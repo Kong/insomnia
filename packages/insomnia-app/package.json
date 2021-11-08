@@ -89,7 +89,7 @@
     "codemirror": "^5.62.3",
     "codemirror-graphql": "^1.0.2",
     "color": "^3.1.2",
-    "electron-context-menu": "^2.2.0",
+    "electron-context-menu": "^3.1.1",
     "electron-log": "^4.3.5",
     "electron-updater": "^4.3.9",
     "font-scanner": "^0.1.2",

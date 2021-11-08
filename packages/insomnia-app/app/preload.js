@@ -1,4 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
+process.env.ELECTRON_IS_DEV = '1';
 
 try {
   // assume contextIsolation=true
