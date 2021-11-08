@@ -5,12 +5,15 @@ import type { RadioButtonGroupProps } from './radio-button-group';
 import { RadioButtonGroup } from './radio-button-group';
 
 const ThemedButtonGroup = styled(RadioButtonGroup)<RadioButtonGroupProps>`
-  font-weight: bold;
+  font-weight: 500;
   background: var(--hl-xs);
   color: var(--color-font);
   border: 0;
   border-radius: 100px;
   align-content: space-evenly;
+  padding: var(--padding-xxs);
+  transform: scale(0.9);
+  transformOrigin: 'center';
 
   label {
     padding: 0;
@@ -18,17 +21,16 @@ const ThemedButtonGroup = styled(RadioButtonGroup)<RadioButtonGroupProps>`
 
   span {
     text-transform: uppercase;
-    padding: var(--padding-xxs) var(--padding-md);
+    padding: var(--padding-xs) var(--padding-xxs);
     color: var(--hl);
     background: transparent;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     margin: 0 auto;
     min-width: 4rem;
   }
 
   input:checked + span {
     color: var(--color-font);
-    text-shadow: 0 1px rgba(255, 255, 255, 0.25);
     background: var(--color-bg);
   }
 `;
