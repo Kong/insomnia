@@ -18,7 +18,6 @@ import {
   getSegmentWriteKey,
   isDevelopment,
 } from './constants';
-import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -280,11 +279,11 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
     },
     {
       name: KEY_SCREEN_RESOLUTION,
-      value: getScreenResolution(),
+      value: window.main.getAnalytics().screenResolution,
     },
     {
       name: KEY_USER_LANGUAGE,
-      value: getUserLanguage(),
+      value: window.main.getAnalytics().locale,
     },
     {
       name: KEY_TITLE,
@@ -315,7 +314,7 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
       value: getAppVersion(),
     },
   ];
-  const viewport = getViewportSize();
+  const viewport = window.main.getAnalytics().viewportSize;
   viewport &&
     params.push({
       name: KEY_VIEWPORT_SIZE,

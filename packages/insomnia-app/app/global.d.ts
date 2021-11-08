@@ -27,7 +27,11 @@ interface Font {
 }
 interface Window {
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: Function;
-  main: { getAvailableFonts: () => Promise<Font[]> };
+  main: {
+    getAvailableFonts: () => Promise<Font[]>;
+    setMenuBarVisibility: (visible: boolean) => void;
+    getAnalytics: () => {viewportSize: string; screenResolution: string; locale: string};
+  };
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;
     showSaveDialog: (options: Electron.SaveDialogOptions) => Promise<Electron.SaveDialogReturnValue>;

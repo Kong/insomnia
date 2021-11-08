@@ -89,7 +89,7 @@ export function createWindow() {
       zoomFactor: zoomFactor,
       nodeIntegration: true,
       webviewTag: true,
-      enableRemoteModule: true,
+      enableRemoteModule: false,
       // TODO: enable context isolation
       contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',

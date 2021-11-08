@@ -238,6 +238,28 @@ async function _trackStats() {
     electron.shell.showItemInFolder(name);
   });
 
+  ipcMain.handle('setMenuBarVisibility', (_, visible) => {
+    electron.BrowserWindow.getAllWindows()
+      .forEach(window => {
+        // the `setMenuBarVisibility` signature uses `visible` semantics
+        window.setMenuBarVisibility(visible);
+        // the `setAutoHideMenu` signature uses `hide` semantics
+        const hide = !visible;
+        window.setAutoHideMenuBar(hide);
+      });
+  });
+
+  ipcMain.on('getAnalytics', event => {
+    const { BrowserWindow, screen, app } = electron;
+    const browserWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+
+    return event.returnValue = {
+      viewportSize: !browserWindow ? null : `${browserWindow.getContentBounds().width}x${browserWindow.getContentBounds().height}`,
+      screenResolution: `${screen.getPrimaryDisplay().workAreaSize.width}x${screen.getPrimaryDisplay().workAreaSize.height}`,
+      locale: app.getLocale(),
+    };
+  });
+
   ipcMain.on('getPath', (event, name) => {
     return event.returnValue = electron.app.getPath(name);
   });

@@ -22,6 +22,8 @@ try {
 // expose for other preload scripts to use, this also covers contextIsolation=false
 window.main = window.main || {};
 window.main.getAvailableFonts = () => ipcRenderer.invoke('getAvailableFonts');
+window.main.getAnalytics = () => ipcRenderer.sendSync('getAnalytics');
+window.main.setMenuBarVisibility = options => ipcRenderer.send('setMenuBarVisibility', options);
 window.dialog = window.dialog || {};
 window.dialog.showOpenDialog = options => ipcRenderer.invoke('showOpenDialog', options);
 window.dialog.showSaveDialog = options => ipcRenderer.invoke('showSaveDialog', options);
