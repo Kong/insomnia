@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import electron from 'electron';
 import fs from 'fs';
 import React, { PureComponent } from 'react';
 
