@@ -1273,7 +1273,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
         className={classes}
         style={style}
         data-editor-type={type}
-        data-mode={mode}
         data-testid="CodeEditor"
       >
         <KeydownBinder onKeydown={this._handleKeyDown} />
