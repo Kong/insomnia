@@ -30,7 +30,7 @@ interface Window {
   main: {
     getAvailableFonts: () => Promise<Font[]>;
     setMenuBarVisibility: (visible: boolean) => void;
-    getAnalytics: () => {viewportSize: string; screenResolution: string; locale: string};
+    analytics: {viewportSize: string; screenResolution: string; locale: string};
   };
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;

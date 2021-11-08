@@ -14,6 +14,10 @@ import {
   getGoogleAnalyticsLocation,
 } from '../constants';
 
+window.main = {
+  analytics: { viewportSize: '1900x1060', screenResolution: '1920x1080', locale: 'en-US' },
+};
+
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();

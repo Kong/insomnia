@@ -279,11 +279,11 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
     },
     {
       name: KEY_SCREEN_RESOLUTION,
-      value: window.main.getAnalytics().screenResolution,
+      value: window.main.analytics.screenResolution,
     },
     {
       name: KEY_USER_LANGUAGE,
-      value: window.main.getAnalytics().locale,
+      value: window.main.analytics.locale,
     },
     {
       name: KEY_TITLE,
@@ -314,7 +314,7 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
       value: getAppVersion(),
     },
   ];
-  const viewport = window.main.getAnalytics().viewportSize;
+  const viewport = window.main.analytics.viewportSize;
   viewport &&
     params.push({
       name: KEY_VIEWPORT_SIZE,
