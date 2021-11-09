@@ -72,24 +72,22 @@ const launch = async config => {
     waitTimeout: 10000,
   });
   const promise = app.start();
-  if (isWindows()){
-    promise.then(async () => {
+  promise.then(async () => {
     // Windows spawns two terminal windows when running spectron, and the only workaround
     // is to focus the window on start.
     // https://github.com/electron-userland/spectron/issues/60
-      await app.browserWindow.focus();
-      await app.browserWindow.setAlwaysOnTop(true);
+    await app.browserWindow.focus();
+    await app.browserWindow.setAlwaysOnTop(true);
 
-      // Set the implicit wait timeout to 0 (webdriver default)
-      //  https://webdriver.io/docs/timeouts.html#session-implicit-wait-timeout
-      // Spectron overrides it to an unreasonable value, as per the issue
-      //  https://github.com/electron-userland/spectron/issues/763
-      await app.client.setTimeout({ implicit: 0 });
+    // Set the implicit wait timeout to 0 (webdriver default)
+    //  https://webdriver.io/docs/timeouts.html#session-implicit-wait-timeout
+    // Spectron overrides it to an unreasonable value, as per the issue
+    //  https://github.com/electron-userland/spectron/issues/763
+    await app.client.setTimeout({ implicit: 0 });
 
-      // Set bounds to default size
-      await app.browserWindow.setSize(1280, 700);
-    });
-  }
+    // Set bounds to default size
+    await app.browserWindow.setSize(1280, 700);
+  });
   return promise;
 };
 
