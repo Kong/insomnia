@@ -22,6 +22,7 @@ import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
 import { axiosRequest } from './network/axios-request';
+import { authorizeUserInWindow } from './network/o-auth-2/misc';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -282,6 +283,11 @@ async function _trackStats() {
 
   ipcMain.on('getAppPath', event => {
     event.returnValue = electron.app.getAppPath();
+  });
+
+  ipcMain.handle('authorizeUserInWindow', (_, options) => {
+    const { url, urlSuccessRegex, urlFailureRegex } = options;
+    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex });
   });
 
   ipcMain.once('window-ready', () => {

@@ -29,6 +29,7 @@ interface Window {
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: Function;
   main: {
     restart: () => void;
+    authorizeUserInWindow: (options: { url: string; urlSuccessRegex: RegExp; urlFailureRegex: RegExp }) => Promise<string>;
     getAvailableFonts: () => Promise<Font[]>;
     setMenuBarVisibility: (visible: boolean) => void;
     analytics: {viewportSize: string; screenResolution: string; locale: string};

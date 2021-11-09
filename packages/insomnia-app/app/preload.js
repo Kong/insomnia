@@ -5,6 +5,7 @@ try {
   // assume contextIsolation=true
   contextBridge.exposeInMainWorld('main', {
     restart: () => ipcRenderer.send('restart'),
+    authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
     getAvailableFonts: () => ipcRenderer.invoke('getAvailableFonts'),
     setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
     analytics: ipcRenderer.sendSync('analytics'),
@@ -29,6 +30,7 @@ try {
 // expose for other preload scripts to use, this also covers contextIsolation=false
 window.main = window.main || {};
 window.main.restart = () => ipcRenderer.send('restart');
+window.main.authorizeUserInWindow = options => ipcRenderer.invoke('authorizeUserInWindow', options);
 window.main.getAvailableFonts = () => ipcRenderer.invoke('getAvailableFonts');
 window.main.setMenuBarVisibility = options => ipcRenderer.send('setMenuBarVisibility', options);
 window.main.analytics = ipcRenderer.sendSync('analytics');
