@@ -3,7 +3,7 @@ import React, { FunctionComponent, useCallback, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux';
 
 import { trackEvent } from '../../common/analytics';
-import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/electron-helpers';
+import { getDataDirectory, getDesignerDataDir } from '../../common/electron-helpers';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { existsAndIsDirectory } from '../../common/migrate-from-designer';
 import { goToNextActivity } from '../redux/modules/global';
@@ -198,7 +198,7 @@ const Migrating = () => (
 );
 
 const RestartButton = () => (
-  <button key="restart" className="btn btn--clicky" onClick={restartApp}>
+  <button key="restart" className="btn btn--clicky" onClick={window.main.restart}>
     Restart Now
   </button>
 );

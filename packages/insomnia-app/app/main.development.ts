@@ -249,6 +249,11 @@ async function _trackStats() {
     electron.shell.showItemInFolder(name);
   });
 
+  ipcMain.on('restart', () => {
+    app.relaunch();
+    app.exit();
+  });
+
   ipcMain.handle('setMenuBarVisibility', (_, visible) => {
     electron.BrowserWindow.getAllWindows()
       .forEach(window => {

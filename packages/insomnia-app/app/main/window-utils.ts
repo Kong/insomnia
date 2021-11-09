@@ -16,7 +16,7 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import { clickLink, getDataDirectory, restartApp } from '../common/electron-helpers';
+import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import LocalStorage from './local-storage';
 
@@ -473,7 +473,7 @@ export function createWindow() {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: restartApp,
+        click: window.main.restart,
       },
     ],
   };

@@ -36,12 +36,6 @@ export function getTempDir() {
   return dir;
 }
 
-export function restartApp() {
-  const { app } = electron.remote || electron;
-  app.relaunch();
-  app.exit();
-}
-
 /**
  * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
  * see: https://github.com/electron/electron/issues/22995

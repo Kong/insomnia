@@ -23,7 +23,6 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { restartApp } from '../../../common/electron-helpers';
 import { snapNumberToLimits } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import type { Settings } from '../../../models/settings';
@@ -105,7 +104,7 @@ class General extends PureComponent<Props, State> {
 
   async _handleUpdateSettingAndRestart(e: React.SyntheticEvent<HTMLInputElement>) {
     await this._handleUpdateSetting(e);
-    restartApp();
+    window.main.restart();
   }
 
   async _handleFontChange(el: React.SyntheticEvent<HTMLInputElement>) {
