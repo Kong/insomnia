@@ -11,13 +11,15 @@ import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import prettier from 'prettier';
+import { complement } from 'ramda';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
+import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { isNotNullOrUndefined, jsonParseOr } from '../../../../common/misc';
+import { jsonParseOr } from '../../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
@@ -47,6 +49,18 @@ if (!explorerContainer) {
 function isOperationDefinition(def: DefinitionNode): def is OperationDefinitionNode {
   return def.kind === 'OperationDefinition';
 }
+
+type HasLocation = SetRequired<OperationDefinitionNode, 'loc'>;
+const hasLocation = (def: OperationDefinitionNode): def is HasLocation => Boolean(def.loc);
+
+/** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
+const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
+  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
+  if (operationName === null && name === undefined) {
+    return true;
+  }
+  return name?.value === operationName;
+};
 
 interface GraphQLBody {
   query: string;
@@ -216,32 +230,24 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       textMarker.clear();
     }
 
-    const disabledDefinitionLocations = _documentAST.definitions
+    this._disabledOperationMarkers = _documentAST.definitions
       .filter(isOperationDefinition)
-      .filter(d => {
-        return d.name?.value !== operationName;
-      })
-      .map(definition => definition.loc)
-      .filter(isNotNullOrUndefined);
+      .filter(complement(matchesOperation(operationName)))
+      .filter(hasLocation)
+      .map(({ loc: { startToken, endToken } }) => {
+        const from = {
+          line: startToken.line - 1,
+          ch: startToken.column - 1,
+        };
+        const to = {
+          line: endToken.line,
+          ch: endToken.column - 1,
+        };
 
-    // Add "Unhighlight" markers
-    const disabledOperationMarkers = disabledDefinitionLocations.map(location => {
-      const { startToken, endToken } = location;
-      const from = {
-        line: startToken.line - 1,
-        ch: startToken.column - 1,
-      };
-      const to = {
-        line: endToken.line,
-        ch: endToken.column - 1,
-      };
-
-      return _queryEditor.getDoc().markText(from, to, {
-        className: 'cm-gql-disabled',
+        return _queryEditor.getDoc().markText(from, to, {
+          className: 'cm-gql-disabled',
+        });
       });
-    });
-
-    this._disabledOperationMarkers = disabledOperationMarkers;
   }
 
   _handleViewResponse() {
