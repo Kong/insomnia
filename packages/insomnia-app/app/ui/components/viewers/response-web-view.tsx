@@ -76,6 +76,7 @@ export class ResponseWebView extends PureComponent<Props> {
     const { webpreferences } = this.props;
     return (
       <webview
+        data-testid="ResponseWebView"
         ref={this.webview}
         src="about:blank"
         webpreferences={webpreferences}
