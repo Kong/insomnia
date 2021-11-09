@@ -18,6 +18,7 @@ import {
   getRequestValidatorPluginDirective,
 } from './plugins';
 import { generateSecurityPlugins } from './security-plugins';
+import { appendUpstreamToName } from './upstreams';
 
 export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
@@ -38,7 +39,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 
   let host = parsedUrl.hostname;
   if (hasUpstreams(api)) {
-    host =  `${name}.upstream`;
+    host =  appendUpstreamToName(name);
   }
 
   // Service plugins
