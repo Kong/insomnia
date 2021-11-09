@@ -24,6 +24,7 @@ describe('jarFromCookies()', () => {
   });
 
   it('handles malformed JSON', () => {
+    jest.spyOn(console, 'log').mockImplementationOnce(() => {});
     // @ts-expect-error this test is verifying that an invalid input is handled appropriately
     const jar = jarFromCookies('not a jar');
     expect(jar.constructor.name).toBe('CookieJar');
@@ -59,11 +60,10 @@ describe('cookiesFromJar()', () => {
 
   it('handles bad jar', async () => {
     const jar = CookieJar.fromJSON({ cookies: [] });
-
+    jest.spyOn(console, 'warn').mockImplementationOnce(() => {});
     // MemoryStore never actually throws errors, so lets mock the function to force it to this time.
     // @ts-expect-error intentionally invalid value
     jar.store.getAllCookies = cb => cb(new Error('Dummy Error'));
-    jest.spyOn(console, 'warn').mockImplementationOnce(() => {});
     const cookies = await cookiesFromJar(jar);
     // Cookies failed to parse
     expect(cookies.length).toBe(0);
