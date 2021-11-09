@@ -734,6 +734,18 @@ describe('actuallySend()', () => {
   });
 
   it('sets HTTP version', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.getOrCreate();
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+    });
+    const renderedRequest = await getRenderedRequest({ request });
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.V1_0,
+    });
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(networkUtils.getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
