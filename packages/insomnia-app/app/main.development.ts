@@ -286,8 +286,8 @@ async function _trackStats() {
   });
 
   ipcMain.handle('authorizeUserInWindow', (_, options) => {
-    const { url, urlSuccessRegex, urlFailureRegex } = options;
-    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex });
+    const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
+    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
   });
 
   ipcMain.once('window-ready', () => {
