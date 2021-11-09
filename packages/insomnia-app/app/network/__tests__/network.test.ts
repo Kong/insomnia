@@ -748,6 +748,10 @@ describe('actuallySend()', () => {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_1,
     });
+    const responseV2PriorKnowledge = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+      ...settings,
+      preferredHttpVersion: HttpVersions.V2PriorKnowledge,
+    });
     const responseV2 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
       ...settings,
       preferredHttpVersion: HttpVersions.V2_0,
@@ -768,6 +772,7 @@ describe('actuallySend()', () => {
     const r = models.response;
     expect(JSON.parse(String(r.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(JSON.parse(String(r.getBodyBuffer(responseV11))).options.HTTP_VERSION).toBe('V1_1');
+    expect(JSON.parse(String(r.getBodyBuffer(responseV2PriorKnowledge))).options.HTTP_VERSION).toBe('V2PriorKnowledge');
     expect(JSON.parse(String(r.getBodyBuffer(responseV2))).options.HTTP_VERSION).toBe('V2_0');
     expect(JSON.parse(String(r.getBodyBuffer(responseV3))).options.HTTP_VERSION).toBe('v3');
     expect(JSON.parse(String(r.getBodyBuffer(responseDefault))).options.HTTP_VERSION).toBe(undefined);

@@ -384,6 +384,11 @@ export async function _actuallySend(
           setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
           break;
 
+        case HttpVersions.V2PriorKnowledge:
+          addTimelineText('Using HTTP/2 PriorKnowledge');
+          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2PriorKnowledge);
+          break;
+
         case HttpVersions.V2_0:
           addTimelineText('Using HTTP/2');
           setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
