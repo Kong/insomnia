@@ -110,7 +110,7 @@ const LIBCURL_DEBUG_MIGRATION_MAP = {
 
 const cancelRequestFunctionMap = {};
 
-const lastUserInteraction = Date.now();
+let lastUserInteraction = Date.now();
 
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
@@ -1153,5 +1153,18 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
         resolve(timelinePath);
       }
     });
+  });
+}
+
+if (global.document) {
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      return;
+    }
+
+    lastUserInteraction = Date.now();
+  });
+  document.addEventListener('paste', () => {
+    lastUserInteraction = Date.now();
   });
 }
