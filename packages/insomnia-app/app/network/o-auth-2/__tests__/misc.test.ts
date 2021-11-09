@@ -64,6 +64,8 @@ describe('authorizeUserInWindow()', () => {
 
   const getCertificateVerifyCallbackMock = () => {
     const mockCallback = mocked<(verificationResult: number) => void>(jest.fn());
+    window.main = { authorizeUserInWindow: () => Promise.resolve(MOCK_AUTHORIZATION_URL) };
+
     createBWRedirectMock({
       redirectTo: MOCK_AUTHORIZATION_URL,
       setCertificateVerifyProc: proc => {
@@ -86,7 +88,7 @@ describe('authorizeUserInWindow()', () => {
 
     // Act
     // We don't really care about the result here, since we're only testing an event handler.
-    await authorizeUserInWindow(MOCK_AUTHORIZATION_URL, /.*/);
+    await authorizeUserInWindow({ url: MOCK_AUTHORIZATION_URL, urlSuccessRegex: /.*/ });
 
     // Assert
     expect(mockCallback).toHaveBeenCalledWith(ChromiumVerificationResult.USE_CHROMIUM_RESULT);
@@ -103,7 +105,7 @@ describe('authorizeUserInWindow()', () => {
 
     // Act
     // We don't really care about the result here, since we're only testing an event handler.
-    await authorizeUserInWindow(MOCK_AUTHORIZATION_URL, /.*/);
+    await authorizeUserInWindow({ url: MOCK_AUTHORIZATION_URL, urlSuccessRegex: /.*/ });
 
     // Assert
     expect(mockCallback).toHaveBeenCalledWith(ChromiumVerificationResult.BLIND_TRUST);

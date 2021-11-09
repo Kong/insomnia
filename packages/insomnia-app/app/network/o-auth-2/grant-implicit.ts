@@ -1,7 +1,7 @@
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 
 import * as c from './constants';
-import { authorizeUserInWindow, getOAuthSession, responseToObject } from './misc';
+import { getOAuthSession, responseToObject } from './misc';
 
 export default async function(
   _requestId: string,

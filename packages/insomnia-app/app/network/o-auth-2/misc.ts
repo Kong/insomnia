@@ -1,4 +1,4 @@
-import electron from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import querystring from 'querystring';
 import * as uuid from 'uuid';
 
@@ -75,7 +75,7 @@ export function authorizeUserInWindow({
     } = await models.settings.getOrCreate();
 
     // Create a child window
-    const child = new electron.BrowserWindow({
+    const child = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
         partition: sessionId,

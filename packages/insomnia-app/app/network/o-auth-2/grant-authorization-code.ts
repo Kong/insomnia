@@ -7,8 +7,7 @@ import * as models from '../../models/index';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { authorizeUserInWindow, getOAuthSession, responseToObject } from './misc';
-
+import { getOAuthSession, responseToObject } from './misc';
 export default async function(
   requestId: string,
   authorizeUrl: string,
