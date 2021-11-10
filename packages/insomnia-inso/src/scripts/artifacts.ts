@@ -50,7 +50,7 @@ const startProcess = (cwd: ProcessEnvOptions['cwd']) => {
       [
         '-C',
         '../binaries',
-        isWindows() ? '-a -cf' : '-cjf',
+        isWindows() ? '-a -cf' : '-cJf',
         name,
         '.',
       ], {

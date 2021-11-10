@@ -1,5 +1,5 @@
 /// <reference types="webpack-env" />
-import { applyMiddleware, compose, createStore } from 'redux';
+import { applyMiddleware, compose, createStore, Store } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 
 import { reducer } from './modules';
@@ -24,5 +24,5 @@ export default function() {
     });
   }
 
-  return store;
+  return store as Store;
 }
