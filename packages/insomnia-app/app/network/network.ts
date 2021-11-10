@@ -112,6 +112,23 @@ const cancelRequestFunctionMap = {};
 
 let lastUserInteraction = Date.now();
 
+export const getHttpVersion = preferredHttpVersion => {
+  switch (preferredHttpVersion) {
+    case HttpVersions.V1_0:
+      return { log: 'Using HTTP 1.0', curlHttpVersion:CurlHttpVersion.V1_0 };
+    case HttpVersions.V1_1:
+      return { log: 'Using HTTP 1.1', curlHttpVersion:CurlHttpVersion.V1_1 };
+    case HttpVersions.V2_0:
+      return { log: 'Using HTTP/2', curlHttpVersion:CurlHttpVersion.V2_0 };
+    case HttpVersions.v3:
+      return { log: 'Using HTTP/3', curlHttpVersion:CurlHttpVersion.v3 };
+    case HttpVersions.default:
+      return { log: 'Using default HTTP version' };
+    default:
+      return { log: `Unknown HTTP version specified ${preferredHttpVersion}`  };
+  }
+};
+
 export async function cancelRequestById(requestId) {
   if (hasCancelFunctionForId(requestId)) {
     const cancelRequestFunction = cancelRequestFunctionMap[requestId];
@@ -372,35 +389,11 @@ export async function _actuallySend(
       addTimelineText('Current time is ' + new Date().toISOString());
       addTimelineText(`Using ${Curl.getVersion()}`);
 
-      // Set HTTP version
-      switch (settings.preferredHttpVersion) {
-        case HttpVersions.V1_0:
-          addTimelineText('Using HTTP 1.0');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_0);
-          break;
-
-        case HttpVersions.V1_1:
-          addTimelineText('Using HTTP 1.1');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
-          break;
-
-        case HttpVersions.V2_0:
-          addTimelineText('Using HTTP/2');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
-          break;
-
-        case HttpVersions.v3:
-          addTimelineText('Using HTTP/3');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.v3);
-          break;
-
-        case HttpVersions.default:
-          addTimelineText('Using default HTTP version');
-          break;
-
-        default:
-          addTimelineText(`Unknown HTTP version specified ${settings.preferredHttpVersion}`);
-          break;
+      const httpVersion = getHttpVersion(settings.preferredHttpVersion);
+      addTimelineText(httpVersion.log);
+      if (httpVersion.curlHttpVersion){
+        // Set HTTP version
+        setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
       }
 
       // Set timeout
