@@ -118,6 +118,8 @@ export const getHttpVersion = preferredHttpVersion => {
       return { log: 'Using HTTP 1.0', curlHttpVersion:CurlHttpVersion.V1_0 };
     case HttpVersions.V1_1:
       return { log: 'Using HTTP 1.1', curlHttpVersion:CurlHttpVersion.V1_1 };
+    case HttpVersions.V2PriorKnowledge:
+      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion:CurlHttpVersion.V2PriorKnowledge };
     case HttpVersions.V2_0:
       return { log: 'Using HTTP/2', curlHttpVersion:CurlHttpVersion.V2_0 };
     case HttpVersions.v3:
