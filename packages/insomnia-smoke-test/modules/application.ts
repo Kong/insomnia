@@ -71,7 +71,8 @@ const launch = async config => {
     waitTimeout: 10000,
   });
 
-  await app.start().then(async () => {
+  const promise = app.start();
+  promise.then(async () => {
     // Windows spawns two terminal windows when running spectron, and the only workaround
     // is to focus the window on start.
     // https://github.com/electron-userland/spectron/issues/60
@@ -87,7 +88,7 @@ const launch = async config => {
     // Set bounds to default size
     await app.browserWindow.setSize(1280, 700);
   });
-  return app;
+  return promise;
 };
 
 export const stop = async app => {
