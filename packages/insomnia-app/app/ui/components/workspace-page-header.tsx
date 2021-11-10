@@ -35,7 +35,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
   );
   const activeProjectName = useSelector(selectActiveProjectName);
 
-  if (!activeWorkspace || !activeWorkspaceName || !activeApiSpec || !activity) {
+  if (!activeWorkspace || !activeApiSpec || !activity) {
     return null;
   }
 
