@@ -32,7 +32,7 @@ import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 interface Props {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
-  activeWorkspaceName: string;
+  activeWorkspaceName?: string;
   activeApiSpec: ApiSpec;
   activeProject: Project;
   hotKeyRegistry: HotKeyRegistry;
