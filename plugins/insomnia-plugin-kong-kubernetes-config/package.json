@@ -14,7 +14,8 @@
   },
   "insomnia": {
     "name": "kong-kubernetes-config",
-    "description": "Generate Kong For Kubernetes configuration"
+    "description": "Generate Kong For Kubernetes configuration",
+    "unlisted": true
   },
   "dependencies": {
     "openapi-2-kong": "2.4.0",
