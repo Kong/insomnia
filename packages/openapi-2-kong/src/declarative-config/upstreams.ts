@@ -21,7 +21,7 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
   let name = getName(api);
 
   if (hasUpstreams(api)) {
-    name =  `${name}.upstream`;
+    name =  appendUpstreamToName(name);
   }
 
   const upstream: DCUpstream = {
@@ -45,3 +45,5 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
 
   return [upstream];
 }
+
+export const appendUpstreamToName = (name: string) => `${name}.upstream`;
