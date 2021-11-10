@@ -191,6 +191,22 @@ describe('generateConfig()', () => {
     );
     expect(result).toBe(true);
     expect(logger.__getLogs().log).toEqual([
+      `_format_version: \"1.1\"
+services: []
+upstreams: []
+`,
+    ]);
+  });
+
+  it('when format is json should generate declarative config as json', async () => {
+    generate.mockResolvedValue(mockDeclarativeConversionResult);
+
+    const result = await generateConfig(
+      filePath,
+      { type: 'declarative', format: 'json' }
+    );
+    expect(result).toBe(true);
+    expect(logger.__getLogs().log).toEqual([
       '{"_format_version":"1.1","services":[],"upstreams":[]}',
     ]);
   });

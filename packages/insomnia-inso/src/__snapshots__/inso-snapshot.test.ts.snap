@@ -94,11 +94,13 @@ exports[`Snapshot for "inso generate config -h" 1`] = `
 Generate configuration from an api spec.
 
 Options:
-  -t, --type <value>   type of configuration to generate, options are
-                       [declarative, kubernetes] (default: declarative)
-  --tags <tags>        comma separated list of tags to apply to each entity
-  -o, --output <path>  save the generated config to a file
-  -h, --help           display help for command"
+  -t, --type <value>    type of configuration to generate, options are
+                        [declarative, kubernetes] (default: declarative)
+  -f, --format <value>  format of configuration to generate, options are [yaml,
+                        json] (default: yaml)
+  --tags <tags>         comma separated list of tags to apply to each entity
+  -o, --output <path>   save the generated config to a file
+  -h, --help            display help for command"
 `;
 
 exports[`Snapshot for "inso help" 1`] = `
