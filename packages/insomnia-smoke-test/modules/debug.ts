@@ -92,7 +92,7 @@ export const clickSendRequest = async (app: Application) => {
   await spinner.waitForDisplayed();
 
   // Wait for spinner to hide
-  await spinner.waitForDisplayed({ reverse: true });
+  await spinner.waitForDisplayed({ reverse: true, timeout: 30000 });
 };
 
 export const expect200 = async (app: Application) => {
