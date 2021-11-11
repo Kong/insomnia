@@ -4,7 +4,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { docsImportExport } from '../../../common/documentation';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { Settings } from '../../../models/settings';
 import type { ConfigGenerator } from '../../../plugins';
@@ -26,6 +25,7 @@ interface Props {
 
 interface Config {
   label: string;
+  docsLink?: string;
   content: string;
   mimeType: string;
   error: string | null;
@@ -99,8 +99,7 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
         <TabPanel key={config.label}>
           <Notice color="error" className="margin-md">
             {config.error}
-            <br />
-            <Link href={docsImportExport}>Documentation {linkIcon}</Link>
+            {!!config.docsLink && <><br /><Link href={config.docsLink}>Documentation {linkIcon}</Link></>}
           </Notice>
         </TabPanel>
       );
@@ -133,12 +132,17 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
     const linkIcon = <i className="fa fa-external-link-square" />;
     return (
       <Tab key={config.label} tabIndex="-1">
-        <button>{config.label + ' '}
-          <HelpTooltip>
-            To learn more about {config.label}
-            <br />
-            <Link href={docsImportExport}>Documentation {linkIcon}</Link>
-          </HelpTooltip>
+        <button>
+          {config.label}
+          {!!config.docsLink &&
+          <>
+            {' '}
+            <HelpTooltip>
+              To learn more about {config.label}
+              <br />
+              <Link href={config.docsLink}>Documentation {linkIcon}</Link>
+            </HelpTooltip>
+          </>}
         </button>
       </Tab>
     );

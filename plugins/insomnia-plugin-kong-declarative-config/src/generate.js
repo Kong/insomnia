@@ -3,6 +3,7 @@ const o2k = require('openapi-2-kong');
 
 module.exports = {
   label: 'Declarative Config',
+  docsLink: 'https://docs.insomnia.rest/insomnia/kong-for-kubernetes',
   generate: async ({ contents, format, formatVersion }) => {
     const isSupported = format === 'openapi' && formatVersion.match(/^3./);
     const capitalisedFormat = format === 'openapi' ? 'OpenAPI' : format?.replace(/^\w/, c => c.toUpperCase())
