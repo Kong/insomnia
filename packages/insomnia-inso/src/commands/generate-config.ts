@@ -81,6 +81,7 @@ export const generateConfig = async (
       result = await generate(fileName, conversionType, generationTags);
     }
   } catch (e) {
+    // @ts-ignore: weird docker build fail with TS2345
     throw new InsoError('There was an error while generating configuration', e);
   }
 
