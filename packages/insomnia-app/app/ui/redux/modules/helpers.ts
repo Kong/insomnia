@@ -100,7 +100,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
 
 export type SetWorkspaceScopePrompt = (name: string) => WorkspaceScope | Promise<WorkspaceScope>;
 export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {
-  return function(name: string) {
+  return function(name?: string) {
     switch (scope) {
       case WorkspaceScopeKeys.collection:
       case WorkspaceScopeKeys.design:
@@ -108,9 +108,13 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
 
       default:
         return new Promise(resolve => {
+          const message = name
+            ? `How would you like to import "${name}"?`
+            : 'Do you want to import as a Request Collection or a Design Document?';
+
           showModal(AskModal, {
             title: 'Import As',
-            message: `How would you like to import "${name}"?`,
+            message,
             noText: 'Request Collection',
             yesText: 'Design Document',
             onDone: yes => {

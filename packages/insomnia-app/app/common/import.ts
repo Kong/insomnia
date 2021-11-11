@@ -18,6 +18,7 @@ import {
 } from './constants';
 import { database as db } from './database';
 import { diffPatchObj, fnOrString, generateId } from './misc';
+import { strings } from './strings';
 
 export interface ImportResult {
   source: string;
@@ -271,6 +272,17 @@ export async function importRaw(
       // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
+
+        // If the workspace doesn't have a name, update the default name based on it's scope
+        if (!resource.name) {
+          const name =
+            resource.scope === 'collection'
+              ? `My ${strings.collection.singular}`
+              : `My ${strings.document.singular}`;
+
+          resource.name = name;
+        }
+
         await createWorkspaceInProject(resource as Workspace, getProjectId);
       }
 
