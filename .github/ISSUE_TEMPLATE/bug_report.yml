@@ -2,11 +2,6 @@ name: Bug Report
 description: Report an Insomnia bug
 labels: [B-bug, S-unverified]
 body:
-- type: checkboxes
-  attributes:
-    options:
-      - label: I have searched the [issue tracker](https://www.github.com/Kong/insomnia/issues) for this problem.
-        required: true
 - type: textarea
   attributes:
     label: Expected Behavior
@@ -31,6 +26,12 @@ body:
       2. Click on '....'
       3. Scroll down to '....'
       4. See error
+- type: checkboxes
+  attributes:
+    label: Is there an existing issue for this?
+    options:
+      - label: I have searched the [issue tracker](https://www.github.com/Kong/insomnia/issues) for this problem.
+        required: true
 - type: textarea
   attributes:
     label: Additional Information
