@@ -35,7 +35,6 @@
 - [Git Bash](#git-bash)
 - [Continuous Integration](#continuous-integration)
 - [Development](#development)
-- [Run with Docker](#run-with-docker)
 
 ## Data source
 
@@ -372,13 +371,3 @@ jobs:
 - Bootstrap: `npm run bootstrap`
 - Start the compiler in watch mode: `npm run start`
 - Run: `./bin/inso -v`
-
-## Run with Docker
-
-> Note: this feature is still experimental / in active development.
-
-1. Clone the repository.
-2. Install [Docker](https://docs.docker.com/get-docker/).
-3. Run `docker build -t insomnia-inso:latest -f inso.Dockerfile .`.
-4. Create an alias for the containerised version of `inso`, e.g. `alias inso-docker="docker run -it --rm insomnia-inso:latest`.
-5. Try to run an `inso` command, e.g. `inso-docker help`
