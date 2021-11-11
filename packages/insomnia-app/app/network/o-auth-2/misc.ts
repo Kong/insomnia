@@ -8,11 +8,12 @@ export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
   USE_CHROMIUM_RESULT = -3
 }
+export const isRenderer = typeof window !== 'undefined';
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;
 
-if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
+if (isRenderer && window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
   authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
 } else {
   initNewOAuthSession();
@@ -22,7 +23,7 @@ export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
   authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  isRenderer && window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
 }
 
 export function responseToObject(body, keys, defaults = {}) {

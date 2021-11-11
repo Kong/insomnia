@@ -850,7 +850,7 @@ class App extends PureComponent<AppProps, State> {
     handleStartLoading(requestId);
 
     try {
-      const responsePatch = await network.send(requestId, environmentId);
+      const responsePatch = await ipcRenderer.invoke('request', requestId, environmentId);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
     } catch (err) {
       if (err.type === 'render') {

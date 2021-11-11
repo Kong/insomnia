@@ -23,8 +23,10 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
 export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
 
-export const getBrowserUserAgent = () => encodeURIComponent(
-  String(window.navigator.userAgent)
+export const isRenderer = typeof window !== 'undefined';
+
+export const getBrowserUserAgent = () => isRenderer && encodeURIComponent(
+  String(window?.navigator?.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
     .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
 ).replace('%2C', ',');

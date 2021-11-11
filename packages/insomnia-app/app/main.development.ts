@@ -21,6 +21,8 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import * as network from './network/network';
+import { ResponsePatch } from './network/network';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -222,6 +224,13 @@ async function _trackStats() {
   } else {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
+  ipcMain.handle('request', async (_, requestId: string, environmentId: string): Promise<ResponsePatch> => {
+    return network.send(requestId, environmentId);
+  });
+
+  ipcMain.on('cancelRequestById', (_, requestId: string): void => {
+    network.cancelRequestById(requestId);
+  });
 
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
