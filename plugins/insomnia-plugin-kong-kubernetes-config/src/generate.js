@@ -6,7 +6,8 @@ module.exports = {
   docsLink: 'https://docs.insomnia.rest/insomnia/declarative-config',
   generate: async ({ contents, format, formatVersion }) => {
     const isSupported = format === 'openapi' && formatVersion.match(/^3./);
-    const capitalisedFormat = format === 'openapi' ? 'OpenAPI' : format?.replace(/^\w/, c => c.toUpperCase())
+    const capitalisedInitial = format?.replace(/^\w/, c => c.toUpperCase());
+    const capitalisedFormat = format === 'openapi' ? 'OpenAPI' : capitalisedInitial;
 
     // Return to signify that it's not supported
     if (!isSupported) {
