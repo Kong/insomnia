@@ -602,7 +602,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
               </Fragment>
             ) : (
               <Fragment>
-                <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot
+                <i className="fa fa-cloud-download" /> Pull {behind || ''} Snapshot
                 {behind === 1 ? '' : 's'}
               </Fragment>
             )}
