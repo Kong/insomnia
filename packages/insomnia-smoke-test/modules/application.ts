@@ -108,6 +108,7 @@ const takeScreenshotOnFailure = async app => {
 
 export const takeScreenshot = async (app, name) => {
   mkdirp.sync('screenshots');
+  await app.client.react$('button=Timeline');
   const buffer = await app.browserWindow.capturePage();
   await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
 };

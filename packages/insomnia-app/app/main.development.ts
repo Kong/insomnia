@@ -14,6 +14,7 @@ import { database } from './common/database';
 import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
+import * as curl from './main/curl';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -226,6 +227,10 @@ async function _trackStats() {
   }
   ipcMain.handle('request', async (_, requestId: string, environmentId: string): Promise<ResponsePatch> => {
     return network.send(requestId, environmentId);
+  });
+
+  ipcMain.handle('_actuallySend', async (_, renderedRequest, workspaceId, settings, environmentId, validateSSL): Promise<ResponsePatch> => {
+    return curl._actuallySend(renderedRequest, workspaceId, settings, environmentId, validateSSL);
   });
 
   ipcMain.on('cancelRequestById', (_, requestId: string): void => {

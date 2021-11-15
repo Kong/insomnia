@@ -775,8 +775,7 @@ class App extends PureComponent<AppProps, State> {
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
-        // @ts-expect-error -- TSCONVERSION contentType can be undefined
-        const extension = mime.extension(responsePatch.contentType) || 'unknown';
+        const extension = mime.extension(responsePatch.contentType || 'unknown');
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename;
@@ -792,8 +791,7 @@ class App extends PureComponent<AppProps, State> {
         }
 
         const to = fs.createWriteStream(filename);
-        // @ts-expect-error -- TSCONVERSION
-        const readStream = models.response.getBodyStream(responsePatch);
+        const readStream = models.response.getBodyStream({ bodyPath:responsePatch.bodyPath, bodyCompression:responsePatch.bodyCompression } as Response);
 
         if (!readStream) {
           return;

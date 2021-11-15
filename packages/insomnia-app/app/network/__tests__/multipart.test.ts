@@ -77,7 +77,7 @@ describe('buildMultipart()', () => {
   });
 
   it('builds with file', async () => {
-    const fileName = path.resolve(path.join(__dirname, './testfile.txt'));
+    const fileName = path.resolve(path.join(__dirname, '../../main/__tests__/testfile.txt'));
     const { filePath, boundary, contentLength } = await buildMultipart([
       {
         name: 'foo',
