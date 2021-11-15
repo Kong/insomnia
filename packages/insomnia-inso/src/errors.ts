@@ -1,9 +1,9 @@
 import { logger } from './logger';
 
 export class InsoError extends Error {
-  cause?: Error | null;
+  cause?: unknown;
 
-  constructor(message: string, cause?: Error) {
+  constructor(message: string, cause?: unknown) {
     super(message);
     this.name = 'InsoError';
     this.cause = cause;

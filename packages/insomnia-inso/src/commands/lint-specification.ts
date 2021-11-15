@@ -45,7 +45,11 @@ export async function lintSpecification(
       return false;
     }
   } catch (e) {
-    logger.fatal(e.message);
+    let errorMessage = "Failed to load linting specification."
+    if (e instanceof Error) {
+      errorMessage = e.message;
+    }
+    logger.fatal(errorMessage);
     return false;
   }
 
