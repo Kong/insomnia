@@ -99,7 +99,7 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
         <TabPanel key={config.label}>
           <Notice color="error" className="margin-md">
             {config.error}
-            {!!config.docsLink && <><br /><Link href={config.docsLink}>Documentation {linkIcon}</Link></>}
+            {!!config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {linkIcon}</Link></> : null}
           </Notice>
         </TabPanel>
       );
@@ -134,15 +134,15 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
       <Tab key={config.label} tabIndex="-1">
         <button>
           {config.label}
-          {!!config.docsLink &&
-          <>
-            {' '}
-            <HelpTooltip>
-              To learn more about {config.label}
-              <br />
-              <Link href={config.docsLink}>Documentation {linkIcon}</Link>
-            </HelpTooltip>
-          </>}
+          {!!config.docsLink ?
+            <>
+              {' '}
+              <HelpTooltip>
+                To learn more about {config.label}
+                <br />
+                <Link href={config.docsLink}>Documentation {linkIcon}</Link>
+              </HelpTooltip>
+            </> : null}
         </button>
       </Tab>
     );
