@@ -34,5 +34,5 @@ See the [open-source Inso CLI documentation](https://docs.insomnia.rest/inso-cli
 1. Clone the repository.
 2. Install [Docker](https://docs.docker.com/get-docker/).
 3. Run `docker build -t insomnia-inso:latest -f inso.Dockerfile .`.
-4. Create an alias for the containerised version of `inso`, e.g. `alias inso-docker="docker run -it --rm insomnia-inso:latest`.
+4. Create an alias for the containerised version of `inso`, e.g. `alias inso-docker="docker run -it --rm insomnia-inso:latest"`.
 5. Try to run an `inso` command, e.g. `inso-docker help`
