@@ -356,8 +356,8 @@ export async function getRenderContext(
 
   // Get Keys from ancestors (e.g. Folders)
   if (ancestors) {
-    for (let idx = 0; idx < ancestors.length; idx++) {
-      const ancestor: any = ancestors[idx] || {};
+    for (let index = 0; index < ancestors.length; index++) {
+      const ancestor: any = ancestors[index] || {};
 
       if (
         isRequestGroup(ancestor) &&
