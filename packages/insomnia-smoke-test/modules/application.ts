@@ -112,6 +112,6 @@ export const takeScreenshot = async (app, name) => {
   await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
 };
 
-export const writeTextToClipboard = async (app, text) => {
+export const writeTextToClipboard = (app: Application, text: string) => {
   app.electron.clipboard.writeText(text);
 };
