@@ -3,8 +3,7 @@ import YAML from 'yaml';
 export interface ParsedApiSpec {
   contents: Record<string, any> | null;
   rawContents: string;
-  format: 'openapi' | 'swagger' | null;
-  formatVersion: string | null;
+  openapiVersion: string | null;
 }
 
 export function parseApiSpec(
@@ -13,8 +12,7 @@ export function parseApiSpec(
   const result: ParsedApiSpec = {
     contents: null,
     rawContents: rawDocument,
-    format: null,
-    formatVersion: null,
+    openapiVersion: null,
   };
 
   // NOTE: JSON is valid YAML so we only need to parse YAML
@@ -27,12 +25,10 @@ export function parseApiSpec(
   if (result.contents) {
     if (result.contents.openapi) {
       // Check if it's OpenAPI
-      result.format = 'openapi';
-      result.formatVersion = result.contents.openapi;
+      result.openapiVersion = result.contents.openapi;
     } else if (result.contents.swagger) {
       // Check if it's Swagger
-      result.format = 'swagger';
-      result.formatVersion = result.contents.swagger;
+      result.openapiVersion = result.contents.swagger;
     } else {
       // Not sure what format it is
     }

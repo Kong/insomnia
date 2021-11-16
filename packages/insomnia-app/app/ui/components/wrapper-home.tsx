@@ -90,14 +90,12 @@ const mapWorkspaceToWorkspaceCard = ({
   }
 
   let spec: ParsedApiSpec['contents'] = null;
-  let specFormat: ParsedApiSpec['format'] = null;
-  let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
+  let openapiVersion: ParsedApiSpec['openapiVersion'] = null;
 
   try {
     const result = parseApiSpec(apiSpec.contents);
     spec = result.contents;
-    specFormat = result.format;
-    specFormatVersion = result.formatVersion;
+    openapiVersion = result.openapiVersion;
   } catch (err) {
     // Assume there is no spec
     // TODO: Check for parse errors if it's an invalid spec
@@ -143,9 +141,8 @@ const mapWorkspaceToWorkspaceCard = ({
     lastCommitAuthor,
     lastActiveBranch,
     spec,
-    specFormat,
     apiSpec,
-    specFormatVersion,
+    openapiVersion,
     workspace,
   };
 };

@@ -27,8 +27,7 @@ export interface WorkspaceCardProps {
   lastCommitAuthor?: string | null;
   modifiedLocally?: number;
   spec: Record<string, any> | null;
-  specFormat: 'openapi' | 'swagger' | null;
-  specFormatVersion: string | null;
+  openapiVersion: string | null;
   hasUnsavedChanges: boolean;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
 }
@@ -44,8 +43,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   modifiedLocally,
   lastCommitAuthor,
   spec,
-  specFormat,
-  specFormatVersion,
+  openapiVersion,
   hasUnsavedChanges,
   onSelect,
 }) => {
@@ -96,12 +94,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
     label = strings.document.singular;
     labelIcon = <i className="fa fa-file-o" />;
 
-    if (specFormat === 'openapi') {
-      format = `OpenAPI ${specFormatVersion}`;
-    } else if (specFormat === 'swagger') {
-      // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
-      format = `OpenAPI ${specFormatVersion}`;
-    }
+    format = `OpenAPI ${openapiVersion}`;
 
     defaultActivity = ACTIVITY_SPEC;
     title = apiSpec.fileName || title;

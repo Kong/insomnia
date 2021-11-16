@@ -16,8 +16,7 @@ describe('parseApiSpec()', () => {
     const yamlSpec = YAML.stringify(objSpec);
     const jsonSpec = JSON.stringify(objSpec);
     const expected = {
-      format: 'openapi',
-      formatVersion: '3.0.0',
+      openapiVersion: '3.0.0',
       contents: objSpec,
     };
     expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
@@ -32,8 +31,7 @@ describe('parseApiSpec()', () => {
       },
     };
     const expected = {
-      format: 'swagger',
-      formatVersion: '2.0.0',
+      openapiVersion: '2.0.0',
       contents: objSpec,
     };
     const yamlSpec = YAML.stringify(objSpec);
@@ -50,8 +48,7 @@ describe('parseApiSpec()', () => {
       },
     };
     const expected = {
-      format: null,
-      formatVersion: null,
+      openapiVersion: null,
       contents: objSpec,
     };
     const yamlSpec = YAML.stringify(objSpec);
@@ -62,8 +59,7 @@ describe('parseApiSpec()', () => {
 
   it('returns the default result if empty document', () => {
     const expected = {
-      format: null,
-      formatVersion: null,
+      openapiVersion: null,
       contents: null,
       rawContents: '',
     };

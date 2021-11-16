@@ -3,14 +3,14 @@ const o2k = require('openapi-2-kong');
 
 module.exports = {
   label: 'Kong for Kubernetes',
-  generate: async ({ contents, format, formatVersion }) => {
-    const isSupported = format === 'openapi' && formatVersion.match(/^3./);
+  generate: async ({ contents, openapiVersion }) => {
+    const isSupported = openapiVersion && openapiVersion.match(/^3./);
 
     // Return to signify that it's not supported
     if (!isSupported) {
       return {
         document: null,
-        error: `Unsupported spec format ${format} ${formatVersion}`,
+        error: `Unsupported OpenAPI spec format ${openapiVersion}`,
       };
     }
 

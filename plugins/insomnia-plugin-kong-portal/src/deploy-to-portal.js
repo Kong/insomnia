@@ -21,8 +21,7 @@ type Props = {
   spec: {
     contents: Object,
     rawContents: string,
-    format: string,
-    formatVersion: string,
+    openapiVersion: string,
   },
 };
 

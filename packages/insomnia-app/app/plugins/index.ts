@@ -84,8 +84,7 @@ export interface WorkspaceAction extends InternalProperties {
 export interface SpecInfo {
   contents: Record<string, any>;
   rawContents: string;
-  format: string;
-  formatVersion: string;
+  openapiVersion: string;
 }
 
 export interface ConfigGenerator extends InternalProperties {
