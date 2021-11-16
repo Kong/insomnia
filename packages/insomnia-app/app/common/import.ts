@@ -276,7 +276,7 @@ export async function importRaw(
         // If the workspace doesn't have a name, update the default name based on it's scope
         if (!resource.name) {
           const name =
-            resource.scope === 'collection'
+            (resource as Workspace).scope === 'collection'
               ? `My ${strings.collection.singular}`
               : `My ${strings.document.singular}`;
 
