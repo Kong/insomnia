@@ -59,6 +59,7 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
       content: '',
       mimeType: 'text/yaml',
       label: generatePlugin.label,
+      docsLink: generatePlugin.docsLink,
       error: null,
     };
     let result;
@@ -130,6 +131,7 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
 
   renderConfigTab(config: Config) {
     const linkIcon = <i className="fa fa-external-link-square" />;
+    console.log(config);
     return (
       <Tab key={config.label} tabIndex="-1">
         <button>

@@ -90,7 +90,7 @@ export interface SpecInfo {
 
 export interface ConfigGenerator extends InternalProperties {
   label: string;
-  docsLink: string;
+  docsLink?: string;
   generate: (
     info: SpecInfo,
   ) => Promise<{
