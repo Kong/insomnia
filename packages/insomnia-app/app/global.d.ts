@@ -15,9 +15,21 @@ declare namespace NodeJS {
     __DEV__: boolean;
   }
 }
-
+interface Font {
+  family: string;
+  italic: boolean;
+  monospace: boolean;
+  path: string;
+  postscriptName: string;
+  style: string;
+  weight: number;
+  width: numbe;
+}
 interface Window {
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: Function;
+  api: {
+    getAvailableFonts: () => Promise<Font[]>;
+  };
 }
 
 // needed for @hot-loader/react-dom in order for TypeScript to build

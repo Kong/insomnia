@@ -3,6 +3,7 @@ import 'regenerator-runtime/runtime';
 
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import fontScanner from 'font-scanner';
 import path from 'path';
 
 import appConfig from '../config/config.json';
@@ -220,6 +221,8 @@ async function _trackStats() {
   } else {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
+
+  ipcMain.handle('getAvailableFonts', () => fontScanner.getAvailableFonts());
 
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;

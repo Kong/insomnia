@@ -13,7 +13,9 @@ const output: Configuration['output'] = {
   filename: 'main.min.js',
 };
 
-if (process.env.NODE_ENV === 'development') {
+const isDev = process.env.NODE_ENV === 'development';
+
+if (isDev) {
   output.path = path.join(__dirname, '../app');
   devtool = 'eval-source-map';
   plugins = [
@@ -30,7 +32,7 @@ if (process.env.NODE_ENV === 'development') {
   plugins = productionConfig.plugins;
 }
 
-const configuration: Configuration = {
+const configuration: Configuration[] = [{
   ...productionConfig,
   devtool,
   entry: ['./main.development.ts'],
@@ -40,6 +42,24 @@ const configuration: Configuration = {
   },
   target: 'electron-main',
   plugins,
-};
+},
+{
+  mode: isDev ? 'development' : 'production',
+  devtool: isDev ? 'source-map' : false,
+  entry: path.join(__dirname, '../app/preload.ts'),
+  stats: 'minimal',
+  target: 'electron-preload',
+  output: {
+    path: path.join(__dirname, '../build'),
+    filename: 'preload.ts',
+  },
+  module: {
+    rules: [{
+      test: /\.tsx?$/,
+      exclude: /node_modules/,
+      loader: 'babel-loader',
+    }],
+  },
+}];
 
 export default configuration;
