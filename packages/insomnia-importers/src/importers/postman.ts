@@ -186,6 +186,9 @@ class ImportCollection {
         // TODO: Handle this as properly as multipart/form-data
         return this.importBodyFormdata(body.formdata);
 
+      case 'graphql':
+        return this.importBodyGraphQL(body.graphql);
+
       default:
         return {};
     }
@@ -257,6 +260,17 @@ class ImportCollection {
     return {
       mimeType: '',
       text: raw,
+    };
+  };
+
+  importBodyGraphQL = (graphql?: Record<string, unknown>) => {
+    if (!graphql) {
+      return {};
+    }
+
+    return {
+      mimeType: 'application/graphql',
+      text: JSON.stringify(graphql),
     };
   };
 

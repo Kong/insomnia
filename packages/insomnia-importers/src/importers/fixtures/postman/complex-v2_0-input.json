@@ -111,6 +111,22 @@
         "description": "Request with unknown body"
       },
       "response": []
+    },
+    {
+      "name": "Test Request GraphQL Body",
+      "request": {
+        "url": "{{base_url}}/graphql/",
+        "method": "POST",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "mutation loginUser($username: String!, $password: String!) {\n  login(username: $username, password: $password) {\n    token\n    status {\n      success\n    }\n  }\n}\n",
+            "variables": "{\n    \"password\": \"{{password}}\",\n    \"username\": \"{{username}}\"\n}"
+          }
+        },
+        "description": "Request with graphql body"
+      },
+      "response": []
     }
   ]
 }
