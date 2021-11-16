@@ -198,7 +198,7 @@ upstreams: []
     ]);
   });
 
-  it('when format is json should generate declarative config as json', async () => {
+  it('should generate declarative config as json when format is set to json', async () => {
     generate.mockResolvedValue(mockDeclarativeConversionResult);
 
     const result = await generateConfig(

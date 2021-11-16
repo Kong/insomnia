@@ -3,8 +3,14 @@ import { parseArgsStringToArgv } from 'string-argv';
 
 import type { ExportSpecificationOptions } from './commands/export-specification';
 import { exportSpecification } from './commands/export-specification';
-import { FormatOption, formatOptions, GenerateConfigOptions } from './commands/generate-config';
-import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
+import {
+  ConversionOption,
+  conversionOptions,
+  FormatOption,
+  formatOptions,
+  generateConfig,
+  GenerateConfigOptions,
+} from './commands/generate-config';
 import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
 import type { RunTestsOptions } from './commands/run-tests';
