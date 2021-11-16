@@ -39,7 +39,6 @@ import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 
-const TAB_KEY = 9;
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
@@ -956,7 +955,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
 
   async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, e: KeyboardEvent & {codemirrorIgnore: boolean}) {
     // Use default tab behaviour if we're told
-    if (this.props.defaultTabBehavior && e.code === TAB_KEY.toString()) {
+    if (this.props.defaultTabBehavior && e.code === 'Tab') {
       e.codemirrorIgnore = true;
     }
 
