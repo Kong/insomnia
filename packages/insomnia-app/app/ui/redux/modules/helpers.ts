@@ -98,9 +98,9 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
   };
 }
 
-export type SetWorkspaceScopePrompt = (name: string) => WorkspaceScope | Promise<WorkspaceScope>;
+export type SetWorkspaceScopePrompt = (name?: string) => WorkspaceScope | Promise<WorkspaceScope>;
 export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {
-  return function(name?: string) {
+  return name => {
     switch (scope) {
       case WorkspaceScopeKeys.collection:
       case WorkspaceScopeKeys.design:
