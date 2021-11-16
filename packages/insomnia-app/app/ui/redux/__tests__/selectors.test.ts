@@ -1,7 +1,7 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
-import { sortMethodMap } from '../../../common/sorting';
+import { createdFirstSort } from '../../../common/sorting';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
@@ -171,7 +171,7 @@ describe('selectors', () => {
 
       // NOTE: Sometimes the order of the entities loaded by the db is different so we need to sort them.
       expect(
-        selectWorkspacesWithResolvedNameForActiveProject(state).sort(sortMethodMap['created-asc'])
+        selectWorkspacesWithResolvedNameForActiveProject(state).sort(createdFirstSort)
       ).toMatchObject([
         {
           _id: newCollectionWorkspace._id,
