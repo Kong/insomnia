@@ -73,6 +73,7 @@ describe('cli', () => {
 
       expect(logs.log?.[0]).toContainEqual({
         type: 'declarative',
+        format: 'yaml',
         printOptions: true,
         verbose: true,
       });
@@ -84,6 +85,7 @@ describe('cli', () => {
       inso('generate config');
       expect(generateConfig).toHaveBeenCalledWith(undefined, {
         type: 'declarative',
+        format: 'yaml',
       });
     });
 
@@ -103,6 +105,7 @@ describe('cli', () => {
       inso('generate config -t declarative file.yaml');
       expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
         type: 'declarative',
+        format: 'yaml',
       });
     });
 

@@ -3,8 +3,14 @@ import { parseArgsStringToArgv } from 'string-argv';
 
 import type { ExportSpecificationOptions } from './commands/export-specification';
 import { exportSpecification } from './commands/export-specification';
-import type { GenerateConfigOptions } from './commands/generate-config';
-import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
+import {
+  ConversionOption,
+  conversionOptions,
+  FormatOption,
+  formatOptions,
+  generateConfig,
+  GenerateConfigOptions,
+} from './commands/generate-config';
 import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
 import type { RunTestsOptions } from './commands/run-tests';
@@ -26,6 +32,7 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
   // inso generate
   const command = commandCreator('generate').description('Code generation utilities');
   const defaultType: ConversionOption = 'declarative';
+  const defaultFormat: FormatOption = 'yaml';
 
   // inso generate config -t kubernetes config.yaml
   command
@@ -35,11 +42,16 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
       '-t, --type <value>',
       `type of configuration to generate, options are [${conversionOptions.join(', ')}] (default: ${defaultType})`,
     )
+    .option(
+      '-f, --format <value>',
+      `format of configuration to generate, options are [${formatOptions.join(', ')}] (default: ${defaultFormat})`,
+    )
     .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
     .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) => {
       let options = getOptions<GenerateConfigOptions>(cmd, {
         type: defaultType,
+        format: defaultFormat,
       });
       options = prepareCommand(options);
       return exit(generateConfig(identifier, options));
