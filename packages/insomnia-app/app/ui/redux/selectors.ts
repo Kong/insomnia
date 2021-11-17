@@ -136,6 +136,27 @@ export const selectAllApiSpecs = createSelector(
   entities => entities.apiSpecs,
 );
 
+export const selectWorkspacesWithResolvedNameForActiveProject = createSelector(
+  selectWorkspacesForActiveProject,
+  selectAllApiSpecs,
+  (workspaces, apiSpecs) => {
+    return workspaces.map(workspace => {
+      if (isCollection(workspace)) {
+        return workspace;
+      }
+
+      const apiSpec = apiSpecs.find(
+        apiSpec => apiSpec.parentId === workspace._id
+      );
+
+      return {
+        ...workspace,
+        name: apiSpec?.fileName || workspace.name,
+      };
+    });
+  }
+);
+
 export const selectActiveApiSpec = createSelector(
   selectAllApiSpecs,
   selectActiveWorkspace,
