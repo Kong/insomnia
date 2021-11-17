@@ -45,7 +45,7 @@ security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k 
 
 # Sign the binary
 plutil -lint "$ENTITLEMENTS_PATH"
-/usr/bin/codesign --force --options=runtime --entitlements "$ENTITLEMENTS_PATH" --timestamp --sign "$APP_IDENTITY" "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME"
+/usr/bin/codesign --force --options=runtime,library --entitlements "$ENTITLEMENTS_PATH" --timestamp --sign "$APP_IDENTITY" "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME"
 
 # Create a staging area for the installer package.
 mkdir -p "$STAGING_AREA"
