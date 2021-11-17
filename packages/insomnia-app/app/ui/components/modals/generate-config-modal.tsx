@@ -55,30 +55,25 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
   }
 
   async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec) {
+    const config: Config = {
+      content: '',
+      mimeType: 'text/yaml',
+      label: generatePlugin.label,
+      error: null,
+    };
+    let result;
+
     try {
-      const spec = parseApiSpec(apiSpec.contents);
-      const result = await generatePlugin.generate({
-        format: spec.format || 'openapi',
-        formatVersion: spec.formatVersion || '',
-        contents: spec.contents || {},
-        rawContents: spec.rawContents,
-      });
-      return {
-        mimeType: 'text/yaml',
-        label: generatePlugin.label,
-        docsLink: generatePlugin.docsLink,
-        content: result.document || '',
-        error: result.error || null,
-      };
+      // @ts-expect-error -- TSCONVERSION
+      result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
     } catch (err) {
-      return {
-        mimeType: 'text/yaml',
-        label: generatePlugin.label,
-        docsLink: generatePlugin.docsLink,
-        content: '',
-        error: err.message,
-      };
+      config.error = err.message;
+      return config;
     }
+
+    config.content = result.document || null;
+    config.error = result.error || null;
+    return config;
   }
 
   async show({ activeTabLabel, apiSpec }: ShowOptions) {
