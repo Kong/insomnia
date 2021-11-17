@@ -21,11 +21,11 @@ export const ascendingNameSort: SortFunction<{name: string}> = (a, b) => {
   return a.name.localeCompare(b.name);
 };
 
-const descendingNameSort: SortFunction<{name: string}> = (a, b) => {
+export const descendingNameSort: SortFunction<{name: string}> = (a, b) => {
   return b.name.localeCompare(a.name);
 };
 
-const createdFirstSort: SortFunction<{created: number}> = (a, b) => {
+export const createdFirstSort: SortFunction<{created: number}> = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
@@ -33,7 +33,7 @@ const createdFirstSort: SortFunction<{created: number}> = (a, b) => {
   return a.created < b.created ? -1 : 1;
 };
 
-const createdLastSort: SortFunction<{created: number}> = (a, b) => {
+export const createdLastSort: SortFunction<{created: number}> = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
@@ -41,7 +41,7 @@ const createdLastSort: SortFunction<{created: number}> = (a, b) => {
   return a.created > b.created ? -1 : 1;
 };
 
-const ascendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
+export const ascendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
   if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
     return 0;
   }
@@ -49,7 +49,7 @@ const ascendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a,
   return a.lastModifiedTimestamp < b.lastModifiedTimestamp ? -1 : 1;
 };
 
-const descendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
+export const descendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
   if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
     return 0;
   }
@@ -57,7 +57,7 @@ const descendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a
   return a.lastModifiedTimestamp > b.lastModifiedTimestamp ? -1 : 1;
 };
 
-const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
+export const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   // Sort Requests and GrpcRequests to top, in that order
   if (a.type !== b.type) {
     if (isRequest(a) || isRequest(b)) {
@@ -92,7 +92,7 @@ const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | 
   return metaSortKeySort(a, b);
 };
 
-const ascendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
+export const ascendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
     return isRequestGroup(b) ? -1 : 1;
   }
@@ -100,7 +100,7 @@ const ascendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey'
   return metaSortKeySort(a, b);
 };
 
-const descendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
+export const descendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
     return isRequestGroup(a) ? -1 : 1;
   }

@@ -18,6 +18,7 @@ import {
 } from './constants';
 import { database as db } from './database';
 import { diffPatchObj, fnOrString, generateId } from './misc';
+import { strings } from './strings';
 
 export interface ImportResult {
   source: string;
@@ -77,8 +78,7 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   if (error) {
     showError({
       title: 'Failed to import',
-      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-      error: error.message,
+      error,
       message: 'Import failed',
     });
     return result;
@@ -163,12 +163,24 @@ export async function importRaw(
     return baseEnvironment._id;
   };
 
+  // NOTE: Although the order of the imported resources is not guaranteed,
+  // all current importers will produce resources in this order:
+  // Workspace > Environment > RequestGroup > Request
   // Import everything backwards so they get inserted in the correct order
   data.resources.reverse();
   const importedDocs = {};
 
   for (const model of models.all()) {
     importedDocs[model.type] = [];
+  }
+
+  // Add a workspace to the resources if it doesn't exist
+  // NOTE: The workspace should be the last item of the resources
+  if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
+    data.resources.push({
+      _id: WORKSPACE_ID_KEY,
+      _type: EXPORT_TYPE_WORKSPACE,
+    });
   }
 
   for (const resource of data.resources) {
@@ -260,6 +272,17 @@ export async function importRaw(
       // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
+
+        // If the workspace doesn't have a name, update the default name based on it's scope
+        if (!resource.name) {
+          const name =
+            (resource as Workspace).scope === 'collection'
+              ? `My ${strings.collection.singular}`
+              : `My ${strings.document.singular}`;
+
+          resource.name = name;
+        }
+
         await createWorkspaceInProject(resource as Workspace, getProjectId);
       }
 

@@ -1,8 +1,9 @@
 import faker from 'faker';
+import { Application } from 'spectron';
 
 import * as debug from './debug';
+import * as design from './design';
 import * as dropdown from './dropdown';
-import findAsync from './find-async';
 import * as modal from './modal';
 
 export const documentListingShown = async app => {
@@ -14,17 +15,19 @@ export const expectDocumentWithTitle = async (app, title) => {
   await app.client.waitUntilTextExists('.document-listing__body', title);
 };
 
-export const findCardWithTitle = async (app, text) => {
-  let card;
-  await app.client.waitUntil(async () => {
-    const cards = await app.client.react$$('Card');
-    card = await findAsync(
-      cards,
-      async i => (await i.react$('CardBody').then(e => e.$('.title')).then(e => e.getText())) === text,
-    );
-    return !!card;
-  });
-  return card;
+export const findCardWithTitle = async (app: Application, text: string) => {
+  const cards = await app.client.react$$('Card');
+
+  for (const card of cards) {
+    const cardTitle = await card.$('.title');
+
+    const title = await cardTitle.getText();
+    if (title === text) {
+      return card;
+    }
+  }
+
+  throw new Error(`Card with title: ${text} not found`);
 };
 
 export const cardHasBadge = async (card, text) => {
@@ -32,12 +35,19 @@ export const cardHasBadge = async (card, text) => {
   expect(await badge.getText()).toBe(text);
 };
 
-export const openDocumentWithTitle = async (app, text) => {
+export const openDocumentWithTitle = async (app: Application, text: string) => {
   const card = await findCardWithTitle(app, text);
+  const cardBadge = await card.$('.header-item.card-badge');
+  const isCollection = await cardBadge.getText() === 'Collection';
   await card.waitForDisplayed();
   await card.click();
 
-  await debug.pageDisplayed(app);
+  if (isCollection) {
+    await debug.pageDisplayed(app);
+  } else {
+    await design.goToActivity(app, 'spec');
+    await design.pageDisplayed(app);
+  }
 };
 
 export const expectTotalDocuments = async (app, count) => {

@@ -414,6 +414,10 @@ class General extends PureComponent<Props, State> {
                 value: HttpVersions.V1_1,
               },
               {
+                name: 'HTTP/2 PriorKnowledge',
+                value: HttpVersions.V2PriorKnowledge,
+              },
+              {
                 name: 'HTTP/2',
                 value: HttpVersions.V2_0,
               }, // Enable when our version of libcurl supports HTTP/3
