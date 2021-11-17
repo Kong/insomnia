@@ -71,11 +71,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
+  const { start } = handleAction;
+
   const _handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (method && !running) {
-      executeHotKey(e, hotKeyRefs.REQUEST_SEND, () => handleAction.start());
+      executeHotKey(e, hotKeyRefs.REQUEST_SEND, start);
     }
-  }, [method, running, handleAction]);
+  }, [method, running, start]);
 
   return (
     <KeydownBinder onKeydown={_handleKeyDown}>
