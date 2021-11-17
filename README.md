@@ -118,7 +118,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 ## Develop Inso CLI
 
 - Bootstrap: `npm run bootstrap`
-- Start the compiler in watch mode: `npx lerna --scope insomnia-inso exec 'npm run start'`
+- Start the compiler in watch mode: `npm run inso-start`
 - Run: `./packages/insomnia-inso/bin/inso -v`
 
 ## Plugins
