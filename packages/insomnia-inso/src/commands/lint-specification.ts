@@ -45,7 +45,7 @@ export async function lintSpecification(
       return false;
     }
   } catch (e) {
-    let errorMessage = "Failed to load linting specification."
+    let errorMessage = 'Failed to load linting specification.';
     if (e instanceof Error) {
       errorMessage = e.message;
     }
