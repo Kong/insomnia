@@ -1,20 +1,27 @@
+import { Application } from 'spectron';
 import { mapAccelerator } from 'spectron-keys';
 
 import * as dropdown from './dropdown';
 import * as modal from './modal';
 import { clickTabByText } from './tabs';
 
-export const openWithKeyboardShortcut = async app => {
+export const openFromSettingsButton = async (app: Application) => {
+  await (await app.client.$('[data-testid="settings-button"]')).click();
+
+  await modal.waitUntilOpened(app, { modalName: 'SettingsModal' });
+};
+
+export const openWithKeyboardShortcut = async (app: Application) => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
 
   await modal.waitUntilOpened(app, { modalName: 'SettingsModal' });
 };
 
-export const closeModal = async app => {
+export const closeModal = async (app: Application) => {
   await modal.close(app, 'SettingsModal');
 };
 
-export const goToPlugins = async app => {
+export const goToPluginsTab = async (app: Application) => {
   // Click on the plugins tab
   await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Plugins'));
 
@@ -22,19 +29,19 @@ export const goToPlugins = async app => {
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
 };
 
-export const importFromClipboard = async (app, newWorkspace = false) => {
-  const importExport = await app.client.react$('ImportExport');
+export const goToDataTab = async (app: Application) => {
+  await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Data'));
+
+  await app.client.$('[data-testid="import-export-tab"]').then(e => e.waitForDisplayed());
+};
+
+export const importFromClipboard = async (app: Application) => {
+  const importExport = await app.client.$('[data-testid="import-export-tab"]');
   await importExport.waitForDisplayed();
 
   await importExport.$('button*=Import Data').then(e => e.click());
 
   await dropdown.clickOpenDropdownItemByText(app, 'From Clipboard');
-
-  await modal.clickModalFooterByText(app, newWorkspace ? 'New Workspace' : 'Current');
-
-  if (newWorkspace) {
-    await modal.clickModalFooterByText(app, 'Request Collection');
-  }
 };
 
 export const installPlugin = async (app, pluginName) => {

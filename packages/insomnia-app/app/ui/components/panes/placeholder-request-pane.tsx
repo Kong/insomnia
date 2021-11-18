@@ -3,6 +3,7 @@ import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
+import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importFile } from '../../redux/modules/import';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
@@ -19,7 +20,7 @@ export const PlaceholderRequestPane: FC<Props> = ({
 }) => {
   const dispatch = useDispatch();
   const workspaceId = useSelector(selectActiveWorkspace)?._id;
-  const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId })), [workspaceId, dispatch]);
+  const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId, forceToWorkspace: ForceToWorkspace.current })), [workspaceId, dispatch]);
 
   return (
     <Pane type="request">
