@@ -305,7 +305,7 @@ export const SORT_ORDERS = [
   SORT_HTTP_METHOD,
   SORT_TYPE_DESC,
   SORT_TYPE_ASC,
-];
+] as const;
 export const sortOrderName: Record<SortOrder, string> = {
   [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
   [SORT_NAME_DESC]: 'Name Descending (Z-A)',
