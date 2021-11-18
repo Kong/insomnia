@@ -37,7 +37,7 @@ See the [open-source Inso CLI documentation](https://docs.insomnia.rest/inso-cli
 4. (Optional) Create an alias for the containerised version of `inso`, e.g. `alias inso-docker="docker run -it --rm insomnia-inso:dev"`.
 5. (Optional) Try to run an `inso` command, e.g. `inso-docker help`
 
-In order to run Insomnia specs in a container, you'll need to mount the specs folder on your most machine to a given folder on the container. Examples:
+In order to run Insomnia specs in a container, you'll need to mount the specs folder on your host machine to a given folder on the container. Examples:
 
 - Mounting an Insomnia git sync repository folder to a folder on the container:
 
