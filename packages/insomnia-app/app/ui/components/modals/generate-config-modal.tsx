@@ -59,6 +59,7 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
       content: '',
       mimeType: 'text/yaml',
       label: generatePlugin.label,
+      docsLink: generatePlugin.docsLink,
       error: null,
     };
     let result;
