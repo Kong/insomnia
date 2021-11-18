@@ -20,9 +20,3 @@
 ## Documentation
 
 See the [open-source Inso CLI documentation](https://docs.insomnia.rest/inso-cli/introduction).
-
-## Development
-
-- Bootstrap: `npm run bootstrap`
-- Start the compiler in watch mode: `npm run start`
-- Run: `./bin/inso -v`
