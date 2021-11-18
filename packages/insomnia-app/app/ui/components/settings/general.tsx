@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as fontScanner from 'font-scanner';
 import { HttpVersion, HttpVersions } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -37,11 +36,6 @@ import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { MaskedSetting } from './masked-setting';
 
-// Font family regex to match certain monospace fonts that don't get
-// recognized as monospace
-
-const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
-
 interface Props {
   settings: Settings;
   hideModal: () => void;
@@ -49,39 +43,8 @@ interface Props {
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 
-interface State {
-  fonts: {
-    family: string;
-    monospace: boolean;
-  }[] | null;
-  fontsMono: {
-    family: string;
-    monospace: boolean;
-  }[] | null;
-}
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class General extends PureComponent<Props, State> {
-  state: State = {
-    fonts: null,
-    fontsMono: null,
-  };
-
-  async componentDidMount() {
-    const allFonts = await fontScanner.getAvailableFonts();
-    // Find regular fonts
-    const fonts = allFonts
-      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
-      .sort((a, b) => (a.family > b.family ? 1 : -1));
-    // Find monospaced fonts
-    // NOTE: Also include some others:
-    //  - https://github.com/Kong/insomnia/issues/1835
-    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
-    this.setState({
-      fonts,
-      fontsMono,
-    });
-  }
+class General extends PureComponent<Props> {
 
   async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;

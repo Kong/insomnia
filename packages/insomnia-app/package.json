@@ -92,7 +92,6 @@
     "electron-context-menu": "^2.2.0",
     "electron-log": "^4.3.5",
     "electron-updater": "^4.3.9",
-    "font-scanner": "^0.1.2",
     "framer-motion": "^1.11.1",
     "fs-extra": "^5.0.0",
     "fuzzysort": "^1.1.1",
