@@ -182,21 +182,8 @@ class General extends PureComponent<Props, State> {
     return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
   }
 
-  formFontstring(fonts:{family:string}[]):string {
-    let fontsList = '';
-    for (const font of fonts){
-      fontsList += (font.family.includes(' ')) ? `\'${font.family}\'` : font.family;
-      fontsList += ' , ';
-    }
-    return fontsList;
-  }
-
   render() {
     const { settings } = this.props;
-    const { fontsMono } = this.state;
-
-    const fontsMonoString:string | null = (fontsMono) ? this.formFontstring(fontsMono) : null;
-
     return (
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
@@ -284,14 +271,13 @@ class General extends PureComponent<Props, State> {
 
         <div className="form-row pad-top-sm">
           <div className="form-row">
-
             {this.renderTextSetting(
               'Interface Font',
               'fontInterface',
-              'Comma-separated list of fonts. if empty - takes system defaults',
+              'Comma-separated list of fonts. If left empty, takes system defaults.',
               {
                 placeholder: '-- System Default --',
-                onChange:this._handleFontChange,
+                onChange: this._handleFontChange,
               },
             )}
             {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
@@ -303,14 +289,13 @@ class General extends PureComponent<Props, State> {
         </div>
 
         <div className="form-row">
-
           {this.renderTextSetting(
             'Text Editor Font',
             'fontMonospace',
-            `Comma-separated list of monospase fonts. if empty - takes system defaults. There is list of Monospace fonts in your system: ${fontsMonoString}`,
+            'Comma-separated list of monospace fonts. If left empty, takes system defaults.',
             {
               placeholder: '-- System Default --',
-              onChange:this._handleFontChange,
+              onChange: this._handleFontChange,
             },
           )}
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
