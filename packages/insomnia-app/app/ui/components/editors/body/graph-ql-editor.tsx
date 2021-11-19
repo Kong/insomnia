@@ -18,6 +18,8 @@ import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
+import { hotKeyRefs } from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
@@ -36,6 +38,7 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
+import { KeydownBinder } from '../../keydown-binder';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
@@ -190,6 +193,10 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       explorerVisible: false,
     });
+  }
+
+  _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
   }
 
   _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
@@ -726,6 +733,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
     return (
       <div className="graphql-editor">
+        <KeydownBinder onKeydown={this._handleKeyDown} />
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
           <DropdownButton className="space-left btn btn--micro btn--outlined">

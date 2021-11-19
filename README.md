@@ -27,7 +27,11 @@ For more generic product questions and feedback, join the [Slack Team](https://c
 
 Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). Included are directions for opening issues, coding standards, and notes on development.
 
-## Developing
+## Documentation
+
+Check out our open-source [Insomnia Documentation](https://docs.insomnia.rest/).
+
+## Develop Insomnia app
 
 Development on Insomnia can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
 
@@ -111,9 +115,15 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 </details>
 
+## Develop Inso CLI
+
+- Bootstrap: `npm run bootstrap`
+- Start the compiler in watch mode: `npm run inso-start`
+- Run: `./packages/insomnia-inso/bin/inso -v`
+
 ## Plugins
 
-Search, discover, and install plugins from the Insomnia [Plugin Hub](https://insomnia.rest/plugins/)!
+Search for, discover, and install plugins from the Insomnia [Plugin Hub](https://insomnia.rest/plugins/)!
 
 ## Community Projects
 

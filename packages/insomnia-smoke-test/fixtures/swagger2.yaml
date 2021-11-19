@@ -11,6 +11,9 @@ tags:
 paths:
   /pets/1:
     get:
+      responses:
+        "200":
+          "description": string
       summary: get pet by id
       operationId: findPetById
       tags:

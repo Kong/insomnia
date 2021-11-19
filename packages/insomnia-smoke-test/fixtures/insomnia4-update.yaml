@@ -1,0 +1,103 @@
+_type: export
+__export_format: 4
+__export_date: 2021-10-22T15:04:47.537Z
+__export_source: insomnia.desktop.app:v2021.5.3
+resources:
+  - _id: req_07b45021d3824dbf9a4b3547e5fc1abc
+    parentId: fld_ca610f1e756d4f7387395f78f6a9d7e1
+    modified: 1634915072194
+    created: 1634914887774
+    url: "{{ _.base_url }}/sleep"
+    name: Get Sleep
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1634914887774
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_18c56132e4935ecg0b5c3547e5fc1abc
+    parentId: fld_ca610f1e756d4f7387395f78f6a9d7e1
+    modified: 1634915072194
+    created: 1634914887774
+    url: "{{ _.base_url }}/sleep"
+    name: Get Sleep 2
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1634914887774
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: fld_ca610f1e756d4f7387395f78f6a9d7e1
+    parentId: wrk_6040310dc0b342c5b2106d451c65a3ab
+    modified: 1634915069629
+    created: 1634915069629
+    name: Actions
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1634915069629
+    _type: request_group
+  - _id: wrk_6040310dc0b342c5b2106d451c65a3ab
+    parentId: null
+    modified: 1626208996457
+    created: 1626208996457
+    name: Insomnia
+    description: ""
+    _type: workspace
+  - _id: env_6aa24926e40c34f11b497374cd4faade781b2d7c
+    parentId: wrk_6040310dc0b342c5b2106d451c65a3ab
+    modified: 1634914817922
+    created: 1626208996494
+    name: Base Environment
+    data:
+      base_url: "{{ scheme }}://{{ host }}{{ base_path }}"
+    dataPropertyOrder:
+      "&":
+        - base_url
+    color: null
+    isPrivate: false
+    metaSortKey: 1626208996494
+    _type: environment
+  - _id: jar_6aa24926e40c34f11b497374cd4faade781b2d7c
+    parentId: wrk_6040310dc0b342c5b2106d451c65a3ab
+    modified: 1626208996496
+    created: 1626208996496
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: env_f7853bd328154f5a9ca0d362a7126c8d
+    parentId: env_6aa24926e40c34f11b497374cd4faade781b2d7c
+    modified: 1634914828784
+    created: 1634914792780
+    name: Insomnia Environment
+    data:
+      base_path: ""
+      scheme: http
+      host: 127.0.0.1:4010
+    dataPropertyOrder:
+      "&":
+        - base_path
+        - scheme
+        - host
+    color: null
+    isPrivate: false
+    metaSortKey: 1634914792780
+    _type: environment

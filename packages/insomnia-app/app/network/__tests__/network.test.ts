@@ -748,6 +748,7 @@ describe('actuallySend()', () => {
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
     expect(networkUtils.getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
     expect(networkUtils.getHttpVersion(HttpVersions.v3).curlHttpVersion).toBe(CurlHttpVersion.v3);
     expect(networkUtils.getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
