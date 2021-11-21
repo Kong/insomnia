@@ -135,7 +135,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
         tags,
       });
 
-      const plugins = [...regularPlugins, ...securityPlugins];
+      const plugins = [...regularPlugins, ...securityPlugins].filter(p => p.enabled);
       // Add plugins if there are any
       if (plugins.length) {
         route.plugins = plugins;
