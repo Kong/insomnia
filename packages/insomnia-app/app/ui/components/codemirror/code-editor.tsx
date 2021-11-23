@@ -590,6 +590,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       this.codeMirror?.clearHistory();
 
       // Setup nunjucks listeners
+      // TODO: we shouldn't need to set setup nunjucks if we're in readonly mode
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
         this.codeMirror?.enableNunjucksTags(
           this.props.render,

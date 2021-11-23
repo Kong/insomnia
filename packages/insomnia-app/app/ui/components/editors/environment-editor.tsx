@@ -59,14 +59,9 @@ export interface EnvironmentInfo {
 interface Props {
   environmentInfo: EnvironmentInfo;
   didChange: (...args: any[]) => any;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
   render: (...args: any[]) => any;
   getRenderContext: (...args: any[]) => any;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  lineWrapping: boolean;
 }
 
 // There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
@@ -145,14 +140,9 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
   render() {
     const {
       environmentInfo,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
       render,
       getRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
-      lineWrapping,
       ...props
     } = this.props;
     const { error } = this.state;
@@ -166,13 +156,8 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
         <CodeEditor
           ref={this._setEditorRef}
           autoPrettify
-          fontSize={editorFontSize}
-          indentSize={editorIndentSize}
-          lineWrapping={lineWrapping}
-          keyMap={editorKeyMap}
           onChange={this._handleChange}
           defaultValue={defaultValue}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           render={render}
           getRenderContext={getRenderContext}

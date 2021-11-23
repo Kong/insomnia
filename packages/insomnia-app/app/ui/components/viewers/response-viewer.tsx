@@ -30,10 +30,6 @@ export interface ResponseViewerProps {
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   download: (...args: any[]) => any;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   filter: string;
   filterHistory: string[];
   getBody: (...args: any[]) => any;
@@ -283,10 +279,6 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       disableHtmlPreviewJs,
       disablePreviewLinks,
       download,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       error: responseError,
       filter,
       filterHistory,
@@ -301,7 +293,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     if (error) {
       return (
         <div className="scrollable tall">
-          <ResponseErrorViewer url={url} error={error} fontSize={editorFontSize} />
+          <ResponseErrorViewer url={url} error={error} />
         </div>
       );
     }
@@ -414,10 +406,6 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
           disableHtmlPreviewJs={disableHtmlPreviewJs}
           disablePreviewLinks={disablePreviewLinks}
           download={download}
-          editorFontSize={editorFontSize}
-          editorIndentSize={editorIndentSize}
-          editorKeyMap={editorKeyMap}
-          editorLineWrapping={editorLineWrapping}
           filter={filter}
           filterHistory={filterHistory}
           key={responseId}
@@ -446,7 +434,6 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
           responseId={responseId}
           ref={this._setSelectableViewRef}
           value={this._getBody()}
-          fontSize={editorFontSize}
         />
       );
     }
@@ -460,10 +447,6 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
         defaultValue={this._getBody()}
         filter={filter}
         filterHistory={filterHistory}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
-        lineWrapping={editorLineWrapping}
         mode={this._getMode()}
         noMatchBrackets
         onClickLink={disablePreviewLinks ? undefined : this._handleClickLink}

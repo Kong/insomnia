@@ -7,9 +7,6 @@ import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
   response: Response;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorLineWrapping: boolean;
 }
 
 interface State {
@@ -96,7 +93,6 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   }
 
   render() {
-    const { editorFontSize, editorIndentSize, editorLineWrapping } = this.props;
     const { timeline, timelineKey } = this.state;
     const rows = timeline
       .map(this.renderRow)
@@ -110,9 +106,6 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
         readOnly
         onClickLink={clickLink}
         defaultValue={rows}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        lineWrapping={editorLineWrapping}
         className="pad-left"
         mode="curl"
       />
