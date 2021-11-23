@@ -1,9 +1,9 @@
+import { KeyCombination } from 'insomnia-common';
 import path from 'path';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import appConfig from '../../config/config.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
-import { KeyCombination } from './hotkeys';
 
 // App Stuff
 export const getAppVersion = () => appConfig.version;
