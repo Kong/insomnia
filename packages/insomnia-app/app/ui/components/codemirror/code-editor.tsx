@@ -164,6 +164,7 @@ interface Props extends ReduxProps {
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
+  // TODO: I think this prop can actually be removed entirely
   isVariableUncovered?: boolean;
   raw?: boolean;
 }

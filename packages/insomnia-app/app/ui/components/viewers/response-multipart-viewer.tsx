@@ -296,6 +296,7 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
               disableHtmlPreviewJs={disableHtmlPreviewJs}
               disablePreviewLinks={disablePreviewLinks}
               download={download}
+              editorFontSize={editorFontSize}
               error={null}
               filter={filter}
               filterHistory={filterHistory}

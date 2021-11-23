@@ -48,9 +48,6 @@ interface Props {
   filterHistory: string[];
   disableHtmlPreviewJs: boolean;
   editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   loadStartTime: number;
   responses: Response[];
   hotKeyRegistry: HotKeyRegistry;
@@ -229,9 +226,6 @@ export class ResponsePane extends PureComponent<Props> {
     const {
       disableHtmlPreviewJs,
       editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       environment,
       filter,
       disableResponsePreviewLinks,
@@ -336,9 +330,6 @@ export class ResponsePane extends PureComponent<Props> {
               disablePreviewLinks={disableResponsePreviewLinks}
               download={this._handleDownloadResponseBody}
               editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-              editorKeyMap={editorKeyMap}
-              editorLineWrapping={editorLineWrapping}
               error={response.error}
               filter={filter}
               filterHistory={filterHistory}
@@ -373,9 +364,6 @@ export class ResponsePane extends PureComponent<Props> {
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
                 response={response}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
               />
             </ErrorBoundary>
           </TabPanel>

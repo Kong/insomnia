@@ -33,7 +33,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
@@ -49,7 +48,6 @@ export class AuthWrapper extends PureComponent<Props> {
       request,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
@@ -64,7 +62,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
@@ -77,7 +74,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -90,7 +86,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -101,7 +96,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           showPasswords={showPasswords}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -114,7 +108,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
@@ -126,7 +119,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -139,7 +131,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -151,7 +142,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
@@ -165,7 +155,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />

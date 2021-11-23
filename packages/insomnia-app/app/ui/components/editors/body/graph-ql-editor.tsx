@@ -665,7 +665,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       content,
       render,
       getRenderContext,
-      settings,
       className,
       uniquenessKey,
       isVariableUncovered,

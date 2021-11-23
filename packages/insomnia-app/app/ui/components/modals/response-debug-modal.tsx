@@ -4,15 +4,10 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
-import type { Settings } from '../../../models/settings';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-
-interface Props {
-  settings: Settings;
-}
 
 interface State {
   response: Response | null;
@@ -20,7 +15,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseDebugModal extends PureComponent<Props, State> {
+export class ResponseDebugModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -48,7 +43,6 @@ export class ResponseDebugModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { settings } = this.props;
     const { response, title } = this.state;
     return (
       <Modal ref={this._setModalRef} tall>
@@ -62,9 +56,6 @@ export class ResponseDebugModal extends PureComponent<Props, State> {
           >
             {response ? (
               <ResponseTimelineViewer
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorLineWrapping={settings.editorLineWrapping}
                 response={response}
               />
             ) : (

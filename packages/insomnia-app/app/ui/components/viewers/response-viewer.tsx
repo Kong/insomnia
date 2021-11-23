@@ -30,6 +30,7 @@ export interface ResponseViewerProps {
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   download: (...args: any[]) => any;
+  editorFontSize: number;
   filter: string;
   filterHistory: string[];
   getBody: (...args: any[]) => any;
@@ -279,6 +280,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       disableHtmlPreviewJs,
       disablePreviewLinks,
       download,
+      editorFontSize,
       error: responseError,
       filter,
       filterHistory,
@@ -406,6 +408,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
           disableHtmlPreviewJs={disableHtmlPreviewJs}
           disablePreviewLinks={disablePreviewLinks}
           download={download}
+          editorFontSize={editorFontSize}
           filter={filter}
           filterHistory={filterHistory}
           key={responseId}

@@ -52,7 +52,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   environmentId,
   workspaceId,
   forceRefreshKey,
-  settings,
   handleRender,
   handleGetRenderContext,
   isVariableUncovered,
@@ -83,7 +82,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               placeholder="grpcb.in:9000"
               onChange={handleChange.url}
               render={handleRender}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={getExistingGrpcUrls}
               getRenderContext={handleGetRenderContext}
@@ -121,7 +119,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <TabPanel className="react-tabs__tab-panel">
               <GrpcTabbedMessages
                 uniquenessKey={uniquenessKey}
-                settings={settings}
                 tabNamePrefix="Stream"
                 messages={requestMessages}
                 bodyText={activeRequest.body.text}

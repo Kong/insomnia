@@ -14,7 +14,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
@@ -43,7 +42,6 @@ export class DigestAuth extends PureComponent<Props> {
       request,
       showPasswords,
       handleRender,
-      nunjucksPowerUserMode,
       handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
@@ -70,7 +68,6 @@ export class DigestAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
                     isVariableUncovered={isVariableUncovered}
@@ -90,7 +87,6 @@ export class DigestAuth extends PureComponent<Props> {
                   disabled={authentication.disabled}
                   password={authentication.password}
                   onChange={this._handleChangePassword}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
