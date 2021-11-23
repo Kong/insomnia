@@ -1,7 +1,6 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
-import { createdFirstSort } from '../../../common/sorting';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
@@ -169,23 +168,37 @@ describe('selectors', () => {
         activeWorkspaceId: null,
       });
 
-      // NOTE: Sometimes the order of the entities loaded by the db is different so we need to sort them.
+      const workspaces = selectWorkspacesWithResolvedNameForActiveProject(state);
+
+      const designWorkspace = workspaces.find(
+        workspace => workspace._id === newDesignWorkspace._id
+      );
+
+      const collectionWorkspace = workspaces.find(
+        workspace => workspace._id === newCollectionWorkspace._id
+      );
+
       expect(
-        selectWorkspacesWithResolvedNameForActiveProject(state).sort(createdFirstSort)
-      ).toMatchObject([
-        {
-          _id: newCollectionWorkspace._id,
-          name: 'collectionWorkspace.name',
-          scope: 'collection',
-          type: 'Workspace',
-        },
+        designWorkspace
+      ).toMatchObject(
         {
           _id: newDesignWorkspace._id,
           name: 'apiSpec.name',
-          scope: 'design',
+          scope: WorkspaceScopeKeys.design,
           type: 'Workspace',
         },
-      ]);
+      );
+
+      expect(
+        collectionWorkspace
+      ).toMatchObject(
+        {
+          _id: newCollectionWorkspace._id,
+          name: 'collectionWorkspace.name',
+          scope: WorkspaceScopeKeys.collection,
+          type: 'Workspace',
+        },
+      );
     });
   });
 });
