@@ -95,16 +95,30 @@ export type CodeEditorOnChange = (value: string) => void;
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
 const mapStateToProps = (state: RootState) => {
-  const { hotKeyRegistry, autocompleteDelay } = selectSettings(state);
+  const {
+    hotKeyRegistry,
+    autocompleteDelay,
+    editorFontSize,
+    editorIndentSize,
+    editorKeyMap,
+    editorLineWrapping,
+    editorIndentWithTabs,
+    nunjucksPowerUserMode,
+  } = selectSettings(state);
 
   return {
     hotKeyRegistry,
     autocompleteDelay,
+    fontSize: editorFontSize,
+    indentSize: editorIndentSize,
+    keyMap: editorKeyMap,
+    lineWrapping: editorLineWrapping,
+    indentWithTabs: editorIndentWithTabs,
+    nunjucksPowerUserMode,
   };
 };
 
 interface Props extends ReduxProps {
-  indentWithTabs?: boolean;
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
   onFocus?: (e: FocusEvent) => void;
@@ -116,21 +130,16 @@ interface Props extends ReduxProps {
   onPaste?: (e: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
   render?: HandleRender;
-  nunjucksPowerUserMode?: boolean;
   getRenderContext?: HandleGetRenderContext;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
-  keyMap?: string;
   mode?: string;
   id?: string;
   placeholder?: string;
-  lineWrapping?: boolean;
   hideLineNumbers?: boolean;
   hideGutters?: boolean;
   noMatchBrackets?: boolean;
   hideScrollbars?: boolean;
-  fontSize?: number;
-  indentSize?: number;
   defaultValue?: string;
   tabIndex?: number;
   autoPrettify?: boolean;
