@@ -164,9 +164,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
-          <DropdownDivider>
-            {getAppName()} v{getAppVersion()}
-          </DropdownDivider>
+          
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
