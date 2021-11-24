@@ -173,6 +173,7 @@ describe('grpc', () => {
             body: {
               text: '{}',
             },
+            metadata: [],
           })
           .build();
         const unaryMethod = methodBuilder.requestStream(false).responseStream(false).build();
@@ -209,6 +210,7 @@ describe('grpc', () => {
             body: {
               text: '{}',
             },
+            metadata: [],
           })
           .build();
         const unaryMethod = methodBuilder.requestStream(false).responseStream(false).build();
@@ -247,6 +249,7 @@ describe('grpc', () => {
             body: {
               text: undefined,
             },
+            metadata: [],
           })
           .build();
         const serverMethod = methodBuilder.requestStream(false).responseStream(true).build();
@@ -271,6 +274,7 @@ describe('grpc', () => {
             body: {
               text: '{}',
             },
+            metadata: [],
           })
           .build();
         const serverMethod = methodBuilder.requestStream(false).responseStream(true).build();

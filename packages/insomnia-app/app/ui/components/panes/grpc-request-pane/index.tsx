@@ -9,6 +9,9 @@ import { useGrpc } from '../../../context/grpc';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
+import { RequestHeadersEditor } from '../../editors/request-headers-editor';
+import { ErrorBoundary } from '../../error-boundary';
+import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
@@ -135,7 +138,22 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel">
-              <h4 className="pad">Coming soon! 😊</h4>
+              <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                <KeyValueEditor
+                  sortable
+                  namePlaceholder="header"
+                  valuePlaceholder="value"
+                  descriptionPlaceholder="description"
+                  pairs={activeRequest.metadata}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  isVariableUncovered={isVariableUncovered}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
+                  handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}
+                  onChange={handleChange.metadata}
+                />
+              </ErrorBoundary>
             </TabPanel>
           </Tabs>
         )}

@@ -4,7 +4,7 @@ import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
-import type { GrpcRequest } from '../../models/grpc-request';
+import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import callCache from './call-cache';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
@@ -37,6 +37,7 @@ const _makeUnaryRequest = (
     method: { path, requestSerialize, responseDeserialize },
     client,
     respond,
+    metadata,
   }: RequestData,
   bodyText: string,
 ): Call | undefined => {
@@ -50,12 +51,15 @@ const _makeUnaryRequest = (
     return;
   }
 
-  // Make call
+  const grpcMetadata = _parseMetadata(metadata);
+
+  // eslint-disable-next-line consistent-return
   return client.makeUnaryRequest(
     path,
     requestSerialize,
     responseDeserialize,
     messageBody,
+    grpcMetadata,
     callback,
   );
 };
@@ -121,6 +125,7 @@ interface RequestData {
   respond: ResponseCallbacks;
   client: ServiceClient;
   method: GrpcMethodDefinition;
+  metadata: GrpcRequestHeader[];
 }
 
 export const start = async (
@@ -128,6 +133,7 @@ export const start = async (
   respond: ResponseCallbacks,
 ) => {
   const requestId = request._id;
+  const metadata = request.metadata;
   const method = await protoLoader.getSelectedMethod(request);
 
   if (!method) {
@@ -152,6 +158,7 @@ export const start = async (
     client,
     method,
     respond,
+    metadata,
   };
   let call;
 
@@ -278,4 +285,18 @@ const _parseMessage = (
     respond.sendError(requestId, e);
     return undefined;
   }
+};
+
+const _parseMetadata = (
+  metadata: GrpcRequestHeader[]
+): grpc.Metadata => {
+  const grpcMetadata = new grpc.Metadata({});
+  if (metadata) {
+    for (const entry of metadata) {
+      if (!entry.disabled) {
+        grpcMetadata.add(entry.name, entry.value);
+      }
+    }
+  }
+  return grpcMetadata;
 };
