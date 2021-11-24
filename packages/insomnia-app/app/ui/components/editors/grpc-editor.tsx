@@ -1,6 +1,5 @@
 import React, { FunctionComponent } from 'react';
 
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { Settings } from '../../../models/settings';
 import { CodeEditor } from '../codemirror/code-editor';
 
@@ -9,9 +8,7 @@ interface Props {
   handleChange?: (arg0: string) => void;
   settings: Settings;
   readOnly?: boolean;
-  handleRender?: HandleRender;
   isVariableUncovered?: boolean;
-  handleGetRenderContext?: HandleGetRenderContext;
 }
 
 export const GRPCEditor: FunctionComponent<Props> = ({
@@ -19,8 +16,6 @@ export const GRPCEditor: FunctionComponent<Props> = ({
   handleChange,
   readOnly,
   settings,
-  handleGetRenderContext,
-  handleRender,
   isVariableUncovered,
 }) => (
   <CodeEditor
@@ -35,8 +30,6 @@ export const GRPCEditor: FunctionComponent<Props> = ({
     readOnly={readOnly}
     autoPrettify={readOnly}
     manualPrettify={!readOnly}
-    render={handleRender}
-    getRenderContext={handleGetRenderContext}
     isVariableUncovered={isVariableUncovered}
     nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
   />

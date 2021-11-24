@@ -1,15 +1,18 @@
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
+
+import { HandleRender } from '../../common/render';
+import { useRenderTemplate } from '../hooks/use-render-template';
 
 interface Props {
   children: string;
-  render: (...args: any[]) => any;
+  render: HandleRender;
 }
 interface State {
   renderedText: string;
   error: string;
 }
 
-export class RenderedText extends PureComponent<Props, State> {
+class InternalRenderedText extends PureComponent<Props, State> {
   state: State = {
     renderedText: '',
     error: '',
@@ -61,3 +64,9 @@ export class RenderedText extends PureComponent<Props, State> {
     }
   }
 }
+
+export const RenderedText: FC<Omit<Props, 'render'>> = props => {
+  const { handleRender } = useRenderTemplate();
+
+  return <InternalRenderedText {...props} render={handleRender}/>;
+};

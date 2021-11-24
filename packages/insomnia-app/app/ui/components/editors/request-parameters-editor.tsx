@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { Request, RequestParameter } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -15,8 +14,6 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
 }
 
@@ -85,15 +82,11 @@ export class RequestParametersEditor extends PureComponent<Props> {
       editorFontSize,
       editorIndentSize,
       editorLineWrapping,
-      handleRender,
-      handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <CodeEditor
-        getRenderContext={handleGetRenderContext}
-        render={handleRender}
         nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         fontSize={editorFontSize}
@@ -112,8 +105,6 @@ export class RequestParametersEditor extends PureComponent<Props> {
         pairs={request.parameters}
         nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
         onChange={this._handleKeyValueUpdate}
       />
     );

@@ -80,8 +80,6 @@ export class AsapAuth extends PureComponent<Props> {
     onChange: (...args: any[]) => any,
   ): ReactElement<any> {
     const {
-      handleRender,
-      handleGetRenderContext,
       request,
       nunjucksPowerUserMode,
       isVariableUncovered,
@@ -107,8 +105,6 @@ export class AsapAuth extends PureComponent<Props> {
               onChange={onChange}
               defaultValue={authentication[property] || ''}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

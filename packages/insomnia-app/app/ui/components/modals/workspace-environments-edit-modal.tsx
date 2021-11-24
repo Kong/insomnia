@@ -6,7 +6,6 @@ import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'r
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
@@ -33,8 +32,6 @@ interface Props extends ModalProps {
   editorIndentSize: number;
   editorKeyMap: string;
   lineWrapping: boolean;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
 }
@@ -436,11 +433,9 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      getRenderContext,
       isVariableUncovered,
       lineWrapping,
       nunjucksPowerUserMode,
-      render,
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
@@ -595,8 +590,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                 key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
                 environmentInfo={environmentInfo}
                 didChange={this._didChange}
-                render={render}
-                getRenderContext={getRenderContext}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
               />

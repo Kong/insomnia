@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
@@ -19,8 +18,6 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
 }
 
@@ -110,16 +107,12 @@ export class RequestHeadersEditor extends PureComponent<Props> {
       editorFontSize,
       editorIndentSize,
       editorLineWrapping,
-      handleRender,
-      handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <div className="tall">
         <CodeEditor
-          getRenderContext={handleGetRenderContext}
-          render={handleRender}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           fontSize={editorFontSize}
@@ -140,8 +133,6 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             pairs={request.headers}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
             handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
             handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}
             onChange={this._handleKeyValueUpdate}

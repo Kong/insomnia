@@ -2,8 +2,8 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Workspace } from '../../../models/workspace';
+import { RenderTemplateWrapper } from '../../containers/template-render-wrapper';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -13,8 +13,6 @@ import { VariableEditor } from '../templating/variable-editor';
 
 interface Props {
   uniqueKey: string;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   workspace: Workspace;
 }
 
@@ -69,7 +67,7 @@ export class NunjucksModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleRender, handleGetRenderContext, uniqueKey, workspace } = this.props;
+    const { uniqueKey, workspace } = this.props;
     const { defaultTemplate } = this.state;
     let editor: JSX.Element | null = null;
     let title = '';
@@ -77,23 +75,29 @@ export class NunjucksModal extends PureComponent<Props, State> {
     if (defaultTemplate.indexOf('{{') === 0) {
       title = 'Variable';
       editor = (
-        <VariableEditor
-          onChange={this._handleTemplateChange}
-          defaultValue={defaultTemplate}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-        />
+        <RenderTemplateWrapper>
+          {args =>
+            <VariableEditor
+              onChange={this._handleTemplateChange}
+              defaultValue={defaultTemplate}
+              {...args}
+            />
+          }
+        </RenderTemplateWrapper>
       );
     } else if (defaultTemplate.indexOf('{%') === 0) {
       title = 'Tag';
       editor = (
-        <TagEditor
-          onChange={this._handleTemplateChange}
-          defaultValue={defaultTemplate}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          workspace={workspace}
-        />
+        <RenderTemplateWrapper>
+          {args =>
+            <TagEditor
+              onChange={this._handleTemplateChange}
+              defaultValue={defaultTemplate}
+              workspace={workspace}
+              {...args}
+            />
+          }
+        </RenderTemplateWrapper>
       );
     }
 

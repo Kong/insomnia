@@ -190,8 +190,6 @@ export class CodePromptModal extends PureComponent<Props, State> {
                   onChange={this._handleChange}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
-                  getRenderContext={handleGetRenderContext}
-                  render={handleRender}
                   mode={mode}
                   keyMap={editorKeyMap}
                   indentSize={editorIndentSize}

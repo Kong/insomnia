@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import { CodeEditor,  CodeEditorOnChange } from '../../codemirror/code-editor';
 
 interface Props {
@@ -17,8 +16,6 @@ interface Props {
   uniquenessKey: string;
   isVariableUncovered: boolean;
   className?: string;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   indentWithTabs?: boolean;
 }
 
@@ -30,7 +27,6 @@ export class RawEditor extends PureComponent<Props> {
       content,
       contentType,
       fontSize,
-      getRenderContext,
       indentSize,
       keyMap,
       lineWrapping,
@@ -38,7 +34,6 @@ export class RawEditor extends PureComponent<Props> {
       nunjucksPowerUserMode,
       isVariableUncovered,
       onChange,
-      render,
       uniquenessKey,
     } = this.props;
     return (
@@ -52,8 +47,6 @@ export class RawEditor extends PureComponent<Props> {
           keyMap={keyMap}
           defaultValue={content}
           className={className}
-          render={render}
-          getRenderContext={getRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           onChange={onChange}

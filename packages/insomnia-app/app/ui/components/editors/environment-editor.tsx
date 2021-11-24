@@ -62,8 +62,6 @@ interface Props {
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
-  render: (...args: any[]) => any;
-  getRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   lineWrapping: boolean;
@@ -148,8 +146,6 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      render,
-      getRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
       lineWrapping,
@@ -174,8 +170,6 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
           defaultValue={defaultValue}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
-          render={render}
-          getRenderContext={getRenderContext}
           mode="application/json"
           {...props}
         />

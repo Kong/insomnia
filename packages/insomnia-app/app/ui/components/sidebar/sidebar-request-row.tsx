@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { connect } from 'react-redux';
 
@@ -12,6 +12,7 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
+import { useRenderTemplate } from '../../hooks/use-render-template';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import { Editable } from '../base/editable';
@@ -332,6 +333,11 @@ const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
 });
 
-const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
+export const UnconnectedSidebarRequestRowWithRender: FC<Omit<Props, 'handleRender'>> = props => {
+  const { handleRender } = useRenderTemplate();
+  return <UnconnectedSidebarRequestRow {...props} handleRender={handleRender}/>;
+};
+
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRowWithRender);
 const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 export const SidebarRequestRow = connect(mapStateToProps)(target);

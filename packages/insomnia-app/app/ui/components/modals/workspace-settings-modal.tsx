@@ -6,7 +6,6 @@ import styled from 'styled-components';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
@@ -72,8 +71,6 @@ interface Props extends ReduxProps {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleRemoveWorkspace: Function;
   handleClearAllResponses: Function;
 }
@@ -301,8 +298,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -352,8 +347,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
                   keyMap={editorKeyMap}
                   placeholder="Write a description"
                   lineWrapping={editorLineWrapping}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}

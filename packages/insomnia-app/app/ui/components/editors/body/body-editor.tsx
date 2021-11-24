@@ -12,7 +12,6 @@ import {
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
 import { getContentTypeHeader } from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type {
   Request,
   RequestBody,
@@ -27,6 +26,7 @@ import {
 } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
+import { NunjucksProvider } from '../../../context/nunjucks-context';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { FileEditor } from './file-editor';
@@ -39,8 +39,6 @@ interface Props {
   onChange: (r: Request, body: RequestBody) => Promise<Request>;
   onChangeHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -119,96 +117,90 @@ export class BodyEditor extends PureComponent<Props> {
       workspace,
       settings,
       environmentId,
-      handleRender: render,
-      handleGetRenderContext: getRenderContext,
       isVariableUncovered,
     } = this.props;
     const noRender = request.settingDisableRenderRequestBody;
-    const handleRender = noRender ? undefined : render;
-    const handleGetRenderContext = noRender ? undefined : getRenderContext;
     const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
     const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
 
-    if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-      return (
-        <UrlEncodedEditor
-          key={uniqueKey}
-          onChange={this._handleFormUrlEncodedChange}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
-          parameters={request.body.params || []}
-        />
-      );
-    } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-      return (
-        <FormEditor
-          key={uniqueKey}
-          onChange={this._handleFormChange}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
-          parameters={request.body.params || []}
-        />
-      );
-    } else if (mimeType === CONTENT_TYPE_FILE) {
-      return <FileEditor key={uniqueKey} onChange={this._handleFileChange} path={fileName || ''} />;
-    } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-      return (
-        <GraphQLEditor
-          key={uniqueKey}
-          uniquenessKey={uniqueKey}
-          request={request}
-          content={request.body.text || ''}
-          render={handleRender}
-          workspace={workspace}
-          settings={settings}
-          environmentId={environmentId}
-          getRenderContext={handleGetRenderContext}
-          isVariableUncovered={isVariableUncovered}
-          onChange={this._handleGraphQLChange}
-        />
-      );
-    } else if (!isBodyEmpty) {
-      const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
-      return (
-        <RawEditor
-          uniquenessKey={uniqueKey}
-          fontSize={settings.editorFontSize}
-          indentSize={settings.editorIndentSize}
-          keyMap={settings.editorKeyMap}
-          lineWrapping={settings.editorLineWrapping}
-          indentWithTabs={settings.editorIndentWithTabs}
-          contentType={contentType || 'text/plain'}
-          content={request.body.text || ''}
-          render={handleRender}
-          getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
-          onChange={this._handleRawChange}
-        />
-      );
-    } else {
-      return (
-        <div className="overflow-hidden editor vertically-center text-center">
-          <p className="pad super-faint text-sm text-center">
-            <i
-              className="fa fa-hand-peace-o"
-              style={{
-                fontSize: '8rem',
-                opacity: 0.3,
-              }}
-            />
-            <br />
-            <br />
-            Select a body type from above
-          </p>
-        </div>
-      );
-    }
+    const _render = () => {
+      if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+        return (
+          <UrlEncodedEditor
+            key={uniqueKey}
+            onChange={this._handleFormUrlEncodedChange}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            parameters={request.body.params || []}
+          />
+        );
+      } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+        return (
+          <FormEditor
+            key={uniqueKey}
+            onChange={this._handleFormChange}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            parameters={request.body.params || []}
+          />
+        );
+      } else if (mimeType === CONTENT_TYPE_FILE) {
+        return <FileEditor key={uniqueKey} onChange={this._handleFileChange} path={fileName || ''} />;
+      } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+        return (
+          <GraphQLEditor
+            key={uniqueKey}
+            uniquenessKey={uniqueKey}
+            request={request}
+            content={request.body.text || ''}
+            workspace={workspace}
+            settings={settings}
+            environmentId={environmentId}
+            isVariableUncovered={isVariableUncovered}
+            onChange={this._handleGraphQLChange}
+          />
+        );
+      } else if (!isBodyEmpty) {
+        const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
+        return (
+          <RawEditor
+            uniquenessKey={uniqueKey}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
+            lineWrapping={settings.editorLineWrapping}
+            indentWithTabs={settings.editorIndentWithTabs}
+            contentType={contentType || 'text/plain'}
+            content={request.body.text || ''}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            isVariableUncovered={isVariableUncovered}
+            onChange={this._handleRawChange}
+          />
+        );
+      } else {
+        return (
+          <div className="overflow-hidden editor vertically-center text-center">
+            <p className="pad super-faint text-sm text-center">
+              <i
+                className="fa fa-hand-peace-o"
+                style={{
+                  fontSize: '8rem',
+                  opacity: 0.3,
+                }}
+              />
+              <br />
+              <br />
+              Select a body type from above
+            </p>
+          </div>
+        );
+      }
+    };
+
+    return <NunjucksProvider disableNunjucks={noRender}>
+      {_render()}
+    </NunjucksProvider>;
   }
 }

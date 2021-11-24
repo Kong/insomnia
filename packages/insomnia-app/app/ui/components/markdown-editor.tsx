@@ -72,8 +72,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
       defaultPreviewMode,
       className,
       tall,
-      handleRender,
-      handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -108,8 +106,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
               lineWrapping={lineWrapping}
               indentSize={indentSize}
               defaultValue={markdown}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               onChange={this._handleChange}
@@ -118,7 +114,7 @@ export class MarkdownEditor extends PureComponent<Props, State> {
           <div className="txt-sm italic faint">Styling with Markdown is supported</div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel markdown-editor__preview">
-          <MarkdownPreview markdown={markdown} handleRender={handleRender} />
+          <MarkdownPreview markdown={markdown} />
         </TabPanel>
       </Tabs>
     );

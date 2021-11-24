@@ -323,8 +323,6 @@ export class OAuth2Auth extends PureComponent<Props, State> {
     handleAutocomplete?: (...args: any[]) => any,
   ) {
     const {
-      handleRender,
-      handleGetRenderContext,
       request,
       nunjucksPowerUserMode,
       isVariableUncovered,
@@ -351,10 +349,8 @@ export class OAuth2Auth extends PureComponent<Props, State> {
               type={type}
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
-              render={handleRender}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocomplete}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

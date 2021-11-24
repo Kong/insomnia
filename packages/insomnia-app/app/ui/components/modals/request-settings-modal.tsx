@@ -3,7 +3,6 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -23,8 +22,6 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   workspaces: Workspace[];
 }
 
@@ -329,8 +326,6 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -351,8 +346,6 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
         keyMap={editorKeyMap}
         placeholder="Write a description"
         lineWrapping={editorLineWrapping}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
         nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         defaultValue={request.description}

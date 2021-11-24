@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import { Button } from '../../base/button';
@@ -16,8 +15,6 @@ interface Props {
   showPasswords: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
 }
 
@@ -57,8 +54,6 @@ export class AWSAuth extends PureComponent<Props> {
     const {
       request,
       nunjucksPowerUserMode,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     return (
@@ -80,8 +75,6 @@ export class AWSAuth extends PureComponent<Props> {
               onChange={onChange}
               defaultValue={request.authentication[key] || ''}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

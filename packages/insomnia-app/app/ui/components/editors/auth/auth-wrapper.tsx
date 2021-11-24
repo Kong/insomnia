@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 
 import {
   AUTH_ASAP,
@@ -18,6 +18,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
+import { useRenderTemplate } from '../../../hooks/use-render-template';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
@@ -42,7 +43,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class AuthWrapper extends PureComponent<Props> {
+class AuthWrapperInternal extends PureComponent<Props> {
   renderEditor() {
     const {
       oAuth2Token,
@@ -61,8 +62,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <BasicAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
@@ -88,8 +87,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <HawkAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -111,8 +108,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <DigestAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
@@ -124,8 +119,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <NTLMAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
@@ -137,8 +130,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <BearerAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -148,8 +139,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <AWSAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
@@ -194,3 +183,8 @@ export class AuthWrapper extends PureComponent<Props> {
     return <div className="tall">{this.renderEditor()}</div>;
   }
 }
+
+export const AuthWrapper: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useRenderTemplate();
+  return <AuthWrapperInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+};

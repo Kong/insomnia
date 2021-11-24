@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import { Button } from '../../base/button';
@@ -11,8 +10,6 @@ import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { PasswordEditor } from '../password-editor';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
@@ -42,8 +39,6 @@ export class NTLMAuth extends PureComponent<Props> {
     const {
       request,
       showPasswords,
-      handleRender,
-      handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
@@ -71,8 +66,6 @@ export class NTLMAuth extends PureComponent<Props> {
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
                     isVariableUncovered={isVariableUncovered}
                   />
                 </div>
@@ -91,8 +84,6 @@ export class NTLMAuth extends PureComponent<Props> {
                   password={authentication.password}
                   onChange={this._handleChangePassword}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
                 />
               </td>
