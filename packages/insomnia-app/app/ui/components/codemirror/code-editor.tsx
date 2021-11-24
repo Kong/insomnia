@@ -10,7 +10,7 @@ import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { Component, CSSProperties, ReactNode } from 'react';
+import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
@@ -29,6 +29,7 @@ import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
+import { useRenderTemplate } from '../../hooks/use-render-template';
 import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -757,11 +758,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     if (this.props.render) {
       mode = {
         name: 'nunjucks',
-        baseMode: CodeEditor._normalizeMode(rawMode),
+        baseMode: UnconnectedCodeEditor._normalizeMode(rawMode),
       };
     } else {
       // foo bar baz
-      mode = CodeEditor._normalizeMode(rawMode);
+      mode = UnconnectedCodeEditor._normalizeMode(rawMode);
     }
 
     // NOTE: YAML is not valid when indented with Tabs
@@ -930,15 +931,15 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     } else if (mimeType.includes('graphql')) {
       // Because graphQL plugin doesn't recognize application/graphql content-type
       return 'graphql';
-    } else if (CodeEditor._isJSON(mimeType)) {
+    } else if (UnconnectedCodeEditor._isJSON(mimeType)) {
       return 'application/json';
-    } else if (CodeEditor._isEDN(mimeType)) {
+    } else if (UnconnectedCodeEditor._isEDN(mimeType)) {
       return 'application/edn';
-    } else if (CodeEditor._isXML(mimeType)) {
+    } else if (UnconnectedCodeEditor._isXML(mimeType)) {
       return 'application/xml';
     } else if (mimeType.includes('kotlin')) {
       return 'text/x-kotlin';
-    } else if (CodeEditor._isYAML(mimeType)) {
+    } else if (UnconnectedCodeEditor._isYAML(mimeType)) {
       // code-mirror doesn't recognize text/yaml or application/yaml
       // as a valid mime-type
       return 'yaml';
@@ -1108,11 +1109,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     const shouldPrettify = forcePrettify || autoPrettify;
 
     if (shouldPrettify && this._canPrettify()) {
-      if (CodeEditor._isXML(mode)) {
+      if (UnconnectedCodeEditor._isXML(mode)) {
         code = this._prettifyXML(code);
-      } else if (CodeEditor._isEDN(mode)) {
-        code = CodeEditor._prettifyEDN(code);
-      } else if (CodeEditor._isJSON(mode)) {
+      } else if (UnconnectedCodeEditor._isEDN(mode)) {
+        code = UnconnectedCodeEditor._prettifyEDN(code);
+      } else if (UnconnectedCodeEditor._isJSON(mode)) {
         code = this._prettifyJSON(code);
       } else {
         unreachable('attempted to prettify in a mode that should not support prettifying');
@@ -1157,11 +1158,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
 
   _canPrettify() {
     const { mode } = this.props;
-    return CodeEditor._isJSON(mode) || CodeEditor._isXML(mode) || CodeEditor._isEDN(mode);
+    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode) || UnconnectedCodeEditor._isEDN(mode);
   }
 
   _showFilterHelp() {
-    const isJson = CodeEditor._isJSON(this.props.mode);
+    const isJson = UnconnectedCodeEditor._isJSON(this.props.mode);
 
     showModal(FilterHelpModal, isJson);
   }
@@ -1191,7 +1192,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     });
     const toolbarChildren: ReactNode[] = [];
 
-    if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
+    if (this.props.updateFilter && (UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode))) {
       toolbarChildren.push(
         <input
           ref={this._setFilterInputRef}
@@ -1199,7 +1200,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
           type="text"
           title="Filter response body"
           defaultValue={filter || ''}
-          placeholder={CodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          placeholder={UnconnectedCodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
           onChange={this._handleFilterChange}
         />,
       );
@@ -1231,11 +1232,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     if (this.props.manualPrettify && this._canPrettify()) {
       let contentTypeName = '';
 
-      if (CodeEditor._isJSON(mode)) {
+      if (UnconnectedCodeEditor._isJSON(mode)) {
         contentTypeName = 'JSON';
-      } else if (CodeEditor._isXML(mode)) {
+      } else if (UnconnectedCodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (CodeEditor._isEDN(mode)) {
+      } else if (UnconnectedCodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
 
@@ -1299,4 +1300,23 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);
+interface FCProps {
+  disableTemplating?: boolean;
+}
+
+const CodeEditorFCRF: ForwardRefRenderFunction<UnconnectedCodeEditor, FCProps & Omit<Props, 'getRenderContext' | 'render'>> = (props, ref) => {
+  const { handleRender, handleGetRenderContext } = useRenderTemplate();
+
+  const { disableTemplating, ...restProps } = props;
+
+  return <UnconnectedCodeEditor
+    ref={ref}
+    {...restProps}
+    getRenderContext={disableTemplating ? undefined : handleGetRenderContext}
+    render={disableTemplating ? undefined : handleRender}
+  />;
+};
+
+const CodeEditorFC = forwardRef(CodeEditorFCRF);
+
+export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(CodeEditorFC);
