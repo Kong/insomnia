@@ -94,7 +94,11 @@ export type CodeEditorOnChange = (value: string) => void;
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
-const mapStateToProps = (state: RootState) => {
+interface OwnProps {
+  ignoreEditorFontSettings?: boolean;
+}
+
+const mapStateToProps = (state: RootState, { ignoreEditorFontSettings }: OwnProps) => {
   const {
     hotKeyRegistry,
     autocompleteDelay,
@@ -109,11 +113,11 @@ const mapStateToProps = (state: RootState) => {
   return {
     hotKeyRegistry,
     autocompleteDelay,
-    fontSize: editorFontSize,
-    indentSize: editorIndentSize,
+    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
+    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
     keyMap: editorKeyMap,
-    lineWrapping: editorLineWrapping,
-    indentWithTabs: editorIndentWithTabs,
+    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
+    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
     nunjucksPowerUserMode,
   };
 };
