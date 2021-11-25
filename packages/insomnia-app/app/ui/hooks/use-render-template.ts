@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../common/render';
@@ -6,9 +6,9 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating';
 import { getKeys } from '../../templating/utils';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../redux/selectors';
 
-const getRenderContextPromiseCache = {};
-
 export const useRenderTemplate = () => {
+  const getRenderContextPromiseCache = useMemo(() => ({}), []);
+
   const environmentId = useSelector(selectActiveEnvironment)?._id;
   const request = useSelector(selectActiveRequest);
   const workspace = useSelector(selectActiveWorkspace);
@@ -41,7 +41,7 @@ export const useRenderTemplate = () => {
     // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
     const context = await getRenderContextPromiseCache[contextCacheKey];
     return render(obj, context);
-  }, [fetchRenderContext]);
+  }, [getRenderContextPromiseCache, fetchRenderContext]);
 
   return {
     handleRender,

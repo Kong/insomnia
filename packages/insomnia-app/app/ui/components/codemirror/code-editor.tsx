@@ -29,7 +29,6 @@ import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
-import { RenderTemplateWrapper } from '../../containers/template-render-wrapper';
 import { useNunjucksState } from '../../context/nunjucks-context';
 import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
@@ -1302,20 +1301,22 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-const CodeEditorFCRF: ForwardRefRenderFunction<UnconnectedCodeEditor, Omit<Props, 'render' | 'getRenderContext' | 'disableNunjucks'>> = (props, ref) => {
-  const { disableNunjucks } = useNunjucksState();
+const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, Omit<Props, 'render' | 'getRenderContext'>> = (
+  props,
+  ref
+) => {
+  // TODO: make nunjucks opt-in instead of opt-out
+  const { disableNunjucks, handleRender, handleGetRenderContext } = useNunjucksState();
 
-  return <RenderTemplateWrapper>
-    {({ handleRender, handleGetRenderContext }) => <UnconnectedCodeEditor
-      ref={ref}
-      {...props}
-      render={handleRender}
-      getRenderContext={handleGetRenderContext}
-      disableNunjucks={disableNunjucks}
-    />}
-  </RenderTemplateWrapper>;
+  return <UnconnectedCodeEditor
+    ref={ref}
+    {...props}
+    render={handleRender}
+    getRenderContext={handleGetRenderContext}
+    disableNunjucks={props.disableNunjucks || disableNunjucks}
+  />;
 };
 
-const CodeEditorFC = forwardRef(CodeEditorFCRF);
+const CodeEditorFC = forwardRef(CodeEditorFCWithRef);
 
 export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(CodeEditorFC);
