@@ -43,7 +43,6 @@ interface Props {
   onBlurDescription?: Function;
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
@@ -278,7 +277,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       pair,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return displayDescription ? (
@@ -302,7 +300,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onFocus={this._handleFocusDescription}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
         />
       </div>
@@ -318,7 +315,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       valuePlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
 
@@ -361,7 +357,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onFocus={this._handleFocusValue}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
         />
@@ -435,7 +430,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       namePlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       sortable,
       noDropZone,
@@ -489,7 +483,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               defaultValue={pair.name}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}

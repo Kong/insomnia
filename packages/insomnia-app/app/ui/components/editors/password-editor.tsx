@@ -10,7 +10,6 @@ import { OneLineEditor } from '../codemirror/one-line-editor';
 interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
@@ -42,7 +41,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
       showAllPasswords,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       onChange,
     } = this.props;
@@ -58,7 +56,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
             id="password"
             onChange={onChange}
             defaultValue={password || ''}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             isVariableUncovered={isVariableUncovered}

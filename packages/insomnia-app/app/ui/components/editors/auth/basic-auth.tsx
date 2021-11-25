@@ -15,7 +15,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
@@ -53,7 +52,6 @@ export class BasicAuth extends PureComponent<Props> {
       showPasswords,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -79,7 +77,6 @@ export class BasicAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
                     isVariableUncovered={isVariableUncovered}
@@ -99,7 +96,6 @@ export class BasicAuth extends PureComponent<Props> {
                   disabled={authentication.disabled}
                   password={authentication.password}
                   onChange={this._handleChangePassword}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}

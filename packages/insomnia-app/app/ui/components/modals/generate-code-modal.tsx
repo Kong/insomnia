@@ -32,9 +32,6 @@ const TO_ADD_CONTENT_LENGTH = {
 
 interface Props {
   environmentId: string;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
 }
 
 interface State {
@@ -138,7 +135,6 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
 
   render() {
     const { cmd, target, client } = this.state;
-    const { editorFontSize, editorIndentSize, editorKeyMap } = this.props;
     const targets = HTTPSnippet.availableTargets();
     // NOTE: Just some extra precautions in case the target is messed up
     let clients: HTTPSnippetClient[] = [];
@@ -192,15 +188,11 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
             <CopyButton content={cmd} className="pull-right" />
           </div>
           <CodeEditor
-            lineWrapping
             placeholder="Generating code snippet..."
             className="border-top"
             key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
             ref={this._setEditorRef}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            keyMap={editorKeyMap}
             defaultValue={cmd}
           />
         </ModalBody>

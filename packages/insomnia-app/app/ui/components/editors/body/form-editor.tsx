@@ -8,7 +8,6 @@ import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 interface Props {
   onChange: Function;
   parameters: any[];
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;
@@ -22,7 +21,6 @@ export class FormEditor extends PureComponent<Props> {
       onChange,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return (
@@ -37,7 +35,6 @@ export class FormEditor extends PureComponent<Props> {
             descriptionPlaceholder="description"
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             onChange={onChange}
             pairs={parameters}
