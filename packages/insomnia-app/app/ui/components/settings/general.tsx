@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as fontScanner from 'font-scanner';
 import { HttpVersion, HttpVersions } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -37,11 +36,6 @@ import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { MaskedSetting } from './masked-setting';
 
-// Font family regex to match certain monospace fonts that don't get
-// recognized as monospace
-
-const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
-
 interface Props {
   settings: Settings;
   hideModal: () => void;
@@ -49,39 +43,8 @@ interface Props {
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 
-interface State {
-  fonts: {
-    family: string;
-    monospace: boolean;
-  }[] | null;
-  fontsMono: {
-    family: string;
-    monospace: boolean;
-  }[] | null;
-}
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class General extends PureComponent<Props, State> {
-  state: State = {
-    fonts: null,
-    fontsMono: null,
-  };
-
-  async componentDidMount() {
-    const allFonts = await fontScanner.getAvailableFonts();
-    // Find regular fonts
-    const fonts = allFonts
-      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
-      .sort((a, b) => (a.family > b.family ? 1 : -1));
-    // Find monospaced fonts
-    // NOTE: Also include some others:
-    //  - https://github.com/Kong/insomnia/issues/1835
-    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
-    this.setState({
-      fonts,
-      fontsMono,
-    });
-  }
+class General extends PureComponent<Props> {
 
   async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
@@ -184,7 +147,6 @@ class General extends PureComponent<Props, State> {
 
   render() {
     const { settings } = this.props;
-    const { fonts, fontsMono } = this.state;
     return (
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
@@ -271,62 +233,34 @@ class General extends PureComponent<Props, State> {
         </div>
 
         <div className="form-row pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              Interface Font
-              {fonts ? (
-                <select
-                  name="fontInterface"
-                  value={settings.fontInterface || '__NULL__'}
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}
-                >
-                  <option value="__NULL__">-- System Default --</option>
-                  {fonts.map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select disabled>
-                  <option value="__NULL__">-- Unsupported Platform --</option>
-                </select>
-              )}
-            </label>
+          <div className="form-row">
+            {this.renderTextSetting(
+              'Interface Font',
+              'fontInterface',
+              'Comma-separated list of fonts. If left empty, takes system defaults.',
+              {
+                placeholder: '-- System Default --',
+                onChange: this._handleFontChange,
+              },
+            )}
+            {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
+              min: MIN_INTERFACE_FONT_SIZE,
+              max: MAX_INTERFACE_FONT_SIZE,
+              onBlur: this._handleFontChange,
+            })}
           </div>
-          {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-            min: MIN_INTERFACE_FONT_SIZE,
-            max: MAX_INTERFACE_FONT_SIZE,
-            onBlur: this._handleFontChange,
-          })}
         </div>
 
         <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Font
-              {fontsMono ? (
-                <select
-                  name="fontMonospace"
-                  value={settings.fontMonospace || '__NULL__'}
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}
-                >
-                  <option value="__NULL__">-- System Default --</option>
-                  {fontsMono.map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select disabled>
-                  <option value="__NULL__">-- Unsupported Platform --</option>
-                </select>
-              )}
-            </label>
-          </div>
+          {this.renderTextSetting(
+            'Text Editor Font',
+            'fontMonospace',
+            'Comma-separated list of monospace fonts. If left empty, takes system defaults.',
+            {
+              placeholder: '-- System Default --',
+              onChange: this._handleFontChange,
+            },
+          )}
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
             min: MIN_EDITOR_FONT_SIZE,
             max: MAX_EDITOR_FONT_SIZE,
