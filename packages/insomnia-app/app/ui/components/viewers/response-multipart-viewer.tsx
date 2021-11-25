@@ -40,9 +40,6 @@ interface Props {
   filter: string;
   filterHistory: string[];
   editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   url: string;
 }
 
@@ -222,9 +219,6 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
       disableHtmlPreviewJs,
       disablePreviewLinks,
       editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       filter,
       filterHistory,
       responseId,
@@ -303,9 +297,6 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
               disablePreviewLinks={disablePreviewLinks}
               download={download}
               editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-              editorKeyMap={editorKeyMap}
-              editorLineWrapping={editorLineWrapping}
               error={null}
               filter={filter}
               filterHistory={filterHistory}

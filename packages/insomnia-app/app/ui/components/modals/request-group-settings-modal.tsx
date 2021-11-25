@@ -14,11 +14,6 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   workspaces: Workspace[];
 }
@@ -196,11 +191,6 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
 
   _renderDescription() {
     const {
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
 
@@ -215,12 +205,7 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
         ref={this._setEditorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
         placeholder="Write a description"
-        lineWrapping={editorLineWrapping}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         defaultValue={requestGroup.description}
         onChange={this._handleDescriptionChange}

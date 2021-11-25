@@ -660,7 +660,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   render() {
     const {
       content,
-      settings,
       className,
       uniquenessKey,
       isVariableUncovered,
@@ -766,9 +765,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             dynamicHeight
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
@@ -776,7 +772,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             onCursorActivity={this._handleQueryUserActivity}
             onFocus={this._handleQueryFocus}
             mode="graphql"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
             {...graphqlOptions}
           />
@@ -819,9 +814,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={variables}
             className={className}
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
@@ -829,11 +821,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
               variableToType: variableTypes,
             }}
             noLint={!variableTypes}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}
             mode="graphql-variables"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>

@@ -11,7 +11,6 @@ import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
   request: Request;
-  nunjucksPowerUserMode: boolean;
   showPasswords: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
@@ -53,7 +52,6 @@ export class AWSAuth extends PureComponent<Props> {
   renderRow(key: string, label: string, onChange: (...args: any[]) => any, help?: string) {
     const {
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return (
@@ -74,7 +72,6 @@ export class AWSAuth extends PureComponent<Props> {
               id={key}
               onChange={onChange}
               defaultValue={request.authentication[key] || ''}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

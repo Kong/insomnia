@@ -9,7 +9,6 @@ import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
-  nunjucksPowerUserMode: boolean;
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   isVariableUncovered: boolean;
@@ -35,7 +34,6 @@ export class BearerAuth extends PureComponent<Props> {
   render() {
     const {
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -61,7 +59,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeToken}
                     defaultValue={authentication.token || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     isVariableUncovered={isVariableUncovered}
                   />
                 </div>
@@ -88,7 +85,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangePrefix}
                     defaultValue={authentication.prefix || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     isVariableUncovered={isVariableUncovered}
                   />
                 </div>

@@ -131,7 +131,6 @@ export class BodyEditor extends PureComponent<Props> {
           <UrlEncodedEditor
             key={uniqueKey}
             onChange={this._handleFormUrlEncodedChange}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             parameters={request.body.params || []}
           />
@@ -141,7 +140,6 @@ export class BodyEditor extends PureComponent<Props> {
           <FormEditor
             key={uniqueKey}
             onChange={this._handleFormChange}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             parameters={request.body.params || []}
           />
@@ -167,14 +165,8 @@ export class BodyEditor extends PureComponent<Props> {
         return (
           <RawEditor
             uniquenessKey={uniqueKey}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
-            lineWrapping={settings.editorLineWrapping}
-            indentWithTabs={settings.editorIndentWithTabs}
             contentType={contentType || 'text/plain'}
             content={request.body.text || ''}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             onChange={this._handleRawChange}
           />

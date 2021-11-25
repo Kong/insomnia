@@ -24,7 +24,6 @@ const RIGHT = 39;
 interface Props {
   onChange: Function;
   pairs: any[];
-  nunjucksPowerUserMode?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
@@ -428,7 +427,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       valuePlaceholder,
       namePlaceholder,
       descriptionPlaceholder,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       handleGetAutocompleteNameConstants,
       handleGetAutocompleteValueConstants,
@@ -464,7 +462,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
               onBlurValue={this._handleBlurValue}
               onBlurDescription={this._handleBlurDescription}
               onMove={this._handleMove}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
               handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}

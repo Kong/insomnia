@@ -18,7 +18,6 @@ import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
-const CONTEXT = {};
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
@@ -97,7 +96,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -172,7 +170,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -272,7 +269,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -332,7 +328,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -412,7 +407,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -473,7 +467,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -513,7 +506,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -552,7 +544,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -592,7 +583,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -689,7 +679,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
       null,
@@ -741,7 +730,7 @@ describe('actuallySend()', () => {
       parentId: workspace._id,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, workspace, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
@@ -777,14 +766,12 @@ describe('actuallySend()', () => {
     // WHEN
     const response1Promise = networkUtils._actuallySend(
       renderedRequest1,
-      CONTEXT,
       workspace,
       settings,
     );
 
     const response2Promise = networkUtils._actuallySend(
       renderedRequest2,
-      CONTEXT,
       workspace,
       settings,
     );

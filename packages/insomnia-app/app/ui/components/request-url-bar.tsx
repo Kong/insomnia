@@ -349,7 +349,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   render() {
     const {
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       handleAutocompleteUrls,
       uniquenessKey,
@@ -372,7 +371,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
               onPaste={this._handleUrlPaste}
               forceEditor
               type="text"
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
               placeholder="https://api.myproduct.com/v1/users"

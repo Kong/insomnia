@@ -14,7 +14,6 @@ import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
   request: Request;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
@@ -128,7 +127,6 @@ export class HawkAuth extends PureComponent<Props> {
   ) {
     const {
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -151,7 +149,6 @@ export class HawkAuth extends PureComponent<Props> {
               type="text"
               onChange={onChange}
               defaultValue={authentication[property] || ''}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

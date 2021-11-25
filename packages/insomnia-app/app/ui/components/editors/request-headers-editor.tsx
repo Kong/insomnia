@@ -13,10 +13,6 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   request: Request;
 }
@@ -104,20 +100,12 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      editorFontSize,
-      editorIndentSize,
-      editorLineWrapping,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <div className="tall">
         <CodeEditor
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
-          fontSize={editorFontSize}
-          indentSize={editorIndentSize}
-          lineWrapping={editorLineWrapping}
           onChange={this._handleBulkUpdate}
           defaultValue={this._getHeadersString()}
         />
@@ -131,7 +119,6 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             valuePlaceholder="value"
             descriptionPlaceholder="description"
             pairs={request.headers}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
             handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}

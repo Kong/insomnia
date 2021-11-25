@@ -7,7 +7,6 @@ import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 interface Props {
   onChange: Function;
   parameters: any[];
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
 }
 
@@ -17,7 +16,6 @@ export class UrlEncodedEditor extends PureComponent<Props> {
     const {
       parameters,
       onChange,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return (
@@ -30,7 +28,6 @@ export class UrlEncodedEditor extends PureComponent<Props> {
             valuePlaceholder="value"
             descriptionPlaceholder="description"
             onChange={onChange}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             pairs={parameters}
           />

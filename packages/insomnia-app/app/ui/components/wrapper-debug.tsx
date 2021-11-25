@@ -289,7 +289,6 @@ export class WrapperDebug extends PureComponent<Props> {
           <GrpcResponsePane
             activeRequest={activeRequest}
             forceRefreshKey={forceRefreshKey}
-            settings={settings}
           />
         </ErrorBoundary>
       );
@@ -301,9 +300,6 @@ export class WrapperDebug extends PureComponent<Props> {
           disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
           disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
           editorFontSize={settings.editorFontSize}
-          editorIndentSize={settings.editorIndentSize}
-          editorKeyMap={settings.editorKeyMap}
-          editorLineWrapping={settings.editorLineWrapping}
           environment={activeEnvironment}
           filter={responseFilter}
           filterHistory={responseFilterHistory}

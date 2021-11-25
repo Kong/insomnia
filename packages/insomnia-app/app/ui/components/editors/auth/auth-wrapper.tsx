@@ -34,7 +34,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
@@ -50,7 +49,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
       request,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
@@ -63,7 +61,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
         <BasicAuth
           request={request}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
@@ -76,7 +73,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -87,7 +83,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
       return (
         <HawkAuth
           request={request}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -98,7 +93,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           showPasswords={showPasswords}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -109,7 +103,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
         <DigestAuth
           request={request}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
@@ -119,7 +112,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
       return (
         <NTLMAuth
           request={request}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -130,7 +122,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
       return (
         <BearerAuth
           request={request}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -140,7 +131,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
         <AWSAuth
           request={request}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
@@ -154,7 +144,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />

@@ -11,7 +11,6 @@ import { PasswordEditor } from '../password-editor';
 
 interface Props {
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
@@ -39,7 +38,6 @@ export class DigestAuth extends PureComponent<Props> {
     const {
       request,
       showPasswords,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -65,7 +63,6 @@ export class DigestAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     isVariableUncovered={isVariableUncovered}
                   />
                 </div>
@@ -83,7 +80,6 @@ export class DigestAuth extends PureComponent<Props> {
                   disabled={authentication.disabled}
                   password={authentication.password}
                   onChange={this._handleChangePassword}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                 />
               </td>

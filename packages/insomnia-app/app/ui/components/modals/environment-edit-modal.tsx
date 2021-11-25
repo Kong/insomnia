@@ -11,12 +11,7 @@ import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  lineWrapping: boolean;
 }
 
 interface State {
@@ -86,11 +81,6 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      editorKeyMap,
-      editorFontSize,
-      editorIndentSize,
-      lineWrapping,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       ...extraProps
     } = this.props;
@@ -104,15 +94,10 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll className="pad-top-sm">
           <EnvironmentEditor
-            editorFontSize={editorFontSize}
-            editorIndentSize={editorIndentSize}
-            editorKeyMap={editorKeyMap}
             ref={this._setEditorRef}
             key={requestGroup ? requestGroup._id : 'n/a'}
-            lineWrapping={lineWrapping}
             environmentInfo={environmentInfo}
             didChange={this._didChange}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
           />
         </ModalBody>

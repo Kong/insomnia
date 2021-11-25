@@ -261,7 +261,6 @@ export class RequestPane extends PureComponent<Props> {
                   showPasswords={settings.showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
                 />
@@ -287,11 +286,7 @@ export class RequestPane extends PureComponent<Props> {
               >
                 <RequestParametersEditor
                   key={headerEditorKey}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
-                  editorFontSize={settings.editorFontSize}
-                  editorIndentSize={settings.editorIndentSize}
-                  editorLineWrapping={settings.editorLineWrapping}
                   onChange={updateRequestParameters}
                   request={request}
                   bulk={settings.useBulkParametersEditor}
@@ -318,11 +313,7 @@ export class RequestPane extends PureComponent<Props> {
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
                 key={headerEditorKey}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorLineWrapping={settings.editorLineWrapping}
                 onChange={updateRequestHeaders}
                 request={request}
                 bulk={settings.useBulkHeaderEditor}

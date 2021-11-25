@@ -28,11 +28,6 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 interface Props extends ModalProps {
   handleChangeEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  lineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
 }
 
@@ -430,12 +425,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   render() {
     const {
       activeEnvironmentId,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
       isVariableUncovered,
-      lineWrapping,
-      nunjucksPowerUserMode,
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
@@ -582,15 +572,10 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
             </div>
             <div className="env-modal__editor">
               <EnvironmentEditor
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
-                editorKeyMap={editorKeyMap}
-                lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
                 key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
                 environmentInfo={environmentInfo}
                 didChange={this._didChange}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
               />
             </div>

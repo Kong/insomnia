@@ -155,7 +155,6 @@ export function hasCancelFunctionForId(requestId) {
 
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
-  renderContext: Record<string, any>,
   workspace: Workspace,
   settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
   environment?: Environment | null,
@@ -183,13 +182,12 @@ export async function _actuallySend(
     async function respond(
       patch: ResponsePatch,
       bodyPath: string | null,
-      noPlugins = false,
     ) {
       const timelinePath = await storeTimeline(timeline);
       // Tear Down the cancellation logic
       clearCancelFunctionForId(renderedRequest._id);
       const environmentId = environment ? environment._id : null;
-      const responsePatchBeforeHooks = Object.assign(
+      return resolve(Object.assign(
         {
           timelinePath,
           environmentId,
@@ -201,29 +199,7 @@ export async function _actuallySend(
           settingStoreCookies: renderedRequest.settingStoreCookies,
         } as ResponsePatch,
         patch,
-      );
-
-      if (noPlugins) {
-        resolve(responsePatchBeforeHooks);
-        return;
-      }
-
-      let responsePatch: ResponsePatch | null = null;
-
-      try {
-        responsePatch = await _applyResponsePluginHooks(
-          responsePatchBeforeHooks,
-          renderedRequest,
-          renderContext,
-        );
-      } catch (err) {
-        await handleError(
-          new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`),
-        );
-        return;
-      }
-
-      resolve(responsePatch);
+      ));
     }
 
     /** Helper function to respond with an error */
@@ -232,14 +208,13 @@ export async function _actuallySend(
         {
           url: renderedRequest.url,
           parentId: renderedRequest._id,
-          error: err.message,
+          error: err.message || 'Something went wrong',
           elapsedTime: 0, // 0 because this path is hit during plugin calls
           statusMessage: 'Error',
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies,
         },
         null,
-        true,
       );
     }
 
@@ -267,7 +242,6 @@ export async function _actuallySend(
             error: 'Request was cancelled',
           },
           null,
-          true,
         );
         // Kill it!
         curl.close();
@@ -839,11 +813,10 @@ export async function _actuallySend(
         await respond(
           {
             statusMessage,
-            error,
+            error: error || 'Something went wrong',
             elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
           },
           null,
-          true,
         );
       });
       curl.perform();
@@ -896,13 +869,20 @@ export async function sendWithSettings(
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(
+  const response = await _actuallySend(
     renderResult.request,
-    renderResult.context,
     workspace,
     settings,
     environment,
     settings.validateAuthSSL,
+  );
+  if (response.error){
+    return response;
+  }
+  return _applyResponsePluginHooks(
+    response,
+    renderResult.request,
+    renderResult.context,
   );
 }
 
@@ -969,7 +949,7 @@ export async function send(
   } catch (err) {
     return {
       environmentId: environmentId,
-      error: err.message,
+      error: err.message || 'Something went wrong',
       parentId: renderedRequestBeforePlugins._id,
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
       settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
@@ -981,7 +961,6 @@ export async function send(
 
   const response = await _actuallySend(
     renderedRequest,
-    renderedContextBeforePlugins,
     workspace,
     settings,
     environment,
@@ -992,7 +971,14 @@ export async function send(
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
       : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
   );
-  return response;
+  if (response.error){
+    return response;
+  }
+  return _applyResponsePluginHooks(
+    response,
+    renderedRequest,
+    renderedContextBeforePlugins,
+  );
 }
 
 async function _applyRequestPluginHooks(
@@ -1025,29 +1011,42 @@ async function _applyResponsePluginHooks(
   response: ResponsePatch,
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-) {
-  const newResponse = clone(response);
-  const newRequest = clone(renderedRequest);
+): Promise<ResponsePatch> {
+  try {
+    const newResponse = clone(response);
+    const newRequest = clone(renderedRequest);
 
-  for (const { plugin, hook } of await plugins.getResponseHooks()) {
-    const context = {
-      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(renderedContext.getProjectId()),
-      ...(pluginContexts.store.init(plugin) as Record<string, any>),
-      ...(pluginContexts.response.init(newResponse) as Record<string, any>),
-      ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
-    };
+    for (const { plugin, hook } of await plugins.getResponseHooks()) {
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...pluginContexts.data.init(renderedContext.getProjectId()),
+        ...(pluginContexts.store.init(plugin) as Record<string, any>),
+        ...(pluginContexts.response.init(newResponse) as Record<string, any>),
+        ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
+        ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
+      };
 
-    try {
-      await hook(context);
-    } catch (err) {
-      err.plugin = plugin;
-      throw err;
+      try {
+        await hook(context);
+      } catch (err) {
+        err.plugin = plugin;
+        throw err;
+      }
     }
+
+    return newResponse;
+  } catch (err) {
+    return {
+      url: renderedRequest.url,
+      parentId: renderedRequest._id,
+      error: `[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      statusMessage: 'Error',
+      settingSendCookies: renderedRequest.settingSendCookies,
+      settingStoreCookies: renderedRequest.settingStoreCookies,
+    };
   }
 
-  return newResponse;
 }
 
 interface HeaderResult {
