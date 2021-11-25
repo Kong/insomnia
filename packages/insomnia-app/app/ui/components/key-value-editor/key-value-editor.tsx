@@ -27,7 +27,6 @@ interface Props {
   pairs: any[];
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
@@ -433,7 +432,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       descriptionPlaceholder,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       handleGetAutocompleteNameConstants,
       handleGetAutocompleteValueConstants,
@@ -469,7 +467,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
               onBlurValue={this._handleBlurValue}
               onBlurDescription={this._handleBlurDescription}
               onMove={this._handleMove}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}

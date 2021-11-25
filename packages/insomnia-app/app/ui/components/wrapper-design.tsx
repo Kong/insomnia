@@ -146,7 +146,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
   }
 
   _renderEditor() {
-    const { activeApiSpec, settings } = this.props.wrapperProps;
+    const { activeApiSpec } = this.props.wrapperProps;
     const { lintMessages } = this.state;
 
     if (!activeApiSpec) {
@@ -159,10 +159,6 @@ export class WrapperDesign extends PureComponent<Props, State> {
           <CodeEditor
             manualPrettify
             ref={this._setEditorRef}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            lineWrapping={settings.lineWrapping}
-            keyMap={settings.editorKeyMap}
             lintOptions={WrapperDesign.lintOptions}
             mode="openapi"
             defaultValue={activeApiSpec.contents}

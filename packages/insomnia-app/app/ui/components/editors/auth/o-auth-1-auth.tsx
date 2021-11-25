@@ -33,7 +33,6 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   showPasswords: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
@@ -199,7 +198,6 @@ export class OAuth1Auth extends PureComponent<Props> {
       handleRender,
       handleGetRenderContext,
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -225,7 +223,6 @@ export class OAuth1Auth extends PureComponent<Props> {
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               render={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocomplete}
               getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}

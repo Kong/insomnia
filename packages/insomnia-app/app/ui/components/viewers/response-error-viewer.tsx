@@ -1,5 +1,7 @@
 import React, { FC, memo } from 'react';
+import { useSelector } from 'react-redux';
 
+import { selectSettings } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { showModal } from '../modals/index';
 import { SettingsModal } from '../modals/settings-modal';
@@ -7,10 +9,10 @@ import { SettingsModal } from '../modals/settings-modal';
 interface Props {
   error: string;
   url: string;
-  fontSize: number;
 }
-export const ResponseErrorViewer: FC<Props> = memo(({ error, fontSize }) => {
+export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
   let msg: React.ReactNode = null;
+  const { editorFontSize } = useSelector(selectSettings);
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {
     msg = (
@@ -37,7 +39,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, fontSize }) => {
       <pre
         className="selectable pad force-pre-wrap"
         style={{
-          fontSize: `${fontSize}px`,
+          fontSize: `${editorFontSize}px`,
         }}
       >
         {error}

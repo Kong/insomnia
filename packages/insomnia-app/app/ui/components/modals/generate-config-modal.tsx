@@ -5,7 +5,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { parseApiSpec } from '../../../common/api-specs';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import type { ApiSpec } from '../../../models/api-spec';
-import type { Settings } from '../../../models/settings';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';
@@ -18,10 +17,6 @@ import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { Notice } from '../notice';
 import { showModal } from './index';
-
-interface Props {
-  settings: Settings;
-}
 
 interface Config {
   label: string;
@@ -42,7 +37,7 @@ interface ShowOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class GenerateConfigModal extends PureComponent<Props, State> {
+export class GenerateConfigModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -93,7 +88,6 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
   }
 
   renderConfigTabPanel(config: Config) {
-    const { settings } = this.props;
     const linkIcon = <i className="fa fa-external-link-square" />;
     if (config.error) {
       return (
@@ -111,12 +105,7 @@ export class GenerateConfigModal extends PureComponent<Props, State> {
         <CodeEditor
           className="tall pad-top-sm"
           defaultValue={config.content}
-          fontSize={settings.editorFontSize}
-          indentSize={settings.editorIndentSize}
-          keyMap={settings.editorKeyMap}
-          lineWrapping={settings.editorLineWrapping}
           mode={config.mimeType}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           readOnly
         />
       </TabPanel>

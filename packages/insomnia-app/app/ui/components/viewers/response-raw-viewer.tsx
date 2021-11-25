@@ -6,7 +6,6 @@ import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 interface Props {
   value: string;
-  fontSize?: number;
   responseId?: string;
 }
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -30,14 +29,12 @@ export class ResponseRawViewer extends PureComponent<Props> {
   }
 
   render() {
-    const { fontSize, responseId, value } = this.props;
+    const { responseId, value } = this.props;
     return (
       <CodeEditor
         ref={this._setCodeEditorRef}
         defaultValue={value}
-        fontSize={fontSize}
         hideLineNumbers
-        lineWrapping
         mode="text/plain"
         noMatchBrackets
         placeholder="..."
