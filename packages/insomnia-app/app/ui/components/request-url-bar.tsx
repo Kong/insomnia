@@ -353,7 +353,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     const {
       request,
       handleRender,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       handleGetRenderContext,
       handleAutocompleteUrls,
@@ -378,7 +377,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
               forceEditor
               type="text"
               render={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
               getRenderContext={handleGetRenderContext}

@@ -12,13 +12,8 @@ import { MarkdownPreview } from './markdown-preview';
 interface Props {
   onChange: Function;
   defaultValue: string;
-  fontSize: number;
-  indentSize: number;
-  keyMap: string;
-  lineWrapping: boolean;
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   placeholder?: string;
   defaultPreviewMode?: boolean;
@@ -63,10 +58,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
 
   render() {
     const {
-      fontSize,
-      lineWrapping,
-      indentSize,
-      keyMap,
       mode,
       placeholder,
       defaultPreviewMode,
@@ -74,7 +65,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
       tall,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { markdown } = this.state;
@@ -103,14 +93,9 @@ export class MarkdownEditor extends PureComponent<Props, State> {
               mode={mode || 'text/x-markdown'}
               placeholder={placeholder}
               debounceMillis={300}
-              keyMap={keyMap}
-              fontSize={fontSize}
-              lineWrapping={lineWrapping}
-              indentSize={indentSize}
               defaultValue={markdown}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
               onChange={this._handleChange}
             />

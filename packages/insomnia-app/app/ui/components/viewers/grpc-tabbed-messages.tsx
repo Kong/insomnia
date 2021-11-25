@@ -3,7 +3,6 @@ import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { Settings } from '../../../models/settings';
 import { Button } from '../base/button';
 import { GRPCEditor } from '../editors/grpc-editor';
 
@@ -14,7 +13,6 @@ interface Message {
 }
 
 interface Props {
-  settings: Settings;
   messages?: Message[];
   tabNamePrefix: 'Stream' | 'Response';
   bodyText?: string;
@@ -29,7 +27,6 @@ interface Props {
 }
 
 export const GrpcTabbedMessages: FunctionComponent<Props> = ({
-  settings,
   showActions,
   bodyText,
   messages,
@@ -88,7 +85,6 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
         <TabPanel className="react-tabs__tab-panel editor-wrapper">
           <GRPCEditor
             content={bodyText}
-            settings={settings}
             handleChange={handleBodyChange}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
@@ -98,7 +94,7 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
       )}
       {orderedMessages.map(m => (
         <TabPanel key={m.id} className="react-tabs__tab-panel editor-wrapper">
-          <GRPCEditor content={m.text} settings={settings} readOnly />
+          <GRPCEditor content={m.text} readOnly />
         </TabPanel>
       ))}
     </Tabs>

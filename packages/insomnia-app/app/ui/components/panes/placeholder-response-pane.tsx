@@ -9,6 +9,7 @@ interface Props {
   hotKeyRegistry: HotKeyRegistry;
 }
 
+// TODO: get hotKeyRegistry from redux
 export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
   <Pane type="response">
     <PaneHeader />

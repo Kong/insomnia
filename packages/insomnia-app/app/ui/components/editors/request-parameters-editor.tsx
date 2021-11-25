@@ -10,10 +10,6 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
@@ -82,23 +78,15 @@ export class RequestParametersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      editorFontSize,
-      editorIndentSize,
-      editorLineWrapping,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <CodeEditor
         getRenderContext={handleGetRenderContext}
         render={handleRender}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        lineWrapping={editorLineWrapping}
         onChange={this._handleBulkUpdate}
         defaultValue={this._getQueriesString()}
       />
@@ -110,7 +98,6 @@ export class RequestParametersEditor extends PureComponent<Props> {
         valuePlaceholder="value"
         descriptionPlaceholder="description"
         pairs={request.parameters}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         handleRender={handleRender}
         handleGetRenderContext={handleGetRenderContext}

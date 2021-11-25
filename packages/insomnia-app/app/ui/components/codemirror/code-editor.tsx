@@ -94,17 +94,35 @@ export type CodeEditorOnChange = (value: string) => void;
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
-const mapStateToProps = (state: RootState) => {
-  const { hotKeyRegistry, autocompleteDelay } = selectSettings(state);
+interface OwnProps {
+  ignoreEditorFontSettings?: boolean;
+}
+
+const mapStateToProps = (state: RootState, { ignoreEditorFontSettings }: OwnProps) => {
+  const {
+    hotKeyRegistry,
+    autocompleteDelay,
+    editorFontSize,
+    editorIndentSize,
+    editorKeyMap,
+    editorLineWrapping,
+    editorIndentWithTabs,
+    nunjucksPowerUserMode,
+  } = selectSettings(state);
 
   return {
     hotKeyRegistry,
     autocompleteDelay,
+    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
+    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
+    keyMap: editorKeyMap,
+    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
+    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
+    nunjucksPowerUserMode,
   };
 };
 
 interface Props extends ReduxProps {
-  indentWithTabs?: boolean;
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
   onFocus?: (e: FocusEvent) => void;
@@ -116,21 +134,16 @@ interface Props extends ReduxProps {
   onPaste?: (e: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
   render?: HandleRender;
-  nunjucksPowerUserMode?: boolean;
   getRenderContext?: HandleGetRenderContext;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
-  keyMap?: string;
   mode?: string;
   id?: string;
   placeholder?: string;
-  lineWrapping?: boolean;
   hideLineNumbers?: boolean;
   hideGutters?: boolean;
   noMatchBrackets?: boolean;
   hideScrollbars?: boolean;
-  fontSize?: number;
-  indentSize?: number;
   defaultValue?: string;
   tabIndex?: number;
   autoPrettify?: boolean;
@@ -155,6 +168,7 @@ interface Props extends ReduxProps {
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
+  // TODO: I think this prop can actually be removed entirely
   isVariableUncovered?: boolean;
   raw?: boolean;
 }
@@ -581,6 +595,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       this.codeMirror?.clearHistory();
 
       // Setup nunjucks listeners
+      // TODO: we shouldn't need to set setup nunjucks if we're in readonly mode
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
         this.codeMirror?.enableNunjucksTags(
           this.props.render,

@@ -12,7 +12,6 @@ import { HelpTooltip } from '../../help-tooltip';
 interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   isVariableUncovered: boolean;
@@ -40,7 +39,6 @@ export class BearerAuth extends PureComponent<Props> {
       request,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -66,7 +64,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeToken}
                     defaultValue={authentication.token || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
                     isVariableUncovered={isVariableUncovered}
@@ -95,7 +92,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangePrefix}
                     defaultValue={authentication.prefix || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
                     render={handleRender}
                     getRenderContext={handleGetRenderContext}
                     isVariableUncovered={isVariableUncovered}

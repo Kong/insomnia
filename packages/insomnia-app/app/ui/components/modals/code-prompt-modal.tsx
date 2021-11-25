@@ -25,11 +25,6 @@ const MODES = {
 };
 
 interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   handleGetRenderContext?: HandleGetRenderContext;
   handleRender?: HandleRender;
@@ -117,13 +112,8 @@ export class CodePromptModal extends PureComponent<Props, State> {
   render() {
     const {
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       handleRender,
-      editorKeyMap,
-      editorIndentSize,
-      editorFontSize,
-      editorLineWrapping,
     } = this.props;
     const {
       submitName,
@@ -170,11 +160,6 @@ export class CodePromptModal extends PureComponent<Props, State> {
                 handleGetRenderContext={enableRender ? handleGetRenderContext : undefined}
                 handleRender={enableRender ? handleRender : undefined}
                 mode={mode}
-                keyMap={editorKeyMap}
-                indentSize={editorIndentSize}
-                fontSize={editorFontSize}
-                lineWrapping={editorLineWrapping}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
                 isVariableUncovered={isVariableUncovered}
               />
             </div>
@@ -188,15 +173,10 @@ export class CodePromptModal extends PureComponent<Props, State> {
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={this._handleChange}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   getRenderContext={handleGetRenderContext}
                   render={handleRender}
                   mode={mode}
-                  keyMap={editorKeyMap}
-                  indentSize={editorIndentSize}
-                  fontSize={editorFontSize}
-                  lineWrapping={editorLineWrapping}
                 />
               </div>
             </div>
