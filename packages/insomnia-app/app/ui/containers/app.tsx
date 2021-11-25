@@ -81,7 +81,7 @@ import { Toast } from '../components/toast';
 import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
-import { NunjucksProvider } from '../context/nunjucks-context';
+import { NunjucksProvider } from '../context/nunjucks';
 import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {

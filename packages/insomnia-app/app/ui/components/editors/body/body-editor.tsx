@@ -26,7 +26,7 @@ import {
 } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
-import { NunjucksProvider } from '../../../context/nunjucks-context';
+import { DisableNunjucks } from '../../../context/nunjucks';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { FileEditor } from './file-editor';
@@ -199,8 +199,8 @@ export class BodyEditor extends PureComponent<Props> {
       }
     };
 
-    return <NunjucksProvider disableNunjucks={noRender}>
-      {_render()}
-    </NunjucksProvider>;
+    const elements = _render();
+
+    return noRender ? <DisableNunjucks>{elements}</DisableNunjucks> : elements;
   }
 }

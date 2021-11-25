@@ -29,7 +29,7 @@ import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
-import { useNunjucksState } from '../../context/nunjucks-context';
+import { useNunjucks } from '../../context/nunjucks';
 import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -116,9 +116,8 @@ interface Props extends ReduxProps {
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   onPaste?: (e: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
-  disableNunjucks?: boolean;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
+  render?: HandleRender;
+  getRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
@@ -756,14 +755,14 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     } = this.props;
     let mode;
 
-    if (Boolean(this.props.disableNunjucks)) {
-      // foo bar baz
-      mode = UnconnectedCodeEditor._normalizeMode(rawMode);
-    } else {
+    if (this.props.render) {
       mode = {
         name: 'nunjucks',
         baseMode: UnconnectedCodeEditor._normalizeMode(rawMode),
       };
+    } else {
+      // foo bar baz
+      mode = UnconnectedCodeEditor._normalizeMode(rawMode);
     }
 
     // NOTE: YAML is not valid when indented with Tabs
@@ -832,7 +831,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     }
 
     // Setup the hint options
-    if (!this.props.disableNunjucks && (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets)) {
+    if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
       let getVariables: (() => Promise<CodeMirror.Variable[]>) | undefined;
       let getTags: (() => Promise<NunjucksParsedTag[]>) | undefined;
 
@@ -1301,19 +1300,18 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, Omit<Props, 'render' | 'getRenderContext'>> = (
-  props,
+const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, Omit<Props, 'render' | 'getRenderContext'> & {disableNunjucks?: boolean}> = (
+  { disableNunjucks, ...props },
   ref
 ) => {
-  // TODO: make nunjucks opt-in instead of opt-out
-  const { disableNunjucks, handleRender, handleGetRenderContext } = useNunjucksState();
+  // Make props.enableNunjucks opt-in instead of disableNunjucks opt-out
+  const { handleRender, handleGetRenderContext } = useNunjucks(disableNunjucks);
 
   return <UnconnectedCodeEditor
     ref={ref}
     {...props}
     render={handleRender}
     getRenderContext={handleGetRenderContext}
-    disableNunjucks={props.disableNunjucks || disableNunjucks}
   />;
 };
 
