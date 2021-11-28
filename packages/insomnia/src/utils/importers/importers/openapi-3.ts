@@ -64,17 +64,14 @@ let requestCounts: Record<string, number> = {};
  *
  * @returns the resolved server URL
  */
-const getDefaultServerUrl = (api: OpenAPIV3.Document) => {
+const getServerUrl = (server: OpenAPIV3.ServerObject) => {
   const exampleServer = 'http://example.com/';
-  const servers = api.servers || [];
-  const firstServer = servers[0];
-  const foundServer = firstServer && firstServer.url;
 
-  if (!foundServer) {
+  if (!(server && server.url)) {
     return urlParse(exampleServer);
   }
 
-  const url = resolveVariables(firstServer);
+  const url = resolveVariables(server);
   return urlParse(url);
 };
 
@@ -127,6 +124,43 @@ export type SpecExtension = `x-${string}`;
 const isSpecExtension = (property: string): property is SpecExtension => {
   return property.indexOf('x-') === 0;
 };
+
+/**
+ * Create env definitions based on openapi document.
+ */
+const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null) => {
+  if (!document || !document.servers) {
+    return [];
+  }
+
+  const securityVariables = getSecurityEnvVariables(
+      document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
+  );
+
+  return document.servers
+      .map(server => {
+        const currentServerUrl = getServerUrl(server);
+        const protocol = currentServerUrl.protocol || '';
+
+        // Base path is pulled out of the URL, and the trailing slash is removed
+        const basePath = (currentServerUrl.pathname || '').replace(/\/$/, '');
+        const openapiEnv: ImportRequest = {
+          _type: 'environment',
+          _id: 'env___BASE_ENVIRONMENT_ID___sub',
+          parentId: baseEnv._id,
+          name: 'OpenAPI env',
+          data: {
+            // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+            scheme: protocol.replace(/:$/, '') || ['http'],
+            base_path: basePath,
+            host: currentServerUrl.host || '',
+            ...securityVariables,
+          },
+        };
+
+        return openapiEnv;
+      }) || [];
+}
 
 /**
  * Create request definitions based on openapi document.
@@ -767,35 +801,14 @@ export const convert: Converter = async rawData => {
       base_url: '{{ scheme }}://{{ host }}{{ base_path }}',
     },
   };
-  const defaultServerUrl = getDefaultServerUrl(apiDocument);
-  const securityVariables = getSecurityEnvVariables(
-    apiDocument.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
-  );
-  const protocol = defaultServerUrl.protocol || '';
 
-  // Base path is pulled out of the URL, and the trailing slash is removed
-  const basePath = (defaultServerUrl.pathname || '').replace(/\/$/, '');
-
-  const openapiEnv: ImportRequest = {
-    _type: 'environment',
-    _id: 'env___BASE_ENVIRONMENT_ID___sub',
-    parentId: baseEnv._id,
-    name: 'OpenAPI env',
-    data: {
-      // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
-      scheme: protocol.replace(/:$/, '') || ['http'],
-      base_path: basePath,
-      host: defaultServerUrl.host || '',
-      ...securityVariables,
-    },
-  };
-
+  const openapiEnvs = parseEnvs(baseEnv, apiDocument);
   const endpoints = parseEndpoints(apiDocument);
 
   return [
     workspace,
     baseEnv,
-    openapiEnv,
+    ...openapiEnvs,
     ...endpoints,
   ];
 };
