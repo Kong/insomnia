@@ -1,12 +1,12 @@
 import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
-import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../common/render';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating';
-import { getKeys } from '../../templating/utils';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../redux/selectors';
+import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+import { getKeys } from '../../../templating/utils';
+import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
 
-export const useRenderTemplate = () => {
+export const useRenderFunctions = () => {
   const getRenderContextPromiseCache = useMemo(() => ({}), []);
 
   const environmentId = useSelector(selectActiveEnvironment)?._id;

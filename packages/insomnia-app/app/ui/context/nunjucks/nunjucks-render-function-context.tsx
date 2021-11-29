@@ -1,9 +1,9 @@
 import React, { createContext, FC, useContext } from 'react';
 
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { useRenderTemplate } from '../../hooks/use-render-template';
+import { useRenderFunctions } from './use-render-functions';
 
-interface NunjucksRenderFunctions {
+export interface NunjucksRenderFunctions {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
 }
@@ -11,7 +11,7 @@ interface NunjucksRenderFunctions {
 const NunjucksRenderFunctionContext = createContext<NunjucksRenderFunctions | undefined>(undefined);
 
 export const NunjucksRenderFunctionProvider: FC = ({ children }) => {
-  const value = useRenderTemplate();
+  const value = useRenderFunctions();
 
   return <NunjucksRenderFunctionContext.Provider value={value}>
     {children}

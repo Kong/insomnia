@@ -4,7 +4,7 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
 import { Request } from '../../models/request';
-import { useRenderTemplate } from '../hooks/use-render-template';
+import { useNunjucks } from '../context/nunjucks';
 import { CopyButton as _CopyButton } from './base/copy-button';
 
 const Wrapper = styled.div({
@@ -32,7 +32,7 @@ const defaultPreview = '...';
 
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
-  const { handleRender } = useRenderTemplate();
+  const { handleRender } = useNunjucks();
 
   useAsync(async () => {
     const enabledParameters = request.parameters.filter(({ disabled }) => !disabled);

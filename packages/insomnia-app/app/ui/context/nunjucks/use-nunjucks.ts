@@ -1,5 +1,9 @@
-import {  useNunjucksEnabled } from './nunjucks-enabled-context';
-import {  useNunjucksRenderFuncs } from './nunjucks-render-function-context';
+import { useNunjucksEnabled } from './nunjucks-enabled-context';
+import { useNunjucksRenderFuncs } from './nunjucks-render-function-context';
+
+export const useNunjucks = () => {
+  return useNunjucksRenderFuncs();
+};
 
 const shouldEnableNunjucks = ({ enabledByReactContext, enabledByProp }: { enabledByReactContext: boolean; enabledByProp: boolean }) => {
 
@@ -15,17 +19,18 @@ const shouldEnableNunjucks = ({ enabledByReactContext, enabledByProp }: { enable
   return false;
 };
 
-export const useNunjucks = (disabled = false) => {
+export const useNunjucksConfigured = (disabled = false): Partial<ReturnType<typeof useNunjucks>> => {
   const { enabled } = useNunjucksEnabled();
-  const { handleRender, handleGetRenderContext } = useNunjucksRenderFuncs();
+  const funcs = useNunjucks();
 
   const isEnabled = shouldEnableNunjucks({
     enabledByProp: !Boolean(disabled),
     enabledByReactContext: enabled,
   });
 
-  return {
-    handleRender: isEnabled ? handleRender : undefined,
-    handleGetRenderContext: isEnabled ? handleGetRenderContext : undefined,
-  };
+  if (isEnabled) {
+    return funcs;
+  }
+
+  return {};
 };

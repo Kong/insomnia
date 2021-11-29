@@ -18,7 +18,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import { useRenderTemplate } from '../../../hooks/use-render-template';
+import { useNunjucks } from '../../../context/nunjucks';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
@@ -174,6 +174,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
 }
 
 export const AuthWrapper: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useRenderTemplate();
+  const { handleRender, handleGetRenderContext } = useNunjucks();
   return <AuthWrapperInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
 };
