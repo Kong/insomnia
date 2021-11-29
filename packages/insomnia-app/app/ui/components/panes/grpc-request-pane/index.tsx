@@ -142,7 +142,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   valuePlaceholder="value"
                   descriptionPlaceholder="description"
                   pairs={activeRequest.metadata}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}

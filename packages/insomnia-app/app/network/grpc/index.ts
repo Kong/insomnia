@@ -69,12 +69,15 @@ const _makeClientStreamRequest = ({
   method: { path, requestSerialize, responseDeserialize },
   client,
   respond,
+  metadata,
 }: RequestData): Call | undefined => {
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
 
+  const grpcMetadata = _parseMetadata(metadata);
+
   // Make call
-  return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, callback);
+  return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata, callback);
 };
 
 const _makeServerStreamRequest = (
@@ -83,6 +86,7 @@ const _makeServerStreamRequest = (
     method: { path, requestSerialize, responseDeserialize },
     client,
     respond,
+    metadata,
   }: RequestData,
   bodyText: string,
 ): Call | undefined => {
@@ -93,16 +97,20 @@ const _makeServerStreamRequest = (
     return;
   }
 
+  const grpcMetadata = _parseMetadata(metadata);
+
   // Make call
   const call = client.makeServerStreamRequest(
     path,
     requestSerialize,
     responseDeserialize,
     messageBody,
+    grpcMetadata,
   );
 
   _setupServerStreamListeners(call, requestId, respond);
 
+  // eslint-disable-next-line consistent-return
   return call;
 };
 
@@ -111,9 +119,12 @@ const _makeBidiStreamRequest = ({
   method: { path, requestSerialize, responseDeserialize },
   client,
   respond,
+  metadata,
 }: RequestData): Call | undefined => {
+  const grpcMetadata = _parseMetadata(metadata);
+
   // Make call
-  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize);
+  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata);
 
   _setupServerStreamListeners(call, requestId, respond);
 
