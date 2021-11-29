@@ -29,7 +29,7 @@ import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
-import { useNunjucks } from '../../context/nunjucks';
+import { useNunjucksConfigured } from '../../context/nunjucks';
 import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -136,7 +136,6 @@ interface Props extends ReduxProps {
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
   render?: HandleRender;
   getRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   mode?: string;
@@ -1321,7 +1320,7 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, Omit<
   ref
 ) => {
   // Make props.enableNunjucks opt-in instead of disableNunjucks opt-out
-  const { handleRender, handleGetRenderContext } = useNunjucks(disableNunjucks);
+  const { handleRender, handleGetRenderContext } = useNunjucksConfigured(disableNunjucks);
 
   return <UnconnectedCodeEditor
     ref={ref}
