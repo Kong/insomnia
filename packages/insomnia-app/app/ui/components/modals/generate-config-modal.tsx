@@ -49,7 +49,7 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
     this.modal = n;
   }
 
-  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> {
+  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec) {
     const config: Config = {
       content: '',
       mimeType: 'text/yaml',
