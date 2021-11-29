@@ -37,7 +37,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
@@ -326,7 +325,6 @@ export class OAuth2Auth extends PureComponent<Props, State> {
       handleRender,
       handleGetRenderContext,
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -352,7 +350,6 @@ export class OAuth2Auth extends PureComponent<Props, State> {
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               render={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocomplete}
               getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}

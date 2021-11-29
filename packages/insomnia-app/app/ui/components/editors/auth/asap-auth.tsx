@@ -28,7 +28,6 @@ interface Props {
   request: Request;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
@@ -83,7 +82,6 @@ export class AsapAuth extends PureComponent<Props> {
       handleRender,
       handleGetRenderContext,
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -106,7 +104,6 @@ export class AsapAuth extends PureComponent<Props> {
               mode={mode}
               onChange={onChange}
               defaultValue={authentication[property] || ''}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}

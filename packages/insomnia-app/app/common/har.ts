@@ -340,7 +340,7 @@ export async function exportHarWithRequest(
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-) {
+): Promise<RenderedRequest> {
   let newRenderedRequest = renderedRequest;
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {

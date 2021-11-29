@@ -24,7 +24,6 @@ interface Props {
   onPaste?: (e: ClipboardEvent) => void;
   render?: HandleRender;
   getRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
@@ -352,7 +351,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
       render,
       onPaste,
       getRenderContext,
-      nunjucksPowerUserMode,
       getAutocompleteConstants,
       isVariableUncovered,
       mode: syntaxMode,
@@ -374,6 +372,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
             noStyleActiveLine
             noLint
             singleLine
+            ignoreEditorFontSettings
             autoCloseBrackets={false}
             tabIndex={0}
             id={id}
@@ -388,7 +387,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
             onChange={onChange}
             render={render}
             getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}

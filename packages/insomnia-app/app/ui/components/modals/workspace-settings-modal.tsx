@@ -66,11 +66,6 @@ interface Props extends ReduxProps {
   clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
@@ -297,13 +292,8 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
       clientCertificates,
       workspace,
       activeWorkspaceName,
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
@@ -347,14 +337,9 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
                 <MarkdownEditor
                   className="margin-top"
                   defaultPreviewMode={defaultPreviewMode}
-                  fontSize={editorFontSize}
-                  indentSize={editorIndentSize}
-                  keyMap={editorKeyMap}
                   placeholder="Write a description"
-                  lineWrapping={editorLineWrapping}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}

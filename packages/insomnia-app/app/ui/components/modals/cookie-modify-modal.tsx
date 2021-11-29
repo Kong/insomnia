@@ -19,7 +19,6 @@ import { OneLineEditor } from '../codemirror/one-line-editor';
 interface Props extends ModalProps {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   workspace: Workspace;
   cookieJar: CookieJar;
@@ -188,7 +187,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     const {
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
 
@@ -204,7 +202,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
           <OneLineEditor
             render={handleRender}
             getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}
