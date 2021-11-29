@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { FC, PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 
 import {
   AUTH_ASAP,
@@ -14,11 +14,9 @@ import {
   AUTH_OAUTH_2,
   AUTOBIND_CFG,
 } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import { useNunjucks } from '../../../context/nunjucks';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
@@ -31,8 +29,6 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
@@ -42,13 +38,11 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AuthWrapperInternal extends PureComponent<Props> {
+export class AuthWrapperInternal extends PureComponent<Props> {
   renderEditor() {
     const {
       oAuth2Token,
       request,
-      handleRender,
-      handleGetRenderContext,
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
@@ -71,8 +65,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
         <OAuth2Auth
           oAuth2Token={oAuth2Token}
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -91,8 +83,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
       return (
         <OAuth1Auth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           showPasswords={showPasswords}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -142,8 +132,6 @@ class AuthWrapperInternal extends PureComponent<Props> {
       return (
         <AsapAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -172,8 +160,3 @@ class AuthWrapperInternal extends PureComponent<Props> {
     return <div className="tall">{this.renderEditor()}</div>;
   }
 }
-
-export const AuthWrapper: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useNunjucks();
-  return <AuthWrapperInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
-};

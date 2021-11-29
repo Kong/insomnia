@@ -1,10 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent, ReactElement } from 'react';
+import React, { FC, PureComponent, ReactElement } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
+import { useNunjucks } from '../../../context/nunjucks';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
@@ -33,7 +34,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class AsapAuth extends PureComponent<Props> {
+class AsapAuthInternal extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
@@ -196,3 +197,8 @@ export class AsapAuth extends PureComponent<Props> {
     );
   }
 }
+
+export const AsapAuth: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useNunjucks();
+  return <AsapAuthInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+};

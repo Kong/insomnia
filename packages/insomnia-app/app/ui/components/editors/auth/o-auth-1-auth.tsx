@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
@@ -11,6 +11,7 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
+import { useNunjucks } from '../../../context/nunjucks';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
@@ -40,7 +41,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class OAuth1Auth extends PureComponent<Props> {
+class OAuth1AuthInternal extends PureComponent<Props> {
   _handleEditPrivateKey() {
     const { handleRender, handleGetRenderContext, request } = this.props;
     const { privateKey } = request.authentication;
@@ -411,3 +412,8 @@ export class OAuth1Auth extends PureComponent<Props> {
     );
   }
 }
+
+export const OAuth1Auth: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useNunjucks();
+  return <OAuth1AuthInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+};
