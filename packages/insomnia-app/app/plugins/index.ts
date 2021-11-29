@@ -4,6 +4,7 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 
 import appConfig from '../../config/config.json';
+import { ParsedApiSpec } from '../common/api-specs';
 import { PLUGIN_PATH } from '../common/constants';
 import { resolveHomePath } from '../common/misc';
 import * as models from '../models';
@@ -81,18 +82,11 @@ export interface WorkspaceAction extends InternalProperties {
   icon?: string;
 }
 
-export interface SpecInfo {
-  contents: Record<string, any>;
-  rawContents: string;
-  format: string;
-  formatVersion: string;
-}
-
 export interface ConfigGenerator extends InternalProperties {
   label: string;
   docsLink?: string;
   generate: (
-    info: SpecInfo,
+    info: ParsedApiSpec,
   ) => Promise<{
     document?: string;
     error?: string;
@@ -100,7 +94,7 @@ export interface ConfigGenerator extends InternalProperties {
 }
 
 export interface DocumentAction extends InternalProperties {
-  action: (context: Record<string, any>, documents: SpecInfo) => void | Promise<void>;
+  action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
 }
