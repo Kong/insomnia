@@ -1,6 +1,9 @@
 import { useNunjucksEnabled } from './nunjucks-enabled-context';
 import { useNunjucksRenderFuncs } from './nunjucks-render-function-context';
 
+/**
+ * Access functions useful for Nunjucks rendering
+ */
 export const useNunjucks = () => {
   return useNunjucksRenderFuncs();
 };
@@ -19,16 +22,19 @@ const shouldEnableNunjucks = ({ enabledByReactContext, enabledByProp }: { enable
   return false;
 };
 
-export const useNunjucksConfigured = (disabled = false): Partial<ReturnType<typeof useNunjucks>> => {
-  const { enabled } = useNunjucksEnabled();
+/**
+ * Gated access to functions useful for Nunjucks rendering. Access is only granted if the prop opts in, and Nunjucks is enabled via the React Context wrapper.
+ */
+export const useGatedNunjucks = ({ enabledByProp }: {enabledByProp?: boolean}): Partial<ReturnType<typeof useNunjucks>> => {
+  const { enabled: enabledByReactContext } = useNunjucksEnabled();
   const funcs = useNunjucks();
 
-  const isEnabled = shouldEnableNunjucks({
-    enabledByProp: !Boolean(disabled),
-    enabledByReactContext: enabled,
+  const shouldEnable = shouldEnableNunjucks({
+    enabledByProp: Boolean(enabledByProp),
+    enabledByReactContext,
   });
 
-  if (isEnabled) {
+  if (shouldEnable) {
     return funcs;
   }
 

@@ -29,7 +29,7 @@ import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
-import { useNunjucksConfigured } from '../../context/nunjucks';
+import { useGatedNunjucks } from '../../context/nunjucks';
 import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -1315,12 +1315,15 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, Omit<Props, 'render' | 'getRenderContext'> & {disableNunjucks?: boolean}> = (
-  { disableNunjucks, ...props },
+interface CodeEditorFCProps extends Omit<Props, 'render' | 'getRenderContext'> {
+  enableNunjucks?: boolean;
+}
+
+const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, CodeEditorFCProps> = (
+  { enableNunjucks, ...props },
   ref
 ) => {
-  // Make props.enableNunjucks opt-in instead of disableNunjucks opt-out
-  const { handleRender, handleGetRenderContext } = useNunjucksConfigured(disableNunjucks);
+  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ enabledByProp: enableNunjucks });
 
   return <UnconnectedCodeEditor
     ref={ref}

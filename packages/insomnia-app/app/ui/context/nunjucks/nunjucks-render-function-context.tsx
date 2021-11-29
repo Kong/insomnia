@@ -22,7 +22,7 @@ export const useNunjucksRenderFuncs = () => {
   const context = useContext(NunjucksRenderFunctionContext);
 
   if (context === undefined) {
-    throw new Error('NunjucksRenderFunctionContext must be used within a NunjucksRenderFunctionProvider');
+    throw new Error('NunjucksRenderFunctionContext must be used within a NunjucksRenderFunctionProvider or NunjucksProvider');
   }
 
   return context;
