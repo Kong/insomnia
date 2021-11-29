@@ -49,7 +49,7 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
     this.modal = n;
   }
 
-  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec) {
+  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> {
     const config: Config = {
       content: '',
       mimeType: 'text/yaml',
@@ -57,19 +57,17 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
       docsLink: generatePlugin.docsLink,
       error: null,
     };
-    let result;
-
     try {
-      // @ts-expect-error -- TSCONVERSION
-      result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
+      const result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
+      if (result.document) {
+        config.content = result.document;
+      }
+      config.error = result.error || null;
+      return config;
     } catch (err) {
       config.error = err.message;
       return config;
     }
-
-    config.content = result.document || null;
-    config.error = result.error || null;
-    return config;
   }
 
   async show({ activeTabLabel, apiSpec }: ShowOptions) {
