@@ -92,7 +92,6 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
         ...pluginContexts.data.init(project._id),
         ...pluginContexts.store.init(p.plugin),
       };
-      // @ts-expect-error -- TSCONVERSION
       await p.action(context, parseApiSpec(apiSpec.contents));
     } catch (err) {
       showError({
