@@ -1323,7 +1323,7 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, CodeE
   { enableNunjucks, ...props },
   ref
 ) => {
-  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ enabledByProp: enableNunjucks });
+  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !Boolean(enableNunjucks) });
 
   return <UnconnectedCodeEditor
     ref={ref}

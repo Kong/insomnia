@@ -1,7 +1,7 @@
 // eslint-disable-next-line filenames/match-exported
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { FC, PureComponent } from 'react';
+import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
@@ -579,16 +579,23 @@ const dragTarget = {
   },
 };
 
-const KeyValueEditorRow: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ enabledByProp: true });
-  return <KeyValueEditorRowInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+const KeyValueEditorRowFCWithRef: ForwardRefRenderFunction<KeyValueEditorRowInternal, Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = (
+  props,
+  ref
+) => {
+  const { handleRender, handleGetRenderContext } = useGatedNunjucks();
+
+  return <KeyValueEditorRowInternal ref={ref} {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+
 };
+
+const KeyValueEditorRowFC = forwardRef(KeyValueEditorRowFCWithRef);
 
 const source = DragSource('KEY_VALUE_EDITOR', dragSource, (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
   connectDragPreview: connect.dragPreview(),
   isDragging: monitor.isDragging(),
-}))(KeyValueEditorRow);
+}))(KeyValueEditorRowFC);
 
 export const Row = DropTarget('KEY_VALUE_EDITOR', dragTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),

@@ -141,14 +141,14 @@ export class CodePromptModal extends PureComponent<Props, State> {
               }
           }
         >
-          {showCopyButton ? (
-            <div className="pad-top-sm pad-right-sm">
-              <CopyButton content={defaultValue} className="pull-right" />
-            </div>
-          ) : null}
-          {mode === 'text/x-markdown' ? (
-            <div className="pad-sm tall">
-              <NunjucksEnabledProvider disable={!enableRender}>
+          <NunjucksEnabledProvider disable={!enableRender}>
+            {showCopyButton ? (
+              <div className="pad-top-sm pad-right-sm">
+                <CopyButton content={defaultValue} className="pull-right" />
+              </div>
+            ) : null}
+            {mode === 'text/x-markdown' ? (
+              <div className="pad-sm tall">
                 <MarkdownEditor
                   tall
                   defaultValue={defaultValue}
@@ -157,25 +157,25 @@ export class CodePromptModal extends PureComponent<Props, State> {
                   mode={mode}
                   isVariableUncovered={isVariableUncovered}
                 />
-              </NunjucksEnabledProvider>
-            </div>
-          ) : (
-            <div className="pad-sm pad-bottom tall">
-              <div className="form-control form-control--outlined form-control--tall tall">
-                <CodeEditor
-                  hideLineNumbers
-                  manualPrettify
-                  className="tall"
-                  defaultValue={defaultValue}
-                  placeholder={placeholder}
-                  onChange={this._handleChange}
-                  isVariableUncovered={isVariableUncovered}
-                  mode={mode}
-                  enableNunjucks
-                />
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="pad-sm pad-bottom tall">
+                <div className="form-control form-control--outlined form-control--tall tall">
+                  <CodeEditor
+                    hideLineNumbers
+                    manualPrettify
+                    className="tall"
+                    defaultValue={defaultValue}
+                    placeholder={placeholder}
+                    onChange={this._handleChange}
+                    isVariableUncovered={isVariableUncovered}
+                    mode={mode}
+                    enableNunjucks
+                  />
+                </div>
+              </div>
+            )}
+          </NunjucksEnabledProvider>
         </ModalBody>
         <ModalFooter>
           {!hideMode ? (
