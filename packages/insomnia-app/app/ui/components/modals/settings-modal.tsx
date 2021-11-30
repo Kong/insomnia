@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { ipcRenderer } from 'electron';
 import { HotKeyRegistry } from 'insomnia-common';
-import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -41,6 +41,7 @@ export class SettingsModal extends PureComponent<Props, State> {
   };
 
   modal: Modal | null = null;
+  curlVersion = ipcRenderer.sendSync('Curl.getVersion');
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -83,7 +84,7 @@ export class SettingsModal extends PureComponent<Props, State> {
           {getAppName()} Preferences
           <span className="faint txt-sm">
             &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
-            <Tooltip position="bottom" message={Curl.getVersion()}>
+            <Tooltip position="bottom" message={this.curlVersion}>
               <i className="fa fa-info-circle" />
             </Tooltip>
             {email ? ` – ${email}` : null}

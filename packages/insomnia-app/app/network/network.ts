@@ -1,5 +1,6 @@
 import aws4 from 'aws4';
 import clone from 'clone';
+import { ipcRenderer } from 'electron';
 import { parse as urlParse } from 'url';
 
 import {
@@ -25,7 +26,6 @@ import type { Settings } from '../models/settings';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
-import { _actuallySend } from './curl';
 
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
@@ -100,7 +100,7 @@ export async function sendWithSettings(
     environment,
     settings.validateAuthSSL,
   ];
-  const response: ResponsePatch = await _actuallySend(...sendOptions);
+  const response: ResponsePatch = await ipcRenderer.invoke('_actuallySend', ...sendOptions);
   if (response.error){
     return response;
   }
@@ -115,6 +115,8 @@ export async function send(
   requestId: string,
   environmentId?: string,
   extraInfo?: ExtraRenderInfo,
+  // NOTE: inject native send function(inso CLI) directly rather than over the ipc bridge(electron)
+  overrideSend?: Function,
 ): Promise<ResponsePatch> {
   console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
   // HACK: wait for all debounces to finish
@@ -193,7 +195,7 @@ export async function send(
     settings.validateSSL,
   ];
 
-  const response: ResponsePatch = await _actuallySend(...sendOptions);
+  const response: ResponsePatch = overrideSend ?  await overrideSend(...sendOptions) : await ipcRenderer.invoke('_actuallySend', ...sendOptions);
   console.log(
     response.error
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`

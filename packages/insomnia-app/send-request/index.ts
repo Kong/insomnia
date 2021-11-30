@@ -6,6 +6,7 @@ import { BaseModel, types as modelTypes } from '../app/models';
 import * as models from '../app/models';
 import { getBodyBuffer } from '../app/models/response';
 import { Settings } from '../app/models/settings';
+import { _actuallySend } from '../app/network/curl';
 import { send } from '../app/network/network';
 import * as plugins from '../app/plugins';
 
@@ -49,7 +50,7 @@ async function sendAndTransform(requestId: string, environmentId?: string) {
     plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
     plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
     plugins.ignorePlugin('insomnia-plugin-kong-portal');
-    const res = await send(requestId, environmentId);
+    const res = await send(requestId, environmentId, undefined, _actuallySend);
     const headersObj: Record<string, string> = {};
 
     for (const h of res.headers || []) {
