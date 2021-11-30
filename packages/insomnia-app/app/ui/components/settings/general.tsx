@@ -35,6 +35,7 @@ import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { MaskedSetting } from './masked-setting';
+import { TextSetting } from './text-setting';
 
 interface Props {
   settings: Settings;
@@ -117,32 +118,18 @@ class General extends PureComponent<Props> {
     );
   }
 
-  renderTextSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    const { settings } = this.props;
-
-    if (!settings.hasOwnProperty(name)) {
-      throw new Error(`Invalid number setting name ${name}`);
-    }
-
-    return (
-      <div className="form-control form-control--outlined">
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          <input
-            type={props.type || 'text'}
-            name={name}
-            defaultValue={settings[name]}
-            {...props}
-            onChange={props.onChange || this._handleUpdateSetting}
-          />
-        </label>
-      </div>
-    );
-  }
-
   renderNumberSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
+    return (
+      <TextSetting
+        label={label}
+        setting={name}
+        help={help}
+        inputProps={{
+          ...props,
+          type: 'number',
+        }}
+      />
+    );
   }
 
   render() {
@@ -241,15 +228,15 @@ class General extends PureComponent<Props> {
 
         <div className="form-row pad-top-sm">
           <div className="form-row">
-            {this.renderTextSetting(
-              'Interface Font',
-              'fontInterface',
-              'Comma-separated list of fonts. If left empty, takes system defaults.',
-              {
+            <TextSetting
+              label="Interface Font"
+              setting="fontInterface"
+              help="Comma-separated list of fonts. If left empty, takes system defaults."
+              inputProps={{
                 placeholder: '-- System Default --',
                 onChange: this._handleFontChange,
-              },
-            )}
+              }}
+            />
             {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
               min: MIN_INTERFACE_FONT_SIZE,
               max: MAX_INTERFACE_FONT_SIZE,
@@ -259,15 +246,15 @@ class General extends PureComponent<Props> {
         </div>
 
         <div className="form-row">
-          {this.renderTextSetting(
-            'Text Editor Font',
-            'fontMonospace',
-            'Comma-separated list of monospace fonts. If left empty, takes system defaults.',
-            {
+          <TextSetting
+            label="Text Editor Font"
+            setting="fontMonospace"
+            help="Comma-separated list of monospace fonts. If left empty, takes system defaults."
+            inputProps={{
               placeholder: '-- System Default --',
               onChange: this._handleFontChange,
-            },
-          )}
+            }}
+          />
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
             min: MIN_EDITOR_FONT_SIZE,
             max: MAX_EDITOR_FONT_SIZE,
@@ -465,15 +452,15 @@ class General extends PureComponent<Props> {
               disabled: !settings.proxyEnabled,
             }}
           />
-          {this.renderTextSetting(
-            'No Proxy',
-            'noProxy',
-            'Comma-separated list of hostnames that do not require a proxy to be contacted',
-            {
+          <TextSetting
+            label="No Proxy"
+            setting="noProxy"
+            help="Comma-separated list of hostnames that do not require a proxy to be contacted"
+            inputProps={{
               placeholder: 'localhost,127.0.0.1',
               disabled: !settings.proxyEnabled,
-            },
-          )}
+            }}
+          />
         </div>
 
         {updatesSupported() && (
@@ -524,15 +511,14 @@ class General extends PureComponent<Props> {
 
         <hr className="pad-top" />
         <h2>Plugins</h2>
-
-        {this.renderTextSetting(
-          'Additional Plugin Path',
-          'pluginPath',
-          'Tell Insomnia to look for plugins in a different directory',
-          {
+        <TextSetting
+          label="Additional Plugin Path"
+          setting="pluginPath"
+          help="Tell Insomnia to look for plugins in a different directory"
+          inputProps={{
             placeholder: '~/.insomnia:/other/path',
-          },
-        )}
+          }}
+        />
 
         <hr className="pad-top" />
         <h2>Network Activity</h2>
