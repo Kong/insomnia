@@ -43,6 +43,8 @@ export const TextSetting: FC<{
     await models.settings.patch({
       [setting]: updatedValue,
     });
+    event.persist();
+    inputProps.onChange?.(event);
   }, [inputProps, setting]);
 
   let defaultValue = settings[setting];

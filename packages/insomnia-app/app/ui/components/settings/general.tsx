@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HttpVersion, HttpVersions } from 'insomnia-common';
+import { HttpVersions } from 'insomnia-common';
+import { Tooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -24,11 +25,9 @@ import {
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
 import { restartApp } from '../../../common/electron-helpers';
-import { snapNumberToLimits } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import type { Settings } from '../../../models/settings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { setFont } from '../../../plugins/misc';
 import * as globalActions from '../../redux/modules/global';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
@@ -42,82 +41,14 @@ import { TextSetting } from './text-setting';
 interface Props {
   settings: Settings;
   hideModal: () => void;
-  updateSetting: (key: string, value: any) => Promise<Settings>;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends PureComponent<Props> {
-
-  async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
-    let value = el.type === 'checkbox' ? el.checked : el.value;
-
-    if (el.type === 'number') {
-      // @ts-expect-error -- TSCONVERSION
-      value = snapNumberToLimits(
-        // @ts-expect-error -- TSCONVERSION
-        parseInt(value, 10) || 0,
-        parseInt(el.min, 10),
-        parseInt(el.max, 10),
-      );
-    }
-
-    if (el.value === '__NULL__') {
-      // @ts-expect-error -- TSCONVERSION
-      value = null;
-    }
-
-    return this.props.updateSetting(el.name, value);
-  }
-
-  async _handleUpdateSettingAndRestart(e: React.SyntheticEvent<HTMLInputElement>) {
-    await this._handleUpdateSetting(e);
-    restartApp();
-  }
-
-  async _handleFontChange(el: React.SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
-  }
-
   _handleStartMigration() {
     this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
     this.props.hideModal();
-  }
-
-  renderEnumSetting(
-    label: string,
-    name: string,
-    values: {
-      name: string;
-      value: any;
-    }[],
-    help: string,
-    forceRestart?: boolean,
-  ) {
-    const { settings } = this.props;
-    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
-    return (
-      <div className="form-control form-control--outlined pad-top-sm">
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          <select
-            value={settings[name] || '__NULL__'}
-            name={name}
-            // @ts-expect-error -- TSCONVERSION
-            onChange={onChange}
-          >
-            {values.map(({ name, value }) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    );
   }
 
   render() {
@@ -155,9 +86,18 @@ class General extends PureComponent<Props> {
               />
             )}
             <BooleanSetting
-              label="Raw template syntax"
+              label={(
+                <Fragment>
+                  Raw template syntax{' '}
+                  <Tooltip message="Will restart the app" className="space-left">
+                    <i className="fa fa-refresh super-duper-faint" />
+                  </Tooltip>
+                </Fragment>
+              )}
               setting="nunjucksPowerUserMode"
-              forceRestart
+              inputProps={{
+                onChange: restartApp,
+              }}
             />
           </div>
         </div>
@@ -222,7 +162,6 @@ class General extends PureComponent<Props> {
               help="Comma-separated list of fonts. If left empty, takes system defaults."
               inputProps={{
                 placeholder: '-- System Default --',
-                onChange: this._handleFontChange,
               }}
             />
             <NumberSetting
@@ -231,7 +170,6 @@ class General extends PureComponent<Props> {
               inputProps={{
                 min: MIN_INTERFACE_FONT_SIZE,
                 max: MAX_INTERFACE_FONT_SIZE,
-                onBlur: this._handleFontChange,
               }}
             />
           </div>
@@ -244,7 +182,6 @@ class General extends PureComponent<Props> {
             help="Comma-separated list of monospace fonts. If left empty, takes system defaults."
             inputProps={{
               placeholder: '-- System Default --',
-              onChange: this._handleFontChange,
             }}
           />
           <NumberSetting
