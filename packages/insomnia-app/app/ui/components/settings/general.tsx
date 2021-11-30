@@ -34,6 +34,7 @@ import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
+import { EnumSetting } from './enum-setting';
 import { MaskedSetting } from './masked-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
@@ -325,38 +326,20 @@ class General extends PureComponent<Props> {
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderEnumSetting(
-            'Preferred HTTP version',
-            'preferredHttpVersion',
-            [
-              {
-                name: 'Default',
-                value: HttpVersions.default,
-              },
-              {
-                name: 'HTTP 1.0',
-                value: HttpVersions.V1_0,
-              },
-              {
-                name: 'HTTP 1.1',
-                value: HttpVersions.V1_1,
-              },
-              {
-                name: 'HTTP/2 PriorKnowledge',
-                value: HttpVersions.V2PriorKnowledge,
-              },
-              {
-                name: 'HTTP/2',
-                value: HttpVersions.V2_0,
-              }, // Enable when our version of libcurl supports HTTP/3
+          <EnumSetting
+            label="Preferred HTTP version"
+            setting="preferredHttpVersion"
+            values={[
+              { name: 'Default', value: HttpVersions.default },
+              { name: 'HTTP 1.0', value: HttpVersions.V1_0 },
+              { name: 'HTTP 1.1', value: HttpVersions.V1_1 },
+              { name: 'HTTP/2 PriorKnowledge', value: HttpVersions.V2PriorKnowledge },
+              { name: 'HTTP/2', value: HttpVersions.V2_0 },
+              // Enable when our version of libcurl supports HTTP/3
               // { name: 'HTTP/3', value: HttpVersions.v3 },
-            ] as {
-              name: string;
-              value: HttpVersion;
-            }[],
-            'Preferred HTTP version to use for requests which will fall back if it cannot be ' +
-            'negotiated',
-          )}
+            ]}
+            help="Preferred HTTP version to use for requests which will fall back if it cannot be negotiated"
+          />
         </div>
 
         <div className="form-row pad-top-sm">
