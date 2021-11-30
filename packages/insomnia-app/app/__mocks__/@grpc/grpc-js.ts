@@ -79,10 +79,20 @@ class MockGrpcClient {
     makeMockCall();
     return getMockCall();
   }
+
 }
 
 export function makeGenericClientConstructor() {
   return MockGrpcClient;
+}
+
+export class Metadata {
+  /**
+   * Mock Metadata class to avoid TypeError: grpc.Metadata is not a constructor
+   */
+  constructor() {
+    // Do nothing
+  }
 }
 
 export const credentials = {

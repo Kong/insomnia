@@ -188,13 +188,14 @@ describe('grpc', () => {
           unaryMethod.responseDeserialize,
           {},
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = {
           code: grpcJs.status.DATA_LOSS,
         };
         const val = undefined;
-        grpcMocks.mockMakeUnaryRequest.mock.calls[0][4](err, val);
+        grpcMocks.mockMakeUnaryRequest.mock.calls[0][5](err, val);
         // Assert
         expect(respond.sendData).not.toHaveBeenCalled();
         expect(respond.sendError).toHaveBeenCalledWith(params.request._id, err);
@@ -225,13 +226,14 @@ describe('grpc', () => {
           unaryMethod.responseDeserialize,
           {},
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = undefined;
         const val = {
           foo: 'bar',
         };
-        grpcMocks.mockMakeUnaryRequest.mock.calls[0][4](err, val);
+        grpcMocks.mockMakeUnaryRequest.mock.calls[0][5](err, val);
         // Assert
         expect(respond.sendError).not.toHaveBeenCalled();
         expect(respond.sendData).toHaveBeenCalledWith(params.request._id, val);
@@ -288,6 +290,7 @@ describe('grpc', () => {
           serverMethod.requestSerialize,
           serverMethod.responseDeserialize,
           {},
+          expect.anything(),
         );
         // Trigger valid response
         const val = {
@@ -329,13 +332,14 @@ describe('grpc', () => {
           clientMethod.requestSerialize,
           clientMethod.responseDeserialize,
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = {
           code: grpcJs.status.DATA_LOSS,
         };
         const val = undefined;
-        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][3](err, val);
+        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][4](err, val);
         // Assert
         expect(respond.sendData).not.toHaveBeenCalled();
         expect(respond.sendError).toHaveBeenCalledWith(params.request._id, err);
@@ -361,13 +365,14 @@ describe('grpc', () => {
           clientMethod.requestSerialize,
           clientMethod.responseDeserialize,
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = undefined;
         const val = {
           foo: 'bar',
         };
-        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][3](err, val);
+        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][4](err, val);
         // Assert
         expect(respond.sendError).not.toHaveBeenCalled();
         expect(respond.sendData).toHaveBeenCalledWith(params.request._id, val);
@@ -394,6 +399,7 @@ describe('grpc', () => {
           bidiMethod.path,
           bidiMethod.requestSerialize,
           bidiMethod.responseDeserialize,
+          expect.anything()
         );
         // Trigger valid response
         const val = {
