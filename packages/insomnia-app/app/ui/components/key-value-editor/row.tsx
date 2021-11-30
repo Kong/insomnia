@@ -7,8 +7,7 @@ import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { useGatedNunjucks } from '../../context/nunjucks';
+import { useNunjucksEnabled } from '../../context/nunjucks';
 import { Button } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -42,8 +41,7 @@ interface Props {
   onBlurName?: Function;
   onBlurValue?: Function;
   onBlurDescription?: Function;
-  handleRender?: HandleRender;
-  handleGetRenderContext?: HandleGetRenderContext;
+  enableNunjucks?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
@@ -250,13 +248,13 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   }
 
   _handleEditMultiline() {
-    const { pair, handleRender, handleGetRenderContext } = this.props;
+    const { pair, enableNunjucks } = this.props;
     showModal(CodePromptModal, {
       submitName: 'Done',
       title: `Edit ${pair.name}`,
       defaultValue: pair.value,
       onChange: this._handleValueChange,
-      enableRender: handleRender || handleGetRenderContext,
+      enableRender: enableNunjucks,
       // @ts-expect-error -- TSCONVERSION
       mode: pair.multiline || 'text/plain',
       onModeChange: mode => {
@@ -579,13 +577,13 @@ const dragTarget = {
   },
 };
 
-const KeyValueEditorRowFCWithRef: ForwardRefRenderFunction<KeyValueEditorRowInternal, Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = (
+const KeyValueEditorRowFCWithRef: ForwardRefRenderFunction<KeyValueEditorRowInternal, Omit<Props, 'enableNunjucks'>> = (
   props,
   ref
 ) => {
-  const { handleRender, handleGetRenderContext } = useGatedNunjucks();
+  const { enabled } = useNunjucksEnabled();
 
-  return <KeyValueEditorRowInternal ref={ref} {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+  return <KeyValueEditorRowInternal ref={ref} {...props} enableNunjucks={enabled} />;
 
 };
 

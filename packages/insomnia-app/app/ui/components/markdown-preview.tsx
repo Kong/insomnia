@@ -8,7 +8,7 @@ import { AUTOBIND_CFG } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
-import { useNunjucks } from '../context/nunjucks';
+import { useGatedNunjucks, useNunjucks } from '../context/nunjucks';
 
 interface Props {
   markdown: string;
@@ -131,6 +131,6 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
 }
 
 export const MarkdownPreview: FC<Omit<Props, 'handleRender'>> = props => {
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useGatedNunjucks();
   return <MarkdownPreviewInternal {...props} handleRender={handleRender}/>;
 };
