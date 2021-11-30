@@ -108,6 +108,7 @@ export class RequestHeadersEditor extends PureComponent<Props> {
           isVariableUncovered={isVariableUncovered}
           onChange={this._handleBulkUpdate}
           defaultValue={this._getHeadersString()}
+          enableNunjucks
         />
       </div>
     ) : (

@@ -19,6 +19,7 @@ export const GRPCEditor: FunctionComponent<Props> = ({
     defaultValue={content}
     onChange={handleChange}
     mode="application/json"
+    enableNunjucks
     readOnly={readOnly}
     autoPrettify={readOnly}
     manualPrettify={!readOnly}

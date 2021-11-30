@@ -104,7 +104,6 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
         key={timelineKey}
         hideLineNumbers
         readOnly
-        disableNunjucks
         onClickLink={clickLink}
         defaultValue={rows}
         className="pad-left"

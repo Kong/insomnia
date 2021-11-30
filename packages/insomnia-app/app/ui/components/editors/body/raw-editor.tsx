@@ -32,6 +32,7 @@ export class RawEditor extends PureComponent<Props> {
           defaultValue={content}
           className={className}
           isVariableUncovered={isVariableUncovered}
+          enableNunjucks
           onChange={onChange}
           mode={contentType}
           placeholder="..."

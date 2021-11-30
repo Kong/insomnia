@@ -368,6 +368,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
             noLint
             singleLine
             ignoreEditorFontSettings
+            enableNunjucks
             autoCloseBrackets={false}
             tabIndex={0}
             id={id}

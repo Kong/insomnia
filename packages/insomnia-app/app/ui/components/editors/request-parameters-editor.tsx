@@ -82,6 +82,7 @@ export class RequestParametersEditor extends PureComponent<Props> {
         isVariableUncovered={isVariableUncovered}
         onChange={this._handleBulkUpdate}
         defaultValue={this._getQueriesString()}
+        enableNunjucks
       />
     ) : (
       <KeyValueEditor

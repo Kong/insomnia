@@ -811,6 +811,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
+            enableNunjucks
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
