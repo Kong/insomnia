@@ -11,7 +11,7 @@ import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
 import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
 import zprint from 'zprint-clj';
@@ -26,11 +26,9 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useGatedNunjucks } from '../../context/nunjucks';
-import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -93,13 +91,17 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 
 export type CodeEditorOnChange = (value: string) => void;
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface OwnProps {
+interface FCProps {
+  enableNunjucks?: boolean;
   ignoreEditorFontSettings?: boolean;
 }
 
-const mapStateToProps = (state: RootState, { ignoreEditorFontSettings }: OwnProps) => {
+const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) => {
+  const {
+    handleRender,
+    handleGetRenderContext,
+  } = useGatedNunjucks({ disabled: !Boolean(enableNunjucks) });
+
   const {
     hotKeyRegistry,
     autocompleteDelay,
@@ -109,9 +111,11 @@ const mapStateToProps = (state: RootState, { ignoreEditorFontSettings }: OwnProp
     editorLineWrapping,
     editorIndentWithTabs,
     nunjucksPowerUserMode,
-  } = selectSettings(state);
+  } = useSelector(selectSettings);
 
   return {
+    render: handleRender,
+    getRenderContext: handleGetRenderContext,
     hotKeyRegistry,
     autocompleteDelay,
     fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
@@ -123,7 +127,7 @@ const mapStateToProps = (state: RootState, { ignoreEditorFontSettings }: OwnProp
   };
 };
 
-interface Props extends ReduxProps {
+interface RawProps {
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
   onFocus?: (e: FocusEvent) => void;
@@ -134,8 +138,6 @@ interface Props extends ReduxProps {
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   onPaste?: (e: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   mode?: string;
@@ -173,6 +175,8 @@ interface Props extends ReduxProps {
   isVariableUncovered?: boolean;
   raw?: boolean;
 }
+
+type Props = RawProps & ReturnType<typeof useDerivedProps>;
 
 interface State {
   filter: string;
@@ -1315,24 +1319,17 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-interface CodeEditorFCProps extends Omit<Props, 'render' | 'getRenderContext'> {
-  enableNunjucks?: boolean;
-}
-
-const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, CodeEditorFCProps> = (
-  { enableNunjucks, ...props },
+const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawProps & FCProps> = (
+  { enableNunjucks, ignoreEditorFontSettings, ...restProps },
   ref
 ) => {
-  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !Boolean(enableNunjucks) });
+  const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
 
   return <UnconnectedCodeEditor
     ref={ref}
-    {...props}
-    render={handleRender}
-    getRenderContext={handleGetRenderContext}
+    {...restProps}
+    {...derivedProps}
   />;
 };
 
-const CodeEditorFC = forwardRef(CodeEditorFCWithRef);
-
-export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(CodeEditorFC);
+export const CodeEditor = forwardRef(CodeEditorFCWithRef);
