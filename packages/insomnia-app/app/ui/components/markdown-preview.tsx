@@ -8,7 +8,7 @@ import { AUTOBIND_CFG } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
-import { useGatedNunjucks, useNunjucks } from '../context/nunjucks';
+import { useGatedNunjucks } from '../context/nunjucks';
 
 interface Props {
   markdown: string;
