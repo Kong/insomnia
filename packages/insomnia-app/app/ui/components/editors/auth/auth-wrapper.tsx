@@ -38,7 +38,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class AuthWrapperInternal extends PureComponent<Props> {
+export class AuthWrapper extends PureComponent<Props> {
   renderEditor() {
     const {
       oAuth2Token,

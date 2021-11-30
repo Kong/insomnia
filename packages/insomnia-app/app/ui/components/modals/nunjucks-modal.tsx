@@ -3,7 +3,6 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Workspace } from '../../../models/workspace';
-import { RenderTemplateWrapper } from '../../containers/template-render-wrapper';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -74,31 +73,10 @@ export class NunjucksModal extends PureComponent<Props, State> {
 
     if (defaultTemplate.indexOf('{{') === 0) {
       title = 'Variable';
-      editor = (
-        <RenderTemplateWrapper>
-          {args =>
-            <VariableEditor
-              onChange={this._handleTemplateChange}
-              defaultValue={defaultTemplate}
-              {...args}
-            />
-          }
-        </RenderTemplateWrapper>
-      );
+      editor = <VariableEditor onChange={this._handleTemplateChange} defaultValue={defaultTemplate} />;
     } else if (defaultTemplate.indexOf('{%') === 0) {
       title = 'Tag';
-      editor = (
-        <RenderTemplateWrapper>
-          {args =>
-            <TagEditor
-              onChange={this._handleTemplateChange}
-              defaultValue={defaultTemplate}
-              workspace={workspace}
-              {...args}
-            />
-          }
-        </RenderTemplateWrapper>
-      );
+      editor = <TagEditor onChange={this._handleTemplateChange} defaultValue={defaultTemplate} workspace={workspace} />;
     }
 
     return (
