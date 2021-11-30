@@ -17,7 +17,7 @@ import type { Request } from '../../../models/request';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import type { UnitTestResult } from '../../../models/unit-test-result';
-import { cancelRequestById } from '../../../network/network';
+import { cancelRequestById } from '../../../network/curl';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
