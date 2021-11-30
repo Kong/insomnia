@@ -1,13 +1,14 @@
 // eslint-disable-next-line filenames/match-exported
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { useGatedNunjucks } from '../../context/nunjucks';
 import { Button } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -72,7 +73,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class KeyValueEditorRow extends PureComponent<Props, State> {
+class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   _nameInput: OneLineEditor | null = null;
   _valueInput: OneLineEditor | FileInputButton | null = null;
   _descriptionInput: OneLineEditor | null = null;
@@ -576,6 +577,11 @@ const dragTarget = {
       component.setDragDirection(-1);
     }
   },
+};
+
+const KeyValueEditorRow: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ enabledByProp: true });
+  return <KeyValueEditorRowInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
 };
 
 const source = DragSource('KEY_VALUE_EDITOR', dragSource, (connect, monitor) => ({
