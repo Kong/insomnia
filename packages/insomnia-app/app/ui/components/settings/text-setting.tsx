@@ -8,7 +8,7 @@ import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const TextSetting: FC<{
-  help: string;
+  help?: string;
   label: string;
   setting: keyof Settings;
   inputProps?: InputHTMLAttributes<HTMLInputElement>;

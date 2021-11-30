@@ -35,6 +35,7 @@ import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { MaskedSetting } from './masked-setting';
+import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
 
 interface Props {
@@ -118,20 +119,6 @@ class General extends PureComponent<Props> {
     );
   }
 
-  renderNumberSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    return (
-      <TextSetting
-        label={label}
-        setting={name}
-        help={help}
-        inputProps={{
-          ...props,
-          type: 'number',
-        }}
-      />
-    );
-  }
-
   render() {
     const { settings } = this.props;
     return (
@@ -193,15 +180,15 @@ class General extends PureComponent<Props> {
               </select>
             </label>
           </div>
-          {this.renderNumberSetting(
-            'Autocomplete popup delay',
-            'autocompleteDelay',
-            'Configure the autocomplete popup delay in milliseconds (0 to disable)',
-            {
+          <NumberSetting
+            label="Autocomplete popup delay"
+            setting="autocompleteDelay"
+            help="Configure the autocomplete popup delay in milliseconds (0 to disable)"
+            inputProps={{
               min: 0,
               max: 3000,
-            },
-          )}
+            }}
+          />
         </div>
 
         <hr className="pad-top" />
@@ -237,11 +224,15 @@ class General extends PureComponent<Props> {
                 onChange: this._handleFontChange,
               }}
             />
-            {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-              min: MIN_INTERFACE_FONT_SIZE,
-              max: MAX_INTERFACE_FONT_SIZE,
-              onBlur: this._handleFontChange,
-            })}
+            <NumberSetting
+              label="Interface Font Size (px)"
+              setting="fontSize"
+              inputProps={{
+                min: MIN_INTERFACE_FONT_SIZE,
+                max: MAX_INTERFACE_FONT_SIZE,
+                onBlur: this._handleFontChange,
+              }}
+            />
           </div>
         </div>
 
@@ -255,17 +246,26 @@ class General extends PureComponent<Props> {
               onChange: this._handleFontChange,
             }}
           />
-          {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
-            min: MIN_EDITOR_FONT_SIZE,
-            max: MAX_EDITOR_FONT_SIZE,
-          })}
+          <NumberSetting
+            label="Editor Font Size (px)"
+            setting="editorFontSize"
+            inputProps={{
+              min: MIN_EDITOR_FONT_SIZE,
+              max: MAX_EDITOR_FONT_SIZE,
+            }}
+          />
         </div>
 
         <div className="form-row">
-          {this.renderNumberSetting('Editor Indent Size', 'editorIndentSize', '', {
-            min: 1,
-            max: 16,
-          })}
+          <NumberSetting
+            label="Editor Indent Size"
+            setting="editorIndentSize"
+            help=""
+            inputProps={{
+              min: 1,
+              max: 16,
+            }}
+          />
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Key Map
@@ -360,31 +360,41 @@ class General extends PureComponent<Props> {
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinity', {
-            min: -1,
-          })}
-          {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinity', {
-            min: -1,
-          })}
+          <NumberSetting
+            label="Maximum Redirects"
+            setting="maxRedirects"
+            help="-1 for infinity"
+            inputProps={{
+              min: -1,
+            }}
+          />
+          <NumberSetting
+            label="Request Timeout"
+            setting="timeout"
+            help="-1 for infinity"
+            inputProps={{
+              min: -1,
+            }}
+          />
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderNumberSetting(
-            'Response History Limit',
-            'maxHistoryResponses',
-            'Number of responses to keep for each request (-1 for infinity)',
-            {
+          <NumberSetting
+            label="Response History Limit"
+            setting="maxHistoryResponses"
+            help="Number of responses to keep for each request (-1 for infinity)"
+            inputProps={{
               min: -1,
-            },
-          )}
-          {this.renderNumberSetting(
-            'Max Timeline Chunk Size (KB)',
-            'maxTimelineDataSizeKB',
-            'Maximum size in kilobytes to show on timeline',
-            {
+            }}
+          />
+          <NumberSetting
+            label="Max Timeline Chunk Size (KB)"
+            setting="maxTimelineDataSizeKB"
+            help="Maximum size in kilobytes to show on timeline"
+            inputProps={{
               min: 0,
-            },
-          )}
+            }}
+          />
         </div>
 
         <hr className="pad-top" />
