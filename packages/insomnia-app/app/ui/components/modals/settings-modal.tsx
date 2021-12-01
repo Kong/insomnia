@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { ipcRenderer } from 'electron';
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -18,7 +17,6 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import { Tooltip } from '../tooltip';
 import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
