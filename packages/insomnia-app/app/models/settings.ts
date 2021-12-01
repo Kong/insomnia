@@ -86,44 +86,6 @@ export function init(): BaseSettings {
   };
 }
 
-const settingsSideEffects = (patch: Partial<Settings>) => {
-  for (const [setting, value] of Object.entries(patch)) {
-
-    switch (setting) {
-      case 'fontInterface':
-        document?.querySelector('html')?.style.setProperty(
-          '--font-default',
-          String(value),
-        );
-        break;
-
-      case 'fontMonospace':
-        document?.querySelector('html')?.style.setProperty(
-          '--font-monospace',
-          String(value),
-        );
-        break;
-
-      case 'fontVariantLigatures':
-        document?.querySelector('html')?.style.setProperty(
-          '--font-ligatures',
-          String(value) ? 'normal' : 'none',
-        );
-        break;
-
-      case 'fontSize':
-        document?.querySelector('html')?.style.setProperty(
-          'font-size',
-          `${String(value)}px`,
-        );
-        break;
-
-      default:
-        break;
-    }
-  }
-};
-
 export function migrate(doc: Settings) {
   doc = migrateEnsureHotKeys(doc);
   return doc;
@@ -141,13 +103,11 @@ export async function all() {
 
 async function create() {
   const settings = await db.docCreate<Settings>(type);
-  settingsSideEffects(settings);
   return getMonkeyPatchedControlledSettings(settings);
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {
   const sanitizedPatch = omitControlledSettings(settings, patch);
-  settingsSideEffects(sanitizedPatch);
   const updatedSettings = await db.docUpdate<Settings>(settings, sanitizedPatch);
   return getMonkeyPatchedControlledSettings(updatedSettings);
 }
@@ -155,7 +115,6 @@ export async function update(settings: Settings, patch: Partial<Settings>) {
 export async function patch(patch: Partial<Settings>) {
   const settings = await getOrCreate();
   const sanitizedPatch = omitControlledSettings(settings, patch);
-  settingsSideEffects(sanitizedPatch);
   const updatedSettings = await db.docUpdate<Settings>(settings, sanitizedPatch);
   return getMonkeyPatchedControlledSettings(updatedSettings);
 }
@@ -170,7 +129,6 @@ export async function getOrCreate() {
     settings = getMonkeyPatchedControlledSettings(results[0]);
   }
 
-  settingsSideEffects(settings);
   return settings;
 }
 
