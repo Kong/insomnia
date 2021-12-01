@@ -36,7 +36,7 @@ export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegist
               },
             ].map(({ name, keyBindings }) => (
               <tr key={name} style={{ lineHeight: '1em' }}>
-                <td style={{ verticalAlign: 'middle' }}>{name}</td>
+                <td className="valign-middle">{name}</td>
                 <td className="text-right">
                   <code>
                     <Hotkey
