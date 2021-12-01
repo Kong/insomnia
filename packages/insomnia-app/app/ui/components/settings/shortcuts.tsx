@@ -112,17 +112,17 @@ export class Shortcuts extends PureComponent<Props> {
     const hasResetItems = !areKeyBindingsSameAsDefault(def.id, keyBindings);
     return (
       <tr key={index}>
-        <td>{def.description}</td>
+        <td style={{ verticalAlign: 'middle' }}>{def.description}</td>
         <td className="text-right">
           {keyCombinations.map((keyComb: KeyCombination, index: number) => {
             return (
-              <code key={index} className="margin-left-sm">
+              <code key={index} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
                 <Hotkey keyCombination={keyComb} />
               </code>
             );
           })}
         </td>
-        <td className="text-right options">
+        <td className="text-right options" style={{ verticalAlign: 'middle' }}>
           <Dropdown outline>
             <DropdownButton className="btn btn--clicky-small">
               <i className="fa fa-gear" />

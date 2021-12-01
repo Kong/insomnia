@@ -1,6 +1,7 @@
 import { HotKeyRegistry, KeyBindings, KeyCombination } from 'insomnia-common';
+import { forEach } from 'ramda';
 
-import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
+import { displayModifierKey, isMac } from './constants';
 import { keyboardKeys } from './keyboard-keys';
 import { strings } from './strings';
 
@@ -403,10 +404,10 @@ export function getChar(keyCode: number) {
 
 function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
   if (!mustUsePlus && isMac()) {
-    return keys.join('');
+    return keys.join(' ');
   }
 
-  return keys.join('+');
+  return keys.join(' + ');
 }
 
 /**
@@ -418,7 +419,9 @@ export function isModifierKeyCode(keyCode: number) {
   return (
     keyCode === keyboardKeys.alt.keyCode ||
     keyCode === keyboardKeys.shift.keyCode ||
-    keyCode === keyboardKeys.ctrl.keyCode || // Meta keys.
+    keyCode === keyboardKeys.ctrl.keyCode ||
+
+    // Meta keys.
     keyCode === keyboardKeys.leftwindowkey.keyCode ||
     keyCode === keyboardKeys.rightwindowkey.keyCode ||
     keyCode === keyboardKeys.selectkey.keyCode
@@ -430,21 +433,35 @@ export function isModifierKeyCode(keyCode: number) {
  * For example, the display of alt in Windows or Linux would be "Alt";
  * while in Mac would be "⌥".
  * @param keyComb
- * @param mustUsePlus if true will join the characters with "+" for all platforms;
+ * @param mustUsePlus if true will join the characters with " + " for all platforms;
  * otherwise if the platform is Mac, the characters will be next to each other.
- * @returns the constructed string, if keyCode is null and the characters are joint with "+",
- * it will have a dangling "+" as the last character, e.g., "Alt+Ctrl+".
+ * @returns the constructed string, if keyCode is null and the characters are joined with " + ",
+ * it will have a dangling "+" as the last character, e.g., "Alt + Ctrl +".
  */
 export function constructKeyCombinationDisplay(
   keyComb: KeyCombination,
   mustUsePlus: boolean,
 ) {
-  const { ctrl, alt, shift, meta, keyCode } = keyComb;
+  const { keyCode } = keyComb;
   const chars: string[] = [];
-  alt && chars.push(ALT_SYM);
-  shift && chars.push(SHIFT_SYM);
-  ctrl && chars.push(CTRL_SYM);
-  meta && chars.push(META_SYM);
+
+  const addModifierKeys = (keys: (keyof Omit<KeyCombination, 'keyCode'>)[]) => {
+    forEach(key => {
+      if (keyComb[key]) {
+        chars.push(displayModifierKey(key));
+      }
+    }, keys);
+  };
+
+  if (isMac()) {
+    // Note: on Mac the cannonical order is Control, Option (i.e. Alt), Shift, Command (i.e. Meta)
+    // see: https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/keyboard
+    addModifierKeys(['ctrl', 'alt', 'shift', 'meta']);
+  } else {
+    // Note: on Windows the observed oreder (as in, if you just try to make a shortcut with all modifiers) is Windows (i.e. Super/Meta), Ctrl, Alt, Shift.
+    // No such standard really exists, but at least on Ubunut it follows the Windows ordering.
+    addModifierKeys(['meta', 'ctrl', 'alt', 'shift']);
+  }
 
   if (keyCode != null && !isModifierKeyCode(keyCode)) {
     chars.push(getChar(keyCode));
@@ -453,7 +470,7 @@ export function constructKeyCombinationDisplay(
   let joint = joinHotKeys(mustUsePlus, chars);
 
   if (mustUsePlus && isModifierKeyCode(keyCode)) {
-    joint += '+';
+    joint += ' +';
   }
 
   return joint;

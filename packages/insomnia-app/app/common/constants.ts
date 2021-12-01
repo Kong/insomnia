@@ -1,4 +1,6 @@
+import { KeyCombination } from 'insomnia-common';
 import path from 'path';
+import { unreachableCase } from 'ts-assert-unreachable';
 
 import appConfig from '../../config/config.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
@@ -84,10 +86,38 @@ export const EDITOR_KEY_MAP_VIM = 'vim';
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
-export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
-export const ALT_SYM = isMac() ? '⌥' : 'Alt';
-export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
-export const META_SYM = isMac() ? '⌘' : 'Super';
+
+export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
+  const mac = isMac();
+  switch (key) {
+    case 'ctrl':
+      return mac ? '⌃' : 'Ctrl';
+
+    case 'alt':
+      return mac ? '⌥' : 'Alt';
+
+    case 'shift':
+      return mac ? '⇧' : 'Shift';
+
+    case 'meta':
+      if (mac) {
+        return '⌘';
+      }
+
+      if (isWindows()) {
+        // Note: Although this unicode character for the Windows doesn't exist, the the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
+        // see: https://en.wikipedia.org/wiki/Windows_key
+        return 'Win';
+      }
+
+      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
+      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
+      return 'Super';
+
+    default:
+      return unreachableCase(key, 'unrecognized key');
+  }
+};
 
 // Update
 export const UPDATE_CHANNEL_STABLE = 'stable';

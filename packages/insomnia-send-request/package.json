@@ -39,6 +39,7 @@
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",
     "tough-cookie": "^4.0.0",
+    "ts-assert-unreachable": "^0.0.9",
     "url-join": "^4.0.1",
     "uuid": "^8.2.0",
     "whatwg-fetch": "^3.1.0",
