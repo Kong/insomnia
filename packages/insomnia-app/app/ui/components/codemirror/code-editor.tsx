@@ -91,42 +91,6 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 
 export type CodeEditorOnChange = (value: string) => void;
 
-interface FCProps {
-  enableNunjucks?: boolean;
-  ignoreEditorFontSettings?: boolean;
-}
-
-const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) => {
-  const {
-    handleRender,
-    handleGetRenderContext,
-  } = useGatedNunjucks({ disabled: !Boolean(enableNunjucks) });
-
-  const {
-    hotKeyRegistry,
-    autocompleteDelay,
-    editorFontSize,
-    editorIndentSize,
-    editorKeyMap,
-    editorLineWrapping,
-    editorIndentWithTabs,
-    nunjucksPowerUserMode,
-  } = useSelector(selectSettings);
-
-  return {
-    render: handleRender,
-    getRenderContext: handleGetRenderContext,
-    hotKeyRegistry,
-    autocompleteDelay,
-    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
-    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
-    keyMap: editorKeyMap,
-    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
-    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
-    nunjucksPowerUserMode,
-  };
-};
-
 interface RawProps {
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
@@ -175,6 +139,57 @@ interface RawProps {
   isVariableUncovered?: boolean;
   raw?: boolean;
 }
+
+interface FCProps {
+  enableNunjucks?: boolean;
+  ignoreEditorFontSettings?: boolean;
+}
+
+const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) => {
+  const {
+    handleRender,
+    handleGetRenderContext,
+  } = useGatedNunjucks({ disabled: !Boolean(enableNunjucks) });
+
+  const {
+    hotKeyRegistry,
+    autocompleteDelay,
+    editorFontSize,
+    editorIndentSize,
+    editorKeyMap,
+    editorLineWrapping,
+    editorIndentWithTabs,
+    nunjucksPowerUserMode,
+  } = useSelector(selectSettings);
+
+  return {
+    render: handleRender,
+    getRenderContext: handleGetRenderContext,
+    hotKeyRegistry,
+    autocompleteDelay,
+    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
+    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
+    keyMap: editorKeyMap,
+    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
+    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
+    nunjucksPowerUserMode,
+  };
+};
+
+const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawProps & FCProps> = (
+  { enableNunjucks, ignoreEditorFontSettings, ...rawProps },
+  ref
+) => {
+  const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
+
+  return <UnconnectedCodeEditor
+    ref={ref}
+    {...rawProps}
+    {...derivedProps}
+  />;
+};
+
+export const CodeEditor = forwardRef(CodeEditorFCWithRef);
 
 type Props = RawProps & ReturnType<typeof useDerivedProps>;
 
@@ -1318,18 +1333,3 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     );
   }
 }
-
-const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawProps & FCProps> = (
-  { enableNunjucks, ignoreEditorFontSettings, ...restProps },
-  ref
-) => {
-  const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
-
-  return <UnconnectedCodeEditor
-    ref={ref}
-    {...restProps}
-    {...derivedProps}
-  />;
-};
-
-export const CodeEditor = forwardRef(CodeEditorFCWithRef);
