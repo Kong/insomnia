@@ -20,7 +20,7 @@ export const useNunjucksEnabled = () => {
   const context = useContext(NunjucksEnabledContext);
 
   if (context === undefined) {
-    throw new Error('useNunjucksState must be used within a NunjucksEnabledProvider or NunjucksProvider');
+    throw new Error('useNunjucksEnabled must be used within a NunjucksEnabledProvider or NunjucksProvider');
   }
 
   return context;
