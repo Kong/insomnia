@@ -552,8 +552,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
               {activeCookieJar ? <>
-                {/* TODO: Why isn't CookiesModal registered? :O */}
                 <CookiesModal
+                  ref={registerModal}
                   handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   workspace={activeWorkspace}
                   cookieJar={activeCookieJar}
