@@ -28,6 +28,14 @@ export const useRenderFunctions = () => {
     return { context, keys };
   }, [fetchRenderContext]);
 
+  /**
+   * Heavily optimized render function
+   *
+   * @param text - template to render
+   * @param contextCacheKey - if rendering multiple times in parallel, set this
+   * @returns {Promise}
+   * @private
+   */
   const handleRender: HandleRender = useCallback(async <T>(obj: T, contextCacheKey: string | null = null) => {
     if (!contextCacheKey || !getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
