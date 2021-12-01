@@ -149,7 +149,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
   const {
     handleRender,
     handleGetRenderContext,
-  } = useGatedNunjucks({ disabled: !Boolean(enableNunjucks) });
+  } = useGatedNunjucks({ disabled: !enableNunjucks });
 
   const {
     hotKeyRegistry,
