@@ -7,6 +7,7 @@ import {
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
+import { CurlRequestEvent } from '../common/ipc-events';
 import {
   delay,
   getContentTypeHeader,
@@ -100,7 +101,7 @@ export async function sendWithSettings(
     environment,
     settings.validateAuthSSL,
   ];
-  const response: ResponsePatch = await ipcRenderer.invoke('_actuallySend', ...sendOptions);
+  const response: ResponsePatch = await ipcRenderer.invoke(CurlRequestEvent.send, ...sendOptions);
   if (response.error){
     return response;
   }
@@ -195,7 +196,7 @@ export async function send(
     settings.validateSSL,
   ];
 
-  const response: ResponsePatch = overrideSend ?  await overrideSend(...sendOptions) : await ipcRenderer.invoke('_actuallySend', ...sendOptions);
+  const response: ResponsePatch = overrideSend ?  await overrideSend(...sendOptions) : await ipcRenderer.invoke(CurlRequestEvent.send, ...sendOptions);
   console.log(
     response.error
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`

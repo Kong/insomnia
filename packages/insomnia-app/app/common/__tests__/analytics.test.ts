@@ -13,7 +13,7 @@ import {
   getGoogleAnalyticsLocation,
 } from '../constants';
 
-export const getBrowserUserAgent = () => encodeURIComponent(
+const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
     .replace(/Electron\/\d+\.\d+\.\d+ /, ''),

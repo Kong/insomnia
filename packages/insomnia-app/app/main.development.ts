@@ -3,7 +3,6 @@ import 'regenerator-runtime/runtime';
 
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import { Curl } from 'node-libcurl';
 import path from 'path';
 
 import appConfig from '../config/config.json';
@@ -12,19 +11,15 @@ import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/cons
 import { database } from './common/database';
 import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
-import type { RenderedRequest } from './common/render';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
+import * as curlIpcMain from './main/curl-ipc-main';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import type { Environment } from './models/environment';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
-import type { Workspace } from './models/workspace';
-import { _actuallySend, cancelRequestById } from './network/curl';
-import type { ResponsePatch } from './network/network';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -85,6 +80,7 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  curlIpcMain.init();
   grpcIpcMain.init();
 });
 
@@ -226,18 +222,6 @@ async function _trackStats() {
   } else {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
-
-  ipcMain.handle('_actuallySend', async (_, renderedRequest: RenderedRequest, workspace: Workspace, settings, environment: Environment | null, validateSSL: boolean): Promise<ResponsePatch> => {
-    return _actuallySend(renderedRequest, workspace, settings, environment, validateSSL);
-  });
-
-  ipcMain.on('cancelRequestById', (_, requestId: string): void => {
-    cancelRequestById(requestId);
-  });
-
-  ipcMain.on('Curl.getVersion', event => {
-    event.returnValue = Curl.getVersion();
-  });
 
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
