@@ -22,7 +22,7 @@ import {
 import * as models from '../models';
 import type { Environment } from '../models/environment';
 import type { Request, RequestHeader } from '../models/request';
-import type { ResponseHeader } from '../models/response';
+import { getBodyBuffer, ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
@@ -382,4 +382,30 @@ if (global.document) {
   document.addEventListener('paste', () => {
     lastUserInteraction = Date.now();
   });
+}
+
+export async function sendAndTransform(requestId: string, environmentId?: string, overrideSend?: Function) {
+  try {
+    plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
+    plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
+    plugins.ignorePlugin('insomnia-plugin-kong-portal');
+    const res = await send(requestId, environmentId, undefined, overrideSend);
+    const headersObj: Record<string, string> = {};
+
+    for (const h of res.headers || []) {
+      const name = h.name || '';
+      headersObj[name.toLowerCase()] = h.value || '';
+    }
+
+    const bodyBuffer = await getBodyBuffer(res) as Buffer;
+    return {
+      status: res.statusCode,
+      statusMessage: res.statusMessage,
+      data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
+      headers: headersObj,
+      responseTime: res.elapsedTime,
+    };
+  } finally {
+    plugins.clearIgnores();
+  }
 }
