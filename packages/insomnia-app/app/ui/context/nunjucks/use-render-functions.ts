@@ -6,6 +6,11 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
 
+/**
+ * @deprecated this hook is intended to only be used by `NunjucksRenderFunctionProvider`
+ *
+ * Use `useNunjucksRenderFunctions` or `useGatedNunjucksRenderFunctions` instead
+ */
 export const useRenderFunctions = () => {
   const getRenderContextPromiseCache = useMemo(() => ({}), []);
 

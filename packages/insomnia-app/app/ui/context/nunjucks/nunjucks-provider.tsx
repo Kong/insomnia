@@ -10,5 +10,3 @@ export const NunjucksProvider: FC = ({ children }) => (
     </NunjucksRenderFunctionProvider>
   </NunjucksEnabledProvider>
 );
-
-export const DisableNunjucks = ({ children }) => <NunjucksEnabledProvider disable>{children}</NunjucksEnabledProvider>;

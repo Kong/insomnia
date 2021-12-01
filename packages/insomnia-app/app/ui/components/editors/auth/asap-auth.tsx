@@ -5,7 +5,7 @@ import React, { FC, PureComponent, ReactElement } from 'react';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
-import { useNunjucks } from '../../../context/nunjucks';
+import { useNunjucksRenderFunctions } from '../../../context/nunjucks/nunjucks-render-function-context';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
@@ -199,6 +199,6 @@ class AsapAuthInternal extends PureComponent<Props> {
 }
 
 export const AsapAuth: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useNunjucks();
+  const { handleRender, handleGetRenderContext } = useNunjucksRenderFunctions();
   return <AsapAuthInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
 };

@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
-import { useNunjucksEnabled } from '../../context/nunjucks';
+import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { Button } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

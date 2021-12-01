@@ -28,7 +28,7 @@ import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
-import { useGatedNunjucks } from '../../context/nunjucks';
+import { useGatedNunjucksRenderFunctions } from '../../context/nunjucks/use-gated-nunjucks-render-functions';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -149,7 +149,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
   const {
     handleRender,
     handleGetRenderContext,
-  } = useGatedNunjucks({ disabled: !enableNunjucks });
+  } = useGatedNunjucksRenderFunctions({ disabled: !enableNunjucks });
 
   const {
     hotKeyRegistry,

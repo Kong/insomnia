@@ -12,7 +12,7 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
-import { useNunjucks } from '../../context/nunjucks';
+import { useNunjucksRenderFunctions } from '../../context/nunjucks/nunjucks-render-function-context';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import { Editable } from '../base/editable';
@@ -334,7 +334,7 @@ const mapStateToProps = (state: RootState) => ({
 });
 
 export const UnconnectedSidebarRequestRowWithRender: FC<Omit<Props, 'handleRender'>> = props => {
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucksRenderFunctions();
   return <UnconnectedSidebarRequestRow {...props} handleRender={handleRender}/>;
 };
 

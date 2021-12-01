@@ -3,7 +3,7 @@ import React, { createRef, FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { useNunjucks } from '../../context/nunjucks';
+import { useNunjucksRenderFunctions } from '../../context/nunjucks/nunjucks-render-function-context';
 
 interface Props {
   handleRender: HandleRender;
@@ -148,6 +148,6 @@ class VariableEditorInternal extends PureComponent<Props, State> {
 }
 
 export const VariableEditor: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } =  useNunjucks();
+  const { handleRender, handleGetRenderContext } = useNunjucksRenderFunctions();
   return <VariableEditorInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
 };
