@@ -1,5 +1,4 @@
-import { HttpVersion } from 'insomnia-common';
-import React, { ChangeEvent, FC, useCallback } from 'react';
+import React, { ChangeEvent, PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models/index';
@@ -7,20 +6,22 @@ import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
-export const EnumSetting: FC<{
-  help?: string;
+interface Props<T> {
+  help?: ReactNode;
   label: string;
   setting: keyof Settings;
   values: {
     name: string;
-    value: HttpVersion;
+    value: T;
   }[];
-}> = ({
+}
+
+export const EnumSetting = <T extends string = string>({
   help,
   label,
   setting,
   values,
-}) => {
+}: PropsWithChildren<Props<T>>) => {
   const settings = useSelector(selectSettings);
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLSelectElement>) => {
@@ -31,7 +32,7 @@ export const EnumSetting: FC<{
   }, [setting]);
 
   return (
-    <div className="form-control form-control--outlined pad-top-sm">
+    <div className="form-control form-control--outlined">
       <label>
         {label}
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}

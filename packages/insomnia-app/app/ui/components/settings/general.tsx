@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HttpVersions } from 'insomnia-common';
+import { HttpVersion, HttpVersions, EnvironmentHighlightColorStyle } from 'insomnia-common';
 import { Tooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -101,26 +101,22 @@ class General extends PureComponent<Props> {
             />
           </div>
         </div>
+
         <div className="row-fill row-fill--top pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              Environment Highlight Style{' '}
-              <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
-              <select
-                defaultValue={settings.environmentHighlightColorStyle}
-                name="environmentHighlightColorStyle"
-                // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}
-              >
-                <option value="sidebar-indicator">Sidebar indicator</option>
-                <option value="sidebar-edge">Sidebar edge</option>
-                <option value="window-top">Window top</option>
-                <option value="window-bottom">Window bottom</option>
-                <option value="window-left">Window left</option>
-                <option value="window-right">Window right</option>
-              </select>
-            </label>
-          </div>
+          <EnumSetting<EnvironmentHighlightColorStyle>
+            label="Environment Highlight Style"
+            help="Configures the appearance of environment's color indicator"
+            setting="environmentHighlightColorStyle"
+            values={[
+              { value:"sidebar-indicator", name: 'Sidebar indicator' },
+              { value:"sidebar-edge", name: 'Sidebar edge' },
+              { value:"window-top", name: 'Window top' },
+              { value:"window-bottom", name: 'Window bottom' },
+              { value:"window-left", name: 'Window left' },
+              { value:"window-right", name: 'Window right' },
+            ]}
+          />
+
           <NumberSetting
             label="Autocomplete popup delay"
             setting="autocompleteDelay"
@@ -204,29 +200,23 @@ class General extends PureComponent<Props> {
               max: 16,
             }}
           />
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Key Map
-              {isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
-                <HelpTooltip className="space-left">
-                  To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
-                    documentation <i className="fa fa-external-link-square" />
-                  </Link>
-                </HelpTooltip>
-              )}
-              <select
-                defaultValue={settings.editorKeyMap}
-                name="editorKeyMap"
-                // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}
-              >
-                <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
-                <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
-                <option value={EDITOR_KEY_MAP_EMACS}>Emacs</option>
-                <option value={EDITOR_KEY_MAP_SUBLIME}>Sublime</option>
-              </select>
-            </label>
-          </div>
+
+          <EnumSetting
+            label="Text Editor Key Map"
+            setting="editorKeyMap"
+            help={isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
+              <Fragment>
+                To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
+            documentation <i className="fa fa-external-link-square" /></Link>
+              </Fragment>
+            )}
+            values={[
+              { value: EDITOR_KEY_MAP_DEFAULT, name: 'Default' },
+              { value: EDITOR_KEY_MAP_VIM, name: 'Vim' },
+              { value: EDITOR_KEY_MAP_EMACS, name: 'Emacs' },
+              { value: EDITOR_KEY_MAP_SUBLIME, name: 'Sublime' },
+            ]}
+          />
         </div>
 
         <hr className="pad-top" />
@@ -263,7 +253,7 @@ class General extends PureComponent<Props> {
         </div>
 
         <div className="form-row pad-top-sm">
-          <EnumSetting
+          <EnumSetting<HttpVersion>
             label="Preferred HTTP version"
             setting="preferredHttpVersion"
             values={[
@@ -409,20 +399,15 @@ class General extends PureComponent<Props> {
               setting="updateAutomatically"
               help="If disabled, you will receive a notification when a new update is available"
             />
-            <div className="form-control form-control--outlined pad-top-sm">
-              <label>
-                Update Channel
-                <select
-                  value={settings.updateChannel}
-                  name="updateChannel"
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleUpdateSetting}
-                >
-                  <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
-                  <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
-                </select>
-              </label>
-            </div>
+
+            <EnumSetting
+              label="Update Channel"
+              setting="updateChannel"
+              values={[
+                { name: 'Release (Recommended)', value: UPDATE_CHANNEL_STABLE },
+                { name: 'Early Access (Beta)', value: UPDATE_CHANNEL_BETA },
+              ]}
+            />
           </Fragment>
         )}
 
