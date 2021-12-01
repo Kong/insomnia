@@ -12,7 +12,7 @@ interface State {
   error: string;
 }
 
-class InternalRenderedText extends PureComponent<Props, State> {
+class RenderedTextInternal extends PureComponent<Props, State> {
   state: State = {
     renderedText: '',
     error: '',
@@ -68,5 +68,5 @@ class InternalRenderedText extends PureComponent<Props, State> {
 export const RenderedText: FC<Omit<Props, 'render'>> = props => {
   const { handleRender } = useNunjucks();
 
-  return <InternalRenderedText {...props} render={handleRender}/>;
+  return <RenderedTextInternal {...props} render={handleRender}/>;
 };
