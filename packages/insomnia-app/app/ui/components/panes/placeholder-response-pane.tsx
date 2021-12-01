@@ -31,7 +31,7 @@ export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegist
                 keyBindings: hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id],
               },
               {
-                name: 'Edit Environment',
+                name: 'Edit Environments',
                 keyBindings: hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id],
               },
             ].map(({ name, keyBindings }) => (
