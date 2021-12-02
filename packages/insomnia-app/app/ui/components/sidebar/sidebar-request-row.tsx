@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { FC, PureComponent } from 'react';
+import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { connect } from 'react-redux';
 
@@ -333,11 +333,13 @@ const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
 });
 
-export const UnconnectedSidebarRequestRowWithRender: FC<Omit<Props, 'handleRender'>> = props => {
+export const UnconnectedSidebarRequestRowFCWithRef: ForwardRefRenderFunction<UnconnectedSidebarRequestRow, Omit<Props, 'handleRender'>> = (props, ref) => {
   const { handleRender } = useNunjucksRenderFunctions();
-  return <UnconnectedSidebarRequestRow {...props} handleRender={handleRender}/>;
+  return <UnconnectedSidebarRequestRow ref={ref} {...props} handleRender={handleRender}/>;
 };
 
-const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRowWithRender);
+const UnconnectedSidebarRequestRowFC = forwardRef(UnconnectedSidebarRequestRowFCWithRef);
+
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRowFC);
 const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 export const SidebarRequestRow = connect(mapStateToProps)(target);
