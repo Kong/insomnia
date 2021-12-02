@@ -114,7 +114,7 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
     let isDuplicate = false;
 
     if (pressedKeyCombination != null) {
-      keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true).toLowerCase();
+      keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true);
       isDuplicate = checkKeyCombinationDuplicate(pressedKeyCombination);
     }
 
