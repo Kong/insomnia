@@ -9,10 +9,15 @@ import {
   getAppName,
   getAppPlatform,
   getAppVersion,
-  getBrowserUserAgent,
   getGoogleAnalyticsId,
   getGoogleAnalyticsLocation,
 } from '../constants';
+
+const getBrowserUserAgent = () => encodeURIComponent(
+  String(window.navigator.userAgent)
+    .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+    .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+).replace('%2C', ',');
 
 describe('init()', () => {
   beforeEach(async () => {

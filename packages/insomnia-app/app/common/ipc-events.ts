@@ -19,3 +19,8 @@ export const GrpcResponseEventEnum = {
 } as const;
 
 export type GrpcResponseEvent = ValueOf<typeof GrpcResponseEventEnum>;
+
+export enum CurlRequestEvent {
+  send = 'SEND_REQUEST',
+  cancel = 'CANCEL_REQUEST'
+}
