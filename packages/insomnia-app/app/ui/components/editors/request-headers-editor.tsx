@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
-import { _getCommonHeaderNames, _getCommonHeaderValues } from '../../../common/common-headers';
 
+import { _getCommonHeaderNames, _getCommonHeaderValues } from '../../../common/common-headers';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { Request, RequestHeader } from '../../../models/request';
