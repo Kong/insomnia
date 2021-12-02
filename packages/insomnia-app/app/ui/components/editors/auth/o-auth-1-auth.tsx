@@ -11,7 +11,7 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import { useNunjucksRenderFunctions } from '../../../context/nunjucks/nunjucks-render-function-context';
+import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
@@ -414,6 +414,6 @@ class OAuth1AuthInternal extends PureComponent<Props> {
 }
 
 export const OAuth1Auth: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useNunjucksRenderFunctions();
+  const { handleRender, handleGetRenderContext } = useNunjucks();
   return <OAuth1AuthInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
 };

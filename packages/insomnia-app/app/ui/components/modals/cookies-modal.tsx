@@ -8,7 +8,7 @@ import { HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
-import { useNunjucksRenderFunctions } from '../../context/nunjucks/nunjucks-render-function-context';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -207,7 +207,7 @@ class CookiesModalInternal extends PureComponent<Props, State> {
 }
 
 const CookiesModalFCRF: ForwardRefRenderFunction<CookiesModalInternal, Omit<Props, 'handleRender'>> = (props, ref) => {
-  const { handleRender } = useNunjucksRenderFunctions();
+  const { handleRender } = useNunjucks();
   return <CookiesModalInternal ref={ref} {...props} handleRender={handleRender} />;
 
 };

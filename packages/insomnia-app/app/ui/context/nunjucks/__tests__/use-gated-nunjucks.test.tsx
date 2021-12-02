@@ -3,32 +3,29 @@ import React from 'react';
 import { FC } from 'react';
 
 import { NunjucksEnabledProvider } from '../nunjucks-enabled-context';
-import { NunjucksRenderFunctionProvider } from '../nunjucks-render-function-context';
-import { useGatedNunjucksRenderFunctions } from '../use-gated-nunjucks-render-functions';
-import { useRenderFunctions } from '../use-render-functions';
+import { useGatedNunjucks } from '../use-gated-nunjucks';
+import { useNunjucks } from '../use-nunjucks';
 
-jest.mock('../use-render-functions', () => {
-  const renderFunctions: ReturnType<typeof useRenderFunctions> = {
+jest.mock('../use-nunjucks', () => {
+  const funcs: ReturnType<typeof useNunjucks> = {
     handleRender: jest.fn(),
     handleGetRenderContext: jest.fn(),
   };
 
   return ({
-    useRenderFunctions: () => renderFunctions,
+    useNunjucks: () => funcs,
   });
 });
 
-describe('useGatedNunjucksRenderFunctions', () => {
+describe('useGatedNunjucks', () => {
   it('should return defined functions (disableContext false, disableProp false)', () => {
     const wrapper: FC = ({ children }) => (
       <NunjucksEnabledProvider disable={false}>
-        <NunjucksRenderFunctionProvider>
-          {children}
-        </NunjucksRenderFunctionProvider>
+        {children}
       </NunjucksEnabledProvider>
     );
 
-    const { result } = renderHook(() => useGatedNunjucksRenderFunctions({ disabled: false }), { wrapper });
+    const { result } = renderHook(() => useGatedNunjucks({ disabled: false }), { wrapper });
 
     expect(result.current.handleRender).toBeDefined();
     expect(result.current.handleGetRenderContext).toBeDefined();
@@ -41,13 +38,11 @@ describe('useGatedNunjucksRenderFunctions', () => {
   ])('should return undefined functions (disableContext %s, disableProp %s)', (disableContext: boolean, disableProp: boolean) => {
     const wrapper: FC = ({ children }) => (
       <NunjucksEnabledProvider disable={disableContext}>
-        <NunjucksRenderFunctionProvider>
-          {children}
-        </NunjucksRenderFunctionProvider>
+        {children}
       </NunjucksEnabledProvider>
     );
 
-    const { result } = renderHook(() => useGatedNunjucksRenderFunctions({ disabled: disableProp }), { wrapper });
+    const { result } = renderHook(() => useGatedNunjucks({ disabled: disableProp }), { wrapper });
 
     expect(result.current.handleRender).not.toBeDefined();
     expect(result.current.handleGetRenderContext).not.toBeDefined();

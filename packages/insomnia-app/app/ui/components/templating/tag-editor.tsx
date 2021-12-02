@@ -23,7 +23,7 @@ import type {
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
-import { useNunjucksRenderFunctions } from '../../context/nunjucks/nunjucks-render-function-context';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -837,6 +837,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
 }
 
 export const TagEditor: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useNunjucksRenderFunctions();
+  const { handleRender, handleGetRenderContext } = useNunjucks();
   return <TagEditorInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
 };

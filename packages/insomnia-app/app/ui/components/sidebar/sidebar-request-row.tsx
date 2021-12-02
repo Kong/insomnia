@@ -11,7 +11,7 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
-import { useNunjucksRenderFunctions } from '../../context/nunjucks/nunjucks-render-function-context';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -331,7 +331,7 @@ const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(Unco
 const Target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 
 const useDerivedProps = () => {
-  const { handleRender } = useNunjucksRenderFunctions();
+  const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
 

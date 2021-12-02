@@ -81,7 +81,7 @@ import { Toast } from '../components/toast';
 import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
-import { NunjucksProvider } from '../context/nunjucks/nunjucks-provider';
+import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
@@ -1457,7 +1457,7 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
-          <NunjucksProvider>
+          <NunjucksEnabledProvider>
             <AppHooks />
 
             <div className="app" key={uniquenessKey}>
@@ -1515,7 +1515,7 @@ class App extends PureComponent<AppProps, State> {
               {/* Block all mouse activity by showing an overlay while dragging */}
               {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
             </div>
-          </NunjucksProvider>
+          </NunjucksEnabledProvider>
         </GrpcProvider>
       </KeydownBinder>
     );

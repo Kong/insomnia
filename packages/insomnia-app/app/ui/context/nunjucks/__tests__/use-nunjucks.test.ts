@@ -11,7 +11,7 @@ import { ACTIVITY_DEBUG } from '../../../../common/constants';
 import { getRenderContext, getRenderContextAncestors, render } from '../../../../common/render';
 import * as models from '../../../../models';
 import { RootState } from '../../../redux/modules';
-import { useRenderFunctions } from '../use-render-functions';
+import { initializeNunjucksRenderPromiseCache, useNunjucks } from '../use-nunjucks';
 
 const renderMock = mocked(render);
 const getRenderContextMock = mocked(getRenderContext);
@@ -29,11 +29,12 @@ const mockStore = configureMockStore<RootState>(middlewares);
 const mockAncestors: PromiseValue<ReturnType<typeof getRenderContextAncestorsMock>> = [];
 const mockContext: PromiseValue<ReturnType<typeof getRenderContextMock>> = { foo: 'bar' };
 
-describe('useRenderFunctions', () => {
+describe('useNunjucks', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     getRenderContextMock.mockResolvedValue(mockContext);
     getRenderContextAncestorsMock.mockResolvedValue(mockAncestors);
+    initializeNunjucksRenderPromiseCache();
   });
 
   describe('handleGetRenderContext', () => {
@@ -43,7 +44,7 @@ describe('useRenderFunctions', () => {
         activeActivity: ACTIVITY_DEBUG,
       }));
 
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
 
       const context = await result.current.handleGetRenderContext();
 
@@ -74,7 +75,7 @@ describe('useRenderFunctions', () => {
       }));
 
       // Act
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       await result.current.handleGetRenderContext();
 
       // Assert
@@ -102,7 +103,7 @@ describe('useRenderFunctions', () => {
       }));
 
       // Act
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       await result.current.handleGetRenderContext();
 
       // Assert
@@ -121,7 +122,7 @@ describe('useRenderFunctions', () => {
       const store = mockStore(await reduxStateForTest());
 
       // Act
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       await result.current.handleRender('abc');
 
       // Assert
@@ -134,7 +135,7 @@ describe('useRenderFunctions', () => {
       const store = mockStore(await reduxStateForTest());
 
       // Act
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       await result.current.handleRender('abc');
       await result.current.handleRender('def');
 
@@ -148,7 +149,7 @@ describe('useRenderFunctions', () => {
       const store = mockStore(await reduxStateForTest());
 
       // Act
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       const cacheKey = 'cache';
 
       await result.current.handleRender('abc', cacheKey);
@@ -164,7 +165,7 @@ describe('useRenderFunctions', () => {
       const store = mockStore(await reduxStateForTest());
 
       // Act
-      const { result } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       const cacheKeyOne = 'cache-1';
       const cacheKeyTwo = 'cache-2';
 
@@ -183,7 +184,7 @@ describe('useRenderFunctions', () => {
       const store = mockStore(await reduxStateForTest());
 
       // Act
-      const { result, rerender } = renderHook(useRenderFunctions, { wrapper: withReduxStore(store) });
+      const { result, rerender } = renderHook(useNunjucks, { wrapper: withReduxStore(store) });
       const cacheKeyOne = 'cache-1';
       const cacheKeyTwo = 'cache-2';
 
@@ -194,6 +195,24 @@ describe('useRenderFunctions', () => {
       await result.current.handleRender('ghi', cacheKeyOne);
       rerender();
       await result.current.handleRender('jkl', cacheKeyTwo);
+
+      // Assert
+      expect(getRenderContextMock).toHaveBeenCalledTimes(2);
+      expect(renderMock).toHaveBeenCalledTimes(4);
+    });
+
+    it('should not change the cache during multiple renders of the hook', async () => {
+      // Arrange
+      const store = mockStore(await reduxStateForTest());
+
+      // Act
+      const cacheKeyOne = 'cache-1';
+      const cacheKeyTwo = 'cache-2';
+
+      await renderHook(useNunjucks, { wrapper: withReduxStore(store) }).result.current.handleRender('abc', cacheKeyOne);
+      await renderHook(useNunjucks, { wrapper: withReduxStore(store) }).result.current.handleRender('def', cacheKeyTwo);
+      await renderHook(useNunjucks, { wrapper: withReduxStore(store) }).result.current.handleRender('ghi', cacheKeyOne);
+      await renderHook(useNunjucks, { wrapper: withReduxStore(store) }).result.current.handleRender('jkl', cacheKeyTwo);
 
       // Assert
       expect(getRenderContextMock).toHaveBeenCalledTimes(2);

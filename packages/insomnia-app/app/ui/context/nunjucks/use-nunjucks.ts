@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
@@ -6,14 +6,18 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
 
-/**
- * @deprecated this hook is intended to only be used by `NunjucksRenderFunctionProvider`
- *
- * Use `useNunjucksRenderFunctions` or `useGatedNunjucksRenderFunctions` instead
- */
-export const useRenderFunctions = () => {
-  const getRenderContextPromiseCache = useMemo(() => ({}), []);
+let getRenderContextPromiseCache = {};
 
+export const initializeNunjucksRenderPromiseCache = () => {
+  getRenderContextPromiseCache = {};
+};
+
+initializeNunjucksRenderPromiseCache();
+
+/**
+ * Access to functions useful for Nunjucks rendering
+ */
+export const useNunjucks = () => {
   const environmentId = useSelector(selectActiveEnvironment)?._id;
   const request = useSelector(selectActiveRequest);
   const workspace = useSelector(selectActiveWorkspace);
@@ -54,7 +58,7 @@ export const useRenderFunctions = () => {
     // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
     const context = await getRenderContextPromiseCache[contextCacheKey];
     return render(obj, context);
-  }, [getRenderContextPromiseCache, fetchRenderContext]);
+  }, [fetchRenderContext]);
 
   return {
     handleRender,

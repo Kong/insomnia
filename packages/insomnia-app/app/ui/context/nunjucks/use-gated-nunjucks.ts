@@ -1,5 +1,5 @@
 import { useNunjucksEnabled } from './nunjucks-enabled-context';
-import { useNunjucksRenderFunctions } from './nunjucks-render-function-context';
+import { useNunjucks } from './use-nunjucks';
 
 /**
  * Gated access to functions useful for Nunjucks rendering. Access is only granted if:
@@ -8,8 +8,8 @@ import { useNunjucksRenderFunctions } from './nunjucks-render-function-context';
  *
  * For ungated access, use `useNunjucksRenderFunctions` instead
  */
-export const useGatedNunjucksRenderFunctions = (props: { disabled?: boolean } = {}): Partial<ReturnType<typeof useNunjucksRenderFunctions>> => {
-  const funcs = useNunjucksRenderFunctions();
+export const useGatedNunjucks = (props: { disabled?: boolean } = {}): Partial<ReturnType<typeof useNunjucks>> => {
+  const funcs = useNunjucks();
 
   const enabledByProvider = useNunjucksEnabled().enabled;
   const enabledByProp = !props.disabled;

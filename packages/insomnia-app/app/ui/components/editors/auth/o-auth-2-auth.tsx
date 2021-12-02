@@ -24,7 +24,7 @@ import {
 } from '../../../../network/o-auth-2/constants';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
-import { useNunjucksRenderFunctions } from '../../../context/nunjucks/nunjucks-render-function-context';
+import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { Button } from '../../base/button';
 import { Link } from '../../base/link';
 import { PromptButton } from '../../base/prompt-button';
@@ -751,6 +751,6 @@ class OAuth2AuthInternal extends PureComponent<Props, State> {
 }
 
 export const OAuth2Auth: FC<Omit<Props, 'handleRender'>> = props => {
-  const { handleRender } = useNunjucksRenderFunctions();
+  const { handleRender } = useNunjucks();
   return <OAuth2AuthInternal {...props} handleRender={handleRender} />;
 };
