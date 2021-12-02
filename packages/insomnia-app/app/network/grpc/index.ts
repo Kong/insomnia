@@ -51,7 +51,11 @@ const _makeUnaryRequest = (
     return;
   }
 
-  const grpcMetadata = _parseMetadata(metadata);
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
 
   // eslint-disable-next-line consistent-return
   return client.makeUnaryRequest(
@@ -74,7 +78,11 @@ const _makeClientStreamRequest = ({
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
 
-  const grpcMetadata = _parseMetadata(metadata);
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
 
   // Make call
   return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata, callback);
@@ -97,7 +105,11 @@ const _makeServerStreamRequest = (
     return;
   }
 
-  const grpcMetadata = _parseMetadata(metadata);
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
 
   // Make call
   const call = client.makeServerStreamRequest(
@@ -121,7 +133,11 @@ const _makeBidiStreamRequest = ({
   respond,
   metadata,
 }: RequestData): Call | undefined => {
-  const grpcMetadata = _parseMetadata(metadata);
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
 
   // Make call
   const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata);
@@ -299,12 +315,19 @@ const _parseMessage = (
 };
 
 const _parseMetadata = (
-  metadata: GrpcRequestHeader[]
-): grpc.Metadata => {
+  metadata: GrpcRequestHeader[],
+  requestId: string,
+  respond: ResponseCallbacks,
+): grpc.Metadata | undefined => {
   const grpcMetadata = new grpc.Metadata();
   for (const entry of metadata) {
     if (!entry.disabled) {
-      grpcMetadata.add(entry.name, entry.value);
+      try {
+        grpcMetadata.add(entry.name, entry.value);
+      } catch (err) {
+        respond.sendError(requestId, err);
+        return undefined;
+      }
     }
   }
   return grpcMetadata;
