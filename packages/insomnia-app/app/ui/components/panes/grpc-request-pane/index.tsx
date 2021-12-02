@@ -135,21 +135,25 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel">
-              <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
-                <KeyValueEditor
-                  sortable
-                  namePlaceholder="header"
-                  valuePlaceholder="value"
-                  descriptionPlaceholder="description"
-                  pairs={activeRequest.metadata}
-                  isVariableUncovered={isVariableUncovered}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  handleGetAutocompleteNameConstants={_getCommonHeaderNames}
-                  handleGetAutocompleteValueConstants={_getCommonHeaderValues}
-                  onChange={handleChange.metadata}
-                />
-              </ErrorBoundary>
+              <div className="tall wide scrollable-container">
+                <div className="scrollable">
+                  <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                    <KeyValueEditor
+                      sortable
+                      namePlaceholder="header"
+                      valuePlaceholder="value"
+                      descriptionPlaceholder="description"
+                      pairs={activeRequest.metadata}
+                      isVariableUncovered={isVariableUncovered}
+                      handleRender={handleRender}
+                      handleGetRenderContext={handleGetRenderContext}
+                      handleGetAutocompleteNameConstants={_getCommonHeaderNames}
+                      handleGetAutocompleteValueConstants={_getCommonHeaderValues}
+                      onChange={handleChange.metadata}
+                    />
+                  </ErrorBoundary>
+                </div>
+              </div>
             </TabPanel>
           </Tabs>
         )}

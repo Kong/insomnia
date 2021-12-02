@@ -41,6 +41,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           protoMethodName: 'SayHi',
+          metadata: [],
         })
         .build();
       protoLoader.getSelectedMethod.mockResolvedValue(null);
@@ -60,6 +61,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: '',
+          metadata: [],
         })
         .build();
       protoLoader.getSelectedMethod.mockResolvedValue(methodBuilder.build());
@@ -79,6 +81,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -100,6 +103,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcs://grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -121,6 +125,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -319,6 +324,7 @@ describe('grpc', () => {
           .request({
             _id: 'id',
             url: 'grpcb.in:9000',
+            metadata: [],
           })
           .build();
         const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -352,6 +358,7 @@ describe('grpc', () => {
           .request({
             _id: 'id',
             url: 'grpcb.in:9000',
+            metadata: [],
           })
           .build();
         const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -387,6 +394,7 @@ describe('grpc', () => {
           .request({
             _id: 'id',
             url: 'grpcb.in:9000',
+            metadata: [],
           })
           .build();
         const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -428,6 +436,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -489,6 +498,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -520,6 +530,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
