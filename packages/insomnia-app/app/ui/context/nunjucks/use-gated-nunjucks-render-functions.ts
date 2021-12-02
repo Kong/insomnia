@@ -9,30 +9,21 @@ import { useNunjucksRenderFunctions } from './nunjucks-render-function-context';
  * For ungated access, use `useNunjucksRenderFunctions` instead
  */
 export const useGatedNunjucksRenderFunctions = (props: { disabled?: boolean } = {}): Partial<ReturnType<typeof useNunjucksRenderFunctions>> => {
-  const { enabled } = useNunjucksEnabled();
   const funcs = useNunjucksRenderFunctions();
 
-  const shouldEnable = shouldEnableNunjucks({
-    enabledByProp: !Boolean(props.disabled),
-    enabledByProvider: enabled,
-  });
+  const enabledByProvider = useNunjucksEnabled().enabled;
+  const enabledByProp = !props.disabled;
 
-  if (shouldEnable) {
+  // provider: disabled, prop: disabled -> disable
+  // provider: disabled, prop: enabled  -> disable
+  // provider: enabled,  prop: disabled -> disable
+  // provider: enabled,  prop: enabled  -> enable
+
+  const isNunjucksTemplatingEnabled = enabledByProp && enabledByProvider;
+
+  if (isNunjucksTemplatingEnabled) {
     return funcs;
   }
 
   return {};
-};
-
-const shouldEnableNunjucks = ({ enabledByProvider, enabledByProp }: { enabledByProvider: boolean; enabledByProp: boolean }) => {
-  // context: disabled, prop: disabled -> should disable
-  // context: disabled, prop: enabled  -> should disable
-  // context: enabled,  prop: disabled -> should disable
-  // context: enabled,  prop: enabled  -> should enable
-
-  if (enabledByProvider && enabledByProp) {
-    return true;
-  }
-
-  return false;
 };
