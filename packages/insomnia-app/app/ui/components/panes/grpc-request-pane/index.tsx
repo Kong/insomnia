@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
-
+import { _getCommonHeaderNames, _getCommonHeaderValues } from '../../../../common/common-headers';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
@@ -9,7 +9,6 @@ import { useGrpc } from '../../../context/grpc';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
-import { RequestHeadersEditor } from '../../editors/request-headers-editor';
 import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
@@ -145,8 +144,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   isVariableUncovered={isVariableUncovered}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
-                  handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}
+                  handleGetAutocompleteNameConstants={_getCommonHeaderNames}
+                  handleGetAutocompleteValueConstants={_getCommonHeaderValues}
                   onChange={handleChange.metadata}
                 />
               </ErrorBoundary>

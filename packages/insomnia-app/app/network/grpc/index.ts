@@ -301,12 +301,10 @@ const _parseMessage = (
 const _parseMetadata = (
   metadata: GrpcRequestHeader[]
 ): grpc.Metadata => {
-  const grpcMetadata = new grpc.Metadata({});
-  if (metadata) {
-    for (const entry of metadata) {
-      if (!entry.disabled) {
-        grpcMetadata.add(entry.name, entry.value);
-      }
+  const grpcMetadata = new grpc.Metadata();
+  for (const entry of metadata) {
+    if (!entry.disabled) {
+      grpcMetadata.add(entry.name, entry.value);
     }
   }
   return grpcMetadata;
