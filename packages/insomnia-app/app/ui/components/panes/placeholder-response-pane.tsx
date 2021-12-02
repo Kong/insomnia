@@ -17,50 +17,36 @@ export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegist
       <div>
         <table className="table--fancy">
           <tbody>
-            <tr>
-              <td>Send Request</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-            <tr>
-              <td>Focus Url Bar</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-            <tr>
-              <td>Manage Cookies</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-            <tr>
-              <td>Edit Environments</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
+            {[
+              {
+                name: 'Send Request',
+                keyBindings: hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id],
+              },
+              {
+                name: 'Focus Url Bar',
+                keyBindings: hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id],
+              },
+              {
+                name: 'Manage Cookies',
+                keyBindings: hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id],
+              },
+              {
+                name: 'Edit Environments',
+                keyBindings: hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id],
+              },
+            ].map(({ name, keyBindings }) => (
+              <tr key={name} style={{ lineHeight: '1em' }}>
+                <td className="valign-middle">{name}</td>
+                <td className="text-right">
+                  <code>
+                    <Hotkey
+                      keyBindings={keyBindings}
+                      useFallbackMessage
+                    />
+                  </code>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
