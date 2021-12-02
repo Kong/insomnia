@@ -1,10 +1,11 @@
 import { useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { selectSettings } from "../redux/selectors"
+
+import { selectSettings } from '../redux/selectors';
 
 const updateFontStyle = (key: string, value: string | null) => document?.querySelector('html')?.style.setProperty(key, value);
 
-export const useFontMutations = () => {
+export const useSettingsSideEffects = () => {
   const settings = useSelector(selectSettings);
 
   useLayoutEffect(() => {

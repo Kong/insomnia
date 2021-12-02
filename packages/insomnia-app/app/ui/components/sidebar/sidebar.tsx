@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import { HotKeyRegistry, EnvironmentHighlightColorStyle } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, memo, ReactNode } from 'react';
 
 import {

@@ -6,7 +6,7 @@ export const NumberSetting: FC<ComponentProps<typeof TextSetting>> = props => (
   <TextSetting
     {...props}
     inputProps={{
-      ...props.inputProps,
+      ...(props.inputProps || {}),
       type: 'number',
     }}
   />

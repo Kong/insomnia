@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HttpVersion, HttpVersions, EnvironmentHighlightColorStyle } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions } from 'insomnia-common';
 import { Tooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -108,12 +108,12 @@ class General extends PureComponent<Props> {
             help="Configures the appearance of environment's color indicator"
             setting="environmentHighlightColorStyle"
             values={[
-              { value:"sidebar-indicator", name: 'Sidebar indicator' },
-              { value:"sidebar-edge", name: 'Sidebar edge' },
-              { value:"window-top", name: 'Window top' },
-              { value:"window-bottom", name: 'Window bottom' },
-              { value:"window-left", name: 'Window left' },
-              { value:"window-right", name: 'Window right' },
+              { value:'sidebar-indicator', name: 'Sidebar indicator' },
+              { value:'sidebar-edge', name: 'Sidebar edge' },
+              { value:'window-top', name: 'Window top' },
+              { value:'window-bottom', name: 'Window bottom' },
+              { value:'window-left', name: 'Window left' },
+              { value:'window-right', name: 'Window right' },
             ]}
           />
 
@@ -207,7 +207,7 @@ class General extends PureComponent<Props> {
             help={isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
               <Fragment>
                 To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
-            documentation <i className="fa fa-external-link-square" /></Link>
+                  documentation <i className="fa fa-external-link-square" /></Link>
               </Fragment>
             )}
             values={[

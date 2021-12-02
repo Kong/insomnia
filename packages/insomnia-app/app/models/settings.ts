@@ -122,14 +122,10 @@ export async function patch(patch: Partial<Settings>) {
 export async function getOrCreate() {
   const results = await db.all<Settings>(type) || [];
 
-  let settings: Settings | null = null;
   if (results.length === 0) {
-    settings = await create();
-  } else {
-    settings = getMonkeyPatchedControlledSettings(results[0]);
+    return await create();
   }
-
-  return settings;
+  return getMonkeyPatchedControlledSettings(results[0]);
 }
 
 /**

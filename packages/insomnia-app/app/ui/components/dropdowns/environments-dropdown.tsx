@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HotKeyRegistry, EnvironmentHighlightColorStyle } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
