@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
-import React from 'react';
-import { FC } from 'react';
+import React, { FC } from 'react';
 
 import { NunjucksEnabledProvider } from '../nunjucks-enabled-context';
 import { useGatedNunjucks } from '../use-gated-nunjucks';
