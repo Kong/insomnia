@@ -1,4 +1,4 @@
-import { GrpcResponseEventEnum } from '../../../common/grpc-events';
+import { GrpcResponseEventEnum } from '../../../common/ipc-events';
 import { ResponseCallbacks } from '../response-callbacks';
 
 describe('response-callbacks', () => {

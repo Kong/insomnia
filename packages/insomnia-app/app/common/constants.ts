@@ -25,12 +25,6 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
 export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
 
-export const getBrowserUserAgent = () => encodeURIComponent(
-  String(window.navigator.userAgent)
-    .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-    .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
-).replace('%2C', ',');
-
 export function updatesSupported() {
   // Updates are not supported on Linux
   if (isLinux()) {
