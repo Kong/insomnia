@@ -1,13 +1,13 @@
 // eslint-disable-next-line filenames/match-exported
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { Button } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -41,8 +41,7 @@ interface Props {
   onBlurName?: Function;
   onBlurValue?: Function;
   onBlurDescription?: Function;
-  handleRender?: HandleRender;
-  handleGetRenderContext?: HandleGetRenderContext;
+  enableNunjucks?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
@@ -72,7 +71,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class KeyValueEditorRow extends PureComponent<Props, State> {
+class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   _nameInput: OneLineEditor | null = null;
   _valueInput: OneLineEditor | FileInputButton | null = null;
   _descriptionInput: OneLineEditor | null = null;
@@ -249,13 +248,13 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
   }
 
   _handleEditMultiline() {
-    const { pair, handleRender, handleGetRenderContext } = this.props;
+    const { pair, enableNunjucks } = this.props;
     showModal(CodePromptModal, {
       submitName: 'Done',
       title: `Edit ${pair.name}`,
       defaultValue: pair.value,
       onChange: this._handleValueChange,
-      enableRender: handleRender || handleGetRenderContext,
+      enableRender: enableNunjucks,
       // @ts-expect-error -- TSCONVERSION
       mode: pair.multiline || 'text/plain',
       onModeChange: mode => {
@@ -275,8 +274,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       forceInput,
       descriptionPlaceholder,
       pair,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     return displayDescription ? (
@@ -298,8 +295,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onBlur={this._handleBlurDescription}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleFocusDescription}
-          render={handleRender}
-          getRenderContext={handleGetRenderContext}
           isVariableUncovered={isVariableUncovered}
         />
       </div>
@@ -313,8 +308,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       forceInput,
       valueInputType,
       valuePlaceholder,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
 
@@ -355,8 +348,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onBlur={this._handleBlurValue}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleFocusValue}
-          render={handleRender}
-          getRenderContext={handleGetRenderContext}
           isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
         />
@@ -428,8 +419,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     const {
       pair,
       namePlaceholder,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
       sortable,
       noDropZone,
@@ -481,8 +470,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               ref={ref => { this._nameInput = ref; }}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
@@ -590,11 +577,23 @@ const dragTarget = {
   },
 };
 
+const KeyValueEditorRowFCWithRef: ForwardRefRenderFunction<KeyValueEditorRowInternal, Omit<Props, 'enableNunjucks'>> = (
+  props,
+  ref
+) => {
+  const { enabled } = useNunjucksEnabled();
+
+  return <KeyValueEditorRowInternal ref={ref} {...props} enableNunjucks={enabled} />;
+
+};
+
+const KeyValueEditorRowFC = forwardRef(KeyValueEditorRowFCWithRef);
+
 const source = DragSource('KEY_VALUE_EDITOR', dragSource, (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
   connectDragPreview: connect.dragPreview(),
   isDragging: monitor.isDragging(),
-}))(KeyValueEditorRow);
+}))(KeyValueEditorRowFC);
 
 export const Row = DropTarget('KEY_VALUE_EDITOR', dragTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),

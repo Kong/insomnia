@@ -1,10 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { convertEpochToMilliseconds } from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { HandleRender } from '../../../../common/render';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
@@ -24,6 +24,7 @@ import {
 } from '../../../../network/o-auth-2/constants';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
+import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { Button } from '../../base/button';
 import { Link } from '../../base/link';
 import { PromptButton } from '../../base/prompt-button';
@@ -35,7 +36,6 @@ import { TimeFromNow } from '../../time-from-now';
 
 interface Props {
   handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
@@ -57,7 +57,7 @@ const getAccessTokenUrls = () => accessTokenUrls;
 let showAdvanced = false;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class OAuth2Auth extends PureComponent<Props, State> {
+class OAuth2AuthInternal extends PureComponent<Props, State> {
   state: State = {
     error: '',
     loading: false,
@@ -322,8 +322,6 @@ export class OAuth2Auth extends PureComponent<Props, State> {
     handleAutocomplete?: (...args: any[]) => any,
   ) {
     const {
-      handleRender,
-      handleGetRenderContext,
       request,
       isVariableUncovered,
     } = this.props;
@@ -349,9 +347,7 @@ export class OAuth2Auth extends PureComponent<Props, State> {
               type={type}
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
-              render={handleRender}
               getAutocompleteConstants={handleAutocomplete}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
           </div>
@@ -637,8 +633,8 @@ export class OAuth2Auth extends PureComponent<Props, State> {
   render() {
     const { request, oAuth2Token: tok } = this.props;
     const { loading, error, showAdvanced } = this.state;
-    const accessExpireLabel = OAuth2Auth.renderAccessTokenExpiry(tok);
-    const identityExpireLabel = OAuth2Auth.renderIdentityTokenExpiry(tok);
+    const accessExpireLabel = OAuth2AuthInternal.renderAccessTokenExpiry(tok);
+    const identityExpireLabel = OAuth2AuthInternal.renderIdentityTokenExpiry(tok);
     const fields = this.renderGrantTypeFields(request.authentication.grantType);
     return (
       <div className="pad">
@@ -753,3 +749,8 @@ export class OAuth2Auth extends PureComponent<Props, State> {
     );
   }
 }
+
+export const OAuth2Auth: FC<Omit<Props, 'handleRender'>> = props => {
+  const { handleRender } = useNunjucks();
+  return <OAuth2AuthInternal {...props} handleRender={handleRender} />;
+};

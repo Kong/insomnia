@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Workspace } from '../../../models/workspace';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -13,8 +12,6 @@ import { VariableEditor } from '../templating/variable-editor';
 
 interface Props {
   uniqueKey: string;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   workspace: Workspace;
 }
 
@@ -69,32 +66,17 @@ export class NunjucksModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleRender, handleGetRenderContext, uniqueKey, workspace } = this.props;
+    const { uniqueKey, workspace } = this.props;
     const { defaultTemplate } = this.state;
     let editor: JSX.Element | null = null;
     let title = '';
 
     if (defaultTemplate.indexOf('{{') === 0) {
       title = 'Variable';
-      editor = (
-        <VariableEditor
-          onChange={this._handleTemplateChange}
-          defaultValue={defaultTemplate}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-        />
-      );
+      editor = <VariableEditor onChange={this._handleTemplateChange} defaultValue={defaultTemplate} />;
     } else if (defaultTemplate.indexOf('{%') === 0) {
       title = 'Tag';
-      editor = (
-        <TagEditor
-          onChange={this._handleTemplateChange}
-          defaultValue={defaultTemplate}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          workspace={workspace}
-        />
-      );
+      editor = <TagEditor onChange={this._handleTemplateChange} defaultValue={defaultTemplate} workspace={workspace} />;
     }
 
     return (

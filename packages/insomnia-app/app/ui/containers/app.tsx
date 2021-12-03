@@ -39,8 +39,6 @@ import {
   generateId,
   getContentDispositionHeader,
 } from '../../common/misc';
-import * as render from '../../common/render';
-import { RenderContextAndKeys } from '../../common/render';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
@@ -64,8 +62,6 @@ import { routableFSClient } from '../../sync/git/routable-fs-client';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { getKeys } from '../../templating/utils';
 import { ErrorBoundary } from '../components/error-boundary';
 import { KeydownBinder } from '../components/keydown-binder';
 import { AskModal } from '../components/modals/ask-modal';
@@ -85,6 +81,7 @@ import { Toast } from '../components/toast';
 import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
+import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
@@ -145,7 +142,6 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent<AppProps, State> {
-  private _getRenderContextPromiseCache: Object;
   private _savePaneWidth: (paneWidth: number) => void;
   private _savePaneHeight: (paneWidth: number) => void;
   private _saveSidebarWidth: (paneWidth: number) => void;
@@ -176,7 +172,6 @@ class App extends PureComponent<AppProps, State> {
       isMigratingChildren: false,
     };
 
-    this._getRenderContextPromiseCache = {};
     this._savePaneWidth = debounce(paneWidth =>
       this._updateActiveWorkspaceMeta({
         paneWidth,
@@ -486,48 +481,6 @@ class App extends PureComponent<AppProps, State> {
         models.stats.incrementCreatedRequests();
       },
     });
-  }
-
-  async _fetchRenderContext() {
-    const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
-    const ancestors = await render.getRenderContextAncestors(activeRequest || activeWorkspace);
-    return render.getRenderContext({
-      request: activeRequest || undefined,
-      environmentId: activeEnvironment?._id,
-      ancestors,
-    });
-  }
-
-  async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
-    const context = await this._fetchRenderContext();
-    const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
-    return {
-      context,
-      keys,
-    };
-  }
-
-  /**
-   * Heavily optimized render function
-   *
-   * @param text - template to render
-   * @param contextCacheKey - if rendering multiple times in parallel, set this
-   * @returns {Promise}
-   * @private
-   */
-  async _handleRenderText<T>(obj: T, contextCacheKey: string | null = null) {
-    if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
-      // NOTE: We're caching promises here to avoid race conditions
-      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-      this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
-    }
-
-    // Set timeout to delete the key eventually
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    const context = await this._getRenderContextPromiseCache[contextCacheKey];
-    return render.render(obj, context);
   }
 
   _handleGenerateCodeForActiveRequest() {
@@ -1504,65 +1457,65 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
-          <AppHooks />
+          <NunjucksEnabledProvider>
+            <AppHooks />
 
-          <div className="app" key={uniquenessKey}>
-            <ErrorBoundary showAlert>
-              <Wrapper
-                ref={this._setWrapperRef}
-                {...this.props}
-                paneWidth={paneWidth}
-                paneHeight={paneHeight}
-                sidebarWidth={sidebarWidth}
-                handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-                handleSetRequestPinned={this._handleSetRequestPinned}
-                handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-                handleActivateRequest={this._handleSetActiveRequest}
-                requestPaneRef={this._requestPaneRef}
-                responsePaneRef={this._responsePaneRef}
-                sidebarRef={this._sidebarRef}
-                handleStartDragSidebar={this._startDragSidebar}
-                handleResetDragSidebar={this._resetDragSidebar}
-                handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-                handleStartDragPaneVertical={this._startDragPaneVertical}
-                handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-                handleResetDragPaneVertical={this._resetDragPaneVertical}
-                handleCreateRequest={this._requestCreate}
-                handleRender={this._handleRenderText}
-                handleGetRenderContext={this._handleGetRenderContext}
-                handleDuplicateRequest={this._requestDuplicate}
-                handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                handleCreateRequestGroup={this._requestGroupCreate}
-                handleGenerateCode={App._handleGenerateCode}
-                handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-                handleCopyAsCurl={this._handleCopyAsCurl}
-                handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-                handleSetResponseFilter={this._handleSetResponseFilter}
-                handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-                handleSendAndDownloadRequestWithEnvironment={
-                  this._handleSendAndDownloadRequestWithEnvironment
-                }
-                handleSetActiveResponse={this._handleSetActiveResponse}
-                handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                handleSetSidebarFilter={this._handleSetSidebarFilter}
-                handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                handleShowSettingsModal={App._handleShowSettingsModal}
-                handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-                isVariableUncovered={isVariableUncovered}
-                headerEditorKey={forceRefreshHeaderCounter + ''}
-                handleSidebarSort={this._sortSidebar}
-                vcs={vcs}
-                gitVCS={gitVCS}
-              />
-            </ErrorBoundary>
+            <div className="app" key={uniquenessKey}>
+              <ErrorBoundary showAlert>
+                <Wrapper
+                  ref={this._setWrapperRef}
+                  {...this.props}
+                  paneWidth={paneWidth}
+                  paneHeight={paneHeight}
+                  sidebarWidth={sidebarWidth}
+                  handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                  handleSetRequestPinned={this._handleSetRequestPinned}
+                  handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                  handleActivateRequest={this._handleSetActiveRequest}
+                  requestPaneRef={this._requestPaneRef}
+                  responsePaneRef={this._responsePaneRef}
+                  sidebarRef={this._sidebarRef}
+                  handleStartDragSidebar={this._startDragSidebar}
+                  handleResetDragSidebar={this._resetDragSidebar}
+                  handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                  handleStartDragPaneVertical={this._startDragPaneVertical}
+                  handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                  handleResetDragPaneVertical={this._resetDragPaneVertical}
+                  handleCreateRequest={this._requestCreate}
+                  handleDuplicateRequest={this._requestDuplicate}
+                  handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                  handleCreateRequestGroup={this._requestGroupCreate}
+                  handleGenerateCode={App._handleGenerateCode}
+                  handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                  handleCopyAsCurl={this._handleCopyAsCurl}
+                  handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                  handleSetResponseFilter={this._handleSetResponseFilter}
+                  handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                  handleSendAndDownloadRequestWithEnvironment={
+                    this._handleSendAndDownloadRequestWithEnvironment
+                  }
+                  handleSetActiveResponse={this._handleSetActiveResponse}
+                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                  handleSetSidebarFilter={this._handleSetSidebarFilter}
+                  handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                  handleShowSettingsModal={App._handleShowSettingsModal}
+                  handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                  isVariableUncovered={isVariableUncovered}
+                  headerEditorKey={forceRefreshHeaderCounter + ''}
+                  handleSidebarSort={this._sortSidebar}
+                  vcs={vcs}
+                  gitVCS={gitVCS}
+                />
+              </ErrorBoundary>
 
-            <ErrorBoundary showAlert>
-              <Toast />
-            </ErrorBoundary>
+              <ErrorBoundary showAlert>
+                <Toast />
+              </ErrorBoundary>
 
-            {/* Block all mouse activity by showing an overlay while dragging */}
-            {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-          </div>
+              {/* Block all mouse activity by showing an overlay while dragging */}
+              {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+            </div>
+          </NunjucksEnabledProvider>
         </GrpcProvider>
       </KeydownBinder>
     );

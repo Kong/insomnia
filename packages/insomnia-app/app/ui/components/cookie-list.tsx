@@ -5,7 +5,6 @@ import * as toughCookie from 'tough-cookie';
 import * as uuid from 'uuid';
 
 import { AUTOBIND_CFG } from '../../common/constants';
-import { HandleRender } from '../../common/render';
 import type { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
@@ -20,7 +19,6 @@ export interface CookieListProps {
   cookies: Cookie[];
   newCookieDomainName: string;
   handleShowModifyCookieModal: (cookie: Cookie) => void;
-  handleRender: HandleRender;
 }
 
 // Use tough-cookie MAX_DATE value
@@ -48,7 +46,7 @@ export class CookieList extends PureComponent<CookieListProps> {
   }
 
   render() {
-    const { cookies, handleDeleteAll, handleShowModifyCookieModal, handleRender } = this.props;
+    const { cookies, handleDeleteAll, handleShowModifyCookieModal } = this.props;
     return (
       <div>
         <table className="table--fancy cookie-table table--striped">
@@ -97,10 +95,10 @@ export class CookieList extends PureComponent<CookieListProps> {
               return (
                 <tr className="selectable" key={i}>
                   <td>
-                    <RenderedText render={handleRender}>{cookie.domain || ''}</RenderedText>
+                    <RenderedText>{cookie.domain || ''}</RenderedText>
                   </td>
                   <td className="force-wrap wide">
-                    <RenderedText render={handleRender}>{cookieString || ''}</RenderedText>
+                    <RenderedText>{cookieString || ''}</RenderedText>
                   </td>
                   <td onClick={() => {}} className="text-right no-wrap">
                     <button

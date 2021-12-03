@@ -108,7 +108,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleGenerateCode,
-      handleRender,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
       handleSetSidebarFilter,
@@ -161,7 +160,6 @@ export class WrapperDebug extends PureComponent<Props> {
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
-          handleRender={handleRender}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
         />
@@ -193,8 +191,6 @@ export class WrapperDebug extends PureComponent<Props> {
       activeWorkspace,
       handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
-      handleGetRenderContext,
-      handleRender,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
@@ -219,9 +215,7 @@ export class WrapperDebug extends PureComponent<Props> {
             workspaceId={activeWorkspace._id}
             forceRefreshKey={forceRefreshKey}
             settings={settings}
-            handleRender={handleRender}
             isVariableUncovered={isVariableUncovered}
-            handleGetRenderContext={handleGetRenderContext}
           />
         </ErrorBoundary>
       );
@@ -237,9 +231,7 @@ export class WrapperDebug extends PureComponent<Props> {
           forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
-          handleGetRenderContext={handleGetRenderContext}
           handleImport={handleImport}
-          handleRender={handleRender}
           handleSend={handleSendRequestWithActiveEnvironment}
           handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
           handleUpdateDownloadPath={handleUpdateDownloadPath}

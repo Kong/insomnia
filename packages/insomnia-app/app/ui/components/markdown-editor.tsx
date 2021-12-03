@@ -4,7 +4,6 @@ import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG } from '../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { Button } from './base/button';
 import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
 import { MarkdownPreview } from './markdown-preview';
@@ -12,8 +11,6 @@ import { MarkdownPreview } from './markdown-preview';
 interface Props {
   onChange: Function;
   defaultValue: string;
-  handleRender?: HandleRender;
-  handleGetRenderContext?: HandleGetRenderContext;
   isVariableUncovered: boolean;
   placeholder?: string;
   defaultPreviewMode?: boolean;
@@ -63,8 +60,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
       defaultPreviewMode,
       className,
       tall,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     const { markdown } = this.state;
@@ -90,12 +85,11 @@ export class MarkdownEditor extends PureComponent<Props, State> {
               dynamicHeight={!tall}
               manualPrettify
               noStyleActiveLine
+              enableNunjucks
               mode={mode || 'text/x-markdown'}
               placeholder={placeholder}
               debounceMillis={300}
               defaultValue={markdown}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
               onChange={this._handleChange}
             />
@@ -103,7 +97,7 @@ export class MarkdownEditor extends PureComponent<Props, State> {
           <div className="txt-sm italic faint">Styling with Markdown is supported</div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel markdown-editor__preview">
-          <MarkdownPreview markdown={markdown} handleRender={handleRender} />
+          <MarkdownPreview markdown={markdown} />
         </TabPanel>
       </Tabs>
     );

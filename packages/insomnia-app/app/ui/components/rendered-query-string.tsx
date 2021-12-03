@@ -3,8 +3,8 @@ import React, { FC, useState } from 'react';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
-import { HandleRender } from '../../common/render';
 import { Request } from '../../models/request';
+import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 import { CopyButton as _CopyButton } from './base/copy-button';
 
 const Wrapper = styled.div({
@@ -26,13 +26,13 @@ const CopyButton = styled(_CopyButton)({
 
 interface Props {
   request: Request;
-  handleRender: HandleRender;
 }
 
 const defaultPreview = '...';
 
-export const RenderedQueryString: FC<Props> = ({ request, handleRender }) => {
+export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
+  const { handleRender } = useNunjucks();
 
   useAsync(async () => {
     const enabledParameters = request.parameters.filter(({ disabled }) => !disabled);

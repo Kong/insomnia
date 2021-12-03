@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
@@ -15,8 +14,6 @@ interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
 }
 
@@ -103,18 +100,15 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <div className="tall">
         <CodeEditor
-          getRenderContext={handleGetRenderContext}
-          render={handleRender}
           isVariableUncovered={isVariableUncovered}
           onChange={this._handleBulkUpdate}
           defaultValue={this._getHeadersString()}
+          enableNunjucks
         />
       </div>
     ) : (
@@ -127,8 +121,6 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             descriptionPlaceholder="description"
             pairs={request.headers}
             isVariableUncovered={isVariableUncovered}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
             handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
             handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}
             onChange={this._handleKeyValueUpdate}
