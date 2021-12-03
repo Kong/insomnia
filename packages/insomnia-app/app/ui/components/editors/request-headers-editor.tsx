@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
-import { _getCommonHeaderNames, _getCommonHeaderValues } from '../../../common/common-headers';
+import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { Request, RequestHeader } from '../../../models/request';
@@ -105,8 +105,8 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             isVariableUncovered={isVariableUncovered}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            handleGetAutocompleteNameConstants={_getCommonHeaderNames}
-            handleGetAutocompleteValueConstants={_getCommonHeaderValues}
+            handleGetAutocompleteNameConstants={getCommonHeaderNames}
+            handleGetAutocompleteValueConstants={getCommonHeaderValues}
             onChange={this._handleKeyValueUpdate}
           />
         </div>

@@ -5,7 +5,7 @@ import allEncodings from '../datasets/encodings';
 import allHeaderNames from '../datasets/header-names';
 import { RequestHeader } from '../models/request';
 
-export const _getCommonHeaderValues = (pair: RequestHeader): any[] => {
+export const getCommonHeaderValues = (pair: RequestHeader): any[] => {
   switch (pair.name.toLowerCase()) {
     case 'content-type':
     case 'accept':
@@ -22,6 +22,6 @@ export const _getCommonHeaderValues = (pair: RequestHeader): any[] => {
   }
 };
 
-export const _getCommonHeaderNames = (): any[] => {
+export const getCommonHeaderNames = (): any[] => {
   return allHeaderNames;
 };

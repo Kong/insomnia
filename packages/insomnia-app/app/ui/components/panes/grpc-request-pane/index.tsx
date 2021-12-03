@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
-import { _getCommonHeaderNames, _getCommonHeaderValues } from '../../../../common/common-headers';
+import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
@@ -147,8 +147,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       isVariableUncovered={isVariableUncovered}
                       handleRender={handleRender}
                       handleGetRenderContext={handleGetRenderContext}
-                      handleGetAutocompleteNameConstants={_getCommonHeaderNames}
-                      handleGetAutocompleteValueConstants={_getCommonHeaderValues}
+                      handleGetAutocompleteNameConstants={getCommonHeaderNames}
+                      handleGetAutocompleteValueConstants={getCommonHeaderValues}
                       onChange={handleChange.metadata}
                     />
                   </ErrorBoundary>
