@@ -1,15 +1,15 @@
+import { SettingsOfType } from 'insomnia-common';
 import React, { ChangeEvent, FC } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
 import * as models from '../../../models';
-import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
   label: string;
-  setting: keyof Settings;
+  setting: SettingsOfType<string>;
   help?: string;
   placeholder?: React.HTMLProps<HTMLInputElement>['placeholder'];
   disabled?: React.HTMLProps<HTMLInputElement>['disabled'];

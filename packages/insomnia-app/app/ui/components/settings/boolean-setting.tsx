@@ -1,4 +1,4 @@
-import { Settings } from 'insomnia-common';
+import { SettingsOfType } from 'insomnia-common';
 import React, { ChangeEvent, FC, InputHTMLAttributes, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -24,7 +24,7 @@ export const BooleanSetting: FC<{
   descriptions?: string[];
   help?: string;
   label: ReactNode;
-  setting: keyof Settings;
+  setting: SettingsOfType<boolean>;
   inputProps?: InputHTMLAttributes<HTMLInputElement>;
 }> = ({
   descriptions,

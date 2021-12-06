@@ -1,15 +1,15 @@
+import { SettingsOfType } from 'insomnia-common';
 import React, { ChangeEvent, PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models/index';
-import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props<T> {
   help?: ReactNode;
   label: string;
-  setting: keyof Settings;
+  setting: SettingsOfType<string>;
   values: {
     name: string;
     value: T;

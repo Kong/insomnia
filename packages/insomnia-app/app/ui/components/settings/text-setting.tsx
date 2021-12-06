@@ -1,15 +1,15 @@
+import { SettingsOfType } from 'insomnia-common';
 import React, { ChangeEvent, FC, InputHTMLAttributes, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models/index';
-import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const TextSetting: FC<{
   help?: string;
   label: string;
-  setting: keyof Settings;
+  setting: SettingsOfType<string | null>;
   onChange?: InputHTMLAttributes<HTMLInputElement>['onChange'];
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
