@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { Request, RequestParameter } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -11,8 +10,6 @@ interface Props {
   onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
 }
 
@@ -78,17 +75,14 @@ export class RequestParametersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <CodeEditor
-        getRenderContext={handleGetRenderContext}
-        render={handleRender}
         isVariableUncovered={isVariableUncovered}
         onChange={this._handleBulkUpdate}
         defaultValue={this._getQueriesString()}
+        enableNunjucks
       />
     ) : (
       <KeyValueEditor
@@ -99,8 +93,6 @@ export class RequestParametersEditor extends PureComponent<Props> {
         descriptionPlaceholder="description"
         pairs={request.parameters}
         isVariableUncovered={isVariableUncovered}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
         onChange={this._handleKeyValueUpdate}
       />
     );

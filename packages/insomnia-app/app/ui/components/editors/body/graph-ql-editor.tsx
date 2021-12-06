@@ -22,7 +22,6 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
@@ -74,8 +73,6 @@ interface GraphQLBody {
 interface Props {
   onChange: Function;
   content: string;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -663,8 +660,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   render() {
     const {
       content,
-      render,
-      getRenderContext,
       className,
       uniquenessKey,
       isVariableUncovered,
@@ -816,13 +811,12 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
+            enableNunjucks
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
             defaultValue={variables}
             className={className}
-            render={render}
-            getRenderContext={getRenderContext}
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
             lintOptions={{
               variableToType: variableTypes,

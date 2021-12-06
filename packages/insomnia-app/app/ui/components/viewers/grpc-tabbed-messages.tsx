@@ -35,9 +35,7 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
   handleCommit,
   handleStream,
   uniquenessKey,
-  handleRender,
   isVariableUncovered,
-  handleGetRenderContext,
 }) => {
   const shouldShowBody = !!handleBodyChange;
   const orderedMessages = messages?.sort((a, b) => a.created - b.created) || [];
@@ -86,8 +84,6 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
           <GRPCEditor
             content={bodyText}
             handleChange={handleBodyChange}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
             isVariableUncovered={isVariableUncovered}
           />
         </TabPanel>

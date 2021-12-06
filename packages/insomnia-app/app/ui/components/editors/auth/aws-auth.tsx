@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import { Button } from '../../base/button';
@@ -15,8 +14,6 @@ interface Props {
   showPasswords: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
 }
 
@@ -55,8 +52,6 @@ export class AWSAuth extends PureComponent<Props> {
   renderRow(key: string, label: string, onChange: (...args: any[]) => any, help?: string) {
     const {
       request,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     return (
@@ -77,8 +72,6 @@ export class AWSAuth extends PureComponent<Props> {
               id={key}
               onChange={onChange}
               defaultValue={request.authentication[key] || ''}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

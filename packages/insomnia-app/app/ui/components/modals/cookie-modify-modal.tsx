@@ -6,7 +6,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as toughCookie from 'tough-cookie';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
@@ -17,8 +16,6 @@ import { ModalHeader } from '../base/modal-header';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props extends ModalProps {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   isVariableUncovered: boolean;
   workspace: Workspace;
   cookieJar: CookieJar;
@@ -185,8 +182,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   _renderInputField(field: string, error: string | null = null) {
     const { cookie } = this.state;
     const {
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
 
@@ -200,8 +195,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
         <label>
           {CookieModifyModal._capitalize(field)} <span className="danger">{error}</span>
           <OneLineEditor
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
             isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}

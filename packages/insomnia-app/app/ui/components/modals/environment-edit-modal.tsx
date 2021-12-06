@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { RequestGroup } from '../../../models/request-group';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -12,8 +11,6 @@ import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
   isVariableUncovered: boolean;
 }
 
@@ -84,8 +81,6 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      render,
-      getRenderContext,
       isVariableUncovered,
       ...extraProps
     } = this.props;
@@ -103,8 +98,6 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
             key={requestGroup ? requestGroup._id : 'n/a'}
             environmentInfo={environmentInfo}
             didChange={this._didChange}
-            render={render}
-            getRenderContext={getRenderContext}
             isVariableUncovered={isVariableUncovered}
           />
         </ModalBody>

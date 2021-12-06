@@ -3,7 +3,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
@@ -27,9 +26,7 @@ interface Props {
   workspaceId: string;
   settings: Settings;
   // For variables
-  handleRender: HandleRender;
   isVariableUncovered: boolean;
-  handleGetRenderContext: HandleGetRenderContext;
 }
 
 const StyledUrlBar = styled.div`
@@ -55,8 +52,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   environmentId,
   workspaceId,
   forceRefreshKey,
-  handleRender,
-  handleGetRenderContext,
   isVariableUncovered,
 }) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
@@ -84,10 +79,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
               onChange={handleChange.url}
-              render={handleRender}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={getExistingGrpcUrls}
-              getRenderContext={handleGetRenderContext}
             />
           </StyledUrlEditor>
           <StyledDropdown>
@@ -129,8 +122,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 showActions={running && enableClientStream}
                 handleStream={handleAction.stream}
                 handleCommit={handleAction.commit}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
                 isVariableUncovered={isVariableUncovered}
               />
             </TabPanel>
@@ -145,8 +136,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       descriptionPlaceholder="description"
                       pairs={activeRequest.metadata}
                       isVariableUncovered={isVariableUncovered}
-                      handleRender={handleRender}
-                      handleGetRenderContext={handleGetRenderContext}
                       handleGetAutocompleteNameConstants={getCommonHeaderNames}
                       handleGetAutocompleteValueConstants={getCommonHeaderValues}
                       onChange={handleChange.metadata}

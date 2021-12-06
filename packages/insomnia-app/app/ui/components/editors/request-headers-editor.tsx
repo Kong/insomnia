@@ -3,18 +3,15 @@ import React, { PureComponent } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import type { Request, RequestHeader } from '../../../models/request';
+import type * as request from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
-  onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  onChange: (r: request.Request, headers: request.RequestHeader[]) => Promise<request.Request>;
   bulk: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  request: Request;
+  request: request.Request;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -27,7 +24,7 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     onChange(request, headers);
   }
 
-  _handleKeyValueUpdate(headers: RequestHeader[]) {
+  _handleKeyValueUpdate(headers: request.RequestHeader[]) {
     const { onChange, request } = this.props;
     onChange(request, headers);
   }
@@ -79,18 +76,15 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     return bulk ? (
       <div className="tall">
         <CodeEditor
-          getRenderContext={handleGetRenderContext}
-          render={handleRender}
           isVariableUncovered={isVariableUncovered}
           onChange={this._handleBulkUpdate}
           defaultValue={this._getHeadersString()}
+          enableNunjucks
         />
       </div>
     ) : (
@@ -103,8 +97,6 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             descriptionPlaceholder="description"
             pairs={request.headers}
             isVariableUncovered={isVariableUncovered}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
             handleGetAutocompleteNameConstants={getCommonHeaderNames}
             handleGetAutocompleteValueConstants={getCommonHeaderValues}
             onChange={this._handleKeyValueUpdate}

@@ -5,6 +5,10 @@ import { MockStoreEnhanced } from 'redux-mock-store';
 import { RootState } from '../ui/redux/modules';
 
 // eslint-disable-next-line react/display-name -- There's not a good way to do with a FunctionComponent while also maintaining the display name.
-export const withReduxStore = (store: MockStoreEnhanced<RootState, {}>): FC => ({ children }) => (
-  <Provider store={store}>{children}</Provider>
-);
+export const withReduxStore = (store: MockStoreEnhanced<RootState, {}>, Node?: React.ComponentType): FC => ({ children }) => {
+  return (
+    <Provider store={store}>
+      {Node ? <Node>{children}</Node> : children}
+    </Provider>
+  );
+};

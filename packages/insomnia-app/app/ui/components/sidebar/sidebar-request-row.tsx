@@ -1,18 +1,17 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
-import { HandleRender } from '../../../common/render';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
-import { RootState } from '../../redux/modules';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -22,17 +21,16 @@ import { showModal } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
-import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
+import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
+type DerivedProps = ReturnType<typeof useDerivedProps>;
 
-interface Props extends DnDProps, ReduxProps {
+interface RawProps {
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleRender: HandleRender;
   requestCreate: Function;
   filter: string;
   isActive: boolean;
@@ -43,6 +41,8 @@ interface Props extends DnDProps, ReduxProps {
   request?: Request | GrpcRequest;
   disableDragAndDrop?: boolean;
 }
+
+type Props = RawProps & DnDProps & DerivedProps;
 
 interface State {
   dragDirection: number;
@@ -327,11 +327,22 @@ const dragTarget: DropTargetSpec<Props> = {
   hover: hoverHandle,
 };
 
-const mapStateToProps = (state: RootState) => ({
-  activeProject: selectActiveProject(state),
-  activeEnvironment: selectActiveEnvironment(state),
-});
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
+const Target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 
-const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
-const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
-export const SidebarRequestRow = connect(mapStateToProps)(target);
+const useDerivedProps = () => {
+  const { handleRender } = useNunjucks();
+  const activeProject = useSelector(selectActiveProject);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+
+  return {
+    handleRender,
+    activeProject,
+    activeEnvironment,
+  };
+};
+
+export const SidebarRequestRow: FC<RawProps> = props => {
+  const derivedProps = useDerivedProps();
+  return <Target {...props} {...derivedProps} />;
+};
