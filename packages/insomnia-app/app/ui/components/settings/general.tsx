@@ -116,10 +116,8 @@ class General extends PureComponent<Props> {
             label="Autocomplete popup delay"
             setting="autocompleteDelay"
             help="Configure the autocomplete popup delay in milliseconds (0 to disable)"
-            inputProps={{
-              min: 0,
-              max: 3000,
-            }}
+            min={0}
+            max={3000}
           />
         </div>
 
@@ -151,17 +149,13 @@ class General extends PureComponent<Props> {
               label="Interface Font"
               setting="fontInterface"
               help="Comma-separated list of fonts. If left empty, takes system defaults."
-              inputProps={{
-                placeholder: '-- System Default --',
-              }}
+              placeholder="-- System Default --"
             />
             <NumberSetting
               label="Interface Font Size (px)"
               setting="fontSize"
-              inputProps={{
-                min: MIN_INTERFACE_FONT_SIZE,
-                max: MAX_INTERFACE_FONT_SIZE,
-              }}
+              min={MIN_INTERFACE_FONT_SIZE}
+              max={MAX_INTERFACE_FONT_SIZE}
             />
           </div>
         </div>
@@ -171,17 +165,13 @@ class General extends PureComponent<Props> {
             label="Text Editor Font"
             setting="fontMonospace"
             help="Comma-separated list of monospace fonts. If left empty, takes system defaults."
-            inputProps={{
-              placeholder: '-- System Default --',
-            }}
+            placeholder="-- System Default --"
           />
           <NumberSetting
             label="Editor Font Size (px)"
             setting="editorFontSize"
-            inputProps={{
-              min: MIN_EDITOR_FONT_SIZE,
-              max: MAX_EDITOR_FONT_SIZE,
-            }}
+            min={MIN_EDITOR_FONT_SIZE}
+            max={MAX_EDITOR_FONT_SIZE}
           />
         </div>
 
@@ -190,10 +180,8 @@ class General extends PureComponent<Props> {
             label="Editor Indent Size"
             setting="editorIndentSize"
             help=""
-            inputProps={{
-              min: 1,
-              max: 16,
-            }}
+            min={1}
+            max={1}
           />
 
           <EnumSetting<EditorKeyMap>
@@ -269,17 +257,13 @@ class General extends PureComponent<Props> {
             label="Maximum Redirects"
             setting="maxRedirects"
             help="-1 for infinity"
-            inputProps={{
-              min: -1,
-            }}
+            min={-1}
           />
           <NumberSetting
             label="Request Timeout"
             setting="timeout"
             help="-1 for infinity"
-            inputProps={{
-              min: -1,
-            }}
+            min={-1}
           />
         </div>
 
@@ -288,17 +272,13 @@ class General extends PureComponent<Props> {
             label="Response History Limit"
             setting="maxHistoryResponses"
             help="Number of responses to keep for each request (-1 for infinity)"
-            inputProps={{
-              min: -1,
-            }}
+            min={-1}
           />
           <NumberSetting
             label="Max Timeline Chunk Size (KB)"
             setting="maxTimelineDataSizeKB"
             help="Maximum size in kilobytes to show on timeline"
-            inputProps={{
-              min: 0,
-            }}
+            min={0}
           />
         </div>
 
@@ -354,27 +334,21 @@ class General extends PureComponent<Props> {
           <MaskedSetting
             label='HTTP Proxy'
             setting='httpProxy'
-            props={{
-              placeholder: 'localhost:8005',
-              disabled: !settings.proxyEnabled,
-            }}
+            placeholder="localhost:8005"
+            disabled={!settings.proxyEnabled}
           />
           <MaskedSetting
             label='HTTPS Proxy'
             setting='httpsProxy'
-            props={{
-              placeholder: 'localhost:8005',
-              disabled: !settings.proxyEnabled,
-            }}
+            placeholder="localhost:8005"
+            disabled={!settings.proxyEnabled}
           />
           <TextSetting
             label="No Proxy"
             setting="noProxy"
             help="Comma-separated list of hostnames that do not require a proxy to be contacted"
-            inputProps={{
-              placeholder: 'localhost,127.0.0.1',
-              disabled: !settings.proxyEnabled,
-            }}
+            placeholder="localhost,127.0.0.1"
+            disabled={!settings.proxyEnabled}
           />
         </div>
 
@@ -425,9 +399,7 @@ class General extends PureComponent<Props> {
           label="Additional Plugin Path"
           setting="pluginPath"
           help="Tell Insomnia to look for plugins in a different directory"
-          inputProps={{
-            placeholder: '~/.insomnia:/other/path',
-          }}
+          placeholder="~/.insomnia:/other/path"
         />
 
         <hr className="pad-top" />

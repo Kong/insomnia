@@ -1,7 +1,6 @@
 import React, { ChangeEvent, FC, InputHTMLAttributes, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { snapNumberToLimits } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
@@ -11,12 +10,14 @@ export const TextSetting: FC<{
   help?: string;
   label: string;
   setting: keyof Settings;
-  inputProps?: InputHTMLAttributes<HTMLInputElement>;
+  onChange?: InputHTMLAttributes<HTMLInputElement>['onChange'];
+  placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
+  disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
 }> = ({
   help,
   label,
   setting,
-  inputProps = {},
+  onChange,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -24,31 +25,19 @@ export const TextSetting: FC<{
     throw new Error(`Invalid setting name ${setting}`);
   }
 
-  const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const { value, min, max } = event.currentTarget;
-    let updatedValue: string | number | null | undefined = value;
-
-    if (inputProps.type === 'number') {
-      updatedValue = snapNumberToLimits(
-        parseInt(value, 10) || 0,
-        parseInt(min, 10),
-        parseInt(max, 10),
-      );
-    }
-
-    if (updatedValue === '__NULL__') {
-      updatedValue = null;
-    }
-
+  const handleOnChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.currentTarget;
+    const updatedValue = value === null ? '__NULL__' : value;
     await models.settings.patch({
       [setting]: updatedValue,
     });
+
     event.persist();
-    inputProps.onChange?.(event);
-  }, [inputProps, setting]);
+    onChange?.(event);
+  }, [onChange, setting]);
 
   let defaultValue = settings[setting];
-  if (typeof defaultValue !== 'string' && typeof defaultValue !== 'number') {
+  if (typeof defaultValue !== 'string') {
     defaultValue = '';
   }
 
@@ -58,11 +47,10 @@ export const TextSetting: FC<{
         {label}
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         <input
-          type={inputProps.type || 'text'}
+          type={'text'}
           name={setting}
           defaultValue={defaultValue}
-          {...inputProps}
-          onChange={onChange}
+          onChange={handleOnChange}
         />
       </label>
     </div>

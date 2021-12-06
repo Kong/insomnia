@@ -11,24 +11,24 @@ export const MaskedSetting: FC<{
   label: string;
   setting: keyof Settings;
   help?: string;
-  props?: React.HTMLProps<HTMLInputElement>;
+  placeholder?: React.HTMLProps<HTMLInputElement>['placeholder'];
+  disabled?: React.HTMLProps<HTMLInputElement>['disabled'];
 }> = ({
   label,
   setting,
   help,
-  props,
+  placeholder,
+  disabled,
 }) => {
-
   const [isHidden, setHidden] = useToggle(true);
 
   const settings = useSelector(selectSettings);
 
   if (!settings.hasOwnProperty(setting)) {
-    throw new Error(`Invalid masked setting name ${setting}`);
+    throw new Error(`Invalid setting name ${setting}`);
   }
 
   const onChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    // Meanwhile we wait the update
     await models.settings.patch({
       [setting]: event.currentTarget.value,
     });
@@ -46,7 +46,8 @@ export const MaskedSetting: FC<{
           type={!settings.showPasswords && isHidden ? 'password' : 'text'}
           name={setting}
           onChange={onChange}
-          {...props}
+          placeholder={placeholder}
+          disabled={disabled}
         />
         {!settings.showPasswords && (
           <button className={'form-control__right'} onClick={setHidden}>
