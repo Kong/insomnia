@@ -1,6 +1,7 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
 
+import { setMenuBarVisibility } from '../../common/electron-helpers';
 import { selectSettings } from '../redux/selectors';
 
 const updateFontStyle = (key: string, value: string | null) => document?.querySelector('html')?.style.setProperty(key, value);
@@ -23,4 +24,8 @@ export const useSettingsSideEffects = () => {
   useLayoutEffect(() => {
     updateFontStyle('font-size', `${settings.fontSize}px`);
   }, [settings.fontSize]);
+
+  useEffect(() => {
+    setMenuBarVisibility(!settings.autoHideMenuBar);
+  }, [settings.autoHideMenuBar]);
 };
