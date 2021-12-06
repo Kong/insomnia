@@ -21,7 +21,7 @@ export const TextSetting: FC<{
   const settings = useSelector(selectSettings);
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
-    throw new Error(`Invalid number setting name ${setting}`);
+    throw new Error(`Invalid setting name ${setting}`);
   }
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
