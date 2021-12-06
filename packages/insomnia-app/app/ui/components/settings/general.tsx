@@ -246,6 +246,7 @@ class General extends PureComponent<Props> {
               { value: HttpVersions.V2PriorKnowledge, name: 'HTTP/2 PriorKnowledge' },
               { value: HttpVersions.V2_0, name: 'HTTP/2' },
               // Enable when our version of libcurl supports HTTP/3
+              // see: https://github.com/JCMais/node-libcurl/issues/233
               // { value: HttpVersions.v3, name: 'HTTP/3' },
             ]}
             help="Preferred HTTP version to use for requests which will fall back if it cannot be negotiated"
