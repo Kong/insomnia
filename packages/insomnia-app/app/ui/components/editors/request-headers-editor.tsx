@@ -3,15 +3,15 @@ import React, { PureComponent } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type * as request from '../../../models/request';
+import type { Request, RequestHeader } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
-  onChange: (r: request.Request, headers: request.RequestHeader[]) => Promise<request.Request>;
+  onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
   isVariableUncovered: boolean;
-  request: request.Request;
+  request: Request;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -24,7 +24,7 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     onChange(request, headers);
   }
 
-  _handleKeyValueUpdate(headers: request.RequestHeader[]) {
+  _handleKeyValueUpdate(headers: RequestHeader[]) {
     const { onChange, request } = this.props;
     onChange(request, headers);
   }
