@@ -10,8 +10,8 @@ import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { Component, CSSProperties, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
+import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
 import zprint from 'zprint-clj';
@@ -26,10 +26,9 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
-import { RootState } from '../../redux/modules';
+import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -92,37 +91,7 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 
 export type CodeEditorOnChange = (value: string) => void;
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface OwnProps {
-  ignoreEditorFontSettings?: boolean;
-}
-
-const mapStateToProps = (state: RootState, { ignoreEditorFontSettings }: OwnProps) => {
-  const {
-    hotKeyRegistry,
-    autocompleteDelay,
-    editorFontSize,
-    editorIndentSize,
-    editorKeyMap,
-    editorLineWrapping,
-    editorIndentWithTabs,
-    nunjucksPowerUserMode,
-  } = selectSettings(state);
-
-  return {
-    hotKeyRegistry,
-    autocompleteDelay,
-    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
-    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
-    keyMap: editorKeyMap,
-    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
-    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
-    nunjucksPowerUserMode,
-  };
-};
-
-interface Props extends ReduxProps {
+interface RawProps {
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
   onFocus?: (e: FocusEvent) => void;
@@ -133,8 +102,6 @@ interface Props extends ReduxProps {
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   onPaste?: (e: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   mode?: string;
@@ -172,6 +139,59 @@ interface Props extends ReduxProps {
   isVariableUncovered?: boolean;
   raw?: boolean;
 }
+
+interface FCProps {
+  enableNunjucks?: boolean;
+  ignoreEditorFontSettings?: boolean;
+}
+
+const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) => {
+  const {
+    handleRender,
+    handleGetRenderContext,
+  } = useGatedNunjucks({ disabled: !enableNunjucks });
+
+  const {
+    hotKeyRegistry,
+    autocompleteDelay,
+    editorFontSize,
+    editorIndentSize,
+    editorKeyMap,
+    editorLineWrapping,
+    editorIndentWithTabs,
+    nunjucksPowerUserMode,
+  } = useSelector(selectSettings);
+
+  return {
+    render: handleRender,
+    getRenderContext: handleGetRenderContext,
+    hotKeyRegistry,
+    autocompleteDelay,
+    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
+    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
+    keyMap: editorKeyMap,
+    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
+    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
+    nunjucksPowerUserMode,
+  };
+};
+
+const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawProps & FCProps> = (
+  { enableNunjucks, ignoreEditorFontSettings, ...rawProps },
+  ref
+) => {
+  const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
+
+  return <UnconnectedCodeEditor
+    ref={ref}
+    {...rawProps}
+    {...derivedProps}
+  />;
+};
+
+export const CodeEditor = forwardRef(CodeEditorFCWithRef);
+
+type Props = RawProps & ReturnType<typeof useDerivedProps>;
 
 interface State {
   filter: string;
@@ -772,11 +792,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     if (this.props.render) {
       mode = {
         name: 'nunjucks',
-        baseMode: CodeEditor._normalizeMode(rawMode),
+        baseMode: UnconnectedCodeEditor._normalizeMode(rawMode),
       };
     } else {
       // foo bar baz
-      mode = CodeEditor._normalizeMode(rawMode);
+      mode = UnconnectedCodeEditor._normalizeMode(rawMode);
     }
 
     // NOTE: YAML is not valid when indented with Tabs
@@ -945,15 +965,15 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     } else if (mimeType.includes('graphql')) {
       // Because graphQL plugin doesn't recognize application/graphql content-type
       return 'graphql';
-    } else if (CodeEditor._isJSON(mimeType)) {
+    } else if (UnconnectedCodeEditor._isJSON(mimeType)) {
       return 'application/json';
-    } else if (CodeEditor._isEDN(mimeType)) {
+    } else if (UnconnectedCodeEditor._isEDN(mimeType)) {
       return 'application/edn';
-    } else if (CodeEditor._isXML(mimeType)) {
+    } else if (UnconnectedCodeEditor._isXML(mimeType)) {
       return 'application/xml';
     } else if (mimeType.includes('kotlin')) {
       return 'text/x-kotlin';
-    } else if (CodeEditor._isYAML(mimeType)) {
+    } else if (UnconnectedCodeEditor._isYAML(mimeType)) {
       // code-mirror doesn't recognize text/yaml or application/yaml
       // as a valid mime-type
       return 'yaml';
@@ -1123,11 +1143,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     const shouldPrettify = forcePrettify || autoPrettify;
 
     if (shouldPrettify && this._canPrettify()) {
-      if (CodeEditor._isXML(mode)) {
+      if (UnconnectedCodeEditor._isXML(mode)) {
         code = this._prettifyXML(code);
-      } else if (CodeEditor._isEDN(mode)) {
-        code = CodeEditor._prettifyEDN(code);
-      } else if (CodeEditor._isJSON(mode)) {
+      } else if (UnconnectedCodeEditor._isEDN(mode)) {
+        code = UnconnectedCodeEditor._prettifyEDN(code);
+      } else if (UnconnectedCodeEditor._isJSON(mode)) {
         code = this._prettifyJSON(code);
       } else {
         unreachable('attempted to prettify in a mode that should not support prettifying');
@@ -1172,11 +1192,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
 
   _canPrettify() {
     const { mode } = this.props;
-    return CodeEditor._isJSON(mode) || CodeEditor._isXML(mode) || CodeEditor._isEDN(mode);
+    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode) || UnconnectedCodeEditor._isEDN(mode);
   }
 
   _showFilterHelp() {
-    const isJson = CodeEditor._isJSON(this.props.mode);
+    const isJson = UnconnectedCodeEditor._isJSON(this.props.mode);
 
     showModal(FilterHelpModal, isJson);
   }
@@ -1206,7 +1226,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     });
     const toolbarChildren: ReactNode[] = [];
 
-    if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
+    if (this.props.updateFilter && (UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode))) {
       toolbarChildren.push(
         <input
           ref={this._setFilterInputRef}
@@ -1214,7 +1234,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
           type="text"
           title="Filter response body"
           defaultValue={filter || ''}
-          placeholder={CodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          placeholder={UnconnectedCodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
           onChange={this._handleFilterChange}
         />,
       );
@@ -1246,11 +1266,11 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     if (this.props.manualPrettify && this._canPrettify()) {
       let contentTypeName = '';
 
-      if (CodeEditor._isJSON(mode)) {
+      if (UnconnectedCodeEditor._isJSON(mode)) {
         contentTypeName = 'JSON';
-      } else if (CodeEditor._isXML(mode)) {
+      } else if (UnconnectedCodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (CodeEditor._isEDN(mode)) {
+      } else if (UnconnectedCodeEditor._isEDN(mode)) {
         contentTypeName = 'EDN';
       }
 
@@ -1313,5 +1333,3 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     );
   }
 }
-
-export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);

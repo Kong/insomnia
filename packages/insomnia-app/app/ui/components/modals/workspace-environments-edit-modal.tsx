@@ -6,7 +6,6 @@ import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'r
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
@@ -29,8 +28,6 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 interface Props extends ModalProps {
   handleChangeEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
   isVariableUncovered: boolean;
 }
 
@@ -428,9 +425,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   render() {
     const {
       activeEnvironmentId,
-      getRenderContext,
       isVariableUncovered,
-      render,
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
@@ -581,8 +576,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                 key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
                 environmentInfo={environmentInfo}
                 didChange={this._didChange}
-                render={render}
-                getRenderContext={getRenderContext}
                 isVariableUncovered={isVariableUncovered}
               />
             </div>

@@ -59,8 +59,6 @@ export interface EnvironmentInfo {
 interface Props {
   environmentInfo: EnvironmentInfo;
   didChange: (...args: any[]) => any;
-  render: (...args: any[]) => any;
-  getRenderContext: (...args: any[]) => any;
   isVariableUncovered: boolean;
 }
 
@@ -140,8 +138,6 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
   render() {
     const {
       environmentInfo,
-      render,
-      getRenderContext,
       isVariableUncovered,
       ...props
     } = this.props;
@@ -156,11 +152,10 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
         <CodeEditor
           ref={this._setEditorRef}
           autoPrettify
+          enableNunjucks
           onChange={this._handleChange}
           defaultValue={defaultValue}
           isVariableUncovered={isVariableUncovered}
-          render={render}
-          getRenderContext={getRenderContext}
           mode="application/json"
           {...props}
         />

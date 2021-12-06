@@ -17,7 +17,6 @@ import {
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
 import type { Cookie } from '../../models/cookie-jar';
@@ -105,8 +104,6 @@ export type WrapperProps = AppProps & {
   requestPaneRef: Ref<HTMLElement>;
   responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
   sidebarRef: Ref<HTMLElement>;
@@ -484,9 +481,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       gitVCS,
       handleActivateRequest,
       handleExportRequestsToFile,
-      handleGetRenderContext,
       handleInitializeEntities,
-      handleRender,
       handleSidebarSort,
       isVariableUncovered,
       settings,
@@ -539,23 +534,17 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <CodePromptModal
               ref={registerModal}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
 
             <RequestSettingsModal
               ref={registerModal}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
               workspaces={workspaces}
               isVariableUncovered={isVariableUncovered}
             />
 
             <RequestGroupSettingsModal
               ref={registerModal}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
               workspaces={workspaces}
               isVariableUncovered={isVariableUncovered}
             />
@@ -564,15 +553,12 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               {/* TODO: Figure out why cookieJar is sometimes null */}
               {activeCookieJar ? <>
                 <CookiesModal
-                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-                  handleRender={handleRender}
                   ref={registerModal}
+                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   workspace={activeWorkspace}
                   cookieJar={activeCookieJar}
                 />
                 <CookieModifyModal
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
                   ref={registerModal}
                   cookieJar={activeCookieJar}
                   workspace={activeWorkspace}
@@ -583,8 +569,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               <NunjucksModal
                 uniqueKey={`key::${this.state.forceRefreshKey}`}
                 ref={registerModal}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
                 workspace={activeWorkspace}
               />
 
@@ -593,8 +577,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                 clientCertificates={activeWorkspaceClientCertificates}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
                 isVariableUncovered={isVariableUncovered}
@@ -621,8 +603,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <EnvironmentEditModal
               ref={registerModal}
               onChange={models.requestGroup.update}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
 
@@ -674,8 +654,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               ref={registerModal}
               handleChangeEnvironment={this._handleChangeEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
 

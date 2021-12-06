@@ -6,7 +6,6 @@ import styled from 'styled-components';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
@@ -67,8 +66,6 @@ interface Props extends ReduxProps {
   workspace: Workspace;
   apiSpec: ApiSpec;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleRemoveWorkspace: Function;
   handleClearAllResponses: Function;
 }
@@ -292,8 +289,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
       clientCertificates,
       workspace,
       activeWorkspaceName,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
@@ -338,8 +333,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
                   className="margin-top"
                   defaultPreviewMode={defaultPreviewMode}
                   placeholder="Write a description"
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}

@@ -3,7 +3,6 @@ import * as React from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
@@ -16,8 +15,6 @@ import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   workspaces: Workspace[];
 }
 
@@ -194,8 +191,6 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
 
   _renderDescription() {
     const {
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
     } = this.props;
 
@@ -211,8 +206,6 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
         placeholder="Write a description"
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
         isVariableUncovered={isVariableUncovered}
         defaultValue={requestGroup.description}
         onChange={this._handleDescriptionChange}

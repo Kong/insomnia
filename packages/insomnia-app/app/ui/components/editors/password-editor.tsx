@@ -3,13 +3,10 @@ import classnames from 'classnames';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Button } from '../base/button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
@@ -39,8 +36,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
       password,
       disabled,
       showAllPasswords,
-      handleRender,
-      handleGetRenderContext,
       isVariableUncovered,
       onChange,
     } = this.props;
@@ -56,8 +51,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
             id="password"
             onChange={onChange}
             defaultValue={password || ''}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
             isVariableUncovered={isVariableUncovered}
           />
         </div>

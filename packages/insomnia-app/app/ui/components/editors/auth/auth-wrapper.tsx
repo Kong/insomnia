@@ -14,7 +14,6 @@ import {
   AUTH_OAUTH_2,
   AUTOBIND_CFG,
 } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
@@ -30,8 +29,6 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
@@ -46,8 +43,6 @@ export class AuthWrapper extends PureComponent<Props> {
     const {
       oAuth2Token,
       request,
-      handleRender,
-      handleGetRenderContext,
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
@@ -59,8 +54,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <BasicAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -72,8 +65,6 @@ export class AuthWrapper extends PureComponent<Props> {
         <OAuth2Auth
           oAuth2Token={oAuth2Token}
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -84,8 +75,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <HawkAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -94,8 +83,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <OAuth1Auth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           showPasswords={showPasswords}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
@@ -105,8 +92,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <DigestAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -117,8 +102,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <NTLMAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -129,8 +112,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <BearerAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
@@ -139,8 +120,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <AWSAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -153,8 +132,6 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <AsapAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />

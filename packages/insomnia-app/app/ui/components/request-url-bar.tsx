@@ -6,7 +6,6 @@ import React, { PureComponent, ReactNode } from 'react';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import type { Request } from '../../models/request';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
@@ -22,9 +21,7 @@ import { showPrompt } from './modals/index';
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   handleGenerateCode: Function;
-  handleGetRenderContext: HandleGetRenderContext;
   handleImport: Function;
-  handleRender: HandleRender;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
@@ -352,9 +349,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   render() {
     const {
       request,
-      handleRender,
       isVariableUncovered,
-      handleGetRenderContext,
       handleAutocompleteUrls,
       uniquenessKey,
     } = this.props;
@@ -376,10 +371,8 @@ export class RequestUrlBar extends PureComponent<Props, State> {
               onPaste={this._handleUrlPaste}
               forceEditor
               type="text"
-              render={handleRender}
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
-              getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}
               onChange={this._handleUrlChange}

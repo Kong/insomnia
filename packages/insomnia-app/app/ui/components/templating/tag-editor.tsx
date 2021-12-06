@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -23,6 +23,7 @@ import type {
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -54,7 +55,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class TagEditor extends PureComponent<Props, State> {
+class TagEditorInternal extends PureComponent<Props, State> {
   _select: HTMLSelectElement | null = null;
 
   state: State = {
@@ -192,7 +193,7 @@ export class TagEditor extends PureComponent<Props, State> {
     }
 
     // Ensure all arguments exist
-    const defaultArgs = TagEditor._getDefaultTagData(activeTagDefinition).args;
+    const defaultArgs = TagEditorInternal._getDefaultTagData(activeTagDefinition).args;
 
     for (let i = 0; i < defaultArgs.length; i++) {
       if (activeTagData.args[i]) {
@@ -370,7 +371,7 @@ export class TagEditor extends PureComponent<Props, State> {
     let activeTagData: NunjucksParsedTag | null = tagData;
 
     if (!activeTagData && tagDefinition) {
-      activeTagData = TagEditor._getDefaultTagData(tagDefinition);
+      activeTagData = TagEditorInternal._getDefaultTagData(tagDefinition);
     } else if (!activeTagData && !tagDefinition && this.state.activeTagData) {
       activeTagData = {
         name: 'custom',
@@ -594,7 +595,7 @@ export class TagEditor extends PureComponent<Props, State> {
     if (argIndex < argDatas.length) {
       argData = argDatas[argIndex];
     } else if (this.state.activeTagDefinition) {
-      const defaultTagData = TagEditor._getDefaultTagData(this.state.activeTagDefinition);
+      const defaultTagData = TagEditorInternal._getDefaultTagData(this.state.activeTagDefinition);
 
       argData = defaultTagData.args[argIndex];
     } else {
@@ -834,3 +835,8 @@ export class TagEditor extends PureComponent<Props, State> {
     );
   }
 }
+
+export const TagEditor: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useNunjucks();
+  return <TagEditorInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+};

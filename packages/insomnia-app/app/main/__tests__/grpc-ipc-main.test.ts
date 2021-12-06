@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 
-import { GrpcRequestEventEnum } from '../../common/grpc-events';
+import { GrpcRequestEventEnum } from '../../common/ipc-events';
 import * as grpc from '../../network/grpc';
 import { ResponseCallbacks } from '../../network/grpc/response-callbacks';
 import * as grpcIpcMain from '../grpc-ipc-main';

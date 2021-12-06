@@ -5,7 +5,6 @@ import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { OAuth2Token } from '../../../models/o-auth-2-token';
@@ -41,8 +40,6 @@ interface Props {
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleCreateRequest: () => void;
   handleGenerateCode: Function;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateDownloadPath: Function;
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateRequestMethod: (r: Request, method: string) => Promise<Request>;
@@ -129,10 +126,8 @@ export class RequestPane extends PureComponent<Props> {
       forceRefreshCounter,
       forceUpdateRequestHeaders,
       handleGenerateCode,
-      handleGetRenderContext,
       handleImport,
       handleCreateRequest,
-      handleRender,
       handleSend,
       handleSendAndDownload,
       handleUpdateDownloadPath,
@@ -187,10 +182,8 @@ export class RequestPane extends PureComponent<Props> {
               handleGenerateCode={handleGenerateCode}
               handleSend={handleSend}
               handleSendAndDownload={handleSendAndDownload}
-              handleRender={handleRender}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
-              handleGetRenderContext={handleGetRenderContext}
               request={request}
               hotKeyRegistry={settings.hotKeyRegistry}
               handleUpdateDownloadPath={handleUpdateDownloadPath}
@@ -251,8 +244,6 @@ export class RequestPane extends PureComponent<Props> {
             <BodyEditor
               key={uniqueKey}
               handleUpdateRequestMimeType={updateRequestMimeType}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
               request={request}
               workspace={workspace}
               environmentId={environmentId}
@@ -270,8 +261,6 @@ export class RequestPane extends PureComponent<Props> {
                   showPasswords={settings.showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
                 />
@@ -286,7 +275,7 @@ export class RequestPane extends PureComponent<Props> {
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center"
                 >
-                  <RenderedQueryString handleRender={handleRender} request={request} />
+                  <RenderedQueryString request={request} />
                 </ErrorBoundary>
               </code>
             </div>
@@ -297,8 +286,6 @@ export class RequestPane extends PureComponent<Props> {
               >
                 <RequestParametersEditor
                   key={headerEditorKey}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestParameters}
                   request={request}
@@ -326,8 +313,6 @@ export class RequestPane extends PureComponent<Props> {
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
                 key={headerEditorKey}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
                 isVariableUncovered={isVariableUncovered}
                 onChange={updateRequestHeaders}
                 request={request}
@@ -359,7 +344,6 @@ export class RequestPane extends PureComponent<Props> {
                       heading={request.name}
                       debounceMillis={1000}
                       markdown={request.description}
-                      handleRender={handleRender}
                     />
                   </ErrorBoundary>
                 </div>

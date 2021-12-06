@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import deepEqual from 'deep-equal';
-import React, { ChangeEvent, PureComponent } from 'react';
+import React, { ChangeEvent, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { fuzzyMatch } from '../../../common/misc';
@@ -8,6 +8,7 @@ import { HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -27,7 +28,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class CookiesModal extends PureComponent<Props, State> {
+class CookiesModalInternal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   filterInput: HTMLInputElement | null = null;
 
@@ -154,7 +155,7 @@ export class CookiesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleShowModifyCookieModal, handleRender, cookieJar } = this.props;
+    const { handleShowModifyCookieModal, cookieJar } = this.props;
     const { filter } = this.state;
 
     const cookies = this._getVisibleCookies();
@@ -183,7 +184,6 @@ export class CookiesModal extends PureComponent<Props, State> {
                 <CookieList
                   cookies={cookies}
                   handleShowModifyCookieModal={handleShowModifyCookieModal}
-                  handleRender={handleRender}
                   handleDeleteAll={this._handleDeleteAllCookies}
                   handleCookieAdd={this._handleCookieAdd}
                   handleCookieDelete={this._handleCookieDelete} // Set the domain to the filter so that it shows up if we're filtering
@@ -205,3 +205,11 @@ export class CookiesModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const CookiesModalFCRF: ForwardRefRenderFunction<CookiesModalInternal, Omit<Props, 'handleRender'>> = (props, ref) => {
+  const { handleRender } = useNunjucks();
+  return <CookiesModalInternal ref={ref} {...props} handleRender={handleRender} />;
+
+};
+
+export const CookiesModal = forwardRef(CookiesModalFCRF);
