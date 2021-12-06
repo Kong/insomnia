@@ -71,10 +71,6 @@ const configuration: Configuration = {
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
     ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
-
-    // To get jsonlint working...
-    'file',
-    'system',
   ],
   plugins: [
     new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
