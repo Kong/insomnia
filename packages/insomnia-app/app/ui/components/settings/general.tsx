@@ -366,14 +366,16 @@ class General extends PureComponent<Props> {
               help="If disabled, you will receive a notification when a new update is available"
             />
 
-            <EnumSetting<UpdateChannel>
-              label="Update Channel"
-              setting="updateChannel"
-              values={[
-                { value: UpdateChannel.stable, name: 'Release (Recommended)' },
-                { value: UpdateChannel.beta, name: 'Early Access (Beta)' },
-              ]}
-            />
+            <div className="for-row pad-top-sm">
+              <EnumSetting<UpdateChannel>
+                label="Update Channel"
+                setting="updateChannel"
+                values={[
+                  { value: UpdateChannel.stable, name: 'Release (Recommended)' },
+                  { value: UpdateChannel.beta, name: 'Early Access (Beta)' },
+                ]}
+              />
+            </div>
           </Fragment>
         )}
 
