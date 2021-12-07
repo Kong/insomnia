@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
 import { Tooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -9,18 +9,13 @@ import type { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
-  EDITOR_KEY_MAP_DEFAULT,
-  EDITOR_KEY_MAP_EMACS,
-  EDITOR_KEY_MAP_SUBLIME,
-  EDITOR_KEY_MAP_VIM,
+  EditorKeyMap,
   isDevelopment,
   isMac,
   MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
   MIN_INTERFACE_FONT_SIZE,
-  UPDATE_CHANNEL_BETA,
-  UPDATE_CHANNEL_STABLE,
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
@@ -201,20 +196,20 @@ class General extends PureComponent<Props> {
             }}
           />
 
-          <EnumSetting
+          <EnumSetting<EditorKeyMap>
             label="Text Editor Key Map"
             setting="editorKeyMap"
-            help={isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
+            help={isMac() && settings.editorKeyMap === EditorKeyMap.vim && (
               <Fragment>
                 To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
                   documentation <i className="fa fa-external-link-square" /></Link>
               </Fragment>
             )}
             values={[
-              { value: EDITOR_KEY_MAP_DEFAULT, name: 'Default' },
-              { value: EDITOR_KEY_MAP_VIM, name: 'Vim' },
-              { value: EDITOR_KEY_MAP_EMACS, name: 'Emacs' },
-              { value: EDITOR_KEY_MAP_SUBLIME, name: 'Sublime' },
+              { value: EditorKeyMap.default, name: 'Default' },
+              { value: EditorKeyMap.vim, name: 'Vim' },
+              { value: EditorKeyMap.emacs, name: 'Emacs' },
+              { value: EditorKeyMap.sublime, name: 'Sublime' },
             ]}
           />
         </div>
@@ -257,13 +252,13 @@ class General extends PureComponent<Props> {
             label="Preferred HTTP version"
             setting="preferredHttpVersion"
             values={[
-              { name: 'Default', value: HttpVersions.default },
-              { name: 'HTTP 1.0', value: HttpVersions.V1_0 },
-              { name: 'HTTP 1.1', value: HttpVersions.V1_1 },
-              { name: 'HTTP/2 PriorKnowledge', value: HttpVersions.V2PriorKnowledge },
-              { name: 'HTTP/2', value: HttpVersions.V2_0 },
+              { value: HttpVersions.default, name: 'Default' },
+              { value: HttpVersions.V1_0, name: 'HTTP 1.0' },
+              { value: HttpVersions.V1_1, name: 'HTTP 1.1' },
+              { value: HttpVersions.V2PriorKnowledge, name: 'HTTP/2 PriorKnowledge' },
+              { value: HttpVersions.V2_0, name: 'HTTP/2' },
               // Enable when our version of libcurl supports HTTP/3
-              // { name: 'HTTP/3', value: HttpVersions.v3 },
+              // { value: HttpVersions.v3, name: 'HTTP/3' },
             ]}
             help="Preferred HTTP version to use for requests which will fall back if it cannot be negotiated"
           />
@@ -400,12 +395,12 @@ class General extends PureComponent<Props> {
               help="If disabled, you will receive a notification when a new update is available"
             />
 
-            <EnumSetting
+            <EnumSetting<UpdateChannel>
               label="Update Channel"
               setting="updateChannel"
               values={[
-                { name: 'Release (Recommended)', value: UPDATE_CHANNEL_STABLE },
-                { name: 'Early Access (Beta)', value: UPDATE_CHANNEL_BETA },
+                { value: UpdateChannel.stable, name: 'Release (Recommended)' },
+                { value: UpdateChannel.beta, name: 'Early Access (Beta)' },
               ]}
             />
           </Fragment>

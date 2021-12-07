@@ -1,10 +1,9 @@
-import { HttpVersions, Settings as BaseSettings } from 'insomnia-common';
+import { HttpVersions, Settings as BaseSettings, UpdateChannel } from 'insomnia-common';
 
 import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,
   getAppDefaultTheme,
-  UPDATE_CHANNEL_STABLE,
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
@@ -78,7 +77,7 @@ export function init(): BaseSettings {
     theme: getAppDefaultTheme(),
     timeout: 0,
     updateAutomatically: true,
-    updateChannel: UPDATE_CHANNEL_STABLE,
+    updateChannel: UpdateChannel.stable,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
     validateAuthSSL: true,

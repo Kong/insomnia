@@ -3,8 +3,13 @@ import { HotKeyRegistry } from './hotkeys';
 
 type Sides = 'top' | 'bottom' | 'left' | 'right';
 type WindowSides = `window-${Sides}`;
-type SidebarSides = `sidebar-${'edge' | 'indicator'}`
-export type EnvironmentHighlightColorStyle = WindowSides | SidebarSides
+type SidebarSides = `sidebar-${'edge' | 'indicator'}`;
+export type EnvironmentHighlightColorStyle = WindowSides | SidebarSides;
+
+export enum UpdateChannel {
+  stable = 'stable',
+  beta = 'beta',
+}
 
 export interface PluginConfig {
   disabled: boolean;
@@ -70,7 +75,7 @@ export interface Settings {
   theme: string;
   timeout: number;
   updateAutomatically: boolean;
-  updateChannel: string;
+  updateChannel: UpdateChannel;
   useBulkHeaderEditor: boolean;
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;

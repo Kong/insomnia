@@ -16,7 +16,7 @@ interface Props<T> {
   }[];
 }
 
-export const EnumSetting = <T extends string = string>({
+export const EnumSetting = <T extends string | number>({
   help,
   label,
   setting,
