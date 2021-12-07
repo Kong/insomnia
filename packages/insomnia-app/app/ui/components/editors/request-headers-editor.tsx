@@ -1,11 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
+import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import allCharsets from '../../../datasets/charsets';
-import allMimeTypes from '../../../datasets/content-types';
-import allEncodings from '../../../datasets/encodings';
-import allHeaderNames from '../../../datasets/header-names';
 import type { Request, RequestHeader } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -75,27 +72,6 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     return headersString;
   }
 
-  static _getCommonHeaderValues(pair: RequestHeader) {
-    switch (pair.name.toLowerCase()) {
-      case 'content-type':
-      case 'accept':
-        return allMimeTypes;
-
-      case 'accept-charset':
-        return allCharsets;
-
-      case 'accept-encoding':
-        return allEncodings;
-
-      default:
-        return [];
-    }
-  }
-
-  static _getCommonHeaderNames() {
-    return allHeaderNames;
-  }
-
   render() {
     const {
       bulk,
@@ -121,8 +97,8 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             descriptionPlaceholder="description"
             pairs={request.headers}
             isVariableUncovered={isVariableUncovered}
-            handleGetAutocompleteNameConstants={RequestHeadersEditor._getCommonHeaderNames}
-            handleGetAutocompleteValueConstants={RequestHeadersEditor._getCommonHeaderValues}
+            handleGetAutocompleteNameConstants={getCommonHeaderNames}
+            handleGetAutocompleteValueConstants={getCommonHeaderValues}
             onChange={this._handleKeyValueUpdate}
           />
         </div>
