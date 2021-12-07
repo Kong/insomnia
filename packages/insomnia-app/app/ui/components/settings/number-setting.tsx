@@ -19,6 +19,8 @@ interface Props {
 export const NumberSetting: FC<Props> = ({
   help,
   label,
+  min,
+  max,
   setting,
   onChange,
 }) => {
@@ -56,6 +58,8 @@ export const NumberSetting: FC<Props> = ({
         <input
           type={'number'}
           name={setting}
+          max={max}
+          min={min}
           defaultValue={defaultValue}
           onChange={handleOnChange}
         />

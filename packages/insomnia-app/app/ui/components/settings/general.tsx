@@ -177,7 +177,7 @@ class General extends PureComponent<Props> {
             setting="editorIndentSize"
             help=""
             min={1}
-            max={1}
+            max={16}
           />
 
           <EnumSetting<EditorKeyMap>
