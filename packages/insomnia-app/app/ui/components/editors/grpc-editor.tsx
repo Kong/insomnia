@@ -13,7 +13,6 @@ export const GRPCEditor: FunctionComponent<Props> = ({
   content,
   handleChange,
   readOnly,
-  isVariableUncovered,
 }) => (
   <CodeEditor
     defaultValue={content}
@@ -23,6 +22,5 @@ export const GRPCEditor: FunctionComponent<Props> = ({
     readOnly={readOnly}
     autoPrettify={readOnly}
     manualPrettify={!readOnly}
-    isVariableUncovered={isVariableUncovered}
   />
 );

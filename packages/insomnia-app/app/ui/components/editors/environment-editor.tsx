@@ -59,8 +59,7 @@ export interface EnvironmentInfo {
 interface Props {
   environmentInfo: EnvironmentInfo;
   didChange: (...args: any[]) => any;
-  isVariableUncovered: boolean;
-}
+  }
 
 // There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
 // to show. If warnings need to be added again, review git history to revert that particular change.
@@ -138,7 +137,6 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
   render() {
     const {
       environmentInfo,
-      isVariableUncovered,
       ...props
     } = this.props;
     const { error } = this.state;
@@ -155,7 +153,6 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
           enableNunjucks
           onChange={this._handleChange}
           defaultValue={defaultValue}
-          isVariableUncovered={isVariableUncovered}
           mode="application/json"
           {...props}
         />

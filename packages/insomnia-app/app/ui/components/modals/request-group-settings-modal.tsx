@@ -14,8 +14,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
-  isVariableUncovered: boolean;
-  workspaces: Workspace[];
+    workspaces: Workspace[];
 }
 
 interface State {
@@ -191,7 +190,6 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
 
   _renderDescription() {
     const {
-      isVariableUncovered,
     } = this.props;
 
     const { showDescription, defaultPreviewMode, requestGroup } = this.state;
@@ -206,7 +204,6 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
         placeholder="Write a description"
-        isVariableUncovered={isVariableUncovered}
         defaultValue={requestGroup.description}
         onChange={this._handleDescriptionChange}
       />

@@ -1491,7 +1491,6 @@ class App extends PureComponent<AppProps, State> {
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   handleShowSettingsModal={App._handleShowSettingsModal}
                   handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-                  isVariableUncovered={this.props.settings?.isVariableUncovered || false}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   handleSidebarSort={this._sortSidebar}
                   vcs={vcs}

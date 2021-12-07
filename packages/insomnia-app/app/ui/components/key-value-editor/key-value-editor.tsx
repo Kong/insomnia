@@ -427,7 +427,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       valuePlaceholder,
       namePlaceholder,
       descriptionPlaceholder,
-      isVariableUncovered,
       handleGetAutocompleteNameConstants,
       handleGetAutocompleteValueConstants,
       allowFile,
@@ -462,7 +461,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
               onBlurValue={this._handleBlurValue}
               onBlurDescription={this._handleBlurDescription}
               onMove={this._handleMove}
-              isVariableUncovered={isVariableUncovered}
               handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
               handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
               allowMultiline={allowMultiline}

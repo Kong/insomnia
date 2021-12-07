@@ -77,8 +77,7 @@ interface Props {
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
-  isVariableUncovered: boolean;
-  className?: string;
+    className?: string;
   uniquenessKey?: string;
 }
 
@@ -662,7 +661,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       content,
       className,
       uniquenessKey,
-      isVariableUncovered,
     } = this.props;
     const {
       schema,
@@ -822,7 +820,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
               variableToType: variableTypes,
             }}
             noLint={!variableTypes}
-            isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}
             mode="graphql-variables"
             placeholder=""

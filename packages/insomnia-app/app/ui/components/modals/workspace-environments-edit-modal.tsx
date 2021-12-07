@@ -28,7 +28,6 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 interface Props extends ModalProps {
   handleChangeEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
-  isVariableUncovered: boolean;
 }
 
 interface State {
@@ -425,7 +424,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   render() {
     const {
       activeEnvironmentId,
-      isVariableUncovered,
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
@@ -576,7 +574,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                 key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
                 environmentInfo={environmentInfo}
                 didChange={this._didChange}
-                isVariableUncovered={isVariableUncovered}
               />
             </div>
           </div>

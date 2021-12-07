@@ -125,7 +125,6 @@ export type WrapperProps = AppProps & {
   paneHeight: number;
   sidebarWidth: number;
   headerEditorKey: string;
-  isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 };
@@ -483,7 +482,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       handleExportRequestsToFile,
       handleInitializeEntities,
       handleSidebarSort,
-      isVariableUncovered,
       settings,
       sidebarChildren,
       syncItems,
@@ -534,19 +532,16 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <CodePromptModal
               ref={registerModal}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <RequestSettingsModal
               ref={registerModal}
               workspaces={workspaces}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <RequestGroupSettingsModal
               ref={registerModal}
               workspaces={workspaces}
-              isVariableUncovered={isVariableUncovered}
             />
 
             {activeWorkspace ? <>
@@ -562,7 +557,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   cookieJar={activeCookieJar}
                   workspace={activeWorkspace}
-                  isVariableUncovered={isVariableUncovered}
                 />
               </> : null}
 
@@ -579,7 +573,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                 apiSpec={activeApiSpec}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
-                isVariableUncovered={isVariableUncovered}
               /> : null}
             </> : null}
 
@@ -603,7 +596,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <EnvironmentEditModal
               ref={registerModal}
               onChange={models.requestGroup.update}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <GitRepositorySettingsModal ref={registerModal} />
@@ -654,7 +646,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               ref={registerModal}
               handleChangeEnvironment={this._handleChangeEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <AddKeyCombinationModal ref={registerModal} />

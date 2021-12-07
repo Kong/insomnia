@@ -347,7 +347,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
       placeholder,
       onPaste,
       getAutocompleteConstants,
-      isVariableUncovered,
       mode: syntaxMode,
       type: originalType,
     } = this.props;
@@ -384,7 +383,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}
-            isVariableUncovered={isVariableUncovered}
           />
         </Fragment>
       );

@@ -135,8 +135,6 @@ interface RawProps {
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
-  // TODO: I think this prop can actually be removed entirely
-  isVariableUncovered?: boolean;
   raw?: boolean;
 }
 
@@ -160,6 +158,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     editorLineWrapping,
     editorIndentWithTabs,
     nunjucksPowerUserMode,
+    isVariableUncovered,
   } = useSelector(selectSettings);
 
   return {
@@ -173,6 +172,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
     indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
     nunjucksPowerUserMode,
+    isVariableUncovered,
   };
 };
 
