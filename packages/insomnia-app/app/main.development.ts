@@ -143,11 +143,14 @@ function _launchApp() {
     commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
-  const gotTheLock = app.requestSingleInstanceLock();
-
-  if (!gotTheLock) {
-    console.error('[app] Failed to get instance lock');
-    return;
+  // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
+  // and find a better solution.
+  if (!process.env.PLAYWRIGHT) {
+    const gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+      console.error('[app] Failed to get instance lock');
+      return;
+    }
   }
 
   app.on('second-instance', () => {

@@ -6,6 +6,7 @@
   },
   "include": [
     "__jest__",
+    "specs",
     "cli",
     "core",
     "designer",

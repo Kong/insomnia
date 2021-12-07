@@ -26,9 +26,12 @@
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
     "test:cli": "npm run with-mock \"npm run cli\"",
     "test:build": "npm run with-mock \"npm run spectron:build\"",
-    "test:package": "npm run with-mock \"npm run spectron:package\""
+    "test:package": "npm run with-mock \"npm run spectron:package\"",
+    "playwright:build": "playwright test ./specs/**.spec.ts",
+    "test:playwright:build": "npm run with-mock \"npm run playwright:build\""
   },
   "devDependencies": {
+    "@playwright/test": "^1.16.3",
     "@types/concurrently": "^6.0.1",
     "@types/express": "^4.17.11",
     "@types/faker": "^5.5.5",
@@ -43,6 +46,7 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.6.3",
     "mkdirp": "^1.0.4",
+    "playwright": "^1.16.3",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.34.0",
     "spectron": "^13.0.0",
