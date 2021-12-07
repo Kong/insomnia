@@ -1215,7 +1215,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       dynamicHeight,
       style,
       type,
-      isVariableUncovered,
       raw,
     } = this.props;
     const classes = classnames(className, {
@@ -1317,7 +1316,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
           onMouseLeave={onMouseLeave}
         >
           <textarea
-            key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}
             ref={this._handleInitTextarea}
             style={{

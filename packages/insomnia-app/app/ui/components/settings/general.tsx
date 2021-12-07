@@ -160,6 +160,13 @@ class General extends PureComponent<Props> {
               setting="forceVerticalLayout"
               help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
+
+            <BooleanSetting
+              label="Uncover variables"
+              help="Show environment variable source and value on the template tag"
+              setting="isVariableUncovered"
+              forceRestart
+            />
           </div>
           <div>
             <BooleanSetting
