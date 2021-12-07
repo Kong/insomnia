@@ -16,7 +16,7 @@ interface InsomniaExtensions {
     handleRender: HandleRender,
     handleGetRenderContext?: HandleGetRenderContext,
     isVariableUncovered?: boolean,
-  ) => void;
+  ) => Function;
   isHintDropdownActive: () => boolean;
   makeLinksClickable: (handleClick: LinkClickCallback) => void;
 }

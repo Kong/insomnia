@@ -214,6 +214,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   private _filterInput: HTMLInputElement;
   private _autocompleteDebounce: NodeJS.Timeout | null = null;
   private _filterTimeout: NodeJS.Timeout | null = null;
+  _clearNunjucksListeners: Function | undefined = undefined;
 
   constructor(props: Props) {
     super(props);
@@ -244,6 +245,23 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
 
   componentDidUpdate() {
     this._codemirrorSetOptions();
+    this._clearNunjucksListeners?.();
+
+    if (this.props.render && !this.props.nunjucksPowerUserMode) {
+      this._clearNunjucksListeners = this.codeMirror?.enableNunjucksTags(
+        this.props.render,
+        this.props.getRenderContext,
+        this.props.isVariableUncovered,
+      );
+    }
+
+    if (this.props.nunjucksPowerUserMode) {
+      this.codeMirror?.clearNunjucksTags(
+        this.props.render,
+        this.props.getRenderContext,
+        this.props.isVariableUncovered,
+      );
+    }
 
     const { defaultValue } = this.props;
 
@@ -617,7 +635,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       // Setup nunjucks listeners
       // TODO: we shouldn't need to set setup nunjucks if we're in readonly mode
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror?.enableNunjucksTags(
+        this._clearNunjucksListeners = this.codeMirror?.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
           this.props.isVariableUncovered,

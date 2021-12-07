@@ -7,6 +7,15 @@ import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
 
+CodeMirror.defineExtension('clearNunjucksTags', function(
+  handleRender: HandleRender,
+  handleGetRenderContext: HandleGetRenderContext,
+  isVariableUncovered = false,
+) {
+  const bound = _highlightNunjucksTags.bind(this, handleRender, handleGetRenderContext, isVariableUncovered, true, true);
+  bound();
+});
+
 CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
@@ -14,7 +23,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 ) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
-    return;
+    return undefined;
   }
 
   const refreshFn = _highlightNunjucksTags.bind(
@@ -22,10 +31,12 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
     handleRender,
     handleGetRenderContext,
     isVariableUncovered,
+    false,
+    false,
   );
 
   const debouncedRefreshFn = misc.debounce(refreshFn);
-  this.on('change', (_cm, change) => {
+  const changeCallback = (_cm, change) => {
     const origin = change.origin || 'unknown';
 
     if (!origin.match(/^[+*]/)) {
@@ -36,15 +47,31 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
       // Debounce all joinable events
       debouncedRefreshFn();
     }
-  });
+  };
+
+  this.on('change', changeCallback);
   this.on('cursorActivity', debouncedRefreshFn);
   this.on('viewportChange', debouncedRefreshFn);
   // Trigger once right away to snappy perf
-  refreshFn();
+  const forceRefresh = _highlightNunjucksTags.bind(
+    this,
+    handleRender,
+    handleGetRenderContext,
+    isVariableUncovered,
+    true,
+    false,
+  );
+  forceRefresh();
+
+  return () => {
+    this.off('change', changeCallback);
+    this.off('cursorActivity', debouncedRefreshFn);
+    this.off('viewportChange', debouncedRefreshFn);
+  };
 },
 );
 
-async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
+async function _highlightNunjucksTags(render, renderContext, isVariableUncovered, force, clear) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = text => render(text, renderCacheKey);
@@ -61,27 +88,30 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
     // Aggregate same tokens
     const newTokens: Token[] = [];
-    let currTok: Token | null = null;
 
-    for (let i = 0; i < tokens.length; i++) {
-      const nextTok = tokens[i];
+    if (!clear) {
+      let currTok: Token | null = null;
 
-      if (currTok && currTok.type === nextTok.type && currTok.end === nextTok.start) {
-        currTok.end = nextTok.end;
-        currTok.string += nextTok.string;
-      } else if (currTok) {
+      for (let i = 0; i < tokens.length; i++) {
+        const nextTok = tokens[i];
+
+        if (currTok && currTok.type === nextTok.type && currTok.end === nextTok.start) {
+          currTok.end = nextTok.end;
+          currTok.string += nextTok.string;
+        } else if (currTok) {
+          newTokens.push(currTok);
+          currTok = null;
+        }
+
+        if (!currTok) {
+          currTok = Object.assign({}, nextTok);
+        }
+      }
+
+      // Push the last one if we're done
+      if (currTok) {
         newTokens.push(currTok);
-        currTok = null;
       }
-
-      if (!currTok) {
-        currTok = Object.assign({}, nextTok);
-      }
-    }
-
-    // Push the last one if we're done
-    if (currTok) {
-      newTokens.push(currTok);
     }
 
     for (const tok of newTokens) {
@@ -110,10 +140,14 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
         // Only check marks we created
         // @ts-expect-error -- TSCONVERSION need to extend nunjucks
         if (mark.__nunjucks) {
-          hasOwnMark = true;
+          if (!force && !clear) {
+            hasOwnMark = true;
+            activeMarks.push(mark);
+          }
+        } else {
+          activeMarks.push(mark);
         }
 
-        activeMarks.push(mark);
       }
 
       // Already have a mark for this, so leave it alone
@@ -127,8 +161,8 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
       const mark = this.markText(start, end, {
-        __nunjucks: true,
         // Mark that we created it
+        __nunjucks: true,
         __template: tok.string,
         handleMouseEvents: false,
         replacedWith: el,
