@@ -19,7 +19,6 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { restartApp } from '../../../common/electron-helpers';
 import { strings } from '../../../common/strings';
 import type { Settings } from '../../../models/settings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
@@ -90,9 +89,6 @@ class General extends PureComponent<Props> {
                 </Fragment>
               )}
               setting="nunjucksPowerUserMode"
-              inputProps={{
-                onChange: restartApp,
-              }}
             />
           </div>
         </div>
