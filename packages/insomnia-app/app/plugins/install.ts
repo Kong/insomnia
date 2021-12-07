@@ -5,6 +5,7 @@ import fsx from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
+import { axiosRequest } from '../network/axios-request';
 import { isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
 import { getTempDir } from '../common/electron-helpers';
 
@@ -42,7 +43,7 @@ interface InsomniaPlugin {
   };
 }
 
-export default async function(lookupName: string) {
+export default async function (lookupName: string) {
   return new Promise<void>(async (resolve, reject) => {
     let info: InsomniaPlugin | null = null;
 
@@ -56,10 +57,15 @@ export default async function(lookupName: string) {
       mkdirp.sync(pluginDir);
 
       // Download the module
-      const request = electron.remote.net.request(info.dist.tarball);
-      request.on('error', err => {
-        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
-      });
+      let request;
+      try {
+        request = await axiosRequest({ url: info.dist.tarball });
+      } catch (err) {
+        request.error = err;
+      }
+      if (request.error) {
+        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${request.error.message}`));
+      }
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
