@@ -2,6 +2,7 @@
   "extends": "./tsconfig.base.json",
   "include": [
     ".eslintrc.js",
+    "scripts",
     "jest-preset.js"
   ]
 }

@@ -1,0 +1,42 @@
+{
+  "ts-node": {
+    "files": true,
+    "cwd": "/home/dimitri/src/github.com/Kong/insomnia",
+    "projectSearchDir": "/home/dimitri/src/github.com/Kong/insomnia/scripts",
+    "project": "/home/dimitri/src/github.com/Kong/insomnia/scripts/tsconfig.generate-changelog.json",
+    "require": []
+  },
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": false,
+    "esModuleInterop": true,
+    "lib": [
+      "dom",
+      "es2019"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2019",
+    "types": [
+      "node",
+      "jest"
+    ],
+    "inlineSourceMap": false,
+    "inlineSources": true,
+    "noEmit": false,
+    "outDir": "./.ts-node"
+  },
+  "files": [
+    "./generate-changelog.ts"
+  ]
+}
