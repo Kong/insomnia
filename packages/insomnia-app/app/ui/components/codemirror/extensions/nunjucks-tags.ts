@@ -309,8 +309,11 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
       // Only prefix the title with context, if context is found
-      title = contextForKey ? `{${contextForKey}}: ${title}` : title;
-      innerHTML = isVariableUncovered ? title : cleanedStr;
+      const valueAndContext = contextForKey ? `{${contextForKey}}: ${title}` : title;
+
+      // Swap what's shown in the tooltip vs the innerHTML
+      innerHTML = isVariableUncovered ? valueAndContext : cleanedStr;
+      title = isVariableUncovered ? cleanedStr : valueAndContext;
     }
 
     dataError = 'off';
