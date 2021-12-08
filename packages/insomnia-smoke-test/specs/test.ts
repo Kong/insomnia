@@ -5,8 +5,9 @@ import {
 } from '@playwright/test';
 import os from 'os';
 import path from 'path';
+import * as uuid from 'uuid';
 
-async function runElectronApp(electron: Electron) {
+export async function runElectronApp(electron: Electron, envOptions = {}) {
   const mainPath = path.join(
     __dirname,
     '..',
@@ -24,41 +25,31 @@ async function runElectronApp(electron: Electron) {
     'node_modules/.bin/electron'
   );
 
-  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Date.now()}`);
-
-  const insomniaApp = await electron.launch({
+  console.log({ envOptions });
+  return electron.launch({
     executablePath,
     args: [mainPath],
     env: {
       ...process.env,
+      ...envOptions,
       ELECTRON_ENABLE_LOGGING: 'true',
-      INSOMNIA_DATA_DIR: dataPath,
-      INSOMNIA_DATA_PATH: dataPath,
       PLAYWRIGHT: 'true',
     },
-    recordVideo: {
-      size: {
-        width: 640,
-        height: 480,
-      },
-      dir: 'videos/',
-    },
   });
-
-  return insomniaApp;
 }
 
-const test = base.extend<{
+const insomniaTestFixture = base.extend<{
   insomniaApp: ElectronApplication;
 }>({
   insomniaApp: async ({ playwright }, use) => {
-    const insomniaApp = await runElectronApp(playwright._electron);
+    const INSOMNIA_DATA_PATH = path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
+    const insomniaApp = await runElectronApp(playwright._electron, { INSOMNIA_DATA_PATH });
 
     await use(insomniaApp);
 
     await insomniaApp.close();
-  }
+  },
 });
 
-export { test };
+export { insomniaTestFixture };
 export { expect } from '@playwright/test';

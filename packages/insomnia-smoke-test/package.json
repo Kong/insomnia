@@ -52,6 +52,7 @@
     "spectron": "^13.0.0",
     "spectron-keys": "0.0.1",
     "ts-node": "^9.1.1",
+    "uuid": "^8.3.0",
     "xvfb-maybe": "^0.2.1"
   }
 }

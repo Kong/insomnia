@@ -1,7 +1,38 @@
-import { loadFixture } from '../modules/fixtures';
-import { expect, test } from './test';
+import { test } from '@playwright/test';
+import os from 'os';
+import path from 'path';
+import * as uuid from 'uuid';
 
-test('can send requests', async ({ insomniaApp }) => {
+import { loadFixture } from '../modules/fixtures';
+import { insomniaTestFixture, runElectronApp } from './test';
+
+const temporaryDataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
+test('can migrate designer', async ({ playwright }) => {
+  const designerDataPath = path.join(__dirname, '..', 'fixtures', 'basic-designer');
+  const options = { DESIGNER_DATA_PATH: designerDataPath, INSOMNIA_DATA_PATH: temporaryDataPath };
+  const insomniaApp = await runElectronApp(playwright._electron, options);
+  await insomniaApp.waitForEvent('window');
+  const page = await insomniaApp.firstWindow();
+  page.on('console', console.log);
+  await page.click('text=Copy Workspaces');
+  await page.click('text=Copy Plugins');
+  await page.click('text=Copy Designer Application Settings');
+  await page.click('text=Start Migration');
+  await page.click('text=Migrated successfully!');
+  await page.close();
+});
+test('can see migrated stuff', async ({ playwright }) => {
+  const designerDataPath = path.join(__dirname, '..', 'fixtures', 'basic-designer');
+  const options = { DESIGNER_DATA_PATH: designerDataPath, INSOMNIA_DATA_PATH: temporaryDataPath };
+  const insomniaApp = await runElectronApp(playwright._electron, options);
+  await insomniaApp.waitForEvent('window');
+  const page = await insomniaApp.firstWindow();
+  await page.click('text=Don\'t share usage analytics');
+  await page.click('text=Skip');
+  await page.click('text=BASIC-DESIGNER-FIXTURE');
+});
+
+insomniaTestFixture('can send requests', async ({ insomniaApp }) => {
   await insomniaApp.waitForEvent('window');
   const page = await insomniaApp.firstWindow();
   await page.click('text=Don\'t share usage analytics');
@@ -33,26 +64,3 @@ test('can send requests', async ({ insomniaApp }) => {
   await page.click('text=http://127.0.0.1:4010/auth/basicSend >> button');
   await page.click('text=200 OK');
 });
-
-// test('sends JSON request', async ({ insomniaApp }) => {
-//   await insomniaApp.waitForEvent('window');
-//   const page = await insomniaApp.firstWindow();
-//   await page.waitForEvent('load');
-//   await page.click('button:has-text("Don\'t share usage analytics")');
-//   await page.click('button:has-text("Skip")');
-//   // await page.click('button:has-text("skipForNow")');
-//   await page.click('text=Create');
-//   await page.click('button:has-text("Request Collection")');
-//   await page.fill('[placeholder="My Collection"]', 'Cool guy');
-//   await page.press('[placeholder="My Collection"]', 'Enter');
-//   await page.click('button:has-text("New Request")');
-//   await page.fill('[placeholder="My Request"]', 'JSON');
-//   await page.press('[placeholder="My Request"]', 'Enter');
-//   await page.click('_react=RequestUrlBar');
-//   await page.keyboard.type('http://127.0.0.1:4010/pets/1');
-//   await page.keyboard.down('Enter');
-//   await page.click('li[role="tab"]:has-text("Timeline")');
-//   await page.click('pre[role="presentation"]:has-text("< HTTP/1.1 200 OK")');
-//   const title = await page.title();
-//   expect(title).toEqual('Insomnia');
-// });
