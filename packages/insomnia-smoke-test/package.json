@@ -28,7 +28,7 @@
     "test:build": "npm run with-mock \"npm run spectron:build\"",
     "test:package": "npm run with-mock \"npm run spectron:package\"",
     "playwright:build": "playwright test ./specs/**.spec.ts",
-    "test:playwright:build": "npm run with-mock \"npm run playwright:build\""
+    "test:playwright:build": "xvfb-maybe npm run with-mock \"npm run playwright:build\""
   },
   "devDependencies": {
     "@playwright/test": "^1.16.3",
