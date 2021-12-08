@@ -162,8 +162,8 @@ class General extends PureComponent<Props> {
             />
 
             <BooleanSetting
-              label="Uncover variables"
-              help="Show environment variable source and value on the template tag"
+              label="Show variable source and values"
+              help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
               setting="isVariableUncovered"
               forceRestart
             />
