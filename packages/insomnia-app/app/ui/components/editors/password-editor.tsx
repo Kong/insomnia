@@ -10,7 +10,7 @@ interface Props {
   onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
-    showAllPasswords: boolean;
+  showAllPasswords: boolean;
 }
 
 interface State {

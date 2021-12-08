@@ -65,7 +65,7 @@ interface Props extends ReduxProps {
   clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
-    handleRemoveWorkspace: Function;
+  handleRemoveWorkspace: Function;
   handleClearAllResponses: Function;
 }
 

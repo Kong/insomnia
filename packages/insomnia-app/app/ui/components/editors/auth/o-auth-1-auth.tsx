@@ -35,7 +35,7 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   showPasswords: boolean;
-    onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
+  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
 }
 

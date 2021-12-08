@@ -40,7 +40,7 @@ interface Props {
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
-    oAuth2Token?: OAuth2Token | null;
+  oAuth2Token?: OAuth2Token | null;
 }
 
 interface State {

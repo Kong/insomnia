@@ -29,7 +29,7 @@ interface Props {
   request: Request;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-    onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
+  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

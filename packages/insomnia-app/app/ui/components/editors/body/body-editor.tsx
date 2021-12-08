@@ -43,7 +43,7 @@ interface Props {
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
-  }
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class BodyEditor extends PureComponent<Props> {

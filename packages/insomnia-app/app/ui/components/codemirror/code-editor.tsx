@@ -918,8 +918,8 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     // Strip of charset if there is one
     Object.keys(options).map(key =>
       this._codemirrorSmartSetOption(
-          key as keyof CodeMirror.EditorConfiguration,
-          options[key]
+        key as keyof CodeMirror.EditorConfiguration,
+        options[key]
       )
     );
   }

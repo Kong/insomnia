@@ -7,7 +7,7 @@ import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 interface Props {
   onChange: Function;
   parameters: any[];
-  }
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UrlEncodedEditor extends PureComponent<Props> {

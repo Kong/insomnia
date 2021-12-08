@@ -14,7 +14,7 @@ import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
   request: Request;
-    onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
+  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

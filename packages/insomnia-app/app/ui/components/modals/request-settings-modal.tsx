@@ -16,7 +16,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
-    workspaces: Workspace[];
+  workspaces: Workspace[];
 }
 
 interface State {

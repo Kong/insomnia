@@ -54,7 +54,7 @@ interface Props {
   handleImport: Function;
   workspace: Workspace;
   settings: Settings;
-    environmentId: string;
+  environmentId: string;
   forceRefreshCounter: number;
   headerEditorKey: string;
   request?: Request | null;

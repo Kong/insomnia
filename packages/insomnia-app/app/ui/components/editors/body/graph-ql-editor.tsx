@@ -77,7 +77,7 @@ interface Props {
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
-    className?: string;
+  className?: string;
   uniquenessKey?: string;
 }
 

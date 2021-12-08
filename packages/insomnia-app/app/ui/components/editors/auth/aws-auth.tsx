@@ -12,7 +12,7 @@ import { HelpTooltip } from '../../help-tooltip';
 interface Props {
   request: Request;
   showPasswords: boolean;
-    onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
+  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
 }
 

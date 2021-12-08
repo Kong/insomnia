@@ -10,7 +10,7 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
-    request: Request;
+  request: Request;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

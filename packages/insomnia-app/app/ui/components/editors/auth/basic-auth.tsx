@@ -15,7 +15,7 @@ interface Props {
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
-  }
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class BasicAuth extends PureComponent<Props> {

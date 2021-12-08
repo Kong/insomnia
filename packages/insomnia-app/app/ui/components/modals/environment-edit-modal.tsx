@@ -11,7 +11,7 @@ import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
-  }
+}
 
 interface State {
   requestGroup: RequestGroup | null;

@@ -59,7 +59,7 @@ export interface EnvironmentInfo {
 interface Props {
   environmentInfo: EnvironmentInfo;
   didChange: (...args: any[]) => any;
-  }
+}
 
 // There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
 // to show. If warnings need to be added again, review git history to revert that particular change.

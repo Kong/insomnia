@@ -9,7 +9,7 @@ interface Props {
   content: string;
   contentType: string;
   uniquenessKey: string;
-    className?: string;
+  className?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

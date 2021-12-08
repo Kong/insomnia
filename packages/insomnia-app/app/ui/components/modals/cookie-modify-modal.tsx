@@ -16,7 +16,7 @@ import { ModalHeader } from '../base/modal-header';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props extends ModalProps {
-    workspace: Workspace;
+  workspace: Workspace;
   cookieJar: CookieJar;
 }
 
