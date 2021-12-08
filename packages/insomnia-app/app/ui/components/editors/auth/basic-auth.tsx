@@ -1,10 +1,15 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import { request } from 'http';
+import React, { FC, PureComponent, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import type { Request, RequestAuthentication } from '../../../../models/request';
+import * as models from '../../../../models';
+import { isGrpcRequest } from '../../../../models/grpc-request';
+import type { Request, RequestAuthentication, RequestBody } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
+import { selectActiveRequest } from '../../../redux/selectors';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
@@ -17,6 +22,51 @@ interface Props {
   showPasswords: boolean;
   isVariableUncovered: boolean;
 }
+
+const useActiveRequest = () => {
+  const activeRequest = useSelector(selectActiveRequest);
+
+  const requestUpdate = useCallback((patch: Partial<Request>) => {
+    if (!activeRequest) {
+      throw new Error('Tried to update null request');
+    }
+
+    if (isGrpcRequest(activeRequest)) {
+      throw new Error('Tried to update GrpcRequest, expected Request');
+    }
+
+    return models.request.update(activeRequest, patch);
+  }, [activeRequest]);
+
+  const updateBody = useCallback((body: Request['body']) => requestUpdate({ body }), [requestUpdate]);
+  const updateParameters = useCallback((parameters: Request['parameters']) => requestUpdate({ parameters }), [requestUpdate]);
+  const updateAuthentication = useCallback((authentication: Request['authentication']) => requestUpdate({ authentication }), [requestUpdate]);
+  const updateHeaders = useCallback((headers: Request['headers']) => requestUpdate({ headers }), [requestUpdate]);
+  const updateMethod = useCallback((method: Request['method']) => requestUpdate({ method }), [requestUpdate]);
+  const updateUrl = useCallback(async (url: Request['url']) => {
+    if (activeRequest?.url === url) {
+      return activeRequest;
+    }
+    return await requestUpdate({ url });
+  }, [activeRequest, requestUpdate]);
+
+  return {
+    activeRequest,
+    updateBody,
+    updateAuthentication,
+    updateParameters,
+    updateHeaders,
+    updateMethod,
+    updateUrl,
+  };
+};
+
+export const BasicAuthFC: FC<Props> = ({ request, onChange }) => {
+  const handleUseISO88591 = useCallback(() => onChange(request, {
+    ...request.authentication,
+    useISO88591: !request.authentication.useISO88591,
+  }), [onChange, request]);
+};
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class BasicAuth extends PureComponent<Props> {
