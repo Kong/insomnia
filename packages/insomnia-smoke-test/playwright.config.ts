@@ -6,5 +6,6 @@ const config: PlaywrightTestConfig = {
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
+  forbidOnly: true,
 };
 export default config;
