@@ -43,7 +43,7 @@ import { AddKeyCombinationModal } from './modals/add-key-combination-modal';
 import { AlertModal } from './modals/alert-modal';
 import { AskModal } from './modals/ask-modal';
 import { CodePromptModal } from './modals/code-prompt-modal';
-import { CookiesModal } from './modals/cookies-modal';
+import { CookiesModalFC } from './modals/cookies-modal';
 import { EnvironmentEditModal } from './modals/environment-edit-modal';
 import { ErrorModal } from './modals/error-modal';
 import { ExportRequestsModal } from './modals/export-requests-modal';
@@ -313,10 +313,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
 
-  _handleShowCookiesModal() {
-    showModal(CookiesModal, this.props.activeWorkspace);
-  }
-
   static _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
   }
@@ -552,7 +548,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
               {activeCookieJar ? <>
-                <CookiesModal
+                <CookiesModalFC
                   ref={registerModal}
                   handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   workspace={activeWorkspace}
@@ -720,7 +716,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleSetActiveResponse={this._handleSetActiveResponse}
               handleSetPreviewMode={this._handleSetPreviewMode}
               handleSetResponseFilter={this._handleSetResponseFilter}
-              handleShowCookiesModal={this._handleShowCookiesModal}
               handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
               handleSidebarSort={handleSidebarSort}
               handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}

@@ -14,6 +14,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CookieList, CookieListProps } from '../cookie-list';
+import { showModal } from '.';
 
 interface Props extends ModalProps {
   handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];
@@ -28,7 +29,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookiesModalInternal extends PureComponent<Props, State> {
+class CookiesModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   filterInput: HTMLInputElement | null = null;
 
@@ -206,10 +207,12 @@ class CookiesModalInternal extends PureComponent<Props, State> {
   }
 }
 
-const CookiesModalFCRF: ForwardRefRenderFunction<CookiesModalInternal, Omit<Props, 'handleRender'>> = (props, ref) => {
+const CookiesModalFCRF: ForwardRefRenderFunction<CookiesModal, Omit<Props, 'handleRender'>> = (props, ref) => {
   const { handleRender } = useNunjucks();
-  return <CookiesModalInternal ref={ref} {...props} handleRender={handleRender} />;
+  return <CookiesModal ref={ref} {...props} handleRender={handleRender} />;
 
 };
 
-export const CookiesModal = forwardRef(CookiesModalFCRF);
+export const CookiesModalFC = forwardRef(CookiesModalFCRF);
+
+export const showCookiesModal = () => showModal(CookiesModal);
