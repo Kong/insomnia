@@ -4,7 +4,7 @@ import path from 'path';
 import * as uuid from 'uuid';
 
 import { loadFixture } from '../modules/fixtures';
-import { insomniaTestFixture, runElectronApp } from './test';
+import { insomniaTestFixture, runElectronApp } from '../playwright/test';
 
 const temporaryDataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
 test('can migrate designer', async ({ playwright }) => {
