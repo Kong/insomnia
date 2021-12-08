@@ -37,8 +37,23 @@ import 'codemirror/addon/selection/active-line';
 import 'codemirror/addon/selection/selection-pointer';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
+
+/**/
+/**
+ * Unfortunately, the CodeMirror addon for linting makes use of a pattern whereby linting dependencies are required to be attached to `window` (i.e. `global`) at runtime.
+ * For that reason, if you search our codebase, you will not find anywhere where these imports are used.
+ */
+/**/
+// for the code that uses this json parser, see https://github.com/codemirror/CodeMirror/blob/master/addon/lint/json-lint.js
+import * as jsonlint from 'jsonlint';
+global.jsonlint = jsonlint;
 import 'codemirror/addon/lint/json-lint';
+
+// for the code that uses this yaml parser, see https://github.com/codemirror/CodeMirror/blob/master/addon/lint/yaml-lint.js
+import * as jsyaml from 'js-yaml';
+global.jsyaml = jsyaml;
 import 'codemirror/addon/lint/yaml-lint';
+/**/
 import 'codemirror/addon/lint/lint.css';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
@@ -61,12 +76,3 @@ import './extensions/nunjucks-tags';
 // CSS
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
-
-// Make js-yaml available to the yaml-lint addon
-import * as jsYaml from 'js-yaml';
-// Make jsonlint available to the json-lint addon
-import { parser as jsonlint } from 'jsonlint';
-
-// @ts-expect-error -- TSCONVERSION needs global augmentation
-global.jsonlint = jsonlint;
-global.jsyaml = jsYaml;
