@@ -65,7 +65,7 @@ import * as templating from '../../templating/index';
 import { ErrorBoundary } from '../components/error-boundary';
 import { KeydownBinder } from '../components/keydown-binder';
 import { AskModal } from '../components/modals/ask-modal';
-import { CookiesModal } from '../components/modals/cookies-modal';
+import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
 import { RequestCreateModal } from '../components/modals/request-create-modal';
@@ -251,13 +251,7 @@ class App extends PureComponent<AppProps, State> {
           showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
         },
       ],
-      [
-        hotKeyRefs.SHOW_COOKIES_EDITOR,
-        () => {
-          const { activeWorkspace } = this.props;
-          showModal(CookiesModal, activeWorkspace);
-        },
-      ],
+      [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
       [
         hotKeyRefs.REQUEST_QUICK_CREATE,
         async () => {

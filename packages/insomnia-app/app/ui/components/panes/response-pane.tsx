@@ -36,7 +36,6 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  showCookiesModal: Function;
   handleSetPreviewMode: Function;
   handleSetActiveResponse: Function;
   handleDeleteResponses: Function;
@@ -242,7 +241,6 @@ export class ResponsePane extends PureComponent<Props> {
       requestVersions,
       response,
       responses,
-      showCookiesModal,
     } = this.props;
 
     if (!request) {
@@ -353,7 +351,6 @@ export class ResponsePane extends PureComponent<Props> {
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
                   cookiesStored={response.settingStoreCookies}
-                  showCookiesModal={showCookiesModal}
                   headers={cookieHeaders}
                 />
               </ErrorBoundary>
