@@ -2,7 +2,7 @@
 
 ## Setup
 
-Package the app
+Package the app 
 
 ```sh
 # 📂 insomnia/
@@ -14,4 +14,11 @@ Run the tests
 ```sh
 # 📂 insomnia/
 npm run test:playwright:build
+```
+
+Test Recorder
+
+```sh
+# 📂 insomnia/
+PWDEBUG=1 npm run test:playwright:build 
 ```
