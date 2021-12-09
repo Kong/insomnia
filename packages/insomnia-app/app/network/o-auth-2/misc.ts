@@ -9,17 +9,17 @@ export enum ChromiumVerificationResult {
   USE_CHROMIUM_RESULT = -3
 }
 
-async function migrateOAuthSessionIntoDatabase() {
-  /**
-   * @deprecated oauth session ids no longer stored in the database. This key is kept for migration purposes.
-   */
-  const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+/**
+ * @deprecated oauth session ids no longer stored in the database. This key is kept for migration purposes and unit tests.
+ */
+export const LEGACY_LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
-  const fromLocalStorage = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+async function migrateOAuthSessionIntoDatabase() {
+  const fromLocalStorage = window.localStorage.getItem(LEGACY_LOCALSTORAGE_KEY_SESSION_ID);
 
   if (fromLocalStorage) {
     await models.settings.patch({ oAuthSessionId: fromLocalStorage });
-    window.localStorage.removeItem(LOCALSTORAGE_KEY_SESSION_ID);
+    window.localStorage.removeItem(LEGACY_LOCALSTORAGE_KEY_SESSION_ID);
   }
 }
 

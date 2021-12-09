@@ -2,7 +2,7 @@ import { mocked } from 'ts-jest/utils';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { authorizeUserInWindow, ChromiumVerificationResult, createNewOAuthSession, initOAuthSession, responseToObject } from '../misc';
+import { authorizeUserInWindow, ChromiumVerificationResult, createNewOAuthSession, initOAuthSession, LEGACY_LOCALSTORAGE_KEY_SESSION_ID, responseToObject } from '../misc';
 import { createBWRedirectMock } from './helpers';
 
 const MOCK_AUTHORIZATION_URL = 'https://foo.com';
@@ -142,10 +142,9 @@ describe('initOAuthSession()', () => {
     // Arrange
     const settingsBefore = await models.settings.patch({ clearOAuth2SessionOnRestart: false });
 
-    const key = 'insomnia::current-oauth-session-id';
     const value = 'abc';
-    global.localStorage.setItem(key, value);
-    expect(global.localStorage.getItem(key)).not.toBe(null);
+    global.localStorage.setItem(LEGACY_LOCALSTORAGE_KEY_SESSION_ID, value);
+    expect(global.localStorage.getItem(LEGACY_LOCALSTORAGE_KEY_SESSION_ID)).not.toBe(null);
 
     // Act
     await initOAuthSession();
@@ -156,7 +155,7 @@ describe('initOAuthSession()', () => {
     expect(settingsAfter.oAuthSessionId).toBe(value);
 
     // Ensure local storage key has been removed
-    expect(global.localStorage.getItem(key)).toBe(null);
+    expect(global.localStorage.getItem(LEGACY_LOCALSTORAGE_KEY_SESSION_ID)).toBe(null);
   });
 
   it('should create a new OAuth session', async () => {
@@ -176,9 +175,8 @@ describe('initOAuthSession()', () => {
     // Arrange
     const settingsBefore = await models.settings.patch({ clearOAuth2SessionOnRestart: true });
 
-    const key = 'insomnia::current-oauth-session-id';
     const value = 'abc';
-    global.localStorage.setItem(key, value);
+    global.localStorage.setItem(LEGACY_LOCALSTORAGE_KEY_SESSION_ID, value);
 
     // Act
     await initOAuthSession();
