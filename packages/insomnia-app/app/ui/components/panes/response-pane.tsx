@@ -10,6 +10,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
+import { CurlRequestEvent } from '../../../common/ipc-events';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -251,7 +252,7 @@ export class ResponsePane extends PureComponent<Props> {
       return (
         <PlaceholderResponsePane hotKeyRegistry={hotKeyRegistry}>
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send('cancelRequestById', request._id)}
+            handleCancel={() => ipcRenderer.send(CurlRequestEvent.cancel, request._id)}
             loadStartTime={loadStartTime}
           />
         </PlaceholderResponsePane>
@@ -366,7 +367,7 @@ export class ResponsePane extends PureComponent<Props> {
         </Tabs>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send('cancelRequestById', request._id)}
+            handleCancel={() => ipcRenderer.send(CurlRequestEvent.cancel, request._id)}
             loadStartTime={loadStartTime}
           />
         </ErrorBoundary>
