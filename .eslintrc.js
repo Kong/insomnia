@@ -10,6 +10,11 @@ const {
 
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
+  settings: {
+    react: {
+      version: '16.8', // note: remember to always keep this in sync with `"react": "^16.8.3",` which is present in any package.json of a project using React.
+    },
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
