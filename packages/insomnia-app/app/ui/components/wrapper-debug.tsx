@@ -10,6 +10,7 @@ import { isCollection, isDesign } from '../../models/workspace';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
+import { showCookiesModal } from './modals/cookies-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
@@ -37,7 +38,6 @@ interface Props {
   handleSetActiveResponse: Function;
   handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleShowCookiesModal: Function;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
@@ -94,7 +94,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleChangeEnvironment,
       handleRequestCreate,
       handleRequestGroupCreate,
-      handleShowCookiesModal,
       handleSidebarSort,
     } = this.props;
     const {
@@ -131,8 +130,7 @@ export class WrapperDebug extends PureComponent<Props> {
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             hotKeyRegistry={settings.hotKeyRegistry}
           />
-          {/* @ts-expect-error -- TSCONVERSION onClick event doesn't matter */}
-          <button className="btn btn--super-compact" onClick={handleShowCookiesModal}>
+          <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -264,7 +262,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleSetActiveResponse,
       handleSetPreviewMode,
       handleSetResponseFilter,
-      handleShowCookiesModal,
       handleShowRequestSettingsModal,
     } = this.props;
     const {
@@ -309,7 +306,6 @@ export class WrapperDebug extends PureComponent<Props> {
           handleSetFilter={handleSetResponseFilter}
           handleSetPreviewMode={handleSetPreviewMode}
           handleShowRequestSettings={handleShowRequestSettingsModal}
-          showCookiesModal={handleShowCookiesModal}
           hotKeyRegistry={settings.hotKeyRegistry}
           loadStartTime={loadStartTime}
           previewMode={responsePreviewMode}

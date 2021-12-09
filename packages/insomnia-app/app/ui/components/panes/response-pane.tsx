@@ -10,6 +10,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
+import { CurlRequestEvent } from '../../../common/ipc-events';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -36,7 +37,6 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  showCookiesModal: Function;
   handleSetPreviewMode: Function;
   handleSetActiveResponse: Function;
   handleDeleteResponses: Function;
@@ -242,7 +242,6 @@ export class ResponsePane extends PureComponent<Props> {
       requestVersions,
       response,
       responses,
-      showCookiesModal,
     } = this.props;
 
     if (!request) {
@@ -253,7 +252,7 @@ export class ResponsePane extends PureComponent<Props> {
       return (
         <PlaceholderResponsePane hotKeyRegistry={hotKeyRegistry}>
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send('cancelRequestById', request._id)}
+            handleCancel={() => ipcRenderer.send(CurlRequestEvent.cancel, request._id)}
             loadStartTime={loadStartTime}
           />
         </PlaceholderResponsePane>
@@ -353,7 +352,6 @@ export class ResponsePane extends PureComponent<Props> {
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
                   cookiesStored={response.settingStoreCookies}
-                  showCookiesModal={showCookiesModal}
                   headers={cookieHeaders}
                 />
               </ErrorBoundary>
@@ -369,7 +367,7 @@ export class ResponsePane extends PureComponent<Props> {
         </Tabs>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send('cancelRequestById', request._id)}
+            handleCancel={() => ipcRenderer.send(CurlRequestEvent.cancel, request._id)}
             loadStartTime={loadStartTime}
           />
         </ErrorBoundary>
