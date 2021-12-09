@@ -2,7 +2,7 @@
 
 ## Setup
 
-Package the app 
+Package the app
 
 ```sh
 # 📂 insomnia/
