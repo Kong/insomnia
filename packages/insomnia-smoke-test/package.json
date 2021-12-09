@@ -27,7 +27,7 @@
     "test:cli": "npm run with-mock \"npm run cli\"",
     "test:build": "npm run with-mock \"npm run spectron:build\"",
     "test:package": "npm run with-mock \"npm run spectron:package\"",
-    "playwright:build": "playwright test ./specs",
+    "playwright:build": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npx playwright@1.16.3 test ./specs",
     "test:playwright:build": "xvfb-maybe npm run playwright:build"
   },
   "devDependencies": {
@@ -46,7 +46,6 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.6.3",
     "mkdirp": "^1.0.4",
-    "playwright": "^1.16.3",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.34.0",
     "spectron": "^13.0.0",
