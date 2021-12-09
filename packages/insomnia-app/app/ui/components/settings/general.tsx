@@ -27,7 +27,7 @@ import { restartApp } from '../../../common/electron-helpers';
 import { snapNumberToLimits } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import type { Settings } from '../../../models/settings';
-import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { createNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { setFont } from '../../../plugins/misc';
 import * as globalActions from '../../redux/modules/global';
 import { Link } from '../base/link';
@@ -407,7 +407,7 @@ class General extends PureComponent<Props> {
             style={{
               padding: 0,
             }}
-            onClick={initNewOAuthSession}
+            onClick={createNewOAuthSession}
           >
             Clear OAuth 2 session
           </button>

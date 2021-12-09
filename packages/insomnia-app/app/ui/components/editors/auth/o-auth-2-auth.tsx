@@ -23,7 +23,7 @@ import {
   RESPONSE_TYPE_TOKEN,
 } from '../../../../network/o-auth-2/constants';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
-import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
+import { createNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { Button } from '../../base/button';
 import { Link } from '../../base/link';
@@ -685,7 +685,7 @@ class OAuth2AuthInternal extends PureComponent<Props, State> {
         </table>
         {showAdvanced ? (
           <div className="pad-top text-right">
-            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+            <button className="btn btn--clicky" onClick={createNewOAuthSession}>
               Clear OAuth 2 session
             </button>
           </div>
