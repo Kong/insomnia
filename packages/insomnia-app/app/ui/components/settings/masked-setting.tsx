@@ -8,17 +8,17 @@ import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
-  label: string;
-  setting: SettingsOfType<string>;
-  help?: string;
-  placeholder?: React.HTMLProps<HTMLInputElement>['placeholder'];
   disabled?: React.HTMLProps<HTMLInputElement>['disabled'];
+  help?: string;
+  label: string;
+  placeholder?: React.HTMLProps<HTMLInputElement>['placeholder'];
+  setting: SettingsOfType<string>;
 }> = ({
-  label,
-  setting,
-  help,
-  placeholder,
   disabled,
+  help,
+  label,
+  placeholder,
+  setting,
 }) => {
   const [isHidden, setHidden] = useToggle(true);
 
@@ -43,11 +43,11 @@ export const MaskedSetting: FC<{
       <div className="form-control form-control--outlined form-control--btn-right">
         <input
           defaultValue={String(settings[setting])}
-          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
+          disabled={disabled}
           name={setting}
           onChange={onChange}
           placeholder={placeholder}
-          disabled={disabled}
+          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
         />
         {!settings.showPasswords && (
           <button className={'form-control__right'} onClick={setHidden}>

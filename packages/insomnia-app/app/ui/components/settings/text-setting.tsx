@@ -1,5 +1,5 @@
 import { SettingsOfType } from 'insomnia-common';
-import React, { ChangeEvent, FC, InputHTMLAttributes, useCallback } from 'react';
+import React, { ChangeEventHandler, FC, InputHTMLAttributes, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models/index';
@@ -7,17 +7,17 @@ import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const TextSetting: FC<{
+  disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
   help?: string;
   label: string;
-  setting: SettingsOfType<string | null>;
-  onChange?: InputHTMLAttributes<HTMLInputElement>['onChange'];
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
-  disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
+  setting: SettingsOfType<string | null>;
 }> = ({
+  disabled,
   help,
   label,
+  placeholder,
   setting,
-  onChange,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -25,16 +25,10 @@ export const TextSetting: FC<{
     throw new Error(`Invalid setting name ${setting}`);
   }
 
-  const handleOnChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.currentTarget;
+  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { value } }) => {
     const updatedValue = value === null ? '__NULL__' : value;
-    await models.settings.patch({
-      [setting]: updatedValue,
-    });
-
-    event.persist();
-    onChange?.(event);
-  }, [onChange, setting]);
+    await models.settings.patch({ [setting]: updatedValue });
+  }, [setting]);
 
   let defaultValue = settings[setting];
   if (typeof defaultValue !== 'string') {
@@ -47,10 +41,12 @@ export const TextSetting: FC<{
         {label}
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         <input
-          type={'text'}
-          name={setting}
           defaultValue={defaultValue}
+          disabled={disabled}
+          name={setting}
           onChange={handleOnChange}
+          placeholder={placeholder}
+          type={'text'}
         />
       </label>
     </div>

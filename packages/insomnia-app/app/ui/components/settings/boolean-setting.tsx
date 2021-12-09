@@ -1,5 +1,5 @@
 import { SettingsOfType } from 'insomnia-common';
-import React, { ChangeEvent, FC, InputHTMLAttributes, ReactNode, useCallback } from 'react';
+import React, { ChangeEventHandler, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -25,13 +25,11 @@ export const BooleanSetting: FC<{
   help?: string;
   label: ReactNode;
   setting: SettingsOfType<boolean>;
-  inputProps?: InputHTMLAttributes<HTMLInputElement>;
 }> = ({
   descriptions,
   help,
   label,
   setting,
-  inputProps,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -41,13 +39,9 @@ export const BooleanSetting: FC<{
 
   const { isControlled } = getControlledStatus(settings)(setting);
 
-  const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const { checked } = event.currentTarget;
-    await models.settings.patch({
-      [setting]: checked,
-    });
-    inputProps?.onChange?.(event);
-  }, [setting, inputProps]);
+  const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { checked } }) => {
+    await models.settings.patch({ [setting]: checked });
+  }, [setting]);
 
   return (
     <ControlledSetting setting={setting}>

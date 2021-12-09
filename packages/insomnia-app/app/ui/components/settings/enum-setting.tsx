@@ -1,5 +1,5 @@
 import { SettingsOfType } from 'insomnia-common';
-import React, { ChangeEvent, PropsWithChildren, ReactNode, useCallback } from 'react';
+import React, { ChangeEventHandler, PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models/index';
@@ -24,11 +24,8 @@ export const EnumSetting = <T extends string | number>({
 }: PropsWithChildren<Props<T>>) => {
   const settings = useSelector(selectSettings);
 
-  const onChange = useCallback(async (event: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.currentTarget;
-    await models.settings.patch({
-      [setting]: value,
-    });
+  const onChange = useCallback<ChangeEventHandler<HTMLSelectElement>>(async ({ currentTarget: { value } }) => {
+    await models.settings.patch({ [setting]: value });
   }, [setting]);
 
   return (

@@ -1,5 +1,5 @@
 import { SettingsOfType } from 'insomnia-common';
-import React, { ChangeEvent, FC, InputHTMLAttributes, useCallback } from 'react';
+import React, { ChangeEventHandler, FC, InputHTMLAttributes, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { snapNumberToLimits } from '../../../common/misc';
@@ -10,19 +10,17 @@ import { HelpTooltip } from '../help-tooltip';
 interface Props {
   help?: string;
   label: string;
-  setting: SettingsOfType<number>;
-  onChange?: InputHTMLAttributes<HTMLInputElement>['onChange'];
-  min: InputHTMLAttributes<HTMLInputElement>['min'];
   max?: InputHTMLAttributes<HTMLInputElement>['max'];
+  min: InputHTMLAttributes<HTMLInputElement>['min'];
+  setting: SettingsOfType<number>;
 }
 
 export const NumberSetting: FC<Props> = ({
   help,
   label,
-  min,
   max,
+  min,
   setting,
-  onChange,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -30,20 +28,14 @@ export const NumberSetting: FC<Props> = ({
     throw new Error(`Invalid setting name ${setting}`);
   }
 
-  const handleOnChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const { value, min, max } = event.currentTarget;
+  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { value, min, max } }) => {
     const updatedValue = snapNumberToLimits(
       parseInt(value, 10) || 0,
       parseInt(min, 10),
       parseInt(max, 10),
     );
-    await models.settings.patch({
-      [setting]: updatedValue,
-    });
-
-    event.persist();
-    onChange?.(event);
-  }, [onChange, setting]);
+    await models.settings.patch({ [setting]: updatedValue });
+  }, [setting]);
 
   let defaultValue: string | number = settings[setting];
   if (typeof defaultValue !== 'number') {
@@ -56,12 +48,12 @@ export const NumberSetting: FC<Props> = ({
         {label}
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         <input
-          type={'number'}
-          name={setting}
+          defaultValue={defaultValue}
           max={max}
           min={min}
-          defaultValue={defaultValue}
+          name={setting}
           onChange={handleOnChange}
+          type={'number'}
         />
       </label>
     </div>
