@@ -91,7 +91,8 @@ export function authorizeUserInWindow(
     const authWindowSessionId = oAuthSessionId || await createNewOAuthSession();
 
     // Create a child window
-    const child = new electron.remote.BrowserWindow({
+    const { BrowserWindow } = electron.remote || electron;
+    const child = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
         partition: authWindowSessionId,
