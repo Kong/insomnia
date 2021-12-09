@@ -10,7 +10,7 @@ export enum ChromiumVerificationResult {
 }
 
 /**
- * @deprecated oauth session ids no longer stored in the database. This key is kept for migration purposes and unit tests.
+ * @deprecated oauth session ids no longer stored in the localstorage. This key is kept for migration purposes and unit tests.
  */
 export const LEGACY_LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
