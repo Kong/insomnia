@@ -14,6 +14,7 @@ export interface Settings {
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
   clearOAuth2SessionOnRestart: boolean;
+  oAuthSessionId: string;
   darkTheme: string;
   deviceId: string | null;
   disableHtmlPreviewJs: boolean;

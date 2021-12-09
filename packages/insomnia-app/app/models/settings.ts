@@ -69,6 +69,7 @@ export function init(): BaseSettings {
     maxTimelineDataSizeKB: 10,
     noProxy: '',
     nunjucksPowerUserMode: false,
+    oAuthSessionId: '',
     pluginConfig: {},
     pluginPath: '',
     preferredHttpVersion: HttpVersions.default,

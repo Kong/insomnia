@@ -11,7 +11,7 @@ import { getAppLongName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
-import { initNewOAuthSession } from '../network/o-auth-2/misc';
+import { initOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme, setFont } from '../plugins/misc';
 import App from './containers/app';
@@ -29,10 +29,7 @@ document.title = getAppLongName();
   await initPlugins();
   const settings = await models.settings.getOrCreate();
 
-  if (settings.clearOAuth2SessionOnRestart) {
-    initNewOAuthSession();
-  }
-
+  await initOAuthSession();
   await applyColorScheme(settings);
   await setFont(settings);
   // Create Redux store

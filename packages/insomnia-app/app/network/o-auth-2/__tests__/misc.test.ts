@@ -2,7 +2,7 @@ import { mocked } from 'ts-jest/utils';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { authorizeUserInWindow, ChromiumVerificationResult, responseToObject } from '../misc';
+import { authorizeUserInWindow, ChromiumVerificationResult, createNewOAuthSession, initOAuthSession, responseToObject } from '../misc';
 import { createBWRedirectMock } from './helpers';
 
 const MOCK_AUTHORIZATION_URL = 'https://foo.com';
@@ -107,5 +107,86 @@ describe('authorizeUserInWindow()', () => {
 
     // Assert
     expect(mockCallback).toHaveBeenCalledWith(ChromiumVerificationResult.BLIND_TRUST);
+  });
+});
+
+describe('createNewOAuthSession()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('should create a new OAuth Session ID and store in database', async () => {
+    const newSessionId = await createNewOAuthSession();
+
+    const settings = await models.settings.getOrCreate();
+
+    expect(settings.oAuthSessionId).toBe(newSessionId);
+    expect(newSessionId).toBeTruthy();
+  });
+});
+
+describe('initOAuthSession()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('should not migrate if no local storage key exists', async () => {
+    // Arrange
+    const settingsBefore = await models.settings.patch({ clearOAuth2SessionOnRestart: false });
+
+    // Act
+    await initOAuthSession();
+
+    // Assert
+    const settingsAfter = await models.settings.getOrCreate();
+    expect(settingsBefore.oAuthSessionId).toBe(settingsAfter.oAuthSessionId);
+  });
+
+  it('should read from local storage into database and clear local storage key', async () => {
+    // Arrange
+    const settingsBefore = await models.settings.patch({ clearOAuth2SessionOnRestart: false });
+
+    const key = 'insomnia::current-oauth-session-id';
+    const value = 'abc';
+    global.localStorage.setItem(key, value);
+    expect(global.localStorage.getItem(key)).not.toBe(null);
+
+    // Act
+    await initOAuthSession();
+
+    // Assert
+    const settingsAfter = await models.settings.getOrCreate();
+    expect(settingsBefore.oAuthSessionId).not.toBe(settingsAfter.oAuthSessionId);
+    expect(settingsAfter.oAuthSessionId).toBe(value);
+
+    // Ensure local storage key has been removed
+    expect(global.localStorage.getItem(key)).toBe(null);
+  });
+
+  it('should create a new OAuth session', async () => {
+    // Arrange
+    const settingsBefore = await models.settings.patch({ clearOAuth2SessionOnRestart: true, oAuthSessionId: 'abc' });
+
+    // Act
+    await initOAuthSession();
+
+    // Assert
+    const settingsAfter = await models.settings.getOrCreate();
+    expect(settingsAfter.oAuthSessionId).not.toBe(settingsBefore.oAuthSessionId);
+    expect(settingsAfter.oAuthSessionId).toBeTruthy();
+  });
+
+  it('should migrate but replace with new session id', async () => {
+    // Arrange
+    const settingsBefore = await models.settings.patch({ clearOAuth2SessionOnRestart: true });
+
+    const key = 'insomnia::current-oauth-session-id';
+    const value = 'abc';
+    global.localStorage.setItem(key, value);
+
+    // Act
+    await initOAuthSession();
+
+    // Assert
+    const settingsAfter = await models.settings.getOrCreate();
+    expect(settingsAfter.oAuthSessionId).not.toBe(value);
+    expect(settingsAfter.oAuthSessionId).not.toBe(settingsBefore.oAuthSessionId);
+    expect(settingsAfter.oAuthSessionId).toBeTruthy();
   });
 });

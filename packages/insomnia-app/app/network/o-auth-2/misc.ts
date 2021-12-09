@@ -9,14 +9,34 @@ export enum ChromiumVerificationResult {
   USE_CHROMIUM_RESULT = -3
 }
 
-const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+async function migrateOAuthSessionIntoDatabase() {
+  /**
+   * @deprecated oauth session ids no longer stored in the database. This key is kept for migration purposes.
+   */
+  const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
-export function initNewOAuthSession() {
-  // the value of this variable needs to start with 'persist:'
-  // otherwise sessions won't be persisted over application-restarts
-  const token = `persist:oauth2_${uuid.v4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, token);
-  return token;
+  const fromLocalStorage = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+
+  if (fromLocalStorage) {
+    await models.settings.patch({ oAuthSessionId: fromLocalStorage });
+    window.localStorage.removeItem(LOCALSTORAGE_KEY_SESSION_ID);
+  }
+}
+
+export async function initOAuthSession() {
+  await migrateOAuthSessionIntoDatabase();
+
+  const { clearOAuth2SessionOnRestart } = await models.settings.getOrCreate();
+
+  if (clearOAuth2SessionOnRestart) {
+    await createNewOAuthSession();
+  }
+}
+
+export async function createNewOAuthSession() {
+  const { oAuthSessionId } = await models.settings.patch({ oAuthSessionId: uuid.v4() });
+
+  return oAuthSessionId;
 }
 
 export function responseToObject(body, keys, defaults = {}) {
@@ -65,10 +85,10 @@ export function authorizeUserInWindow(
     // Fetch user setting to determine whether to validate SSL certificates during auth
     const {
       validateAuthSSL,
+      oAuthSessionId,
     } = await models.settings.getOrCreate();
 
-    const authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID) || initNewOAuthSession();
-    window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+    const authWindowSessionId = oAuthSessionId || await createNewOAuthSession();
 
     // Create a child window
     const child = new electron.remote.BrowserWindow({
