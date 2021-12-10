@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useCallback } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -71,11 +71,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
-  const _handleKeyDown = (e: KeyboardEvent) => {
+  const _handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (method && !running) {
       executeHotKey(e, hotKeyRefs.REQUEST_SEND, () => handleAction.start());
     }
-  };
+  }, [method, running, handleAction]);
 
   return (
     <KeydownBinder onKeydown={_handleKeyDown}>
