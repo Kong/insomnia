@@ -7,14 +7,16 @@ import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { selectSettings } from '../../../../redux/selectors';
 import { Button } from '../../../base/button';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
+import { HelpTooltip } from '../../../help-tooltip';
 
 interface Props {
   label: string;
   property: string;
+  help?: string;
   mask?: boolean;
 }
 
-export const AuthInputRow: FC<Props> = ({ label, property, mask }) => {
+export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
   const { isVariableUncovered, showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
@@ -30,6 +32,7 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask }) => {
       <td className="pad-right no-wrap valign-middle">
         <label htmlFor={id} className="label--small no-pad">
           {label}
+          {help ? <HelpTooltip>{help}</HelpTooltip> : null}
         </label>
       </td>
       <td className="wide">
