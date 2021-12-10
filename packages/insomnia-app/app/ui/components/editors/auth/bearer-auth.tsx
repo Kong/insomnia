@@ -69,7 +69,7 @@ export const BearerAuth: FC<Props> = ({ isVariableUncovered }) => {
               </div>
             </td>
           </tr>
-          <AuthEnabledRow enabled={authentication.disabled} patchAuth={patchAuth} />
+          <AuthEnabledRow />
         </tbody>
       </table>
     </div>

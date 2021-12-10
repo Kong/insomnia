@@ -1,13 +1,17 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
+import { useActiveRequest } from '../../../hooks/use-active-request';
+import { selectSettings } from '../../../redux/selectors';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { PasswordEditor } from '../password-editor';
+import { AuthEnabledRow } from './auth-enabled-row';
 
 interface Props {
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
@@ -17,8 +21,65 @@ interface Props {
   isVariableUncovered: boolean;
 }
 
+export const DigestAuth: FC<Props> = ({ isVariableUncovered }) => {
+  const { showPasswords } = useSelector(selectSettings);
+  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+
+  const handleUsername = useCallback((username: string) => patchAuth({ username }), [patchAuth]);
+  const handlePassword = useCallback((password: string) => patchAuth({ password }), [patchAuth]);
+
+  return (
+    <div className="pad">
+      <table>
+        <tbody>
+          <tr>
+            <td className="pad-right no-wrap valign-middle">
+              <label htmlFor="username" className="label--small no-pad">
+                Username
+              </label>
+            </td>
+            <td className="wide">
+              <div
+                className={classnames('form-control form-control--underlined no-margin', {
+                  'form-control--inactive': authentication.disabled,
+                })}
+              >
+                <OneLineEditor
+                  type="text"
+                  id="username"
+                  disabled={authentication.disabled}
+                  onChange={handleUsername}
+                  defaultValue={authentication.username || ''}
+                  isVariableUncovered={isVariableUncovered}
+                />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td className="pad-right no-wrap valign-middle">
+              <label htmlFor="password" className="label--small no-pad">
+                Password
+              </label>
+            </td>
+            <td className="flex wide">
+              <PasswordEditor
+                showAllPasswords={showPasswords}
+                disabled={authentication.disabled}
+                password={authentication.password}
+                onChange={handlePassword}
+                isVariableUncovered={isVariableUncovered}
+              />
+            </td>
+          </tr>
+          <AuthEnabledRow />
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class DigestAuth extends PureComponent<Props> {
+export class DigestAutha extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });

@@ -65,7 +65,7 @@ export const BasicAuth: FC<Props> = ({ isVariableUncovered }) => {
               />
             </td>
           </tr>
-          <AuthEnabledRow enabled={authentication.disabled} patchAuth={patchAuth} />
+          <AuthEnabledRow />
           <tr>
             <td className="pad-right no-wrap valign-middle">
               <label htmlFor="use-iso-8859-1" className="label--small no-pad">

@@ -3,7 +3,10 @@ import React, { FC, useCallback } from 'react';
 import { useActiveRequest } from '../../../hooks/use-active-request';
 import { Button } from '../../base/button';
 
-export const AuthEnabledRow: FC<{enabled: boolean; patchAuth: ReturnType<typeof useActiveRequest>['patchAuth']}> = ({ enabled, patchAuth }) => {
+export const AuthEnabledRow: FC = () => {
+  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+  const enabled = !authentication.disabled;
+
   const toggleEnabled = useCallback(() => patchAuth({ disable: enabled }), [enabled, patchAuth]);
 
   return (
