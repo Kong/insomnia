@@ -21,10 +21,13 @@ export const useActiveRequest = () => {
     await models.request.update(activeRequest, patch);
   }, [activeRequest]);
 
-  const updateAuthentication = useCallback((authentication: Request['authentication']) => patchRequest({ authentication }), [patchRequest]);
+  const updateAuth = useCallback((authentication: Request['authentication']) => patchRequest({ authentication }), [patchRequest]);
+
+  const { authentication } = activeRequest;
+  const patchAuth = useCallback((patch: Partial<Request['authentication']>) => updateAuth({ ...authentication, ...patch }), [authentication, updateAuth]);
 
   return {
     activeRequest,
-    updateAuthentication,
+    patchAuth,
   };
 };
