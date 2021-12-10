@@ -111,11 +111,12 @@ const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   }
 };
 
+export type SpecExtension = `x-${string}`;
 /**
  * Checks if the given property name is an open-api extension
  * @param property The property name
  */
-const isSpecExtension = (property: string): boolean => {
+const isSpecExtension = (property: string): property is SpecExtension => {
   return property.indexOf('x-') === 0;
 };
 
