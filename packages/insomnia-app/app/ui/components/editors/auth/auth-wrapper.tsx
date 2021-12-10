@@ -87,28 +87,18 @@ export class AuthWrapper extends PureComponent<Props> {
     } else if (authentication.type === AUTH_DIGEST) {
       return (
         <DigestAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NTLM) {
       return (
         <NTLMAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_BEARER) {
       return (
         <BearerAuth
-          request={request}
-          onChange={onChange}
           isVariableUncovered={isVariableUncovered}
         />
       );
