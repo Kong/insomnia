@@ -57,7 +57,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   forceRefreshKey,
   isVariableUncovered,
 }) => {
-
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
   useProtoFileReload(state, dispatch, activeRequest);
@@ -72,7 +71,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
   const { start } = handleAction;
-
   const _handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (method && !running) {
       executeHotKey(event, hotKeyRefs.REQUEST_SEND, start);
