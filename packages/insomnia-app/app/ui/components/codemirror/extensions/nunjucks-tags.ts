@@ -44,7 +44,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
+async function _highlightNunjucksTags(render, renderContext, isVariableUncovered: boolean) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = text => render(text, renderCacheKey);
@@ -255,7 +255,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
   }
 }
 
-async function _updateElementText(render, mark, text, renderContext, isVariableUncovered) {
+async function _updateElementText(render, mark, text, renderContext, isVariableUncovered: boolean) {
   const el = mark.replacedWith;
   let innerHTML = '';
   let title = '';
