@@ -1,0 +1,62 @@
+import classnames from 'classnames';
+import React, { FC, useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { useToggle } from 'react-use';
+
+import { useActiveRequest } from '../../../../hooks/use-active-request';
+import { selectSettings } from '../../../../redux/selectors';
+import { Button } from '../../../base/button';
+import { OneLineEditor } from '../../../codemirror/one-line-editor';
+
+interface Props {
+  label: string;
+  property: string;
+  mask?: boolean;
+}
+
+export const AuthInputRow: FC<Props> = ({ label, property, mask }) => {
+  const { isVariableUncovered, showPasswords } = useSelector(selectSettings);
+  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+
+  const [masked, toggleMask] = useToggle(Boolean(mask));
+  const isMasked = showPasswords || !masked;
+
+  const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
+
+  const id = useMemo(() => label.replace(/ /g, '-'), [label]);
+
+  return (
+    <tr key={id}>
+      <td className="pad-right no-wrap valign-middle">
+        <label htmlFor={id} className="label--small no-pad">
+          {label}
+        </label>
+      </td>
+      <td className="wide">
+        <div
+          className={classnames('form-control form-control--underlined no-margin', {
+            'form-control--inactive': authentication.disabled,
+          })}
+        >
+          <OneLineEditor
+            id={id}
+            type={isMasked ? 'password' : 'text'}
+            onChange={onChange}
+            disabled={authentication.disabled}
+            defaultValue={authentication[property] || ''}
+            isVariableUncovered={isVariableUncovered}
+          />
+        </div>
+        {showPasswords ? null : (
+          <Button
+            className="btn btn--super-duper-compact pointer"
+            onClick={toggleMask}
+            value={isMasked}
+          >
+            {isMasked ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
+          </Button>
+        )}
+      </td>
+    </tr>
+  );
+};

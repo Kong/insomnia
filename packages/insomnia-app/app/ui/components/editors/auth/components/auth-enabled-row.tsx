@@ -1,34 +1,5 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 
-import { useActiveRequest } from '../../../../hooks/use-active-request';
-import { Button } from '../../../base/button';
+import { AuthToggleRow } from './auth-toggle-row';
 
-export const AuthEnabledRow: FC = () => {
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
-  const enabled = !authentication.disabled;
-
-  const toggleEnabled = useCallback(() => patchAuth({ disable: enabled }), [enabled, patchAuth]);
-
-  return (
-    <tr>
-      <td className="pad-right no-wrap valign-middle">
-        <label htmlFor="enabled" className="label--small no-pad">
-          Enabled
-        </label>
-      </td>
-      <td className="wide">
-        <div className="form-control form-control--underlined">
-          <Button
-            className="btn btn--super-duper-compact"
-            id="enabled"
-            onClick={toggleEnabled}
-            value={enabled}
-            title={enabled ? 'Disable item' : 'Enable item'}
-          >
-            {enabled ? <i className="fa fa-check-square-o" /> : <i className="fa fa-square-o" />}
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-};
+export const AuthEnabledRow: FC = () => <AuthToggleRow label="Enabled" property="disabled" invert />;
