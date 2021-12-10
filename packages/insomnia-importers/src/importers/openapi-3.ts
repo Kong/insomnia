@@ -2,6 +2,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { camelCase } from 'change-case';
 import crypto from 'crypto';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
+import { isPlainObject } from 'ramda-adjunct';
 import { parse as urlParse } from 'url';
 import YAML from 'yaml';
 
@@ -116,14 +117,6 @@ const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
  */
 const isSpecExtension = (property: string): boolean => {
   return property.indexOf('x-') === 0;
-};
-
-/**
- * Checks if the given value is a plain object
- * @param value The value to test
- */
-const isPlainObject = (value: object): boolean => {
-  return value && !Array.isArray(value) && typeof value === 'object';
 };
 
 /**

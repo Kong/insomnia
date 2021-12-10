@@ -33,11 +33,14 @@
     "commander": "^7.1.0",
     "lodash": "^4.17.15",
     "shell-quote": "^1.7.2",
+    "ramda": "^0.27.1",
+    "ramda-adjunct": "^2.33.0",
     "yaml": "^1.10.0"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1",
   "devDependencies": {
     "@types/lodash": "^4.14.168",
+    "@types/ramda": "^0.27.44",
     "@types/shell-quote": "^1.7.0",
     "@types/yaml": "^1.9.7",
     "openapi-types": "^7.0.1"
