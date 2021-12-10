@@ -6,6 +6,6 @@ import { AuthTableBody } from './components/auth-table-body';
 export const DigestAuth: FC = () => (
   <AuthTableBody>
     <AuthInputRow label='Username' property='username' />
-    <AuthInputRow label='Password' property='password' />
+    <AuthInputRow label='Password' property='password' mask />
   </AuthTableBody>
 );
