@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { clipboard, ipcRenderer, remote } from 'electron';
+import { clipboard, remote } from 'electron';
 import fs from 'fs';
 import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
@@ -10,7 +10,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import { CurlRequestEvent } from '../../../common/ipc-events';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -18,6 +17,7 @@ import type { Request } from '../../../models/request';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import type { UnitTestResult } from '../../../models/unit-test-result';
+import { cancelRequestById } from '../../../network/network';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -252,7 +252,7 @@ export class ResponsePane extends PureComponent<Props> {
       return (
         <PlaceholderResponsePane hotKeyRegistry={hotKeyRegistry}>
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send(CurlRequestEvent.cancel, request._id)}
+            handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
           />
         </PlaceholderResponsePane>
@@ -367,7 +367,7 @@ export class ResponsePane extends PureComponent<Props> {
         </Tabs>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send(CurlRequestEvent.cancel, request._id)}
+            handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
           />
         </ErrorBoundary>

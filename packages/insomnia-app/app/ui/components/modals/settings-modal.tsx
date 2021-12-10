@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry } from 'insomnia-common';
+import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -17,6 +18,7 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
+import { Tooltip } from '../tooltip';
 import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
@@ -81,6 +83,9 @@ export class SettingsModal extends PureComponent<Props, State> {
           {getAppName()} Preferences
           <span className="faint txt-sm">
             &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
+            <Tooltip position="bottom" message={Curl.getVersion()}>
+              <i className="fa fa-info-circle" />
+            </Tooltip>
             {email ? ` – ${email}` : null}
           </span>
         </ModalHeader>
