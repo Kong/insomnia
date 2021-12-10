@@ -73,9 +73,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
   const { start } = handleAction;
 
-  const _handleKeyDown = useCallback((e: KeyboardEvent) => {
+  const _handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (method && !running) {
-      executeHotKey(e, hotKeyRefs.REQUEST_SEND, start);
+      executeHotKey(event, hotKeyRefs.REQUEST_SEND, start);
     }
   }, [method, running, start]);
 
