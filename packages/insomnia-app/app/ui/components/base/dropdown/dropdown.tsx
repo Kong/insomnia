@@ -238,7 +238,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     this.toggle();
   }
 
-  static _handleMouseDown(event: KeyboardEvent) {
+  static _handleMouseDown(event: React.MouseEvent) {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
     event.preventDefault();
   }
