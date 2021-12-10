@@ -24,7 +24,6 @@ const RIGHT = 39;
 interface Props {
   onChange: Function;
   pairs: any[];
-  isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
   allowFile?: boolean;
