@@ -42,7 +42,6 @@ interface Props {
   onBlurValue?: Function;
   onBlurDescription?: Function;
   enableNunjucks?: boolean;
-  isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
   namePlaceholder?: string;
