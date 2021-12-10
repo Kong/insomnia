@@ -6,7 +6,6 @@ interface Props {
   content?: string;
   handleChange?: (arg0: string) => void;
   readOnly?: boolean;
-  isVariableUncovered?: boolean;
 }
 
 export const GRPCEditor: FunctionComponent<Props> = ({
