@@ -26,7 +26,6 @@ interface Props {
   className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
-  isVariableUncovered?: boolean;
   readOnly?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
