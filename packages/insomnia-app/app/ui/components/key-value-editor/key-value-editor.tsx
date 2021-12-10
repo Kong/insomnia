@@ -4,7 +4,6 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { generateId, nullFn } from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -25,9 +24,6 @@ const RIGHT = 39;
 interface Props {
   onChange: Function;
   pairs: any[];
-  handleRender?: HandleRender;
-  handleGetRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
@@ -431,9 +427,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       valuePlaceholder,
       namePlaceholder,
       descriptionPlaceholder,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       handleGetAutocompleteNameConstants,
       handleGetAutocompleteValueConstants,
@@ -469,10 +462,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
               onBlurValue={this._handleBlurValue}
               onBlurDescription={this._handleBlurDescription}
               onMove={this._handleMove}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
               handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
               handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
               allowMultiline={allowMultiline}

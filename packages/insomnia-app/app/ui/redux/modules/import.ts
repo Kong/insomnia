@@ -12,7 +12,7 @@ import * as models from '../../../models';
 import { Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showError, showModal } from '../../components/modals';
 import { AlertModal } from '../../components/modals/alert-modal';
-import { selectActiveProject, selectProjects } from '../selectors';
+import { selectActiveProject, selectProjects, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
 import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
@@ -50,11 +50,12 @@ const convertToRawConfig = ({
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
   const activeProject = selectActiveProject(state);
+  const activeProjectWorkspaces = selectWorkspacesWithResolvedNameForActiveProject(state);
   const projects = selectProjects(state);
 
   return ({
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-    getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
+    getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
     // Currently, just return the active project instead of prompting for which project to import into
     getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject._id),
   });

@@ -37,3 +37,9 @@ export const typeIntoModalInput = async (app, text) => {
   await input.waitUntil(() => input.isFocused());
   await input.keys(text);
 };
+
+export const selectModalOption = async (app, text) => {
+  const select = await app.client.$('.modal select');
+
+  await select.selectByVisibleText(text);
+};

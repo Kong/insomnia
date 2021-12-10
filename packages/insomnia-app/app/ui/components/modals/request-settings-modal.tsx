@@ -3,7 +3,6 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -17,14 +16,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   workspaces: Workspace[];
 }
 
@@ -325,13 +317,6 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
 
   _renderDescription() {
     const {
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { showDescription, defaultPreviewMode, request } = this.state;
@@ -346,14 +331,7 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
         ref={this._setEditorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
         placeholder="Write a description"
-        lineWrapping={editorLineWrapping}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
         isVariableUncovered={isVariableUncovered}
         defaultValue={request.description}
         onChange={this._handleDescriptionChange}

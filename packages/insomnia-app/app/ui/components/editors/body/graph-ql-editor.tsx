@@ -18,9 +18,10 @@ import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
+import { hotKeyRefs } from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
@@ -36,6 +37,7 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
+import { KeydownBinder } from '../../keydown-binder';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
@@ -71,8 +73,6 @@ interface GraphQLBody {
 interface Props {
   onChange: Function;
   content: string;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -190,6 +190,10 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       explorerVisible: false,
     });
+  }
+
+  _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
   }
 
   _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
@@ -656,9 +660,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   render() {
     const {
       content,
-      render,
-      getRenderContext,
-      settings,
       className,
       uniquenessKey,
       isVariableUncovered,
@@ -726,6 +727,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
     return (
       <div className="graphql-editor">
+        <KeydownBinder onKeydown={this._handleKeyDown} />
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
           <DropdownButton className="space-left btn btn--micro btn--outlined">
@@ -763,9 +765,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             dynamicHeight
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
@@ -773,7 +772,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             onCursorActivity={this._handleQueryUserActivity}
             onFocus={this._handleQueryFocus}
             mode="graphql"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
             {...graphqlOptions}
           />
@@ -813,26 +811,20 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
+            enableNunjucks
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={variables}
             className={className}
-            render={render}
-            getRenderContext={getRenderContext}
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
             lintOptions={{
               variableToType: variableTypes,
             }}
             noLint={!variableTypes}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}
             mode="graphql-variables"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>

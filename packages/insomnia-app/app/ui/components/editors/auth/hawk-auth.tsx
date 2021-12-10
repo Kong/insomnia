@@ -7,7 +7,6 @@ import {
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
 } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
@@ -15,9 +14,6 @@ import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
   request: Request;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
@@ -130,10 +126,7 @@ export class HawkAuth extends PureComponent<Props> {
     onChange: (...args: any[]) => any,
   ) {
     const {
-      handleRender,
-      handleGetRenderContext,
       request,
-      nunjucksPowerUserMode,
       isVariableUncovered,
     } = this.props;
     const { authentication } = request;
@@ -156,9 +149,6 @@ export class HawkAuth extends PureComponent<Props> {
               type="text"
               onChange={onChange}
               defaultValue={authentication[property] || ''}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
               isVariableUncovered={isVariableUncovered}
             />
           </div>

@@ -17,7 +17,6 @@ import {
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
 import type { Cookie } from '../../models/cookie-jar';
@@ -44,7 +43,7 @@ import { AddKeyCombinationModal } from './modals/add-key-combination-modal';
 import { AlertModal } from './modals/alert-modal';
 import { AskModal } from './modals/ask-modal';
 import { CodePromptModal } from './modals/code-prompt-modal';
-import { CookiesModal } from './modals/cookies-modal';
+import { CookiesModalFC } from './modals/cookies-modal';
 import { EnvironmentEditModal } from './modals/environment-edit-modal';
 import { ErrorModal } from './modals/error-modal';
 import { ExportRequestsModal } from './modals/export-requests-modal';
@@ -105,8 +104,6 @@ export type WrapperProps = AppProps & {
   requestPaneRef: Ref<HTMLElement>;
   responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
   sidebarRef: Ref<HTMLElement>;
@@ -316,10 +313,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
 
-  _handleShowCookiesModal() {
-    showModal(CookiesModal, this.props.activeWorkspace);
-  }
-
   static _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
   }
@@ -484,9 +477,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       gitVCS,
       handleActivateRequest,
       handleExportRequestsToFile,
-      handleGetRenderContext,
       handleInitializeEntities,
-      handleRender,
       handleSidebarSort,
       isVariableUncovered,
       settings,
@@ -533,44 +524,23 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <PaymentNotificationModal ref={registerModal} />
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
-            <GenerateConfigModal ref={registerModal} settings={settings} />
+            <GenerateConfigModal ref={registerModal} />
             <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
 
             <CodePromptModal
               ref={registerModal}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
-              editorLineWrapping={settings.editorLineWrapping}
               isVariableUncovered={isVariableUncovered}
             />
 
             <RequestSettingsModal
               ref={registerModal}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
-              editorLineWrapping={settings.editorLineWrapping}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               workspaces={workspaces}
               isVariableUncovered={isVariableUncovered}
             />
 
             <RequestGroupSettingsModal
               ref={registerModal}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
-              editorLineWrapping={settings.editorLineWrapping}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               workspaces={workspaces}
               isVariableUncovered={isVariableUncovered}
             />
@@ -578,17 +548,13 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
               {activeCookieJar ? <>
-                <CookiesModal
-                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-                  handleRender={handleRender}
+                <CookiesModalFC
                   ref={registerModal}
+                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   workspace={activeWorkspace}
                   cookieJar={activeCookieJar}
                 />
                 <CookieModifyModal
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   ref={registerModal}
                   cookieJar={activeCookieJar}
                   workspace={activeWorkspace}
@@ -599,8 +565,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               <NunjucksModal
                 uniqueKey={`key::${this.state.forceRefreshKey}`}
                 ref={registerModal}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
                 workspace={activeWorkspace}
               />
 
@@ -609,13 +573,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                 clientCertificates={activeWorkspaceClientCertificates}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorKeyMap={settings.editorKeyMap}
-                editorLineWrapping={settings.editorLineWrapping}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
                 isVariableUncovered={isVariableUncovered}
@@ -625,9 +582,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <GenerateCodeModal
               ref={registerModal}
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
             />
 
             <SettingsModal
@@ -635,7 +589,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               settings={settings}
             />
 
-            <ResponseDebugModal ref={registerModal} settings={settings} />
+            <ResponseDebugModal ref={registerModal} />
 
             <RequestSwitcherModal
               ref={registerModal}
@@ -644,14 +598,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <EnvironmentEditModal
               ref={registerModal}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
-              lineWrapping={settings.editorLineWrapping}
               onChange={models.requestGroup.update}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
 
@@ -702,14 +649,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
               handleChangeEnvironment={this._handleChangeEnvironment}
-              lineWrapping={settings.editorLineWrapping}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
 
@@ -776,7 +716,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleSetActiveResponse={this._handleSetActiveResponse}
               handleSetPreviewMode={this._handleSetPreviewMode}
               handleSetResponseFilter={this._handleSetResponseFilter}
-              handleShowCookiesModal={this._handleShowCookiesModal}
               handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
               handleSidebarSort={handleSidebarSort}
               handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}

@@ -428,18 +428,12 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
         <CodeEditor
           dynamicHeight
           manualPrettify
-          fontSize={settings.editorFontSize}
-          indentSize={settings.editorIndentSize}
-          indentWithTabs={settings.editorIndentWithTabs}
-          keyMap={settings.editorKeyMap}
           defaultValue={unitTest ? unitTest.code : ''}
           getAutocompleteSnippets={() => this.autocompleteSnippets(unitTest)}
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={settings.isVariableUncovered}
           mode="javascript"
-          lineWrapping={settings.editorLineWrapping}
           placeholder=""
         />
       </UnitTestItem>

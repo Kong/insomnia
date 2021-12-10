@@ -4,7 +4,6 @@ import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { DebouncedInput } from '../base/debounced-input';
 import { CodeEditor,  CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
 const MODE_INPUT = 'input';
@@ -22,9 +21,6 @@ interface Props {
   onFocus?: (e: FocusEvent) => void;
   onChange?: CodeEditorOnChange;
   onPaste?: (e: ClipboardEvent) => void;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
-  nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
@@ -349,10 +345,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
       className,
       onChange,
       placeholder,
-      render,
       onPaste,
-      getRenderContext,
-      nunjucksPowerUserMode,
       getAutocompleteConstants,
       isVariableUncovered,
       mode: syntaxMode,
@@ -374,6 +367,8 @@ export class OneLineEditor extends PureComponent<Props, State> {
             noStyleActiveLine
             noLint
             singleLine
+            ignoreEditorFontSettings
+            enableNunjucks
             autoCloseBrackets={false}
             tabIndex={0}
             id={id}
@@ -386,9 +381,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
             onChange={onChange}
-            render={render}
-            getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}

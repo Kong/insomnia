@@ -50,7 +50,14 @@ export const Hotkey: FC<Props> = memo(({ keyCombination, keyBindings, className,
     italic: isFallback,
   };
 
-  return <span className={classnames(className, classes)}>{display}</span>;
+  return (
+    <span
+      className={classnames(className, classes)}
+      style={{ verticalAlign: 'middle' }}
+    >
+      {display}
+    </span>
+  );
 });
 
 Hotkey.displayName = 'Hotkey';

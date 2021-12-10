@@ -3,14 +3,10 @@ import classnames from 'classnames';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Button } from '../base/button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
@@ -40,9 +36,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
       password,
       disabled,
       showAllPasswords,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
       onChange,
     } = this.props;
@@ -58,9 +51,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
             id="password"
             onChange={onChange}
             defaultValue={password || ''}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
             isVariableUncovered={isVariableUncovered}
           />
         </div>
