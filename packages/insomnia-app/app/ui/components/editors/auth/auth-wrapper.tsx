@@ -53,10 +53,6 @@ export class AuthWrapper extends PureComponent<Props> {
     if (authentication.type === AUTH_BASIC) {
       return (
         <BasicAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
           isVariableUncovered={isVariableUncovered}
         />
       );
