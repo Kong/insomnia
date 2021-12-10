@@ -52,9 +52,7 @@ export class AuthWrapper extends PureComponent<Props> {
 
     if (authentication.type === AUTH_BASIC) {
       return (
-        <BasicAuth
-          isVariableUncovered={isVariableUncovered}
-        />
+        <BasicAuth />
       );
     } else if (authentication.type === AUTH_OAUTH_2) {
       return (
@@ -69,11 +67,7 @@ export class AuthWrapper extends PureComponent<Props> {
       );
     } else if (authentication.type === AUTH_HAWK) {
       return (
-        <HawkAuth
-          request={request}
-          onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
-        />
+        <HawkAuth />
       );
     } else if (authentication.type === AUTH_OAUTH_1) {
       return (
@@ -86,31 +80,19 @@ export class AuthWrapper extends PureComponent<Props> {
       );
     } else if (authentication.type === AUTH_DIGEST) {
       return (
-        <DigestAuth
-          isVariableUncovered={isVariableUncovered}
-        />
+        <DigestAuth />
       );
     } else if (authentication.type === AUTH_NTLM) {
       return (
-        <NTLMAuth
-          isVariableUncovered={isVariableUncovered}
-        />
+        <NTLMAuth />
       );
     } else if (authentication.type === AUTH_BEARER) {
       return (
-        <BearerAuth
-          isVariableUncovered={isVariableUncovered}
-        />
+        <BearerAuth />
       );
     } else if (authentication.type === AUTH_AWS_IAM) {
       return (
-        <AWSAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
-        />
+        <AWSAuth />
       );
     } else if (authentication.type === AUTH_NETRC) {
       return <NetrcAuth />;
