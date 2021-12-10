@@ -22,7 +22,6 @@ interface Props {
   handleCommit?: () => void;
   showActions?: boolean;
   handleRender?: HandleRender;
-  isVariableUncovered?: boolean;
   handleGetRenderContext?: HandleGetRenderContext;
 }
 
