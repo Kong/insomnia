@@ -43,12 +43,12 @@ export class Modal extends PureComponent<ModalProps, State> {
     zIndex: globalZIndex,
   };
 
-  async _handleKeyDown(e) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this.state.open) {
       return;
     }
 
-    this.props.onKeyDown?.(e);
+    this.props.onKeyDown?.(event);
 
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
@@ -56,12 +56,12 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = await pressedHotKey(e, hotKeyRefs.CLOSE_MODAL);
-    const pressedCloseButton = closeOnKeyCodes.find(c => c === e.keyCode);
+    const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
+    const pressedCloseButton = closeOnKeyCodes.find(c => c === event.keyCode);
 
     // Pressed escape
     if (pressedEscape || pressedCloseButton) {
-      e.preventDefault();
+      event.preventDefault();
       this.hide();
       this.props.onCancel?.();
     }

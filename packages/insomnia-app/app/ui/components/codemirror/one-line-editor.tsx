@@ -121,7 +121,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
   }
 
-  _handleDocumentMousedown(e) {
+  _handleDocumentMousedown(event: KeyboardEvent) {
     if (!this._editor) {
       return;
     }
@@ -131,7 +131,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
     const node = ReactDOM.findDOMNode(this._editor);
     // @ts-expect-error -- TSCONVERSION
-    const clickWasOutsideOfComponent = !node.contains(e.target);
+    const clickWasOutsideOfComponent = !node.contains(event.target);
 
     if (clickWasOutsideOfComponent) {
       this._editor?.clearSelection();
@@ -210,9 +210,9 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this.props.onChange?.(value);
   }
 
-  _handleInputKeyDown(e) {
+  _handleInputKeyDown(event: KeyboardEvent) {
     if (this.props.onKeyDown) {
-      this.props.onKeyDown(e, e.target.value);
+      this.props.onKeyDown(event, event.target.value);
     }
   }
 
@@ -246,16 +246,16 @@ export class OneLineEditor extends PureComponent<Props, State> {
   }
 
   // @TODO Refactor this event handler. The way we search for a parent form node is not stable.
-  _handleKeyDown(e) {
+  _handleKeyDown(event: KeyboardEvent) {
     // submit form if needed
-    if (e.keyCode === 13) {
-      let node = e.target;
+    if (event.keyCode === 13) {
+      let node = event.target;
 
       for (let i = 0; i < 20 && node; i++) {
         if (node.tagName === 'FORM') {
           node.dispatchEvent(new window.Event('submit'));
-          e.preventDefault();
-          e.stopPropagation();
+          event.preventDefault();
+          event.stopPropagation();
           break;
         }
 
@@ -263,7 +263,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
       }
     }
 
-    this.props.onKeyDown?.(e, this.getValue());
+    this.props.onKeyDown?.(event, this.getValue());
   }
 
   _convertToEditorPreserveFocus() {
