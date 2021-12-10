@@ -20,8 +20,9 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
   const { isVariableUncovered, showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
-  const [masked, toggleMask] = useToggle(Boolean(mask));
-  const isMasked = showPasswords || !masked;
+  const [masked, toggleMask] = useToggle(true);
+  const canBeMasked = !showPasswords && mask;
+  const isMasked = canBeMasked && masked;
 
   const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
 
@@ -35,7 +36,7 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
           {help ? <HelpTooltip>{help}</HelpTooltip> : null}
         </label>
       </td>
-      <td className="wide">
+      <td className="flex wide">
         <div
           className={classnames('form-control form-control--underlined no-margin', {
             'form-control--inactive': authentication.disabled,
@@ -50,15 +51,16 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
             isVariableUncovered={isVariableUncovered}
           />
         </div>
-        {showPasswords ? null : (
+        {canBeMasked ? (
           <Button
             className="btn btn--super-duper-compact pointer"
-            onClick={toggleMask}
+            // inline function needed to ignore the parameters sent by button into onClick...
+            onClick={() => toggleMask()}
             value={isMasked}
           >
             {isMasked ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
           </Button>
-        )}
+        ) : null}
       </td>
     </tr>
   );

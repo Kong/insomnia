@@ -26,15 +26,12 @@ export const AuthToggleRow: FC<Props> = ({
 }) => {
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
-  const isOn = useMemo(() => {
-    const value = Boolean(authentication[property]);
-    return invert ? !value : value;
-  }, [authentication, invert, property]);
-
+  const isOn = Boolean(authentication[property]);
   const toggle = useCallback(() => patchAuth({ [property]: !isOn }), [isOn, patchAuth, property]);
 
+  const isActuallyOn = invert ? !isOn : isOn;
   const id = useMemo(() => label.replace(/ /g, '-'), [label]);
-  const title = isOn ? onTitle : offTitle;
+  const title = isActuallyOn ? onTitle : offTitle;
 
   return (
     <tr key={id}>
@@ -54,10 +51,10 @@ export const AuthToggleRow: FC<Props> = ({
             className="btn btn--super-duper-compact"
             id={id}
             onClick={toggle}
-            value={isOn}
+            value={isActuallyOn}
             title={title}
           >
-            <ToggleIcon isOn={isOn} />
+            <ToggleIcon isOn={isActuallyOn} />
           </Button>
         </div>
       </td>
