@@ -210,7 +210,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this.props.onChange?.(value);
   }
 
-  _handleInputKeyDown(event: KeyboardEvent) {
+  _handleInputKeyDown(event) {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(event, event.target.value);
     }
@@ -246,7 +246,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
   }
 
   // @TODO Refactor this event handler. The way we search for a parent form node is not stable.
-  _handleKeyDown(event: KeyboardEvent) {
+  _handleKeyDown(event) {
     // submit form if needed
     if (event.keyCode === 13) {
       let node = event.target;
