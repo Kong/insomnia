@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
+import { Request } from '../../../../models/request';
 import { useActiveRequest } from '../../../hooks/use-active-request';
 import { selectSettings } from '../../../redux/selectors';
 import { Button } from '../../base/button';
@@ -17,10 +18,12 @@ export const BasicAuth: FC<Props> = ({ isVariableUncovered }) => {
   const { showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, updateAuthentication } = useActiveRequest();
 
-  const toggleISO88591 = useCallback(() => updateAuthentication({ ...authentication, useISO88591: !authentication.useISO88591 }), [authentication, updateAuthentication]);
-  const toggleEnabled = useCallback(() => updateAuthentication({ ...authentication, disable: !authentication.disabled }), [authentication, updateAuthentication]);
-  const handleUsersname = useCallback((username: string) => updateAuthentication({ ...authentication, username }), [authentication, updateAuthentication]);
-  const handlePassword = useCallback((password: string) => updateAuthentication({ ...authentication, password }), [authentication, updateAuthentication]);
+  const patchAuth = useCallback((patch: Partial<Request['authentication']>) => updateAuthentication({ ...authentication, ...patch }), [authentication, updateAuthentication]);
+
+  const toggleISO88591 = useCallback((useISO88591: boolean) => patchAuth({ useISO88591: !useISO88591 }), [patchAuth]);
+  const toggleEnabled = useCallback((disable: boolean) => patchAuth({ disable: !disable }), [patchAuth]);
+  const handleUsersname = useCallback((username: string) => patchAuth({ username }), [patchAuth]);
+  const handlePassword = useCallback((password: string) => patchAuth({ password }), [patchAuth]);
 
   return <div className="pad">
     <table>
