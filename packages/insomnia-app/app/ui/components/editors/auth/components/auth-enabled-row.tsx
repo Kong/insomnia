@@ -1,7 +1,7 @@
 import React, { FC, useCallback } from 'react';
 
-import { useActiveRequest } from '../../../hooks/use-active-request';
-import { Button } from '../../base/button';
+import { useActiveRequest } from '../../../../hooks/use-active-request';
+import { Button } from '../../../base/button';
 
 export const AuthEnabledRow: FC = () => {
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();

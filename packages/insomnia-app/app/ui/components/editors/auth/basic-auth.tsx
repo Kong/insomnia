@@ -8,7 +8,7 @@ import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
 import { PasswordEditor } from '../password-editor';
-import { AuthEnabledRow } from './auth-enabled-row';
+import { AuthEnabledRow } from './components/auth-enabled-row';
 
 interface Props {
   isVariableUncovered: boolean;

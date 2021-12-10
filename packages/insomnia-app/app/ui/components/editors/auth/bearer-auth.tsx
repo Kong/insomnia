@@ -4,7 +4,7 @@ import React, { FC, useCallback } from 'react';
 import { useActiveRequest } from '../../../hooks/use-active-request';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
-import { AuthEnabledRow } from './auth-enabled-row';
+import { AuthEnabledRow } from './components/auth-enabled-row';
 
 interface Props {
   isVariableUncovered: boolean;
