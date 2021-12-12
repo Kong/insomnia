@@ -26,9 +26,9 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     }),
   };
 
-  if (!settings.proxyEnabled || urlInNoProxy(finalConfig.url, settings.noProxy)) {
+  if (settings.proxyEnabled && urlInNoProxy(finalConfig.url, settings.noProxy)) {
     finalConfig.proxy = false;
-  } else if (proxyUrl) {
+  } else if (settings.proxyEnabled && proxyUrl) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
 
     if (hostname && port) {
@@ -38,6 +38,8 @@ export async function axiosRequest(config: AxiosRequestConfig) {
       };
     }
   }
+
+  console.log('finalConfig: ', finalConfig);
 
   const response = await axios(finalConfig);
 

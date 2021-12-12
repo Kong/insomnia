@@ -1,8 +1,9 @@
 import { parse as urlParse } from 'url';
 
-function formatHostname(hostname) {
+function formatHostname(rawHostname) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
-  return hostname.replace(/^\.*/, '.').toLowerCase();
+  const hostname = rawHostname.replace(/^\.*/, '.').toLowerCase();
+  return hostname.endsWith('.') ? hostname.slice(0, -1) : hostname;
 }
 
 function parseNoProxyZone(zone) {
@@ -15,25 +16,30 @@ function parseNoProxyZone(zone) {
   return { hostname: zoneHost, port: zonePort, hasPort: hasPort };
 }
 
+function matchesHostname(hostname, noProxyZoneHostname) {
+  const wildcardNeedle = noProxyZoneHostname.startsWith('.*.') ? noProxyZoneHostname.slice(2) : noProxyZoneHostname;
+  const isMatchedAt = hostname.indexOf(wildcardNeedle);
+  return (isMatchedAt > -1 && (isMatchedAt === hostname.length - wildcardNeedle.length));
+}
+
 export function urlInNoProxy(url: string | undefined, noProxy: any) {
   if (!url || !noProxy || typeof noProxy !== 'string') {
     return false;
   }
   const uri = urlParse(url);
-
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80');
   const hostname = formatHostname(uri.hostname);
   const noProxyList = noProxy.split(',');
 
   // iterate through the noProxyList until it finds a match.
   return noProxyList.map(parseNoProxyZone).some(noProxyZone => {
-    const isMatchedAt = hostname.indexOf(noProxyZone.hostname);
-    const hostnameMatched = (isMatchedAt > -1 && (isMatchedAt === hostname.length - noProxyZone.hostname.length));
-
+    if (!noProxyZone.hostname && noProxyZone.hasPort) {
+      return port === noProxyZone.port;
+    }
+    const hostnameMatched = matchesHostname(hostname, noProxyZone.hostname);
     if (noProxyZone.hasPort) {
       return (port === noProxyZone.port) && hostnameMatched;
     }
-
     return hostnameMatched;
   });
 }
