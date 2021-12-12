@@ -39,8 +39,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     }
   }
 
-  console.log('finalConfig: ', finalConfig);
-
   const response = await axios(finalConfig);
 
   if (isDevelopment()) {
