@@ -1,9 +1,8 @@
-import classnames from 'classnames';
 import React, { FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { Button } from '../../../base/button';
-import { HelpTooltip } from '../../../help-tooltip';
+import { AuthRow } from './auth-row';
 
 interface Props {
   label: string;
@@ -34,30 +33,16 @@ export const AuthToggleRow: FC<Props> = ({
   const title = isActuallyOn ? onTitle : offTitle;
 
   return (
-    <tr key={id}>
-      <td className="pad-right no-wrap valign-middle">
-        <label htmlFor={id} className="label--small no-pad">
-          {label}
-          {help ? <HelpTooltip>{help}</HelpTooltip> : null}
-        </label>
-      </td>
-      <td className="wide">
-        <div
-          className={classnames('form-control form-control--underlined no-margin', {
-            'form-control--inactive': authentication.disabled,
-          })}
-        >
-          <Button
-            className="btn btn--super-duper-compact"
-            id={id}
-            onClick={toggle}
-            value={isActuallyOn}
-            title={title}
-          >
-            <ToggleIcon isOn={isActuallyOn} />
-          </Button>
-        </div>
-      </td>
-    </tr>
+    <AuthRow labelFor={id} label={label} help={help}>
+      <Button
+        className="btn btn--super-duper-compact"
+        id={id}
+        onClick={toggle}
+        value={isActuallyOn}
+        title={title}
+      >
+        <ToggleIcon isOn={isActuallyOn} />
+      </Button>
+    </AuthRow>
   );
 };

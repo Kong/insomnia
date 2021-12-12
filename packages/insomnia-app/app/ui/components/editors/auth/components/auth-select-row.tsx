@@ -1,8 +1,7 @@
-import classnames from 'classnames';
-import React, { ChangeEvent, FC, useCallback, useMemo } from 'react';
+import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { useActiveRequest } from '../../../../hooks/use-active-request';
-import { HelpTooltip } from '../../../help-tooltip';
+import { AuthRow } from './auth-row';
 
 interface Props {
   label: string;
@@ -11,7 +10,7 @@ interface Props {
     name: string;
     value: string;
   }[];
-  help?: string;
+  help?: ReactNode;
 }
 
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options }) => {
@@ -24,28 +23,14 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options }) => 
   const id = useMemo(() => label.replace(/ /g, '-'), [label]);
 
   return (
-    <tr key={id}>
-      <td className="pad-right no-wrap valign-middle">
-        <label htmlFor={id} className="label--small no-pad">
-          {label}
-          {help ? <HelpTooltip>{help}</HelpTooltip> : null}
-        </label>
-      </td>
-      <td className="wide">
-        <div
-          className={classnames('form-control form-control--underlined no-margin', {
-            'form-control--inactive': authentication.disabled,
-          })}
-        >
-          <select id={id} onChange={onChange} value={selectedValue}>
-            {options.map(({ name, value }) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </td>
-    </tr>
+    <AuthRow labelFor={id} label={label} help={help}>
+      <select id={id} onChange={onChange} value={selectedValue}>
+        {options.map(({ name, value }) => (
+          <option key={value} value={value}>
+            {name}
+          </option>
+        ))}
+      </select>
+    </AuthRow>
   );
 };
