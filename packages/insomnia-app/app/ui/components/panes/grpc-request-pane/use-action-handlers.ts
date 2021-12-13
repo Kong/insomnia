@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 import { useCallback } from 'react';
 
-import { GrpcRequestEventEnum } from '../../../../common/ipc-events';
+import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import type { GrpcMethodType } from '../../../../network/grpc/method';
 import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
 import { grpcActions, GrpcDispatch } from '../../../context/grpc';
