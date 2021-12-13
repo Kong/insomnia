@@ -7,7 +7,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import type { OAuth2Token } from '../../../models/o-auth-2-token';
 import type {
   Request,
   RequestAuthentication,
@@ -48,7 +47,6 @@ interface Props {
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
   updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleImport: Function;
@@ -60,7 +58,6 @@ interface Props {
   headerEditorKey: string;
   request?: Request | null;
   downloadPath: string | null;
-  oAuth2Token?: OAuth2Token | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -131,7 +128,6 @@ export class RequestPane extends PureComponent<Props> {
       handleSend,
       handleSendAndDownload,
       handleUpdateDownloadPath,
-      oAuth2Token,
       request,
       workspace,
       environmentId,
@@ -141,7 +137,6 @@ export class RequestPane extends PureComponent<Props> {
       updateRequestBody,
       updateRequestHeaders,
       updateRequestMimeType,
-      updateSettingsShowPasswords,
       updateRequestMethod,
       updateRequestParameters,
       updateRequestUrl,
@@ -256,14 +251,7 @@ export class RequestPane extends PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
               <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-                <AuthWrapper
-                  oAuth2Token={oAuth2Token}
-                  showPasswords={settings.showPasswords}
-                  request={request}
-                  handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                  isVariableUncovered={isVariableUncovered}
-                  onChange={updateRequestAuthentication}
-                />
+                <AuthWrapper />
               </ErrorBoundary>
             </div>
           </TabPanel>

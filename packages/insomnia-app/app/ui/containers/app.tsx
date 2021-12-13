@@ -98,7 +98,6 @@ import {
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
-  selectActiveOAuth2Token,
   selectActiveProject,
   selectActiveRequest,
   selectActiveRequestMeta,
@@ -1567,9 +1566,6 @@ function mapStateToProps(state: RootState) {
   // Environment stuff
   const activeEnvironment = selectActiveEnvironment(state);
 
-  // OAuth2Token stuff
-  const oAuth2Token = selectActiveOAuth2Token(state);
-
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state);
@@ -1612,7 +1608,6 @@ function mapStateToProps(state: RootState) {
     isLoading,
     isLoggedIn,
     loadStartTime,
-    oAuth2Token,
     paneHeight,
     paneWidth,
     requestGroups,

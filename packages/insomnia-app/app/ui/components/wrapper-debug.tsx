@@ -46,7 +46,6 @@ interface Props {
   handleUpdateRequestMethod: (r: Request, method: string) => Promise<Request>;
   handleUpdateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
   handleUpdateRequestUrl: (r: Request, url: string) => Promise<Request>;
-  handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   wrapperProps: WrapperProps;
@@ -179,7 +178,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleUpdateRequestMethod,
       handleUpdateRequestParameters,
       handleUpdateRequestUrl,
-      handleUpdateSettingsShowPasswords,
       handleUpdateSettingsUseBulkHeaderEditor,
       handleUpdateSettingsUseBulkParametersEditor,
     } = this.props;
@@ -193,7 +191,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleUpdateRequestMimeType,
       headerEditorKey,
       isVariableUncovered,
-      oAuth2Token,
       responseDownloadPath,
       settings,
     } = this.props.wrapperProps;
@@ -235,7 +232,6 @@ export class WrapperDebug extends PureComponent<Props> {
           handleUpdateDownloadPath={handleUpdateDownloadPath}
           headerEditorKey={headerEditorKey}
           isVariableUncovered={isVariableUncovered}
-          oAuth2Token={oAuth2Token}
           request={activeRequest}
           settings={settings}
           updateRequestAuthentication={handleUpdateRequestAuthentication}
@@ -245,7 +241,6 @@ export class WrapperDebug extends PureComponent<Props> {
           updateRequestMimeType={handleUpdateRequestMimeType}
           updateRequestParameters={handleUpdateRequestParameters}
           updateRequestUrl={handleUpdateRequestUrl}
-          updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
           updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
           workspace={activeWorkspace}
