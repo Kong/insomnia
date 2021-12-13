@@ -30,6 +30,7 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
   return (
     <AuthRow labelFor={id} label={label} help={help}>
       <OneLineEditor
+        id={id}
         type={isMasked ? 'password' : 'text'}
         onChange={onChange}
         disabled={authentication.disabled}
