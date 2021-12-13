@@ -15,7 +15,7 @@ interface InsomniaExtensions {
   enableNunjucksTags: (
     handleRender: HandleRender,
     handleGetRenderContext?: HandleGetRenderContext,
-    isVariableUncovered?: boolean,
+    showVariableSourceAndValue?: boolean,
   ) => void;
   isHintDropdownActive: () => boolean;
   makeLinksClickable: (handleClick: LinkClickCallback) => void;

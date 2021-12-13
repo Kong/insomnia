@@ -26,7 +26,6 @@ interface Props {
   className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
-  isVariableUncovered?: boolean;
   readOnly?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
@@ -347,7 +346,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
       placeholder,
       onPaste,
       getAutocompleteConstants,
-      isVariableUncovered,
       mode: syntaxMode,
       type: originalType,
     } = this.props;
@@ -384,7 +382,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}
-            isVariableUncovered={isVariableUncovered}
           />
         </Fragment>
       );

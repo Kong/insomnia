@@ -135,8 +135,6 @@ interface RawProps {
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
-  // TODO: I think this prop can actually be removed entirely
-  isVariableUncovered?: boolean;
   raw?: boolean;
 }
 
@@ -160,6 +158,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     editorLineWrapping,
     editorIndentWithTabs,
     nunjucksPowerUserMode,
+    showVariableSourceAndValue,
   } = useSelector(selectSettings);
 
   return {
@@ -173,6 +172,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
     indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
     nunjucksPowerUserMode,
+    showVariableSourceAndValue,
   };
 };
 
@@ -620,7 +620,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
         this.codeMirror?.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
-          this.props.isVariableUncovered,
+          this.props.showVariableSourceAndValue,
         );
       }
 
@@ -918,8 +918,8 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     // Strip of charset if there is one
     Object.keys(options).map(key =>
       this._codemirrorSmartSetOption(
-          key as keyof CodeMirror.EditorConfiguration,
-          options[key]
+        key as keyof CodeMirror.EditorConfiguration,
+        options[key]
       )
     );
   }
@@ -1215,7 +1215,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       dynamicHeight,
       style,
       type,
-      isVariableUncovered,
       raw,
     } = this.props;
     const classes = classnames(className, {
@@ -1317,7 +1316,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
           onMouseLeave={onMouseLeave}
         >
           <textarea
-            key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}
             ref={this._handleInitTextarea}
             style={{

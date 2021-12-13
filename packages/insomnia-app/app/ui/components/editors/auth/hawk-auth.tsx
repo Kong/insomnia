@@ -14,7 +14,6 @@ import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
   request: Request;
-  isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
 
@@ -127,7 +126,6 @@ export class HawkAuth extends PureComponent<Props> {
   ) {
     const {
       request,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -149,7 +147,6 @@ export class HawkAuth extends PureComponent<Props> {
               type="text"
               onChange={onChange}
               defaultValue={authentication[property] || ''}
-              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

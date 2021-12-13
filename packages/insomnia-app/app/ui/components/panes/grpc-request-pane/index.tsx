@@ -28,8 +28,6 @@ interface Props {
   environmentId: string;
   workspaceId: string;
   settings: Settings;
-  // For variables
-  isVariableUncovered: boolean;
 }
 
 const StyledUrlBar = styled.div`
@@ -55,7 +53,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   environmentId,
   workspaceId,
   forceRefreshKey,
-  isVariableUncovered,
 }) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
@@ -91,7 +88,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
                 onChange={handleChange.url}
-                isVariableUncovered={isVariableUncovered}
                 getAutocompleteConstants={getExistingGrpcUrls}
               />
             </StyledUrlEditor>
@@ -134,7 +130,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   showActions={running && enableClientStream}
                   handleStream={handleAction.stream}
                   handleCommit={handleAction.commit}
-                  isVariableUncovered={isVariableUncovered}
                 />
               </TabPanel>
               <TabPanel className="react-tabs__tab-panel">
@@ -147,7 +142,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                         valuePlaceholder="value"
                         descriptionPlaceholder="description"
                         pairs={activeRequest.metadata}
-                        isVariableUncovered={isVariableUncovered}
                         handleGetAutocompleteNameConstants={getCommonHeaderNames}
                         handleGetAutocompleteValueConstants={getCommonHeaderValues}
                         onChange={handleChange.metadata}

@@ -11,7 +11,6 @@ import { HelpTooltip } from '../../help-tooltip';
 interface Props {
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  isVariableUncovered: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -34,7 +33,6 @@ export class BearerAuth extends PureComponent<Props> {
   render() {
     const {
       request,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     return (
@@ -59,7 +57,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeToken}
                     defaultValue={authentication.token || ''}
-                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -85,7 +82,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangePrefix}
                     defaultValue={authentication.prefix || ''}
-                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
