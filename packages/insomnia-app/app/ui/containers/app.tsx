@@ -999,9 +999,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _handleKeyDown(e) {
+  _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(e, definition, callback);
+      executeHotKey(event, definition, callback);
     }
   }
 

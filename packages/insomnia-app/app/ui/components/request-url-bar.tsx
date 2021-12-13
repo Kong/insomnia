@@ -137,19 +137,19 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     this.props.handleUpdateDownloadPath(request._id, null);
   }
 
-  async _handleKeyDown(e: KeyboardEvent) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       this._input?.focus();
       this._input?.selectAll();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
       this._methodDropdown?.toggle();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       this._dropdown?.toggle(true);
     });
   }
