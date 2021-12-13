@@ -1,6 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { renderHook } from '@testing-library/react-hooks';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer as _ipcRenderer } from 'electron';
 import { mocked } from 'ts-jest/utils';
 
 import { GrpcRequestEventEnum } from '../../../../../common/ipc-events';
@@ -25,6 +25,8 @@ jest.mock('../../../../../network/grpc/prepare', () => {
 const mockGrpcDispatch = mocked<GrpcDispatch>(jest.fn());
 const prepareGrpcMessage = mocked(_prepareGrpcMessage);
 const prepareGrpcRequest = mocked(_prepareGrpcRequest);
+
+const ipcRenderer = mocked(_ipcRenderer);
 
 const messageParamsBuilder = createBuilder(grpcIpcMessageParamsSchema);
 const requestParamsBuilder = createBuilder(grpcIpcRequestParamsSchema);
