@@ -25,7 +25,6 @@ interface Props {
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
-  isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
@@ -349,7 +348,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   render() {
     const {
       request,
-      isVariableUncovered,
       handleAutocompleteUrls,
       uniquenessKey,
     } = this.props;
@@ -371,7 +369,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
               onPaste={this._handleUrlPaste}
               forceEditor
               type="text"
-              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}

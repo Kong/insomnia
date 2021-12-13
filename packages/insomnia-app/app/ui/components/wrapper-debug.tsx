@@ -190,7 +190,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
-      isVariableUncovered,
       responseDownloadPath,
       settings,
     } = this.props.wrapperProps;
@@ -210,7 +209,6 @@ export class WrapperDebug extends PureComponent<Props> {
             workspaceId={activeWorkspace._id}
             forceRefreshKey={forceRefreshKey}
             settings={settings}
-            isVariableUncovered={isVariableUncovered}
           />
         </ErrorBoundary>
       );
@@ -231,7 +229,6 @@ export class WrapperDebug extends PureComponent<Props> {
           handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
           handleUpdateDownloadPath={handleUpdateDownloadPath}
           headerEditorKey={headerEditorKey}
-          isVariableUncovered={isVariableUncovered}
           request={activeRequest}
           settings={settings}
           updateRequestAuthentication={handleUpdateRequestAuthentication}

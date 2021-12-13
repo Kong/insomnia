@@ -2,6 +2,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { camelCase } from 'change-case';
 import crypto from 'crypto';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
+import { isPlainObject } from 'ramda-adjunct';
 import { parse as urlParse } from 'url';
 import YAML from 'yaml';
 
@@ -110,6 +111,15 @@ const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   }
 };
 
+export type SpecExtension = `x-${string}`;
+/**
+ * Checks if the given property name is an open-api extension
+ * @param property The property name
+ */
+const isSpecExtension = (property: string): property is SpecExtension => {
+  return property.indexOf('x-') === 0;
+};
+
 /**
  * Create request definitions based on openapi document.
  */
@@ -134,13 +144,15 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
         return [];
       }
 
-      return Object.keys(schemasPerMethod)
-        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
-        .map(method => ({
-          ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
-          path,
-          method,
-        }));
+      const methods = Object.entries(schemasPerMethod)
+        // Only keep entries that are plain objects and not spec extensions
+        .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+
+      return methods.map(([method]) => ({
+        ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
+        path,
+        method,
+      }));
     })
     .flat();
 

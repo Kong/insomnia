@@ -46,7 +46,7 @@ export interface Settings {
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
-  isVariableUncovered?: boolean;
+  showVariableSourceAndValue: boolean;
   lightTheme: string;
   lineWrapping?: boolean;
   maxHistoryResponses: number;

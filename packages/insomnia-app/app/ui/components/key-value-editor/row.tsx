@@ -42,7 +42,6 @@ interface Props {
   onBlurValue?: Function;
   onBlurDescription?: Function;
   enableNunjucks?: boolean;
-  isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
   handleGetAutocompleteValueConstants?: Function;
   namePlaceholder?: string;
@@ -274,7 +273,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
       forceInput,
       descriptionPlaceholder,
       pair,
-      isVariableUncovered,
     } = this.props;
     return displayDescription ? (
       <div
@@ -295,7 +293,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
           onBlur={this._handleBlurDescription}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleFocusDescription}
-          isVariableUncovered={isVariableUncovered}
         />
       </div>
     ) : null;
@@ -308,7 +305,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
       forceInput,
       valueInputType,
       valuePlaceholder,
-      isVariableUncovered,
     } = this.props;
 
     if (pair.type === 'file') {
@@ -348,7 +344,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
           onBlur={this._handleBlurValue}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleFocusValue}
-          isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
         />
       );
@@ -419,7 +414,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     const {
       pair,
       namePlaceholder,
-      isVariableUncovered,
       sortable,
       noDropZone,
       hideButtons,
@@ -470,7 +464,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
               ref={ref => { this._nameInput = ref; }}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
-              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
               readOnly={readOnly}

@@ -43,7 +43,6 @@ interface Props {
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
-  isVariableUncovered: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -117,7 +116,6 @@ export class BodyEditor extends PureComponent<Props> {
       workspace,
       settings,
       environmentId,
-      isVariableUncovered,
     } = this.props;
     const noRender = request.settingDisableRenderRequestBody;
     const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
@@ -131,7 +129,6 @@ export class BodyEditor extends PureComponent<Props> {
           <UrlEncodedEditor
             key={uniqueKey}
             onChange={this._handleFormUrlEncodedChange}
-            isVariableUncovered={isVariableUncovered}
             parameters={request.body.params || []}
           />
         );
@@ -140,7 +137,6 @@ export class BodyEditor extends PureComponent<Props> {
           <FormEditor
             key={uniqueKey}
             onChange={this._handleFormChange}
-            isVariableUncovered={isVariableUncovered}
             parameters={request.body.params || []}
           />
         );
@@ -156,7 +152,6 @@ export class BodyEditor extends PureComponent<Props> {
             workspace={workspace}
             settings={settings}
             environmentId={environmentId}
-            isVariableUncovered={isVariableUncovered}
             onChange={this._handleGraphQLChange}
           />
         );
@@ -167,7 +162,6 @@ export class BodyEditor extends PureComponent<Props> {
             uniquenessKey={uniqueKey}
             contentType={contentType || 'text/plain'}
             content={request.body.text || ''}
-            isVariableUncovered={isVariableUncovered}
             onChange={this._handleRawChange}
           />
         );
