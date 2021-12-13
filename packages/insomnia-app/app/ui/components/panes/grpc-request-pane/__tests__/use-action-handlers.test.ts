@@ -73,4 +73,16 @@ describe('useActionHandlers', () => {
     expect(ipcRenderer.send).toHaveBeenCalledWith(GrpcRequestEventEnum.commit, requestId);
     expect(mockGrpcDispatch).not.toHaveBeenCalled();
   });
+
+  it('should exit if request id is falsey', () => {
+    const { result } = renderHook(() => useActionHandlers('', 'env', GrpcMethodTypeEnum.client, mockGrpcDispatch));
+
+    result.current.start();
+    result.current.stream();
+    result.current.commit();
+    result.current.cancel();
+
+    expect(ipcRenderer.send).not.toHaveBeenCalled();
+    expect(mockGrpcDispatch).not.toHaveBeenCalled();
+  });
 });
