@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useCallback } from 'react';
+import React, { ComponentProps, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
@@ -9,15 +9,14 @@ import { Button } from '../../../base/button';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
 
-interface Props {
+interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompleteConstants' | 'mode'> {
   label: string;
   property: string;
   help?: ReactNode;
-  mode?: string;
   mask?: boolean;
 }
 
-export const AuthInputRow: FC<Props> = ({ label, property, mask, mode, help }) => {
+export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, mode, help }) => {
   const { isVariableUncovered, showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
@@ -39,6 +38,7 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, mode, help }) =
         disabled={authentication.disabled}
         defaultValue={authentication[property] || ''}
         isVariableUncovered={isVariableUncovered}
+        getAutocompleteConstants={getAutocompleteConstants}
       />
       {canBeMasked ? (
         <Button

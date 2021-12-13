@@ -8,10 +8,11 @@ interface Props {
   labelFor: string;
   label: string;
   help?: ReactNode;
+  disabled?: boolean;
 }
 
-export const AuthRow: FC<Props> = ({ labelFor, label, help, children }) => {
-  const { activeRequest: { authentication: { disabled } } } = useActiveRequest();
+export const AuthRow: FC<Props> = ({ labelFor, label, help, disabled, children }) => {
+  const { activeRequest: { authentication } } = useActiveRequest();
 
   return (
     <tr key={labelFor}>
@@ -24,7 +25,7 @@ export const AuthRow: FC<Props> = ({ labelFor, label, help, children }) => {
       <td className="wide">
         <div
           className={classnames('form-control form-control--underlined no-margin flex wide', {
-            'form-control--inactive': disabled,
+            'form-control--inactive': authentication.disabled || disabled,
           })}
         >
           {children}

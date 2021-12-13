@@ -12,9 +12,10 @@ interface Props {
     value: string;
   }[];
   help?: ReactNode;
+  disabled?: boolean;
 }
 
-export const AuthSelectRow: FC<Props> = ({ label, property, help, options }) => {
+export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
   const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0];
@@ -24,7 +25,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options }) => 
   const id = kebabCase(label);
 
   return (
-    <AuthRow labelFor={id} label={label} help={help}>
+    <AuthRow labelFor={id} label={label} help={help} disabled={disabled}>
       <select id={id} onChange={onChange} value={selectedValue}>
         {options.map(({ name, value }) => (
           <option key={value} value={value}>
