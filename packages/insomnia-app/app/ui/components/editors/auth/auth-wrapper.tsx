@@ -93,11 +93,7 @@ export class AuthWrapper extends PureComponent<Props> {
       return <NetrcAuth />;
     } else if (authentication.type === AUTH_ASAP) {
       return (
-        <AsapAuth
-          request={request}
-          onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
-        />
+        <AsapAuth />
       );
     } else {
       return (
