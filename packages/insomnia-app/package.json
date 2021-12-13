@@ -31,7 +31,7 @@
     "build:sr": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack/webpack.config.sr.ts",
     "package": "ts-node scripts/package.ts",
     "release": "ts-node scripts/release.ts",
-    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
     "bootstrap": "npm run build:sr"
   },

@@ -17,7 +17,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "npm run build",
-    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
     "clean": "tsc --build tsconfig.build.json --clean",
     "prebuild": "npm run clean",
