@@ -250,23 +250,27 @@ export const OAuth2Auth: FC = () => {
   const { basic, advanced } = getFieldsForGrantType(authentication);
 
   return (
-    <AuthTableBody>
-      <AuthSelectRow
-        label='Grant Type'
-        property='grantType'
-        options={grantTypeOptions}
-      />
-      {basic}
-      <AuthAccordian label='Advanced Options'>
-        {advanced}
-        {<div className="pad-top text-right">
-          <button className="btn btn--clicky" onClick={initNewOAuthSession}>
-            Clear OAuth 2 session
-          </button>
-        </div>}
-      </AuthAccordian>
-      <OAuth2Tokens />
-    </AuthTableBody>
+    <>
+      <AuthTableBody>
+        <AuthSelectRow
+          label='Grant Type'
+          property='grantType'
+          options={grantTypeOptions}
+        />
+        {basic}
+        <AuthAccordian label='Advanced Options'>
+          {advanced}
+          {<div className="pad-top text-right">
+            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+              Clear OAuth 2 session
+            </button>
+          </div>}
+        </AuthAccordian>
+      </AuthTableBody>
+      <div className='pad'>
+        <OAuth2Tokens />
+      </div>
+    </>
   );
 };
 
@@ -345,7 +349,7 @@ const OAuth2TokenInput: FC<{label: string; property: keyof Pick<OAuth2Token, 'ac
       <label htmlFor={id}>
         <small>{label}{expiryLabel ? <em> {expiryLabel}</em> : null}</small>
         <input
-          value={token?.[property]}
+          value={token?.[property] || ''}
           placeholder='n/a'
           onChange={onChange}
         />
@@ -438,7 +442,7 @@ const OAuth2Tokens: FC = () => {
   const { token, clearTokens, refreshToken, loading, error } = useActiveOAuth2Token();
 
   return (
-    <div className='notice subtle margin-top text-left'>
+    <div className='notice subtle text-left'>
       {error && (
         <p className="selectable notice warning margin-bottom">
           {error}
