@@ -49,6 +49,12 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
+      - name: Build app for smoke tests
+        run: npm run app-build:smoke
+
+      - name: Run app playwright tests
+        run: npm run test:playwright:build
+
       - name: Lint
         run: npm run lint
 
@@ -132,12 +138,6 @@ jobs:
       
       - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
-
-      - name: Build app for smoke tests
-        run: npm run app-build:smoke
-
-      - name: Run app playwright tests
-        run: npm run test:playwright:build
 
       - name: Run app smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580

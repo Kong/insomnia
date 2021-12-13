@@ -27,7 +27,7 @@
     "test:cli": "npm run with-mock \"npm run cli\"",
     "test:build": "npm run with-mock \"npm run spectron:build\"",
     "test:package": "npm run with-mock \"npm run spectron:package\"",
-    "playwright:build": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npx playwright@1.16.3 test ./specs",
+    "playwright:build": "cross-env PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npx playwright@1.17.1 test ./specs",
     "test:playwright:build": "xvfb-maybe npm run playwright:build"
   },
   "devDependencies": {
