@@ -13,14 +13,10 @@ import { GrpcActionTypeEnum } from '../../../../context/grpc/grpc-actions';
 import useActionHandlers from '../use-action-handlers';
 
 jest.mock('electron');
-jest.mock('../../../../../network/grpc/prepare', () => {
-  const module = {
-    prepareGrpcMessage: jest.fn(),
-    prepareGrpcRequest: jest.fn(),
-  };
-
-  return module;
-});
+jest.mock('../../../../../network/grpc/prepare', () => ({
+  prepareGrpcMessage: jest.fn(),
+  prepareGrpcRequest: jest.fn(),
+}));
 
 const mockGrpcDispatch = mocked<GrpcDispatch>(jest.fn());
 const prepareGrpcMessage = mocked(_prepareGrpcMessage);
