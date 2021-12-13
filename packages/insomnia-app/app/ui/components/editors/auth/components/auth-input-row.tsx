@@ -13,10 +13,11 @@ interface Props {
   label: string;
   property: string;
   help?: ReactNode;
+  mode?: string;
   mask?: boolean;
 }
 
-export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
+export const AuthInputRow: FC<Props> = ({ label, property, mask, mode, help }) => {
   const { isVariableUncovered, showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
@@ -33,6 +34,7 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
       <OneLineEditor
         id={id}
         type={isMasked ? 'password' : 'text'}
+        mode={mode}
         onChange={onChange}
         disabled={authentication.disabled}
         defaultValue={authentication[property] || ''}
