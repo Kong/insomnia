@@ -17,7 +17,7 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
 }
 
 export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, mode, help }) => {
-  const { isVariableUncovered, showPasswords } = useSelector(selectSettings);
+  const { showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
   const [masked, toggleMask] = useToggle(true);
@@ -37,7 +37,6 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
         onChange={onChange}
         disabled={authentication.disabled}
         defaultValue={authentication[property] || ''}
-        isVariableUncovered={isVariableUncovered}
         getAutocompleteConstants={getAutocompleteConstants}
       />
       {canBeMasked ? (
