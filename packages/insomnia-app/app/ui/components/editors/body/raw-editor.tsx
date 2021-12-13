@@ -9,7 +9,6 @@ interface Props {
   content: string;
   contentType: string;
   uniquenessKey: string;
-  isVariableUncovered: boolean;
   className?: string;
 }
 
@@ -20,7 +19,6 @@ export class RawEditor extends PureComponent<Props> {
       className,
       content,
       contentType,
-      isVariableUncovered,
       onChange,
       uniquenessKey,
     } = this.props;
@@ -31,7 +29,6 @@ export class RawEditor extends PureComponent<Props> {
           uniquenessKey={uniquenessKey}
           defaultValue={content}
           className={className}
-          isVariableUncovered={isVariableUncovered}
           enableNunjucks
           onChange={onChange}
           mode={contentType}

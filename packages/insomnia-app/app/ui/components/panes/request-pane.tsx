@@ -54,7 +54,6 @@ interface Props {
   handleImport: Function;
   workspace: Workspace;
   settings: Settings;
-  isVariableUncovered: boolean;
   environmentId: string;
   forceRefreshCounter: number;
   headerEditorKey: string;
@@ -136,7 +135,6 @@ export class RequestPane extends PureComponent<Props> {
       workspace,
       environmentId,
       settings,
-      isVariableUncovered,
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
@@ -183,7 +181,6 @@ export class RequestPane extends PureComponent<Props> {
               handleSend={handleSend}
               handleSendAndDownload={handleSendAndDownload}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
               request={request}
               hotKeyRegistry={settings.hotKeyRegistry}
               handleUpdateDownloadPath={handleUpdateDownloadPath}
@@ -250,7 +247,6 @@ export class RequestPane extends PureComponent<Props> {
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
-              isVariableUncovered={isVariableUncovered}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
@@ -261,7 +257,6 @@ export class RequestPane extends PureComponent<Props> {
                   showPasswords={settings.showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
                 />
               </ErrorBoundary>
@@ -286,7 +281,6 @@ export class RequestPane extends PureComponent<Props> {
               >
                 <RequestParametersEditor
                   key={headerEditorKey}
-                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestParameters}
                   request={request}
                   bulk={settings.useBulkParametersEditor}
@@ -313,7 +307,6 @@ export class RequestPane extends PureComponent<Props> {
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
                 key={headerEditorKey}
-                isVariableUncovered={isVariableUncovered}
                 onChange={updateRequestHeaders}
                 request={request}
                 bulk={settings.useBulkHeaderEditor}

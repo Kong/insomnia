@@ -16,7 +16,6 @@ import { ModalHeader } from '../base/modal-header';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props extends ModalProps {
-  isVariableUncovered: boolean;
   workspace: Workspace;
   cookieJar: CookieJar;
 }
@@ -182,7 +181,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   _renderInputField(field: string, error: string | null = null) {
     const { cookie } = this.state;
     const {
-      isVariableUncovered,
     } = this.props;
 
     if (!cookie) {
@@ -195,7 +193,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
         <label>
           {CookieModifyModal._capitalize(field)} <span className="danger">{error}</span>
           <OneLineEditor
-            isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}
           />
