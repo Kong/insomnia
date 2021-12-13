@@ -13,7 +13,6 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
@@ -299,14 +298,9 @@ export const loadRequestStop = (requestId: string) => ({
   requestId,
 });
 
-function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
+function _getNextActivity(settings: Settings, currentActivity: GlobalActivity) {
   switch (currentActivity) {
     case ACTIVITY_MIGRATION:
-      // Has not seen the onboarding step? Go to onboarding
-      if (!settings.hasPromptedOnboarding) {
-        return ACTIVITY_ONBOARDING;
-      }
-
       // Has not seen the analytics prompt? Go to it
       if (!settings.hasPromptedAnalytics) {
         return ACTIVITY_ANALYTICS;
@@ -315,8 +309,7 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
       // Otherwise, go to home
       return ACTIVITY_HOME;
 
-    case ACTIVITY_ONBOARDING:
-      // Always go to home after onboarding
+    case ACTIVITY_ANALYTICS:
       return ACTIVITY_HOME;
 
     default:
@@ -351,14 +344,6 @@ export const setActiveActivity = (activity: GlobalActivity) => {
       trackEvent('Data', 'Migration', 'Manual');
       models.settings.patch({
         hasPromptedToMigrateFromDesigner: true,
-      });
-      break;
-
-    case ACTIVITY_ONBOARDING:
-      models.settings.patch({
-        hasPromptedOnboarding: true,
-        // Don't show the analytics preferences prompt as it is part of the onboarding flow
-        hasPromptedAnalytics: true,
       });
       break;
 
@@ -756,8 +741,6 @@ export const initActiveActivity = () => (dispatch, getState) => {
       if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
         trackEvent('Data', 'Migration', 'Auto');
         overrideActivity = ACTIVITY_MIGRATION;
-      } else if (!settings.hasPromptedOnboarding) {
-        overrideActivity = ACTIVITY_ONBOARDING;
       } else if (!settings.hasPromptedAnalytics) {
         overrideActivity = ACTIVITY_ANALYTICS;
       }

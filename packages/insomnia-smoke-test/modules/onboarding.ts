@@ -12,15 +12,7 @@ const clickDontShare = async app => {
     .then(e => e.click());
 };
 
-const clickSkipImport = async app => {
-  await app.client
-    .$('.onboarding__content__body')
-    .then(e => e.$('button=Skip'))
-    .then(e => e.click());
-};
-
 export const skipOnboardingFlow = async app => {
   await analyticsMessageShown(app);
   await clickDontShare(app);
-  await clickSkipImport(app);
 };
