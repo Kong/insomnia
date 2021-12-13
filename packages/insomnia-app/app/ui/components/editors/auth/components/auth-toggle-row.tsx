@@ -1,5 +1,6 @@
-import React, { FC, ReactNode, useCallback, useMemo } from 'react';
+import React, { FC, ReactNode, useCallback } from 'react';
 
+import { kebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { Button } from '../../../base/button';
 import { AuthRow } from './auth-row';
@@ -25,11 +26,12 @@ export const AuthToggleRow: FC<Props> = ({
 }) => {
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
-  const isOn = Boolean(authentication[property]);
-  const toggle = useCallback(() => patchAuth({ [property]: !isOn }), [isOn, patchAuth, property]);
+  const databaseValue = Boolean(authentication[property]);
+  const toggle = useCallback((value: boolean) => patchAuth({ [property]: value }), [patchAuth, property]);
 
-  const isActuallyOn = invert ? !isOn : isOn;
-  const id = useMemo(() => label.replace(/ /g, '-'), [label]);
+  const isActuallyOn = invert ? !databaseValue : databaseValue;
+
+  const id = kebabCase(label);
   const title = isActuallyOn ? onTitle : offTitle;
 
   return (
@@ -38,7 +40,7 @@ export const AuthToggleRow: FC<Props> = ({
         className="btn btn--super-duper-compact"
         id={id}
         onClick={toggle}
-        value={isActuallyOn}
+        value={!databaseValue}
         title={title}
       >
         <ToggleIcon isOn={isActuallyOn} />

@@ -1,7 +1,8 @@
-import React, { FC, ReactNode, useCallback, useMemo } from 'react';
+import React, { FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
+import { kebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { selectSettings } from '../../../../redux/selectors';
 import { Button } from '../../../base/button';
@@ -25,7 +26,7 @@ export const AuthInputRow: FC<Props> = ({ label, property, mask, help }) => {
 
   const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
 
-  const id = useMemo(() => label.replace(/ /g, '-'), [label]);
+  const id = kebabCase(label);
 
   return (
     <AuthRow labelFor={id} label={label} help={help}>

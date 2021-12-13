@@ -1,5 +1,6 @@
-import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo } from 'react';
+import React, { ChangeEvent, FC, ReactNode, useCallback } from 'react';
 
+import { kebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { AuthRow } from './auth-row';
 
@@ -20,7 +21,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options }) => 
 
   const onChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => patchAuth({ [property]: event.currentTarget.value }), [patchAuth, property]);
 
-  const id = useMemo(() => label.replace(/ /g, '-'), [label]);
+  const id = kebabCase(label);
 
   return (
     <AuthRow labelFor={id} label={label} help={help}>

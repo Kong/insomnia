@@ -71,12 +71,7 @@ export class AuthWrapper extends PureComponent<Props> {
       );
     } else if (authentication.type === AUTH_OAUTH_1) {
       return (
-        <OAuth1Auth
-          request={request}
-          showPasswords={showPasswords}
-          onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
-        />
+        <OAuth1Auth />
       );
     } else if (authentication.type === AUTH_DIGEST) {
       return (
