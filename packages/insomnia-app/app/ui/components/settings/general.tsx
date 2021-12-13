@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
 import { Tooltip } from 'insomnia-components';
-import React, { Fragment, PureComponent } from 'react';
+import React, { FC, Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -32,6 +32,19 @@ import { MaskedSetting } from './masked-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
 
+/**
+ * We are attempting to move the app away from needing settings changes to restart the app.
+ * For now, this component is a holdover until such a time as we are able to fix the underlying cases.
+ */
+const RestartTooltip: FC<{ message: string }> = ({ message }) => (
+  <Fragment>
+    {message}{' '}
+    <Tooltip message="Will restart the app" className="space-left">
+      <i className="fa fa-refresh super-duper-faint" />
+    </Tooltip>
+  </Fragment>
+);
+
 interface Props {
   settings: Settings;
   hideModal: () => void;
@@ -60,12 +73,10 @@ class General extends PureComponent<Props> {
               setting="forceVerticalLayout"
               help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
-
             <BooleanSetting
-              label="Show variable source and value"
+              label={<RestartTooltip message="Show variable source and value" />}
               help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
               setting="showVariableSourceAndValue"
-              forceRestart
             />
           </div>
           <div>
@@ -80,14 +91,7 @@ class General extends PureComponent<Props> {
               />
             )}
             <BooleanSetting
-              label={(
-                <Fragment>
-                  Raw template syntax{' '}
-                  <Tooltip message="Will restart the app" className="space-left">
-                    <i className="fa fa-refresh super-duper-faint" />
-                  </Tooltip>
-                </Fragment>
-              )}
+              label={<RestartTooltip message="Raw template syntax" />}
               setting="nunjucksPowerUserMode"
             />
           </div>

@@ -6,21 +6,24 @@ import { restartApp, setMenuBarVisibility } from '../../common/electron-helpers'
 import { Settings } from '../../models/settings';
 import { selectSettings } from '../redux/selectors';
 
-const useNunjucksRestart = (settings: Settings) => {
-  const previousNunjucksPowerUserMode = usePrevious(settings.nunjucksPowerUserMode);
+const useRestartSetting = (setting: keyof Settings) => {
+  const settings = useSelector(selectSettings);
+
+  const nextValue = settings[setting];
+  const previousValue = usePrevious(nextValue);
   useEffect(() => {
     // for the first value only, the return of `usePrevious` is `undefined` since there's no "previous" value at the time of the first value.
-    if (previousNunjucksPowerUserMode === undefined) {
+    if (previousValue === undefined) {
       return;
     }
 
     // there's not been a change, so no need to take any action
-    if (settings.nunjucksPowerUserMode === previousNunjucksPowerUserMode) {
+    if (nextValue === previousValue) {
       return;
     }
 
     restartApp();
-  }, [settings.nunjucksPowerUserMode, previousNunjucksPowerUserMode]);
+  }, [nextValue, previousValue]);
 };
 
 const updateFontStyle = (key: string, value: string | null) => document?.querySelector('html')?.style.setProperty(key, value);
@@ -49,5 +52,6 @@ export const useSettingsSideEffects = () => {
     setMenuBarVisibility(!settings.autoHideMenuBar);
   }, [settings.autoHideMenuBar]);
 
-  useNunjucksRestart(settings);
+  useRestartSetting('nunjucksPowerUserMode');
+  useRestartSetting('showVariableSourceAndValue');
 };
