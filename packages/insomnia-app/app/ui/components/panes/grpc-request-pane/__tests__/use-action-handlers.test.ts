@@ -28,15 +28,21 @@ const messageParamsBuilder = createBuilder(grpcIpcMessageParamsSchema);
 const requestParamsBuilder = createBuilder(grpcIpcRequestParamsSchema);
 
 describe('useActionHandlers', () => {
-  it('should send start', async () => {
+  it.each([
+    GrpcMethodTypeEnum.unary,
+    GrpcMethodTypeEnum.client,
+    GrpcMethodTypeEnum.server,
+    GrpcMethodTypeEnum.bidi,
+  ])('should send start: %s', async method => {
     const requestParams = requestParamsBuilder.build();
 
     prepareGrpcRequest.mockResolvedValue(requestParams);
 
-    const { result } = renderHook(() => useActionHandlers(requestParams.request._id, 'env', GrpcMethodTypeEnum.unary, mockGrpcDispatch));
+    const { result } = renderHook(() => useActionHandlers(requestParams.request._id, 'env', method, mockGrpcDispatch));
 
     await result.current.start();
 
+    expect(prepareGrpcRequest).toHaveBeenCalledWith(requestParams.request._id, 'env', method);
     expect(ipcRenderer.send).toHaveBeenCalledWith(GrpcRequestEventEnum.start, requestParams);
     expect(mockGrpcDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: GrpcActionTypeEnum.clear }));
   });
