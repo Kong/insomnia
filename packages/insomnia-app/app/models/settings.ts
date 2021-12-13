@@ -44,7 +44,7 @@ export function init(): BaseSettings {
     editorLineWrapping: true,
     enableAnalytics: false,
     environmentHighlightColorStyle: 'sidebar-indicator',
-    isVariableUncovered: false,
+    showVariableSourceAndValue: false,
     filterResponsesByEnv: false,
     followRedirects: true,
     fontInterface: null,

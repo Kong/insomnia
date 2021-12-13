@@ -105,7 +105,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   REQUEST_TOGGLE_PIN: defineHotKey('request_togglePin', 'Pin/Unpin Request'),
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
-  ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
+  ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE: defineHotKey('environment_showVariableSourceAndValue', 'Show variable source and value'),
   BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Active Code Editors'),
   GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
   // Designer-specific
@@ -248,7 +248,7 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
     keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
   ),
-  [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES.id]: keyBinds(
+  [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE.id]: keyBinds(
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
   ),

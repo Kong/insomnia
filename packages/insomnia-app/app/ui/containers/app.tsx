@@ -345,7 +345,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
-      [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES, this._updateIsVariableUncovered],
+      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, this._updateShowVariableSourceAndValue],
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
@@ -526,9 +526,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _updateIsVariableUncovered() {
+  async _updateShowVariableSourceAndValue() {
     const { settings } = this.props;
-    await models.settings.update(settings, { isVariableUncovered: !settings.isVariableUncovered });
+    await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
   _handleSetPaneWidth(paneWidth: number) {

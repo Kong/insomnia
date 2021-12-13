@@ -158,7 +158,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     editorLineWrapping,
     editorIndentWithTabs,
     nunjucksPowerUserMode,
-    isVariableUncovered,
+    showVariableSourceAndValue,
   } = useSelector(selectSettings);
 
   return {
@@ -172,7 +172,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
     indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
     nunjucksPowerUserMode,
-    isVariableUncovered,
+    showVariableSourceAndValue,
   };
 };
 
@@ -620,7 +620,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
         this.codeMirror?.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
-          this.props.isVariableUncovered,
+          this.props.showVariableSourceAndValue,
         );
       }
 
