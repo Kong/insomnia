@@ -1,6 +1,6 @@
 module.exports = {
 	name: 'Dark Colorblind',
-	displayName: 'Dark Colorblind',
+	displayName: 'Dark Colorblind abcd',
 	theme: {
 		background: {
 			default:    '#21262D', 	// primary background color
