@@ -5,7 +5,6 @@ import 'webpack-dev-server';
 import path from 'path';
 import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, optimize } from 'webpack';
 
-import appConfig from '../config/config.json';
 import pkg from '../package.json';
 
 const configuration: Configuration = {
@@ -71,7 +70,7 @@ const configuration: Configuration = {
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(name => pkg.externalDependencies.includes(name) || appConfig.plugins.includes(name)),
+    ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
 
     // To get jsonlint working...
     'file',

@@ -5,19 +5,19 @@ describe('package.json', () => {
   beforeEach(globalBeforeEach);
 
   it('all packed dependencies should exist', () => {
-    for (const name of globalPackage.externalDependencies) {
+    for (const name of globalPackage.packedDependencies) {
       const version = globalPackage.dependencies[name];
       expect(version).toBeDefined();
     }
   });
 
-  it('should be an external in webpack otherwise errors will happen', () => {
+  it('packages must be included in webpack build or else errors happen', () => {
     // If this is built by Webpack it fails on multipart/form-data
-    expect(globalPackage.externalDependencies).toContain('httpsnippet');
+    expect(globalPackage.packedDependencies.includes('httpsnippet')).toBe(false);
   });
 
-  it('should NOT be an external in webpack otherwise errors happen', () => {
+  it('packages must NOT be included in webpack build or else errors happen', () => {
     // PDFJS breaks if not part of Webpack build
-    expect(globalPackage.externalDependencies).not.toContain('pdfjs-dist');
+    expect(globalPackage.packedDependencies.includes('pdfjs-dist')).toBe(true);
   });
 });

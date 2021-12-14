@@ -171,15 +171,17 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
     }
   }
 
-  // Figure out which dependencies to pack using electron-builder
-  const dependenciesToPack = Object.keys(basePkg.dependencies).filter(name => basePkg.externalDependencies.includes(name) || appConfig.plugins.includes(name));
+  // Figure out which dependencies to pack
+  const allDependencies = Object.keys(basePkg.dependencies);
+  const packedDependencies = basePkg.packedDependencies;
+  const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
 
   // Add dependencies
-  console.log(`[build] Adding ${dependenciesToPack.length} node dependencies`);
-  for (const name of dependenciesToPack) {
+  console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);
+  for (const name of unpackedDependencies) {
     const version = basePkg.dependencies[name];
     if (!version) {
-      throw new Error(`Failed to find "${name}" in dependencies, won't pack. Is it being used?`);
+      throw new Error(`Failed to find packed dep "${name}" in dependencies`);
     }
     appPkg.dependencies[name] = version;
   }
