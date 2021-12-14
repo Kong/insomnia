@@ -172,9 +172,7 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   }
 
   // Figure out which dependencies to pack
-  const allDependencies = Object.keys(basePkg.dependencies);
-  const packedDependencies = basePkg.packedDependencies;
-  const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
+  const unpackedDependencies = Object.keys(basePkg.dependencies).filter(name => basePkg.externalDependencies.includes(name));
 
   // Add dependencies
   console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);

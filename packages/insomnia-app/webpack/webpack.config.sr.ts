@@ -42,7 +42,7 @@ const configuration: Configuration = {
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
+    ...Object.keys(pkg.dependencies).filter(name => pkg.externalDependencies.includes(name)),
   ],
   resolve: {
     alias: {
