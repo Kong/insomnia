@@ -118,7 +118,6 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
 const install = () => new Promise<void>((resolve, reject) => {
   const root = path.resolve(__dirname, '../../../');
 
-  // Try switch this to use lerna
   const p = childProcess.spawn('npm', ['run', 'bootstrap:build'], {
     cwd: root,
     shell: true,
@@ -173,7 +172,7 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   }
 
   // Figure out which dependencies to pack
-  const unpackedDependencies = Object.keys(basePkg.dependencies).filter(name => basePkg.externalDependencies.includes(name));
+  const unpackedDependencies = Object.keys(basePkg.dependencies).filter(name => basePkg.externalDependencies.includes(name) || appConfig.plugins.includes(name));
 
   // Add dependencies
   console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);

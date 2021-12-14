@@ -57,8 +57,6 @@
     "iconv-lite",
     "insomnia-testing",
     "insomnia-importers",
-    "insomnia-plugin-os",
-    "insomnia-plugin-core-themes",
     "isomorphic-git",
     "js-yaml",
     "jshint",

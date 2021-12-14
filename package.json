@@ -16,7 +16,6 @@
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
-    "bundled-plugin:add": "lerna add --scope=bundled-plugins --exact --no-bootstrap",
     "bootstrap:build": "lerna bootstrap",
     "version": "lerna version --exact --preid beta",
     "version:all": "npm run version -- --force-publish",

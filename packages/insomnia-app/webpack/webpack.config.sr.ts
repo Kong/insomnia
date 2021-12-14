@@ -1,6 +1,7 @@
 import path from 'path';
 import { Configuration, ProvidePlugin } from 'webpack';
 
+import appConfig from '../config/config.json';
 import pkg from '../package.json';
 
 const configuration: Configuration = {
@@ -42,7 +43,7 @@ const configuration: Configuration = {
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(name => pkg.externalDependencies.includes(name)),
+    ...Object.keys(pkg.dependencies).filter(name => pkg.externalDependencies.includes(name) || appConfig.plugins.includes(name)),
   ],
   resolve: {
     alias: {

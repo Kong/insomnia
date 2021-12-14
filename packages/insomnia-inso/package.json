@@ -58,6 +58,7 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.6.3",
     "node-loader": "1.0.2",
+    "openapi-2-kong": "2.4.1",
     "pkg": "^5.3.2",
     "rimraf": "^3.0.2",
     "ts-loader": "^8.2.0",
