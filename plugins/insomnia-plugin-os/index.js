@@ -1,7 +1,7 @@
 const os = require('os');
 const {JSONPath} = require('jsonpath-plus');
 
-const FILTERABLE = ['userInfasdao', 'cpus'];
+const FILTERABLE = ['userInfo', 'cpus'];
 
 module.exports.templateTags = [
   {
