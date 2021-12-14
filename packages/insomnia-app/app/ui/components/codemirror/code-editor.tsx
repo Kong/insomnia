@@ -19,7 +19,7 @@ import zprint from 'zprint-clj';
 import {
   AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
-  EDITOR_KEY_MAP_VIM,
+  EditorKeyMap,
   isMac,
 } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -1055,7 +1055,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   _codemirrorKeyHandled(_codeMirror: CodeMirror.EditorFromTextArea, _keyName: string, event: KeyboardEvent) {
     const { keyMap } = this.props;
     const { keyCode } = event;
-    const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
+    const isVimKeyMap = keyMap === EditorKeyMap.vim;
     const pressedEscape = keyCode === keyCodes.esc.keyCode;
 
     if (isVimKeyMap && pressedEscape) {

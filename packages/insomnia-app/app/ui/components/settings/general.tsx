@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HttpVersion, HttpVersions } from 'insomnia-common';
-import React, { Fragment, PureComponent } from 'react';
+import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
+import { Tooltip } from 'insomnia-components';
+import React, { FC, Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -8,141 +9,53 @@ import type { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
-  EDITOR_KEY_MAP_DEFAULT,
-  EDITOR_KEY_MAP_EMACS,
-  EDITOR_KEY_MAP_SUBLIME,
-  EDITOR_KEY_MAP_VIM,
+  EditorKeyMap,
   isDevelopment,
   isMac,
   MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
   MIN_INTERFACE_FONT_SIZE,
-  UPDATE_CHANNEL_BETA,
-  UPDATE_CHANNEL_STABLE,
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { restartApp } from '../../../common/electron-helpers';
-import { snapNumberToLimits } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import type { Settings } from '../../../models/settings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { setFont } from '../../../plugins/misc';
 import * as globalActions from '../../redux/modules/global';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
+import { EnumSetting } from './enum-setting';
 import { MaskedSetting } from './masked-setting';
+import { NumberSetting } from './number-setting';
+import { TextSetting } from './text-setting';
+
+/**
+ * We are attempting to move the app away from needing settings changes to restart the app.
+ * For now, this component is a holdover until such a time as we are able to fix the underlying cases. (INS-1245)
+ */
+const RestartTooltip: FC<{ message: string }> = ({ message }) => (
+  <Fragment>
+    {message}{' '}
+    <Tooltip message="Will restart the app" className="space-left">
+      <i className="fa fa-refresh super-duper-faint" />
+    </Tooltip>
+  </Fragment>
+);
 
 interface Props {
   settings: Settings;
   hideModal: () => void;
-  updateSetting: (key: string, value: any) => Promise<Settings>;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends PureComponent<Props> {
-
-  async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
-    let value = el.type === 'checkbox' ? el.checked : el.value;
-
-    if (el.type === 'number') {
-      // @ts-expect-error -- TSCONVERSION
-      value = snapNumberToLimits(
-        // @ts-expect-error -- TSCONVERSION
-        parseInt(value, 10) || 0,
-        parseInt(el.min, 10),
-        parseInt(el.max, 10),
-      );
-    }
-
-    if (el.value === '__NULL__') {
-      // @ts-expect-error -- TSCONVERSION
-      value = null;
-    }
-
-    return this.props.updateSetting(el.name, value);
-  }
-
-  async _handleUpdateSettingAndRestart(e: React.SyntheticEvent<HTMLInputElement>) {
-    await this._handleUpdateSetting(e);
-    restartApp();
-  }
-
-  async _handleFontChange(el: React.SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
-  }
-
   _handleStartMigration() {
     this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
     this.props.hideModal();
-  }
-
-  renderEnumSetting(
-    label: string,
-    name: string,
-    values: {
-      name: string;
-      value: any;
-    }[],
-    help: string,
-    forceRestart?: boolean,
-  ) {
-    const { settings } = this.props;
-    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
-    return (
-      <div className="form-control form-control--outlined pad-top-sm">
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          <select
-            value={settings[name] || '__NULL__'}
-            name={name}
-            // @ts-expect-error -- TSCONVERSION
-            onChange={onChange}
-          >
-            {values.map(({ name, value }) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    );
-  }
-
-  renderTextSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    const { settings } = this.props;
-
-    if (!settings.hasOwnProperty(name)) {
-      throw new Error(`Invalid number setting name ${name}`);
-    }
-
-    return (
-      <div className="form-control form-control--outlined">
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          <input
-            type={props.type || 'text'}
-            name={name}
-            defaultValue={settings[name]}
-            {...props}
-            onChange={props.onChange || this._handleUpdateSetting}
-          />
-        </label>
-      </div>
-    );
-  }
-
-  renderNumberSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
   }
 
   render() {
@@ -160,12 +73,10 @@ class General extends PureComponent<Props> {
               setting="forceVerticalLayout"
               help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
-
             <BooleanSetting
-              label="Show variable source and value"
+              label={<RestartTooltip message="Show variable source and value" />}
               help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
               setting="showVariableSourceAndValue"
-              forceRestart
             />
           </div>
           <div>
@@ -180,41 +91,34 @@ class General extends PureComponent<Props> {
               />
             )}
             <BooleanSetting
-              label="Raw template syntax"
+              label={<RestartTooltip message="Raw template syntax" />}
               setting="nunjucksPowerUserMode"
-              forceRestart
             />
           </div>
         </div>
+
         <div className="row-fill row-fill--top pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              Environment Highlight Style{' '}
-              <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
-              <select
-                defaultValue={settings.environmentHighlightColorStyle}
-                name="environmentHighlightColorStyle"
-                // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}
-              >
-                <option value="sidebar-indicator">Sidebar indicator</option>
-                <option value="sidebar-edge">Sidebar edge</option>
-                <option value="window-top">Window top</option>
-                <option value="window-bottom">Window bottom</option>
-                <option value="window-left">Window left</option>
-                <option value="window-right">Window right</option>
-              </select>
-            </label>
-          </div>
-          {this.renderNumberSetting(
-            'Autocomplete popup delay',
-            'autocompleteDelay',
-            'Configure the autocomplete popup delay in milliseconds (0 to disable)',
-            {
-              min: 0,
-              max: 3000,
-            },
-          )}
+          <EnumSetting<EnvironmentHighlightColorStyle>
+            label="Environment Highlight Style"
+            help="Configures the appearance of environment's color indicator"
+            setting="environmentHighlightColorStyle"
+            values={[
+              { value:'sidebar-indicator', name: 'Sidebar indicator' },
+              { value:'sidebar-edge', name: 'Sidebar edge' },
+              { value:'window-top', name: 'Window top' },
+              { value:'window-bottom', name: 'Window bottom' },
+              { value:'window-left', name: 'Window left' },
+              { value:'window-right', name: 'Window right' },
+            ]}
+          />
+
+          <NumberSetting
+            label="Autocomplete popup delay"
+            setting="autocompleteDelay"
+            help="Configure the autocomplete popup delay in milliseconds (0 to disable)"
+            min={0}
+            max={3000}
+          />
         </div>
 
         <hr className="pad-top" />
@@ -241,67 +145,61 @@ class General extends PureComponent<Props> {
 
         <div className="form-row pad-top-sm">
           <div className="form-row">
-            {this.renderTextSetting(
-              'Interface Font',
-              'fontInterface',
-              'Comma-separated list of fonts. If left empty, takes system defaults.',
-              {
-                placeholder: '-- System Default --',
-                onChange: this._handleFontChange,
-              },
+            <TextSetting
+              label="Interface Font"
+              setting="fontInterface"
+              help="Comma-separated list of fonts. If left empty, takes system defaults."
+              placeholder="-- System Default --"
+            />
+            <NumberSetting
+              label="Interface Font Size (px)"
+              setting="fontSize"
+              min={MIN_INTERFACE_FONT_SIZE}
+              max={MAX_INTERFACE_FONT_SIZE}
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <TextSetting
+            label="Text Editor Font"
+            setting="fontMonospace"
+            help="Comma-separated list of monospace fonts. If left empty, takes system defaults."
+            placeholder="-- System Default --"
+          />
+          <NumberSetting
+            label="Editor Font Size (px)"
+            setting="editorFontSize"
+            min={MIN_EDITOR_FONT_SIZE}
+            max={MAX_EDITOR_FONT_SIZE}
+          />
+        </div>
+
+        <div className="form-row">
+          <NumberSetting
+            label="Editor Indent Size"
+            setting="editorIndentSize"
+            help=""
+            min={1}
+            max={16}
+          />
+
+          <EnumSetting<EditorKeyMap>
+            label="Text Editor Key Map"
+            setting="editorKeyMap"
+            help={isMac() && settings.editorKeyMap === EditorKeyMap.vim && (
+              <Fragment>
+                To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
+                  documentation <i className="fa fa-external-link-square" /></Link>
+              </Fragment>
             )}
-            {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-              min: MIN_INTERFACE_FONT_SIZE,
-              max: MAX_INTERFACE_FONT_SIZE,
-              onBlur: this._handleFontChange,
-            })}
-          </div>
-        </div>
-
-        <div className="form-row">
-          {this.renderTextSetting(
-            'Text Editor Font',
-            'fontMonospace',
-            'Comma-separated list of monospace fonts. If left empty, takes system defaults.',
-            {
-              placeholder: '-- System Default --',
-              onChange: this._handleFontChange,
-            },
-          )}
-          {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
-            min: MIN_EDITOR_FONT_SIZE,
-            max: MAX_EDITOR_FONT_SIZE,
-          })}
-        </div>
-
-        <div className="form-row">
-          {this.renderNumberSetting('Editor Indent Size', 'editorIndentSize', '', {
-            min: 1,
-            max: 16,
-          })}
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Key Map
-              {isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
-                <HelpTooltip className="space-left">
-                  To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
-                    documentation <i className="fa fa-external-link-square" />
-                  </Link>
-                </HelpTooltip>
-              )}
-              <select
-                defaultValue={settings.editorKeyMap}
-                name="editorKeyMap"
-                // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}
-              >
-                <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
-                <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
-                <option value={EDITOR_KEY_MAP_EMACS}>Emacs</option>
-                <option value={EDITOR_KEY_MAP_SUBLIME}>Sublime</option>
-              </select>
-            </label>
-          </div>
+            values={[
+              { value: EditorKeyMap.default, name: 'Default' },
+              { value: EditorKeyMap.vim, name: 'Vim' },
+              { value: EditorKeyMap.emacs, name: 'Emacs' },
+              { value: EditorKeyMap.sublime, name: 'Sublime' },
+            ]}
+          />
         </div>
 
         <hr className="pad-top" />
@@ -338,66 +236,51 @@ class General extends PureComponent<Props> {
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderEnumSetting(
-            'Preferred HTTP version',
-            'preferredHttpVersion',
-            [
-              {
-                name: 'Default',
-                value: HttpVersions.default,
-              },
-              {
-                name: 'HTTP 1.0',
-                value: HttpVersions.V1_0,
-              },
-              {
-                name: 'HTTP 1.1',
-                value: HttpVersions.V1_1,
-              },
-              {
-                name: 'HTTP/2 PriorKnowledge',
-                value: HttpVersions.V2PriorKnowledge,
-              },
-              {
-                name: 'HTTP/2',
-                value: HttpVersions.V2_0,
-              }, // Enable when our version of libcurl supports HTTP/3
-              // { name: 'HTTP/3', value: HttpVersions.v3 },
-            ] as {
-              name: string;
-              value: HttpVersion;
-            }[],
-            'Preferred HTTP version to use for requests which will fall back if it cannot be ' +
-            'negotiated',
-          )}
+          <EnumSetting<HttpVersion>
+            label="Preferred HTTP version"
+            setting="preferredHttpVersion"
+            values={[
+              { value: HttpVersions.default, name: 'Default' },
+              { value: HttpVersions.V1_0, name: 'HTTP 1.0' },
+              { value: HttpVersions.V1_1, name: 'HTTP 1.1' },
+              { value: HttpVersions.V2PriorKnowledge, name: 'HTTP/2 PriorKnowledge' },
+              { value: HttpVersions.V2_0, name: 'HTTP/2' },
+              // Enable when our version of libcurl supports HTTP/3
+              // see: https://github.com/JCMais/node-libcurl/issues/233
+              // { value: HttpVersions.v3, name: 'HTTP/3' },
+            ]}
+            help="Preferred HTTP version to use for requests which will fall back if it cannot be negotiated"
+          />
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinity', {
-            min: -1,
-          })}
-          {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinity', {
-            min: -1,
-          })}
+          <NumberSetting
+            label="Maximum Redirects"
+            setting="maxRedirects"
+            help="-1 for infinity"
+            min={-1}
+          />
+          <NumberSetting
+            label="Request Timeout"
+            setting="timeout"
+            help="-1 for infinity"
+            min={-1}
+          />
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderNumberSetting(
-            'Response History Limit',
-            'maxHistoryResponses',
-            'Number of responses to keep for each request (-1 for infinity)',
-            {
-              min: -1,
-            },
-          )}
-          {this.renderNumberSetting(
-            'Max Timeline Chunk Size (KB)',
-            'maxTimelineDataSizeKB',
-            'Maximum size in kilobytes to show on timeline',
-            {
-              min: 0,
-            },
-          )}
+          <NumberSetting
+            label="Response History Limit"
+            setting="maxHistoryResponses"
+            help="Number of responses to keep for each request (-1 for infinity)"
+            min={-1}
+          />
+          <NumberSetting
+            label="Max Timeline Chunk Size (KB)"
+            setting="maxTimelineDataSizeKB"
+            help="Maximum size in kilobytes to show on timeline"
+            min={0}
+          />
         </div>
 
         <hr className="pad-top" />
@@ -452,28 +335,22 @@ class General extends PureComponent<Props> {
           <MaskedSetting
             label='HTTP Proxy'
             setting='httpProxy'
-            props={{
-              placeholder: 'localhost:8005',
-              disabled: !settings.proxyEnabled,
-            }}
+            placeholder="localhost:8005"
+            disabled={!settings.proxyEnabled}
           />
           <MaskedSetting
             label='HTTPS Proxy'
             setting='httpsProxy'
-            props={{
-              placeholder: 'localhost:8005',
-              disabled: !settings.proxyEnabled,
-            }}
+            placeholder="localhost:8005"
+            disabled={!settings.proxyEnabled}
           />
-          {this.renderTextSetting(
-            'No Proxy',
-            'noProxy',
-            'Comma-separated list of hostnames that do not require a proxy to be contacted',
-            {
-              placeholder: 'localhost,127.0.0.1',
-              disabled: !settings.proxyEnabled,
-            },
-          )}
+          <TextSetting
+            label="No Proxy"
+            setting="noProxy"
+            help="Comma-separated list of hostnames that do not require a proxy to be contacted"
+            placeholder="localhost,127.0.0.1"
+            disabled={!settings.proxyEnabled}
+          />
         </div>
 
         {updatesSupported() && (
@@ -492,19 +369,16 @@ class General extends PureComponent<Props> {
               setting="updateAutomatically"
               help="If disabled, you will receive a notification when a new update is available"
             />
-            <div className="form-control form-control--outlined pad-top-sm">
-              <label>
-                Update Channel
-                <select
-                  value={settings.updateChannel}
-                  name="updateChannel"
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleUpdateSetting}
-                >
-                  <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
-                  <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
-                </select>
-              </label>
+
+            <div className="for-row pad-top-sm">
+              <EnumSetting<UpdateChannel>
+                label="Update Channel"
+                setting="updateChannel"
+                values={[
+                  { value: UpdateChannel.stable, name: 'Release (Recommended)' },
+                  { value: UpdateChannel.beta, name: 'Early Access (Beta)' },
+                ]}
+              />
             </div>
           </Fragment>
         )}
@@ -524,15 +398,12 @@ class General extends PureComponent<Props> {
 
         <hr className="pad-top" />
         <h2>Plugins</h2>
-
-        {this.renderTextSetting(
-          'Additional Plugin Path',
-          'pluginPath',
-          'Tell Insomnia to look for plugins in a different directory',
-          {
-            placeholder: '~/.insomnia:/other/path',
-          },
-        )}
+        <TextSetting
+          label="Additional Plugin Path"
+          setting="pluginPath"
+          help="Tell Insomnia to look for plugins in a different directory"
+          placeholder="~/.insomnia:/other/path"
+        />
 
         <hr className="pad-top" />
         <h2>Network Activity</h2>
