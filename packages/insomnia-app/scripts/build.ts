@@ -118,6 +118,7 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
 const install = (relDir: string) => new Promise<void>((resolve, reject) => {
   const prefix = path.resolve(__dirname, relDir);
 
+  // Try switch this to use lerna
   const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
     cwd: prefix,
     shell: true,
