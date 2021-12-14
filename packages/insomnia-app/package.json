@@ -55,6 +55,8 @@
     "html-entities",
     "httpsnippet",
     "iconv-lite",
+    "insomnia-testing",
+    "insomnia-importers",
     "isomorphic-git",
     "js-yaml",
     "jshint",
