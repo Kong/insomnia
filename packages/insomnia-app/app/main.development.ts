@@ -73,8 +73,10 @@ app.on('ready', async () => {
   await errorHandling.init();
   await windowUtils.init();
   // Init the app
-  const updatedStats = await _trackStats();
-  await _updateFlags(updatedStats);
+  const { launches } = await _trackStats();
+  if (launches === 1) {
+    await handleFirstLaunch();
+  }
   await _launchApp();
 
   // Init the rest
@@ -187,11 +189,9 @@ async function _createModelInstances() {
   await models.settings.getOrCreate();
 }
 
-async function _updateFlags({ launches }: Stats) {
-  const firstLaunch = launches === 1;
-  if (firstLaunch) {
-    await models.settings.patch({ hasPromptedAnalytics: false });
-  }
+async function handleFirstLaunch() {
+  // TODO: create first request and bring it into view
+  await models.settings.patch({ hasPromptedAnalytics: false });
 }
 
 async function _trackStats() {
