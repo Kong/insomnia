@@ -46,7 +46,7 @@ describe('<EnumSetting />', () => {
     expect(getByText(help)).toBeInTheDocument();
   });
 
-  it('should be disabled when passed a disabled prop', async () => {
+  it('should be render the options provided', async () => {
     const { getByText } = render(enumSetting, container);
     expect(getByText(values[0].name)).toBeInTheDocument();
     expect(getByText(values[1].name)).toBeInTheDocument();
