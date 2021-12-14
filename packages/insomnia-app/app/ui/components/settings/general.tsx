@@ -34,7 +34,7 @@ import { TextSetting } from './text-setting';
 
 /**
  * We are attempting to move the app away from needing settings changes to restart the app.
- * For now, this component is a holdover until such a time as we are able to fix the underlying cases.
+ * For now, this component is a holdover until such a time as we are able to fix the underlying cases. (INS-1245)
  */
 const RestartTooltip: FC<{ message: string }> = ({ message }) => (
   <Fragment>
