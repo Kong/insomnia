@@ -2,7 +2,7 @@ import * as electron from 'electron';
 import React from 'react';
 
 import * as analytics from '../../../app/common/analytics';
-import { axiosRequest as axios } from '../../../app/network/axios-request';
+import { axiosRequestWithOptionalSSLVerify as axios } from '../../../app/network/axios-request';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {

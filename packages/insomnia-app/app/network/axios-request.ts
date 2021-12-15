@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import https from 'https';
 import { setDefaultProtocol } from 'insomnia-url';
 import { parse as urlParse } from 'url';
 
@@ -6,6 +7,15 @@ import { isDevelopment } from '../common/constants';
 import * as models from '../models';
 import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
 
+export const axiosRequestWithOptionalSSLVerify = async (config: AxiosRequestConfig) => {
+  const settings = await models.settings.getOrCreate();
+  return axiosRequest({
+    ...config,
+    httpsAgent: new https.Agent({
+      rejectUnauthorized: settings.validateSSL,
+    }),
+  });
+};
 export async function axiosRequest(config: AxiosRequestConfig) {
   const settings = await models.settings.getOrCreate();
   const isHttps = config.url?.indexOf('https:') === 0;
