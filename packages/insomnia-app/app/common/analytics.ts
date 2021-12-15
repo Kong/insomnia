@@ -410,30 +410,24 @@ async function _sendToGoogle({ params }: { params: RequestParameter[] }) {
   try {
     res = await axiosRequest({ url });
   } catch (err) {
-    res.error = err;
+    console.warn('[ga] Network error', err);
   }
-  if (res.error)
-    console.warn('[ga] Network error', res.error);
-  if (res.status < 200 && res.status >= 300) {
-    console.warn('[ga] Bad status code ' + res.status);
-  }
-  const [contentType] = res.headers['content-type'] || [];
+
+  const [contentType] = res?.headers['content-type'] || [];
   if (contentType !== 'application/json') {
     // Production GA API returns a Gif to use for tracking
     return;
   }
   try {
-    const data = JSON.parse(res.data);
-    const { hitParsingResult } = data;
-    if (hitParsingResult.valid) {
+    const data = JSON.parse(res?.data);
+    if (data?.hitParsingResult?.valid) {
       return;
     }
 
-    for (const result of hitParsingResult || []) {
-      for (const msg of result.parserMessage || []) {
-        console.warn(`[ga] Error ${msg.description}`);
+    for (const result of data?.hitParsingResult || []) {
+      for (const msg of result?.parserMessage || []) {
+        console.warn(`[ga] Error ${msg?.description}`);
       }
-
     }
   } catch (err) {
     console.warn('[ga] Failed to parse response', err);

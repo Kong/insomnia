@@ -1,8 +1,6 @@
-import * as electron from 'electron';
-import { EventEmitter } from 'events';
-
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models/index';
+import * as axiosModule from '../../network/axios-request';
 import { _trackEvent, _trackPageView } from '../analytics';
 import {
   getAppId,
@@ -14,16 +12,12 @@ import {
   getGoogleAnalyticsLocation,
 } from '../constants';
 
+const axiosRequest = jest.spyOn(axiosModule, 'axiosRequest');
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    electron.net.request = jest.fn(() => {
-      const req = new EventEmitter();
-
-      req.end = function() {};
-
-      return req;
-    });
+    axiosRequest.mockResolvedValue({ data:{}, headers:{} });
+    // console.log(axiosRequest);
     jest.useFakeTimers();
   });
 
@@ -33,10 +27,10 @@ describe('init()', () => {
       deviceId: 'device',
     });
     expect(settings.enableAnalytics).toBe(false);
-    expect(electron.net.request.mock.calls).toEqual([]);
+    expect(axiosRequest.mock.calls).toEqual([]);
     await _trackEvent({ interactive: true, category: 'Foo', action: 'Bar' });
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([]);
+    expect(axiosRequest.mock.calls).toEqual([]);
   });
 
   it('works with tracking enabled', async () => {
@@ -45,32 +39,32 @@ describe('init()', () => {
       deviceId: 'device',
     });
     expect(settings.enableAnalytics).toBe(true);
-    expect(electron.net.request.mock.calls).toEqual([]);
+    expect(axiosRequest.mock.calls).toEqual([]);
     await _trackEvent({ interactive: true, category: 'Foo', action: 'Bar' });
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([
-      [
+    expect(axiosRequest.mock.calls).toEqual([
+      [{ url:
         'https://www.google-analytics.com/collect?' +
-          'v=1&' +
-          `tid=${getGoogleAnalyticsId()}&` +
-          'cid=device&' +
-          `ua=${getBrowserUserAgent()}&` +
-          `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2F&` +
-          'sr=1920x1080&' +
-          'ul=en-US&' +
-          `dt=${getAppId()}%3A${getAppVersion()}&` +
-          `cd1=${getAppPlatform()}&` +
-          `cd2=${getAppVersion()}&` +
-          'aip=1&' +
-          `an=${encodeURI(getAppName())}&` +
-          `aid=${getAppId()}&` +
-          `av=${getAppVersion()}&` +
-          'vp=1900x1060&' +
-          'de=UTF-8&' +
-          't=event&' +
-          'ec=Foo&' +
-          'ea=Bar',
-      ],
+        'v=1&' +
+        `tid=${getGoogleAnalyticsId()}&` +
+        'cid=device&' +
+        `ua=${getBrowserUserAgent()}&` +
+        `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2F&` +
+        'sr=1920x1080&' +
+        'ul=en-US&' +
+        `dt=${getAppId()}%3A${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
+        'aip=1&' +
+        `an=${encodeURI(getAppName())}&` +
+        `aid=${getAppId()}&` +
+        `av=${getAppVersion()}&` +
+        'vp=1900x1060&' +
+        'de=UTF-8&' +
+        't=event&' +
+        'ec=Foo&' +
+        'ea=Bar',
+      }],
     ]);
   });
 
@@ -81,30 +75,30 @@ describe('init()', () => {
     });
     await _trackEvent({ interactive: false, category: 'Foo', action: 'Bar' });
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([
-      [
+    expect(axiosRequest.mock.calls).toEqual([
+      [{ url:
         'https://www.google-analytics.com/collect?' +
-          'v=1&' +
-          `tid=${getGoogleAnalyticsId()}&` +
-          'cid=device&' +
-          `ua=${getBrowserUserAgent()}&` +
-          `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2F&` +
-          'sr=1920x1080&' +
-          'ul=en-US&' +
-          `dt=${getAppId()}%3A${getAppVersion()}&` +
-          `cd1=${getAppPlatform()}&` +
-          `cd2=${getAppVersion()}&` +
-          'aip=1&' +
-          `an=${encodeURI(getAppName())}&` +
-          `aid=${getAppId()}&` +
-          `av=${getAppVersion()}&` +
-          'vp=1900x1060&' +
-          'de=UTF-8&' +
-          't=event&' +
-          'ec=Foo&' +
-          'ea=Bar&' +
-          'ni=1',
-      ],
+        'v=1&' +
+        `tid=${getGoogleAnalyticsId()}&` +
+        'cid=device&' +
+        `ua=${getBrowserUserAgent()}&` +
+        `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2F&` +
+        'sr=1920x1080&' +
+        'ul=en-US&' +
+        `dt=${getAppId()}%3A${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
+        'aip=1&' +
+        `an=${encodeURI(getAppName())}&` +
+        `aid=${getAppId()}&` +
+        `av=${getAppVersion()}&` +
+        'vp=1900x1060&' +
+        'de=UTF-8&' +
+        't=event&' +
+        'ec=Foo&' +
+        'ea=Bar&' +
+        'ni=1',
+      }],
     ]);
   });
 
@@ -115,27 +109,27 @@ describe('init()', () => {
     });
     await _trackPageView('/my/path');
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([
-      [
+    expect(axiosRequest.mock.calls).toEqual([
+      [{ url:
         'https://www.google-analytics.com/collect?' +
-          'v=1&' +
-          `tid=${getGoogleAnalyticsId()}&` +
-          'cid=device&' +
-          `ua=${getBrowserUserAgent()}&` +
-          `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2Fmy%2Fpath&` +
-          'sr=1920x1080&' +
-          'ul=en-US&' +
-          `dt=${getAppId()}%3A${getAppVersion()}&` +
-          `cd1=${getAppPlatform()}&` +
-          `cd2=${getAppVersion()}&` +
-          'aip=1&' +
-          `an=${encodeURI(getAppName())}&` +
-          `aid=${getAppId()}&` +
-          `av=${getAppVersion()}&` +
-          'vp=1900x1060&' +
-          'de=UTF-8&' +
-          't=pageview',
-      ],
+        'v=1&' +
+        `tid=${getGoogleAnalyticsId()}&` +
+        'cid=device&' +
+        `ua=${getBrowserUserAgent()}&` +
+        `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2Fmy%2Fpath&` +
+        'sr=1920x1080&' +
+        'ul=en-US&' +
+        `dt=${getAppId()}%3A${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
+        'aip=1&' +
+        `an=${encodeURI(getAppName())}&` +
+        `aid=${getAppId()}&` +
+        `av=${getAppVersion()}&` +
+        'vp=1900x1060&' +
+        'de=UTF-8&' +
+        't=pageview',
+      }],
     ]);
   });
 
@@ -153,51 +147,51 @@ describe('init()', () => {
       label: 'lab',
       value: 'val',
     });
-    expect(electron.net.request.mock.calls).toEqual([
+    expect(axiosRequest.mock.calls).toEqual([
       [
         'https://www.google-analytics.com/collect?' +
-          'v=1&' +
-          `tid=${getGoogleAnalyticsId()}&` +
-          'cid=device&' +
-          `ua=${getBrowserUserAgent()}&` +
-          `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2Fmy%2Fpath&` +
-          'sr=1920x1080&' +
-          'ul=en-US&' +
-          `dt=${getAppId()}%3A${getAppVersion()}&` +
-          `cd1=${getAppPlatform()}&` +
-          `cd2=${getAppVersion()}&` +
-          'aip=1&' +
-          `an=${encodeURI(getAppName())}&` +
-          `aid=${getAppId()}&` +
-          `av=${getAppVersion()}&` +
-          'vp=1900x1060&' +
-          'de=UTF-8&' +
-          't=pageview',
-      ],
-      [
+        'v=1&' +
+        `tid=${getGoogleAnalyticsId()}&` +
+        'cid=device&' +
+        `ua=${getBrowserUserAgent()}&` +
+        `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2Fmy%2Fpath&` +
+        'sr=1920x1080&' +
+        'ul=en-US&' +
+        `dt=${getAppId()}%3A${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
+        'aip=1&' +
+        `an=${encodeURI(getAppName())}&` +
+        `aid=${getAppId()}&` +
+        `av=${getAppVersion()}&` +
+        'vp=1900x1060&' +
+        'de=UTF-8&' +
+        't=pageview',
+      }],
+      [{ url:
         'https://www.google-analytics.com/collect?' +
-          'v=1&' +
-          `tid=${getGoogleAnalyticsId()}&` +
-          'cid=device&' +
-          `ua=${getBrowserUserAgent()}&` +
-          `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2Fmy%2Fpath&` +
-          'sr=1920x1080&' +
-          'ul=en-US&' +
-          `dt=${getAppId()}%3A${getAppVersion()}&` +
-          `cd1=${getAppPlatform()}&` +
-          `cd2=${getAppVersion()}&` +
-          'aip=1&' +
-          `an=${encodeURI(getAppName())}&` +
-          `aid=${getAppId()}&` +
-          `av=${getAppVersion()}&` +
-          'vp=1900x1060&' +
-          'de=UTF-8&' +
-          't=event&' +
-          'ec=cat&' +
-          'ea=act&' +
-          'el=lab&' +
-          'ev=val',
-      ],
+        'v=1&' +
+        `tid=${getGoogleAnalyticsId()}&` +
+        'cid=device&' +
+        `ua=${getBrowserUserAgent()}&` +
+        `dl=${encodeURIComponent(getGoogleAnalyticsLocation())}%2Fmy%2Fpath&` +
+        'sr=1920x1080&' +
+        'ul=en-US&' +
+        `dt=${getAppId()}%3A${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
+        'aip=1&' +
+        `an=${encodeURI(getAppName())}&` +
+        `aid=${getAppId()}&` +
+        `av=${getAppVersion()}&` +
+        'vp=1900x1060&' +
+        'de=UTF-8&' +
+        't=event&' +
+        'ec=cat&' +
+        'ea=act&' +
+        'el=lab&' +
+        'ev=val',
+      }],
     ]);
   });
 });
