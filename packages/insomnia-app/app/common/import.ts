@@ -6,6 +6,7 @@ import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import { isRequest } from '../models/request';
 import { isWorkspace, Workspace } from '../models/workspace';
+import { axiosRequest } from '../network/axios-request';
 import { AlertModal } from '../ui/components/modals/alert-modal';
 import { showError, showModal } from '../ui/components/modals/index';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
@@ -62,8 +63,8 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   }
 
   if (uri.match(/^(http|https):\/\//)) {
-    const response = await window.fetch(uri);
-    rawText = await response.text();
+    const response = await axiosRequest({ url: uri });
+    rawText = await response.data;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
     rawText = fs.readFileSync(path, 'utf8');
