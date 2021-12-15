@@ -43,7 +43,7 @@ import { AddKeyCombinationModal } from './modals/add-key-combination-modal';
 import { AlertModal } from './modals/alert-modal';
 import { AskModal } from './modals/ask-modal';
 import { CodePromptModal } from './modals/code-prompt-modal';
-import { CookiesModal } from './modals/cookies-modal';
+import { CookiesModalFC } from './modals/cookies-modal';
 import { EnvironmentEditModal } from './modals/environment-edit-modal';
 import { ErrorModal } from './modals/error-modal';
 import { ExportRequestsModal } from './modals/export-requests-modal';
@@ -125,7 +125,6 @@ export type WrapperProps = AppProps & {
   paneHeight: number;
   sidebarWidth: number;
   headerEditorKey: string;
-  isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 };
@@ -313,10 +312,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
 
-  _handleShowCookiesModal() {
-    showModal(CookiesModal, this.props.activeWorkspace);
-  }
-
   static _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
   }
@@ -483,7 +478,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       handleExportRequestsToFile,
       handleInitializeEntities,
       handleSidebarSort,
-      isVariableUncovered,
       settings,
       sidebarChildren,
       syncItems,
@@ -534,25 +528,22 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <CodePromptModal
               ref={registerModal}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <RequestSettingsModal
               ref={registerModal}
               workspaces={workspaces}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <RequestGroupSettingsModal
               ref={registerModal}
               workspaces={workspaces}
-              isVariableUncovered={isVariableUncovered}
             />
 
             {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
               {activeCookieJar ? <>
-                <CookiesModal
+                <CookiesModalFC
                   ref={registerModal}
                   handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   workspace={activeWorkspace}
@@ -562,7 +553,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   cookieJar={activeCookieJar}
                   workspace={activeWorkspace}
-                  isVariableUncovered={isVariableUncovered}
                 />
               </> : null}
 
@@ -579,7 +569,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                 apiSpec={activeApiSpec}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
-                isVariableUncovered={isVariableUncovered}
               /> : null}
             </> : null}
 
@@ -603,7 +592,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <EnvironmentEditModal
               ref={registerModal}
               onChange={models.requestGroup.update}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <GitRepositorySettingsModal ref={registerModal} />
@@ -654,7 +642,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               ref={registerModal}
               handleChangeEnvironment={this._handleChangeEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-              isVariableUncovered={isVariableUncovered}
             />
 
             <AddKeyCombinationModal ref={registerModal} />
@@ -720,7 +707,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleSetActiveResponse={this._handleSetActiveResponse}
               handleSetPreviewMode={this._handleSetPreviewMode}
               handleSetResponseFilter={this._handleSetResponseFilter}
-              handleShowCookiesModal={this._handleShowCookiesModal}
               handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
               handleSidebarSort={handleSidebarSort}
               handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}

@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { clipboard, ipcRenderer, remote } from 'electron';
+import { clipboard, remote } from 'electron';
 import fs from 'fs';
 import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
@@ -17,6 +17,7 @@ import type { Request } from '../../../models/request';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import type { UnitTestResult } from '../../../models/unit-test-result';
+import { cancelRequestById } from '../../../network/network';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -36,7 +37,6 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  showCookiesModal: Function;
   handleSetPreviewMode: Function;
   handleSetActiveResponse: Function;
   handleDeleteResponses: Function;
@@ -242,7 +242,6 @@ export class ResponsePane extends PureComponent<Props> {
       requestVersions,
       response,
       responses,
-      showCookiesModal,
     } = this.props;
 
     if (!request) {
@@ -253,7 +252,7 @@ export class ResponsePane extends PureComponent<Props> {
       return (
         <PlaceholderResponsePane hotKeyRegistry={hotKeyRegistry}>
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send('cancelRequestById', request._id)}
+            handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
           />
         </PlaceholderResponsePane>
@@ -353,7 +352,6 @@ export class ResponsePane extends PureComponent<Props> {
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
                   cookiesStored={response.settingStoreCookies}
-                  showCookiesModal={showCookiesModal}
                   headers={cookieHeaders}
                 />
               </ErrorBoundary>
@@ -369,7 +367,7 @@ export class ResponsePane extends PureComponent<Props> {
         </Tabs>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <ResponseTimer
-            handleCancel={() => ipcRenderer.send('cancelRequestById', request._id)}
+            handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
           />
         </ErrorBoundary>

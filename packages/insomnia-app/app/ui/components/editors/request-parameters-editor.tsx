@@ -9,7 +9,6 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
-  isVariableUncovered: boolean;
   request: Request;
 }
 
@@ -75,11 +74,9 @@ export class RequestParametersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      isVariableUncovered,
     } = this.props;
     return bulk ? (
       <CodeEditor
-        isVariableUncovered={isVariableUncovered}
         onChange={this._handleBulkUpdate}
         defaultValue={this._getQueriesString()}
         enableNunjucks
@@ -92,7 +89,6 @@ export class RequestParametersEditor extends PureComponent<Props> {
         valuePlaceholder="value"
         descriptionPlaceholder="description"
         pairs={request.parameters}
-        isVariableUncovered={isVariableUncovered}
         onChange={this._handleKeyValueUpdate}
       />
     );

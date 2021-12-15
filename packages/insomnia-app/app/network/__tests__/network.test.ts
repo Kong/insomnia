@@ -16,9 +16,8 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
-import * as networkUtils from '../curl';
 import { DEFAULT_BOUNDARY } from '../multipart';
-import { _getAwsAuthHeaders, _parseHeaders } from '../network';
+import * as networkUtils from '../network';
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
@@ -817,7 +816,7 @@ describe('_getAwsAuthHeaders', () => {
       sessionToken: req.authentication.sessionToken || '',
     };
 
-    const headers = _getAwsAuthHeaders(
+    const headers = networkUtils._getAwsAuthHeaders(
       credentials,
       req.headers,
       req.body.text,
@@ -851,7 +850,7 @@ describe('_getAwsAuthHeaders', () => {
       sessionToken: req.authentication.sessionToken || '',
     };
 
-    const headers = _getAwsAuthHeaders(
+    const headers = networkUtils._getAwsAuthHeaders(
       credentials,
       req.headers,
       null,
@@ -887,7 +886,7 @@ describe('_parseHeaders', () => {
   const minimalHeaders = ['HTTP/1.1 301', ''];
 
   it('Parses single response headers', () => {
-    expect(_parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -935,7 +934,7 @@ describe('_parseHeaders', () => {
   });
 
   it('Parses Windows newlines', () => {
-    expect(_parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -984,7 +983,7 @@ describe('_parseHeaders', () => {
 
   it('Parses multiple responses', () => {
     const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
-    expect(_parseHeaders(Buffer.from(blobs))).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(blobs))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',

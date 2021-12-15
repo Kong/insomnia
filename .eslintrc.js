@@ -10,6 +10,11 @@ const {
 
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
+  settings: {
+    react: {
+      version: '16.8', // note: remember to always keep this in sync with `"react": "^16.8.3",` which is present in any package.json of a project using React.
+    },
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
@@ -70,7 +75,7 @@ module.exports = {
     'camelcase': [ERROR, { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': [ERROR, 'always-multiline'],
     'comma-spacing': ERROR,
-    'consistent-return': WARN(UNKNOWN),
+    'consistent-return': OFF('found to be too many false positives'),
     'default-case': ERROR,
     'default-case-last': ERROR,
     'filenames/match-exported': [ERROR, 'kebab'],

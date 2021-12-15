@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, memo, ReactNode } from 'react';
 
 import {
@@ -12,7 +12,7 @@ import type { Workspace } from '../../../models/workspace';
 interface Props {
   activeEnvironment: Environment | null;
   children: ReactNode;
-  environmentHighlightColorStyle: string;
+  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   handleSetActiveEnvironment: (...args: any[]) => any;
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;

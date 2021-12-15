@@ -11,7 +11,6 @@ import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
-  isVariableUncovered: boolean;
 }
 
 interface State {
@@ -81,7 +80,6 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      isVariableUncovered,
       ...extraProps
     } = this.props;
     const { requestGroup, isValid } = this.state;
@@ -98,7 +96,6 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
             key={requestGroup ? requestGroup._id : 'n/a'}
             environmentInfo={environmentInfo}
             didChange={this._didChange}
-            isVariableUncovered={isVariableUncovered}
           />
         </ModalBody>
         <ModalFooter>

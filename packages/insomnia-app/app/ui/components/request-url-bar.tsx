@@ -25,7 +25,6 @@ interface Props {
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
-  isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
@@ -138,19 +137,19 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     this.props.handleUpdateDownloadPath(request._id, null);
   }
 
-  async _handleKeyDown(e: KeyboardEvent) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       this._input?.focus();
       this._input?.selectAll();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
       this._methodDropdown?.toggle();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       this._dropdown?.toggle(true);
     });
   }
@@ -349,7 +348,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   render() {
     const {
       request,
-      isVariableUncovered,
       handleAutocompleteUrls,
       uniquenessKey,
     } = this.props;
@@ -371,7 +369,6 @@ export class RequestUrlBar extends PureComponent<Props, State> {
               onPaste={this._handleUrlPaste}
               forceEditor
               type="text"
-              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}

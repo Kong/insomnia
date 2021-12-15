@@ -361,20 +361,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    if (e.keyCode === keyboardKeys.esc.keyCode) {
+  _handleKeydown(event: KeyboardEvent) {
+    if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
     }
 
     // Only control up/down with tab if modal is visible
-    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex + 1);
       }
     });
     // Only control up/down with tab if modal is visible
-    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex - 1);
       }

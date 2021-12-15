@@ -13,7 +13,7 @@ import { initializeLogging } from '../common/log';
 import * as models from '../models';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
-import { applyColorScheme, setFont } from '../plugins/misc';
+import { applyColorScheme } from '../plugins/misc';
 import App from './containers/app';
 import { init as initStore } from './redux/modules';
 
@@ -34,7 +34,7 @@ document.title = getAppLongName();
   }
 
   await applyColorScheme(settings);
-  await setFont(settings);
+
   // Create Redux store
   const store = await initStore();
 

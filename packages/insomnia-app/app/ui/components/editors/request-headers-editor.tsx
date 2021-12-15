@@ -10,7 +10,6 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
-  isVariableUncovered: boolean;
   request: Request;
 }
 
@@ -76,12 +75,10 @@ export class RequestHeadersEditor extends PureComponent<Props> {
     const {
       bulk,
       request,
-      isVariableUncovered,
     } = this.props;
     return bulk ? (
       <div className="tall">
         <CodeEditor
-          isVariableUncovered={isVariableUncovered}
           onChange={this._handleBulkUpdate}
           defaultValue={this._getHeadersString()}
           enableNunjucks
@@ -96,7 +93,6 @@ export class RequestHeadersEditor extends PureComponent<Props> {
             valuePlaceholder="value"
             descriptionPlaceholder="description"
             pairs={request.headers}
-            isVariableUncovered={isVariableUncovered}
             handleGetAutocompleteNameConstants={getCommonHeaderNames}
             handleGetAutocompleteValueConstants={getCommonHeaderValues}
             onChange={this._handleKeyValueUpdate}

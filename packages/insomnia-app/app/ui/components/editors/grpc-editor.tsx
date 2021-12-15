@@ -6,14 +6,12 @@ interface Props {
   content?: string;
   handleChange?: (arg0: string) => void;
   readOnly?: boolean;
-  isVariableUncovered?: boolean;
 }
 
 export const GRPCEditor: FunctionComponent<Props> = ({
   content,
   handleChange,
   readOnly,
-  isVariableUncovered,
 }) => (
   <CodeEditor
     defaultValue={content}
@@ -23,6 +21,5 @@ export const GRPCEditor: FunctionComponent<Props> = ({
     readOnly={readOnly}
     autoPrettify={readOnly}
     manualPrettify={!readOnly}
-    isVariableUncovered={isVariableUncovered}
   />
 );

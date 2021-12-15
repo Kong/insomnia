@@ -54,17 +54,17 @@ export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, s
   let controllerName: string | null = null;
   switch (controller) {
     case 'insomnia-config':
-      helpText = `this value is controlled by \`settings.${setting}\` in your Insomnia Config`;
-      controllerName = 'insomnia config';
+      helpText = `This value is controlled by \`settings.${setting}\` in your Insomnia config`;
+      controllerName = 'Insomnia config';
       break;
 
     case 'incognitoMode':
-      helpText = 'this value is controlled by Incognito Mode';
-      controllerName = 'incognito mode';
+      helpText = 'This value is controlled by Incognito Mode';
+      controllerName = 'Incognito Mode';
       break;
 
     default:
-      helpText = `this value is controlled by ${controller}`;
+      helpText = `This value is controlled by ${controller}`;
       controllerName = controller || 'another setting';
   }
 
@@ -77,7 +77,7 @@ export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, s
 
       <Helper>
         <HelpTooltip info>{helpText}</HelpTooltip>{' '}
-        <HelperText>controlled by {controllerName}</HelperText>
+        <HelperText>Controlled by {controllerName}</HelperText>
       </Helper>
     </Wrapper>
   );

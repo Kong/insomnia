@@ -25,6 +25,12 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
 export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
 
+export const getBrowserUserAgent = () => encodeURIComponent(
+  String(window.navigator.userAgent)
+    .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+    .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+).replace('%2C', ',');
+
 export function updatesSupported() {
   // Updates are not supported on Linux
   if (isLinux()) {
@@ -72,10 +78,12 @@ export const AUTOBIND_CFG = {
 };
 
 // Available editor key map
-export const EDITOR_KEY_MAP_DEFAULT = 'default';
-export const EDITOR_KEY_MAP_EMACS = 'emacs';
-export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
-export const EDITOR_KEY_MAP_VIM = 'vim';
+export enum EditorKeyMap {
+  default = 'default',
+  emacs = 'emacs',
+  sublime = 'sublime',
+  vim = 'vim',
+}
 
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
@@ -114,10 +122,10 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
 };
 
 // Update
-export const UPDATE_CHANNEL_STABLE = 'stable';
-export const UPDATE_CHANNEL_BETA = 'beta';
-export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
-export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
+export enum UpdateURL {
+  mac = 'https://updates.insomnia.rest/builds/check/mac',
+  windows = 'https://updates.insomnia.rest/updates/win',
+}
 
 // API
 export const API_BASE_URL = 'https://api.insomnia.rest';

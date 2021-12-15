@@ -14,7 +14,6 @@ interface Props {
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
-  isVariableUncovered: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -38,7 +37,6 @@ export class DigestAuth extends PureComponent<Props> {
     const {
       request,
       showPasswords,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     return (
@@ -63,7 +61,6 @@ export class DigestAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeUsername}
                     defaultValue={authentication.username || ''}
-                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -80,7 +77,6 @@ export class DigestAuth extends PureComponent<Props> {
                   disabled={authentication.disabled}
                   password={authentication.password}
                   onChange={this._handleChangePassword}
-                  isVariableUncovered={isVariableUncovered}
                 />
               </td>
             </tr>

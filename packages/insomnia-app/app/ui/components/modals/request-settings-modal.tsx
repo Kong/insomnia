@@ -16,7 +16,6 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
-  isVariableUncovered: boolean;
   workspaces: Workspace[];
 }
 
@@ -317,7 +316,6 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
 
   _renderDescription() {
     const {
-      isVariableUncovered,
     } = this.props;
     const { showDescription, defaultPreviewMode, request } = this.state;
 
@@ -332,7 +330,6 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
         placeholder="Write a description"
-        isVariableUncovered={isVariableUncovered}
         defaultValue={request.description}
         onChange={this._handleDescriptionChange}
       />
