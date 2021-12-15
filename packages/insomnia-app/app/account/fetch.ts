@@ -1,7 +1,9 @@
+import { Method } from 'axios';
 import { parse as urlParse } from 'url';
 import zlib from 'zlib';
 
 import { delay } from '../common/misc';
+import { axiosRequest } from '../network/axios-request';
 let _userAgent = '';
 let _baseUrl = '';
 const _commandListeners: Function[] = [];
@@ -33,7 +35,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   }
 
   const config: {
-    method: string;
+    method: Method | undefined;
     headers: HeadersInit;
     body?: string | Buffer;
   } = {
@@ -64,7 +66,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   const url = _getUrl(path);
 
   try {
-    response = await window.fetch(url, config);
+    response = await axiosRequest({ url, headers: config.headers, data: config.body, method: config.method });
 
     // Exponential backoff for 502 errors
     if (response.status === 502 && retries < 5) {
