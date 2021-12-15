@@ -1,34 +1,34 @@
+import { SettingsOfType } from 'insomnia-common';
 import React, { ChangeEvent, FC } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
 import * as models from '../../../models';
-import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
-  label: string;
-  setting: keyof Settings;
+  disabled?: React.HTMLProps<HTMLInputElement>['disabled'];
   help?: string;
-  props?: React.HTMLProps<HTMLInputElement>;
+  label: string;
+  placeholder?: React.HTMLProps<HTMLInputElement>['placeholder'];
+  setting: SettingsOfType<string>;
 }> = ({
-  label,
-  setting,
+  disabled,
   help,
-  props,
+  label,
+  placeholder,
+  setting,
 }) => {
-
   const [isHidden, setHidden] = useToggle(true);
 
   const settings = useSelector(selectSettings);
 
   if (!settings.hasOwnProperty(setting)) {
-    throw new Error(`Invalid masked setting name ${setting}`);
+    throw new Error(`Invalid setting name ${setting}`);
   }
 
   const onChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    // Meanwhile we wait the update
     await models.settings.patch({
       [setting]: event.currentTarget.value,
     });
@@ -43,10 +43,11 @@ export const MaskedSetting: FC<{
       <div className="form-control form-control--outlined form-control--btn-right">
         <input
           defaultValue={String(settings[setting])}
-          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
+          disabled={disabled}
           name={setting}
           onChange={onChange}
-          {...props}
+          placeholder={placeholder}
+          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
         />
         {!settings.showPasswords && (
           <button className={'form-control__right'} onClick={setHidden}>

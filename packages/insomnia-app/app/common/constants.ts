@@ -78,10 +78,12 @@ export const AUTOBIND_CFG = {
 };
 
 // Available editor key map
-export const EDITOR_KEY_MAP_DEFAULT = 'default';
-export const EDITOR_KEY_MAP_EMACS = 'emacs';
-export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
-export const EDITOR_KEY_MAP_VIM = 'vim';
+export enum EditorKeyMap {
+  default = 'default',
+  emacs = 'emacs',
+  sublime = 'sublime',
+  vim = 'vim',
+}
 
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
@@ -120,10 +122,10 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
 };
 
 // Update
-export const UPDATE_CHANNEL_STABLE = 'stable';
-export const UPDATE_CHANNEL_BETA = 'beta';
-export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
-export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
+export enum UpdateURL {
+  mac = 'https://updates.insomnia.rest/builds/check/mac',
+  windows = 'https://updates.insomnia.rest/updates/win',
+}
 
 // API
 export const API_BASE_URL = 'https://api.insomnia.rest';
@@ -165,7 +167,6 @@ export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
-export const ACTIVITY_ONBOARDING: GlobalActivity = 'onboarding';
 export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
@@ -181,7 +182,6 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
       return true;
 
     case ACTIVITY_HOME:
-    case ACTIVITY_ONBOARDING:
     case ACTIVITY_MIGRATION:
     case ACTIVITY_ANALYTICS:
     default:
@@ -197,7 +197,6 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
     case ACTIVITY_SPEC:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
-    case ACTIVITY_ONBOARDING:
     case ACTIVITY_MIGRATION:
     case ACTIVITY_ANALYTICS:
     default:
@@ -211,7 +210,6 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
-    case ACTIVITY_ONBOARDING:
     case ACTIVITY_MIGRATION:
     case ACTIVITY_ANALYTICS:
       return true;

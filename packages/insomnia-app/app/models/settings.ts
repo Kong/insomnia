@@ -1,10 +1,9 @@
-import { HttpVersions, Settings as BaseSettings } from 'insomnia-common';
+import { HttpVersions, Settings as BaseSettings, UpdateChannel } from 'insomnia-common';
 
 import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,
   getAppDefaultTheme,
-  UPDATE_CHANNEL_STABLE,
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
@@ -53,12 +52,11 @@ export function init(): BaseSettings {
     fontVariantLigatures: false,
     forceVerticalLayout: false,
 
-    // Only existing users updating from an older version should see the analytics prompt.
-    // So by default this flag is set to false, and is toggled to true during initialization for new users.
+    /**
+     * Only existing users updating from an older version should see the analytics prompt.
+     * So by default this flag is set to false, and is toggled to true during initialization for new users.
+     */
     hasPromptedAnalytics: false,
-
-    // Users should only see onboarding during first launch, and anybody updating from an older version should not see it, so by default this flag is set to true, and is toggled to false during initialization
-    hasPromptedOnboarding: true,
     hasPromptedToMigrateFromDesigner: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
@@ -78,7 +76,7 @@ export function init(): BaseSettings {
     theme: getAppDefaultTheme(),
     timeout: 0,
     updateAutomatically: true,
-    updateChannel: UPDATE_CHANNEL_STABLE,
+    updateChannel: UpdateChannel.stable,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
     validateAuthSSL: true,
@@ -107,7 +105,8 @@ async function create() {
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {
-  const updatedSettings = await db.docUpdate<Settings>(settings, omitControlledSettings(settings, patch));
+  const sanitizedPatch = omitControlledSettings(settings, patch);
+  const updatedSettings = await db.docUpdate<Settings>(settings, sanitizedPatch);
   return getMonkeyPatchedControlledSettings(updatedSettings);
 }
 
@@ -122,10 +121,9 @@ export async function getOrCreate() {
   const results = await db.all<Settings>(type) || [];
 
   if (results.length === 0) {
-    return create();
-  } else {
-    return getMonkeyPatchedControlledSettings(results[0]);
+    return await create();
   }
+  return getMonkeyPatchedControlledSettings(results[0]);
 }
 
 /**

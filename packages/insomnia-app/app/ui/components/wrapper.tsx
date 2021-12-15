@@ -9,7 +9,6 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
@@ -83,7 +82,6 @@ import { WrapperDebug } from './wrapper-debug';
 import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
 import { WrapperMigration } from './wrapper-migration';
-import WrapperOnboarding from './wrapper-onboarding';
 import { WrapperUnitTest } from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
@@ -728,10 +726,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
           {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
 
-          {activity === ACTIVITY_ANALYTICS && <WrapperAnalytics wrapperProps={this.props} />}
-
-          {(activity === ACTIVITY_ONBOARDING || activity === null) && (
-            <WrapperOnboarding wrapperProps={this.props} />
+          {(activity === ACTIVITY_ANALYTICS || activity === null) && (
+            <WrapperAnalytics wrapperProps={this.props} />
           )}
         </Fragment>
       </Fragment>

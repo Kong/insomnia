@@ -13,6 +13,7 @@ import {
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { delay } from '../../../common/misc';
+import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
@@ -26,7 +27,6 @@ import { showAlert, showPrompt } from '../modals';
 
 interface Props {
   settings: Settings;
-  updateSetting: (...args: any[]) => any;
 }
 
 interface State {
@@ -167,8 +167,10 @@ export class Plugins extends PureComponent<Props, State> {
   }
 
   async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
-    const { updateSetting, settings } = this.props;
-    await updateSetting('pluginConfig', { ...settings.pluginConfig, [pluginName]: config });
+    const { settings } = this.props;
+    await models.settings.update(this.props.settings, {
+      pluginConfig: { ...settings.pluginConfig, [pluginName]: config },
+    });
   }
 
   async _togglePluginEnabled(name: string, enabled: boolean, config: PluginConfig) {
