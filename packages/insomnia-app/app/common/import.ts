@@ -63,7 +63,8 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   }
 
   if (uri.match(/^(http|https):\/\//)) {
-    const response = await axiosRequest({ url: uri });
+    // NOTE: disabled axios default JSON parse by overriding transformResponse
+    const response = await axiosRequest({ url: uri, transformResponse: _ => _ });
     rawText = await response.data;
   } else if (uri.match(/^(file):\/\//)) {
     const path = uri.replace(/^(file):\/\//, '');
