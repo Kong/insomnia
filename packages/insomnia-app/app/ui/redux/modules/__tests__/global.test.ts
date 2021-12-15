@@ -9,7 +9,6 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   DEPRECATED_ACTIVITY_INSOMNIA,
@@ -43,11 +42,9 @@ const mockStore = configureMockStore(middlewares);
 
 const createSettings = (
   hasPromptedMigration: boolean,
-  hasPromptedOnboarding: boolean,
   hasPromptedAnalytics: boolean,
 ) => {
   const settings = models.settings.init();
-  settings.hasPromptedOnboarding = hasPromptedOnboarding;
   settings.hasPromptedToMigrateFromDesigner = hasPromptedMigration;
   settings.hasPromptedAnalytics = hasPromptedAnalytics;
   return settings;
@@ -68,7 +65,6 @@ describe('global', () => {
       ACTIVITY_DEBUG,
       ACTIVITY_UNIT_TEST,
       ACTIVITY_HOME,
-      ACTIVITY_ONBOARDING,
       ACTIVITY_MIGRATION,
     ])('should update local storage and track event: %s', (activity: GlobalActivity) => {
       const expectedEvent = {
@@ -82,36 +78,14 @@ describe('global', () => {
       );
     });
 
-    it('should update flag for onboarding prompted', async done => {
-      await models.settings.patch({
-        hasPromptedToMigrateFromDesigner: false,
-        hasPromptedOnboarding: false,
-      });
-
-      async function onDatabaseChange() {
-        const settings = await models.settings.getOrCreate();
-        expect(settings.hasPromptedToMigrateFromDesigner).toBe(false);
-        expect(settings.hasPromptedOnboarding).toBe(true);
-
-        database.offChange(onDatabaseChange);
-        done();
-      }
-
-      database.onChange(onDatabaseChange);
-
-      setActiveActivity(ACTIVITY_ONBOARDING);
-    });
-
     it('should update flag for migration prompted', async done => {
       await models.settings.patch({
         hasPromptedToMigrateFromDesigner: false,
-        hasPromptedOnboarding: false,
       });
 
       async function onDatabaseChange() {
         const settings = await models.settings.getOrCreate();
         expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
-        expect(settings.hasPromptedOnboarding).toBe(false);
         database.offChange(onDatabaseChange);
         done();
       }
@@ -151,9 +125,9 @@ describe('global', () => {
   });
 
   describe('goToNextActivity', () => {
-    it('should go from onboarding to home', async () => {
-      const settings = createSettings(false, false, true);
-      const activeActivity = ACTIVITY_ONBOARDING;
+    it('should go from analytics to home', async () => {
+      const settings = createSettings(false, true);
+      const activeActivity = ACTIVITY_ANALYTICS;
       const store = mockStore({
         global: {
           activeActivity,
@@ -171,28 +145,8 @@ describe('global', () => {
       ]);
     });
 
-    it('should go from migration to onboarding', async () => {
-      const settings = createSettings(false, false, true);
-      const activeActivity = ACTIVITY_MIGRATION;
-      const store = mockStore({
-        global: {
-          activeActivity,
-        },
-        entities: {
-          settings: [settings],
-        },
-      });
-      await store.dispatch(goToNextActivity());
-      expect(store.getActions()).toEqual([
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_ONBOARDING,
-        },
-      ]);
-    });
-
     it('should go from migration to analytics', async () => {
-      const settings = createSettings(false, true, false);
+      const settings = createSettings(false, false);
       const activeActivity = ACTIVITY_MIGRATION;
       const store = mockStore({
         global: {
@@ -212,7 +166,7 @@ describe('global', () => {
     });
 
     it('should go from migration to home', async () => {
-      const settings = createSettings(true, true, true);
+      const settings = createSettings(true, true);
       const activeActivity = ACTIVITY_MIGRATION;
       const store = mockStore({
         global: {
@@ -234,7 +188,7 @@ describe('global', () => {
     it.each([ACTIVITY_SPEC, ACTIVITY_DEBUG, ACTIVITY_UNIT_TEST, ACTIVITY_HOME])(
       'should not change activity from: %s',
       async (activeActivity: GlobalActivity) => {
-        const settings = createSettings(false, true, true);
+        const settings = createSettings(false, true);
         const store = mockStore({
           global: {
             activeActivity,
@@ -324,10 +278,9 @@ describe('global', () => {
       ACTIVITY_DEBUG,
       ACTIVITY_UNIT_TEST,
       ACTIVITY_HOME,
-      ACTIVITY_ONBOARDING,
       ACTIVITY_ANALYTICS,
     ])('should initialize %s from local storage', async activity => {
-      const settings = createSettings(true, true, true);
+      const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
         entities: {
@@ -344,7 +297,7 @@ describe('global', () => {
     });
 
     it('should initialize from local storage and migrate deprecated activity', async () => {
-      const settings = createSettings(true, true, true);
+      const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
         entities: {
@@ -361,8 +314,8 @@ describe('global', () => {
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
-    it('should go to onboarding if initialized at migration', async () => {
-      const settings = createSettings(true, false, true);
+    it('should go to home if initialized at migration', async () => {
+      const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
         entities: {
@@ -373,7 +326,7 @@ describe('global', () => {
       global.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
       const expectedEvent = {
         type: SET_ACTIVE_ACTIVITY,
-        activity: ACTIVITY_ONBOARDING,
+        activity: ACTIVITY_HOME,
       };
       await store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
@@ -384,7 +337,7 @@ describe('global', () => {
       null,
       undefined,
     )('should go to home if initialized with an unsupported value: %s', async activity => {
-      const settings = createSettings(true, true, true);
+      const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
         entities: {
@@ -401,7 +354,7 @@ describe('global', () => {
     });
 
     it('should go to home if local storage key not found', async () => {
-      const settings = createSettings(true, true, true);
+      const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
         entities: {
@@ -417,7 +370,7 @@ describe('global', () => {
     });
 
     it('should go to home if initialized at migration and onboarding seen', async () => {
-      const settings = createSettings(true, true, true);
+      const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
         entities: {
@@ -435,7 +388,7 @@ describe('global', () => {
     });
 
     it('should prompt to migrate', async () => {
-      const settings = createSettings(false, true, true);
+      const settings = createSettings(false, true);
       fsExistsSyncSpy.mockReturnValue(true);
       const store = mockStore({
         global: {},
@@ -455,7 +408,7 @@ describe('global', () => {
     });
 
     it('should not prompt to migrate if default directory not found', async () => {
-      const settings = createSettings(false, true, true);
+      const settings = createSettings(false, true);
       fsExistsSyncSpy.mockReturnValue(false);
       const store = mockStore({
         global: {},
@@ -474,26 +427,8 @@ describe('global', () => {
       expect(fsExistsSyncSpy).toHaveBeenCalledWith(getDesignerDataDir());
     });
 
-    it('should prompt to onboard', async () => {
-      const settings = createSettings(true, false, true);
-      const store = mockStore({
-        global: {},
-        entities: {
-          settings: [settings],
-        },
-      });
-      const activity = ACTIVITY_HOME;
-      global.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-      const expectedEvent = {
-        type: SET_ACTIVE_ACTIVITY,
-        activity: ACTIVITY_ONBOARDING,
-      };
-      await store.dispatch(initActiveActivity());
-      expect(store.getActions()).toEqual([expectedEvent]);
-    });
-
     it('should prompt to change analytics settings', async () => {
-      const settings = createSettings(true, true, false);
+      const settings = createSettings(true, false);
       const store = mockStore({
         global: {},
         entities: {

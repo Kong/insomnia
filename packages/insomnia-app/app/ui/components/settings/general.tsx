@@ -452,12 +452,6 @@ class General extends PureComponent<Props> {
             </div>
             <div className="form-row pad-top-sm">
               <BooleanSetting
-                label="Has seen onboarding experience"
-                setting="hasPromptedOnboarding"
-              />
-            </div>
-            <div className="form-row pad-top-sm">
-              <BooleanSetting
                 label="Has seen analytics prompt"
                 setting="hasPromptedAnalytics"
               />
