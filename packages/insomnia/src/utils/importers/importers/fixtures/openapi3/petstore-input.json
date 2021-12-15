@@ -20,6 +20,9 @@
   "servers": [
     {
       "url": "http://petstore.swagger.io/v2/"
+    },
+    {
+      "url": "http://petstore-preprod.swagger.io/v2/"
     }
   ],
   "tags": [],

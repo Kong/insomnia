@@ -21,14 +21,14 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__64b4aec9",
       "_type": "environment",
       "data": {
         "base_path": "",
         "host": "api.insomnia.rest",
         "scheme": "https"
       },
-      "name": "OpenAPI env",
+      "name": "OpenAPI env api.insomnia.rest",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
