@@ -5,9 +5,9 @@ import fsx from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-import { axiosRequest } from '../network/axios-request';
 import { isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
 import { getTempDir } from '../common/electron-helpers';
+import { axiosRequest } from '../network/axios-request';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
@@ -43,7 +43,7 @@ interface InsomniaPlugin {
   };
 }
 
-export default async function (lookupName: string) {
+export default async function(lookupName: string) {
   return new Promise<void>(async (resolve, reject) => {
     let info: InsomniaPlugin | null = null;
 
