@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import * as https from 'https';
 import { setDefaultProtocol } from 'insomnia-url';
 import { parse as urlParse } from 'url';
 
@@ -21,9 +20,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
   const finalConfig: AxiosRequestConfig = {
     ...config,
     adapter: global.require('axios/lib/adapters/http'),
-    httpsAgent: new https.Agent({
-      rejectUnauthorized: settings.validateSSL,
-    }),
   };
 
   // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
