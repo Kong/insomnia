@@ -57,15 +57,12 @@ export default async function(lookupName: string) {
       mkdirp.sync(pluginDir);
 
       // Download the module
-      let request;
       try {
-        request = await axiosRequest({ url: info.dist.tarball });
+        await axiosRequest({ url: info.dist.tarball });
       } catch (err) {
-        request.error = err;
+        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
       }
-      if (request.error) {
-        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${request.error.message}`));
-      }
+
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 

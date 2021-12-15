@@ -66,7 +66,12 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   const url = _getUrl(path);
 
   try {
-    response = await axiosRequest({ url, headers: config.headers, data: config.body, method: config.method });
+    response = await axiosRequest({
+      url,
+      method: config.method,
+      headers: config.headers,
+      data: config.body,
+    });
 
     // Exponential backoff for 502 errors
     if (response.status === 502 && retries < 5) {
