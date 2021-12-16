@@ -5,7 +5,7 @@ import { parse as urlParse } from 'url';
 
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
-import { urlInNoProxy } from './url-in-no-proxy';
+import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
 
 export async function axiosRequest(config: AxiosRequestConfig) {
   const settings = await models.settings.getOrCreate();
@@ -26,7 +26,7 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     }),
   };
 
-  if (settings.proxyEnabled && urlInNoProxy(finalConfig.url, settings.noProxy)) {
+  if (settings.proxyEnabled && isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
     finalConfig.proxy = false;
   } else if (settings.proxyEnabled && proxyUrl) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));

@@ -22,14 +22,14 @@ function matchesHostname(hostname, noProxyZoneHostname) {
   return (isMatchedAt > -1 && (isMatchedAt === hostname.length - wildcardNeedle.length));
 }
 
-export function urlInNoProxy(url: string | undefined, noProxy: any) {
-  if (!url || !noProxy || typeof noProxy !== 'string') {
+export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: any) {
+  if (!url || !noProxyRule || typeof noProxyRule !== 'string') {
     return false;
   }
   const uri = urlParse(url);
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80');
   const hostname = formatHostname(uri.hostname);
-  const noProxyList = noProxy.split(',');
+  const noProxyList = noProxyRule.split(',');
 
   // iterate through the noProxyList until it finds a match.
   return noProxyList.map(parseNoProxyZone).some(noProxyZone => {
