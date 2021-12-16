@@ -6,7 +6,7 @@
   },
   "include": [
     "__jest__",
-    "specs",
+    "tests",
     "cli",
     "fixtures",
     "playwright.config.ts",
