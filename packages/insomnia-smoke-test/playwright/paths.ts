@@ -19,9 +19,8 @@ const pathLookup = {
 };
 const insomniaBinary = path.join('dist', pathLookup[process.platform]);
 const electronBinary = path.join('node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
-const isPackageTest = process.env.BUNDLE === 'package';
 
-export const executablePath = isPackageTest ? insomniaBinary : electronBinary;
+export const executablePath = process.env.BUNDLE === 'package' ? insomniaBinary : electronBinary;
 export const mainPath = path.join('build', 'main.min.js');
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia-app');
 
@@ -29,13 +28,18 @@ const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
 const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 
 // NOTE: guard against missing build artifacts
-if (!isPackageTest && !hasMainBeenBuilt) {
+if (process.env.BUNDLE !== 'package' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-"npm run app-build:smoke"`);
+  Have you run "npm run app-build:smoke"?`);
   exit(1);
 }
-if (isPackageTest && !hasBinaryBeenBuilt) {
+if (process.env.BUNDLE === 'package' && !hasBinaryBeenBuilt) {
   console.error(`ERROR: ${insomniaBinary} not found at ${path.resolve(cwd, insomniaBinary)} 
-"npm run app-package:smoke"`);
+  Have you run "npm run app-package:smoke"?`);
   exit(1);
+}
+if (process.env.DEBUG) {
+  console.log(`Using current working directory at ${cwd}`);
+  console.log(`Using executablePath at ${executablePath}`);
+  console.log(`Using mainPath at ${mainPath}`);
 }

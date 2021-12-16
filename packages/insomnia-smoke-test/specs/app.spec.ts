@@ -1,20 +1,17 @@
 import { PlaywrightWorkerArgs, test } from '@playwright/test';
 
 import { cwd, DESIGNER_DATA_PATH, executablePath, loadFixture, mainPath, randomDataPath } from '../playwright/paths';
+
+// NOTE: the DESIGNER_DATA_PATH argument is only used for overriding paths for migration testing,
+// if we remove migration from insomnia designer support this testing flow can be simplifed.
 type Playwright = PlaywrightWorkerArgs['playwright'];
-const isPackageTest = process.env.BUNDLE === 'package';
+interface EnvOptions { INSOMNIA_DATA_PATH: string; DESIGNER_DATA_PATH?: string }
 
-console.log(`Using current working directory at ${cwd}`);
-console.log(`Using executablePath at ${executablePath}`);
-console.log(`Using mainPath at ${mainPath}`);
-
-// NOTE: the options argument is only used for overriding paths for migration testing,
-// if we don't support migration this can be simplifed
-const newPage = async ({ playwright, options }: ({ playwright: Playwright; options: {} })) => {
+const newPage = async ({ playwright, options }: ({ playwright: Playwright; options: EnvOptions })) => {
   const electronApp = await playwright._electron.launch({
     cwd,
     executablePath,
-    args: isPackageTest ? [] : [mainPath],
+    args: process.env.BUNDLE === 'package' ? [] : [mainPath],
     env: {
       ...process.env,
       ...options,
@@ -23,7 +20,6 @@ const newPage = async ({ playwright, options }: ({ playwright: Playwright; optio
   });
   await electronApp.waitForEvent('window');
   const page = await electronApp.firstWindow();
-  // page.on('console', console.log); a bit noisy but helpful for debugging
   // @TODO: Investigate why the app doesn't start without a reload with playwright in windows
   if (process.platform === 'win32') await page.reload();
   return { electronApp, page };
