@@ -9,7 +9,7 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 | Folder      | Purpose                           |
 | ----------- | --------------------------------- |
 | `/cli`      | tests for inso                    |
-| `/specs`    | tests for Insomnia                |
+| `/tests`    | tests for Insomnia                |
 | `/server`   | Express server used by the tests  |
 | `/fixtures` | data used by tests and the server |
 
@@ -28,10 +28,10 @@ npm run inso-package                # Package the Inso CLI binaries
 You can then run the smoke tests, again from the root:
 
 ```shell
-npm run test:smoke:cli         # Run CLI tests
-npm run test:smoke:build       # Run Insomnia tests
-DEBUG=pw:browser,pw:api npm run test:smoke:build       # Run Insomnia tests, with verbose output
-PWDEBUG=1 npm run test:smoke:build       # Write Insomnia tests with the playwrite recorder
+npm run test:smoke:cli                            # Run CLI tests
+npm run test:smoke:build                          # Run Insomnia tests
+PWDEBUG=1 npm run test:smoke:build                # Write Insomnia tests with the playwrite recorder
+DEBUG=pw:browser,pw:api npm run test:smoke:build  # Run Insomnia tests, with verbose output
 ```
 
 Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases (such as a <!-- TODO(TSCONVERSION) update this link -->[plugin installation](https://github.com/Kong/insomnia/blob/357b8f05f89fd5c07a75d8418670abe37b2882dc/packages/insomnia-smoke-test/designer/app.test.js#L36)), so we typically run tests against a build. To run packaged tests, from the root:

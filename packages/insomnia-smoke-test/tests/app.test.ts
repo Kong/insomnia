@@ -8,6 +8,8 @@ type Playwright = PlaywrightWorkerArgs['playwright'];
 interface EnvOptions { INSOMNIA_DATA_PATH: string; DESIGNER_DATA_PATH?: string }
 
 const newPage = async ({ playwright, options }: ({ playwright: Playwright; options: EnvOptions })) => {
+  // NOTE: ensure the DESIGNER_DATA_PATH is ignored from process.env
+  if (!options.DESIGNER_DATA_PATH) options.DESIGNER_DATA_PATH = 'doesnt-exist';
   const electronApp = await playwright._electron.launch({
     cwd,
     executablePath,
@@ -35,6 +37,7 @@ test('can send requests', async ({ playwright }) => {
   await electronApp.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.click('button:has-text("Clipboard")');
+  await page.click('text=CollectionSmoke testsjust now');
   await page.click('button:has-text("GETsend JSON request")');
   await page.click('text=http://127.0.0.1:4010/pets/1Send >> button');
   await page.click('text=200 OK');
