@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HotKeyRegistry } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -21,7 +21,7 @@ interface Props {
   handleChangeEnvironment: Function;
   workspace: Workspace;
   environments: Environment[];
-  environmentHighlightColorStyle: string;
+  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   hotKeyRegistry: HotKeyRegistry;
   className?: string;
   activeEnvironment?: Environment | null;

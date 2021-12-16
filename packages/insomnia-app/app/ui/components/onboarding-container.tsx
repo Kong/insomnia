@@ -9,7 +9,7 @@ interface Props {
   header: string;
   subHeader: string;
 }
-
+// TODO: inline this into the migration flow since it's the only thing that will use it and remove all the 'onboarding' css class prefix and other terminology
 export const OnboardingContainer: FunctionComponent<Props> = ({ wrapperProps, children, header, subHeader }) => (
   <PageLayout
     wrapperProps={wrapperProps}

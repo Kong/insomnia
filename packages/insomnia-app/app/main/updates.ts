@@ -6,9 +6,8 @@ import {
   getAppId,
   getAppVersion,
   isDevelopment,
-  UPDATE_URL_MAC,
-  UPDATE_URL_WINDOWS,
   updatesSupported,
+  UpdateURL,
 } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
@@ -24,9 +23,9 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   }
 
   if (platform === 'win32') {
-    updateUrl = UPDATE_URL_WINDOWS;
+    updateUrl = UpdateURL.windows;
   } else if (platform === 'darwin') {
-    updateUrl = UPDATE_URL_MAC;
+    updateUrl = UpdateURL.mac;
   } else {
     return null;
   }

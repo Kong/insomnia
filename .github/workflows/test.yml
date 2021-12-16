@@ -129,7 +129,7 @@ jobs:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
-      
+
       - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
 
