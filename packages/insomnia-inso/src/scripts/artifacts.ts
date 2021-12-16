@@ -11,7 +11,7 @@ const isMac = () => platform === 'darwin';
 const isLinux = () => platform === 'linux';
 const isWindows = () => platform === 'win32';
 
-const getName = () => {
+const getArchiveName = () => {
   const version = getVersion();
   if (isMac()) {
     return `inso-macos-${version}.zip`;
@@ -29,7 +29,7 @@ const getName = () => {
 };
 
 const startProcess = (cwd: ProcessEnvOptions['cwd']) => {
-  const name = getName();
+  const name = getArchiveName();
 
   if (isMac()) {
     return spawn('ditto',
@@ -50,9 +50,9 @@ const startProcess = (cwd: ProcessEnvOptions['cwd']) => {
       [
         '-C',
         '../binaries',
-        isWindows() ? '-a -cf' : '-cjf',
+        isWindows() ? '-a -cf' : '-cJf',
         name,
-        '.',
+        isWindows() ? 'inso.exe' : 'inso',
       ], {
         cwd,
         shell: true,

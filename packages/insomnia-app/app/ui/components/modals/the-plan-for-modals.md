@@ -4,6 +4,7 @@
 
 1. We're trying to move the entire codebase to hooks.  With the possible exception of one component (ErrorBoundary) there should be no component in the codebase that must be a class.
 1. Right now, all modals are classes.  One core reason for this is that `showModal` in `app/ui/components/modals/index.ts` directly calls `show` on the modal instance of a registered modal.
+1. right now there's an approach where a magic z-index number is used and then every time you open a modal it increments this magic number.  this has caused [user-facing bugs](https://github.com/Kong/insomnia/pull/4059).  By the way, this also means that if you ever wanted to use the same modal twice (for different purposes) you'd have layering bugs.
 
 ## Where we're going (TBC, but this is an initial plan)
 
@@ -14,6 +15,7 @@
 1. Modals will not have to be singletons, making them more easily composable in the app's flows.
     1. For an example of why singleton modals cause issues, see the regression that was resolved in [#3970](https://github.com/Kong/insomnia/pull/3970)
 1. Modals will not have to be loaded into the react tree at all times.
+1. all modals will have the same z-index and layering will be handled normally like all other elements (element order).
 
 ## How we're going to get there
 

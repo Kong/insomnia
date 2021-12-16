@@ -10,6 +10,7 @@ import { isCollection, isDesign } from '../../models/workspace';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
+import { showCookiesModal } from './modals/cookies-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
@@ -37,7 +38,6 @@ interface Props {
   handleSetActiveResponse: Function;
   handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleShowCookiesModal: Function;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
@@ -94,7 +94,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleChangeEnvironment,
       handleRequestCreate,
       handleRequestGroupCreate,
-      handleShowCookiesModal,
       handleSidebarSort,
     } = this.props;
     const {
@@ -108,7 +107,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleGenerateCode,
-      handleRender,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
       handleSetSidebarFilter,
@@ -132,8 +130,7 @@ export class WrapperDebug extends PureComponent<Props> {
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             hotKeyRegistry={settings.hotKeyRegistry}
           />
-          {/* @ts-expect-error -- TSCONVERSION onClick event doesn't matter */}
-          <button className="btn btn--super-compact" onClick={handleShowCookiesModal}>
+          <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -161,7 +158,6 @@ export class WrapperDebug extends PureComponent<Props> {
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
-          handleRender={handleRender}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
         />
@@ -193,12 +189,9 @@ export class WrapperDebug extends PureComponent<Props> {
       activeWorkspace,
       handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
-      handleGetRenderContext,
-      handleRender,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
-      isVariableUncovered,
       oAuth2Token,
       responseDownloadPath,
       settings,
@@ -219,9 +212,6 @@ export class WrapperDebug extends PureComponent<Props> {
             workspaceId={activeWorkspace._id}
             forceRefreshKey={forceRefreshKey}
             settings={settings}
-            handleRender={handleRender}
-            isVariableUncovered={isVariableUncovered}
-            handleGetRenderContext={handleGetRenderContext}
           />
         </ErrorBoundary>
       );
@@ -237,14 +227,11 @@ export class WrapperDebug extends PureComponent<Props> {
           forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
-          handleGetRenderContext={handleGetRenderContext}
           handleImport={handleImport}
-          handleRender={handleRender}
           handleSend={handleSendRequestWithActiveEnvironment}
           handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
           handleUpdateDownloadPath={handleUpdateDownloadPath}
           headerEditorKey={headerEditorKey}
-          isVariableUncovered={isVariableUncovered}
           oAuth2Token={oAuth2Token}
           request={activeRequest}
           settings={settings}
@@ -272,7 +259,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleSetActiveResponse,
       handleSetPreviewMode,
       handleSetResponseFilter,
-      handleShowCookiesModal,
       handleShowRequestSettingsModal,
     } = this.props;
     const {
@@ -297,7 +283,6 @@ export class WrapperDebug extends PureComponent<Props> {
           <GrpcResponsePane
             activeRequest={activeRequest}
             forceRefreshKey={forceRefreshKey}
-            settings={settings}
           />
         </ErrorBoundary>
       );
@@ -309,9 +294,6 @@ export class WrapperDebug extends PureComponent<Props> {
           disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
           disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
           editorFontSize={settings.editorFontSize}
-          editorIndentSize={settings.editorIndentSize}
-          editorKeyMap={settings.editorKeyMap}
-          editorLineWrapping={settings.editorLineWrapping}
           environment={activeEnvironment}
           filter={responseFilter}
           filterHistory={responseFilterHistory}
@@ -321,7 +303,6 @@ export class WrapperDebug extends PureComponent<Props> {
           handleSetFilter={handleSetResponseFilter}
           handleSetPreviewMode={handleSetPreviewMode}
           handleShowRequestSettings={handleShowRequestSettingsModal}
-          showCookiesModal={handleShowCookiesModal}
           hotKeyRegistry={settings.hotKeyRegistry}
           loadStartTime={loadStartTime}
           previewMode={responsePreviewMode}

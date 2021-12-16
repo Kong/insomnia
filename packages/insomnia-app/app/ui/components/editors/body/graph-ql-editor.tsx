@@ -11,14 +11,17 @@ import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import prettier from 'prettier';
+import { complement } from 'ramda';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
+import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
+import { hotKeyRefs } from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { isNotNullOrUndefined, jsonParseOr } from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { jsonParseOr } from '../../../../common/misc';
 import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
@@ -34,6 +37,7 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
+import { KeydownBinder } from '../../keydown-binder';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
@@ -48,6 +52,18 @@ function isOperationDefinition(def: DefinitionNode): def is OperationDefinitionN
   return def.kind === 'OperationDefinition';
 }
 
+type HasLocation = SetRequired<OperationDefinitionNode, 'loc'>;
+const hasLocation = (def: OperationDefinitionNode): def is HasLocation => Boolean(def.loc);
+
+/** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
+const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
+  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
+  if (operationName === null && name === undefined) {
+    return true;
+  }
+  return name?.value === operationName;
+};
+
 interface GraphQLBody {
   query: string;
   variables?: Record<string, any>;
@@ -57,13 +73,10 @@ interface GraphQLBody {
 interface Props {
   onChange: Function;
   content: string;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
-  isVariableUncovered: boolean;
   className?: string;
   uniquenessKey?: string;
 }
@@ -178,6 +191,10 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
+  _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
+  }
+
   _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
     event.preventDefault();
 
@@ -216,32 +233,24 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       textMarker.clear();
     }
 
-    const disabledDefinitionLocations = _documentAST.definitions
+    this._disabledOperationMarkers = _documentAST.definitions
       .filter(isOperationDefinition)
-      .filter(d => {
-        return d.name?.value !== operationName;
-      })
-      .map(definition => definition.loc)
-      .filter(isNotNullOrUndefined);
+      .filter(complement(matchesOperation(operationName)))
+      .filter(hasLocation)
+      .map(({ loc: { startToken, endToken } }) => {
+        const from = {
+          line: startToken.line - 1,
+          ch: startToken.column - 1,
+        };
+        const to = {
+          line: endToken.line,
+          ch: endToken.column - 1,
+        };
 
-    // Add "Unhighlight" markers
-    const disabledOperationMarkers = disabledDefinitionLocations.map(location => {
-      const { startToken, endToken } = location;
-      const from = {
-        line: startToken.line - 1,
-        ch: startToken.column - 1,
-      };
-      const to = {
-        line: endToken.line,
-        ch: endToken.column - 1,
-      };
-
-      return _queryEditor.getDoc().markText(from, to, {
-        className: 'cm-gql-disabled',
+        return _queryEditor.getDoc().markText(from, to, {
+          className: 'cm-gql-disabled',
+        });
       });
-    });
-
-    this._disabledOperationMarkers = disabledOperationMarkers;
   }
 
   _handleViewResponse() {
@@ -650,12 +659,8 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   render() {
     const {
       content,
-      render,
-      getRenderContext,
-      settings,
       className,
       uniquenessKey,
-      isVariableUncovered,
     } = this.props;
     const {
       schema,
@@ -720,6 +725,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
     return (
       <div className="graphql-editor">
+        <KeydownBinder onKeydown={this._handleKeyDown} />
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
           <DropdownButton className="space-left btn btn--micro btn--outlined">
@@ -757,9 +763,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             dynamicHeight
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
@@ -767,7 +770,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             onCursorActivity={this._handleQueryUserActivity}
             onFocus={this._handleQueryFocus}
             mode="graphql"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
             {...graphqlOptions}
           />
@@ -807,26 +809,19 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
+            enableNunjucks
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={variables}
             className={className}
-            render={render}
-            getRenderContext={getRenderContext}
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
             lintOptions={{
               variableToType: variableTypes,
             }}
             noLint={!variableTypes}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}
             mode="graphql-variables"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>

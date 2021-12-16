@@ -35,5 +35,5 @@ export interface DCUpstream extends Taggable {
 export interface DeclarativeConfig {
   _format_version: '1.1';
   services: DCService[];
-  upstreams: DCUpstream[];
+  upstreams?: DCUpstream[];
 }

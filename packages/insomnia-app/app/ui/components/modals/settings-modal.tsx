@@ -46,12 +46,6 @@ export class SettingsModal extends PureComponent<Props, State> {
     this.modal = n;
   }
 
-  async _handleUpdateSetting(key: string, value: any) {
-    return models.settings.update(this.props.settings, {
-      [key]: value,
-    });
-  }
-
   async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {
     await models.settings.update(this.props.settings, {
       hotKeyRegistry,
@@ -115,7 +109,6 @@ export class SettingsModal extends PureComponent<Props, State> {
               <General
                 settings={settings}
                 hideModal={this.hide}
-                updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
@@ -136,7 +129,7 @@ export class SettingsModal extends PureComponent<Props, State> {
               <Account />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
+              <Plugins settings={settings} />
             </TabPanel>
           </Tabs>
         </ModalBody>

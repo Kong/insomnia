@@ -19,7 +19,7 @@ export const clickWorkspaceDropdown = async (app: Application) => {
 };
 
 export const goToDashboard = async (app: Application) => {
-  await app.client.$('.header_left a').then(e => e.click());
+  await app.client.$('.header_left [data-testid="project"]').then(e => e.click());
 };
 
 export const createNewRequest = async (app: Application, name: string) => {
@@ -247,4 +247,12 @@ export const clickTimelineTab = async (app: Application) => {
 
 export const selectAll = async (app: Application) => {
   await app.client.keys(spectronKeys.mapAccelerator('CommandOrControl+A'));
+};
+
+export const typeInResponseFilter = async (app: Application, filter: string) => {
+  const toolbar = await app.client.$('.response-pane .editor__toolbar');
+  await toolbar.waitForExist();
+  await toolbar.click();
+
+  await toolbar.keys(filter);
 };

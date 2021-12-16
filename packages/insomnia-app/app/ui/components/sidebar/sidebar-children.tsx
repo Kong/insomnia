@@ -5,7 +5,6 @@ import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleRender } from '../../../common/render';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
@@ -44,7 +43,6 @@ interface Props extends ReduxProps {
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleRender: HandleRender;
   childObjects: SidebarChildObjects;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
@@ -89,7 +87,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
       handleDuplicateRequestGroup,
       handleGenerateCode,
       handleCopyAsCurl,
-      handleRender,
       handleActivateRequest,
       activeRequest,
       hotKeyRegistry,
@@ -110,7 +107,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
-            handleRender={handleRender}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
             isPinned={child.pinned}
@@ -149,7 +145,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleRender={handleRender}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}

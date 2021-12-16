@@ -1,8 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { createRef, PureComponent } from 'react';
+import React, { createRef, FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
   handleRender: HandleRender;
@@ -20,7 +21,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class VariableEditor extends PureComponent<Props, State> {
+class VariableEditorInternal extends PureComponent<Props, State> {
   textAreaRef = createRef<HTMLTextAreaElement>();
   _select: HTMLSelectElement | null = null;
 
@@ -145,3 +146,8 @@ export class VariableEditor extends PureComponent<Props, State> {
     );
   }
 }
+
+export const VariableEditor: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useNunjucks();
+  return <VariableEditorInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+};

@@ -1,13 +1,20 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { RootState } from '../../redux/modules';
+import { selectSettings } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { hideAllModals, showModal } from '../modals/index';
 import { LoginModal } from '../modals/login-modal';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+type Props = ReduxProps;
 
 interface State {
   code: string;
@@ -20,7 +27,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class Account extends PureComponent<{}, State> {
+class UnconnectedAccount extends PureComponent<Props, State> {
   state: State = {
     code: '',
     password: '',
@@ -124,7 +131,19 @@ export class Account extends PureComponent<{}, State> {
     await this._sendCode();
   }
 
-  static renderUpgrade() {
+  renderUpgrade() {
+    const { disablePaidFeatureAds } = this.props;
+
+    const logInButton = (
+      <a href="#" onClick={Account._handleLogin} className="theme--link">
+        Log In
+      </a>
+    );
+
+    if (disablePaidFeatureAds) {
+      return logInButton;
+    }
+
     return (
       <Fragment>
         <div className="notice pad surprise">
@@ -152,10 +171,7 @@ export class Account extends PureComponent<{}, State> {
           </div>
         </div>
         <p>
-          Or{' '}
-          <a href="#" onClick={Account._handleLogin} className="theme--link">
-            Log In
-          </a>
+          Or{' '}{logInButton}
         </p>
       </Fragment>
     );
@@ -258,6 +274,12 @@ export class Account extends PureComponent<{}, State> {
   }
 
   render() {
-    return session.isLoggedIn() ? this.renderAccount() : Account.renderUpgrade();
+    return session.isLoggedIn() ? this.renderAccount() : this.renderUpgrade();
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  disablePaidFeatureAds: selectSettings(state).disablePaidFeatureAds,
+});
+
+export const Account = connect(mapStateToProps)(UnconnectedAccount);

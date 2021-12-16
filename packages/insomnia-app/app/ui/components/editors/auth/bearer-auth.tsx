@@ -3,19 +3,14 @@ import classnames from 'classnames';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import { Button } from '../../base/button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  isVariableUncovered: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -38,10 +33,6 @@ export class BearerAuth extends PureComponent<Props> {
   render() {
     const {
       request,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     return (
@@ -66,10 +57,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangeToken}
                     defaultValue={authentication.token || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
-                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>
@@ -95,10 +82,6 @@ export class BearerAuth extends PureComponent<Props> {
                     disabled={authentication.disabled}
                     onChange={this._handleChangePrefix}
                     defaultValue={authentication.prefix || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
-                    isVariableUncovered={isVariableUncovered}
                   />
                 </div>
               </td>

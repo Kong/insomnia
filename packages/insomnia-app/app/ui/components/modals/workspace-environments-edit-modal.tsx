@@ -6,7 +6,6 @@ import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'r
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
@@ -29,14 +28,6 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 interface Props extends ModalProps {
   handleChangeEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  lineWrapping: boolean;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
 }
 
 interface State {
@@ -362,9 +353,9 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     // Do this last so we don't block the sorting
     db.bufferChanges();
 
-    Promise.all(newSubEnvironments.map((environment, idx) => this._updateEnvironment(
+    Promise.all(newSubEnvironments.map((environment, index) => this._updateEnvironment(
       environment,
-      { metaSortKey: idx },
+      { metaSortKey: index },
       false,
     ))).then(() => {
       db.flushChanges();
@@ -433,14 +424,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   render() {
     const {
       activeEnvironmentId,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      getRenderContext,
-      isVariableUncovered,
-      lineWrapping,
-      nunjucksPowerUserMode,
-      render,
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
@@ -587,18 +570,10 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
             </div>
             <div className="env-modal__editor">
               <EnvironmentEditor
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
-                editorKeyMap={editorKeyMap}
-                lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
                 key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
                 environmentInfo={environmentInfo}
                 didChange={this._didChange}
-                render={render}
-                getRenderContext={getRenderContext}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                isVariableUncovered={isVariableUncovered}
               />
             </div>
           </div>

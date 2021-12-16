@@ -115,11 +115,11 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
   );
 });
 
-const install = (relDir: string) => new Promise<void>((resolve, reject) => {
-  const prefix = path.resolve(__dirname, relDir);
+const install = () => new Promise<void>((resolve, reject) => {
+  const root = path.resolve(__dirname, '../../../');
 
-  const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
-    cwd: prefix,
+  const p = childProcess.spawn('npm', ['run', 'bootstrap:electron-builder'], {
+    cwd: root,
     shell: true,
   });
 
@@ -250,7 +250,7 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
 
   // Install Node modules
   console.log('[build] Installing dependencies');
-  await install(buildFolder);
+  await install();
 
   console.log('[build] Complete!');
   return buildContext;

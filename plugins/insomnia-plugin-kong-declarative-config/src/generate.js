@@ -1,38 +1,31 @@
-const YAML = require('yaml');
 const o2k = require('openapi-2-kong');
 
 module.exports = {
   label: 'Declarative Config',
-  generate: async ({ contents, format, formatVersion }) => {
-    const isSupported = format === 'openapi' && formatVersion.match(/^3./);
+  docsLink: 'https://docs.insomnia.rest/insomnia/declarative-config',
+  generate: async ({ contents, formatVersion }) => {
+    const isSupported = formatVersion && formatVersion.match(/^3./);
 
-    // Return to signify that it's not supported
     if (!isSupported) {
       return {
         document: null,
-        error: `Unsupported spec format ${format} ${formatVersion}`,
+        error: `Unsupported OpenAPI spec format ${formatVersion}`,
       };
     }
 
-    let result;
-
     try {
-      result = await o2k.generateFromString(contents, 'kong-declarative-config');
+      const result = await o2k.generateFromString(contents, 'kong-declarative-config');
+      // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
+      const declarativeConfig = result.documents?.[0]
+      return {
+        document: JSON.stringify(declarativeConfig, null, '\t'),
+        error: null,
+      };
     } catch (err) {
       return {
         document: null,
         error: err.message,
       };
     }
-
-    const yamlDocs = result.documents.map(d => YAML.stringify(d));
-
-    // Join the YAML docs with "---" and strip any extra newlines surrounding them
-    const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
-
-    return {
-      document,
-      error: null,
-    };
   },
 };

@@ -30,6 +30,8 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
+      - name: Type checks
+        run: npm run type-check
       - name: Run tests
         run: npm test
   

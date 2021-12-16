@@ -14,7 +14,6 @@ import {
   AUTH_OAUTH_2,
   AUTOBIND_CFG,
 } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
@@ -30,14 +29,10 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
-  nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
-  isVariableUncovered: boolean;
   oAuth2Token?: OAuth2Token | null;
 }
 
@@ -47,13 +42,9 @@ export class AuthWrapper extends PureComponent<Props> {
     const {
       oAuth2Token,
       request,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
 
@@ -61,13 +52,9 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <BasicAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_2) {
@@ -75,86 +62,58 @@ export class AuthWrapper extends PureComponent<Props> {
         <OAuth2Auth
           oAuth2Token={oAuth2Token}
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_HAWK) {
       return (
         <HawkAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_1) {
       return (
         <OAuth1Auth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           showPasswords={showPasswords}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_DIGEST) {
       return (
         <DigestAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NTLM) {
       return (
         <NTLMAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_BEARER) {
       return (
         <BearerAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_AWS_IAM) {
       return (
         <AWSAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NETRC) {
@@ -163,11 +122,7 @@ export class AuthWrapper extends PureComponent<Props> {
       return (
         <AsapAuth
           request={request}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else {

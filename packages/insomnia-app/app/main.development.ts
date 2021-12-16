@@ -1,3 +1,6 @@
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
@@ -6,8 +9,9 @@ import appConfig from '../config/config.json';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import { disableSpellcheckerDownload } from './common/electron-helpers';
+import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
+import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -38,8 +42,18 @@ if (!isDevelopment()) {
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
+
 // When the app is first launched
 app.on('ready', async () => {
+  const { error } = validateInsomniaConfig();
+
+  if (error) {
+    electron.dialog.showErrorBox(error.title, error.message);
+    console.log('[config] Insomnia config is invalid, preventing app initialization');
+    exitAppFailure();
+    return;
+  }
+
   disableSpellcheckerDownload();
 
   if (isDevelopment()) {
@@ -59,9 +73,12 @@ app.on('ready', async () => {
   await errorHandling.init();
   await windowUtils.init();
   // Init the app
-  const updatedStats = await _trackStats();
-  await _updateFlags(updatedStats);
+  const { launches } = await _trackStats();
+  if (launches === 1) {
+    await handleFirstLaunch();
+  }
   await _launchApp();
+
   // Init the rest
   await updates.init();
   grpcIpcMain.init();
@@ -172,16 +189,9 @@ async function _createModelInstances() {
   await models.settings.getOrCreate();
 }
 
-async function _updateFlags({ launches }: Stats) {
-  const firstLaunch = launches === 1;
-
-  if (firstLaunch) {
-    await models.settings.patch({
-      hasPromptedOnboarding: false,
-      // Don't show the analytics preferences prompt as it is part of the onboarding flow
-      hasPromptedAnalytics: true,
-    });
-  }
+async function handleFirstLaunch() {
+  // TODO: create first request and bring it into view
+  await models.settings.patch({ hasPromptedAnalytics: false });
 }
 
 async function _trackStats() {

@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
-import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -32,7 +32,7 @@ import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 interface Props {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
-  activeWorkspaceName: string;
+  activeWorkspaceName?: string;
   activeApiSpec: ApiSpec;
   activeProject: Project;
   hotKeyRegistry: HotKeyRegistry;
@@ -115,8 +115,8 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown?.toggle(true);
     });
   }
@@ -164,9 +164,6 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
-          <DropdownDivider>
-            {getAppName()} v{getAppVersion()}
-          </DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />

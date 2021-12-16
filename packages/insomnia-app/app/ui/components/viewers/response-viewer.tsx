@@ -24,16 +24,13 @@ import { ResponseWebView } from './response-web-view';
 
 let alwaysShowLargeResponses = false;
 
-interface Props {
+export interface ResponseViewerProps {
   bytes: number;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   download: (...args: any[]) => any;
   editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   filter: string;
   filterHistory: string[];
   getBody: (...args: any[]) => any;
@@ -53,7 +50,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseViewer extends Component<Props, State> {
+export class ResponseViewer extends Component<ResponseViewerProps, State> {
   _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
@@ -86,7 +83,7 @@ export class ResponseViewer extends Component<Props, State> {
     this._handleDismissBlocker();
   }
 
-  _maybeLoadResponseBody(props: Props, forceShow?: boolean) {
+  _maybeLoadResponseBody(props: ResponseViewerProps, forceShow?: boolean) {
     const { bytes } = props;
     const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
     const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
@@ -117,11 +114,11 @@ export class ResponseViewer extends Component<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps(nextProps: ResponseViewerProps) {
     this._maybeLoadResponseBody(nextProps);
   }
 
-  shouldComponentUpdate(nextProps: Props, nextState: State) {
+  shouldComponentUpdate(nextProps: ResponseViewerProps, nextState: State) {
     for (const k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
@@ -179,12 +176,12 @@ export class ResponseViewer extends Component<Props, State> {
     );
   }
 
-  _handleKeyDown(e: KeyboardEvent) {
+  _handleKeyDown(event: KeyboardEvent) {
     if (!this._isViewSelectable()) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.RESPONSE_FOCUS, () => {
+    executeHotKey(event, hotKeyRefs.RESPONSE_FOCUS, () => {
       if (!this._isViewSelectable()) {
         return;
       }
@@ -197,15 +194,55 @@ export class ResponseViewer extends Component<Props, State> {
     });
   }
 
+  _getContentType() {
+    const { contentType: originalContentType } = this.props;
+    const { bodyBuffer } = this.state;
+
+    const lowercasedOriginalContentType = originalContentType.toLowerCase();
+
+    if (!bodyBuffer || bodyBuffer.length === 0) {
+      return lowercasedOriginalContentType;
+    }
+
+    // Try to detect JSON in all cases (even if a different header is set).
+    // Apparently users often send JSON with weird content-types like text/plain.
+    try {
+      if (bodyBuffer && bodyBuffer.length > 0) {
+        JSON.parse(bodyBuffer.toString('utf8'));
+        return 'application/json';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
+    // Try to detect HTML in all cases (even if header is set).
+    // It is fairly common for webservers to send errors in HTML by default.
+    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
+    try {
+      const isProbablyHTML = bodyBuffer
+        .slice(0, 100)
+        .toString()
+        .trim()
+        .match(/^<!doctype html.*>/i);
+
+      if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
+        return 'text/html';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
+    return lowercasedOriginalContentType;
+  }
+
   _getBody() {
     const { bodyBuffer } = this.state;
-    const { contentType } = this.props;
-
     if (!bodyBuffer) {
       return '';
     }
 
     // Show everything else as "source"
+    const contentType = this._getContentType();
     const match = contentType.match(/charset=([\w-]+)/);
     const charset = match && match.length >= 2 ? match[1] : 'utf-8';
 
@@ -220,13 +257,11 @@ export class ResponseViewer extends Component<Props, State> {
 
   /** Try to detect content-types if there isn't one */
   _getMode() {
-    const { contentType } = this.props;
-    const body = this._getBody();
-    if (body?.match(/^\s*<\?xml [^?]*\?>/)) {
+    if (this._getBody()?.match(/^\s*<\?xml [^?]*\?>/)) {
       return 'application/xml';
-    } else {
-      return contentType;
     }
+
+    return this._getContentType();
   }
 
   _handleClickLink(url: string) {
@@ -246,9 +281,6 @@ export class ResponseViewer extends Component<Props, State> {
       disablePreviewLinks,
       download,
       editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       error: responseError,
       filter,
       filterHistory,
@@ -257,15 +289,13 @@ export class ResponseViewer extends Component<Props, State> {
       updateFilter,
       url,
     } = this.props;
-    // WARNING: props should never be overwritten!
-    let { contentType } = this.props;
     const { bodyBuffer, error: parseError } = this.state;
     const error = responseError || parseError;
 
     if (error) {
       return (
         <div className="scrollable tall">
-          <ResponseErrorViewer url={url} error={error} fontSize={editorFontSize} />
+          <ResponseErrorViewer url={url} error={error} />
         </div>
       );
     }
@@ -321,35 +351,8 @@ export class ResponseViewer extends Component<Props, State> {
       return <div className="pad faint">No body returned for response</div>;
     }
 
-    // Try to detect JSON in all cases (even if header is set). Apparently users
-    // often send JSON with weird content-types like text/plain
-    try {
-      JSON.parse(bodyBuffer.toString('utf8'));
-      contentType = 'application/json';
-    } catch (e) {
-      // Nothing
-    }
-
-    // Try to detect HTML in all cases (even if header is set). It is fairly
-    // common for webservers to send errors in HTML by default.
-    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
-    try {
-      const isProbablyHTML = bodyBuffer
-        .slice(0, 100)
-        .toString()
-        .trim()
-        .match(/^<!doctype html.*>/i);
-
-      if (contentType.indexOf('text/html') !== 0 && isProbablyHTML) {
-        contentType = 'text/html';
-      }
-    } catch (e) {
-      // Nothing
-    }
-
-    const ct = contentType.toLowerCase();
-
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
+    const contentType = this._getContentType();
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -369,7 +372,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
       return (
         <ResponseWebView
           body={this._getBody()}
@@ -381,7 +384,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
           <ResponsePDFViewer body={bodyBuffer} uniqueKey={responseId} />
@@ -389,7 +392,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
           <ResponseCSVViewer body={bodyBuffer} key={responseId} />
@@ -397,7 +400,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('multipart/') === 0) {
       return (
         <ResponseMultipartViewer
           bodyBuffer={bodyBuffer}
@@ -406,9 +409,6 @@ export class ResponseViewer extends Component<Props, State> {
           disablePreviewLinks={disablePreviewLinks}
           download={download}
           editorFontSize={editorFontSize}
-          editorIndentSize={editorIndentSize}
-          editorKeyMap={editorKeyMap}
-          editorLineWrapping={editorLineWrapping}
           filter={filter}
           filterHistory={filterHistory}
           key={responseId}
@@ -418,7 +418,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -437,7 +437,6 @@ export class ResponseViewer extends Component<Props, State> {
           responseId={responseId}
           ref={this._setSelectableViewRef}
           value={this._getBody()}
-          fontSize={editorFontSize}
         />
       );
     }
@@ -451,10 +450,6 @@ export class ResponseViewer extends Component<Props, State> {
         defaultValue={this._getBody()}
         filter={filter}
         filterHistory={filterHistory}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
-        lineWrapping={editorLineWrapping}
         mode={this._getMode()}
         noMatchBrackets
         onClickLink={disablePreviewLinks ? undefined : this._handleClickLink}

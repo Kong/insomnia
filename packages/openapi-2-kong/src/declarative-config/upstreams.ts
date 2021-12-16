@@ -1,4 +1,4 @@
-import { fillServerVariables, getName, parseUrl } from '../common';
+import { fillServerVariables, getName, hasUpstreams, parseUrl } from '../common';
 import { DCUpstream } from '../types/declarative-config';
 import { xKongUpstreamDefaults } from '../types/kong';
 import { OpenApi3Spec } from '../types/openapi3';
@@ -18,9 +18,15 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
     throw new Error(`expected '${xKongUpstreamDefaults}' to be an object`);
   }
 
+  let name = getName(api);
+
+  if (hasUpstreams(api)) {
+    name =  appendUpstreamToName(name);
+  }
+
   const upstream: DCUpstream = {
     ...upstreamDefaults,
-    name: `${getName(api)}.upstream`,
+    name,
     targets: [],
     tags,
   };
@@ -39,3 +45,5 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
 
   return [upstream];
 }
+
+export const appendUpstreamToName = (name: string) => `${name}.upstream`;

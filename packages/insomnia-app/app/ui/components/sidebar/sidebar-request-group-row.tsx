@@ -9,7 +9,6 @@ import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as misc from '../../../common/misc';
-import { HandleRender } from '../../../common/render';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveRequest } from '../../redux/selectors';
@@ -33,7 +32,6 @@ interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
   handleActivateRequest: Function;
   handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
-  handleRender: HandleRender;
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
@@ -95,7 +93,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
-      handleRender,
       isDragging,
       isDraggingOver,
       hotKeyRegistry,
@@ -173,7 +170,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               handleGenerateCode={misc.nullFn}
               handleCopyAsCurl={misc.nullFn}
               handleSetRequestPinned={misc.nullFn}
-              handleRender={handleRender}
               isActive={false}
               requestGroup={requestGroup}
               requestCreate={handleCreateRequest}

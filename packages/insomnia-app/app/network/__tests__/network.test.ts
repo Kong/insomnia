@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
+import { CurlHttpVersion } from 'node-libcurl';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
@@ -17,7 +18,6 @@ import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
-const CONTEXT = {};
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
@@ -96,7 +96,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -171,7 +170,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -271,7 +269,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -331,7 +328,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -411,7 +407,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -472,7 +467,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -512,7 +506,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -551,7 +544,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -591,7 +583,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -688,7 +679,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
       null,
@@ -740,38 +730,18 @@ describe('actuallySend()', () => {
       parentId: workspace._id,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, workspace, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
-    const responseV11 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V1_1,
-    });
-    const responseV2 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V2_0,
-    });
-    const responseV3 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.v3,
-    });
-    const responseDefault = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.default,
-    });
-    const responseInvalid = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      // @ts-expect-error intentionally invalid
-      preferredHttpVersion: 'blah',
-    });
-    const r = models.response;
-    expect(JSON.parse(String(r.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV11))).options.HTTP_VERSION).toBe('V1_1');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV2))).options.HTTP_VERSION).toBe('V2_0');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV3))).options.HTTP_VERSION).toBe('v3');
-    expect(JSON.parse(String(r.getBodyBuffer(responseDefault))).options.HTTP_VERSION).toBe(undefined);
-    expect(JSON.parse(String(r.getBodyBuffer(responseInvalid))).options.HTTP_VERSION).toBe(undefined);
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
+    expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
+    expect(networkUtils.getHttpVersion(HttpVersions.v3).curlHttpVersion).toBe(CurlHttpVersion.v3);
+    expect(networkUtils.getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
+    expect(networkUtils.getHttpVersion('blah').curlHttpVersion).toBe(undefined);
   });
 
   it('requests can be cancelled by requestId', async () => {
@@ -796,14 +766,12 @@ describe('actuallySend()', () => {
     // WHEN
     const response1Promise = networkUtils._actuallySend(
       renderedRequest1,
-      CONTEXT,
       workspace,
       settings,
     );
 
     const response2Promise = networkUtils._actuallySend(
       renderedRequest2,
-      CONTEXT,
       workspace,
       settings,
     );

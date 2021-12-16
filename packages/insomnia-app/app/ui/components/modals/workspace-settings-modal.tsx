@@ -6,7 +6,6 @@ import styled from 'styled-components';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
@@ -66,14 +65,6 @@ interface Props extends ReduxProps {
   clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleRemoveWorkspace: Function;
   handleClearAllResponses: Function;
 }
@@ -131,8 +122,8 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
   }
 
   _handleDuplicateWorkspace() {
-    const { workspace } = this.props;
-    showWorkspaceDuplicateModal({ workspace, onDone: this.hide });
+    const { workspace, apiSpec } = this.props;
+    showWorkspaceDuplicateModal({ workspace, apiSpec, onDone: this.hide });
   }
 
   _handleToggleCertificateForm() {
@@ -297,14 +288,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
       clientCertificates,
       workspace,
       activeWorkspaceName,
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
     const privateCertificates = clientCertificates.filter(c => c.isPrivate);
@@ -347,15 +330,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
                 <MarkdownEditor
                   className="margin-top"
                   defaultPreviewMode={defaultPreviewMode}
-                  fontSize={editorFontSize}
-                  indentSize={editorIndentSize}
-                  keyMap={editorKeyMap}
                   placeholder="Write a description"
-                  lineWrapping={editorLineWrapping}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}
                 />

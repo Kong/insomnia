@@ -51,8 +51,8 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
     this.props.handleSetActiveResponse(response);
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       this._dropdown?.toggle(true);
     });
   }
@@ -132,9 +132,9 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <DropdownDivider>5 Minutes Ago</DropdownDivider>
+        <DropdownDivider>Just Now</DropdownDivider>
         {categories.minutes.map(this.renderDropdownItem)}
-        <DropdownDivider>2 Hours Ago</DropdownDivider>
+        <DropdownDivider>Less Than Two Hours Ago</DropdownDivider>
         {categories.hours.map(this.renderDropdownItem)}
         <DropdownDivider>Today</DropdownDivider>
         {categories.today.map(this.renderDropdownItem)}

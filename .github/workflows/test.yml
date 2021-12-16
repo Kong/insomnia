@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
@@ -53,6 +54,9 @@ jobs:
 
       - name: Lint markdown
         run: npm run lint:markdown
+
+      - name: Type checks
+        run: npm run type-check
 
       - name: Run tests
         run: npm test
@@ -125,7 +129,7 @@ jobs:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
-      
+
       - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
 

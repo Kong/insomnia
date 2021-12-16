@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { RequestGroup } from '../../../models/request-group';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -12,14 +11,6 @@ import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  lineWrapping: boolean;
 }
 
 interface State {
@@ -89,14 +80,6 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      editorKeyMap,
-      editorFontSize,
-      editorIndentSize,
-      lineWrapping,
-      render,
-      getRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
       ...extraProps
     } = this.props;
     const { requestGroup, isValid } = this.state;
@@ -109,18 +92,10 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll className="pad-top-sm">
           <EnvironmentEditor
-            editorFontSize={editorFontSize}
-            editorIndentSize={editorIndentSize}
-            editorKeyMap={editorKeyMap}
             ref={this._setEditorRef}
             key={requestGroup ? requestGroup._id : 'n/a'}
-            lineWrapping={lineWrapping}
             environmentInfo={environmentInfo}
             didChange={this._didChange}
-            render={render}
-            getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
           />
         </ModalBody>
         <ModalFooter>

@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
-import { InsomniaConfig, validate } from 'insomnia-config';
+import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
@@ -9,34 +9,63 @@ import { ValueOf } from 'type-fest';
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 
+interface FailedParseResult {
+  syntaxError: SyntaxError;
+  fileContents: string;
+  configPath: string;
+}
+
+const isFailedParseResult = (input: any): input is FailedParseResult => {
+  const typesafeInput = input as FailedParseResult;
+
+  return (
+    typesafeInput ? typesafeInput.syntaxError instanceof SyntaxError : false
+  );
+};
+
 /** takes an unresolved (or resolved will work fine too) filePath of the insomnia config and reads the insomniaConfig from disk */
-export const readConfigFile = (filePath?: string) => {
-  if (!filePath) {
+export const readConfigFile = (configPath?: string): unknown | FailedParseResult | undefined => {
+  if (!configPath) {
     return undefined;
   }
 
   let fileContents = '';
   try {
-    const resolvedFilePath = resolve(filePath, 'insomnia.config.json');
-    fileContents = readFileSync(resolvedFilePath, 'utf-8');
+    fileContents = readFileSync(configPath, 'utf-8');
   } catch (error: unknown) {
+    // file not found
     return undefined;
   }
 
-  if (!fileContents) {
+  const fileIsFoundButEmpty = fileContents === '';
+  if (fileIsFoundButEmpty) {
     return undefined;
   }
 
   try {
     return JSON.parse(fileContents) as unknown;
-  } catch (error: unknown) {
-    console.error('failed to parse insomnia config', { filePath, fileContents }, error);
+  } catch (syntaxError: unknown) {
+    // note: all JSON.parse errors are SyntaxErrors
+    // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/JSON_bad_parse
+    if (syntaxError instanceof SyntaxError) {
+      console.error('failed to parse insomnia config', { configPath, fileContents, syntaxError });
+      const failedParseResult: FailedParseResult = {
+        syntaxError,
+        fileContents,
+        configPath: configPath,
+      };
+      return failedParseResult;
+    }
     return undefined;
   }
 };
 
 export const getLocalDevConfigFilePath = () => (
   isDevelopment() ? '../../packages/insomnia-app/app' as string : undefined
+);
+
+const addConfigFileToPath = (path: string | undefined) => (
+  path ? resolve(path, INSOMNIA_CONFIG_FILENAME) : undefined
 );
 
 export const getConfigFile = () => {
@@ -47,15 +76,19 @@ export const getConfigFile = () => {
     portableExecutable,
     insomniaDataDirectory,
     localDev,
-  ];
+  ].map(addConfigFileToPath);
 
   // note: this is written as to avoid unnecessary (synchronous) reads from disk.
   // The paths above are in priority order such that if we already found what we're looking for, there's no reason to keep reading other files.
   for (const configPath of configPaths) {
-    const insomniaConfig = readConfigFile(configPath);
-    if (insomniaConfig !== undefined) {
+    const fileReadResult = readConfigFile(configPath);
+    if (isFailedParseResult(fileReadResult)) {
+      return fileReadResult;
+    }
+
+    if (fileReadResult !== undefined && configPath !== undefined) {
       return {
-        insomniaConfig,
+        insomniaConfig: fileReadResult,
         configPath,
       };
     }
@@ -67,23 +100,58 @@ export const getConfigFile = () => {
   };
 };
 
+export interface ConfigError {
+  error: {
+    configPath?: string;
+    insomniaConfig: unknown;
+    errors: ErrorResult['errors'];
+    humanReadableErrors: ErrorResult['humanReadableErrors'];
+  };
+}
+
+export const isConfigError = (input: ConfigError | ParseError): input is ConfigError => (
+  // Cast for typesafety
+  (input as ConfigError).error?.humanReadableErrors?.length > 0
+);
+
+export interface ParseError {
+  error: FailedParseResult;
+}
+
+export const isParseError = (input: ConfigError | ParseError): input is ParseError => (
+  isFailedParseResult(input.error)
+);
+
 /**
  * gets settings from the `insomnia.config.json`
  *
  * note that it is a business rule that the config is never read again after startup, hence the `once` usage.
  */
-export const getConfigSettings = once(() => {
-  const { configPath, insomniaConfig } = getConfigFile();
+export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError | ParseError) = once(() => {
+  const configFileResult = getConfigFile();
 
-  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
-  if (!valid) {
-    console.error('invalid insomnia config', {
+  if (isFailedParseResult(configFileResult)) {
+    return {
+      error: configFileResult,
+    };
+  }
+
+  const { insomniaConfig, configPath } = configFileResult;
+  const validationResult = validate(insomniaConfig as InsomniaConfig);
+
+  if (isErrorResult(validationResult)) {
+    const { errors, humanReadableErrors } = validationResult;
+    const error = {
       configPath,
       insomniaConfig,
       errors,
-    });
-    return {};
+      humanReadableErrors,
+    };
+
+    console.error('invalid insomnia config', error);
+    return { error };
   }
+
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};
 });

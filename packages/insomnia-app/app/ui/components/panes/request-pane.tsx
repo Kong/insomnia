@@ -5,7 +5,6 @@ import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { OAuth2Token } from '../../../models/o-auth-2-token';
@@ -41,8 +40,6 @@ interface Props {
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleCreateRequest: () => void;
   handleGenerateCode: Function;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateDownloadPath: Function;
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateRequestMethod: (r: Request, method: string) => Promise<Request>;
@@ -57,7 +54,6 @@ interface Props {
   handleImport: Function;
   workspace: Workspace;
   settings: Settings;
-  isVariableUncovered: boolean;
   environmentId: string;
   forceRefreshCounter: number;
   headerEditorKey: string;
@@ -129,10 +125,8 @@ export class RequestPane extends PureComponent<Props> {
       forceRefreshCounter,
       forceUpdateRequestHeaders,
       handleGenerateCode,
-      handleGetRenderContext,
       handleImport,
       handleCreateRequest,
-      handleRender,
       handleSend,
       handleSendAndDownload,
       handleUpdateDownloadPath,
@@ -141,7 +135,6 @@ export class RequestPane extends PureComponent<Props> {
       workspace,
       environmentId,
       settings,
-      isVariableUncovered,
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
@@ -187,10 +180,7 @@ export class RequestPane extends PureComponent<Props> {
               handleGenerateCode={handleGenerateCode}
               handleSend={handleSend}
               handleSendAndDownload={handleSendAndDownload}
-              handleRender={handleRender}
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              handleGetRenderContext={handleGetRenderContext}
               request={request}
               hotKeyRegistry={settings.hotKeyRegistry}
               handleUpdateDownloadPath={handleUpdateDownloadPath}
@@ -251,15 +241,12 @@ export class RequestPane extends PureComponent<Props> {
             <BodyEditor
               key={uniqueKey}
               handleUpdateRequestMimeType={updateRequestMimeType}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
               request={request}
               workspace={workspace}
               environmentId={environmentId}
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
-              isVariableUncovered={isVariableUncovered}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
@@ -270,10 +257,6 @@ export class RequestPane extends PureComponent<Props> {
                   showPasswords={settings.showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
                   onChange={updateRequestAuthentication}
                 />
               </ErrorBoundary>
@@ -287,7 +270,7 @@ export class RequestPane extends PureComponent<Props> {
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center"
                 >
-                  <RenderedQueryString handleRender={handleRender} request={request} />
+                  <RenderedQueryString request={request} />
                 </ErrorBoundary>
               </code>
             </div>
@@ -298,13 +281,6 @@ export class RequestPane extends PureComponent<Props> {
               >
                 <RequestParametersEditor
                   key={headerEditorKey}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
-                  editorFontSize={settings.editorFontSize}
-                  editorIndentSize={settings.editorIndentSize}
-                  editorLineWrapping={settings.editorLineWrapping}
                   onChange={updateRequestParameters}
                   request={request}
                   bulk={settings.useBulkParametersEditor}
@@ -331,13 +307,6 @@ export class RequestPane extends PureComponent<Props> {
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
                 key={headerEditorKey}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                isVariableUncovered={isVariableUncovered}
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorLineWrapping={settings.editorLineWrapping}
                 onChange={updateRequestHeaders}
                 request={request}
                 bulk={settings.useBulkHeaderEditor}
@@ -368,7 +337,6 @@ export class RequestPane extends PureComponent<Props> {
                       heading={request.name}
                       debounceMillis={1000}
                       markdown={request.description}
-                      handleRender={handleRender}
                     />
                   </ErrorBoundary>
                 </div>
