@@ -1,5 +1,5 @@
 import { Button } from 'insomnia-components';
-import React, { FC, useCallback, useRef } from 'react';
+import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -76,19 +76,30 @@ export const AnalyticsModal: FC = () => {
   const { hasPromptedAnalytics } = useSelector(selectSettings);
   const ref = useRef<Modal | null>(null);
 
-  const onClick = useCallback((enableAnalytics: boolean) => async () => {
+  const onEnable = useCallback(async () => {
     await models.settings.patch({
-      enableAnalytics,
+      enableAnalytics: true,
       hasPromptedAnalytics: true,
     });
   }, []);
+  const onDisable = async () => {
+    await models.settings.patch({
+      enableAnalytics: false,
+      hasPromptedAnalytics: true,
+    });
+  };
+
+  useEffect(() => {
+    if (hasPromptedAnalytics) {
+      ref.current?.hide();
+    } else {
+      ref.current?.show();
+    }
+  }, [hasPromptedAnalytics]);
 
   if (hasPromptedAnalytics) {
-    ref.current?.hide();
     return null;
   }
-
-  ref.current?.show();
 
   return (
     <Modal centered noEscape skinny ref={ref}>
@@ -117,7 +128,7 @@ export const AnalyticsModal: FC = () => {
             radius="3px"
             size="medium"
             variant="contained"
-            onClick={onClick(true)}
+            onClick={onEnable}
           >
             Share Usage Analytics
           </Button>
@@ -125,7 +136,7 @@ export const AnalyticsModal: FC = () => {
           <button
             key="disable"
             className="btn btn--super-compact"
-            onClick={onClick(false)}
+            onClick={onDisable}
           >
             Don't share usage analytics
           </button>
