@@ -37,7 +37,7 @@ log.info(`Running version ${getAppVersion()}`);
 if (!isDevelopment()) {
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
-  app.setPath('userData', process.env.INSOMNIA_DATA_PATH ?? newPath);
+  app.setPath('userData', newPath);
 }
 
 // So if (window) checks don't throw
