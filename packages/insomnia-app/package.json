@@ -19,7 +19,6 @@
     "clean": "tsc --build tsconfig.webpack.json --clean && tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf build app/main.min.js",
     "test": "jest",
-    "test-jc": "jest is-url-matched-in-no-proxy-rule --watch",
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit -p tsconfig.build.json",
     "type-check:watch": "npm run type-check -- --watch",
