@@ -11,6 +11,7 @@ import { parse as urlParse } from 'url';
 
 import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
+  ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
@@ -45,7 +46,7 @@ import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isNotDefaultProject } from '../../models/project';
+import { DEFAULT_PROJECT_ID, isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
@@ -92,6 +93,7 @@ import {
   setActiveActivity,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
+import { activateWorkspace } from '../redux/modules/workspace';
 import {
   selectActiveApiSpec,
   selectActiveCookieJar,
@@ -113,6 +115,7 @@ import {
   selectActiveWorkspaceName,
   selectEntitiesLists,
   selectSettings,
+  selectStats,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
@@ -1416,9 +1419,27 @@ class App extends PureComponent<AppProps, State> {
     this._ensureWorkspaceChildren();
   }
 
+  async _handleFirstLaunch() {
+    const { handleActivateWorkspace, stats } = this.props;
+
+    if (stats.launches > 1) {
+      return;
+    }
+
+    const { _id: workspaceId } = await models.workspace.create({ scope: 'design', parentId: DEFAULT_PROJECT_ID });
+    const request = await models.request.create({ parentId: workspaceId });
+    await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: request._id, activeActivity: ACTIVITY_DEBUG });
+
+    handleActivateWorkspace({ workspaceId });
+
+    await models.settings.patch({ hasPromptedAnalytics: false });
+  }
+
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
     this._ensureWorkspaceChildren();
+    this._handleFirstLaunch();
   }
 
   render() {
@@ -1506,7 +1527,13 @@ class App extends PureComponent<AppProps, State> {
 }
 
 function mapStateToProps(state: RootState) {
-  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = state.global;
+  const {
+    activeActivity,
+    isLoading,
+    loadingRequestIds,
+    isLoggedIn,
+  } = state.global;
+
   // Entities
   const entitiesLists = selectEntitiesLists(state);
   const {
@@ -1520,6 +1547,7 @@ function mapStateToProps(state: RootState) {
     workspaceMetas,
   } = entitiesLists;
 
+  const stats = selectStats(state);
   const settings = selectSettings(state);
 
   // Workspace stuff
@@ -1617,6 +1645,7 @@ function mapStateToProps(state: RootState) {
     sidebarFilter,
     sidebarHidden,
     sidebarWidth,
+    stats,
     syncItems,
     unseenWorkspaces,
     workspaceChildren,
@@ -1632,6 +1661,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
+    activateWorkspace: handleActivateWorkspace,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1640,6 +1670,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop,
     newCommand,
     setActiveActivity,
+    activateWorkspace,
     exportRequestsToFile,
     initialize,
   }, dispatch);
@@ -1647,6 +1678,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     handleCommand,
     handleImportUri,
     handleSetActiveActivity,
+    handleActivateWorkspace,
     handleStartLoading,
     handleStopLoading,
     handleExportRequestsToFile,
