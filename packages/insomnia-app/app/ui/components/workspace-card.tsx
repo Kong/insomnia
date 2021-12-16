@@ -85,12 +85,16 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
     />
   );
 
-  const version = spec?.info?.version || '';
+  let version = spec?.info?.version || '';
   let label: string = strings.collection.singular;
   let format = '';
   let labelIcon = <i className="fa fa-bars" />;
   let defaultActivity = ACTIVITY_DEBUG;
   let title = workspace.name;
+
+  if (version.length > 0 && !version.startsWith('v')) {
+    version = `v${version}`;
+  }
 
   if (isDesign(workspace)) {
     label = strings.document.singular;
@@ -125,7 +129,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
       }
       docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
       docVersion={
-        version ? <Highlight search={filter} text={`v${version}`} /> : undefined
+        version ? <Highlight search={filter} text={`${version}`} /> : undefined
       }
       tagLabel={
         label ? (
