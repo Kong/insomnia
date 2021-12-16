@@ -29,7 +29,7 @@ describe('Application launch', function() {
   });
 
   it('sends JSON request', async () => {
-    const url = 'http://127.0.0.1:4010/pets/1';
+    const url = 'http://127.0.0.1:4010/pets/{% now \'millis\', \'\' %}';
 
     await client.correctlyLaunched(app);
     await onboarding.skipOnboardingFlow(app);

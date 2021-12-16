@@ -56,7 +56,6 @@ export interface Settings {
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
   hasPromptedAnalytics: boolean;
-  hasPromptedOnboarding: boolean;
   hasPromptedToMigrateFromDesigner: boolean;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;

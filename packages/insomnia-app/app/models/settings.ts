@@ -52,12 +52,11 @@ export function init(): BaseSettings {
     fontVariantLigatures: false,
     forceVerticalLayout: false,
 
-    // Only existing users updating from an older version should see the analytics prompt.
-    // So by default this flag is set to false, and is toggled to true during initialization for new users.
+    /**
+     * Only existing users updating from an older version should see the analytics prompt.
+     * So by default this flag is set to false, and is toggled to true during initialization for new users.
+     */
     hasPromptedAnalytics: false,
-
-    // Users should only see onboarding during first launch, and anybody updating from an older version should not see it, so by default this flag is set to true, and is toggled to false during initialization
-    hasPromptedOnboarding: true,
     hasPromptedToMigrateFromDesigner: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',

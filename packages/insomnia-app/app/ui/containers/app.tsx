@@ -86,7 +86,6 @@ import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
   exportRequestsToFile,
-  goToNextActivity,
   loadRequestStart,
   loadRequestStop,
   newCommand,
@@ -1633,7 +1632,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
-    goToNextActivity: handleGoToNextActivity,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1642,7 +1640,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop,
     newCommand,
     setActiveActivity,
-    goToNextActivity,
     exportRequestsToFile,
     initialize,
   }, dispatch);
@@ -1652,7 +1649,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
-    handleGoToNextActivity,
     handleExportRequestsToFile,
     handleInitializeEntities,
   };

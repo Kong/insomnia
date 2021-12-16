@@ -3,7 +3,7 @@ import './base-imports';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { CodeMirrorLinkClickCallback, ShowHintOptions } from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
@@ -787,7 +787,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       readOnly,
       tabIndex,
     } = this.props;
-    let mode;
+    let mode: EditorConfiguration['mode'];
 
     if (this.props.render) {
       mode = {
@@ -801,7 +801,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
 
     // NOTE: YAML is not valid when indented with Tabs
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
-    const actuallyIndentWithTabs = indentWithTabs && !isYaml;
+    const actuallyIndentWithTabs = indentWithTabs && !isYaml && mode !== 'openapi';
     const options: CodeMirror.EditorConfiguration = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',

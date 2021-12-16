@@ -16,6 +16,7 @@
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
+    "bootstrap:electron-builder": "lerna bootstrap --no-ci -- --production --no-optional",
     "version": "lerna version --exact --preid beta",
     "version:all": "npm run version -- --force-publish",
     "version:dry": "npm run version -- --no-git-tag-version",
