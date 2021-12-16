@@ -35,7 +35,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   showPasswords: boolean;
-  isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
 }
@@ -197,7 +196,6 @@ class OAuth1AuthInternal extends PureComponent<Props> {
   ) {
     const {
       request,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -222,7 +220,6 @@ class OAuth1AuthInternal extends PureComponent<Props> {
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               getAutocompleteConstants={handleAutocomplete}
-              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

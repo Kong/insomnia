@@ -11,6 +11,7 @@ import { KeydownBinder } from '../keydown-binder';
 let globalZIndex = 1000;
 
 export interface ModalProps {
+  centered?: boolean;
   tall?: boolean;
   wide?: boolean;
   skinny?: boolean;
@@ -43,12 +44,12 @@ export class Modal extends PureComponent<ModalProps, State> {
     zIndex: globalZIndex,
   };
 
-  async _handleKeyDown(e) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this.state.open) {
       return;
     }
 
-    this.props.onKeyDown?.(e);
+    this.props.onKeyDown?.(event);
 
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
@@ -56,12 +57,12 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = await pressedHotKey(e, hotKeyRefs.CLOSE_MODAL);
-    const pressedCloseButton = closeOnKeyCodes.find(c => c === e.keyCode);
+    const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
+    const pressedCloseButton = closeOnKeyCodes.find(c => c === event.keyCode);
 
     // Pressed escape
     if (pressedEscape || pressedCloseButton) {
-      e.preventDefault();
+      event.preventDefault();
       this.hide();
       this.props.onCancel?.();
     }
@@ -140,7 +141,7 @@ export class Modal extends PureComponent<ModalProps, State> {
   }
 
   render() {
-    const { tall, wide, skinny, noEscape, className, children } = this.props;
+    const { tall, wide, skinny, noEscape, className, children, centered } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
     if (!open) {
@@ -181,7 +182,7 @@ export class Modal extends PureComponent<ModalProps, State> {
           onClick={this._handleClick}
         >
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-          <div className="modal__content__wrapper">
+          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
             <div className="modal__content" key={forceRefreshCounter}>
               {children}
             </div>

@@ -33,7 +33,6 @@ interface Props {
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
-  isVariableUncovered: boolean;
   oAuth2Token?: OAuth2Token | null;
 }
 
@@ -46,7 +45,6 @@ export class AuthWrapper extends PureComponent<Props> {
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
 
@@ -57,7 +55,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_2) {
@@ -68,7 +65,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_HAWK) {
@@ -76,7 +72,6 @@ export class AuthWrapper extends PureComponent<Props> {
         <HawkAuth
           request={request}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_1) {
@@ -85,7 +80,6 @@ export class AuthWrapper extends PureComponent<Props> {
           request={request}
           showPasswords={showPasswords}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_DIGEST) {
@@ -95,7 +89,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NTLM) {
@@ -105,7 +98,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_BEARER) {
@@ -113,7 +105,6 @@ export class AuthWrapper extends PureComponent<Props> {
         <BearerAuth
           request={request}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_AWS_IAM) {
@@ -123,7 +114,6 @@ export class AuthWrapper extends PureComponent<Props> {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else if (authentication.type === AUTH_NETRC) {
@@ -133,7 +123,6 @@ export class AuthWrapper extends PureComponent<Props> {
         <AsapAuth
           request={request}
           onChange={onChange}
-          isVariableUncovered={isVariableUncovered}
         />
       );
     } else {

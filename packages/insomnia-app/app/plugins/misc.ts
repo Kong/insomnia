@@ -303,23 +303,6 @@ export async function setTheme(themeName: string) {
   }
 }
 
-export async function setFont(settings: Record<string, any>) {
-  if (!document) {
-    return;
-  }
-
-  const html = document.querySelector('html');
-
-  if (!html) {
-    return;
-  }
-
-  html.style.setProperty('--font-default', settings.fontInterface);
-  html.style.setProperty('--font-monospace', settings.fontMonospace);
-  html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
-  html.style.setProperty('font-size', `${settings.fontSize}px`);
-}
-
 const _baseTheme = {
   background: {
     default: '#fff',

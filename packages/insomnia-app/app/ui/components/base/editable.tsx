@@ -88,14 +88,14 @@ export class Editable extends PureComponent<Props, State> {
     );
   }
 
-  _handleEditKeyDown(e) {
-    if (e.keyCode === 13) {
+  _handleEditKeyDown(event: KeyboardEvent) {
+    if (event.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
-    } else if (e.keyCode === 27) {
+    } else if (event.keyCode === 27) {
       // Pressed Escape
       // Prevent bubbling to modals and other escape listeners.
-      e.stopPropagation();
+      event.stopPropagation();
 
       if (this._input) {
         // Set the input to the original value

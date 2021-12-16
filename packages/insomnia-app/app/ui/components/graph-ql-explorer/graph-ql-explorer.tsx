@@ -87,8 +87,8 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
 
   _searchInput = createRef<DebouncedInput>();
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
       this._navigateToSchema();
       this._focusAndSelectFilterInput();
     });

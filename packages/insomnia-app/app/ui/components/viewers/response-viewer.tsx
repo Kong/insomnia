@@ -176,12 +176,12 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     );
   }
 
-  _handleKeyDown(e: KeyboardEvent) {
+  _handleKeyDown(event: KeyboardEvent) {
     if (!this._isViewSelectable()) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.RESPONSE_FOCUS, () => {
+    executeHotKey(event, hotKeyRefs.RESPONSE_FOCUS, () => {
       if (!this._isViewSelectable()) {
         return;
       }

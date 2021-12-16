@@ -11,7 +11,6 @@ import { MarkdownPreview } from './markdown-preview';
 interface Props {
   onChange: Function;
   defaultValue: string;
-  isVariableUncovered: boolean;
   placeholder?: string;
   defaultPreviewMode?: boolean;
   className?: string;
@@ -60,7 +59,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
       defaultPreviewMode,
       className,
       tall,
-      isVariableUncovered,
     } = this.props;
     const { markdown } = this.state;
     const classes = classnames('react-tabs', 'markdown-editor', 'outlined', className, {
@@ -90,7 +88,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
               placeholder={placeholder}
               debounceMillis={300}
               defaultValue={markdown}
-              isVariableUncovered={isVariableUncovered}
               onChange={this._handleChange}
             />
           </div>
