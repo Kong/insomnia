@@ -10,6 +10,12 @@ describe('isUrlMatchedInNoProxyRule - noProxyRule hostname and wildcard matches'
     expect(isUrlMatchedInNoProxyRule(url, noProxyRule)).toBe(false);
   });
 
+  it('should handle invalid url', () => {
+    const noProxyRule = 'localhost,127.0.0.1';
+    const url = 'this is not a valid url and can not be parsed by the node url.parse library';
+    expect(isUrlMatchedInNoProxyRule(url, noProxyRule)).toBe(false);
+  });
+
   it('should handle poorly formatted noProxyRule', () => {
     const noProxyRule = null;
     const url = 'https://git.acme.com/username/repo-name';

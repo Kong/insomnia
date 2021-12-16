@@ -27,6 +27,9 @@ export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: 
     return false;
   }
   const uri = urlParse(url);
+  if (!uri.hostname && !uri.port && !uri.protocol) {
+    return false;
+  }
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80');
   const hostname = formatHostname(uri.hostname);
   const noProxyList = noProxyRule.split(',');
