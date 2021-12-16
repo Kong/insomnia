@@ -9,7 +9,6 @@ import { unreachableCase } from 'ts-assert-unreachable';
 import { trackEvent } from '../../../common/analytics';
 import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
-  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -31,7 +30,6 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
-import { Settings } from '../../../models/settings';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
@@ -298,63 +296,15 @@ export const loadRequestStop = (requestId: string) => ({
   requestId,
 });
 
-function _getNextActivity(settings: Settings, currentActivity: GlobalActivity) {
-  switch (currentActivity) {
-    case ACTIVITY_MIGRATION:
-      // Has not seen the analytics prompt? Go to it
-      if (!settings.hasPromptedAnalytics) {
-        return ACTIVITY_ANALYTICS;
-      }
-
-      // Otherwise, go to home
-      return ACTIVITY_HOME;
-
-    case ACTIVITY_ANALYTICS:
-      return ACTIVITY_HOME;
-
-    default:
-      return currentActivity;
-  }
-}
-
-/*
-  Go to the next activity in a sequential activity flow, depending on different conditions
- */
-export const goToNextActivity = () => (dispatch, getState) => {
-  const state = getState();
-  const { activeActivity } = state.global;
-  const settings = selectSettings(state);
-
-  const nextActivity = _getNextActivity(settings, activeActivity);
-
-  if (nextActivity !== activeActivity) {
-    dispatch(setActiveActivity(nextActivity));
-  }
-};
-
 /*
   Go to an explicit activity
  */
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
 
-  // Don't need to await settings update
-  switch (activity) {
-    case ACTIVITY_MIGRATION:
-      trackEvent('Data', 'Migration', 'Manual');
-      models.settings.patch({
-        hasPromptedToMigrateFromDesigner: true,
-      });
-      break;
-
-    case ACTIVITY_ANALYTICS:
-      models.settings.patch({
-        hasPromptedAnalytics: true,
-      });
-      break;
-
-    default:
-      break;
+  if (activity === ACTIVITY_MIGRATION) {
+    trackEvent('Data', 'Migration', 'Manual');
+    models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
   }
 
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
@@ -700,11 +650,12 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
 
   if (isValidActivity(activity)) {
     return activity;
-  } else {
-    const fallbackActivity = ACTIVITY_HOME;
-    console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
-    return fallbackActivity;
   }
+
+  const fallbackActivity = ACTIVITY_HOME;
+  console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
+  return fallbackActivity;
+
 }
 
 /*
@@ -729,23 +680,16 @@ export const initActiveActivity = () => (dispatch, getState) => {
   activeActivity = _normalizeActivity(activeActivity);
   let overrideActivity: GlobalActivity | null = null;
 
-  switch (activeActivity) {
+  if (activeActivity === ACTIVITY_MIGRATION) {
     // If relaunched after a migration, go to the next activity
     // Don't need to do this for onboarding because that doesn't require a restart
-    case ACTIVITY_MIGRATION:
-      overrideActivity = _getNextActivity(settings, activeActivity);
-      break;
-
+    overrideActivity = ACTIVITY_HOME;
+  } else {
     // Always check if user has been prompted to migrate or onboard
-    default:
-      if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-        trackEvent('Data', 'Migration', 'Auto');
-        overrideActivity = ACTIVITY_MIGRATION;
-      } else if (!settings.hasPromptedAnalytics) {
-        overrideActivity = ACTIVITY_ANALYTICS;
-      }
-
-      break;
+    if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+      trackEvent('Data', 'Migration', 'Auto');
+      overrideActivity = ACTIVITY_MIGRATION;
+    }
   }
 
   const initializeToActivity = overrideActivity || activeActivity;

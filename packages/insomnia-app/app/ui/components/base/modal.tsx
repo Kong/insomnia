@@ -11,6 +11,7 @@ import { KeydownBinder } from '../keydown-binder';
 let globalZIndex = 1000;
 
 export interface ModalProps {
+  centered?: boolean;
   tall?: boolean;
   wide?: boolean;
   skinny?: boolean;
@@ -140,7 +141,7 @@ export class Modal extends PureComponent<ModalProps, State> {
   }
 
   render() {
-    const { tall, wide, skinny, noEscape, className, children } = this.props;
+    const { tall, wide, skinny, noEscape, className, children, centered } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
     if (!open) {
@@ -181,7 +182,7 @@ export class Modal extends PureComponent<ModalProps, State> {
           onClick={this._handleClick}
         >
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-          <div className="modal__content__wrapper">
+          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
             <div className="modal__content" key={forceRefreshCounter}>
               {children}
             </div>

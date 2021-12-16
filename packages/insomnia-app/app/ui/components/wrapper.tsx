@@ -5,7 +5,6 @@ import React, { Fragment, PureComponent, Ref } from 'react';
 import { trackPageView } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import {
-  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -40,6 +39,7 @@ import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
 import { AddKeyCombinationModal } from './modals/add-key-combination-modal';
 import { AlertModal } from './modals/alert-modal';
+import { AnalyticsModal } from './modals/analytics-modal';
 import { AskModal } from './modals/ask-modal';
 import { CodePromptModal } from './modals/code-prompt-modal';
 import { CookiesModalFC } from './modals/cookies-modal';
@@ -77,7 +77,6 @@ import { WorkspaceDuplicateModal } from './modals/workspace-duplicate-modal';
 import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from './modals/workspace-settings-modal';
 import { WrapperModal } from './modals/wrapper-modal';
-import { WrapperAnalytics } from './wrapper-analytics';
 import { WrapperDebug } from './wrapper-debug';
 import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
@@ -508,6 +507,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       <Fragment>
         <div key="modals" className="modals">
           <ErrorBoundary showAlert>
+            <AnalyticsModal />
             <AlertModal ref={registerModal} />
             <ErrorModal ref={registerModal} />
             <PromptModal ref={registerModal} />
@@ -725,10 +725,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
           )}
 
           {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
-
-          {(activity === ACTIVITY_ANALYTICS || activity === null) && (
-            <WrapperAnalytics wrapperProps={this.props} />
-          )}
         </Fragment>
       </Fragment>
     );
