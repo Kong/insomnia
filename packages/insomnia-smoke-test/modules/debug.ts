@@ -19,7 +19,7 @@ export const clickWorkspaceDropdown = async (app: Application) => {
 };
 
 export const goToDashboard = async (app: Application) => {
-  await app.client.$('.header_left a').then(e => e.click());
+  await app.client.$('.header_left [data-testid="project"]').then(e => e.click());
 };
 
 export const createNewRequest = async (app: Application, name: string) => {
