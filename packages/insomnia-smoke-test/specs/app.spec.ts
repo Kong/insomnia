@@ -8,6 +8,8 @@ console.log(`Using current working directory at ${cwd}`);
 console.log(`Using executablePath at ${executablePath}`);
 console.log(`Using mainPath at ${mainPath}`);
 
+// NOTE: the options argument is only used for overriding paths for migration testing,
+// if we don't support migration this can be simplifed
 const newPage = async ({ playwright, options }: ({ playwright: Playwright; options: {} })) => {
   const electronApp = await playwright._electron.launch({
     cwd,
@@ -28,7 +30,7 @@ const newPage = async ({ playwright, options }: ({ playwright: Playwright; optio
 };
 
 test('can send requests', async ({ playwright }) => {
-  const options = { INSOMNIA_DATA_PATH: randomDataPath };
+  const options = { INSOMNIA_DATA_PATH: randomDataPath() };
   const { page, electronApp } = await newPage({ playwright, options });
   await page.click('text=Don\'t share usage analytics');
   await page.click('text=Create');
@@ -57,7 +59,7 @@ test('can send requests', async ({ playwright }) => {
 });
 
 test.describe.serial('given a designer and data directory', () => {
-  const INSOMNIA_DATA_PATH = randomDataPath;
+  const INSOMNIA_DATA_PATH = randomDataPath();
 
   test('should complete migration dialog', async ({ playwright }) => {
     const options = { DESIGNER_DATA_PATH, INSOMNIA_DATA_PATH };

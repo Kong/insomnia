@@ -9,7 +9,7 @@ export const loadFixture = async (fixturePath: string) => {
   return buffer.toString('utf-8');
 };
 
-export const randomDataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
+export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
 export const DESIGNER_DATA_PATH = path.join(__dirname, '..', 'fixtures', 'basic-designer');
 
 const pathLookup = {
