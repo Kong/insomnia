@@ -4,4 +4,6 @@ features or non-trivial changes. Please provide as much detail as possible on th
 possible including general description, implementation details, potential shortcommings, etc.
 
 If this PR closes an issue, please mention "Closes #XX" where #XX is the issue number.
+
+If this PR fixes a bug or regression, please make sure to add a test.
 -->
