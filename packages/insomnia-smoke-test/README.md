@@ -30,6 +30,7 @@ You can then run the smoke tests, again from the root:
 ```shell
 npm run test:smoke:cli         # Run CLI tests
 npm run test:smoke:build       # Run Insomnia tests
+DEBUG=pw:browser,pw:api npm run test:smoke:build       # Run Insomnia tests, with verbose output
 PWDEBUG=1 npm run test:smoke:build       # Write Insomnia tests with the playwrite recorder
 ```
 
@@ -46,7 +47,7 @@ Each of the above commands will automatically run the Express server, so you do 
 
 When writing tests, it is recommended to use the scripts in this project directly (instead of from the root, as per the section above). After building and/or packaging your application under test, it will be available under `packages/insomnia-app/{build|dist}` and you can begin writing your test.
 
-In order to run tests for development, open two terminal tabs in `packages/insomnia-smoke-test`:
+In order to run CLI tests for development, open two terminal tabs in `packages/insomnia-smoke-test`:
 
 ```shell
 # In the first tab, serve the Express API
@@ -54,14 +55,9 @@ npm run serve
 
 # In the second tab, run your tests
 npm run cli                         # Run CLI tests
-npm run playwright:build         # Insomnia build tests
-
-npm run playwright:package       # Insomnia package tests
 ```
 
 This will allow you to write and monitor the server separately from each test, speeding up the development cycle.
-
-If the playwright test runner doesn't start the following command will show the stack on launch `DEBUG=pw:browser`
 
 ## General guidelines
 

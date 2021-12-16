@@ -19,14 +19,12 @@
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
-    "playwright:build": "xvfb-maybe cross-env BUNDLE=build PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npx playwright@1.17.1 test",
-    "playwright:package": "xvfb-maybe cross-env BUNDLE=package PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npx playwright@1.17.1 test",
+    "test:build": "cross-env BUNDLE=build xvfb-maybe playwright test",
+    "test:package": "cross-env BUNDLE=package xvfb-maybe playwright test",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "ts-node server/index.ts",
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
-    "test:cli": "npm run with-mock \"npm run cli\"",
-    "test:build": "npm run playwright:build",
-    "test:package": "npm run playwright:package"
+    "test:cli": "npm run with-mock \"npm run cli\""
   },
   "devDependencies": {
     "@playwright/test": "^1.16.3",
