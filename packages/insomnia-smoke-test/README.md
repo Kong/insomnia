@@ -68,3 +68,38 @@ Individual tests will automatically run against a clean Insomnia data directory 
 ### Dependencies
 
 A test should not depend on any external services unless absolutely necessary. If a particular endpoint is required (eg. for authentication or a specific content type), implement a new endpoint in `/server`.
+
+## Working with fixtures
+
+### How to update the inso-nedb fixture
+
+In order to update the inso-nedb fixutre you need to launch Insomnia using the inso-nedb directory. To do this, set the INSOMNIA_DATA_PATH environment variable and launch from the command line.
+
+#### MacOS
+
+```bash
+INSOMNIA_DATA_PATH=packages/insomnia-smoke-test/fixtures/inso-nedb /Applications/Insomnia.app/Contents/MacOS/Insomnia
+```
+
+#### Linux
+
+TODO
+
+#### Windows
+
+TODO
+
+After making your changes, be sure to relaunch the app one more time from the command line, so that Insomnia compacts the database. The .gitignore file will explicity ignore certain database files, to keep the directory size down and avoid prevent data leakage in case you are signed in to the app when launching with this database.
+
+### How to run inso with the inso-nedb fixture locally?
+
+Set the `--src packages/insomnia-smoke-test/fixtures/inso-nedb` flag
+
+```bash
+# if installed globally
+inso --src ...
+# using the package bin
+./packages/insomnia-inso/bin/inso --src ...
+# using a binary
+./packages/insomnia-inso/binaries/insomnia-inso --src ...
+```
