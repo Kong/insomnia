@@ -656,7 +656,6 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   const fallbackActivity = ACTIVITY_HOME;
   console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
   return fallbackActivity;
-
 }
 
 /*
