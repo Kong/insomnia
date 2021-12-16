@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react-hooks';
 import { ipcRenderer as _ipcRenderer } from 'electron';
 import { mocked } from 'ts-jest/utils';
 
-import { GrpcRequestEventEnum } from '../../../../../common/ipc-events';
+import { GrpcRequestEventEnum } from '../../../../../common/grpc-events';
 import { grpcIpcMessageParamsSchema } from '../../../../../network/grpc/__schemas__/grpc-ipc-message-params-schema';
 import { grpcIpcRequestParamsSchema } from '../../../../../network/grpc/__schemas__/grpc-ipc-request-params-schema';
 import { GrpcMethodTypeEnum } from '../../../../../network/grpc/method';
