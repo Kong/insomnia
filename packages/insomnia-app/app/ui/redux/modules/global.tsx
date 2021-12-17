@@ -727,6 +727,7 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
   });
 
   dispatch(activateWorkspace({ workspaceId }));
+  dispatch(setActiveActivity(ACTIVITY_DEBUG));
 };
 
 export const init = () => [
