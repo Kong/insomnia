@@ -712,7 +712,7 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
     return;
   }
 
-  const workspace = await models.workspace.create({ scope: 'design', parentId: DEFAULT_PROJECT_ID });
+  const workspace = await models.workspace.create({ scope: 'design', name: `New ${strings.document.singular}`, parentId: DEFAULT_PROJECT_ID });
   const { _id: workspaceId } = workspace;
 
   await models.workspace.ensureChildren(workspace);
