@@ -46,8 +46,9 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveProjectName, selectSettings, selectWorkspacesForActiveProject } from '../selectors';
+import { selectActiveActivity, selectActiveProjectName, selectSettings, selectStats, selectWorkspacesForActiveProject } from '../selectors';
 import { importUri } from './import';
+import { activateWorkspace } from './workspace';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -696,9 +697,35 @@ export const initActiveActivity = () => (dispatch, getState) => {
   dispatch(setActiveActivity(initializeToActivity));
 };
 
+export const initFirstLaunch = () => async (dispatch, getState) => {
+  const state = getState();
+  const activeActivity = selectActiveActivity(state);
+  const stats = selectStats(state);
+
+  // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
+  if (activeActivity === ACTIVITY_MIGRATION) {
+    await models.settings.patch({ hasPromptedAnalytics: true });
+    return;
+  }
+
+  if (stats.launches > 1) {
+    return;
+  }
+
+  const workspace = await models.workspace.create({ scope: 'design', parentId: DEFAULT_PROJECT_ID });
+  const { _id: workspaceId } = workspace;
+
+  await models.workspace.ensureChildren(workspace);
+  const request = await models.request.create({ parentId: workspaceId });
+  await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: request._id, activeActivity: ACTIVITY_DEBUG });
+
+  dispatch(activateWorkspace({ workspaceId }));
+};
+
 export const init = () => [
   initActiveProject(),
   initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
+  initFirstLaunch(),
 ];

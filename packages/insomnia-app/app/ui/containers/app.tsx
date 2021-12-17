@@ -11,7 +11,6 @@ import { parse as urlParse } from 'url';
 
 import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
-  ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
@@ -46,7 +45,7 @@ import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { DEFAULT_PROJECT_ID, isNotDefaultProject } from '../../models/project';
+import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
@@ -1419,27 +1418,9 @@ class App extends PureComponent<AppProps, State> {
     this._ensureWorkspaceChildren();
   }
 
-  async _handleFirstLaunch() {
-    const { handleActivateWorkspace, stats } = this.props;
-
-    if (stats.launches > 1) {
-      return;
-    }
-
-    const { _id: workspaceId } = await models.workspace.create({ scope: 'design', parentId: DEFAULT_PROJECT_ID });
-    const request = await models.request.create({ parentId: workspaceId });
-    await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-    await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: request._id, activeActivity: ACTIVITY_DEBUG });
-
-    handleActivateWorkspace({ workspaceId });
-
-    await models.settings.patch({ hasPromptedAnalytics: false });
-  }
-
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
     this._ensureWorkspaceChildren();
-    this._handleFirstLaunch();
   }
 
   render() {
