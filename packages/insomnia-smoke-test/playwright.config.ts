@@ -7,7 +7,7 @@ const config: PlaywrightTestConfig = {
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
-  timeout: 20 * 1000, // @TODO: shorten this after we fix the 5 second app start delay
+  timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'screenshots',
   testDir: 'tests',
