@@ -724,11 +724,13 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
   // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
   if (activeActivity === ACTIVITY_MIGRATION) {
     await models.settings.patch({ hasPromptedAnalytics: true });
+    dispatch(setIsFinishedBooting(true));
     return;
   }
 
   const stats = selectStats(state);
   if (stats.launches > 1) {
+    dispatch(setIsFinishedBooting(true));
     return;
   }
 
@@ -749,17 +751,13 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
 
   dispatch(activateWorkspace({ workspaceId }));
   dispatch(setActiveActivity(ACTIVITY_DEBUG));
-};
-
-const finishBooting = () => dispatch => {
   dispatch(setIsFinishedBooting(true));
 };
 
-export const init = async () => [
+export const init = () => [
   initActiveProject(),
   initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
-  await initFirstLaunch(),
-  finishBooting(),
+  initFirstLaunch(),
 ];
