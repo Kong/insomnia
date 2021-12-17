@@ -29,7 +29,7 @@ export async function init(): Promise<Store> {
   fetch.onCommand(newCommand);
 
   for (const action of global.init()) {
-    // @ts-expect-error -- TSCONVERSION
+    // @ts-expect-error needs work for redux-thunk
     store.dispatch(action);
   }
 

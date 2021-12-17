@@ -698,25 +698,33 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
 export const initFirstLaunch = () => async (dispatch, getState) => {
   const state = getState();
-  const activeActivity = selectActiveActivity(state);
-  const stats = selectStats(state);
 
+  const activeActivity = selectActiveActivity(state);
   // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
   if (activeActivity === ACTIVITY_MIGRATION) {
     await models.settings.patch({ hasPromptedAnalytics: true });
     return;
   }
 
+  const stats = selectStats(state);
   if (stats.launches > 1) {
     return;
   }
 
-  const workspace = await models.workspace.create({ scope: 'design', name: `New ${strings.document.singular}`, parentId: DEFAULT_PROJECT_ID });
+  const workspace = await models.workspace.create({
+    scope: 'design',
+    name: `New ${strings.document.singular}`,
+    parentId: DEFAULT_PROJECT_ID,
+  });
   const { _id: workspaceId } = workspace;
 
   await models.workspace.ensureChildren(workspace);
   const request = await models.request.create({ parentId: workspaceId });
-  await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: request._id, activeActivity: ACTIVITY_DEBUG });
+
+  await models.workspaceMeta.updateByParentId(workspaceId, {
+    activeRequestId: request._id,
+    activeActivity: ACTIVITY_DEBUG,
+  });
 
   dispatch(activateWorkspace({ workspaceId }));
 };
