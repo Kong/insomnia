@@ -1429,6 +1429,11 @@ class App extends PureComponent<AppProps, State> {
       return null;
     }
 
+    if (!this.props.isFinishedBooting) {
+      console.log('[app] Waiting to finish booting');
+      return null;
+    }
+
     const { activeWorkspace } = this.props;
     const {
       paneWidth,
@@ -1513,6 +1518,7 @@ function mapStateToProps(state: RootState) {
     isLoading,
     loadingRequestIds,
     isLoggedIn,
+    isFinishedBooting,
   } = state.global;
 
   // Entities
@@ -1609,6 +1615,7 @@ function mapStateToProps(state: RootState) {
     gitRepositories,
     isLoading,
     isLoggedIn,
+    isFinishedBooting,
     loadStartTime,
     oAuth2Token,
     paneHeight,

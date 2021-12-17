@@ -60,6 +60,7 @@ export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
+export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -70,6 +71,16 @@ const COMMAND_PLUGIN_THEME = 'plugins/theme';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+const isFinishedBootingReducer = (state = false, action) => {
+  switch (action.type) {
+    case SET_IS_FINISHED_BOOTING:
+      return action.payload;
+
+    default:
+      return state;
+  }
+};
+
 function activeActivityReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
@@ -151,6 +162,7 @@ function loginStateChangeReducer(state = false, action) {
 }
 
 export interface GlobalState {
+  isFinishedBooting: boolean;
   isLoading: boolean;
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
@@ -161,6 +173,7 @@ export interface GlobalState {
 }
 
 export const reducer = combineReducers<GlobalState>({
+  isFinishedBooting: isFinishedBootingReducer,
   isLoading: loadingReducer,
   dashboardSortOrder: dashboardSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
@@ -173,6 +186,10 @@ export const reducer = combineReducers<GlobalState>({
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
+const setIsFinishedBooting = (isFinishedBooting: boolean) => ({
+  type: SET_IS_FINISHED_BOOTING,
+  payload: isFinishedBooting,
+});
 
 export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
@@ -693,6 +710,10 @@ export const initActiveActivity = () => (dispatch, getState) => {
   }
 
   const initializeToActivity = overrideActivity || activeActivity;
+  if (initializeToActivity === state.global.activeActivity) {
+    // no need to fire the action twice if it has already been set to the correct value.
+    return;
+  }
   dispatch(setActiveActivity(initializeToActivity));
 };
 
@@ -730,10 +751,15 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
   dispatch(setActiveActivity(ACTIVITY_DEBUG));
 };
 
-export const init = () => [
+const finishBooting = () => dispatch => {
+  dispatch(setIsFinishedBooting(true));
+};
+
+export const init = async () => [
   initActiveProject(),
   initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
-  initFirstLaunch(),
+  await initFirstLaunch(),
+  finishBooting(),
 ];
