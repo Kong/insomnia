@@ -25,6 +25,7 @@ import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { KeydownBinder } from '../keydown-binder';
+import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
@@ -220,6 +221,10 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
     if (request.parameters) {
       finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
+    }
+
+    if (isGrpcRequest(request)) {
+      finalUrl = request.url + (request as GrpcRequest).protoMethodName;
     }
 
     const match = fuzzyMatchAll(
@@ -473,8 +478,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                         <Highlight search={searchString} text={r.name} />
                       </div>
                       <div className="margin-left-xs faint">
-                        { isRequest(r) ? <MethodTag method={r.method} /> : null }
-                        <Highlight search={searchString} text={r.url} />
+                        { isRequest(r) ? <MethodTag method={r.method} /> : null}
+                        { isGrpcRequest(r) ? <GrpcTag /> : null }
+                        { <Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url } /> }
                       </div>
                     </Button>
                   </li>
