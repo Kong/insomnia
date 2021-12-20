@@ -237,7 +237,7 @@
     "electron-builder": "22.14.10",
     "electron-builder-squirrel-windows": "22.14.10",
     "electron-devtools-installer": "^3.2.0",
-    "electron-notarize": "^1.0.0",
+    "electron-notarize": "^1.1.1",
     "fast-glob": "^3.1.0",
     "file-loader": "^3.0.1",
     "jest": "^26.6.3",
