@@ -115,8 +115,8 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown?.toggle(true);
     });
   }

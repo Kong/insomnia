@@ -7,7 +7,6 @@ import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 interface Props {
   onChange: Function;
   parameters: any[];
-  isVariableUncovered: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -16,7 +15,6 @@ export class FormEditor extends PureComponent<Props> {
     const {
       parameters,
       onChange,
-      isVariableUncovered,
     } = this.props;
     return (
       <div className="scrollable-container tall wide">
@@ -28,7 +26,6 @@ export class FormEditor extends PureComponent<Props> {
             namePlaceholder="name"
             valuePlaceholder="value"
             descriptionPlaceholder="description"
-            isVariableUncovered={isVariableUncovered}
             onChange={onChange}
             pairs={parameters}
           />

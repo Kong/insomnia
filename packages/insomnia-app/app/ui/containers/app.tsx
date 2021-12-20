@@ -86,7 +86,6 @@ import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
   exportRequestsToFile,
-  goToNextActivity,
   loadRequestStart,
   loadRequestStop,
   newCommand,
@@ -132,7 +131,6 @@ interface State {
   sidebarWidth: number;
   paneWidth: number;
   paneHeight: number;
-  isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
   forceRefreshCounter: number;
@@ -164,7 +162,6 @@ class App extends PureComponent<AppProps, State> {
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
-      isVariableUncovered: false,
       vcs: null,
       gitVCS: null,
       forceRefreshCounter: 0,
@@ -347,12 +344,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
-      [
-        hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
-        async () => {
-          await this._updateIsVariableUncovered();
-        },
-      ],
+      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, this._updateShowVariableSourceAndValue],
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
@@ -533,10 +525,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _updateIsVariableUncovered() {
-    this.setState({
-      isVariableUncovered: !this.state.isVariableUncovered,
-    });
+  async _updateShowVariableSourceAndValue() {
+    const { settings } = this.props;
+    await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
   _handleSetPaneWidth(paneWidth: number) {
@@ -1007,9 +998,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _handleKeyDown(e) {
+  _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(e, definition, callback);
+      executeHotKey(event, definition, callback);
     }
   }
 
@@ -1441,7 +1432,6 @@ class App extends PureComponent<AppProps, State> {
       paneWidth,
       paneHeight,
       sidebarWidth,
-      isVariableUncovered,
       gitVCS,
       vcs,
       forceRefreshCounter,
@@ -1494,7 +1484,6 @@ class App extends PureComponent<AppProps, State> {
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   handleShowSettingsModal={App._handleShowSettingsModal}
                   handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-                  isVariableUncovered={isVariableUncovered}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   handleSidebarSort={this._sortSidebar}
                   vcs={vcs}
@@ -1643,7 +1632,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
-    goToNextActivity: handleGoToNextActivity,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1652,7 +1640,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop,
     newCommand,
     setActiveActivity,
-    goToNextActivity,
     exportRequestsToFile,
     initialize,
   }, dispatch);
@@ -1662,7 +1649,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
-    handleGoToNextActivity,
     handleExportRequestsToFile,
     handleInitializeEntities,
   };

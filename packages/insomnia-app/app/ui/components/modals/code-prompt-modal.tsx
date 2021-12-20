@@ -24,10 +24,6 @@ const MODES = {
   'text/html': 'HTML',
 };
 
-interface Props {
-  isVariableUncovered: boolean;
-}
-
 interface State {
   title: string;
   defaultValue: string;
@@ -41,7 +37,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class CodePromptModal extends PureComponent<Props, State> {
+export class CodePromptModal extends PureComponent<{}, State> {
   state: State = {
     title: 'Not Set',
     defaultValue: '',
@@ -109,7 +105,6 @@ export class CodePromptModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      isVariableUncovered,
     } = this.props;
     const {
       submitName,
@@ -155,7 +150,6 @@ export class CodePromptModal extends PureComponent<Props, State> {
                   placeholder={placeholder}
                   onChange={this._handleChange}
                   mode={mode}
-                  isVariableUncovered={isVariableUncovered}
                 />
               </div>
             ) : (
@@ -168,7 +162,6 @@ export class CodePromptModal extends PureComponent<Props, State> {
                     defaultValue={defaultValue}
                     placeholder={placeholder}
                     onChange={this._handleChange}
-                    isVariableUncovered={isVariableUncovered}
                     mode={mode}
                     enableNunjucks
                   />

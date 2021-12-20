@@ -9,6 +9,7 @@
   },
   "packages": [
     "packages/*",
-    "plugins/*"
+    "plugins/*",
+    "packages/insomnia-app/build"
   ]
 }

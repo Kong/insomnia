@@ -3,7 +3,7 @@ import './base-imports';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { CodeMirrorLinkClickCallback, ShowHintOptions } from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
@@ -19,7 +19,7 @@ import zprint from 'zprint-clj';
 import {
   AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
-  EDITOR_KEY_MAP_VIM,
+  EditorKeyMap,
   isMac,
 } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -135,8 +135,6 @@ interface RawProps {
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
-  // TODO: I think this prop can actually be removed entirely
-  isVariableUncovered?: boolean;
   raw?: boolean;
 }
 
@@ -160,6 +158,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     editorLineWrapping,
     editorIndentWithTabs,
     nunjucksPowerUserMode,
+    showVariableSourceAndValue,
   } = useSelector(selectSettings);
 
   return {
@@ -173,6 +172,7 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
     lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
     indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
     nunjucksPowerUserMode,
+    showVariableSourceAndValue,
   };
 };
 
@@ -620,7 +620,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
         this.codeMirror?.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
-          this.props.isVariableUncovered,
+          this.props.showVariableSourceAndValue,
         );
       }
 
@@ -787,7 +787,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       readOnly,
       tabIndex,
     } = this.props;
-    let mode;
+    let mode: EditorConfiguration['mode'];
 
     if (this.props.render) {
       mode = {
@@ -801,7 +801,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
 
     // NOTE: YAML is not valid when indented with Tabs
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
-    const actuallyIndentWithTabs = indentWithTabs && !isYaml;
+    const actuallyIndentWithTabs = indentWithTabs && !isYaml && mode !== 'openapi';
     const options: CodeMirror.EditorConfiguration = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
@@ -918,8 +918,8 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     // Strip of charset if there is one
     Object.keys(options).map(key =>
       this._codemirrorSmartSetOption(
-          key as keyof CodeMirror.EditorConfiguration,
-          options[key]
+        key as keyof CodeMirror.EditorConfiguration,
+        options[key]
       )
     );
   }
@@ -1055,7 +1055,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   _codemirrorKeyHandled(_codeMirror: CodeMirror.EditorFromTextArea, _keyName: string, event: KeyboardEvent) {
     const { keyMap } = this.props;
     const { keyCode } = event;
-    const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
+    const isVimKeyMap = keyMap === EditorKeyMap.vim;
     const pressedEscape = keyCode === keyCodes.esc.keyCode;
 
     if (isVimKeyMap && pressedEscape) {
@@ -1215,7 +1215,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       dynamicHeight,
       style,
       type,
-      isVariableUncovered,
       raw,
     } = this.props;
     const classes = classnames(className, {
@@ -1317,7 +1316,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
           onMouseLeave={onMouseLeave}
         >
           <textarea
-            key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}
             ref={this._handleInitTextarea}
             style={{

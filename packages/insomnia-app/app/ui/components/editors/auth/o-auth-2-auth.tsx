@@ -40,7 +40,6 @@ interface Props {
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
-  isVariableUncovered: boolean;
   oAuth2Token?: OAuth2Token | null;
 }
 
@@ -323,7 +322,6 @@ class OAuth2AuthInternal extends PureComponent<Props, State> {
   ) {
     const {
       request,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -348,7 +346,6 @@ class OAuth2AuthInternal extends PureComponent<Props, State> {
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               getAutocompleteConstants={handleAutocomplete}
-              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

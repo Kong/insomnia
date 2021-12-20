@@ -29,7 +29,6 @@ interface Props {
   request: Request;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
 
@@ -81,7 +80,6 @@ class AsapAuthInternal extends PureComponent<Props> {
   ): ReactElement<any> {
     const {
       request,
-      isVariableUncovered,
     } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -103,7 +101,6 @@ class AsapAuthInternal extends PureComponent<Props> {
               mode={mode}
               onChange={onChange}
               defaultValue={authentication[property] || ''}
-              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

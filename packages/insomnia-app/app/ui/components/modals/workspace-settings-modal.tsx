@@ -65,7 +65,6 @@ interface Props extends ReduxProps {
   clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
-  isVariableUncovered: boolean;
   handleRemoveWorkspace: Function;
   handleClearAllResponses: Function;
 }
@@ -289,7 +288,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
       clientCertificates,
       workspace,
       activeWorkspaceName,
-      isVariableUncovered,
     } = this.props;
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
     const privateCertificates = clientCertificates.filter(c => c.isPrivate);
@@ -333,7 +331,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
                   className="margin-top"
                   defaultPreviewMode={defaultPreviewMode}
                   placeholder="Write a description"
-                  isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}
                 />

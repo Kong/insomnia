@@ -37,7 +37,7 @@ log.info(`Running version ${getAppVersion()}`);
 if (!isDevelopment()) {
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
-  app.setPath('userData', newPath);
+  app.setPath('userData', process.env.INSOMNIA_DATA_PATH ?? newPath);
 }
 
 // So if (window) checks don't throw
@@ -73,8 +73,10 @@ app.on('ready', async () => {
   await errorHandling.init();
   await windowUtils.init();
   // Init the app
-  const updatedStats = await _trackStats();
-  await _updateFlags(updatedStats);
+  const { launches } = await _trackStats();
+  if (launches === 1) {
+    await handleFirstLaunch();
+  }
   await _launchApp();
 
   // Init the rest
@@ -143,11 +145,14 @@ function _launchApp() {
     commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
-  const gotTheLock = app.requestSingleInstanceLock();
-
-  if (!gotTheLock) {
-    console.error('[app] Failed to get instance lock');
-    return;
+  // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
+  // and find a better solution.
+  if (!process.env.PLAYWRIGHT) {
+    const gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+      console.error('[app] Failed to get instance lock');
+      return;
+    }
   }
 
   app.on('second-instance', () => {
@@ -187,16 +192,9 @@ async function _createModelInstances() {
   await models.settings.getOrCreate();
 }
 
-async function _updateFlags({ launches }: Stats) {
-  const firstLaunch = launches === 1;
-
-  if (firstLaunch) {
-    await models.settings.patch({
-      hasPromptedOnboarding: false,
-      // Don't show the analytics preferences prompt as it is part of the onboarding flow
-      hasPromptedAnalytics: true,
-    });
-  }
+async function handleFirstLaunch() {
+  // TODO: create first request and bring it into view
+  await models.settings.patch({ hasPromptedAnalytics: false });
 }
 
 async function _trackStats() {

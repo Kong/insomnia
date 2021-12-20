@@ -189,7 +189,6 @@ export default async function migrateFromDesigner({
         const coreSettings = await models.settings.getOrCreate();
         const propertiesToPersist = [
           '_id',
-          'hasPromptedOnboarding',
           'hasPromptedToMigrateFromDesigner',
         ];
         propertiesToPersist.forEach(s => {

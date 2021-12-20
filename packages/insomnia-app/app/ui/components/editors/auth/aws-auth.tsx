@@ -12,7 +12,6 @@ import { HelpTooltip } from '../../help-tooltip';
 interface Props {
   request: Request;
   showPasswords: boolean;
-  isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
 }
@@ -52,7 +51,6 @@ export class AWSAuth extends PureComponent<Props> {
   renderRow(key: string, label: string, onChange: (...args: any[]) => any, help?: string) {
     const {
       request,
-      isVariableUncovered,
     } = this.props;
     return (
       <tr key={key}>
@@ -72,7 +70,6 @@ export class AWSAuth extends PureComponent<Props> {
               id={key}
               onChange={onChange}
               defaultValue={request.authentication[key] || ''}
-              isVariableUncovered={isVariableUncovered}
             />
           </div>
         </td>

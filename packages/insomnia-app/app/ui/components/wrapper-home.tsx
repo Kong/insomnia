@@ -223,8 +223,8 @@ class WrapperHome extends PureComponent<Props, State> {
     });
   }
 
-  _handleKeyDown(e) {
-    executeHotKey(e, hotKeyRefs.FILTER_DOCUMENTS, () => {
+  _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => {
       if (this._filterInput) {
         this._filterInput.focus();
       }

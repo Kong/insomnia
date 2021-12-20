@@ -10,7 +10,6 @@ interface Props {
   onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
-  isVariableUncovered: boolean;
   showAllPasswords: boolean;
 }
 
@@ -36,7 +35,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
       password,
       disabled,
       showAllPasswords,
-      isVariableUncovered,
       onChange,
     } = this.props;
     return (
@@ -51,7 +49,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
             id="password"
             onChange={onChange}
             defaultValue={password || ''}
-            isVariableUncovered={isVariableUncovered}
           />
         </div>
         {!showAllPasswords && (
