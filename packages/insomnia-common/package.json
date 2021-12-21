@@ -17,15 +17,27 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "generate:changelog": "esr src/changelog/generate-changelog.ts --owner=Kong --repo=insomnia",
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
+    "test": "jest",
     "clean": "tsc --build tsconfig.build.json --clean",
     "prebuild": "npm run clean",
     "build": "tsc --build tsconfig.build.json"
   },
+  "dependencies": {
+    "ramda": "^0.27.1",
+    "ramda-adjunct": "2.33.0"
+  },
   "devDependencies": {
+    "@octokit/rest": "^18.12.0",
+    "@octokit/types": "^6.34.0",
+    "@types/ramda": "^0.27.44",
     "ajv": "^8.6.2",
+    "esbuild": "^0.14.2",
+    "jest": "^26.6.3",
+    "esbuild-runner": "^2.2.1",
     "type-fest": "^1.0.2",
     "typescript": "^4.5.5",
     "typescript-json-schema": "^0.50.1"
