@@ -1,7 +1,5 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 import * as electron from 'electron';
+import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
@@ -42,6 +40,8 @@ if (!isDevelopment()) {
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
+
+contextMenu();
 
 // When the app is first launched
 app.on('ready', async () => {
