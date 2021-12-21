@@ -90,7 +90,7 @@
     "codemirror-graphql": "^1.0.2",
     "color": "^3.1.2",
     "electron-log": "^4.4.3",
-    "electron-updater": "^4.3.9",
+    "electron-updater": "^4.6.1",
     "framer-motion": "^1.11.1",
     "fs-extra": "^5.0.0",
     "fuzzysort": "^1.1.1",
