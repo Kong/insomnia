@@ -205,7 +205,7 @@ jobs:
     name: Windows
     runs-on: windows-2016
     env:
-      NPM_CONFIG_TARGET: 11.2.3
+      NPM_CONFIG_TARGET: 12.2.3
       NPM_CONFIG_DISTURL: https://electronjs.org/headers
       NPM_CONFIG_RUNTIME: electron
     steps:
@@ -232,7 +232,7 @@ jobs:
     name: Mac
     runs-on: macos-latest
     env:
-      NPM_CONFIG_TARGET: 11.2.3
+      NPM_CONFIG_TARGET: 12.2.3
       NPM_CONFIG_DISTURL: https://electronjs.org/headers
       NPM_CONFIG_RUNTIME: electron
     steps:
@@ -261,7 +261,7 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     env:
-      NPM_CONFIG_TARGET: 11.2.3
+      NPM_CONFIG_TARGET: 12.2.3
       NPM_CONFIG_DISTURL: https://electronjs.org/headers
       NPM_CONFIG_RUNTIME: electron
     steps:

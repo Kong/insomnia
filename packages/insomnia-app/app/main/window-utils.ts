@@ -42,7 +42,6 @@ interface Bounds {
 
 export function init() {
   initLocalStorage();
-  initContextMenus();
 }
 
 export function createWindow() {
@@ -583,9 +582,4 @@ function getZoomFactor() {
 function initLocalStorage() {
   const localStoragePath = path.join(getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
-}
-
-function initContextMenus() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require('electron-context-menu')({});
 }

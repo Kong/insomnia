@@ -1,7 +1,5 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 import * as electron from 'electron';
+import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
@@ -37,11 +35,13 @@ log.info(`Running version ${getAppVersion()}`);
 if (!isDevelopment()) {
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
-  app.setPath('userData', newPath);
+  app.setPath('userData', process.env.INSOMNIA_DATA_PATH ?? newPath);
 }
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
+
+contextMenu();
 
 // When the app is first launched
 app.on('ready', async () => {
@@ -145,11 +145,14 @@ function _launchApp() {
     commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
-  const gotTheLock = app.requestSingleInstanceLock();
-
-  if (!gotTheLock) {
-    console.error('[app] Failed to get instance lock');
-    return;
+  // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
+  // and find a better solution.
+  if (!process.env.PLAYWRIGHT) {
+    const gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+      console.error('[app] Failed to get instance lock');
+      return;
+    }
   }
 
   app.on('second-instance', () => {
