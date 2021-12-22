@@ -1,4 +1,6 @@
-import { extractChangelog, getAuthorHandleFromCommit, getPullRequestNumber, ResponseCommit, uniqueAuthors } from './utils';
+import { Octokit } from '@octokit/rest';
+
+import { compareCommits, extractChangelog, formattedDate, getAuthorHandleFromCommit, getChanges, getPullRequest, getPullRequestNumber, ResponseCommit, uniqueAuthors } from './utils';
 
 describe('extractChangelog', () => {
   const result = 'Fixed an issue with xyz.';
@@ -15,15 +17,27 @@ describe('extractChangelog', () => {
     expect(extractChangelog(`changelog ${result}`)).toEqual(undefined);
   });
 
-  it('allows zero or more whitespace after `changelog:`', () => {
+  it('allows zero whitespace after `changelog:`', () => {
     expect(extractChangelog(`changelog:${result}`)).toEqual(result);
+  });
+
+  it('allows one or more spaces after `changelog:`', () => {
     expect(extractChangelog(`changelog: ${result}`)).toEqual(result);
-    expect(extractChangelog(`changelog:\t${result}`)).toEqual(result);
     expect(extractChangelog(`changelog:  ${result}`)).toEqual(result);
   });
 
-  it('does not allow whitespace before `changelog:`', () => {
+  it('allows one or more tabs after `changelog:`', () => {
+    expect(extractChangelog(`changelog:\t${result}`)).toEqual(result);
+    expect(extractChangelog(`changelog:\t\t${result}`)).toEqual(result);
+  });
+
+  it('does not allow newlines after `changelog:`', () => {
+    expect(extractChangelog(`changelog:\n${result}`)).toEqual(undefined);
+  });
+
+  it('requires that the line begins with `changelog:`', () => {
     expect(extractChangelog(` changelog:${result}`)).toEqual(undefined);
+    expect(extractChangelog(`for the changelog:${result}`)).toEqual(undefined);
   });
 
   it('only returns the first match', () => {
@@ -114,5 +128,151 @@ describe('getPullRequestNumber', () => {
     const commit = { commit: { message } } as ResponseCommit;
     const result = getPullRequestNumber(commit);
     expect(result).toEqual(9001);
+  });
+});
+
+describe('getPullRequest', () => {
+  it('exits if the pull request number is not found', async () => {
+    const commit = { commit: { message: '' } } as ResponseCommit;
+    const result = await getPullRequest(async () => '')(commit);
+    expect(result).toEqual(undefined);
+  });
+
+  it('exits if the pull request body is not found', async () => {
+    const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
+    const result = await getPullRequest(async () => '')(commit);
+    expect(result).toEqual(undefined);
+  });
+
+  it('exits if the pull request body is not found', async () => {
+    const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
+    const result = await getPullRequest(async () => 'a body with no changelog')(commit);
+    expect(result).toEqual(undefined);
+  });
+
+  it('shows the changelog, even without an author found', async () => {
+    const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
+    const changelog = 'If there were to omnisciences, Ziltoid would be both.';
+    const result = await getPullRequest(async () => `changelog: ${changelog}`)(commit);
+    expect(result).toEqual(`- ${changelog} (#9001)`);
+  });
+
+  it('shows the changelog, with the author found', async () => {
+    const commit = {
+      author: { login: 'CaptainSpectacular' },
+      commit: { message: 'ziltoid (#9001)' },
+    } as ResponseCommit;
+    const changelog = 'If there were to omnisciences, Ziltoid would be both.';
+    const result = await getPullRequest(async () => `changelog: ${changelog}`)(commit);
+    expect(result).toEqual(`- ${changelog} (#9001) @CaptainSpectacular`);
+  });
+});
+
+describe('formattedDate', () => {
+  it('returns the date in the proper format', () => {
+    jest.useFakeTimers('modern');
+    jest.setSystemTime(1414419757000);
+    const result = formattedDate();
+    expect(result).toEqual('Oct 27, 2014');
+  });
+});
+
+describe('compareCommits', () => {
+  const commitInfo = {
+    base: 'a',
+    head: 'b',
+    owner: 'HevyDevy',
+    repo: 'ziltoid',
+  };
+
+  it('throws an error if the commits are not found', async () => {
+    const octokit = {
+      repos: { compareCommitsWithBasehead: {} },
+      paginate: {
+        iterator: async () => [],
+      },
+    } as unknown as Octokit;
+
+    expect.assertions(1);
+    try {
+      await compareCommits({ octokit, ...commitInfo });
+    } catch (error: unknown) {
+      expect(error).toEqual(new Error('no commits found for a...b'));
+    }
+  });
+
+  it('throws an error if the result is empty', async () => {
+    const octokit = {
+      repos: { compareCommitsWithBasehead: {} },
+      paginate: {
+        iterator: () => ({
+          async* [Symbol.asyncIterator]() {
+            yield { data: { commits: [] } };
+          },
+        }),
+      },
+    } as unknown as Octokit;
+
+    expect.assertions(1);
+    try {
+      await compareCommits({ octokit, ...commitInfo });
+    } catch (error: unknown) {
+      expect(error).toEqual(new Error('no commits found for a...b'));
+    }
+  });
+
+  it('combines paginated data', async () => {
+    const octokit = {
+      repos: { compareCommitsWithBasehead: {} },
+      paginate: {
+        iterator: () => ({
+          async* [Symbol.asyncIterator]() {
+            yield { data: { commits: ['c'] } };
+            yield { data: { commits: ['d'] } };
+          },
+        }),
+      },
+    } as unknown as Octokit;
+
+    const commits = await compareCommits({ octokit, ...commitInfo });
+    expect(commits).toEqual(['c', 'd']);
+  });
+});
+
+describe('getChanges', () => {
+  it('will get pull request changes', async () => {
+    const octokit = {
+      pulls: {
+        // eslint-disable-next-line camelcase -- this defined by the GitHub API
+        get: async ({ pull_number: pullNumber }: { pull_number: number }) => ({
+          data: {
+            body: pullNumber === 9001 ? 'changelog: they hide their finest bean!' : 'changelog: prepare the attack!',
+          },
+        }),
+      },
+    } as unknown as Octokit;
+
+    const commits = [
+      {
+        author: { login: 'ziltoid' },
+        commit: { message: 'a commit message (#9001)' },
+      },
+      {
+        author: { login: 'ziltoid' },
+        commit: { message: 'a commit message (#9002)' },
+      },
+    ] as ResponseCommit[];
+
+    const result = await getChanges({
+      commits,
+      octokit,
+      owner: 'HevyDevy',
+      repo: 'ziltoid',
+    });
+
+    expect(result).toEqual([
+      '- they hide their finest bean! (#9001) @ziltoid',
+      '- prepare the attack! (#9002) @ziltoid',
+    ]);
   });
 });

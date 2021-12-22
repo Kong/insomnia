@@ -45,7 +45,9 @@ const handler = async ({
     head,
     octokit,
   });
+
   const authors = uniqueAuthors(commits);
+
   const changes = await getChanges({
     owner,
     repo,
@@ -60,7 +62,7 @@ const handler = async ({
     '',
     `A big thanks to the ${authors.length} contributors who made this release possible. Here are some highlights ✨:`,
     '',
-    changes,
+    changes.join('\n'),
     '',
     `All contributors of this release in alphabetical order: ${authors.join(', ')}`,
     '',

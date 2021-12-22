@@ -7,7 +7,7 @@ export type ResponseCommit = CompareCommitsRepoResponse['data']['commits'][0];
 
 /** look for the first occurance of `changelog:` at the beginning of a line, case insensitive */
 export const extractChangelog = (pullRequestDescription: string) => (
-  pullRequestDescription.match(/^changelog:\s*(.*)/mi)?.[1]
+  pullRequestDescription.match(/^changelog:[ \t]*(.*)/mi)?.[1] || undefined
 );
 
 export const getAuthorHandleFromCommit = ({ author }: ResponseCommit) => (
@@ -47,7 +47,8 @@ export const getPullRequest = (getPullBody: (prNumber: number) => Promise<string
   }
 
   const author = getAuthorHandleFromCommit(commit);
-  return `- ${changelog} (#${pullRequestNumber}) ${author}`;
+  const authorship = author ? ` ${author}` : '';
+  return `- ${changelog} (#${pullRequestNumber})${authorship}`;
 };
 
 export const formattedDate = () => new Date().toLocaleDateString('en-US', {
@@ -70,20 +71,24 @@ export const compareCommits = async ({
   repo: string;
 }) => {
   const { repos: { compareCommitsWithBasehead }, paginate } = octokit;
-  const timeline = paginate.iterator(compareCommitsWithBasehead, {
+  const pages = paginate.iterator(compareCommitsWithBasehead, {
     owner,
     repo,
     basehead: `${base}...${head}`,
   });
+  const notFound = new Error(`no commits found for ${base}...${head}`);
 
   try {
     const commitsItems: ResponseCommit[] = [];
-    for await (const { data: { commits } } of timeline) {
+    for await (const { data: { commits } } of pages) {
       commitsItems.push(...commits);
+    }
+    if (commitsItems.length === 0) {
+      throw notFound;
     }
     return commitsItems;
   } catch (error: unknown) {
-    throw new Error(`no commits found for ${base}...${head}`);
+    throw notFound;
   }
 };
 
@@ -106,6 +111,6 @@ export const getChanges = async ({
   })).data.body;
 
   const getPR = getPullRequest(getPullBody);
-  const changeSet = await Promise.all(map(getPR, commits));
-  return compact(changeSet).join('\n');
+  const changes = await Promise.all(map(getPR, commits));
+  return compact(changes);
 };
