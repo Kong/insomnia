@@ -1,12 +1,14 @@
 import { Button, ToggleSwitch } from 'insomnia-components';
 import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useMount } from 'react-use';
 
 import { trackEvent } from '../../common/analytics';
 import { ACTIVITY_HOME } from '../../common/constants';
 import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/electron-helpers';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { existsAndIsDirectory } from '../../common/migrate-from-designer';
+import * as models from '../../models';
 import { setActiveActivity } from '../redux/modules/global';
 import { HelpTooltip } from './help-tooltip';
 import { OnboardingContainer } from './onboarding-container';
@@ -276,6 +278,10 @@ const MigrationBody = () => {
     trackEvent('Data', 'Migration', 'Skip');
     reduxDispatch(setActiveActivity(ACTIVITY_HOME));
   }, [reduxDispatch]);
+
+  useMount(() => (
+    models.settings.patch({ hasPromptedToMigrateFromDesigner: true })
+  ));
 
   switch (step) {
     case 'options':

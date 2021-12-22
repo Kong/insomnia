@@ -167,6 +167,8 @@ export function initializeWith(docs) {
 export async function allDocs() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
   return [
+    // missing: ...(await models.pluginData.all()),
+    ...(await models.stats.all()),
     ...(await models.settings.all()),
     ...(await models.project.all()),
     ...(await models.workspace.all()),
