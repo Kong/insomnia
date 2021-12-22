@@ -319,12 +319,6 @@ export const loadRequestStop = (requestId: string) => ({
  */
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
-
-  if (activity === ACTIVITY_MIGRATION) {
-    trackEvent('Data', 'Migration', 'Manual');
-    models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
-  }
-
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
   return {
@@ -711,7 +705,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
   const initializeToActivity = overrideActivity || activeActivity;
   if (initializeToActivity === state.global.activeActivity) {
-    // no need to fire the action twice if it has already been set to the correct value.
+    // no need to dispatch the action twice if it has already been set to the correct value.
     return;
   }
   dispatch(setActiveActivity(initializeToActivity));
@@ -723,9 +717,12 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
   const activeActivity = selectActiveActivity(state);
   // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
   if (activeActivity === ACTIVITY_MIGRATION) {
-    await models.settings.patch({ hasPromptedAnalytics: true });
-    dispatch(setIsFinishedBooting(true));
-    return;
+    const { hasPromptedToMigrateFromDesigner } = selectSettings(state);
+    if (!hasPromptedToMigrateFromDesigner) {
+      await models.settings.patch({ hasPromptedAnalytics: true });
+      dispatch(setIsFinishedBooting(true));
+      return;
+    }
   }
 
   const stats = selectStats(state);
