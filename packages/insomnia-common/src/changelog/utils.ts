@@ -1,6 +1,7 @@
 import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
-import { map, pipe, sort, uniq } from 'ramda';
+import { groupBy, head, join, map, pipe, sort, sortBy, toPairs, uniq } from 'ramda';
 import { compact } from 'ramda-adjunct';
+import { Entries } from 'type-fest';
 
 type CompareCommitsRepoResponse = RestEndpointMethodTypes['repos']['compareCommitsWithBasehead']['response'];
 export type ResponseCommit = CompareCommitsRepoResponse['data']['commits'][0];
@@ -92,7 +93,7 @@ export const compareCommits = async ({
   }
 };
 
-export const getChanges = async ({
+export const fetchChanges = async ({
   commits,
   octokit,
   owner,
@@ -114,3 +115,25 @@ export const getChanges = async ({
   const changes = await Promise.all(map(getPR, commits));
   return compact(changes);
 };
+
+export const groupChanges: (changes: string[]) => string = pipe(
+  groupBy(change => {
+    if (/\- fixed/i.exec(change)) {
+      return 'Notable Fixes';
+    }
+
+    if (/\- improved/i.exec(change) || /\- added/i.exec(change)) {
+      return 'Additions and Improvements';
+    }
+
+    return 'Other Changes';
+  }),
+  toPairs as <T>(t: T) => Entries<typeof t>,
+  pairs => sortBy(head, pairs),
+  map(([group, items]) => join('\n', [
+    `### ${group}`,
+    '',
+    ...items,
+  ])),
+  join('\n\n'),
+);

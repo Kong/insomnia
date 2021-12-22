@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 
-import { compareCommits, extractChangelog, formattedDate, getAuthorHandleFromCommit, getChanges, getPullRequest, getPullRequestNumber, ResponseCommit, uniqueAuthors } from './utils';
+import { compareCommits, extractChangelog, fetchChanges, formattedDate, getAuthorHandleFromCommit, getPullRequest, getPullRequestNumber, groupChanges, ResponseCommit, uniqueAuthors } from './utils';
 
 describe('extractChangelog', () => {
   const result = 'Fixed an issue with xyz.';
@@ -239,7 +239,49 @@ describe('compareCommits', () => {
   });
 });
 
-describe('getChanges', () => {
+describe('groupChanges', () => {
+  it('groups changes, case insensitively', () => {
+    const changes = [
+      '- fixed a thing',
+      '- added some thing',
+      '- Fixed some other thing',
+      '- did another thing',
+      '- improved all the things',
+    ];
+    const result = groupChanges(changes);
+    const expectedResult = [
+      '### Additions and Improvements',
+      '',
+      '- added some thing',
+      '- improved all the things',
+      '',
+      '### Notable Fixes',
+      '',
+      '- fixed a thing',
+      '- Fixed some other thing',
+      '',
+      '### Other Changes',
+      '',
+      '- did another thing',
+    ].join('\n');
+    expect(result).toEqual(expectedResult);
+  });
+
+  it('drops sections that are not present', () => {
+    const changes = [
+      '- fixed a thing',
+    ];
+    const result = groupChanges(changes);
+    const expectedResult = [
+      '### Notable Fixes',
+      '',
+      '- fixed a thing',
+    ].join('\n');
+    expect(result).toEqual(expectedResult);
+  });
+});
+
+describe('fetchChanges', () => {
   it('will get pull request changes', async () => {
     const octokit = {
       pulls: {
@@ -263,7 +305,7 @@ describe('getChanges', () => {
       },
     ] as ResponseCommit[];
 
-    const result = await getChanges({
+    const result = await fetchChanges({
       commits,
       octokit,
       owner: 'HevyDevy',

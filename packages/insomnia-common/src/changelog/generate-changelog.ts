@@ -2,7 +2,7 @@
 example usage:
 
 ```console
-npm run generate:changelog -- --base="core@2021.7.1" --head="21ab3dd" --releaseName="core@2021.7.3"
+npm run generate:changelog -- --base="core@2021.7.2" --head="21ab3dd" --releaseName="core@2021.7.3"
 ```
 
 */
@@ -12,8 +12,9 @@ import yargs from 'yargs';
 
 import {
   compareCommits,
+  fetchChanges,
   formattedDate,
-  getChanges,
+  groupChanges,
   uniqueAuthors,
 } from './utils';
 
@@ -48,12 +49,13 @@ const handler = async ({
 
   const authors = uniqueAuthors(commits);
 
-  const changes = await getChanges({
+  const changes = await fetchChanges({
     owner,
     repo,
     octokit,
     commits,
   });
+  const changeLines = groupChanges(changes);
 
   const changelog = [
     `## ${releaseName}`,
@@ -62,7 +64,7 @@ const handler = async ({
     '',
     `A big thanks to the ${authors.length} contributors who made this release possible. Here are some highlights ✨:`,
     '',
-    changes.join('\n'),
+    changeLines,
     '',
     `All contributors of this release in alphabetical order: ${authors.join(', ')}`,
     '',
