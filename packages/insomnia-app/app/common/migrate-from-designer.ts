@@ -187,13 +187,13 @@ export default async function migrateFromDesigner({
       // Persist some settings from core
       if (modelType === models.settings.type) {
         const coreSettings = await models.settings.getOrCreate();
-        const propertiesToPersist = [
+        const settingsToPersist: (keyof Settings)[] = [
           '_id',
           'hasPromptedToMigrateFromDesigner',
         ];
-        propertiesToPersist.forEach(s => {
-          if (coreSettings.hasOwnProperty(s)) {
-            (entries[0] as Settings)[s] = coreSettings[s];
+        settingsToPersist.forEach(setting => {
+          if (coreSettings.hasOwnProperty(setting)) {
+            entries[0][setting] = coreSettings[setting];
           }
         });
       }

@@ -64,6 +64,10 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 
+export const selectStats = createSelector(
+  selectEntitiesLists,
+  entities => entities.stats[0] || models.stats.init());
+
 export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());

@@ -98,14 +98,16 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
     if (isCollection(workspace) && isCollectionActivity(activeActivity)) {
       // we are in a collection, and our active activity is a collection activity
       return;
-    } else if (isDesign(workspace) && isDesignActivity(activeActivity)) {
+    }
+
+    if (isDesign(workspace) && isDesignActivity(activeActivity)) {
       // we are in a design document, and our active activity is a design activity
       return;
-    } else {
-      const { activeActivity: cachedActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      const nextActivity = cachedActivity as GlobalActivity ||  (isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG);
-      dispatch(setActiveActivity(nextActivity));
     }
+
+    const { activeActivity: cachedActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const nextActivity = cachedActivity as GlobalActivity ||  (isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG);
+    dispatch(setActiveActivity(nextActivity));
 
     // TODO: dispatch one action to activate the project, workspace and activity in one go to avoid jumps in the UI
   };
