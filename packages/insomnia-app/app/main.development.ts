@@ -1,7 +1,5 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 import * as electron from 'electron';
+import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
@@ -43,6 +41,8 @@ if (!isDevelopment()) {
 // So if (window) checks don't throw
 global.window = global.window || undefined;
 
+contextMenu();
+
 // When the app is first launched
 app.on('ready', async () => {
   const { error } = validateInsomniaConfig();
@@ -70,13 +70,8 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
-  await errorHandling.init();
-  await windowUtils.init();
-  // Init the app
-  const { launches } = await _trackStats();
-  if (launches === 1) {
-    await handleFirstLaunch();
-  }
+  errorHandling.init();
+  windowUtils.init();
   await _launchApp();
 
   // Init the rest
@@ -136,9 +131,12 @@ app.on('activate', (_error, hasVisibleWindows) => {
   }
 });
 
-function _launchApp() {
+const _launchApp = async () => {
+  await _trackStats();
+
   app.removeListener('open-url', _addUrlToOpen);
   const window = windowUtils.createWindow();
+
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
     // @ts-expect-error -- TSCONVERSION
@@ -180,7 +178,7 @@ function _launchApp() {
       requestHeaders: details.requestHeaders,
     });
   });
-}
+};
 
 /*
   Only one instance should exist of these models
@@ -190,11 +188,6 @@ function _launchApp() {
 async function _createModelInstances() {
   await models.stats.get();
   await models.settings.getOrCreate();
-}
-
-async function handleFirstLaunch() {
-  // TODO: create first request and bring it into view
-  await models.settings.patch({ hasPromptedAnalytics: false });
 }
 
 async function _trackStats() {

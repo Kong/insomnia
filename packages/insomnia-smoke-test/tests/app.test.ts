@@ -31,6 +31,7 @@ test('can send requests', async ({ playwright }) => {
   const options = { INSOMNIA_DATA_PATH: randomDataPath() };
   const { page, electronApp } = await newPage({ playwright, options });
   await page.click('text=Don\'t share usage analytics');
+  await page.click('[data-testid="project"]');
   await page.click('text=Create');
 
   const text = await loadFixture('smoke-test-collection.yaml');

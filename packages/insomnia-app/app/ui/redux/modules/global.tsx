@@ -46,8 +46,9 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveProjectName, selectSettings, selectWorkspacesForActiveProject } from '../selectors';
+import { selectActiveActivity, selectActiveProjectName, selectSettings, selectStats, selectWorkspacesForActiveProject } from '../selectors';
 import { importUri } from './import';
+import { activateWorkspace } from './workspace';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -59,6 +60,7 @@ export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
+export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -69,6 +71,16 @@ const COMMAND_PLUGIN_THEME = 'plugins/theme';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+const isFinishedBootingReducer = (state = false, action) => {
+  switch (action.type) {
+    case SET_IS_FINISHED_BOOTING:
+      return action.payload;
+
+    default:
+      return state;
+  }
+};
+
 function activeActivityReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
@@ -150,6 +162,7 @@ function loginStateChangeReducer(state = false, action) {
 }
 
 export interface GlobalState {
+  isFinishedBooting: boolean;
   isLoading: boolean;
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
@@ -160,6 +173,7 @@ export interface GlobalState {
 }
 
 export const reducer = combineReducers<GlobalState>({
+  isFinishedBooting: isFinishedBootingReducer,
   isLoading: loadingReducer,
   dashboardSortOrder: dashboardSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
@@ -172,6 +186,10 @@ export const reducer = combineReducers<GlobalState>({
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
+const setIsFinishedBooting = (isFinishedBooting: boolean) => ({
+  type: SET_IS_FINISHED_BOOTING,
+  payload: isFinishedBooting,
+});
 
 export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
@@ -301,12 +319,6 @@ export const loadRequestStop = (requestId: string) => ({
  */
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
-
-  if (activity === ACTIVITY_MIGRATION) {
-    trackEvent('Data', 'Migration', 'Manual');
-    models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
-  }
-
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
   return {
@@ -655,7 +667,6 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   const fallbackActivity = ACTIVITY_HOME;
   console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
   return fallbackActivity;
-
 }
 
 /*
@@ -693,7 +704,51 @@ export const initActiveActivity = () => (dispatch, getState) => {
   }
 
   const initializeToActivity = overrideActivity || activeActivity;
+  if (initializeToActivity === state.global.activeActivity) {
+    // no need to dispatch the action twice if it has already been set to the correct value.
+    return;
+  }
   dispatch(setActiveActivity(initializeToActivity));
+};
+
+export const initFirstLaunch = () => async (dispatch, getState) => {
+  const state = getState();
+
+  const activeActivity = selectActiveActivity(state);
+  // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
+  if (activeActivity === ACTIVITY_MIGRATION) {
+    const { hasPromptedToMigrateFromDesigner } = selectSettings(state);
+    if (!hasPromptedToMigrateFromDesigner) {
+      await models.settings.patch({ hasPromptedAnalytics: true });
+      dispatch(setIsFinishedBooting(true));
+      return;
+    }
+  }
+
+  const stats = selectStats(state);
+  if (stats.launches > 1) {
+    dispatch(setIsFinishedBooting(true));
+    return;
+  }
+
+  const workspace = await models.workspace.create({
+    scope: 'design',
+    name: `New ${strings.document.singular}`,
+    parentId: DEFAULT_PROJECT_ID,
+  });
+  const { _id: workspaceId } = workspace;
+
+  await models.workspace.ensureChildren(workspace);
+  const request = await models.request.create({ parentId: workspaceId });
+
+  await models.workspaceMeta.updateByParentId(workspaceId, {
+    activeRequestId: request._id,
+    activeActivity: ACTIVITY_DEBUG,
+  });
+
+  dispatch(activateWorkspace({ workspaceId }));
+  dispatch(setActiveActivity(ACTIVITY_DEBUG));
+  dispatch(setIsFinishedBooting(true));
 };
 
 export const init = () => [
@@ -701,4 +756,5 @@ export const init = () => [
   initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
+  initFirstLaunch(),
 ];

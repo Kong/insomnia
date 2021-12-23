@@ -11,15 +11,15 @@ const isWindows = () => platform === 'win32';
 /** see: https://github.com/vercel/pkg#targets */
 const getTargets = () => {
   if (isMac()) {
-    return 'node12-macos-x64';
+    return 'node14-macos-x64';
   }
 
   if (isLinux()) {
-    return 'node12-linux-x64';
+    return 'node14-linux-x64';
   }
 
   if (isWindows()) {
-    return 'node12-win-x64';
+    return 'node14-win-x64';
   }
 
   throw new Error(prefixPkgInso(`Unsupported OS: ${platform}`));
