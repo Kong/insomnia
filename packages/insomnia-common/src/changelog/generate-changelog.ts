@@ -39,7 +39,7 @@ const handler = async ({
 
   const octokit = new Octokit({ auth: githubToken });
 
-  const commits = await compareCommits({
+  const responseCommits = await compareCommits({
     owner,
     repo,
     base,
@@ -47,13 +47,13 @@ const handler = async ({
     octokit,
   });
 
-  const authors = uniqueAuthors(commits);
+  const authors = uniqueAuthors(responseCommits);
 
   const changes = await fetchChanges({
     owner,
     repo,
     octokit,
-    commits,
+    responseCommits,
   });
   const changeLines = groupChanges(changes);
 

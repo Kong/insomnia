@@ -1,5 +1,5 @@
 import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
-import { groupBy, head, join, map, pipe, sort, sortBy, toPairs, uniq } from 'ramda';
+import { flatten, groupBy, head, join, map, pipe, sort, sortBy, toPairs, uniq } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Entries } from 'type-fest';
 
@@ -7,16 +7,19 @@ type CompareCommitsRepoResponse = RestEndpointMethodTypes['repos']['compareCommi
 export type ResponseCommit = CompareCommitsRepoResponse['data']['commits'][0];
 
 /** look for the first occurance of `changelog:` at the beginning of a line, case insensitive */
-export const extractChangelog = (pullRequestDescription: string) => (
+export const extractChangelog = (pullRequestDescription: string | null) => pullRequestDescription ? (
   pullRequestDescription.match(/^changelog:[ \t]*(.*)/mi)?.[1] || undefined
+) : null;
+
+type AuthorHandle = `@${string}`;
+
+export const getAuthorHandles = ({ author }: ResponseCommit) => (
+  author && author.login ? [`@${author.login}`] as AuthorHandle[] : null
 );
 
-export const getAuthorHandleFromCommit = ({ author }: ResponseCommit) => (
-  author && author.login ? `@${author.login}` : null
-);
-
-export const uniqueAuthors: (commits: ResponseCommit[]) => string[] = pipe(
-  map(getAuthorHandleFromCommit),
+export const uniqueAuthors: (responseCommits: ResponseCommit[]) => AuthorHandle[] = pipe(
+  map(getAuthorHandles),
+  flatten,
   uniq,
   compact,
   sort((a, b) => a.localeCompare(b)),
@@ -31,25 +34,23 @@ export const getPullRequestNumber = ({ commit }: ResponseCommit) => {
   return parseInt(stringPRNumber);
 };
 
-export const getPullRequest = (getPullBody: (prNumber: number) => Promise<string | null>) => async (commit: ResponseCommit) => {
-  const pullRequestNumber = getPullRequestNumber(commit);
-  if (!pullRequestNumber) {
-    return;
-  }
-
+export const getChangelogLine = (getPullBody: (prNumber?: number) => Promise<string | null>) => async (responseCommit: ResponseCommit) => {
+  const pullRequestNumber = getPullRequestNumber(responseCommit);
   const prBody = await getPullBody(pullRequestNumber);
-  if (!prBody) {
+  const prChangelog = extractChangelog(prBody);
+  const pullRequestSection = pullRequestNumber ? ` (#${pullRequestNumber})` : '';
+
+  const commitChangelog = extractChangelog(responseCommit.commit.message);
+  if (!prChangelog && !commitChangelog) {
     return;
   }
 
-  const changelog = extractChangelog(prBody);
-  if (!changelog) {
-    return;
-  }
+  // if there's no PR changelog (such as a situation where there's no PR), then fall back to the commit
+  const changelog = prChangelog || commitChangelog;
 
-  const author = getAuthorHandleFromCommit(commit);
-  const authorship = author ? ` ${author}` : '';
-  return `- ${changelog} (#${pullRequestNumber})${authorship}`;
+  const author = getAuthorHandles(responseCommit)?.join(' ');
+  const authorSection = author ? ` ${author}` : '';
+  return `- ${changelog}${pullRequestSection}${authorSection}`;
 };
 
 export const formattedDate = () => new Date().toLocaleDateString('en-US', {
@@ -94,25 +95,25 @@ export const compareCommits = async ({
 };
 
 export const fetchChanges = async ({
-  commits,
+  responseCommits,
   octokit,
   owner,
   repo,
 }: {
-  commits: ResponseCommit[];
+  responseCommits: ResponseCommit[];
   octokit: Octokit;
   owner: string;
   repo: string;
 }) => {
-  const getPullBody = async (pullNumber: number) => (await octokit.pulls.get({
+  const getPullBody = async (pullNumber?: number) => pullNumber ? (await octokit.pulls.get({
     owner,
     repo,
     // eslint-disable-next-line camelcase -- this defined by the GitHub API
     pull_number: pullNumber,
-  })).data.body;
+  })).data.body : null;
 
-  const getPR = getPullRequest(getPullBody);
-  const changes = await Promise.all(map(getPR, commits));
+  const getLine = getChangelogLine(getPullBody);
+  const changes = await Promise.all(map(getLine, responseCommits));
   return compact(changes);
 };
 

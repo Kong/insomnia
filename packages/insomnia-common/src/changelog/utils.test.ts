@@ -1,6 +1,17 @@
 import { Octokit } from '@octokit/rest';
 
-import { compareCommits, extractChangelog, fetchChanges, formattedDate, getAuthorHandleFromCommit, getPullRequest, getPullRequestNumber, groupChanges, ResponseCommit, uniqueAuthors } from './utils';
+import {
+  compareCommits,
+  extractChangelog,
+  fetchChanges,
+  formattedDate,
+  getAuthorHandles,
+  getChangelogLine,
+  getPullRequestNumber,
+  groupChanges,
+  ResponseCommit,
+  uniqueAuthors,
+} from './utils';
 
 describe('extractChangelog', () => {
   const result = 'Fixed an issue with xyz.';
@@ -48,6 +59,14 @@ describe('extractChangelog', () => {
     expect(extractChangelog(description)).toEqual(result);
   });
 
+  it('does not require the match line to be the first line', () => {
+    const description = [
+      'first line of PR or commit',
+      `changelog: ${result}`,
+    ].join('\n');
+    expect(extractChangelog(description)).toEqual(result);
+  });
+
   it("disregards the match text that doesn't start at the beginning of the line", () => {
     const description = [
       'check out the changelog: tomorrow',
@@ -57,20 +76,20 @@ describe('extractChangelog', () => {
   });
 });
 
-describe('getAuthorHandleFromCommit', () => {
+describe('getAuthorHandles', () => {
   it('returns the handle if an author login exists', () => {
     const commit = { author: { login: 'a' } } as ResponseCommit;
-    expect(getAuthorHandleFromCommit(commit)).toEqual('@a');
+    expect(getAuthorHandles(commit)).toEqual(['@a']);
   });
 
   it('returns null if no author exists', () => {
     const commit = {} as ResponseCommit;
-    expect(getAuthorHandleFromCommit(commit)).toEqual(null);
+    expect(getAuthorHandles(commit)).toEqual(null);
   });
 
   it('returns null if no author login exists', () => {
     const commit = { author: {} } as ResponseCommit;
-    expect(getAuthorHandleFromCommit(commit)).toEqual(null);
+    expect(getAuthorHandles(commit)).toEqual(null);
   });
 });
 
@@ -124,47 +143,67 @@ describe('getPullRequestNumber', () => {
   });
 
   it('handles co-authorship', () => {
-    const message = 'fixes a thing (#9001)\n\nCo-authored-by: Dimitri Mitropoulos <dimitrimitropoulos@gmail.com>';
+    const message = 'fixes a thing (#9001)\n\nCo-authored-by: Ziltoid The Omniscient <ziltoid@hevydevy.galaxy>';
     const commit = { commit: { message } } as ResponseCommit;
     const result = getPullRequestNumber(commit);
     expect(result).toEqual(9001);
   });
 });
 
-describe('getPullRequest', () => {
+describe('getChangelogLine', () => {
+  const changelog = 'If there were to omnisciences, Ziltoid would be both.';
+  const author = { login: 'CaptainSpectacular' };
+  const authorHandle = '@CaptainSpectacular';
+
   it('exits if the pull request number is not found', async () => {
     const commit = { commit: { message: '' } } as ResponseCommit;
-    const result = await getPullRequest(async () => '')(commit);
+    const result = await getChangelogLine(async () => null)(commit);
     expect(result).toEqual(undefined);
   });
 
   it('exits if the pull request body is not found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const result = await getPullRequest(async () => '')(commit);
+    const result = await getChangelogLine(async () => null)(commit);
     expect(result).toEqual(undefined);
   });
 
   it('exits if the pull request body is not found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const result = await getPullRequest(async () => 'a body with no changelog')(commit);
+    const result = await getChangelogLine(async () => 'a body with no changelog')(commit);
     expect(result).toEqual(undefined);
   });
 
   it('shows the changelog, even without an author found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const changelog = 'If there were to omnisciences, Ziltoid would be both.';
-    const result = await getPullRequest(async () => `changelog: ${changelog}`)(commit);
+    const result = await getChangelogLine(async () => `changelog: ${changelog}`)(commit);
     expect(result).toEqual(`- ${changelog} (#9001)`);
+  });
+
+  it('can a changelog from a commit', async () => {
+    const commit = {
+      author,
+      commit: { message: `ziltoid\nchangelog: ${changelog}` },
+    } as ResponseCommit;
+    const result = await getChangelogLine(async () => null)(commit);
+    expect(result).toEqual(`- ${changelog} ${authorHandle}`);
+  });
+
+  it('will preference a PR changelog over a commit changelog', async () => {
+    const commit = {
+      author,
+      commit: { message: `ziltoid\nchangelog: ${changelog}` },
+    } as ResponseCommit;
+    const result = await getChangelogLine(async () => `changelog: ${changelog}`)(commit);
+    expect(result).toEqual(`- ${changelog} ${authorHandle}`);
   });
 
   it('shows the changelog, with the author found', async () => {
     const commit = {
-      author: { login: 'CaptainSpectacular' },
+      author,
       commit: { message: 'ziltoid (#9001)' },
     } as ResponseCommit;
-    const changelog = 'If there were to omnisciences, Ziltoid would be both.';
-    const result = await getPullRequest(async () => `changelog: ${changelog}`)(commit);
-    expect(result).toEqual(`- ${changelog} (#9001) @CaptainSpectacular`);
+    const result = await getChangelogLine(async () => `changelog: ${changelog}`)(commit);
+    expect(result).toEqual(`- ${changelog} (#9001) ${authorHandle}`);
   });
 });
 
@@ -181,8 +220,8 @@ describe('compareCommits', () => {
   const commitInfo = {
     base: 'a',
     head: 'b',
-    owner: 'HevyDevy',
-    repo: 'ziltoid',
+    owner: '',
+    repo: '',
   };
 
   it('throws an error if the commits are not found', async () => {
@@ -282,6 +321,23 @@ describe('groupChanges', () => {
 });
 
 describe('fetchChanges', () => {
+  it('can handle commits without pull request numbers', async () => {
+    const octokit = {} as unknown as Octokit;
+
+    const responseCommits = [{
+      commit: { message: 'a commit message without a PR number' },
+    }] as ResponseCommit[];
+
+    const result = await fetchChanges({
+      responseCommits,
+      octokit,
+      owner: '',
+      repo: '',
+    });
+
+    expect(result).toEqual([]);
+  });
+
   it('will get pull request changes', async () => {
     const octokit = {
       pulls: {
@@ -294,7 +350,7 @@ describe('fetchChanges', () => {
       },
     } as unknown as Octokit;
 
-    const commits = [
+    const responseCommits = [
       {
         author: { login: 'ziltoid' },
         commit: { message: 'a commit message (#9001)' },
@@ -306,10 +362,10 @@ describe('fetchChanges', () => {
     ] as ResponseCommit[];
 
     const result = await fetchChanges({
-      commits,
+      responseCommits,
       octokit,
-      owner: 'HevyDevy',
-      repo: 'ziltoid',
+      owner: '',
+      repo: '',
     });
 
     expect(result).toEqual([
