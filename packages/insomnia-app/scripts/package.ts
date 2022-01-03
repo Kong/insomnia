@@ -55,6 +55,7 @@ const pkg = () => {
   return electronBuilder.build({
     config,
     [targetPlatform]: target,
+    ...targetPlatform === 'mac' ? { universal: true } : {},
   });
 };
 

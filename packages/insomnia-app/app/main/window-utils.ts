@@ -1,6 +1,6 @@
+import { Curl } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
-import { Curl } from 'node-libcurl';
 import * as os from 'os';
 import path from 'path';
 

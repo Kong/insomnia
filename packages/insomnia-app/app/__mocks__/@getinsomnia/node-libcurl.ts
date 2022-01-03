@@ -1,13 +1,13 @@
-import { EventEmitter } from 'events';
-import fs from 'fs';
 // Note: we cannot import these from `node-libcurl` like normal because they come from the native library and it's not possible to load it while testing because it was built to run with Electron.
 // That applies to these Enum type imports, but also applies to the members of the class below.
-import { CurlAuth } from 'node-libcurl/dist/enum/CurlAuth';
-import { CurlCode } from 'node-libcurl/dist/enum/CurlCode';
-import { CurlFeature } from 'node-libcurl/dist/enum/CurlFeature';
-import { CurlHttpVersion } from 'node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlInfoDebug } from 'node-libcurl/dist/enum/CurlInfoDebug';
-import { CurlNetrc } from 'node-libcurl/dist/enum/CurlNetrc';
+import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
+import { CurlCode } from '@getinsomnia/node-libcurl/dist/enum/CurlCode';
+import { CurlFeature } from '@getinsomnia/node-libcurl/dist/enum/CurlFeature';
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import { CurlInfoDebug } from '@getinsomnia/node-libcurl/dist/enum/CurlInfoDebug';
+import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import { EventEmitter } from 'events';
+import fs from 'fs';
 
 class Curl extends EventEmitter {
   _options = {};

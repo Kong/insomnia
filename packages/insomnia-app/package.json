@@ -139,7 +139,7 @@
     "multiparty": "^4.2.1",
     "nedb": "^1.8.0",
     "node-forge": "^1.0.0",
-    "node-libcurl": "npm:@getinsomnia/node-libcurl@2.3.4-0",
+    "@getinsomnia/node-libcurl": "2.3.4-1",
     "nunjucks": "^3.2.0",
     "oauth-1.0a": "^2.2.2",
     "objectpath": "^2.0.0",
