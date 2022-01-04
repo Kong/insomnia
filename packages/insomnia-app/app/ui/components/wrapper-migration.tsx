@@ -307,17 +307,17 @@ export const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => 
   <PageLayout
     wrapperProps={wrapperProps}
     renderPageBody={() => (
-      <div className="onboarding">
-        <div className="onboarding__background theme--sidebar" />
-        <div className="onboarding__content theme--dialog">
+      <div className="migration">
+        <div className="migration__background theme--sidebar" />
+        <div className="migration__content theme--dialog">
           <div className="img-container">
             <img src={coreLogo} alt="Kong" />
           </div>
-          <header className="onboarding__content__header">
+          <header className="migration__content__header">
             <h1>Migrate from Insomnia Designer</h1>
             <h2>Insomnia Designer and Core are now Insomnia!</h2>
           </header>
-          <div className="onboarding__content__body">
+          <div className="migration__content__body">
             <MigrationBody />
           </div>
         </div>
