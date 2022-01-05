@@ -156,7 +156,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <div className="overflow-hidden editor vertically-center text-center">
               <p className="pad super-faint text-sm text-center">
                 <i
-                  className="fa fa-hand-peace-o"
+                  className="fa fa-hand-peace-DON'TFORGETTHIS-o"
                   style={{
                     fontSize: '8rem',
                     opacity: 0.3,
