@@ -15,32 +15,21 @@ export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegist
     <PaneHeader />
     <PaneBody placeholder>
       <div>
-        <table className="table--fancy">
+        <table>
           <tbody>
             {[
-              {
-                name: 'Send Request',
-                keyBindings: hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id],
-              },
-              {
-                name: 'Focus Url Bar',
-                keyBindings: hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id],
-              },
-              {
-                name: 'Manage Cookies',
-                keyBindings: hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id],
-              },
-              {
-                name: 'Edit Environments',
-                keyBindings: hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id],
-              },
-            ].map(({ name, keyBindings }) => (
-              <tr key={name} style={{ lineHeight: '1em' }}>
-                <td className="valign-middle">{name}</td>
+              hotKeyRefs.REQUEST_SEND,
+              hotKeyRefs.REQUEST_FOCUS_URL,
+              hotKeyRefs.SHOW_COOKIES_EDITOR,
+              hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+              hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+            ].map(({ description, id }) => (
+              <tr key={id} style={{ lineHeight: '1em' }}>
+                <td style={{ padding: 'var(--padding-sm)', verticalAlign: 'middle' }}>{description}</td>
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={keyBindings}
+                      keyBindings={hotKeyRegistry[id]}
                       useFallbackMessage
                     />
                   </code>
