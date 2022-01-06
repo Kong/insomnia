@@ -64,7 +64,7 @@ const LinkIcon = styled(SvgIcon)({
   paddingLeft: 'var(--padding-sm)',
 });
 
-export const ZeroStatePane: FC<{
+export const EmptyStatePane: FC<{
   icon: ReactNode;
   title: string;
   secondaryAction: string;

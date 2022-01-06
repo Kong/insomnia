@@ -30,7 +30,7 @@ import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
-import { ZeroStatePane } from '../../panes/zero-state-pane';
+import { EmptyStatePane } from '../../panes/empty-state-pane';
 import { FileEditor } from './file-editor';
 import { FormEditor } from './form-editor';
 import { GraphQLEditor } from './graph-ql-editor';
@@ -169,7 +169,7 @@ export class BodyEditor extends PureComponent<Props> {
         );
       } else {
         return (
-          <ZeroStatePane
+          <EmptyStatePane
             icon={<SvgIcon icon="bug" />}
             documentationLinks={[{ title: 'Introduction to Insomnia', url: 'https://docs.insomnia.rest/insomnia/get-started' }]}
             secondaryAction="Select a body type from above to send data in the body of a request"

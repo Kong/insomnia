@@ -16,8 +16,8 @@ import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { KeydownBinder } from '../../keydown-binder';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
+import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
-import { ZeroStatePane } from '../zero-state-pane';
 import useActionHandlers from './use-action-handlers';
 import useChangeHandlers from './use-change-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
@@ -155,7 +155,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             </Tabs>
           )}
           {!methodType && (
-            <ZeroStatePane
+            <EmptyStatePane
               icon={<SvgIcon icon="bug" />}
               documentationLinks={[{ title: 'Introduction to Insomnia', url: 'https://docs.insomnia.rest/insomnia/get-started' }]}
               secondaryAction="Select a body type from above to send data in the body of a request"
