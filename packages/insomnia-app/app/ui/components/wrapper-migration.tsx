@@ -9,9 +9,10 @@ import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/e
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { existsAndIsDirectory } from '../../common/migrate-from-designer';
 import * as models from '../../models';
+import coreLogo from '../images/insomnia-core-logo.png';
 import { setActiveActivity } from '../redux/modules/global';
 import { HelpTooltip } from './help-tooltip';
-import { OnboardingContainer } from './onboarding-container';
+import { PageLayout } from './page-layout';
 import type { WrapperProps } from './wrapper';
 
 type Step = 'options' | 'migrating' | 'results';
@@ -303,11 +304,24 @@ interface Props {
 }
 
 export const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
-  <OnboardingContainer
+  <PageLayout
     wrapperProps={wrapperProps}
-    header="Migrate from Insomnia Designer"
-    subHeader="Insomnia Designer and Core are now Insomnia!"
-  >
-    <MigrationBody />
-  </OnboardingContainer>
+    renderPageBody={() => (
+      <div className="migration">
+        <div className="migration__background theme--sidebar" />
+        <div className="migration__content theme--dialog">
+          <div className="img-container">
+            <img src={coreLogo} alt="Kong" />
+          </div>
+          <header className="migration__content__header">
+            <h1>Migrate from Insomnia Designer</h1>
+            <h2>Insomnia Designer and Core are now Insomnia!</h2>
+          </header>
+          <div className="migration__content__body">
+            <MigrationBody />
+          </div>
+        </div>
+      </div>
+    )}
+  />
 );

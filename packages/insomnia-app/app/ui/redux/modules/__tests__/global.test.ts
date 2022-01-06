@@ -269,7 +269,7 @@ describe('global', () => {
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
-    it('should go to home if initialized at migration and onboarding seen', async () => {
+    it('should go to home if initialized at migration seen', async () => {
       const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
