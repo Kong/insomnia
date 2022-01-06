@@ -11,8 +11,6 @@ import {
   randomDataPath,
 } from '../playwright/paths';
 
-// NOTE: the DESIGNER_DATA_PATH argument is only used for overriding paths for migration testing,
-// if we remove migration from insomnia designer support this testing flow can be simplifed.
 interface EnvOptions {
   INSOMNIA_DATA_PATH: string;
   DESIGNER_DATA_PATH?: string;
@@ -63,7 +61,7 @@ const insomniaTest = test.extend<{
   },
 });
 
-insomniaTest.only('git sync', async ({ insomniaApp, gitServer }) => {
+insomniaTest('git sync', async ({ insomniaApp, gitServer }) => {
   const page = await insomniaApp.firstWindow();
 
   await page.click('text=Don\'t share usage analytics');
