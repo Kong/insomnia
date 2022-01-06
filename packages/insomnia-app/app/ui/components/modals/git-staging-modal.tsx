@@ -376,9 +376,8 @@ export class GitStagingModal extends PureComponent<Props, State> {
                 <label className="wide no-pad">
                   <span className="txt-md">
                     <IndeterminateCheckbox
+                      name="select-all"
                       className="space-right"
-                      // @ts-expect-error -- TSCONVERSION
-                      type="checkbox"
                       checked={allStaged}
                       onChange={() => this._toggleAll(items, !allStaged)}
                       indeterminate={!allStaged && !allUnstaged}
@@ -414,6 +413,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
       <>
         <div className="form-control form-control--outlined">
           <textarea
+            name="commit-message"
             ref={this._setTextareaRef}
             rows={3}
             required

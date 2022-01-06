@@ -4,6 +4,7 @@ import React, { HTMLAttributes, PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props extends HTMLAttributes<HTMLInputElement> {
+  name?: string;
   indeterminate: boolean;
   checked: boolean;
 }

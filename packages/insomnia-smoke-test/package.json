@@ -25,7 +25,8 @@
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "ts-node server/index.ts",
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
-    "test:cli": "npm run with-mock \"npm run cli\""
+    "test:cli": "npm run with-mock \"npm run cli\"",
+    "mock:git-server": "cd fixtures/git-repos && git-http-mock-server"
   },
   "devDependencies": {
     "@playwright/test": "^1.19.2",
@@ -42,6 +43,7 @@
     "express-basic-auth": "^1.2.0",
     "faker": "^5.1.0",
     "get-bin-path": "^5.1.0",
+    "git-http-mock-server": "^2.0.0",
     "jest": "^26.6.3",
     "mkdirp": "^1.0.4",
     "oidc-provider": "^7.10.6",
