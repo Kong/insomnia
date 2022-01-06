@@ -1,5 +1,4 @@
 import { SvgIcon } from 'insomnia-components';
-import { map } from 'ramda';
 import React, { FC, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
@@ -87,12 +86,12 @@ export const ZeroStatePane: FC<{
         <Divider />
         <SecondaryAction>{secondaryAction}</SecondaryAction>
         <DocumentationLinks>
-          {map(({ title, url }) => (
+          {documentationLinks.map(({ title, url }) => (
             <Fragment key={title}>
               <Link key={title} href={url}>{title}</Link>
               <LinkIcon icon="jump" />
             </Fragment>
-          ), documentationLinks)}
+          ))}
         </DocumentationLinks>
       </Wrapper>
     </Panel>
