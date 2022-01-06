@@ -1,0 +1,167 @@
+import fs from 'fs';
+import { Button, Dropdown, DropdownItem, SvgIcon } from 'insomnia-components';
+import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import styled from 'styled-components';
+
+import { selectFileOrFolder } from '../../common/select-file-or-folder';
+import * as models from '../../models';
+import { faint } from '../css/css-in-js';
+import { readFromClipBoard } from '../redux/modules/import';
+import { selectActiveApiSpec } from '../redux/selectors';
+import { showPrompt } from './modals';
+import { EmptyStatePane } from './panes/empty-state-pane';
+
+const Wrapper = styled.div({
+  position: 'absolute',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  pointerEvents: 'none',
+  width: '100%',
+});
+
+const StyledButton = styled(Button)({
+  pointerEvents: 'all',
+  color: 'var(--color-font)',
+  marginTop: 'var(--padding-md)',
+  marginLeft: '0 !important', // unfortunately, we're in specificty battle with a default marginLeft
+});
+
+const ExampleButton = styled.div({
+  cursor: 'pointer',
+  display: 'inline',
+  textDecoration: 'underline',
+  pointerEvents: 'all',
+  '&:hover': {
+    ...faint,
+  },
+});
+
+const useUpdateApiSpecContents = () => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  return useCallback(async (contents: string) => {
+    if (!contents) {
+      return;
+    }
+    if (!activeApiSpec) {
+      return;
+    }
+    await models.apiSpec.update(activeApiSpec, { contents });
+  }, [activeApiSpec]);
+};
+
+const ImportSpecButton: FC = () => {
+  const updateApiSpecContents = useUpdateApiSpecContents();
+
+  const handleImportFile = useCallback(async () => {
+    const { canceled, filePath } = await selectFileOrFolder({
+      extensions: ['yml', 'yaml'],
+      itemTypes: ['file'],
+    });
+    // Exit if no file selected
+    if (canceled || !filePath) {
+      return;
+    }
+
+    const contents = String(await fs.promises.readFile(filePath));
+    await updateApiSpecContents(contents);
+  }, [updateApiSpecContents]);
+
+  const handleImportUri = useCallback(async () => {
+    showPrompt({
+      title: 'Import document from URL',
+      submitName: 'Fetch and Import',
+      label: 'URL',
+      placeholder: 'https://gist.githubusercontent.com/<user>/<id>/raw/<id>/openapi.yaml',
+      onComplete: async (uri: string) => {
+        const response = await window.fetch(uri);
+        if (!response) {
+          return;
+        }
+        const contents = await response.text();
+        await updateApiSpecContents(contents);
+      },
+    });
+
+  }, [updateApiSpecContents]);
+
+  const handleImportClipBoard = useCallback(async () => {
+    const contents = readFromClipBoard();
+    await updateApiSpecContents(contents);
+  }, [updateApiSpecContents]);
+
+  const button = (
+    <StyledButton variant="outlined" bg="surprise" className="margin-left">
+      Import
+      <i className="fa fa-caret-down pad-left-sm" />
+    </StyledButton>
+  );
+
+  return (
+    <Dropdown renderButton={button}>
+      <DropdownItem
+        icon={<i className="fa fa-plus" />}
+        onClick={handleImportFile}
+      >
+        File
+      </DropdownItem>
+      <DropdownItem
+        icon={<i className="fa fa-link" />}
+        onClick={handleImportUri}
+      >
+        URL
+      </DropdownItem>
+      <DropdownItem
+        icon={<i className="fa fa-clipboard" />}
+        onClick={handleImportClipBoard}
+      >
+        Clipboard
+      </DropdownItem>
+    </Dropdown>
+  );
+};
+
+const SecondaryAction: FC = () => {
+  const PETSTORE_EXAMPLE_URI = 'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml';
+
+  const updateApiSpecContents = useUpdateApiSpecContents();
+  const onClick = useCallback(async () => {
+    const response = await window.fetch(PETSTORE_EXAMPLE_URI);
+    if (!response) {
+      return;
+    }
+    const contents = await response.text();
+    await updateApiSpecContents(contents);
+  }, [updateApiSpecContents]);
+
+  return (
+    <div>
+      <div>
+        Or import existing an OpenAPI spec or <ExampleButton onClick={onClick}>start from an example</ExampleButton>
+      </div>
+      <ImportSpecButton />
+    </div>
+  );
+};
+
+export const DesignEmptyState: FC = () => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+
+  if (!activeApiSpec || activeApiSpec.contents) {
+    return null;
+  }
+
+  return (
+    <Wrapper>
+      <EmptyStatePane
+        icon={<SvgIcon icon="drafting-compass" />}
+        documentationLinks={[
+          { title: 'Working with Design Documents', url: 'https://docs.insomnia.rest/insomnia/get-started' },
+          { title: 'Introduction to Insomnia', url: 'https://docs.insomnia.rest/insomnia/get-started' },
+        ]}
+        secondaryAction={<SecondaryAction />}
+        title="Enter an OpenAPI specification here"
+      />
+    </Wrapper>
+  );
+};

@@ -115,10 +115,7 @@ export const importFile = (
   }
 };
 
-export const importClipBoard = (
-  options: ImportOptions = {},
-): ThunkAction<void, RootState, void, AnyAction> => async (dispatch, getState) => {
-  dispatch(loadStart());
+export const readFromClipBoard = () => {
   const schema = electron.clipboard.readText();
 
   if (!schema) {
@@ -126,6 +123,17 @@ export const importClipBoard = (
       title: 'Import Failed',
       message: 'Your clipboard appears to be empty.',
     });
+  }
+
+  return schema;
+};
+
+export const importClipBoard = (
+  options: ImportOptions = {},
+): ThunkAction<void, RootState, void, AnyAction> => async (dispatch, getState) => {
+  dispatch(loadStart());
+  const schema = readFromClipBoard();
+  if (!schema) {
     return;
   }
 
