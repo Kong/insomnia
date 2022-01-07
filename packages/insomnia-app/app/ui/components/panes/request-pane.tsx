@@ -151,7 +151,6 @@ export const RequestPane: FC<Props> = ({
   if (!request) {
     return (
       <PlaceholderRequestPane
-        hotKeyRegistry={settings.hotKeyRegistry}
         handleCreateRequest={handleCreateRequest}
       />
     );
