@@ -19,7 +19,7 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   state: State = {
     timeline: [],
     timelineKey: '',
-    body: ''
+    body: '',
   };
 
   componentDidMount() {
@@ -37,12 +37,12 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   async refreshTimeline() {
     const { response } = this.props;
     const timeline = await models.response.getTimeline(response);
-    const body = await models.response.getBodyBuffer(response)!.toString('utf8')
+    const body = await models.response.getBodyBuffer(response)?.toString('utf8') || '';
 
     this.setState({
       timeline,
       timelineKey: response._id,
-      body: body
+      body: body,
     });
   }
 
@@ -99,11 +99,11 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
 
   render() {
     const { timeline, timelineKey } = this.state;
-    let rows = timeline
+    const rows = timeline
       .map(this.renderRow)
       .filter(r => r !== null);
 
-    rows.push(`\n| ${this.state.body}`);
+    rows.push(`\n|\n${this.state.body}`);
 
     const value = rows
       .join('\n')
