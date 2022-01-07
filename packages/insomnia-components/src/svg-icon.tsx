@@ -5,6 +5,7 @@ import { ValueOf } from 'type-fest';
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
 import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';
 import { SvgIcnBrackets } from './assets/svgr/IcnBrackets';
+import { SvgIcnBug } from './assets/svgr/IcnBug';
 import { SvgIcnBurgerMenu } from './assets/svgr/IcnBurgerMenu';
 import { SvgIcnCheckmark } from './assets/svgr/IcnCheckmark';
 import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
@@ -29,6 +30,7 @@ import { SvgIcnGui } from './assets/svgr/IcnGui';
 import { SvgIcnHome } from './assets/svgr/IcnHome';
 import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';
 import { SvgIcnInfo } from './assets/svgr/IcnInfo';
+import { SvgIcnJump } from './assets/svgr/IcnJump';
 import { SvgIcnKey } from './assets/svgr/IcnKey';
 import { SvgIcnLaptop } from './assets/svgr/IcnLaptop';
 import { SvgIcnMinusCircle } from './assets/svgr/IcnMinusCircle';
@@ -69,6 +71,7 @@ export const IconEnum = {
   arrowRight: 'arrow-right',
   bitbucket: 'bitbucket',
   brackets: 'brackets',
+  bug: 'bug',
   burgerMenu: 'burger-menu',
   checkmark: 'checkmark',
   chevronDown: 'chevron-down',
@@ -91,6 +94,7 @@ export const IconEnum = {
   gui: 'gui',
   indentation: 'indentation',
   info: 'info',
+  jump: 'jump',
   home: 'home',
   key: 'key',
   laptop: 'laptop',
@@ -164,6 +168,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.arrowRight]: [ThemeEnum.highlight, SvgIcnArrowRight],
     [IconEnum.bitbucket]: [ThemeEnum.default, SvgIcnBitbucketLogo],
     [IconEnum.brackets]: [ThemeEnum.default, SvgIcnBrackets],
+    [IconEnum.bug]: [ThemeEnum.default, SvgIcnBug],
     [IconEnum.burgerMenu]: [ThemeEnum.default, SvgIcnBurgerMenu],
     [IconEnum.checkmark]: [ThemeEnum.default, SvgIcnCheckmark],
     [IconEnum.chevronDown]: [ThemeEnum.default, SvgIcnChevronDown],
@@ -189,6 +194,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.home]: [ThemeEnum.default, SvgIcnHome],
     [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
     [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],
+    [IconEnum.jump]: [ThemeEnum.default, SvgIcnJump],
     [IconEnum.key]: [ThemeEnum.default, SvgIcnKey],
     [IconEnum.laptop]: [ThemeEnum.default, SvgIcnLaptop],
     [IconEnum.minusCircleFill]: [ThemeEnum.default, SvgIcnMinusCircleFill],

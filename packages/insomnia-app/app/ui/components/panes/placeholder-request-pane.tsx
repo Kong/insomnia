@@ -1,24 +1,22 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importFile } from '../../redux/modules/import';
-import { selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveWorkspace, selectSettings } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {
-  hotKeyRegistry: HotKeyRegistry;
   handleCreateRequest: () => void;
 }
 
 export const PlaceholderRequestPane: FC<Props> = ({
-  hotKeyRegistry,
   handleCreateRequest,
 }) => {
   const dispatch = useDispatch();
+  const { hotKeyRegistry } = useSelector(selectSettings);
   const workspaceId = useSelector(selectActiveWorkspace)?._id;
   const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId, forceToWorkspace: ForceToWorkspace.current })), [workspaceId, dispatch]);
 
