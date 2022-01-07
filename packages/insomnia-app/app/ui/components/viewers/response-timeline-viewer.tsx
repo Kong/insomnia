@@ -12,12 +12,14 @@ interface Props {
 interface State {
   timeline: any[];
   timelineKey: string;
+  body: string;
 }
 
 export class ResponseTimelineViewer extends PureComponent<Props, State> {
   state: State = {
     timeline: [],
     timelineKey: '',
+    body: ''
   };
 
   componentDidMount() {
@@ -35,9 +37,12 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   async refreshTimeline() {
     const { response } = this.props;
     const timeline = await models.response.getTimeline(response);
+    const body = await models.response.getBodyBuffer(response)!.toString('utf8')
+
     this.setState({
       timeline,
       timelineKey: response._id,
+      body: body
     });
   }
 
@@ -94,18 +99,23 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
 
   render() {
     const { timeline, timelineKey } = this.state;
-    const rows = timeline
+    let rows = timeline
       .map(this.renderRow)
-      .filter(r => r !== null)
+      .filter(r => r !== null);
+
+    rows.push(`\n| ${this.state.body}`);
+
+    const value = rows
       .join('\n')
       .trim();
+
     return (
       <CodeEditor
         key={timelineKey}
         hideLineNumbers
         readOnly
         onClickLink={clickLink}
-        defaultValue={rows}
+        defaultValue={value}
         className="pad-left"
         mode="curl"
       />
