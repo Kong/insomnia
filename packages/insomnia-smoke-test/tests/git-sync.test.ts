@@ -1,68 +1,68 @@
-import { ElectronApplication, test } from '@playwright/test';
-import { execSync } from 'child_process';
+import { test } from '../playwright/test';
+// import { execSync } from 'child_process';
 
-import {
-  cwd,
-  executablePath,
-  mainPath,
-  randomDataPath,
-} from '../playwright/paths';
+// import {
+//   cwd,
+//   executablePath,
+//   mainPath,
+//   randomDataPath,
+// } from '../playwright/paths';
 
-interface EnvOptions {
-  INSOMNIA_DATA_PATH: string;
-  DESIGNER_DATA_PATH?: string;
-}
+// interface EnvOptions {
+//   INSOMNIA_DATA_PATH: string;
+//   DESIGNER_DATA_PATH?: string;
+// }
 
-const insomniaTest = test.extend<{
-  gitServer: { url: string };
-  insomniaApp: ElectronApplication;
-}>({
-  gitServer: async ({}, use) => {
-    const GIT_HTTP_MOCK_SERVER_PORT = '8174';
+// const insomniaTest = test.extend<{
+//   gitServer: { url: string };
+//   insomniaApp: ElectronApplication;
+// }>({
+//   gitServer: async ({}, use) => {
+//     const GIT_HTTP_MOCK_SERVER_PORT = '8174';
 
-    execSync('npm run mock:git-server:start');
+//     execSync('npm run mock:git-server:start');
 
-    await use({ url: `http://localhost:${GIT_HTTP_MOCK_SERVER_PORT}` });
+//     await use({ url: `http://localhost:${GIT_HTTP_MOCK_SERVER_PORT}` });
 
-    execSync('npm run mock:git-server:stop');
-  },
-  insomniaApp: async ({ playwright }, use) => {
-    const options: EnvOptions = { INSOMNIA_DATA_PATH: randomDataPath() };
+//     execSync('npm run mock:git-server:stop');
+//   },
+//   insomniaApp: async ({ playwright }, use) => {
+//     const options: EnvOptions = { INSOMNIA_DATA_PATH: randomDataPath() };
 
-    if (!options.DESIGNER_DATA_PATH)
-      options.DESIGNER_DATA_PATH = 'doesnt-exist';
+//     if (!options.DESIGNER_DATA_PATH)
+//       options.DESIGNER_DATA_PATH = 'doesnt-exist';
 
-    const electronApp = await playwright._electron.launch({
-      cwd,
-      executablePath,
-      args: process.env.BUNDLE === 'package' ? [] : [mainPath],
-      env: {
-        ...process.env,
-        ...options,
-        PLAYWRIGHT: 'true',
-      },
-    });
+//     const electronApp = await playwright._electron.launch({
+//       cwd,
+//       executablePath,
+//       args: process.env.BUNDLE === 'package' ? [] : [mainPath],
+//       env: {
+//         ...process.env,
+//         ...options,
+//         PLAYWRIGHT: 'true',
+//       },
+//     });
 
-    await electronApp.waitForEvent('window');
+//     await electronApp.waitForEvent('window');
 
-    await use(electronApp);
+//     await use(electronApp);
 
-    await electronApp.close();
-  },
-  page: async ({ insomniaApp }, use) => {
-    const page = await insomniaApp.firstWindow();
+//     await electronApp.close();
+//   },
+//   page: async ({ insomniaApp }, use) => {
+//     const page = await insomniaApp.firstWindow();
 
-    if (process.platform === 'win32') await page.reload();
+//     if (process.platform === 'win32') await page.reload();
 
-    await page.click("text=Don't share usage analytics");
+//     await page.click("text=Don't share usage analytics");
 
-    await use(page);
+//     await use(page);
 
-    await page.close();
-  },
-});
+//     await page.close();
+//   },
+// });
 
-insomniaTest('Git Sync', async ({ page, gitServer }) => {
+test('Git Sync', async ({ page, gitServer }) => {
   // Set up Git Sync
   await page.click('text=Setup Git Sync');
 
