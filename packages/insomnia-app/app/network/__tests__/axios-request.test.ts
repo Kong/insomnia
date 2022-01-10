@@ -23,15 +23,13 @@ describe('axiosRequest used for git-sync', () => {
     beforeEach(() => {
       globalBeforeEach();
       // we want to test that the values that are passed to axios are returned in the config key
-      (axios as unknown as jest.Mock).mockImplementation(ajaxConfig => new Promise(resolve => {
-        resolve({
-          config: ajaxConfig,
-          data: {},
-          headers: {},
-          request: {},
-          status: 200,
-          statusText: 'OK',
-        });
+      (axios as unknown as jest.Mock).mockImplementation(ajaxConfig => Promise.resolve({
+        config: ajaxConfig,
+        data: {},
+        headers: {},
+        request: {},
+        status: 200,
+        statusText: 'OK',
       }));
     });
 
