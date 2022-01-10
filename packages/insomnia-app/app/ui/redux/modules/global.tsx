@@ -9,11 +9,9 @@ import { unreachableCase } from 'ts-assert-unreachable';
 import { trackEvent } from '../../../common/analytics';
 import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
-  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
@@ -32,7 +30,6 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
-import { Settings } from '../../../models/settings';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
@@ -49,8 +46,9 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveProjectName, selectSettings, selectWorkspacesForActiveProject } from '../selectors';
+import { selectActiveActivity, selectActiveProjectName, selectSettings, selectStats, selectWorkspacesForActiveProject } from '../selectors';
 import { importUri } from './import';
+import { activateWorkspace } from './workspace';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -62,6 +60,7 @@ export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
+export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -72,6 +71,16 @@ const COMMAND_PLUGIN_THEME = 'plugins/theme';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+const isFinishedBootingReducer = (state = false, action) => {
+  switch (action.type) {
+    case SET_IS_FINISHED_BOOTING:
+      return action.payload;
+
+    default:
+      return state;
+  }
+};
+
 function activeActivityReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
@@ -153,6 +162,7 @@ function loginStateChangeReducer(state = false, action) {
 }
 
 export interface GlobalState {
+  isFinishedBooting: boolean;
   isLoading: boolean;
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
@@ -163,6 +173,7 @@ export interface GlobalState {
 }
 
 export const reducer = combineReducers<GlobalState>({
+  isFinishedBooting: isFinishedBootingReducer,
   isLoading: loadingReducer,
   dashboardSortOrder: dashboardSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
@@ -175,6 +186,10 @@ export const reducer = combineReducers<GlobalState>({
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
+const setIsFinishedBooting = (isFinishedBooting: boolean) => ({
+  type: SET_IS_FINISHED_BOOTING,
+  payload: isFinishedBooting,
+});
 
 export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
@@ -299,79 +314,11 @@ export const loadRequestStop = (requestId: string) => ({
   requestId,
 });
 
-function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
-  switch (currentActivity) {
-    case ACTIVITY_MIGRATION:
-      // Has not seen the onboarding step? Go to onboarding
-      if (!settings.hasPromptedOnboarding) {
-        return ACTIVITY_ONBOARDING;
-      }
-
-      // Has not seen the analytics prompt? Go to it
-      if (!settings.hasPromptedAnalytics) {
-        return ACTIVITY_ANALYTICS;
-      }
-
-      // Otherwise, go to home
-      return ACTIVITY_HOME;
-
-    case ACTIVITY_ONBOARDING:
-      // Always go to home after onboarding
-      return ACTIVITY_HOME;
-
-    default:
-      return currentActivity;
-  }
-}
-
-/*
-  Go to the next activity in a sequential activity flow, depending on different conditions
- */
-export const goToNextActivity = () => (dispatch, getState) => {
-  const state = getState();
-  const { activeActivity } = state.global;
-  const settings = selectSettings(state);
-
-  const nextActivity = _getNextActivity(settings, activeActivity);
-
-  if (nextActivity !== activeActivity) {
-    dispatch(setActiveActivity(nextActivity));
-  }
-};
-
 /*
   Go to an explicit activity
  */
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
-
-  // Don't need to await settings update
-  switch (activity) {
-    case ACTIVITY_MIGRATION:
-      trackEvent('Data', 'Migration', 'Manual');
-      models.settings.patch({
-        hasPromptedToMigrateFromDesigner: true,
-      });
-      break;
-
-    case ACTIVITY_ONBOARDING:
-      models.settings.patch({
-        hasPromptedOnboarding: true,
-        // Don't show the analytics preferences prompt as it is part of the onboarding flow
-        hasPromptedAnalytics: true,
-      });
-      break;
-
-    case ACTIVITY_ANALYTICS:
-      models.settings.patch({
-        hasPromptedAnalytics: true,
-      });
-      break;
-
-    default:
-      break;
-  }
-
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
   return {
@@ -715,16 +662,16 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
 
   if (isValidActivity(activity)) {
     return activity;
-  } else {
-    const fallbackActivity = ACTIVITY_HOME;
-    console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
-    return fallbackActivity;
   }
+
+  const fallbackActivity = ACTIVITY_HOME;
+  console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
+  return fallbackActivity;
 }
 
 /*
   Initialize with the cached active activity, and navigate to the next activity if necessary
-  This will also decide whether to start with the migration or onboarding activities
+  This will also decide whether to start with the migration
  */
 export const initActiveActivity = () => (dispatch, getState) => {
   const state = getState();
@@ -744,29 +691,64 @@ export const initActiveActivity = () => (dispatch, getState) => {
   activeActivity = _normalizeActivity(activeActivity);
   let overrideActivity: GlobalActivity | null = null;
 
-  switch (activeActivity) {
+  if (activeActivity === ACTIVITY_MIGRATION) {
     // If relaunched after a migration, go to the next activity
-    // Don't need to do this for onboarding because that doesn't require a restart
-    case ACTIVITY_MIGRATION:
-      overrideActivity = _getNextActivity(settings, activeActivity);
-      break;
-
+    // Don't need to do this for migration because that doesn't require a restart
+    overrideActivity = ACTIVITY_HOME;
+  } else {
     // Always check if user has been prompted to migrate or onboard
-    default:
-      if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-        trackEvent('Data', 'Migration', 'Auto');
-        overrideActivity = ACTIVITY_MIGRATION;
-      } else if (!settings.hasPromptedOnboarding) {
-        overrideActivity = ACTIVITY_ONBOARDING;
-      } else if (!settings.hasPromptedAnalytics) {
-        overrideActivity = ACTIVITY_ANALYTICS;
-      }
-
-      break;
+    if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+      trackEvent('Data', 'Migration', 'Auto');
+      overrideActivity = ACTIVITY_MIGRATION;
+    }
   }
 
   const initializeToActivity = overrideActivity || activeActivity;
+  if (initializeToActivity === state.global.activeActivity) {
+    // no need to dispatch the action twice if it has already been set to the correct value.
+    return;
+  }
   dispatch(setActiveActivity(initializeToActivity));
+};
+
+export const initFirstLaunch = () => async (dispatch, getState) => {
+  const state = getState();
+
+  const activeActivity = selectActiveActivity(state);
+  // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
+  if (activeActivity === ACTIVITY_MIGRATION) {
+    const { hasPromptedToMigrateFromDesigner } = selectSettings(state);
+    if (!hasPromptedToMigrateFromDesigner) {
+      await models.settings.patch({ hasPromptedAnalytics: true });
+      dispatch(setIsFinishedBooting(true));
+      return;
+    }
+  }
+
+  const stats = selectStats(state);
+  if (stats.launches > 1) {
+    dispatch(setIsFinishedBooting(true));
+    return;
+  }
+
+  const workspace = await models.workspace.create({
+    scope: 'design',
+    name: `New ${strings.document.singular}`,
+    parentId: DEFAULT_PROJECT_ID,
+  });
+  const { _id: workspaceId } = workspace;
+
+  await models.workspace.ensureChildren(workspace);
+  const request = await models.request.create({ parentId: workspaceId });
+
+  await models.workspaceMeta.updateByParentId(workspaceId, {
+    activeRequestId: request._id,
+    activeActivity: ACTIVITY_DEBUG,
+  });
+
+  dispatch(activateWorkspace({ workspaceId }));
+  dispatch(setActiveActivity(ACTIVITY_DEBUG));
+  dispatch(setIsFinishedBooting(true));
 };
 
 export const init = () => [
@@ -774,4 +756,5 @@ export const init = () => [
   initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
+  initFirstLaunch(),
 ];

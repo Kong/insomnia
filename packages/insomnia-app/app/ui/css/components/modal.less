@@ -29,6 +29,11 @@
 
     // We want pointer events to pass through to the backdrop so we can close it
     pointer-events: none;
+
+    &.modal--centered {
+      display: flex;
+      align-items: center;
+    }
   }
 
   &.modal--fixed-height .modal__content {

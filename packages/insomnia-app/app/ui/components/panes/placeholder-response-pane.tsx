@@ -1,9 +1,30 @@
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { FunctionComponent } from 'react';
+import styled from 'styled-components';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
+
+const Wrapper = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  whiteSpace: 'nowrap',
+});
+
+const Item = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+  margin: 'var(--padding-sm)',
+});
+
+const Description = styled.div({
+  marginRight: '2em',
+});
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;
@@ -14,42 +35,26 @@ export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegist
   <Pane type="response">
     <PaneHeader />
     <PaneBody placeholder>
-      <div>
-        <table className="table--fancy">
-          <tbody>
-            {[
-              {
-                name: 'Send Request',
-                keyBindings: hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id],
-              },
-              {
-                name: 'Focus Url Bar',
-                keyBindings: hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id],
-              },
-              {
-                name: 'Manage Cookies',
-                keyBindings: hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id],
-              },
-              {
-                name: 'Edit Environments',
-                keyBindings: hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id],
-              },
-            ].map(({ name, keyBindings }) => (
-              <tr key={name} style={{ lineHeight: '1em' }}>
-                <td className="valign-middle">{name}</td>
-                <td className="text-right">
-                  <code>
-                    <Hotkey
-                      keyBindings={keyBindings}
-                      useFallbackMessage
-                    />
-                  </code>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Wrapper>
+        {[
+          hotKeyRefs.REQUEST_SEND,
+          hotKeyRefs.REQUEST_FOCUS_URL,
+          hotKeyRefs.SHOW_COOKIES_EDITOR,
+          hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+          hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+        ].map(({ description, id }) => (
+          <Item key={id}>
+            <Description>{description}</Description>
+            <code>
+              <Hotkey
+                keyBindings={hotKeyRegistry[id]}
+                useFallbackMessage
+              />
+            </code>
+
+          </Item>
+        ))}
+      </Wrapper>
     </PaneBody>
     {children}
   </Pane>

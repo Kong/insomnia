@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "insomnia-plugin-cookie-jar",
   "version": "2.4.1",
   "author": "Kong <office@konghq.com>",

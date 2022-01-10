@@ -91,7 +91,7 @@
             "regexp": "watching"
           },
           "endsPattern": {
-            "regexp": "Built at\\:"
+            "regexp": "\\d+ modules"
           }
         }
       },

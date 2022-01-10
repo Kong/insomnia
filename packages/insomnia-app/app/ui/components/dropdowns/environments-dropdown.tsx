@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HotKeyRegistry } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -21,7 +21,7 @@ interface Props {
   handleChangeEnvironment: Function;
   workspace: Workspace;
   environments: Environment[];
-  environmentHighlightColorStyle: string;
+  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   hotKeyRegistry: HotKeyRegistry;
   className?: string;
   activeEnvironment?: Environment | null;
@@ -62,8 +62,8 @@ export class EnvironmentsDropdown extends PureComponent<Props> {
     );
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
       this._dropdown?.toggle(true);
     });
   }

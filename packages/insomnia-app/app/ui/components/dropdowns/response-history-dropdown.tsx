@@ -51,8 +51,8 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
     this.props.handleSetActiveResponse(response);
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       this._dropdown?.toggle(true);
     });
   }

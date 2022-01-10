@@ -115,11 +115,11 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
   );
 });
 
-const install = (relDir: string) => new Promise<void>((resolve, reject) => {
-  const prefix = path.resolve(__dirname, relDir);
+const install = () => new Promise<void>((resolve, reject) => {
+  const root = path.resolve(__dirname, '../../../');
 
-  const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
-    cwd: prefix,
+  const p = childProcess.spawn('npm', ['run', 'bootstrap:electron-builder'], {
+    cwd: root,
     shell: true,
   });
 
@@ -218,8 +218,8 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
-  if (process.version.indexOf('v12.') !== 0) {
-    console.log('[build] Node v12.x.x is required to build');
+  if (process.version.indexOf('v14.') !== 0) {
+    console.log('[build] Node v14.x.x is required to build');
     process.exit(1);
   }
 
@@ -250,7 +250,7 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
 
   // Install Node modules
   console.log('[build] Installing dependencies');
-  await install(buildFolder);
+  await install();
 
   console.log('[build] Complete!');
   return buildContext;
