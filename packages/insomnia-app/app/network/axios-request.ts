@@ -26,6 +26,8 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     }),
   };
 
+  // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
+  finalConfig.proxy = false;
   if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
 
@@ -35,8 +37,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
         port: parseInt(port, 10),
       };
     }
-  } else {
-    finalConfig.proxy = false;
   }
 
   const response = await axios(finalConfig);
