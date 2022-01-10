@@ -42,6 +42,31 @@ const RestartTooltip: FC<{ message: string }> = ({ message }) => (
   </Fragment>
 );
 
+const DevelopmentOnlySettings: FC = () => {
+  if (!isDevelopment()) {
+    return null;
+  }
+
+  return (
+    <>
+      <hr className="pad-top" />
+      <h2>Development</h2>
+      <div className="form-row pad-top-sm">
+        <BooleanSetting
+          label="Has been prompted to migrate from Insomnia Designer"
+          setting="hasPromptedToMigrateFromDesigner"
+        />
+      </div>
+      <div className="form-row pad-top-sm">
+        <BooleanSetting
+          label="Has seen analytics prompt"
+          setting="hasPromptedAnalytics"
+        />
+      </div>
+    </>
+  );
+};
+
 interface Props {
   hideModal: () => void;
 }
@@ -436,24 +461,7 @@ export const General: FC<Props> = ({ hideModal }) => {
         </button>
       </div>
 
-      {isDevelopment() && (
-        <>
-          <hr className="pad-top" />
-          <h2>Development</h2>
-          <div className="form-row pad-top-sm">
-            <BooleanSetting
-              label="Has been prompted to migrate from Insomnia Designer"
-              setting="hasPromptedToMigrateFromDesigner"
-            />
-          </div>
-          <div className="form-row pad-top-sm">
-            <BooleanSetting
-              label="Has seen analytics prompt"
-              setting="hasPromptedAnalytics"
-            />
-          </div>
-        </>
-      )}
+      <DevelopmentOnlySettings />
     </div>
   );
 };
