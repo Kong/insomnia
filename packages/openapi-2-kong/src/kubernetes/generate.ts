@@ -139,9 +139,9 @@ export const generateMetadataAnnotations = (
 
     const originalAnnotations = metadata?.annotations || {};
     return {
+      ...coreAnnotations,
       ...originalAnnotations,
       ...customAnnotations,
-      ...coreAnnotations,
     };
   }
 
