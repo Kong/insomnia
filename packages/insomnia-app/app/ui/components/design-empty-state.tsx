@@ -7,7 +7,6 @@ import styled from 'styled-components';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import * as models from '../../models';
 import { faint } from '../css/css-in-js';
-import { readFromClipBoard } from '../redux/modules/import';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';
@@ -89,12 +88,6 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
     onUpdateContents();
   }, [updateApiSpecContents, onUpdateContents]);
 
-  const handleImportClipBoard = useCallback(async () => {
-    const contents = readFromClipBoard();
-    await updateApiSpecContents(contents);
-    onUpdateContents();
-  }, [updateApiSpecContents, onUpdateContents]);
-
   const button = (
     <StyledButton variant="outlined" bg="surprise" className="margin-left">
       Import
@@ -115,12 +108,6 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
         onClick={handleImportUri}
       >
         URL
-      </DropdownItem>
-      <DropdownItem
-        icon={<i className="fa fa-clipboard" />}
-        onClick={handleImportClipBoard}
-      >
-        Clipboard
       </DropdownItem>
     </Dropdown>
   );
