@@ -44,6 +44,7 @@ interface State {
     line: number;
     type: 'error' | 'warning';
   }[];
+  forceRefreshCounter: number;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -55,6 +56,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
     super(props);
     this.state = {
       lintMessages: [],
+      forceRefreshCounter: 0,
     };
   }
 
@@ -157,13 +159,20 @@ export class WrapperDesign extends PureComponent<Props, State> {
     }
   }
 
+  _onUpdateContents() {
+    const { forceRefreshCounter } = this.state;
+    this.setState({ forceRefreshCounter: forceRefreshCounter + 1 });
+  }
+
   _renderEditor() {
     const { activeApiSpec } = this.props.wrapperProps;
-    const { lintMessages } = this.state;
+    const { lintMessages, forceRefreshCounter } = this.state;
 
     if (!activeApiSpec) {
       return null;
     }
+
+    const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec._id}`;
 
     return (
       <div className="column tall theme--pane__body">
@@ -175,9 +184,11 @@ export class WrapperDesign extends PureComponent<Props, State> {
             mode="openapi"
             defaultValue={activeApiSpec.contents}
             onChange={this.onChangeSpecContents}
-            uniquenessKey={activeApiSpec._id}
+            uniquenessKey={uniquenessKey}
           />
-          <DesignEmptyState />
+          <DesignEmptyState
+            onUpdateContents={this._onUpdateContents}
+          />
         </div>
         {lintMessages.length > 0 && (
           <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
