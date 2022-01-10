@@ -17,9 +17,10 @@ import {
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
+import * as models from '../../../models';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectSettings } from '../../redux/selectors';
+import { selectSettings, selectStats } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -43,6 +44,13 @@ const RestartTooltip: FC<{ message: string }> = ({ message }) => (
 );
 
 const DevelopmentOnlySettings: FC = () => {
+  const { launches } = useSelector(selectStats);
+
+  const onChangeLaunches = useCallback(async event => {
+    const launches = parseInt(event.target.value, 10);
+    await models.stats.update({ launches });
+  }, []);
+
   if (!isDevelopment()) {
     return null;
   }
@@ -51,17 +59,35 @@ const DevelopmentOnlySettings: FC = () => {
     <>
       <hr className="pad-top" />
       <h2>Development</h2>
+
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Has been prompted to migrate from Insomnia Designer"
           setting="hasPromptedToMigrateFromDesigner"
         />
       </div>
+
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Has seen analytics prompt"
           setting="hasPromptedAnalytics"
         />
+      </div>
+
+      <div className="form-row pad-top-sm">
+        <div className="form-control form-control--outlined">
+          <label>
+            Stats.Launches
+            <HelpTooltip className="space-left">If you need this to be a certain value after restarting the app, then just subtract one from your desired value before you restart.  For example, if you want to simulate first launch, set it to 0 and when you reboot it will be 1.  Note that Shift+F5 does not actually restart since it only refreshes the renderer and thus will not increment `Stats.launches`.  This is because Stats.launches is incremented in the main process whereas refreshing the app with Shift+F5 doesn't retrigger that code path.</HelpTooltip>
+            <input
+              value={String(launches)}
+              min={0}
+              name="launches"
+              onChange={onChangeLaunches}
+              type={'number'}
+            />
+          </label>
+        </div>
       </div>
     </>
   );
