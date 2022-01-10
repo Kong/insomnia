@@ -37,38 +37,12 @@ describe('axiosRequest used for git-sync', () => {
       jest.resetAllMocks();
     });
 
-    it('should set axios proxy key to false if the insomnia user settings for the proxy are not enabled', async () => {
+    it('should set axios proxy key to false.', async () => {
       const mockInsomniaConfigPanelUserSettings: AxiosRequestMockUserSettings = {
         proxyEnabled: false,
         httpsProxy: 'https://some.proxy.com:8080',
         httpProxy: 'https://some.proxy.com:8080',
         noProxy: '',
-        validateSSL: false,
-      };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
-      const response = await axiosRequest({ url: 'https://git.acme.com/username/repo-name.git/git-upload-pack' });
-      expect(response.config.proxy).toBe(false);
-    });
-
-    it('should set axios proxy key to false if the insomnia user settings for the proxy are enabled and proxy url is not filled in', async () => {
-      const mockInsomniaConfigPanelUserSettings: AxiosRequestMockUserSettings = {
-        proxyEnabled: true,
-        httpsProxy: '',
-        httpProxy: '',
-        noProxy: '',
-        validateSSL: false,
-      };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
-      const response = await axiosRequest({ url: 'https://git.acme.com/username/repo-name.git/git-upload-pack' });
-      expect(response.config.proxy).toBe(false);
-    });
-
-    it('should set axios proxy key to false if the insomnia user settings are enabled and the url matches a uri in the no proxy setting', async () => {
-      const mockInsomniaConfigPanelUserSettings: AxiosRequestMockUserSettings = {
-        proxyEnabled: true,
-        httpsProxy: 'https://some.proxy.com:8080',
-        httpProxy: 'https://some.proxy.com:8080',
-        noProxy: 'localhost,127.0.0.1,git.acme.com',
         validateSSL: false,
       };
       (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
