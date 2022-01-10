@@ -1,5 +1,5 @@
 import { ElectronApplication, test } from '@playwright/test';
-import { exec } from 'child_process';
+import { execSync } from 'child_process';
 
 import {
   cwd,
@@ -14,27 +14,17 @@ interface EnvOptions {
 }
 
 const insomniaTest = test.extend<{
-  gitServer: string;
+  gitServer: { url: string };
   insomniaApp: ElectronApplication;
 }>({
   gitServer: async ({}, use) => {
     const GIT_HTTP_MOCK_SERVER_PORT = '8174';
-    console.log(
-      'Starting git-http-mock-server on port',
-      GIT_HTTP_MOCK_SERVER_PORT
-    );
 
-    const mockServerProcess = exec('npm run mock:git-server');
+    execSync('npm run mock:git-server:start');
 
-    mockServerProcess.on('message', message => {
-      console.log(message);
-    });
+    await use({ url: `http://localhost:${GIT_HTTP_MOCK_SERVER_PORT}` });
 
-    mockServerProcess.on('error', console.log);
-
-    await use(`http://localhost:${GIT_HTTP_MOCK_SERVER_PORT}`);
-
-    mockServerProcess.kill();
+    execSync('npm run mock:git-server:stop');
   },
   insomniaApp: async ({ playwright }, use) => {
     const options: EnvOptions = { INSOMNIA_DATA_PATH: randomDataPath() };
@@ -80,7 +70,7 @@ insomniaTest('Git Sync', async ({ page, gitServer }) => {
 
   await page.fill(
     '[placeholder="https://github.com/org/repo.git"]',
-    `${gitServer}/example.git`
+    `${gitServer.url}/example.git`
   );
 
   await page.press('[placeholder="https://github.com/org/repo.git"]', 'Tab');
