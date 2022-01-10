@@ -5,6 +5,7 @@ import React, { FC, Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
+import { trackEvent } from '../../../common/analytics';
 import type { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,
@@ -54,6 +55,7 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends PureComponent<Props> {
   _handleStartMigration() {
+    trackEvent('Data', 'Migration', 'Manual');
     this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
     this.props.hideModal();
   }

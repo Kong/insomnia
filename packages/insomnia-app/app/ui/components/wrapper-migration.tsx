@@ -1,15 +1,18 @@
 import { Button, ToggleSwitch } from 'insomnia-components';
 import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useMount } from 'react-use';
 
 import { trackEvent } from '../../common/analytics';
 import { ACTIVITY_HOME } from '../../common/constants';
 import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/electron-helpers';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { existsAndIsDirectory } from '../../common/migrate-from-designer';
+import * as models from '../../models';
+import coreLogo from '../images/insomnia-core-logo.png';
 import { setActiveActivity } from '../redux/modules/global';
 import { HelpTooltip } from './help-tooltip';
-import { OnboardingContainer } from './onboarding-container';
+import { PageLayout } from './page-layout';
 import type { WrapperProps } from './wrapper';
 
 type Step = 'options' | 'migrating' | 'results';
@@ -277,6 +280,10 @@ const MigrationBody = () => {
     reduxDispatch(setActiveActivity(ACTIVITY_HOME));
   }, [reduxDispatch]);
 
+  useMount(() => (
+    models.settings.patch({ hasPromptedToMigrateFromDesigner: true })
+  ));
+
   switch (step) {
     case 'options':
       return <Options start={start} cancel={cancel} />;
@@ -297,11 +304,24 @@ interface Props {
 }
 
 export const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
-  <OnboardingContainer
+  <PageLayout
     wrapperProps={wrapperProps}
-    header="Migrate from Insomnia Designer"
-    subHeader="Insomnia Designer and Core are now Insomnia!"
-  >
-    <MigrationBody />
-  </OnboardingContainer>
+    renderPageBody={() => (
+      <div className="migration">
+        <div className="migration__background theme--sidebar" />
+        <div className="migration__content theme--dialog">
+          <div className="img-container">
+            <img src={coreLogo} alt="Kong" />
+          </div>
+          <header className="migration__content__header">
+            <h1>Migrate from Insomnia Designer</h1>
+            <h2>Insomnia Designer and Core are now Insomnia!</h2>
+          </header>
+          <div className="migration__content__body">
+            <MigrationBody />
+          </div>
+        </div>
+      </div>
+    )}
+  />
 );

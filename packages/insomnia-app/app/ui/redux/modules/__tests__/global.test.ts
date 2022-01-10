@@ -14,7 +14,6 @@ import {
   GlobalActivity,
   SORT_MODIFIED_DESC,
 } from '../../../../common/constants';
-import { database } from '../../../../common/database';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
 import { DEFAULT_PROJECT_ID } from '../../../../models/project';
@@ -74,23 +73,6 @@ describe('global', () => {
       expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activity`)).toBe(
         JSON.stringify(activity),
       );
-    });
-
-    it('should update flag for migration prompted', async done => {
-      await models.settings.patch({
-        hasPromptedToMigrateFromDesigner: false,
-      });
-
-      async function onDatabaseChange() {
-        const settings = await models.settings.getOrCreate();
-        expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
-        database.offChange(onDatabaseChange);
-        done();
-      }
-
-      database.onChange(onDatabaseChange);
-
-      setActiveActivity(ACTIVITY_MIGRATION);
     });
   });
 
@@ -287,7 +269,7 @@ describe('global', () => {
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
-    it('should go to home if initialized at migration and onboarding seen', async () => {
+    it('should go to home if initialized at migration seen', async () => {
       const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
