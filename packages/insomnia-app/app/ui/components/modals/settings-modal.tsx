@@ -13,7 +13,7 @@ import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { Account } from '../settings/account';
-import General from '../settings/general';
+import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
@@ -106,10 +106,7 @@ export class SettingsModal extends PureComponent<Props, State> {
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <General
-                settings={settings}
-                hideModal={this.hide}
-              />
+              <General hideModal={this.hide} />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
