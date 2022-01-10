@@ -1,7 +1,4 @@
-import {
-  ElectronApplication,
-  test,
-} from '@playwright/test';
+import { ElectronApplication, test } from '@playwright/test';
 import { exec } from 'child_process';
 
 import {
@@ -22,7 +19,10 @@ const insomniaTest = test.extend<{
 }>({
   gitServer: async ({}, use) => {
     const GIT_HTTP_MOCK_SERVER_PORT = '8174';
-    console.log('Starting git-http-mock-server on port', GIT_HTTP_MOCK_SERVER_PORT);
+    console.log(
+      'Starting git-http-mock-server on port',
+      GIT_HTTP_MOCK_SERVER_PORT
+    );
 
     const mockServerProcess = exec('npm run mock:git-server');
 
@@ -59,18 +59,29 @@ const insomniaTest = test.extend<{
 
     await electronApp.close();
   },
+  page: async ({ insomniaApp }, use) => {
+    const page = await insomniaApp.firstWindow();
+
+    if (process.platform === 'win32') await page.reload();
+
+    await page.click("text=Don't share usage analytics");
+
+    await use(page);
+
+    await page.close();
+  },
 });
 
-insomniaTest('git sync', async ({ insomniaApp, gitServer }) => {
-  const page = await insomniaApp.firstWindow();
-
-  await page.click('text=Don\'t share usage analytics');
-
+insomniaTest('Git Sync', async ({ page, gitServer }) => {
+  // Set up Git Sync
   await page.click('text=Setup Git Sync');
 
   await page.click('button:has-text("Repository Settings")');
 
-  await page.fill('[placeholder="https://github.com/org/repo.git"]', `${gitServer}/example.git`);
+  await page.fill(
+    '[placeholder="https://github.com/org/repo.git"]',
+    `${gitServer}/example.git`
+  );
 
   await page.press('[placeholder="https://github.com/org/repo.git"]', 'Tab');
 
@@ -86,19 +97,22 @@ insomniaTest('git sync', async ({ insomniaApp, gitServer }) => {
 
   await page.press('[placeholder="MyUser"]', 'Tab');
 
-  await page.fill('[placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"]', 'supersecrettoken');
+  await page.fill(
+    '[placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"]',
+    'supersecrettoken'
+  );
 
-  await page.press('[placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"]', 'Tab');
+  await page.press(
+    '[placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"]',
+    'Tab'
+  );
 
   await page.press('text=Done', 'Enter');
 
+  // Create a new commit
   await page.click('button:has-text("master")');
 
   await page.click('button:has-text("Commit")');
-
-  await page.click('textarea[name="commit-message"]');
-
-  await page.click('textarea[name="commit-message"]');
 
   await page.fill('textarea[name="commit-message"]', 'Initial commit');
 
@@ -106,7 +120,58 @@ insomniaTest('git sync', async ({ insomniaApp, gitServer }) => {
 
   await page.click('button:has-text("Commit")');
 
+  // Push the new commit to the remote
   await page.click('button:has-text("master")');
 
   await page.click('button:has-text("Push")');
+
+  // Create a new branch
+  await page.click('button:has-text("Branches")');
+
+  await page.fill('[placeholder="testing-branch"]', 'new-feature');
+
+  await page.press('[placeholder="testing-branch"]', 'Enter');
+
+  await page.click('text=Done');
+
+  // Create a new request
+  await page.click('div:nth-child(3) .btn');
+
+  await page.click('button:has-text("New Request⌘ N")');
+
+  await page.press('[placeholder="My Request"]', 'Enter');
+
+  // Commit the new changes
+  await page.click('button:has-text("new-feature")');
+
+  await page.click('button:has-text("Commit")');
+
+  await page.fill('textarea[name="commit-message"]', 'Add new request');
+
+  await page.check('input[name="select-all"]');
+
+  await page.click('button:has-text("Commit")');
+
+  await page.click('button:has-text("new-feature")');
+
+  await page.click('button:has-text("History (2)")');
+
+  await page.click('text=Add new request');
+
+  await page.click('text=Done');
+
+  // Merge the new branch to master
+  await page.click('button:has-text("new-feature")');
+
+  await page.click('button:has-text("Branches")');
+
+  await page.click('text=Checkout');
+
+  await page.click('text=Merge');
+
+  await page.click('button:has-text("Click to confirm")');
+
+  await page.click('text=Local Branches');
+
+  await page.click('text=Done');
 });
