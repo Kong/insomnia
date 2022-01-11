@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
+import React, { FC } from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
@@ -12,7 +12,6 @@ import { ACTIVITY_DEBUG } from '../../../../../../common/constants';
 import * as models from '../../../../../../models';
 import { RootState } from '../../../../../redux/modules';
 import { AuthInputRow } from '../auth-input-row';
-import { AuthTableBody } from '../auth-table-body';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore<RootState>(middlewares);
@@ -20,6 +19,8 @@ const mockStore = configureMockStore<RootState>(middlewares);
 jest.mock('../../../../codemirror/code-editor', () => ({
   CodeEditor: MockCodeEditor,
 }));
+
+const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
 
 describe('<AuthInputRow />', () => {
   beforeEach(globalBeforeEach);
@@ -37,7 +38,7 @@ describe('<AuthInputRow />', () => {
     // Render with mask enabled
     const { findByLabelText, findByTestId } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' mask />,
-      { wrapper: withReduxStore(store, AuthTableBody) }
+      { wrapper: withReduxStore(store, Table) }
     );
 
     let input = await findByLabelText('inputLabel');
@@ -71,7 +72,7 @@ describe('<AuthInputRow />', () => {
     // Render with mask enabled
     const { findByLabelText, queryAllByTestId } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' mask />,
-      { wrapper: withReduxStore(store, AuthTableBody) }
+      { wrapper: withReduxStore(store, Table) }
     );
 
     // Assert
@@ -92,7 +93,7 @@ describe('<AuthInputRow />', () => {
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,
-      { wrapper: withReduxStore(store, AuthTableBody) }
+      { wrapper: withReduxStore(store, Table) }
     );
 
     // This is a function because the underlying component changes as the element gets focus
@@ -122,7 +123,7 @@ describe('<AuthInputRow />', () => {
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,
-      { wrapper: withReduxStore(store, AuthTableBody) }
+      { wrapper: withReduxStore(store, Table) }
     );
 
     // Assert
