@@ -4,6 +4,7 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import * as models from '../../models';
 import { faint } from '../css/css-in-js';
@@ -149,8 +150,8 @@ export const DesignEmptyState: FC<Props> = ({ onUpdateContents }) => {
       <EmptyStatePane
         icon={<SvgIcon icon="drafting-compass" />}
         documentationLinks={[
-          { title: 'Working with Design Documents', url: 'https://docs.insomnia.rest/insomnia/get-started' },
-          { title: 'Introduction to Insomnia', url: 'https://docs.insomnia.rest/insomnia/get-started' },
+          documentationLinks.workingWithDesignDocs,
+          documentationLinks.introductionToInsomnia,
         ]}
         secondaryAction={<SecondaryAction onUpdateContents={onUpdateContents} />}
         title="Enter an OpenAPI specification here"

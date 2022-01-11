@@ -6,10 +6,24 @@ export const docsTemplateTags = insomniaDocs('/article/171-template-tags');
 export const docsVersionControl = insomniaDocs('/article/165-version-control-sync');
 export const docsPlugins = insomniaDocs('/article/173-plugins');
 export const docsImportExport = insomniaDocs('/article/172-importing-and-exporting-data');
+export const docsKeyMaps = insomniaDocs('/article/203-key-maps');
+export const docsIntroductionInsomnia = insomniaDocs('/insomnia/get-started');
+export const docsWorkingWithDesignDocs = insomniaDocs('/insomnia/design-documents');
+
 export const docsGitAccessToken = {
   github: 'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',
   gitlab: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
   bitbucket: 'https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/',
   bitbucketServer: 'https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html',
 };
-export const docsKeyMaps = insomniaDocs('/article/203-key-maps');
+
+export const documentationLinks = {
+  introductionToInsomnia: {
+    title: 'Introduction to Insomnia',
+    url: docsIntroductionInsomnia,
+  },
+  workingWithDesignDocs: {
+    title: 'Working with Design Documents',
+    url: docsWorkingWithDesignDocs,
+  },
+} as const;
