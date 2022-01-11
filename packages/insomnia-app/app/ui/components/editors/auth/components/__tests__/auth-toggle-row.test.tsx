@@ -30,7 +30,7 @@ describe('<AuthToggleRow />', () => {
     const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
 
     // Render
-    const { findByRole } = render(
+    const { findByRole, queryByTestId } = render(
       <AuthToggleRow label='toggleLabel' property='toggleProperty' />,
       { wrapper: withReduxStore(store, Table) }
     );
@@ -38,6 +38,39 @@ describe('<AuthToggleRow />', () => {
     // Assert
     let request = await models.request.getById(requestId);
     expect(request?.authentication.toggleProperty).toBeFalsy();
+
+    expect(queryByTestId('toggle-is-on')).not.toBeInTheDocument();
+    expect(queryByTestId('toggle-is-off')).toBeInTheDocument();
+
+    // Act
+    await userEvent.click(await findByRole('button'));
+
+    // Assert
+    request = await models.request.getById(requestId);
+    expect(request?.authentication.toggleProperty).toBeTruthy();
+  });
+
+  it('should update the authentication property on changing toggle while inverted', async () => {
+    // Arrange
+    const { _id: projectId } = await models.project.create();
+    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
+    const { _id: requestId } = await models.request.create({ parentId: workspaceId });
+    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId, activeActivity: ACTIVITY_DEBUG });
+
+    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+
+    // Render
+    const { findByRole, queryByTestId } = render(
+      <AuthToggleRow label='toggleLabel' property='toggleProperty' invert />,
+      { wrapper: withReduxStore(store, Table) }
+    );
+
+    // Assert
+    let request = await models.request.getById(requestId);
+    expect(request?.authentication.toggleProperty).toBeFalsy();
+
+    expect(queryByTestId('toggle-is-on')).toBeInTheDocument();
+    expect(queryByTestId('toggle-is-off')).not.toBeInTheDocument();
 
     // Act
     await userEvent.click(await findByRole('button'));
@@ -57,7 +90,7 @@ describe('<AuthToggleRow />', () => {
     const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
 
     // Render
-    const { findByRole } = render(
+    const { findByRole, queryByTestId } = render(
       <AuthToggleRow label='toggleLabel' property='toggleProperty' />,
       { wrapper: withReduxStore(store, Table) }
     );
@@ -65,6 +98,9 @@ describe('<AuthToggleRow />', () => {
     // Assert
     let request = await models.request.getById(requestId);
     expect(request?.authentication.toggleProperty).toBe(true);
+
+    expect(queryByTestId('toggle-is-on')).toBeInTheDocument();
+    expect(queryByTestId('toggle-is-off')).not.toBeInTheDocument();
 
     // Act
     await userEvent.click(await findByRole('button'));

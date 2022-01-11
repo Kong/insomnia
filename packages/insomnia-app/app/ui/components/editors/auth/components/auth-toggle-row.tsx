@@ -14,7 +14,7 @@ interface Props {
   offTitle?: string;
 }
 
-const ToggleIcon: FC<{isOn: boolean}> = ({ isOn }) => isOn ? <i className="fa fa-check-square-o" /> : <i className="fa fa-square-o" />;
+const ToggleIcon: FC<{isOn: boolean}> = ({ isOn }) => isOn ? <i data-testid="toggle-is-on" className="fa fa-check-square-o" /> : <i data-testid="toggle-is-off" className="fa fa-square-o" />;
 
 export const AuthToggleRow: FC<Props> = ({
   label,
