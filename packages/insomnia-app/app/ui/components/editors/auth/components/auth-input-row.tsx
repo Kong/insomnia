@@ -46,10 +46,9 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
           onClick={() => toggleMask()}
           value={isMasked}
         >
-          {isMasked ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
+          {isMasked ? <i className="fa fa-eye" data-testid="reveal-password-icon" /> : <i className="fa fa-eye-slash" data-testid="mask-password-icon" />}
         </Button>
       ) : null}
     </AuthRow>
-
   );
 };
