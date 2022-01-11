@@ -48,7 +48,6 @@ interface Props {
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
   updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleImport: Function;
