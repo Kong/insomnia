@@ -199,7 +199,7 @@ export const General: FC<Props> = ({ hideModal }) => {
             placeholder="-- System Default --"
           />
           <NumberSetting
-            label="Interface font size (PX)"
+            label="Interface font size (px)"
             setting="fontSize"
             min={MIN_INTERFACE_FONT_SIZE}
             max={MAX_INTERFACE_FONT_SIZE}
@@ -323,7 +323,7 @@ export const General: FC<Props> = ({ hideModal }) => {
           min={-1}
         />
         <NumberSetting
-          label="Max timeline chunk size (KB)"
+          label="Max timeline chunk size (KiB)"
           setting="maxTimelineDataSizeKB"
           help="Enter the maximum size in kilobytes to show on the response timeline. Decrease the number for less detailed responses."
           min={0}
