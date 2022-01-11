@@ -11,7 +11,7 @@
     "@stoplight/spectral": "^5.9.0",
     "analytics-node": "^4.0.1",
     "aws4": "^1.10.0",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "clone": "^2.1.2",
     "color": "^3.1.2",
     "fs-extra": "^9.0.1",
