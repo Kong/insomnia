@@ -27,7 +27,7 @@
     "jshint": "^2.11.1",
     "jsonlint": "^1.6.3",
     "jsonpath-plus": "^6.0.1",
-    "marked": "^1.1.0",
+    "marked": "^2.0.0",
     "mime-types": "^2.1.27",
     "mkdirp": "^1.0.4",
     "multiparty": "^4.2.1",
