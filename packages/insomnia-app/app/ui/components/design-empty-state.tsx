@@ -83,9 +83,9 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
         }
         const contents = await response.text();
         await updateApiSpecContents(contents);
+        onUpdateContents();
       },
     });
-    onUpdateContents();
   }, [updateApiSpecContents, onUpdateContents]);
 
   const button = (
