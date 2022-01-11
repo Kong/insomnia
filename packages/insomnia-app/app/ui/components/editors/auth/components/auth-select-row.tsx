@@ -18,7 +18,7 @@ interface Props {
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
-  const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0];
+  const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0].value;
 
   const onChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => patchAuth({ [property]: event.currentTarget.value }), [patchAuth, property]);
 
