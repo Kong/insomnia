@@ -325,7 +325,7 @@ export const General: FC<Props> = ({ hideModal }) => {
         <NumberSetting
           label="Max timeline chunk size (KiB)"
           setting="maxTimelineDataSizeKB"
-          help="Enter the maximum size in kilobytes to show on the response timeline. Decrease the number for less detailed responses."
+          help="Enter the maximum size in kibibytes to show on the response timeline. Decrease the number for less detailed responses."
           min={0}
         />
       </div>
