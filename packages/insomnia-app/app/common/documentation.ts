@@ -1,4 +1,4 @@
-const insomniaDocs = (slug: string) => `https://support.insomnia.rest${slug}`;
+const insomniaDocs = (slug: string) => `https://docs.insomnia.rest${slug}`;
 
 export const docsBase = insomniaDocs('/');
 export const docsGitSync = insomniaDocs('/article/193-git-sync');
