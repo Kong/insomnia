@@ -118,7 +118,7 @@ export const General: FC<Props> = ({ hideModal }) => {
           <BooleanSetting
             label="Use vertical layout"
             setting="forceVerticalLayout"
-            help="Stack application panels (e.g. request / response) vertically instead of horizontally."
+            help="If checked, stack request and response panels vertically."
           />
           <BooleanSetting
             label={<RestartTooltip message="Show variable source and value" />}
@@ -146,8 +146,8 @@ export const General: FC<Props> = ({ hideModal }) => {
 
       <div className="row-fill row-fill--top pad-top-sm">
         <EnumSetting<EnvironmentHighlightColorStyle>
-          label="Environment Highlight Style"
-          help="Configures the appearance of environment's color indicator"
+          label="Environment highlight style"
+          help="Select the sub-environment highlight area. Configure the highlight color itself in your environment settings."
           setting="environmentHighlightColorStyle"
           values={[
             { value:'sidebar-indicator', name: 'Sidebar indicator' },
@@ -162,7 +162,7 @@ export const General: FC<Props> = ({ hideModal }) => {
         <NumberSetting
           label="Autocomplete popup delay"
           setting="autocompleteDelay"
-          help="Configure the autocomplete popup delay in milliseconds (0 to disable)"
+          help="Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay."
           min={0}
           max={3000}
         />
@@ -193,13 +193,13 @@ export const General: FC<Props> = ({ hideModal }) => {
       <div className="form-row pad-top-sm">
         <div className="form-row">
           <TextSetting
-            label="Interface Font"
+            label="Interface font"
             setting="fontInterface"
-            help="Comma-separated list of fonts. If left empty, takes system defaults."
+            help="Enter a comma-separated list of fonts. If left empty, uses system defaults."
             placeholder="-- System Default --"
           />
           <NumberSetting
-            label="Interface Font Size (px)"
+            label="Interface font size (px)"
             setting="fontSize"
             min={MIN_INTERFACE_FONT_SIZE}
             max={MAX_INTERFACE_FONT_SIZE}
@@ -209,9 +209,9 @@ export const General: FC<Props> = ({ hideModal }) => {
 
       <div className="form-row">
         <TextSetting
-          label="Text Editor Font"
+          label="Text editor font"
           setting="fontMonospace"
-          help="Comma-separated list of monospace fonts. If left empty, takes system defaults."
+          help="Enter a comma-separated list of monospace fonts. If left empty, uses system defaults."
           placeholder="-- System Default --"
         />
         <NumberSetting
@@ -258,7 +258,7 @@ export const General: FC<Props> = ({ hideModal }) => {
           <BooleanSetting
             label="Validate certificates"
             setting="validateSSL"
-            help="Indicates whether SSL certificates should be validated for API requests. This does not affect SSL certificate validation during authentication."
+            help="If checked, validate SSL certificates for API requests. This does not affect SSL certificate validation during authentication."
           />
           <BooleanSetting
             label="Follow redirects"
@@ -267,7 +267,7 @@ export const General: FC<Props> = ({ hideModal }) => {
           <BooleanSetting
             label="Filter responses by environment"
             setting="filterResponsesByEnv"
-            help="Only show responses that were sent under the currently-active environment. This adds additional separation when working with Development, Staging, Production environments, for example."
+            help="If checked, only show responses sent under the active environment. "
           />
         </div>
         <div>
@@ -276,7 +276,7 @@ export const General: FC<Props> = ({ hideModal }) => {
             setting="disableHtmlPreviewJs"
           />
           <BooleanSetting
-            label="Disable Links in response viewer"
+            label="Disable links in response viewer"
             setting="disableResponsePreviewLinks"
           />
         </div>
@@ -296,7 +296,7 @@ export const General: FC<Props> = ({ hideModal }) => {
             // see: https://github.com/JCMais/node-libcurl/issues/233
             // { value: HttpVersions.v3, name: 'HTTP/3' },
           ]}
-          help="Preferred HTTP version to use for requests which will fall back if it cannot be negotiated"
+          help="Select the preferred HTTP version for requests. The version will fall back if it can’t be negotiated."
         />
       </div>
 
@@ -304,28 +304,28 @@ export const General: FC<Props> = ({ hideModal }) => {
         <NumberSetting
           label="Maximum Redirects"
           setting="maxRedirects"
-          help="-1 for infinity"
+          help="Enter the maximum amount of redirects to follow. Enter -1 for unlimited redirects."
           min={-1}
         />
         <NumberSetting
-          label="Request Timeout"
+          label="Request timeout"
           setting="timeout"
-          help="-1 for infinity"
+          help="Enter the maximum seconds allotted before a request will timeout. Enter -1 to disable timeouts. "
           min={-1}
         />
       </div>
 
       <div className="form-row pad-top-sm">
         <NumberSetting
-          label="Response History Limit"
+          label="Response history limit"
           setting="maxHistoryResponses"
-          help="Number of responses to keep for each request (-1 for infinity)"
+          help="Enter the number of responses to keep for each request. Enter -1 to keep all response history."
           min={-1}
         />
         <NumberSetting
-          label="Max Timeline Chunk Size (KB)"
+          label="Max timeline chunk size (KiB)"
           setting="maxTimelineDataSizeKB"
-          help="Maximum size in kilobytes to show on timeline"
+          help="Enter the maximum size in kibibytes to show on the response timeline. Decrease the number for less detailed responses."
           min={0}
         />
       </div>
@@ -337,7 +337,7 @@ export const General: FC<Props> = ({ hideModal }) => {
         <BooleanSetting
           label="Clear OAuth 2 session on start"
           setting="clearOAuth2SessionOnRestart"
-          help="Clears the session of the OAuth2 popup window every time Insomnia is launched"
+          help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
           className="btn btn--clicky pointer"
@@ -353,48 +353,37 @@ export const General: FC<Props> = ({ hideModal }) => {
         <BooleanSetting
           label="Validate certificates during authentication"
           setting="validateAuthSSL"
-          help="Indicates whether SSL certificates should be validated during authentication flows"
+          help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
 
       <hr className="pad-top" />
 
-      <h2>
-        HTTP Network Proxy
-        <HelpTooltip
-          className="space-left txt-md"
-          style={{
-            maxWidth: '20rem',
-            // @ts-expect-error -- TSCONVERSION
-            lineWrap: 'word',
-          }}
-        >
-          Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
-        </HelpTooltip>
-      </h2>
+      <h2>HTTP Network Proxy</h2>
 
       <BooleanSetting
         label="Enable proxy"
         setting="proxyEnabled"
+        help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
       />
 
       <div className="form-row pad-top-sm">
         <MaskedSetting
-          label='HTTP Proxy'
+          label='HTTP proxy'
           setting='httpProxy'
           placeholder="localhost:8005"
           disabled={!settings.proxyEnabled}
         />
         <MaskedSetting
-          label='HTTPS Proxy'
+          label='HTTPS proxy'
           setting='httpsProxy'
           placeholder="localhost:8005"
           disabled={!settings.proxyEnabled}
         />
         <TextSetting
-          label="No Proxy"
+          label="No proxy"
           setting="noProxy"
-          help="Comma-separated list of hostnames that do not require a proxy to be contacted"
+          help="Enter a comma-separated list of hostnames that don’t require a proxy."
           placeholder="localhost,127.0.0.1"
           disabled={!settings.proxyEnabled}
         />
@@ -406,7 +395,7 @@ export const General: FC<Props> = ({ hideModal }) => {
           <div>
             <div className="pull-right">
               <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
-                Check Now
+                Check now
               </CheckForUpdatesButton>
             </div>
             <h2>Software Updates</h2>
@@ -414,16 +403,16 @@ export const General: FC<Props> = ({ hideModal }) => {
           <BooleanSetting
             label="Automatically download and install updates"
             setting="updateAutomatically"
-            help="If disabled, you will receive a notification when a new update is available"
+            help="If disabled, receive a notification in-app when a new update is available."
           />
 
           <div className="for-row pad-top-sm">
             <EnumSetting<UpdateChannel>
-              label="Update Channel"
+              label="Update channel"
               setting="updateChannel"
               values={[
-                { value: UpdateChannel.stable, name: 'Release (Recommended)' },
-                { value: UpdateChannel.beta, name: 'Early Access (Beta)' },
+                { value: UpdateChannel.stable, name: 'Release (recommended)' },
+                { value: UpdateChannel.beta, name: 'Early access (beta)' },
               ]}
             />
           </div>
@@ -441,6 +430,7 @@ export const General: FC<Props> = ({ hideModal }) => {
       <BooleanSetting
         label="Do not tell me about premium features"
         setting="disablePaidFeatureAds"
+        help="If checked, mute in-app notifications and other messaging about premium features."
       />
 
       <hr className="pad-top" />
@@ -448,7 +438,7 @@ export const General: FC<Props> = ({ hideModal }) => {
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"
-        help="Tell Insomnia to look for plugins in a different directory"
+        help="Add a custom path to direct Insomnia to a different plugin directory."
         placeholder="~/.insomnia:/other/path"
       />
 
