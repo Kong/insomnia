@@ -5,15 +5,18 @@ import {
   Dropdown,
   DropdownItem,
   ListGroup,
+  SvgIcon,
   UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
+import { isEmpty } from 'ramda';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import { AUTOBIND_CFG } from '../../common/constants';
+import { documentationLinks } from '../../common/documentation';
 import { getSendRequestCallback } from '../../common/send-request';
 import * as models from '../../models';
 import { isRequest } from '../../models/request';
@@ -26,6 +29,7 @@ import { ErrorBoundary } from './error-boundary';
 import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
+import { EmptyStatePane } from './panes/empty-state-pane';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
@@ -442,34 +446,59 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
+    const emptyStatePane = (
+      <div style={{ height: '100%' }}>
+        <EmptyStatePane
+          icon={<SvgIcon icon="vial" />}
+          documentationLinks={[
+            documentationLinks.unitTesting,
+            documentationLinks.introductionToInsoCLI,
+          ]}
+          title="Add unit tests to verify your API"
+          secondaryAction="You can run these tests in CI with Inso CLI"
+        />
+      </div>
+    );
+
     if (!activeUnitTestSuite) {
       return <div className="unit-tests pad theme--pane__body">No test suite selected</div>;
     }
 
     return (
       <div className="unit-tests theme--pane__body">
-        <div className="unit-tests__top-header">
-          <h2>
-            <Editable
-              singleClick
-              onSubmit={this._handleChangeActiveSuiteName}
-              value={activeUnitTestSuite.name}
-            />
-          </h2>
-          <Button variant="outlined" onClick={this._handleCreateTest}>
-            New Test
-          </Button>
-          <Button
-            variant="contained"
-            bg="surprise"
-            onClick={this._handleRunTests}
-            size="default"
-            disabled={Boolean(testsRunning)}
-          >
-            {testsRunning ? 'Running... ' : 'Run Tests'}
-            <i className="fa fa-play space-left" />
-          </Button>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+          }}
+        >
+          <div className="unit-tests__top-header">
+            <h2>
+              <Editable
+                singleClick
+                onSubmit={this._handleChangeActiveSuiteName}
+                value={activeUnitTestSuite.name}
+              />
+            </h2>
+            <Button variant="outlined" onClick={this._handleCreateTest}>
+              New Test
+            </Button>
+            <Button
+              variant="contained"
+              bg="surprise"
+              onClick={this._handleRunTests}
+              size="default"
+              disabled={Boolean(testsRunning)}
+            >
+              {testsRunning ? 'Running... ' : 'Run Tests'}
+              <i className="fa fa-play space-left" />
+            </Button>
+          </div>
+
+          {isEmpty(activeUnitTests) ? emptyStatePane : null}
         </div>
+
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
