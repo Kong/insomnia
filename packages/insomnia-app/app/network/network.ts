@@ -1,3 +1,12 @@
+import {
+  Curl,
+  CurlAuth,
+  CurlCode,
+  CurlFeature,
+  CurlHttpVersion,
+  CurlInfoDebug,
+  CurlNetrc,
+} from '@getinsomnia/node-libcurl';
 import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
@@ -11,15 +20,6 @@ import {
   smartEncodeUrl,
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
-import {
-  Curl,
-  CurlAuth,
-  CurlCode,
-  CurlFeature,
-  CurlHttpVersion,
-  CurlInfoDebug,
-  CurlNetrc,
-} from 'node-libcurl';
 import { join as pathJoin } from 'path';
 import { parse as urlParse, resolve as urlResolve } from 'url';
 import * as uuid from 'uuid';

@@ -1,6 +1,6 @@
+import { Curl } from '@getinsomnia/node-libcurl';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry } from 'insomnia-common';
-import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 

@@ -1,6 +1,6 @@
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
-import { CurlHttpVersion } from 'node-libcurl';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
