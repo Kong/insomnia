@@ -94,35 +94,38 @@ const credentialsInBodyOptions = [
 ];
 
 const getFields = (authentication: Request['authentication']) => {
-  const clientId = <AuthInputRow label='Client ID' property='clientId' />;
-  const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' />;
-  const usePkce = <AuthToggleRow label='Use PKCE' property='usePkce' onTitle='Disable PKCE' offTitle='Enable PKCE' />;
+  const clientId = <AuthInputRow label='Client ID' property='clientId' key='clientId' />;
+  const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' key='clientSecret' />;
+  const usePkce = <AuthToggleRow label='Use PKCE' property='usePkce' key='usePkce' onTitle='Disable PKCE' offTitle='Enable PKCE' />;
   const pkceMethod = <AuthSelectRow
     label='Code Challenge Method'
     property='pkceMethod'
+    key='pkceMethod'
     disabled={!authentication.usePkce}
     options={pkceMethodOptions}
   />;
-  const authorizationUrl = <AuthInputRow label='Authorization URL' property='authorizationUrl' getAutocompleteConstants={getAuthorizationUrls} />;
-  const accessTokenUrl = <AuthInputRow label='Access Token URL' property='accessTokenUrl' getAutocompleteConstants={getAccessTokenUrls} />;
-  const redirectUri = <AuthInputRow label='Redirect URL' property='redirectUrl' help='This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.' />;
-  const state = <AuthInputRow label='State' property='state' />;
-  const scope = <AuthInputRow label='Scope' property='scope' />;
-  const username = <AuthInputRow label='Username' property='username' />;
-  const password = <AuthInputRow label='Password' property='password' mask/>;
-  const tokenPrefix = <AuthInputRow label='Header Prefix' property='tokenPrefix' help='Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to send raw token without prefix.' />;
+  const authorizationUrl = <AuthInputRow label='Authorization URL' property='authorizationUrl' key='authorizationUrl' getAutocompleteConstants={getAuthorizationUrls} />;
+  const accessTokenUrl = <AuthInputRow label='Access Token URL' property='accessTokenUrl' key='accessTokenUrl'  getAutocompleteConstants={getAccessTokenUrls} />;
+  const redirectUri = <AuthInputRow label='Redirect URL' property='redirectUrl' key='redirectUrl' help='This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.' />;
+  const state = <AuthInputRow label='State' property='state' key='state' />;
+  const scope = <AuthInputRow label='Scope' property='scope' key='scope' />;
+  const username = <AuthInputRow label='Username' property='username' key='username' />;
+  const password = <AuthInputRow label='Password' property='password' key='password' mask/>;
+  const tokenPrefix = <AuthInputRow label='Header Prefix' property='tokenPrefix' key='tokenPrefix' help='Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to send raw token without prefix.' />;
   const responseType = <AuthSelectRow
     label='Response Type'
     property='responseType'
+    key='responseType'
     options={responseTypeOptions}
     help='Indicates the type of credentials returned in the response'
   />;
-  const audience = <AuthInputRow label='Audience' property='audience' help='Indicate what resource server to access' />;
-  const resource = <AuthInputRow label='Resource' property='resource' help='Indicate what resource to access' />;
-  const origin = <AuthInputRow label='Origin' property='origin' help='Specify Origin header when CORS is required for oauth endpoints' />;
+  const audience = <AuthInputRow label='Audience' property='audience' key='audience' help='Indicate what resource server to access' />;
+  const resource = <AuthInputRow label='Resource' property='resource' key='resource' help='Indicate what resource to access' />;
+  const origin = <AuthInputRow label='Origin' property='origin' key='origin' help='Specify Origin header when CORS is required for oauth endpoints' />;
   const credentialsInBody = <AuthSelectRow
     label='Credentials'
     property='credentialsInBody'
+    key='credentialsInBody'
     options={credentialsInBodyOptions}
     help='Whether or not to send credentials as Basic Auth, or as plain text in the request body'
   />;
@@ -260,11 +263,18 @@ export const OAuth2Auth: FC = () => {
         {basic}
         <AuthAccordion label='Advanced Options'>
           {advanced}
-          {<div className="pad-top text-right">
-            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
-              Clear OAuth 2 session
-            </button>
-          </div>}
+          {
+            <tr>
+              <td/>
+              <td className="wide">
+                <div className="pad-top text-right">
+                  <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+                    Clear OAuth 2 session
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
         </AuthAccordion>
       </AuthTableBody>
       <div className='pad'>
