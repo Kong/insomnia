@@ -22,6 +22,7 @@ interface BaseRequestMeta {
   pinned: boolean;
   lastActive: number;
   downloadPath: string | null;
+  expandedAccordionKeys: Record<string, boolean>;
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
@@ -41,6 +42,7 @@ export function init() {
     pinned: false,
     lastActive: 0,
     downloadPath: null,
+    expandedAccordionKeys: {},
   };
 }
 

@@ -51,7 +51,7 @@ describe('<AuthSelectRow />', () => {
 
   it('should pre-select the authentication property value', async () => {
     // Arrange
-    const { store } = await createMockStoreWithRequest({ authentication: { selectProperty: options[1].value } });
+    const { store } = await createMockStoreWithRequest({ requestPatch: { authentication: { selectProperty: options[1].value } } });
 
     // Render
     const { findByLabelText } = render(

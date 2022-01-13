@@ -92,7 +92,7 @@ describe('<AuthInputRow />', () => {
 
   it('should pre-fill existing authentication property value', async () => {
     // Arrange
-    const { store } = await createMockStoreWithRequest({ authentication: { inputProperty: 'existing' } });
+    const { store } = await createMockStoreWithRequest({ requestPatch: { authentication: { inputProperty: 'existing' } } });
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,

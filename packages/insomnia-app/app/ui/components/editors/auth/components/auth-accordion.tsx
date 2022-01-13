@@ -1,19 +1,33 @@
 import classnames from 'classnames';
-import React, { FC, useEffect } from 'react';
-import { useToggle } from 'react-use';
+import React, { FC } from 'react';
+import { useSelector } from 'react-redux';
+
+import * as models from '../../../../../models';
+import { isRequest } from '../../../../../models/request';
+import { selectActiveRequest, selectActiveRequestMeta } from '../../../../redux/selectors';
 
 interface Props {
   label: string;
 }
 
-const expandCache: Record<string, boolean> = {};
-
 export const AuthAccordion: FC<Props> = ({ label, children }) => {
-  const [expand, toggle] = useToggle(expandCache[label]);
+  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequestMeta = useSelector(selectActiveRequestMeta);
 
-  useEffect(() => {
-    expandCache[label] = expand;
-  }, [expand, label]);
+  if (!activeRequest || !isRequest(activeRequest)) {
+    return null;
+  }
+
+  const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[label]);
+
+  const toggle = async () => {
+    await models.requestMeta.updateOrCreateByParentId(activeRequest._id, {
+      expandedAccordionKeys: {
+        ...activeRequestMeta?.expandedAccordionKeys,
+        [label]: !expanded,
+      },
+    });
+  };
 
   return (
     <>
@@ -26,14 +40,14 @@ export const AuthAccordion: FC<Props> = ({ label, children }) => {
               }}
               className={classnames(
                 'fa fa--skinny',
-                `fa-caret-${expand ? 'down' : 'right'}`,
+                `fa-caret-${expanded ? 'down' : 'right'}`,
               )}
             />
             {label}
           </button>
         </td>
       </tr>
-      {expand && children}
+      {expanded && children}
     </>
   );
 };

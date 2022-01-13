@@ -65,7 +65,7 @@ describe('<AuthToggleRow />', () => {
 
   it('should pre-fill the authentication property toggle', async () => {
     // Arrange
-    const { store, requestId } = await createMockStoreWithRequest({ authentication: { toggleProperty: true } });
+    const { store, requestId } = await createMockStoreWithRequest({ requestPatch: { authentication: { toggleProperty: true } } });
 
     // Render
     const { findByRole, queryByTestId } = render(
