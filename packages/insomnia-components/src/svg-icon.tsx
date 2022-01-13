@@ -12,6 +12,7 @@ import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
 import { SvgIcnChevronUp } from './assets/svgr/IcnChevronUp';
 import { SvgIcnClock } from './assets/svgr/IcnClock';
 import { SvgIcnCookie } from './assets/svgr/IcnCookie';
+import { SvgIcnDraftingCompass } from './assets/svgr/IcnDraftingCompass';
 import { SvgIcnDragGrip } from './assets/svgr/IcnDragGrip';
 import { SvgIcnElevator } from './assets/svgr/IcnElevator';
 import { SvgIcnEllipsis } from './assets/svgr/IcnEllipsis';
@@ -78,6 +79,7 @@ export const IconEnum = {
   chevronUp: 'chevron-up',
   clock: 'clock',
   cookie: 'cookie',
+  draftingCompass: 'drafting-compass',
   dragGrip: 'drag-grip',
   elevator: 'elevator',
   ellipsesCircle: 'ellipses-circle',
@@ -175,6 +177,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.chevronUp]: [ThemeEnum.default, SvgIcnChevronUp],
     [IconEnum.clock]: [ThemeEnum.default, SvgIcnClock],
     [IconEnum.cookie]: [ThemeEnum.default, SvgIcnCookie],
+    [IconEnum.draftingCompass]: [ThemeEnum.default, SvgIcnDraftingCompass],
     [IconEnum.dragGrip]: [ThemeEnum.default, SvgIcnDragGrip],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
