@@ -1,19 +1,12 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React, { FC } from 'react';
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
-import { reduxStateForTest } from '../../../../../../__jest__/redux-state-for-test';
+import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
-import { ACTIVITY_DEBUG } from '../../../../../../common/constants';
 import * as models from '../../../../../../models';
-import { RootState } from '../../../../../redux/modules';
 import { AuthSelectRow } from '../auth-select-row';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore<RootState>(middlewares);
 
 const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
 
@@ -30,12 +23,7 @@ describe('<AuthSelectRow />', () => {
 
   it('should update the authentication property on changing selection', async () => {
     // Arrange
-    const { _id: projectId } = await models.project.create();
-    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
-    const { _id: requestId } = await models.request.create({ parentId: workspaceId });
-    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId });
-
-    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+    const { store, requestId } = await createMockStoreWithRequest();
 
     // Render
     const { findByLabelText } = render(
@@ -63,12 +51,7 @@ describe('<AuthSelectRow />', () => {
 
   it('should pre-select the authentication property value', async () => {
     // Arrange
-    const { _id: projectId } = await models.project.create();
-    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
-    const { _id: requestId } = await models.request.create({ parentId: workspaceId, authentication: { selectProperty: options[1].value } });
-    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId });
-
-    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+    const { store } = await createMockStoreWithRequest({ authentication: { selectProperty: options[1].value } });
 
     // Render
     const { findByLabelText } = render(

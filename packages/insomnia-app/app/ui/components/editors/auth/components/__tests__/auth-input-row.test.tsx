@@ -1,20 +1,13 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React, { FC } from 'react';
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
+import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { MockCodeEditor } from '../../../../../../__jest__/mock-code-editor';
-import { reduxStateForTest } from '../../../../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
-import { ACTIVITY_DEBUG } from '../../../../../../common/constants';
 import * as models from '../../../../../../models';
-import { RootState } from '../../../../../redux/modules';
 import { AuthInputRow } from '../auth-input-row';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore<RootState>(middlewares);
 
 jest.mock('../../../../codemirror/code-editor', () => ({
   CodeEditor: MockCodeEditor,
@@ -28,12 +21,7 @@ describe('<AuthInputRow />', () => {
   it('should mask and toggle the input', async () => {
     // Arrange
     await models.settings.patch({  showPasswords: false });
-    const { _id: projectId } = await models.project.create();
-    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
-    const { _id: requestId } = await models.request.create({ parentId: workspaceId });
-    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId });
-
-    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+    const { store } = await createMockStoreWithRequest();
 
     // Render with mask enabled
     const { findByLabelText, findByTestId } = render(
@@ -62,12 +50,7 @@ describe('<AuthInputRow />', () => {
   it('should not show masking toggle if all passwords are shown', async () => {
     // Arrange
     await models.settings.patch({ showPasswords: true });
-    const { _id: projectId } = await models.project.create();
-    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
-    const { _id: requestId } = await models.request.create({ parentId: workspaceId });
-    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId });
-
-    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+    const { store } = await createMockStoreWithRequest();
 
     // Render with mask enabled
     const { findByLabelText, queryAllByTestId } = render(
@@ -84,12 +67,7 @@ describe('<AuthInputRow />', () => {
 
   it('should update the authentication property on typing', async () => {
     // Arrange
-    const { _id: projectId } = await models.project.create();
-    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
-    const { _id: requestId } = await models.request.create({ parentId: workspaceId });
-    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId });
-
-    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+    const { store, requestId } = await createMockStoreWithRequest();
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,
@@ -114,12 +92,7 @@ describe('<AuthInputRow />', () => {
 
   it('should pre-fill existing authentication property value', async () => {
     // Arrange
-    const { _id: projectId } = await models.project.create();
-    const { _id: workspaceId } = await models.workspace.create({ parentId: projectId });
-    const { _id: requestId } = await models.request.create({ parentId: workspaceId, authentication: { inputProperty: 'existing' } });
-    await models.workspaceMeta.create({ parentId: workspaceId, activeRequestId: requestId });
-
-    const store = mockStore(await reduxStateForTest({ activeProjectId: projectId, activeWorkspaceId: workspaceId, activeActivity: ACTIVITY_DEBUG }));
+    const { store } = await createMockStoreWithRequest({ authentication: { inputProperty: 'existing' } });
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,
