@@ -345,6 +345,11 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     return [cancelButton, sendButton];
   }
 
+  // note: not an unused function, used by parent, RequestPane
+  focusInput() {
+    this._input?.focus(true);
+  }
+
   render() {
     const {
       request,
@@ -352,6 +357,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
       uniquenessKey,
     } = this.props;
     const { url, method } = request;
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="urlbar">

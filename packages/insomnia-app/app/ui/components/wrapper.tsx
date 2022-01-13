@@ -257,9 +257,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     if (activeApiSpec.contents && results && results.length) {
       showModal(AlertModal, {
         title: 'Error Generating Configuration',
-        message:
-          'Some requests may not be available due to errors found in the ' +
-          'specification. We recommend fixing errors before proceeding. 🤗',
+        message: 'Some requests may not be available due to errors found in the specification. We recommend fixing errors before proceeding.',
         okLabel: 'Proceed',
         addCancel: true,
         onConfirm: () => {

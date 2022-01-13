@@ -671,7 +671,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
 
 /*
   Initialize with the cached active activity, and navigate to the next activity if necessary
-  This will also decide whether to start with the migration or onboarding activities
+  This will also decide whether to start with the migration
  */
 export const initActiveActivity = () => (dispatch, getState) => {
   const state = getState();
@@ -693,7 +693,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
   if (activeActivity === ACTIVITY_MIGRATION) {
     // If relaunched after a migration, go to the next activity
-    // Don't need to do this for onboarding because that doesn't require a restart
+    // Don't need to do this for migration because that doesn't require a restart
     overrideActivity = ACTIVITY_HOME;
   } else {
     // Always check if user has been prompted to migrate or onboard
