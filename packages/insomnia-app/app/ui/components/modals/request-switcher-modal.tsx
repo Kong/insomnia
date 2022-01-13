@@ -10,11 +10,10 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
-import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
@@ -194,7 +193,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: BaseModel): string[] {
+  _groupOf(requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] {
     const { workspaceChildren } = this.props;
     const requestGroups = workspaceChildren.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
@@ -214,7 +213,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     return this._groupOf(matchedGroups[0]);
   }
 
-  _isMatch(request: Request, searchStrings: string): number | null {
+  _isMatch(request: Request | GrpcRequest, searchStrings: string): number | null {
     let finalUrl = request.url;
     let method = '';
 
@@ -263,8 +262,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = workspaceChildren
-      .filter(child => isRequest(child) || isGrpcRequest(child))
+    let matchedRequests = (workspaceChildren
+      .filter(child => isRequest(child) || isGrpcRequest(child)) as (Request | GrpcRequest)[])
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -285,7 +284,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       matchedRequests = matchedRequests
         .map(r => ({
           request: r,
-          score: this._isMatch(r as any, searchString),
+          score: this._isMatch(r, searchString),
         }))
         .filter(v => v.score !== null)
         .sort((a, b) => (a.score || -Infinity) - (b.score || -Infinity))
@@ -306,7 +305,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.setState({
       searchString,
       activeIndex: indexOfFirstNonActiveRequest >= 0 ? indexOfFirstNonActiveRequest : 0,
-      matchedRequests: (matchedRequests as any[]).slice(0, maxRequests),
+      matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }
