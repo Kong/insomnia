@@ -76,7 +76,7 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
       title: 'Import document from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
-      placeholder: 'https://gist.githubusercontent.com/<user>/<id>/raw/<id>/openapi.yaml',
+      placeholder: 'e.g. https://petstore.swagger.io/v2/swagger.json',
       onComplete: async (uri: string) => {
         const response = await window.fetch(uri);
         if (!response) {
