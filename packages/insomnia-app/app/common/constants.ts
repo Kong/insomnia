@@ -166,7 +166,6 @@ export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
 export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
-export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
 export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
   isDesignActivity(activity) || isCollectionActivity(activity);
