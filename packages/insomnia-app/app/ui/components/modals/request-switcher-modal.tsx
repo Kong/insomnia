@@ -32,11 +32,9 @@ type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDisp
 
 const mapStateToProps = (state: RootState) => {
   const activeRequest = selectActiveRequest(state);
-  // the request switcher modal does not know about grpc requests yet
-  const normalizedRequest = activeRequest && isRequest(activeRequest) ? activeRequest : undefined;
 
   return {
-    activeRequest: normalizedRequest,
+    activeRequest,
     workspace: selectActiveWorkspace(state),
     workspaces: selectWorkspacesForActiveProject(state),
     requestMetas: selectRequestMetas(state),
