@@ -312,7 +312,7 @@ export const ThemePanel: FC = () => {
         <label className="inline-block">
           Use OS color scheme
           <HelpTooltip className="space-left">
-            Pick your prefered themes for light and dark
+            Select different themes for when you’re using light versus dark color schemes on your OS. Check this box, then hover over a theme and select either sun (light) or moon (dark).
           </HelpTooltip>
           <input
             type="checkbox"
