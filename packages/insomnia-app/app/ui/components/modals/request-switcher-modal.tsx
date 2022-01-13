@@ -5,7 +5,7 @@ import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys } from '../../../common/keyboard-keys';
@@ -216,18 +216,21 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   _isMatch(request: Request, searchStrings: string): number | null {
     let finalUrl = request.url;
+    let method = '';
 
-    if (request.parameters) {
+    if (isRequest(request)) {
       finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
+      method = request.method;
     }
 
     if (isGrpcRequest(request)) {
-      finalUrl = request.url + (request as GrpcRequest).protoMethodName;
+      finalUrl = request.url + request.protoMethodName;
+      method = METHOD_GRPC;
     }
 
     const match = fuzzyMatchAll(
       searchStrings,
-      [request.name, finalUrl, request.method || '', this._groupOf(request).join('/')],
+      [request.name, finalUrl, method, this._groupOf(request).join('/')],
       {
         splitSpace: true,
       },
