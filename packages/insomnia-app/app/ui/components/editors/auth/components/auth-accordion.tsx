@@ -8,7 +8,7 @@ interface Props {
 
 const expandCache: Record<string, boolean> = {};
 
-export const AuthAccordian: FC<Props> = ({ label, children }) => {
+export const AuthAccordion: FC<Props> = ({ label, children }) => {
   const [expand, toggle] = useToggle(expandCache[label]);
 
   useEffect(() => {

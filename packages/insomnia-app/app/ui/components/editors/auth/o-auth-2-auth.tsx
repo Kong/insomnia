@@ -28,7 +28,7 @@ import { PromptButton } from '../../base/prompt-button';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
-import { AuthAccordian } from './components/auth-accordian';
+import { AuthAccordion } from './components/auth-accordion';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
@@ -258,14 +258,14 @@ export const OAuth2Auth: FC = () => {
           options={grantTypeOptions}
         />
         {basic}
-        <AuthAccordian label='Advanced Options'>
+        <AuthAccordion label='Advanced Options'>
           {advanced}
           {<div className="pad-top text-right">
             <button className="btn btn--clicky" onClick={initNewOAuthSession}>
               Clear OAuth 2 session
             </button>
           </div>}
-        </AuthAccordian>
+        </AuthAccordion>
       </AuthTableBody>
       <div className='pad'>
         <OAuth2Tokens />
