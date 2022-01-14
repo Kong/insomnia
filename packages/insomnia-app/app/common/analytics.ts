@@ -129,6 +129,7 @@ export enum SegmentEvent {
   unitTestRunAll = 'Ran All Unit Tests',
   vcsSyncStart = 'VCS Sync Started',
   vcsSyncComplete = 'VCS Sync Completed',
+  vcsAction = 'VCS Action Executed',
 }
 
 export function vcsSegmentEventProperties(type: String, action: String, error?: string): Record<string, any> {

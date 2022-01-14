@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import path from 'path';
 import React, { Fragment, PureComponent } from 'react';
 import YAML from 'yaml';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -96,6 +97,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     await vcs.commit(message);
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'commit'));
     this.modal?.hide();
 
     if (typeof this.onCommit === 'function') {
@@ -120,6 +122,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
       newItems[p].staged = doStage || forceAdd;
     }
 
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'stage_all'));
     this.setState({
       items: newItems,
     });
@@ -134,6 +137,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     newItems[gitPath].staged = !newItems[gitPath].staged;
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'stage'));
     this.setState({
       items: newItems,
     });
@@ -303,6 +307,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
         status: i.status,
       }));
     await gitRollback(vcs, files);
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'restore'));
     await this._refresh();
   }
 
