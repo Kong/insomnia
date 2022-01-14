@@ -1,12 +1,12 @@
-const insomniaDocs = (slug: string) => `https://support.insomnia.rest${slug}`;
+const insomniaDocs = (slug: string) => `https://docs.insomnia.rest${slug}`;
 
 export const docsBase = insomniaDocs('/');
-export const docsGitSync = insomniaDocs('/article/193-git-sync');
-export const docsTemplateTags = insomniaDocs('/article/171-template-tags');
-export const docsVersionControl = insomniaDocs('/article/165-version-control-sync');
-export const docsPlugins = insomniaDocs('/article/173-plugins');
-export const docsImportExport = insomniaDocs('/article/172-importing-and-exporting-data');
-export const docsKeyMaps = insomniaDocs('/article/203-key-maps');
+export const docsGitSync = insomniaDocs('/insomnia/git-sync');
+export const docsTemplateTags = insomniaDocs('/insomnia/template-tags');
+export const docsVersionControl = insomniaDocs('/insomnia/version-control-sync');
+export const docsPlugins = insomniaDocs('/insomnia/introduction-to-plugins');
+export const docsImportExport = insomniaDocs('/insomnia/import-export-data');
+export const docsKeyMaps = insomniaDocs('/insomnia/key-maps');
 export const docsIntroductionInsomnia = insomniaDocs('/insomnia/get-started');
 export const docsWorkingWithDesignDocs = insomniaDocs('/insomnia/design-documents');
 
