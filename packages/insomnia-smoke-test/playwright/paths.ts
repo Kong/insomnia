@@ -21,7 +21,9 @@ const insomniaBinary = path.join('dist', pathLookup[process.platform]);
 const electronBinary = path.join('node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
 
 export const executablePath = process.env.BUNDLE === 'package' ? insomniaBinary : electronBinary;
-export const mainPath = path.join('build', 'main.min.js');
+
+// NOTE: main.min.js is built by app-build:smoke in /build and also by the watcher in /app
+export const mainPath = path.join(process.env.BUNDLE === 'dev' ? 'app' : 'build', 'main.min.js');
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia-app');
 
 const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
