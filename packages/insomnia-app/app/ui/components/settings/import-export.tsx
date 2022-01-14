@@ -15,7 +15,6 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Link } from '../base/link';
-import { HelpTooltip } from '../help-tooltip';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { showModal, showPrompt } from '../modals/index';
 
@@ -72,10 +71,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   return (
     <div data-testid="import-export-tab">
       <div className="no-margin-top">
-        Import format will be automatically detected.
-        <HelpTooltip className="space-left">
-          Supported formats include: {importers.map(importer => importer.name).join(', ')}
-        </HelpTooltip>
+        Import format will be automatically detected. Supported formats include: {importers.map(importer => importer.name).join(', ')}
       </div>
       <p>
         Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.

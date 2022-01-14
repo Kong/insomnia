@@ -12,7 +12,6 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
-  DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
 import { database } from '../../../common/database';
@@ -652,14 +651,7 @@ export function initActiveWorkspace() {
   return setActiveWorkspace(workspaceId);
 }
 
-function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
-  // @ts-expect-error -- TSCONVERSION
-  return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
-}
-
 function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
-  activity = _migrateDeprecatedActivity(activity);
-
   if (isValidActivity(activity)) {
     return activity;
   }

@@ -12,6 +12,7 @@ import {
   CONTENT_TYPE_GRAPHQL,
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
+import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
 import type {
   Request,
@@ -171,7 +172,7 @@ export class BodyEditor extends PureComponent<Props> {
         return (
           <EmptyStatePane
             icon={<SvgIcon icon="bug" />}
-            documentationLinks={[{ title: 'Introduction to Insomnia', url: 'https://docs.insomnia.rest/insomnia/get-started' }]}
+            documentationLinks={[documentationLinks.introductionToInsomnia]}
             secondaryAction="Select a body type from above to send data in the body of a request"
             title="Enter a URL and send to get a response"
           />
