@@ -1,6 +1,7 @@
 import React, { FC, memo } from 'react';
 import { useSelector } from 'react-redux';
 
+import { docsBase } from '../../../common/documentation';
 import { selectSettings } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { showModal } from '../modals/index';
@@ -28,7 +29,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
     );
   } else {
     msg = (
-      <Link button className="btn btn--clicky" href="https://support.insomnia.rest">
+      <Link button className="btn btn--clicky" href={docsBase}>
         Documentation
       </Link>
     );

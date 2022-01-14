@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Button, NoticeTable } from 'insomnia-components';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
+import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -9,20 +10,31 @@ import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
+import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
 import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
 import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { WrapperProps } from './wrapper';
 
+const EmptySpaceHelper = styled.div({
+  ...superFaint,
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  padding: '2em',
+  textAlign: 'center',
+});
+
 const spectral = initializeSpectral();
 
 interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
-  handleUpdateApiSpec: (s: ApiSpec) => Promise<void>;
+  handleUpdateApiSpec: (apiSpec: ApiSpec) => Promise<void>;
   wrapperProps: WrapperProps;
 }
 
@@ -32,6 +44,7 @@ interface State {
     line: number;
     type: 'error' | 'warning';
   }[];
+  forceRefreshCounter: number;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -43,6 +56,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
     super(props);
     this.state = {
       lintMessages: [],
+      forceRefreshCounter: 0,
     };
   }
 
@@ -68,7 +82,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
   }
 
-  _handleOnChange(v: string) {
+  onChangeSpecContents(contents: string) {
     const {
       wrapperProps: { activeApiSpec },
       handleUpdateApiSpec,
@@ -85,7 +99,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
     }
 
     this.debounceTimeout = setTimeout(async () => {
-      await handleUpdateApiSpec({ ...activeApiSpec, contents: v });
+      await handleUpdateApiSpec({ ...activeApiSpec, contents });
     }, 500);
   }
 
@@ -145,25 +159,35 @@ export class WrapperDesign extends PureComponent<Props, State> {
     }
   }
 
+  _onUpdateContents() {
+    const { forceRefreshCounter } = this.state;
+    this.setState({ forceRefreshCounter: forceRefreshCounter + 1 });
+  }
+
   _renderEditor() {
     const { activeApiSpec } = this.props.wrapperProps;
-    const { lintMessages } = this.state;
+    const { lintMessages, forceRefreshCounter } = this.state;
 
     if (!activeApiSpec) {
       return null;
     }
 
+    const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec._id}`;
+
     return (
       <div className="column tall theme--pane__body">
-        <div className="tall">
+        <div className="tall relative overflow-hidden">
           <CodeEditor
             manualPrettify
             ref={this._setEditorRef}
             lintOptions={WrapperDesign.lintOptions}
             mode="openapi"
             defaultValue={activeApiSpec.contents}
-            onChange={this._handleOnChange}
-            uniquenessKey={activeApiSpec._id}
+            onChange={this.onChangeSpecContents}
+            uniquenessKey={uniquenessKey}
+          />
+          <DesignEmptyState
+            onUpdateContents={this._onUpdateContents}
           />
         </div>
         {lintMessages.length > 0 && (
@@ -178,6 +202,14 @@ export class WrapperDesign extends PureComponent<Props, State> {
 
     if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
       return null;
+    }
+
+    if (!activeApiSpec.contents) {
+      return (
+        <EmptySpaceHelper>
+          Documentation for your OpenAPI spec will render here
+        </EmptySpaceHelper>
+      );
     }
 
     let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
@@ -196,7 +228,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
           invalidationKey={activeApiSpec.contents}
           renderError={() => (
             <div className="text-left margin pad">
-              <h3>An error occurred while trying to render Swagger UI 😢</h3>
+              <h3>An error occurred while trying to render Swagger UI</h3>
               <p>
                 This preview will automatically refresh, once you have a valid specification that
                 can be previewed.
@@ -249,12 +281,20 @@ export class WrapperDesign extends PureComponent<Props, State> {
       return null;
     }
 
+    if (!activeApiSpec.contents) {
+      return (
+        <EmptySpaceHelper>
+          A spec navigator will render here
+        </EmptySpaceHelper>
+      );
+    }
+
     return (
       <ErrorBoundary
         invalidationKey={activeApiSpec.contents}
         renderError={() => (
           <div className="text-left margin pad">
-            <h4>An error occurred while trying to render your spec's navigation. 😢</h4>
+            <h4>An error occurred while trying to render your spec's navigation.</h4>
             <p>
               This navigation will automatically refresh, once you have a valid specification that
               can be rendered.
