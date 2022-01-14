@@ -3,8 +3,8 @@ import classnames from 'classnames';
 import path from 'path';
 import React, { Fragment, PureComponent } from 'react';
 import YAML from 'yaml';
-import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
