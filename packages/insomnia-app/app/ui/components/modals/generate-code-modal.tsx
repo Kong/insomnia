@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { exportHarRequest } from '../../../common/har';
 import { Request } from '../../../models/request';
+import { showModal } from '../../../ui/components/modals';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -15,6 +16,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { ErrorModal } from './error-modal';
 
 const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
 const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
@@ -110,8 +112,6 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
     const { environmentId } = this.props;
     const har = await exportHarRequest(request._id, environmentId, addContentLength);
-    // @TODO Should we throw instead?
-    if (!har) return;
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key) || '';
     this.setState({
@@ -125,16 +125,26 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
   }
 
-  show(request: Request) {
+  show(request: Request | null) {
     const { client, target } = this.state;
 
-    this._generateCode(request, target, client);
+    if (request === null) {
+      // consider that since this is attached to a shortcut, a user could call up this prompt at literally any time, including times when there is no active request (like on the dashboard, or when they've deleted all requests).
+      return;
+    }
 
-    this.modal?.show();
+    this._generateCode(request, target, client).then(() => {
+      this.modal?.show();
+    }).catch(error => {
+      showModal(ErrorModal, {
+        error,
+      });
+    });
   }
 
   render() {
     const { cmd, target, client } = this.state;
+
     const targets = HTTPSnippet.availableTargets();
     // NOTE: Just some extra precautions in case the target is messed up
     let clients: HTTPSnippetClient[] = [];
@@ -194,6 +204,7 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
             mode={MODE_MAP[target.key] || target.key}
             ref={this._setEditorRef}
             defaultValue={cmd}
+            uniquenessKey={cmd}
           />
         </ModalBody>
         <ModalFooter>
