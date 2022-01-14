@@ -117,8 +117,6 @@ let segmentClient: Analytics | null = null;
 export enum SegmentEvent {
   collectionCreate = 'Collection Created',
   documentCreate = 'Document Created',
-  pluginExportLoadAllWokspace = 'Plugin export loading all workspace',
-  pluginExportLoadWorkspacesInProject = 'Plugin export loading workspaces for active project',
   requestCreate = 'Request Created',
   requestExecute = 'Request Executed',
   projectLocalCreate = 'Local Project Created',
@@ -152,8 +150,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
     }
 
     const anonymousId = await getDeviceId();
-    // TODO: This currently always returns an empty string in the main process
-    // This is due to the session data being stored in localStorage
+    // This may return an empty string or undefined when a user is not logged in
     const userId = getAccountId();
     segmentClient.track({
       anonymousId,
