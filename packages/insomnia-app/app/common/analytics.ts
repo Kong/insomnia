@@ -127,6 +127,16 @@ export enum SegmentEvent {
   unitTestDelete = 'Unit Test Deleted',
   unitTestRun = 'Ran Individual Unit Test',
   unitTestRunAll = 'Ran All Unit Tests',
+  vcsSyncStart = 'VCS Sync Started',
+  vcsSyncComplete = 'VCS Sync Completed',
+}
+
+export function vcsSegmentEventProperties(type: String, action: String, error?: string): Record<string, any> {
+  return {
+    'type': type,
+    'action': action,
+    'error': error,
+  };
 }
 
 export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
