@@ -1,4 +1,3 @@
-import { Curl } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
 import * as os from 'os';
@@ -19,12 +18,10 @@ import {
 import { docsBase } from '../common/documentation';
 import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
+import { Curl } from '../network/curl-shim';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard } = electron;
-// So we can use native modules in renderer
-// NOTE: This was (deprecated in Electron 10)[https://github.com/electron/electron/issues/18397] and (removed in Electron 14)[https://github.com/electron/electron/pull/26874]
-app.allowRendererProcessReuse = false;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;

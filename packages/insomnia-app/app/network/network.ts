@@ -1,12 +1,3 @@
-import {
-  Curl,
-  CurlAuth,
-  CurlCode,
-  CurlFeature,
-  CurlHttpVersion,
-  CurlInfoDebug,
-  CurlNetrc,
-} from '@getinsomnia/node-libcurl';
 import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
@@ -66,6 +57,15 @@ import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import caCerts from './ca-certs';
+import {
+  Curl,
+  CurlAuth,
+  CurlCode,
+  CurlFeature,
+  CurlHttpVersion,
+  CurlInfoDebug,
+  CurlNetrc,
+} from './curl-shim';
 import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
@@ -233,11 +233,9 @@ export async function _actuallySend(
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
         await respond(
           {
-            elapsedTime: (curl.getInfo(Curl.info.TOTAL_TIME) as number || 0) * 1000,
-            // @ts-expect-error -- needs generic
-            bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-            // @ts-expect-error -- needs generic
-            url: curl.getInfo(Curl.info.EFFECTIVE_URL),
+            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number,
+            bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
+            url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
             statusMessage: 'Cancelled',
             error: 'Request was cancelled',
           },
@@ -248,16 +246,16 @@ export async function _actuallySend(
       };
 
       // Set all the basic options
-      setOpt(Curl.option.VERBOSE, true);
+      setOpt(Curl.option.VERBOSE, true); // NOTE: not needed for axios
 
       // True so debug function works\
-      setOpt(Curl.option.NOPROGRESS, true);
+      setOpt(Curl.option.NOPROGRESS, true); // NOTE: not needed for axios
 
       // True so curl doesn't print progress
-      setOpt(Curl.option.ACCEPT_ENCODING, '');
+      setOpt(Curl.option.ACCEPT_ENCODING, ''); // NOTE: not needed for axios
 
       // Auto decode everything
-      curl.enable(CurlFeature.Raw);
+      curl.enable(CurlFeature.Raw); // NOTE: not needed for axios
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
@@ -283,7 +281,7 @@ export async function _actuallySend(
 
       // Don't rebuild dot sequences in path
       if (!renderedRequest.settingRebuildPath) {
-        setOpt(Curl.option.PATH_AS_IS, true);
+        // setOpt(Curl.option.PATH_AS_IS, true); // NOTE: not needed
       }
 
       // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
@@ -721,8 +719,8 @@ export async function _actuallySend(
         return buff.length;
       });
       // Handle the response ending
-      curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
-        const allCurlHeadersObjects = _parseHeaders(rawHeaders);
+      curl.on('end', async (_1, _2, rawHeaders: any[]) => {
+        const allCurlHeadersObjects = rawHeaders;
 
         // Headers are an array (one for each redirect)
         const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
@@ -788,11 +786,9 @@ export async function _actuallySend(
           statusCode,
           statusMessage,
           bytesContent: responseBodyBytes,
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
+          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number,
+          url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
         };
         // Close the request
         curl.close();
@@ -814,7 +810,7 @@ export async function _actuallySend(
           {
             statusMessage,
             error: error || 'Something went wrong',
-            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
+            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number,
           },
           null,
         );
@@ -1047,51 +1043,6 @@ async function _applyResponsePluginHooks(
     };
   }
 
-}
-
-interface HeaderResult {
-  headers: ResponseHeader[];
-  version: string;
-  code: number;
-  reason: string;
-}
-
-export function _parseHeaders(
-  buffer: Buffer,
-) {
-  const results: HeaderResult[] = [];
-  const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
-
-  for (let i = 0, currentResult: HeaderResult | null = null; i < lines.length; i++) {
-    const line = lines[i];
-    const isEmptyLine = line.trim() === '';
-
-    // If we hit an empty line, start parsing the next response
-    if (isEmptyLine && currentResult) {
-      results.push(currentResult);
-      currentResult = null;
-      continue;
-    }
-
-    if (!currentResult) {
-      const [version, code, ...other] = line.split(/ +/g);
-      currentResult = {
-        version,
-        code: parseInt(code, 10),
-        reason: other.join(' '),
-        headers: [],
-      };
-    } else {
-      const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = {
-        name,
-        value: value || '',
-      };
-      currentResult.headers.push(header);
-    }
-  }
-
-  return results;
 }
 
 // exported for unit tests only

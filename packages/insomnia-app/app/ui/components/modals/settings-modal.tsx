@@ -1,4 +1,3 @@
-import { Curl } from '@getinsomnia/node-libcurl';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
@@ -8,6 +7,7 @@ import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { Settings } from '../../../models/settings';
+import { Curl } from '../../../network/curl-shim';
 import { Button } from '../base/button';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

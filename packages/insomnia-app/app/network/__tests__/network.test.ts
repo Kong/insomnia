@@ -1,4 +1,3 @@
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
@@ -17,9 +16,12 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
+import { CurlHttpVersion } from '../curl-shim';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
 window.app = electron.app;
+
+jest.mock('../curl-shim');
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
@@ -868,173 +870,5 @@ describe('_getAwsAuthHeaders', () => {
       /^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/,
     );
     expect(filterHeaders(headers, 'content-type')).toEqual([]);
-  });
-});
-
-describe('_parseHeaders', () => {
-  const basicHeaders = [
-    'HTTP/1.1 301 Moved Permanently',
-    'X-Powered-By: Express',
-    'location: http://localhost:3000/',
-    'Content-Type: text/plain; charset=utf-8',
-    'Content-Length: 17',
-    'ETag: W/"11-WKzg6oYof0o8Mliwrz5pkw"',
-    'Duplicate: foo',
-    'Duplicate: bar',
-    'Date: Mon, 13 Nov 2017 22:06:28 GMT',
-    'Foo', // Invalid header
-    '',
-  ];
-  const minimalHeaders = ['HTTP/1.1 301', ''];
-
-  it('Parses single response headers', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
-      {
-        code: 301,
-        version: 'HTTP/1.1',
-        reason: 'Moved Permanently',
-        headers: [
-          {
-            name: 'X-Powered-By',
-            value: 'Express',
-          },
-          {
-            name: 'location',
-            value: 'http://localhost:3000/',
-          },
-          {
-            name: 'Content-Type',
-            value: 'text/plain; charset=utf-8',
-          },
-          {
-            name: 'Content-Length',
-            value: '17',
-          },
-          {
-            name: 'ETag',
-            value: 'W/"11-WKzg6oYof0o8Mliwrz5pkw"',
-          },
-          {
-            name: 'Duplicate',
-            value: 'foo',
-          },
-          {
-            name: 'Duplicate',
-            value: 'bar',
-          },
-          {
-            name: 'Date',
-            value: 'Mon, 13 Nov 2017 22:06:28 GMT',
-          },
-          {
-            name: 'Foo',
-            value: '',
-          },
-        ],
-      },
-    ]);
-  });
-
-  it('Parses Windows newlines', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
-      {
-        code: 301,
-        version: 'HTTP/1.1',
-        reason: 'Moved Permanently',
-        headers: [
-          {
-            name: 'X-Powered-By',
-            value: 'Express',
-          },
-          {
-            name: 'location',
-            value: 'http://localhost:3000/',
-          },
-          {
-            name: 'Content-Type',
-            value: 'text/plain; charset=utf-8',
-          },
-          {
-            name: 'Content-Length',
-            value: '17',
-          },
-          {
-            name: 'ETag',
-            value: 'W/"11-WKzg6oYof0o8Mliwrz5pkw"',
-          },
-          {
-            name: 'Duplicate',
-            value: 'foo',
-          },
-          {
-            name: 'Duplicate',
-            value: 'bar',
-          },
-          {
-            name: 'Date',
-            value: 'Mon, 13 Nov 2017 22:06:28 GMT',
-          },
-          {
-            name: 'Foo',
-            value: '',
-          },
-        ],
-      },
-    ]);
-  });
-
-  it('Parses multiple responses', () => {
-    const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
-    expect(networkUtils._parseHeaders(Buffer.from(blobs))).toEqual([
-      {
-        code: 301,
-        version: 'HTTP/1.1',
-        reason: 'Moved Permanently',
-        headers: [
-          {
-            name: 'X-Powered-By',
-            value: 'Express',
-          },
-          {
-            name: 'location',
-            value: 'http://localhost:3000/',
-          },
-          {
-            name: 'Content-Type',
-            value: 'text/plain; charset=utf-8',
-          },
-          {
-            name: 'Content-Length',
-            value: '17',
-          },
-          {
-            name: 'ETag',
-            value: 'W/"11-WKzg6oYof0o8Mliwrz5pkw"',
-          },
-          {
-            name: 'Duplicate',
-            value: 'foo',
-          },
-          {
-            name: 'Duplicate',
-            value: 'bar',
-          },
-          {
-            name: 'Date',
-            value: 'Mon, 13 Nov 2017 22:06:28 GMT',
-          },
-          {
-            name: 'Foo',
-            value: '',
-          },
-        ],
-      },
-      {
-        code: 301,
-        headers: [],
-        reason: '',
-        version: 'HTTP/1.1',
-      },
-    ]);
   });
 });

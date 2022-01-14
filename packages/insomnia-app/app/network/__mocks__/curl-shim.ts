@@ -1,13 +1,10 @@
-// Note: we cannot import these from `node-libcurl` like normal because they come from the native library and it's not possible to load it while testing because it was built to run with Electron.
-// That applies to these Enum type imports, but also applies to the members of the class below.
-import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import { CurlCode } from '@getinsomnia/node-libcurl/dist/enum/CurlCode';
-import { CurlFeature } from '@getinsomnia/node-libcurl/dist/enum/CurlFeature';
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlInfoDebug } from '@getinsomnia/node-libcurl/dist/enum/CurlInfoDebug';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+
 import { EventEmitter } from 'events';
 import fs from 'fs';
+
+// Note: we cannot import these from `node-libcurl` like normal because they come from the native library and it's not possible to load it while testing because it was built to run with Electron.
+// That applies to these Enum type imports, but also applies to the members of the class below.
+import { CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '../../network/curl-enum/Curl';
 
 class Curl extends EventEmitter {
   _options = {};
@@ -153,12 +150,11 @@ class Curl extends EventEmitter {
           'end',
           'NOT_USED',
           'NOT_USED',
-          [
-            'HTTP/1.1 200 OK',
-            `Content-Length: ${data.length}`,
-            'Content-Type: application/json',
-            '',
-          ].join('\n'),
+          [{
+            version: 'HTTP/1.1',
+            code: '200',
+            reason: 'OK',
+          }]
         );
       });
     });

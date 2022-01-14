@@ -23,7 +23,7 @@ export const URLTag: FC<Props> = memo(({
   const max = maxLength || 30;
   let shortUrl = url;
 
-  if (url.length > max) {
+  if (url?.length > max) {
     shortUrl = url.slice(0, max - 3) + '…';
   }
 

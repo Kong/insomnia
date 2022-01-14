@@ -28,7 +28,6 @@ module.exports = {
     extensions: ['.js', '.ts'],
   },
   externals: [
-    '@getinsomnia/node-libcurl',
     'mocha',
     nodeExternals(),
   ],

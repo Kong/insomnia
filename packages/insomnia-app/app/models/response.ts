@@ -270,7 +270,7 @@ function getBodyBufferFromPath<T>(
 
   try {
     const rawBuffer = fs.readFileSync(bodyPath);
-
+    console.log('suspiciously frequent file read', rawBuffer.length, bodyPath);
     if (compression === 'zip') {
       return zlib.gunzipSync(rawBuffer);
     } else {
