@@ -21,7 +21,6 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import { parse as urlParse, resolve as urlResolve } from 'url';
 import * as uuid from 'uuid';
 
 import {
@@ -458,7 +457,7 @@ export async function _actuallySend(
 
       // Set proxy settings if we have them
       if (settings.proxyEnabled) {
-        const { protocol } = urlParse(renderedRequest.url);
+        const { protocol } = new URL(renderedRequest.url);
         const { httpProxy, httpsProxy, noProxy } = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
@@ -748,7 +747,7 @@ export async function _actuallySend(
           const newLocation = getLocationHeader(headers);
 
           if (newLocation !== null) {
-            currentUrl = urlResolve(currentUrl, newLocation.value);
+            currentUrl = new URL(newLocation.value, currentUrl).href;
           }
         }
 
@@ -1113,7 +1112,7 @@ export function _getAwsAuthHeaders(
   description?: string;
   disabled?: boolean;
 }[] {
-  const parsedUrl = urlParse(url);
+  const parsedUrl = new URL(url);
   const contentTypeHeader = getContentTypeHeader(headers);
   // AWS uses host header for signing so prioritize that if the user set it manually
   const hostHeader = getHostHeader(headers);
@@ -1124,7 +1123,7 @@ export function _getAwsAuthHeaders(
     host,
     body,
     method,
-    path: parsedUrl.path,
+    path: parsedUrl.pathname + parsedUrl.search,
     headers: contentTypeHeader
       ? {
         'content-type': contentTypeHeader.value,

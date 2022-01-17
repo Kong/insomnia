@@ -1,5 +1,3 @@
-import { parse as urlParse } from 'url';
-
 import { globalBeforeEach } from '../../__jest__/before-each';
 import certificateUrlParse from '../certificate-url-parse';
 
@@ -8,7 +6,7 @@ describe('certificateUrlParse', () => {
 
   it('should return the result of url.parse if no wildcard paths are supplied', () => {
     const url = 'https://www.example.org:80/some/resources?query=1&other=2#myfragment';
-    const expected = urlParse(url);
+    const expected = new URL(url);
     expect(certificateUrlParse(url)).toEqual(expected);
   });
 
@@ -16,10 +14,10 @@ describe('certificateUrlParse', () => {
     const protocol = 'https';
     const host = 'www.exam*ple.org';
     const port = '123';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${host}:${port}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${host}:${port}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(host);
   });
 
@@ -27,10 +25,10 @@ describe('certificateUrlParse', () => {
     const protocol = 'https';
     const host = 'www.e*xamp*le.or*g';
     const port = '123';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${host}:${port}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${host}:${port}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(host);
   });
 
@@ -38,10 +36,10 @@ describe('certificateUrlParse', () => {
     const protocol = 'https';
     const host = '*.example.org';
     const port = '123';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${host}:${port}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${host}:${port}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(host);
   });
 
@@ -49,19 +47,19 @@ describe('certificateUrlParse', () => {
     const protocol = 'https';
     const host = 'www.example.*';
     const port = '123';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${host}:${port}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${host}:${port}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(host);
   });
 
   it('should return a host of null if no protocol is provided for a wildcard hostname', () => {
     const host = 'www.example.*';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${host}${path}?${query}#${fragment}`;
+    const url = `${host}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(null);
   });
 
@@ -70,20 +68,20 @@ describe('certificateUrlParse', () => {
     const user = 'myuser';
     const password = 'mypass';
     const host = 'www.example.*';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${user}:${password}@${host}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${user}:${password}@${host}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(host);
   });
 
   it('should return the correct host if the path contains an @ symbol', () => {
     const protocol = 'https';
     const host = 'www.example.*';
-    const path = '/@some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/@some/resources';
+    const search = '?query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${host}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${host}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).hostname).toEqual(host);
   });
 
@@ -94,12 +92,12 @@ describe('certificateUrlParse', () => {
     const nonWildcardHost = 'www.example.';
     const host = 'www.example.*';
     const port = '123';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = 'query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${user}:${password}@${host}:${port}${path}?${query}#${fragment}`;
-    const nonWildcardUrl = `${protocol}://${user}:${password}@${nonWildcardHost}:${port}${path}?${query}#${fragment}`;
-    const expected = urlParse(nonWildcardUrl);
+    const url = `${protocol}://${user}:${password}@${host}:${port}${pathname}${search}#${fragment}`;
+    const nonWildcardUrl = `${protocol}://${user}:${password}@${nonWildcardHost}:${port}${pathname}${search}#${fragment}`;
+    const expected = new URL(nonWildcardUrl);
     expected.hostname = host;
     expected.href = url;
     expected.host = `${host}:${port}`;
@@ -110,10 +108,10 @@ describe('certificateUrlParse', () => {
     const protocol = 'https';
     const host = 'localhost';
     const port = '*';
-    const path = '/some/resources';
-    const query = 'query=1&other=2';
+    const pathname = '/some/resources';
+    const search = 'query=1&other=2';
     const fragment = 'myfragment';
-    const url = `${protocol}://${host}:${port}${path}?${query}#${fragment}`;
+    const url = `${protocol}://${host}:${port}${pathname}${search}#${fragment}`;
     expect(certificateUrlParse(url).port).toEqual(port);
   });
 });

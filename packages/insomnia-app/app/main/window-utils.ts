@@ -3,7 +3,7 @@ import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
 import * as os from 'os';
 import path from 'path';
-import url from 'url';
+import { pathToFileURL } from 'url';
 
 import {
   changelogUrl,
@@ -125,7 +125,7 @@ export function createWindow() {
 
   // Load the html of the app.
   const appPath = path.resolve(__dirname, './renderer.html');
-  const appUrl = process.env.APP_RENDER_URL || url.pathToFileURL(appPath).href;
+  const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
   console.log(`[main] Loading ${appUrl}`);
   mainWindow?.loadURL(appUrl);
   // Emitted when the window is closed.

@@ -3,7 +3,7 @@ import { camelCase } from 'change-case';
 import crypto from 'crypto';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import { isPlainObject } from 'ramda-adjunct';
-import { parse as urlParse } from 'url';
+import { URL } from 'url';
 import YAML from 'yaml';
 
 import { Authentication, Converter, ImportRequest } from '../entities';
@@ -63,11 +63,11 @@ const getDefaultServerUrl = (api: OpenAPIV3.Document) => {
   const foundServer = firstServer && firstServer.url;
 
   if (!foundServer) {
-    return urlParse(exampleServer);
+    return new URL(exampleServer);
   }
 
   const url = resolveVariables(firstServer);
-  return urlParse(url);
+  return new URL(url);
 };
 
 /**

@@ -1,5 +1,3 @@
-import { format as urlFormat, parse as urlParse } from 'url';
-
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -181,7 +179,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
     return urlWithProto;
   } else {
     // Parse the URL into components
-    const parsedUrl = urlParse(urlWithProto);
+    const parsedUrl = new URL(urlWithProto);
 
     // ~~~~~~~~~~~ //
     // 1. Pathname //
@@ -194,25 +192,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
         .join('/');
     }
 
-    // ~~~~~~~~~~~~~~ //
-    // 2. Querystring //
-    // ~~~~~~~~~~~~~~ //
-
-    if (parsedUrl.query) {
-      const qsParams = deconstructQueryStringToParams(parsedUrl.query);
-      const encodedQsParams = [];
-      for (const { name, value } of qsParams) {
-        encodedQsParams.push({
-          name: flexibleEncodeComponent(name),
-          value: flexibleEncodeComponent(value),
-        });
-      }
-
-      parsedUrl.query = buildQueryStringFromParams(encodedQsParams);
-      parsedUrl.search = `?${parsedUrl.query}`;
-    }
-
-    return urlFormat(parsedUrl);
+    return parsedUrl.href;
   }
 };
 

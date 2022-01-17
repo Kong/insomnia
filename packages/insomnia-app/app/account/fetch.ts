@@ -1,4 +1,3 @@
-import { parse as urlParse } from 'url';
 import zlib from 'zlib';
 
 import { delay } from '../common/misc';
@@ -101,11 +100,10 @@ function _getUrl(path) {
 
   return `${_baseUrl}${path}`;
 }
-
 function _notifyCommandListeners(uri) {
-  const parsed = urlParse(uri, true);
+  const parsed = new URL(uri);
   const command = `${parsed.hostname}${parsed.pathname}`;
-  const args = JSON.parse(JSON.stringify(parsed.query));
+  const args = JSON.parse(JSON.stringify(parsed.searchParams.toString()));
 
   _commandListeners.map(fn => fn(command, args));
 }

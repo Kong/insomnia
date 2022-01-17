@@ -7,7 +7,6 @@ import * as path from 'path';
 import React, { createRef, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
-import { parse as urlParse } from 'url';
 
 import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
@@ -1309,9 +1308,9 @@ class App extends PureComponent<AppProps, State> {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
     });
     ipcRenderer.on('run-command', (_, commandUri) => {
-      const parsed = urlParse(commandUri, true);
+      const parsed = new URL(commandUri);
       const command = `${parsed.hostname}${parsed.pathname}`;
-      const args = JSON.parse(JSON.stringify(parsed.query));
+      const args = JSON.parse(JSON.stringify(parsed.searchParams.toString()));
       args.workspaceId = args.workspaceId || this.props.activeWorkspace?._id;
       this.props.handleCommand(command, args);
     });

@@ -1,7 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
 import { setDefaultProtocol } from 'insomnia-url';
-import { parse as urlParse } from 'url';
 
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
@@ -29,7 +28,7 @@ export async function axiosRequest(config: AxiosRequestConfig) {
   // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
   finalConfig.proxy = false;
   if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
-    const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
+    const { hostname, port } = new URL(setDefaultProtocol(proxyUrl));
 
     if (hostname && port) {
       finalConfig.proxy = {
