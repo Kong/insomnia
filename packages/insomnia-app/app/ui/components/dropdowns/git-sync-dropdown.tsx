@@ -188,7 +188,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
 
     try {
       await vcs.push(gitRepository.credentials, force);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_' : '' + 'push'));
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push'));
     } catch (err) {
       if (err.code === 'PushRejectedError') {
         this._dropdown?.hide();
@@ -206,7 +206,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
           title: 'Error Pushing Repository',
           error: err,
         });
-        trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_' : '' + 'push', err.message));
+        trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message));
       }
     }
 
