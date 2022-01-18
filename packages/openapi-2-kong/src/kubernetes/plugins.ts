@@ -161,7 +161,7 @@ export function generateK8sPluginConfig(
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
-        name: `add-${name}-${pluginNameSuffix}${increment()}`,
+        name: `add-${pData.resourceName || name}-${pluginNameSuffix}${increment()}`,
       },
       plugin: name,
     };
