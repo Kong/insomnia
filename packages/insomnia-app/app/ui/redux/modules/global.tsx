@@ -733,9 +733,15 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
   await models.workspace.ensureChildren(workspace);
   const request = await models.request.create({ parentId: workspaceId });
 
+  const unitTestSuite = await models.unitTestSuite.create({
+    parentId: workspaceId,
+    name: 'Example Test Suite',
+  });
+
   await models.workspaceMeta.updateByParentId(workspaceId, {
     activeRequestId: request._id,
     activeActivity: ACTIVITY_DEBUG,
+    activeUnitTestSuiteId: unitTestSuite._id,
   });
 
   dispatch(activateWorkspace({ workspaceId }));
