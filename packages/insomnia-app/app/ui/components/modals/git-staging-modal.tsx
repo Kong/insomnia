@@ -122,7 +122,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
       newItems[p].staged = doStage || forceAdd;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'stage_all'));
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'));
     this.setState({
       items: newItems,
     });
@@ -137,7 +137,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     newItems[gitPath].staged = !newItems[gitPath].staged;
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'stage'));
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'));
     this.setState({
       items: newItems,
     });
@@ -307,8 +307,17 @@ export class GitStagingModal extends PureComponent<Props, State> {
         status: i.status,
       }));
     await gitRollback(vcs, files);
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'restore'));
     await this._refresh();
+  }
+
+  async _handleRollbackSingle(item: Item) {
+    await this._handleRollback([item]);
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'rollback'));
+  }
+
+  async _handleRollbackAll(items: Item[]) {
+    await this._handleRollback(items);
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'rollback_all'));
   }
 
   renderItem(item: Item) {
@@ -333,7 +342,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
           {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
             <button
               className="btn btn--micro space-right"
-              onClick={() => this._handleRollback([item])}
+              onClick={() => this._handleRollbackSingle(item)}
             >
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </button>
@@ -356,7 +365,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
         <strong>{title}</strong>
         <PromptButton
           className="btn pull-right btn--micro"
-          onClick={() => this._handleRollback(items)}
+          onClick={() => this._handleRollbackAll(items)}
         >
           {rollbackLabel}
         </PromptButton>
