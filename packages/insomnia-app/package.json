@@ -201,7 +201,7 @@
     "@types/js-yaml": "^4.0.1",
     "@types/less": "^3.0.2",
     "@types/license-checker": "^25.0.1",
-    "@types/marked": "^2.0.2",
+    "@types/marked": "^4.0.1",
     "@types/mime-types": "^2.1.0",
     "@types/mkdirp": "^0.5.2",
     "@types/multiparty": "^0.0.32",
