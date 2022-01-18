@@ -466,39 +466,30 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
 
     return (
       <div className="unit-tests theme--pane__body">
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
-          <div className="unit-tests__top-header">
-            <h2>
-              <Editable
-                singleClick
-                onSubmit={this._handleChangeActiveSuiteName}
-                value={activeUnitTestSuite.name}
-              />
-            </h2>
-            <Button variant="outlined" onClick={this._handleCreateTest}>
-              New Test
-            </Button>
-            <Button
-              variant="contained"
-              bg="surprise"
-              onClick={this._handleRunTests}
-              size="default"
-              disabled={Boolean(testsRunning)}
-            >
-              {testsRunning ? 'Running... ' : 'Run Tests'}
-              <i className="fa fa-play space-left" />
-            </Button>
-          </div>
-
-          {isEmpty(activeUnitTests) ? emptyStatePane : null}
+        <div className="unit-tests__top-header">
+          <h2>
+            <Editable
+              singleClick
+              onSubmit={this._handleChangeActiveSuiteName}
+              value={activeUnitTestSuite.name}
+            />
+          </h2>
+          <Button variant="outlined" onClick={this._handleCreateTest}>
+            New Test
+          </Button>
+          <Button
+            variant="contained"
+            bg="surprise"
+            onClick={this._handleRunTests}
+            size="default"
+            disabled={Boolean(testsRunning)}
+          >
+            {testsRunning ? 'Running... ' : 'Run Tests'}
+            <i className="fa fa-play space-left" />
+          </Button>
         </div>
 
+        {isEmpty(activeUnitTests) ? emptyStatePane : null}
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
