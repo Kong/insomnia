@@ -280,7 +280,7 @@ export async function _trackEvent({
   ];
 
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-  await _sendToGoogle(params, !!queueable);
+  await _sendToGoogle({ params, queueable });
 }
 
 export async function _trackPageView(location: string) {
@@ -293,7 +293,7 @@ export async function _trackPageView(location: string) {
     },
   ];
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-  await _sendToGoogle(params, false);
+  await _sendToGoogle({ params, queueable: false });
 }
 
 async function _getDefaultParams(): Promise<RequestParameter[]> {
@@ -388,7 +388,10 @@ db.onChange(async changes => {
   }
 });
 
-async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
+async function _sendToGoogle({ params, queueable }: {
+  params: RequestParameter;
+  queueable: boolean;
+}) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {
@@ -472,6 +475,6 @@ async function _flushQueuedEvents() {
 
   for (const params of tmp) {
     console.log('[ga] Flushing queued event', params);
-    await _sendToGoogle(params, false);
+    await _sendToGoogle({ params, queueable: false });
   }
 }
