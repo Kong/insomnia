@@ -279,7 +279,6 @@ export async function _trackEvent({
     }] : []),
   ];
 
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   await _sendToGoogle({ params, queueable });
 }
 
@@ -292,7 +291,6 @@ export async function _trackPageView(location: string) {
       value: 'pageview',
     },
   ];
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   await _sendToGoogle({ params, queueable: false });
 }
 
@@ -389,8 +387,8 @@ db.onChange(async changes => {
 });
 
 async function _sendToGoogle({ params, queueable }: {
-  params: RequestParameter;
-  queueable: boolean;
+  params: RequestParameter[];
+  queueable: boolean | null | undefined;
 }) {
   const settings = await models.settings.getOrCreate();
 
@@ -398,14 +396,13 @@ async function _sendToGoogle({ params, queueable }: {
     if (queueable) {
       console.log('[ga] Queued event', params);
 
-      _queuedEvents.push(params);
+      _queuedEvents.push(...params);
     }
 
     return;
   }
 
   const baseParams = await _getDefaultParams();
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const allParams = [...baseParams, ...params];
   const qs = buildQueryStringFromParams(allParams);
   const baseUrl = isDevelopment()
@@ -469,12 +466,10 @@ let _queuedEvents: RequestParameter[] = [];
 
 async function _flushQueuedEvents() {
   console.log(`[ga] Flushing ${_queuedEvents.length} queued events`);
-  const tmp = [..._queuedEvents];
+  const params = [..._queuedEvents];
   // Clear queue before we even start sending to prevent races
   _queuedEvents = [];
 
-  for (const params of tmp) {
-    console.log('[ga] Flushing queued event', params);
-    await _sendToGoogle({ params, queueable: false });
-  }
+  console.log('[ga] Flushing queued event', params);
+  await _sendToGoogle({ params, queueable: false });
 }
