@@ -3,14 +3,12 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Request Meta';
-
 export const type = 'RequestMeta';
-
 export const prefix = 'reqm';
-
 export const canDuplicate = false;
-
 export const canSync = false;
+
+export type RequestAccordionKeys = 'OAuth2AdvancedOptions';
 
 interface BaseRequestMeta {
   parentId: string;
@@ -22,6 +20,7 @@ interface BaseRequestMeta {
   pinned: boolean;
   lastActive: number;
   downloadPath: string | null;
+  expandedAccordionKeys: Partial<Record<RequestAccordionKeys, boolean>>;
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
@@ -41,6 +40,7 @@ export function init() {
     pinned: false,
     lastActive: 0,
     downloadPath: null,
+    expandedAccordionKeys: {},
   };
 }
 
