@@ -1,10 +1,8 @@
-import marked from 'marked';
+import { marked } from 'marked';
 
 marked.setOptions({
   renderer: new marked.Renderer(),
   gfm: true,
-  // @ts-expect-error -- TSCONVERSION missing from marked types
-  tables: true,
   breaks: false,
   pedantic: false,
   sanitize: true,
@@ -12,6 +10,4 @@ marked.setOptions({
   smartypants: false,
 });
 
-export function markdownToHTML(markdown) {
-  return marked(markdown);
-}
+export const markdownToHTML = marked.parse;

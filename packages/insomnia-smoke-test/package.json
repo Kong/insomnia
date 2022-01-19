@@ -19,6 +19,7 @@
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
+    "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "cli": "jest --detectOpenHandles --testPathPattern cli",

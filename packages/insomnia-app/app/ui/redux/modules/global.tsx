@@ -12,7 +12,6 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
-  DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
 import { database } from '../../../common/database';
@@ -652,14 +651,7 @@ export function initActiveWorkspace() {
   return setActiveWorkspace(workspaceId);
 }
 
-function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
-  // @ts-expect-error -- TSCONVERSION
-  return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
-}
-
 function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
-  activity = _migrateDeprecatedActivity(activity);
-
   if (isValidActivity(activity)) {
     return activity;
   }
@@ -741,9 +733,15 @@ export const initFirstLaunch = () => async (dispatch, getState) => {
   await models.workspace.ensureChildren(workspace);
   const request = await models.request.create({ parentId: workspaceId });
 
+  const unitTestSuite = await models.unitTestSuite.create({
+    parentId: workspaceId,
+    name: 'Example Test Suite',
+  });
+
   await models.workspaceMeta.updateByParentId(workspaceId, {
     activeRequestId: request._id,
     activeActivity: ACTIVITY_DEBUG,
+    activeUnitTestSuiteId: unitTestSuite._id,
   });
 
   dispatch(activateWorkspace({ workspaceId }));
