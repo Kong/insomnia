@@ -4,6 +4,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
+import { documentationLinks } from '../../../../common/documentation';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import type { GrpcRequest } from '../../../../models/grpc-request';
@@ -157,7 +158,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           {!methodType && (
             <EmptyStatePane
               icon={<SvgIcon icon="bug" />}
-              documentationLinks={[{ title: 'Introduction to Insomnia', url: 'https://docs.insomnia.rest/insomnia/get-started' }]}
+              documentationLinks={[documentationLinks.introductionToInsomnia]}
               secondaryAction="Select a body type from above to send data in the body of a request"
               title="Enter a URL and send to get a response"
             />

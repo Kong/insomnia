@@ -10,7 +10,6 @@ import {
   ACTIVITY_MIGRATION,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
-  DEPRECATED_ACTIVITY_INSOMNIA,
   GlobalActivity,
   SORT_MODIFIED_DESC,
 } from '../../../../common/constants';
@@ -191,24 +190,6 @@ describe('global', () => {
       const expectedEvent = {
         type: SET_ACTIVE_ACTIVITY,
         activity,
-      };
-      store.dispatch(initActiveActivity());
-      expect(store.getActions()).toEqual([expectedEvent]);
-    });
-
-    it('should initialize from local storage and migrate deprecated activity', async () => {
-      const settings = createSettings(true, true);
-      const store = mockStore({
-        global: {},
-        entities: {
-          settings: [settings],
-        },
-      });
-      const activity = DEPRECATED_ACTIVITY_INSOMNIA;
-      global.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-      const expectedEvent = {
-        type: SET_ACTIVE_ACTIVITY,
-        activity: ACTIVITY_DEBUG,
       };
       store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);

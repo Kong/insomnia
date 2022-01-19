@@ -12,6 +12,7 @@ import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
 import { SvgIcnChevronUp } from './assets/svgr/IcnChevronUp';
 import { SvgIcnClock } from './assets/svgr/IcnClock';
 import { SvgIcnCookie } from './assets/svgr/IcnCookie';
+import { SvgIcnDraftingCompass } from './assets/svgr/IcnDraftingCompass';
 import { SvgIcnDragGrip } from './assets/svgr/IcnDragGrip';
 import { SvgIcnElevator } from './assets/svgr/IcnElevator';
 import { SvgIcnEllipsis } from './assets/svgr/IcnEllipsis';
@@ -48,6 +49,7 @@ import { SvgIcnSync } from './assets/svgr/IcnSync';
 import { SvgIcnTrashcan } from './assets/svgr/IcnTrashcan';
 import { SvgIcnTriangle } from './assets/svgr/IcnTriangle';
 import { SvgIcnUser } from './assets/svgr/IcnUser';
+import { SvgIcnVial } from './assets/svgr/IcnVial';
 import { SvgIcnWarning } from './assets/svgr/IcnWarning';
 import { SvgIcnWarningCircle } from './assets/svgr/IcnWarningCircle';
 import { SvgIcnX } from './assets/svgr/IcnX';
@@ -78,6 +80,7 @@ export const IconEnum = {
   chevronUp: 'chevron-up',
   clock: 'clock',
   cookie: 'cookie',
+  draftingCompass: 'drafting-compass',
   dragGrip: 'drag-grip',
   elevator: 'elevator',
   ellipsesCircle: 'ellipses-circle',
@@ -113,6 +116,7 @@ export const IconEnum = {
   trashcan: 'trashcan',
   triangle: 'triangle',
   user: 'user',
+  vial: 'vial',
   warning: 'warning',
   warningCircle: 'warning-circle',
   x: 'x',
@@ -175,6 +179,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.chevronUp]: [ThemeEnum.default, SvgIcnChevronUp],
     [IconEnum.clock]: [ThemeEnum.default, SvgIcnClock],
     [IconEnum.cookie]: [ThemeEnum.default, SvgIcnCookie],
+    [IconEnum.draftingCompass]: [ThemeEnum.default, SvgIcnDraftingCompass],
     [IconEnum.dragGrip]: [ThemeEnum.default, SvgIcnDragGrip],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
@@ -212,6 +217,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],
     [IconEnum.triangle]: [ThemeEnum.default, SvgIcnTriangle],
     [IconEnum.user]: [ThemeEnum.default, SvgIcnUser],
+    [IconEnum.vial]: [ThemeEnum.default, SvgIcnVial],
     [IconEnum.warningCircle]: [ThemeEnum.default, SvgIcnWarningCircle],
     [IconEnum.warning]: [ThemeEnum.notice, SvgIcnWarning],
     [IconEnum.x]: [ThemeEnum.default, SvgIcnX],

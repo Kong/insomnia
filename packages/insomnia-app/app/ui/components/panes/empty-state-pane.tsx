@@ -1,8 +1,9 @@
 import { SvgIcon } from 'insomnia-components';
-import React, { FC, Fragment, ReactNode } from 'react';
+import React, { FC, ReactNode } from 'react';
 import styled from 'styled-components';
 
 import { superDuperFaint, superFaint, ultraFaint } from '../../css/css-in-js';
+import { Link } from '../base/link';
 
 const Panel = styled.div({
   height: '100%',
@@ -10,6 +11,7 @@ const Panel = styled.div({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
+  pointerEvents: 'none',
 });
 
 const Wrapper = styled.div({
@@ -17,7 +19,7 @@ const Wrapper = styled.div({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: 'var(--padding-md)',
+  padding: 'var(--padding-md) var(--padding-xl)',
   textAlign: 'center',
   ...superFaint,
 });
@@ -35,9 +37,9 @@ const Title = styled.div({
 const Divider = styled.div({
   height: 1,
   backgroundColor: 'var(--color-font)',
-  margin: 'var(--padding-md) var(--padding-xl)',
+  margin: 'var(--padding-md) 0',
   maxWidth: 500,
-  width: '100%',
+  width: 'calc(100% + var(--padding-xl))',
   ...ultraFaint,
 });
 
@@ -48,13 +50,19 @@ const DocumentationLinks = styled.div({
   marginTop: 'calc(var(--padding-lg))',
   margiBottom: 'var(--padding-md)',
   display: 'flex',
-  alignItems: 'end',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  flexWrap: 'wrap',
 });
 
 // @ts-expect-error the types don't like the addition of !important.  can't say I blame them.
-const Link = styled.a({
+const StyledLink = styled(Link)({
+  display: 'flex',
+  marginTop: 'var(--padding-md)',
   color: 'var(--color-font) !important', // unfortunately, we've set at the root with !important
   fontWeight: 'normal !important', // unfortunately, we've set at the root with !important
+  pointerEvents: 'all',
   '& hover': {
     textDecoration: 'none',
   },
@@ -67,7 +75,7 @@ const LinkIcon = styled(SvgIcon)({
 export const EmptyStatePane: FC<{
   icon: ReactNode;
   title: string;
-  secondaryAction: string;
+  secondaryAction: ReactNode;
   documentationLinks: {
     title: string;
     url: string;
@@ -87,10 +95,10 @@ export const EmptyStatePane: FC<{
         <SecondaryAction>{secondaryAction}</SecondaryAction>
         <DocumentationLinks>
           {documentationLinks.map(({ title, url }) => (
-            <Fragment key={title}>
-              <Link key={title} href={url}>{title}</Link>
+            <StyledLink key={title} href={url}>
+              {title}
               <LinkIcon icon="jump" />
-            </Fragment>
+            </StyledLink>
           ))}
         </DocumentationLinks>
       </Wrapper>
