@@ -42,6 +42,27 @@ resources:
     description: ""
     scope: collection
     _type: workspace
+  - _id: req_e6fab3568ed54f9d83c92e2c8006e145
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1636141084436
+    created: 1636141078600
+    url: http://127.0.0.1:4010/delay/seconds/20
+    name: delayed request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141078600
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: req_e6fab3568ed54f9d83c92e2c8006e140
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1636141084436
