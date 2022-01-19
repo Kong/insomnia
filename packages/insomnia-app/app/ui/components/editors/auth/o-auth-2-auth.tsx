@@ -261,7 +261,7 @@ export const OAuth2Auth: FC = () => {
           options={grantTypeOptions}
         />
         {basic}
-        <AuthAccordion label='Advanced Options'>
+        <AuthAccordion accordionKey='OAuth2AdvancedOptions' label='Advanced Options'>
           {advanced}
           {
             <tr>

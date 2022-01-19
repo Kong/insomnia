@@ -4,13 +4,15 @@ import { useSelector } from 'react-redux';
 
 import * as models from '../../../../../models';
 import { isRequest } from '../../../../../models/request';
+import { RequestAccordionKeys } from '../../../../../models/request-meta';
 import { selectActiveRequest, selectActiveRequestMeta } from '../../../../redux/selectors';
 
 interface Props {
   label: string;
+  accordionKey: RequestAccordionKeys;
 }
 
-export const AuthAccordion: FC<Props> = ({ label, children }) => {
+export const AuthAccordion: FC<Props> = ({ accordionKey, label, children }) => {
   const activeRequest = useSelector(selectActiveRequest);
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
 
@@ -24,7 +26,7 @@ export const AuthAccordion: FC<Props> = ({ label, children }) => {
     await models.requestMeta.updateOrCreateByParentId(activeRequest._id, {
       expandedAccordionKeys: {
         ...activeRequestMeta?.expandedAccordionKeys,
-        [label]: !expanded,
+        [accordionKey]: !expanded,
       },
     });
   };
