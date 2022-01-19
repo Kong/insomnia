@@ -406,30 +406,19 @@ async function _sendToGoogle({ params }: { params: RequestParameter[] }) {
     ? 'https://www.google-analytics.com/debug/collect'
     : 'https://www.google-analytics.com/collect';
   const url = joinUrlAndQueryString(baseUrl, qs);
-  let res;
-  try {
-    res = await axiosRequest({ url });
-  } catch (err) {
-    console.warn('[ga] Network error', err);
-  }
 
-  const [contentType] = res?.headers['content-type'] || [];
-  if (contentType !== 'application/json') {
+  axiosRequest({ url }).then(({ data, headers }) => {
+    const [contentType] = headers['content-type'] || [];
+    if (contentType !== 'application/json') {
     // Production GA API returns a Gif to use for tracking
-    return;
-  }
-  try {
-    const data = JSON.parse(res?.data);
-    if (data?.hitParsingResult?.valid) {
       return;
     }
 
-    for (const result of data?.hitParsingResult || []) {
-      for (const msg of result?.parserMessage || []) {
-        console.warn(`[ga] Error ${msg?.description}`);
-      }
+    if (data?.hitParsingResult?.valid) {
+      return;
     }
-  } catch (err) {
-    console.warn('[ga] Failed to parse response', err);
-  }
+    data?.hitParsingResult?.parserMessage?.map(msg =>
+      console.warn(`[ga] Error ${msg?.description}`));
+
+  }).catch(err => console.warn('[ga] Network error', err));
 }

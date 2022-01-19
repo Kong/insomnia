@@ -17,7 +17,6 @@ describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     axiosRequest.mockResolvedValue({ data:{}, headers:{} });
-    // console.log(axiosRequest);
     jest.useFakeTimers();
   });
 
