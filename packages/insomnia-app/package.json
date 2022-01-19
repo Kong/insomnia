@@ -188,6 +188,7 @@
     "@testing-library/jest-dom": "^5.11.5",
     "@testing-library/react": "^11.2.6",
     "@testing-library/react-hooks": "^5.1.2",
+    "@testing-library/user-event": "^14.0.0-beta.7",
     "@types/analytics-node": "^3.1.4",
     "@types/aws4": "^1.5.1",
     "@types/clone": "^2.1.0",

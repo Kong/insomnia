@@ -464,3 +464,5 @@ export function isNotNullOrUndefined<ValueType>(
 
   return true;
 }
+
+export const kebabCase = (value: string) => value.replace(/ /g, '-');
