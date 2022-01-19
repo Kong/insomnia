@@ -62,54 +62,6 @@ export function trackEvent(
   });
 }
 
-export function trackNonInteractiveEvent(
-  category: string,
-  action: string,
-  label?: string | null,
-  value?: string | null,
-) {
-  process.nextTick(async () => {
-    await _trackEvent({
-      interactive: false,
-      category,
-      action,
-      label,
-      value,
-      queueable: false,
-    });
-  });
-}
-
-/**
- * Tracks an analytics event but queues it for later if analytics are
- * currently disabled. Once analytics setting is enabled, any queued
- * events will be sent automatically.
- *
- * This should be used sparingly!
- *
- * @param category
- * @param action
- * @param label
- * @param value
- */
-export function trackNonInteractiveEventQueueable(
-  category: string,
-  action: string,
-  label?: string | null,
-  value?: string | null,
-) {
-  process.nextTick(async () => {
-    await _trackEvent({
-      interactive: false,
-      category,
-      action,
-      label,
-      value,
-      queueable: true,
-    });
-  });
-}
-
 export function trackPageView(path: string) {
   process.nextTick(async () => {
     await _trackPageView(path);
@@ -135,6 +87,7 @@ export async function getDeviceId() {
 let segmentClient: Analytics | null = null;
 
 export enum SegmentEvent {
+  appStarted = 'App Started',
   collectionCreate = 'Collection Created',
   documentCreate = 'Document Created',
   requestCreate = 'Request Created',
@@ -163,16 +116,56 @@ export function vcsSegmentEventProperties(
   error?: string
 ) {
   return {
-    'type': type,
-    'action': action,
-    'error': error,
+    type,
+    action,
+    error,
   };
 }
 
-export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
+interface QueuedEvent {
+  event: SegmentEvent;
+  properties?: Record<string, any>;
+}
+
+/**
+ * Flush any analytics events that were built up when analytics were disabled.
+ */
+let queuedEvents: QueuedEvent[] = [];
+
+async function flushQueuedEvents() {
+  console.log(`[segment] Flushing ${queuedEvents.length} queued events`);
+  const params = [...queuedEvents];
+
+  // Clear queue before we even start sending to prevent races
+  queuedEvents = [];
+
+  console.log('[segment] Flushing queued event', params);
+  await Promise.all(params.map(({ event, properties }) => (
+    trackSegmentEvent(event, properties)
+  )));
+}
+
+interface TrackSegmentEventOptions {
+  /**
+   * Tracks an analytics event but queues it for later if analytics are currently disabled
+   * Once analytics setting is enabled, any queued events will be sent automatically, all at once.
+   */
+  queueable?: boolean;
+}
+
+export async function trackSegmentEvent(
+  event: SegmentEvent,
+  properties?: Record<string, any>,
+  { queueable }: TrackSegmentEventOptions = {},
+) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {
+    if (queueable) {
+      const queuedEvent: QueuedEvent = { event, properties };
+      console.log('[segment] Queued event', queuedEvent);
+      queuedEvents.push(queuedEvent);
+    }
     return;
   }
 
@@ -238,14 +231,12 @@ export async function _trackEvent({
   action,
   label,
   value,
-  queueable,
 }: {
   interactive: boolean;
   category: string;
   action: string;
   label?: string | null;
   value?: string | null;
-  queueable?: boolean | null;
 }) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
   console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
@@ -279,7 +270,7 @@ export async function _trackEvent({
     }] : []),
   ];
 
-  await _sendToGoogle({ params, queueable });
+  await _sendToGoogle({ params });
 }
 
 export async function _trackPageView(location: string) {
@@ -291,7 +282,7 @@ export async function _trackPageView(location: string) {
       value: 'pageview',
     },
   ];
-  await _sendToGoogle({ params, queueable: false });
+  await _sendToGoogle({ params });
 }
 
 async function _getDefaultParams(): Promise<RequestParameter[]> {
@@ -372,36 +363,21 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
   return params;
 }
 
-// Monitor database changes to see if analytics gets enabled. If analytics
-// become enabled, flush any queued events.
+// Monitor database changes to see if analytics gets enabled.
+// If analytics become enabled, flush any queued events.
 db.onChange(async changes => {
   for (const change of changes) {
     const [event, doc] = change;
 
     if (isSettings(doc) && event === 'update') {
       if (doc.enableAnalytics) {
-        await _flushQueuedEvents();
+        await flushQueuedEvents();
       }
     }
   }
 });
 
-async function _sendToGoogle({ params, queueable }: {
-  params: RequestParameter[];
-  queueable: boolean | null | undefined;
-}) {
-  const settings = await models.settings.getOrCreate();
-
-  if (!settings.enableAnalytics) {
-    if (queueable) {
-      console.log('[ga] Queued event', params);
-
-      _queuedEvents.push(...params);
-    }
-
-    return;
-  }
-
+async function _sendToGoogle({ params }: { params: RequestParameter[] }) {
   const baseParams = await _getDefaultParams();
   const allParams = [...baseParams, ...params];
   const qs = buildQueryStringFromParams(allParams);
@@ -454,22 +430,4 @@ async function _sendToGoogle({ params, queueable }: {
     });
   });
   request.end();
-}
-
-/**
- * Flush any analytics events that were built up when analytics
- * were disabled.
- * @returns {Promise<void>}
- * @private
- */
-let _queuedEvents: RequestParameter[] = [];
-
-async function _flushQueuedEvents() {
-  console.log(`[ga] Flushing ${_queuedEvents.length} queued events`);
-  const params = [..._queuedEvents];
-  // Clear queue before we even start sending to prevent races
-  _queuedEvents = [];
-
-  console.log('[ga] Flushing queued event', params);
-  await _sendToGoogle({ params, queueable: false });
 }
