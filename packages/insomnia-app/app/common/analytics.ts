@@ -262,22 +262,23 @@ export async function _trackEvent({
       name: KEY_EVENT_ACTION,
       value: action,
     },
-  ];
-  !interactive &&
-    params.push({
+
+    ...(!interactive ? [{
       name: KEY_NON_INTERACTION,
       value: '1',
-    });
-  label &&
-    params.push({
+    }] : []),
+
+    ...(label ? [{
       name: KEY_EVENT_LABEL,
       value: label,
-    });
-  value &&
-    params.push({
+    }] : []),
+
+    ...(value ? [{
       name: KEY_EVENT_VALUE,
       value: value,
-    });
+    }] : []),
+  ];
+
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   await _sendToGoogle(params, !!queueable);
 }
@@ -301,6 +302,9 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
   const ua = String(window?.navigator?.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
     .replace(/Electron\/\d+\.\d+\.\d+ /, '');
+
+  const viewport = getViewportSize();
+
   const params = [
     {
       name: KEY_VERSION,
@@ -358,18 +362,15 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
       name: KEY_APPLICATION_VERSION,
       value: getAppVersion(),
     },
-  ];
-  const viewport = getViewportSize();
-  viewport &&
-    params.push({
+    ...(viewport ? [{
       name: KEY_VIEWPORT_SIZE,
       value: viewport,
-    });
-  global.document &&
-    params.push({
+    }] : []),
+    ...(global.document ? [{
       name: KEY_DOCUMENT_ENCODING,
       value: global.document.inputEncoding,
-    });
+    }] : []),
+  ];
   return params;
 }
 
