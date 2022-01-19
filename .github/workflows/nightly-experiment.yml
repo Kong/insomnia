@@ -1,0 +1,46 @@
+name: Nightly Experiment
+
+# TODO - likely we wouldn't be looking for a tag, but checking plain `develop` branch
+# on:
+#   push:
+#     tags:
+#       - nightly-core@*
+
+on:
+  schedule:
+  # run every night at 0:30 UTC
+    - cron:  '30 0 * * *'
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_REF: ${{ github.ref }}
+  GITHUB_SHA: ${{ github.sha }}
+
+# Example taken from https://github.community/t/trigger-action-on-schedule-only-if-there-are-changes-to-the-branch/17887/4
+# we only run the nightly if there's a recent commit
+jobs:
+  has_recent_commit:
+    runs-on: ubuntu-latest
+    name: Check we have a recent commit (last 24 hours)
+    outputs:
+      should_run: ${{ steps.should_run.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: print latest_commit
+        run: echo ${{ github.sha }}
+
+      - id: should_run
+        continue-on-error: true
+        name: check latest commit is less than a day
+        if: ${{ github.event_name == 'schedule' }}
+        run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
+
+  do_something_schedule:
+    needs: has_recent_commit
+    if: ${{ needs.has_recent_commit.outputs.should_run != 'false' }}
+    runs-on: ubuntu-latest
+    name: do something scheduled if has_recent_commit true
+    steps:
+      - uses: actions/checkout@v2
+      - name: print latest_commit
+        run: echo "running nightly as there was a recent commit - ${{ github.sha }}"
