@@ -19,7 +19,7 @@ const Wrapper = styled.div({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: 'var(--padding-md)',
+  padding: 'var(--padding-md) var(--padding-xl)',
   textAlign: 'center',
   ...superFaint,
 });
@@ -37,10 +37,9 @@ const Title = styled.div({
 const Divider = styled.div({
   height: 1,
   backgroundColor: 'var(--color-font)',
-  margin: 'var(--padding-md) var(--padding-xl)',
+  margin: 'var(--padding-md) 0',
   maxWidth: 500,
-  width: '100%',
-  minWidth: 300,
+  width: 'calc(100% + var(--padding-xl))',
   ...ultraFaint,
 });
 
