@@ -282,10 +282,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords(showPasswords: boolean) {
-    return models.settings.update(this.props.settings, { showPasswords });
-  }
-
   _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
     return models.settings.update(this.props.settings, { useBulkHeaderEditor });
   }
@@ -711,7 +707,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
               handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
               handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-              handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
               handleUpdateSettingsUseBulkHeaderEditor={
                 this._handleUpdateSettingsUseBulkHeaderEditor
               }

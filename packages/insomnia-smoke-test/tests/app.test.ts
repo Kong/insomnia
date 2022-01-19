@@ -39,6 +39,11 @@ test('can send requests', async ({ playwright }) => {
 
   await page.click('button:has-text("Clipboard")');
   await page.click('text=CollectionSmoke testsjust now');
+
+  await page.click('button:has-text("GETdelayed request")');
+  await page.click('text=http://127.0.0.1:4010/delay/seconds/20Send >> button');
+  await page.click('text=Loading...Cancel Request >> button');
+  await page.click('text=Request was cancelled');
   await page.click('button:has-text("GETsend JSON request")');
   await page.click('text=http://127.0.0.1:4010/pets/1Send >> button');
   await page.click('text=200 OK');
