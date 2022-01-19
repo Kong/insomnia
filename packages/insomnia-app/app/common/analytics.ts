@@ -52,7 +52,13 @@ export function trackEvent(
   value?: string | null,
 ) {
   process.nextTick(async () => {
-    await _trackEvent(true, category, action, label, value);
+    await _trackEvent({
+      interactive: true,
+      category,
+      action,
+      label,
+      value,
+    });
   });
 }
 
@@ -63,7 +69,14 @@ export function trackNonInteractiveEvent(
   value?: string | null,
 ) {
   process.nextTick(async () => {
-    await _trackEvent(false, category, action, label, value, false);
+    await _trackEvent({
+      interactive: false,
+      category,
+      action,
+      label,
+      value,
+      queueable: false,
+    });
   });
 }
 
@@ -86,7 +99,14 @@ export function trackNonInteractiveEventQueueable(
   value?: string | null,
 ) {
   process.nextTick(async () => {
-    await _trackEvent(false, category, action, label, value, true);
+    await _trackEvent({
+      interactive: false,
+      category,
+      action,
+      label,
+      value,
+      queueable: true,
+    });
   });
 }
 
@@ -212,14 +232,21 @@ function _getOsName() {
 }
 
 // Exported for testing
-export async function _trackEvent(
-  interactive: boolean,
-  category: string,
-  action: string,
-  label?: string | null,
-  value?: string | null,
-  queueable?: boolean | null,
-) {
+export async function _trackEvent({
+  interactive,
+  category,
+  action,
+  label,
+  value,
+  queueable,
+}: {
+  interactive: boolean;
+  category: string;
+  action: string;
+  label?: string | null;
+  value?: string | null;
+  queueable?: boolean | null;
+}) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
   console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
   const params = [
