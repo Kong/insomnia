@@ -6,6 +6,7 @@ import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
 import * as models from '../../../../../../models';
+import { RequestMeta } from '../../../../../../models/request-meta';
 import { AuthAccordion } from '../auth-accordion';
 
 const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
@@ -22,7 +23,7 @@ describe('<AuthAccordion />', () => {
 
     // Render
     const { queryByTestId } = render(
-      <AuthAccordion label="label">{child}</AuthAccordion>,
+      <AuthAccordion accordionKey='OAuth2AdvancedOptions' label="label">{child}</AuthAccordion>,
       { wrapper: withReduxStore(store, Table) }
     );
 
@@ -32,11 +33,12 @@ describe('<AuthAccordion />', () => {
 
   it('should render as collapsed because expected key not found', async () => {
     // Arrange
+    // @ts-expect-error intentional key that doesn't exist
     const { store } = await createMockStoreWithRequest({ requestMetaPatch: { expandedAccordionKeys: { 'not-found': false } } });
 
     // Render
     const { queryByTestId } = render(
-      <AuthAccordion label="label">{child}</AuthAccordion>,
+      <AuthAccordion accordionKey='OAuth2AdvancedOptions' label="label">{child}</AuthAccordion>,
       { wrapper: withReduxStore(store, Table) }
     );
 
@@ -46,11 +48,11 @@ describe('<AuthAccordion />', () => {
 
   it('should render as collapsed', async () => {
     // Arrange
-    const { store } = await createMockStoreWithRequest({ requestMetaPatch: { expandedAccordionKeys: { label: false } } });
+    const { store } = await createMockStoreWithRequest({ requestMetaPatch: { expandedAccordionKeys: { OAuth2AdvancedOptions: false } } });
 
     // Render
     const { queryByTestId } = render(
-      <AuthAccordion label="label">{child}</AuthAccordion>,
+      <AuthAccordion accordionKey='OAuth2AdvancedOptions' label="label">{child}</AuthAccordion>,
       { wrapper: withReduxStore(store, Table) }
     );
 
@@ -60,13 +62,15 @@ describe('<AuthAccordion />', () => {
 
   it('should render as expanded', async () => {
     // Arrange
-    const { store } = await createMockStoreWithRequest({ requestMetaPatch: { expandedAccordionKeys: { label: true } } });
+    const { store } = await createMockStoreWithRequest({ requestMetaPatch: { expandedAccordionKeys: { OAuth2AdvancedOptions: true } } });
 
     // Render
-    const { queryByTestId } = render(
-      <AuthAccordion label="label">{child}</AuthAccordion>,
+    const { queryByTestId, debug } = render(
+      <AuthAccordion accordionKey='OAuth2AdvancedOptions' label="label">{child}</AuthAccordion>,
       { wrapper: withReduxStore(store, Table) }
     );
+
+    debug();
 
     // Assert
     expect(queryByTestId(childTestId)).toBeInTheDocument();
@@ -74,7 +78,8 @@ describe('<AuthAccordion />', () => {
 
   it('should expanded on click', async () => {
     // Arrange
-    const initialExpandedAccordionKeys = {
+    const initialExpandedAccordionKeys: RequestMeta['expandedAccordionKeys'] = {
+      // @ts-expect-error intentional keys that don't exist
       foo: true,
       bar: false,
     };
@@ -83,7 +88,7 @@ describe('<AuthAccordion />', () => {
 
     // Render
     const { findByRole, queryByTestId } = render(
-      <AuthAccordion label="label">{child}</AuthAccordion>,
+      <AuthAccordion accordionKey='OAuth2AdvancedOptions' label="label">{child}</AuthAccordion>,
       { wrapper: withReduxStore(store, Table) }
     );
 
@@ -99,23 +104,24 @@ describe('<AuthAccordion />', () => {
     // Assert
     expect((await models.requestMeta.getByParentId(requestId))?.expandedAccordionKeys).toEqual({
       ...initialExpandedAccordionKeys,
-      label: true,
+      OAuth2AdvancedOptions: true,
     });
   });
 
   it('should collapse on click', async () => {
     // Arrange
-    const initialExpandedAccordionKeys = {
+    const initialExpandedAccordionKeys: RequestMeta['expandedAccordionKeys'] = {
+      OAuth2AdvancedOptions: true,
+      // @ts-expect-error intentional keys that don't exist
       foo: true,
       bar: false,
-      label: true,
     };
 
     const { store, requestId } = await createMockStoreWithRequest({ requestMetaPatch: { expandedAccordionKeys: initialExpandedAccordionKeys } });
 
     // Render
     const { findByRole, queryByTestId } = render(
-      <AuthAccordion label="label">{child}</AuthAccordion>,
+      <AuthAccordion accordionKey='OAuth2AdvancedOptions' label="label">{child}</AuthAccordion>,
       { wrapper: withReduxStore(store, Table) }
     );
 
@@ -131,7 +137,7 @@ describe('<AuthAccordion />', () => {
     // Assert
     expect((await models.requestMeta.getByParentId(requestId))?.expandedAccordionKeys).toEqual({
       ...initialExpandedAccordionKeys,
-      label: false,
+      OAuth2AdvancedOptions: false,
     });
   });
 });

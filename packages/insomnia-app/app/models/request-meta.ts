@@ -20,7 +20,7 @@ interface BaseRequestMeta {
   pinned: boolean;
   lastActive: number;
   downloadPath: string | null;
-  expandedAccordionKeys: Record<RequestAccordionKeys, boolean>;
+  expandedAccordionKeys: Partial<Record<RequestAccordionKeys, boolean>>;
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;

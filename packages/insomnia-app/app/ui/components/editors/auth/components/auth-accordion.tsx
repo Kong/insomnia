@@ -20,7 +20,7 @@ export const AuthAccordion: FC<Props> = ({ accordionKey, label, children }) => {
     return null;
   }
 
-  const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[label]);
+  const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[accordionKey]);
 
   const toggle = async () => {
     await models.requestMeta.updateOrCreateByParentId(activeRequest._id, {
