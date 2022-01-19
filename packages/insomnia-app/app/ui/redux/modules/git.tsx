@@ -208,7 +208,7 @@ export const cloneGitRepository = ({ createFsClient }: {
         if (!(await containsInsomniaWorkspaceDir(fsClient))) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no workspace found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no directory found'));
           return;
         }
 
@@ -218,7 +218,7 @@ export const cloneGitRepository = ({ createFsClient }: {
         if (workspaces.length === 0) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'workspaces empty'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no workspaces found'));
           return;
         }
 
