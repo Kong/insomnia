@@ -58,4 +58,8 @@ app.post('/upload-multipart', upload.single('fileToUpload'), (req, res) => {
   ${fileContents}`);
 });
 
+// HTTP Redirect
+app.get('/from', (_, res) => res.redirect(301, '/to'));
+app.get('/to', (_, res) => res.send('Hello, World!'));
+
 app.listen(port, () => console.log(`Listening at http://localhost:${port}`));
