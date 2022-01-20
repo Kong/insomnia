@@ -122,15 +122,29 @@ export function vcsSegmentEventProperties(
   };
 }
 
-interface QueuedEvent {
+/**
+ * An ISO-8601 date (the date produced by Date.toISOString())
+ * see: https://en.wikipedia.org/wiki/ISO_8601
+ *
+ * @example 2022-01-20T01:41:23.042Z
+ */
+type ISO8601 = string;
+
+interface QueuedSegmentEvent {
   event: SegmentEvent;
-  properties?: Record<string, any>;
+  properties: Partial<Record<string, any>> & {
+    /**
+     * timestamps are required for Queued Segment Events so that when/if the event is enventually fired, it's fired with the timestamp when the event actually occurred.
+     * see: https://segment.com/docs/connections/spec/common
+     */
+    timestamp: ISO8601;
+  };
 }
 
 /**
  * Flush any analytics events that were built up when analytics were disabled.
  */
-let queuedEvents: QueuedEvent[] = [];
+let queuedEvents: QueuedSegmentEvent[] = [];
 
 async function flushQueuedEvents() {
   console.log(`[segment] Flushing ${queuedEvents.length} queued events`);
@@ -162,7 +176,13 @@ export async function trackSegmentEvent(
 
   if (!settings.enableAnalytics) {
     if (queueable) {
-      const queuedEvent: QueuedEvent = { event, properties };
+      const queuedEvent: QueuedSegmentEvent = {
+        event,
+        properties: {
+          ...properties,
+          timestamp: new Date().toISOString(),
+        },
+      };
       console.log('[segment] Queued event', queuedEvent);
       queuedEvents.push(queuedEvent);
     }
