@@ -116,9 +116,9 @@ export function vcsSegmentEventProperties(
   error?: string
 ) {
   return {
-    type,
-    action,
-    error,
+    'type': type,
+    'action': action,
+    'error': error,
   };
 }
 
