@@ -285,7 +285,7 @@ export function createWindow() {
           }),
       },
       {
-        label: `Resize for recordin${MNEMONIC_SYM}g`,
+        label: `Resize for Recordin${MNEMONIC_SYM}g`,
         click: () =>
           mainWindow?.setBounds({
             width: 1024,
