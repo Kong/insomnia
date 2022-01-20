@@ -4,7 +4,7 @@ import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { trackEvent } from '../../../common/analytics';
+import { SegmentEvent, trackEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
@@ -130,11 +130,13 @@ class GitSyncDropdown extends PureComponent<Props, State> {
 
     try {
       await vcs.pull(gitRepository.credentials);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull'));
     } catch (err) {
       showError({
         title: 'Error Pulling Repository',
         error: err,
       });
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', err.message));
     }
 
     await db.flushChanges(bufferId);
@@ -186,6 +188,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
 
     try {
       await vcs.push(gitRepository.credentials, force);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push'));
     } catch (err) {
       if (err.code === 'PushRejectedError') {
         this._dropdown?.hide();
@@ -203,6 +206,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
           title: 'Error Pushing Repository',
           error: err,
         });
+        trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message));
       }
     }
 
