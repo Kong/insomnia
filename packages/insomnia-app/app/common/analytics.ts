@@ -217,7 +217,7 @@ export async function trackSegmentEvent(
       }
     });
   } catch (error: unknown) {
-    console.warn('[analytics] Error sending segment event', error);
+    console.warn('[analytics] Unexpected error while sending segment event', error);
   }
 }
 
