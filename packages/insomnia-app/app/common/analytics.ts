@@ -52,41 +52,13 @@ export function trackEvent(
   value?: string | null,
 ) {
   process.nextTick(async () => {
-    await _trackEvent(true, category, action, label, value);
-  });
-}
-
-export function trackNonInteractiveEvent(
-  category: string,
-  action: string,
-  label?: string | null,
-  value?: string | null,
-) {
-  process.nextTick(async () => {
-    await _trackEvent(false, category, action, label, value, false);
-  });
-}
-
-/**
- * Tracks an analytics event but queues it for later if analytics are
- * currently disabled. Once analytics setting is enabled, any queued
- * events will be sent automatically.
- *
- * This should be used sparingly!
- *
- * @param category
- * @param action
- * @param label
- * @param value
- */
-export function trackNonInteractiveEventQueueable(
-  category: string,
-  action: string,
-  label?: string | null,
-  value?: string | null,
-) {
-  process.nextTick(async () => {
-    await _trackEvent(false, category, action, label, value, true);
+    await _trackEvent({
+      interactive: true,
+      category,
+      action,
+      label,
+      value,
+    });
   });
 }
 
@@ -115,6 +87,7 @@ export async function getDeviceId() {
 let segmentClient: Analytics | null = null;
 
 export enum SegmentEvent {
+  appStarted = 'App Started',
   collectionCreate = 'Collection Created',
   documentCreate = 'Document Created',
   requestCreate = 'Request Created',
@@ -149,10 +122,60 @@ export function vcsSegmentEventProperties(
   };
 }
 
-export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
+interface QueuedSegmentEvent {
+  event: SegmentEvent;
+  properties?: Record<string, any>;
+  /**
+   * timestamps are required for Queued Segment Events so that when/if the event is enventually fired, it's fired with the timestamp when the event actually occurred.
+   * see: https://segment.com/docs/connections/spec/common
+   */
+  timestamp: Date;
+}
+
+/**
+ * Flush any analytics events that were built up when analytics were disabled.
+ */
+let queuedEvents: QueuedSegmentEvent[] = [];
+
+async function flushQueuedEvents() {
+  console.log(`[segment] Flushing ${queuedEvents.length} queued events`, queuedEvents);
+  const events = [...queuedEvents];
+
+  // Clear queue before we even start sending to prevent races
+  queuedEvents = [];
+
+  await Promise.all(events.map(({ event, properties, timestamp }) => (
+    trackSegmentEvent(event, properties, { timestamp })
+  )));
+}
+
+interface TrackSegmentEventOptions {
+  /**
+   * Tracks an analytics event but queues it for later if analytics are currently disabled
+   * Once analytics setting is enabled, any queued events will be sent automatically, all at once.
+   */
+  queueable?: boolean;
+
+  timestamp?: Date;
+}
+
+export async function trackSegmentEvent(
+  event: SegmentEvent,
+  properties?: Record<string, any>,
+  { queueable, timestamp }: TrackSegmentEventOptions = {},
+) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {
+    if (queueable) {
+      const queuedEvent: QueuedSegmentEvent = {
+        event,
+        properties,
+        timestamp: new Date(),
+      };
+      console.log('[segment] Queued event', queuedEvent);
+      queuedEvents.push(queuedEvent);
+    }
     return;
   }
 
@@ -177,6 +200,7 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
       userId,
       event,
       properties,
+      ...(timestamp ? { timestamp } : {}),
       context: {
         app: {
           name: getAppName(),
@@ -187,9 +211,13 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
           version: process.getSystemVersion(),
         },
       },
+    }, error => {
+      if (error) {
+        console.warn('[analytics] Error sending segment event', error);
+      }
     });
-  } catch (err) {
-    console.warn('[analytics] Error sending segment event', err);
+  } catch (error: unknown) {
+    console.warn('[analytics] Unexpected error while sending segment event', error);
   }
 }
 
@@ -212,14 +240,19 @@ function _getOsName() {
 }
 
 // Exported for testing
-export async function _trackEvent(
-  interactive: boolean,
-  category: string,
-  action: string,
-  label?: string | null,
-  value?: string | null,
-  queueable?: boolean | null,
-) {
+export async function _trackEvent({
+  interactive,
+  category,
+  action,
+  label,
+  value,
+}: {
+  interactive: boolean;
+  category: string;
+  action: string;
+  label?: string | null;
+  value?: string | null;
+}) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
   console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
   const params = [
@@ -235,24 +268,24 @@ export async function _trackEvent(
       name: KEY_EVENT_ACTION,
       value: action,
     },
-  ];
-  !interactive &&
-    params.push({
+
+    ...(!interactive ? [{
       name: KEY_NON_INTERACTION,
       value: '1',
-    });
-  label &&
-    params.push({
+    }] : []),
+
+    ...(label ? [{
       name: KEY_EVENT_LABEL,
       value: label,
-    });
-  value &&
-    params.push({
+    }] : []),
+
+    ...(value ? [{
       name: KEY_EVENT_VALUE,
       value: value,
-    });
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-  await _sendToGoogle(params, !!queueable);
+    }] : []),
+  ];
+
+  await _sendToGoogle({ params });
 }
 
 export async function _trackPageView(location: string) {
@@ -264,8 +297,7 @@ export async function _trackPageView(location: string) {
       value: 'pageview',
     },
   ];
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-  await _sendToGoogle(params, false);
+  await _sendToGoogle({ params });
 }
 
 async function _getDefaultParams(): Promise<RequestParameter[]> {
@@ -274,6 +306,9 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
   const ua = String(window?.navigator?.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
     .replace(/Electron\/\d+\.\d+\.\d+ /, '');
+
+  const viewport = getViewportSize();
+
   const params = [
     {
       name: KEY_VERSION,
@@ -331,50 +366,40 @@ async function _getDefaultParams(): Promise<RequestParameter[]> {
       name: KEY_APPLICATION_VERSION,
       value: getAppVersion(),
     },
-  ];
-  const viewport = getViewportSize();
-  viewport &&
-    params.push({
+    ...(viewport ? [{
       name: KEY_VIEWPORT_SIZE,
       value: viewport,
-    });
-  global.document &&
-    params.push({
+    }] : []),
+    ...(global.document ? [{
       name: KEY_DOCUMENT_ENCODING,
       value: global.document.inputEncoding,
-    });
+    }] : []),
+  ];
   return params;
 }
 
-// Monitor database changes to see if analytics gets enabled. If analytics
-// become enabled, flush any queued events.
+// Monitor database changes to see if analytics gets enabled.
+// If analytics become enabled, flush any queued events.
 db.onChange(async changes => {
   for (const change of changes) {
     const [event, doc] = change;
 
     if (isSettings(doc) && event === 'update') {
       if (doc.enableAnalytics) {
-        await _flushQueuedEvents();
+        await flushQueuedEvents();
       }
     }
   }
 });
 
-async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
+async function _sendToGoogle({ params }: { params: RequestParameter[] }) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {
-    if (queueable) {
-      console.log('[ga] Queued event', params);
-
-      _queuedEvents.push(params);
-    }
-
     return;
   }
 
   const baseParams = await _getDefaultParams();
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const allParams = [...baseParams, ...params];
   const qs = buildQueryStringFromParams(allParams);
   const baseUrl = isDevelopment()
@@ -426,24 +451,4 @@ async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
     });
   });
   request.end();
-}
-
-/**
- * Flush any analytics events that were built up when analytics
- * were disabled.
- * @returns {Promise<void>}
- * @private
- */
-let _queuedEvents: RequestParameter[] = [];
-
-async function _flushQueuedEvents() {
-  console.log(`[ga] Flushing ${_queuedEvents.length} queued events`);
-  const tmp = [..._queuedEvents];
-  // Clear queue before we even start sending to prevent races
-  _queuedEvents = [];
-
-  for (const params of tmp) {
-    console.log('[ga] Flushing queued event', params);
-    await _sendToGoogle(params, false);
-  }
 }
