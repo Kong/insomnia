@@ -122,23 +122,14 @@ export function vcsSegmentEventProperties(
   };
 }
 
-/**
- * An ISO-8601 date (the date produced by Date.toISOString())
- * see: https://en.wikipedia.org/wiki/ISO_8601
- *
- * @example 2022-01-20T01:41:23.042Z
- */
-type ISO8601 = string;
-
 interface QueuedSegmentEvent {
   event: SegmentEvent;
-  properties: Partial<Record<string, any>> & {
-    /**
-     * timestamps are required for Queued Segment Events so that when/if the event is enventually fired, it's fired with the timestamp when the event actually occurred.
-     * see: https://segment.com/docs/connections/spec/common
-     */
-    timestamp: ISO8601;
-  };
+  properties?: Record<string, any>;
+  /**
+   * timestamps are required for Queued Segment Events so that when/if the event is enventually fired, it's fired with the timestamp when the event actually occurred.
+   * see: https://segment.com/docs/connections/spec/common
+   */
+  timestamp: Date;
 }
 
 /**
@@ -153,8 +144,8 @@ async function flushQueuedEvents() {
   // Clear queue before we even start sending to prevent races
   queuedEvents = [];
 
-  await Promise.all(events.map(({ event, properties }) => (
-    trackSegmentEvent(event, properties)
+  await Promise.all(events.map(({ event, properties, timestamp }) => (
+    trackSegmentEvent(event, properties, { timestamp })
   )));
 }
 
@@ -164,12 +155,14 @@ interface TrackSegmentEventOptions {
    * Once analytics setting is enabled, any queued events will be sent automatically, all at once.
    */
   queueable?: boolean;
+
+  timestamp?: Date;
 }
 
 export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
-  { queueable }: TrackSegmentEventOptions = {},
+  { queueable, timestamp }: TrackSegmentEventOptions = {},
 ) {
   const settings = await models.settings.getOrCreate();
 
@@ -177,10 +170,8 @@ export async function trackSegmentEvent(
     if (queueable) {
       const queuedEvent: QueuedSegmentEvent = {
         event,
-        properties: {
-          ...properties,
-          timestamp: new Date().toISOString(),
-        },
+        properties,
+        timestamp: new Date(),
       };
       console.log('[segment] Queued event', queuedEvent);
       queuedEvents.push(queuedEvent);
@@ -209,6 +200,7 @@ export async function trackSegmentEvent(
       userId,
       event,
       properties,
+      ...(timestamp ? { timestamp } : {}),
       context: {
         app: {
           name: getAppName(),
@@ -219,9 +211,13 @@ export async function trackSegmentEvent(
           version: process.getSystemVersion(),
         },
       },
+    }, error => {
+      if (error) {
+        console.warn('[analytics] Error sending segment event', error);
+      }
     });
-  } catch (err) {
-    console.warn('[analytics] Error sending segment event', err);
+  } catch (error: unknown) {
+    console.warn('[analytics] Error sending segment event', error);
   }
 }
 
