@@ -1,4 +1,6 @@
 .unit-tests {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow-y: auto;
 
@@ -68,7 +70,6 @@
     // Double that of CodeMirror's topmost element.
     z-index: 20;
     top: 0;
-    align-items: center;
     background: var(--color-bg);
 
     button {
@@ -87,6 +88,8 @@
     h2 {
       margin: 0 auto 0 0;
       font-size: var(--font-size-xl);
+      display: flex;
+      align-items: center;
     }
   }
 }

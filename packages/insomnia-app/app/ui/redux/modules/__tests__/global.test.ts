@@ -5,22 +5,18 @@ import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { trackEvent } from '../../../../common/analytics';
 import {
-  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
-  DEPRECATED_ACTIVITY_INSOMNIA,
   GlobalActivity,
   SORT_MODIFIED_DESC,
 } from '../../../../common/constants';
-import { database } from '../../../../common/database';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
 import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import {
-  goToNextActivity,
   initActiveActivity,
   initActiveProject,
   initActiveWorkspace,
@@ -77,23 +73,6 @@ describe('global', () => {
         JSON.stringify(activity),
       );
     });
-
-    it('should update flag for migration prompted', async done => {
-      await models.settings.patch({
-        hasPromptedToMigrateFromDesigner: false,
-      });
-
-      async function onDatabaseChange() {
-        const settings = await models.settings.getOrCreate();
-        expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
-        database.offChange(onDatabaseChange);
-        done();
-      }
-
-      database.onChange(onDatabaseChange);
-
-      setActiveActivity(ACTIVITY_MIGRATION);
-    });
   });
 
   describe('setActiveProject', () => {
@@ -122,85 +101,6 @@ describe('global', () => {
         JSON.stringify(workspaceId),
       );
     });
-  });
-
-  describe('goToNextActivity', () => {
-    it('should go from analytics to home', async () => {
-      const settings = createSettings(false, true);
-      const activeActivity = ACTIVITY_ANALYTICS;
-      const store = mockStore({
-        global: {
-          activeActivity,
-        },
-        entities: {
-          settings: [settings],
-        },
-      });
-      await store.dispatch(goToNextActivity());
-      expect(store.getActions()).toEqual([
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_HOME,
-        },
-      ]);
-    });
-
-    it('should go from migration to analytics', async () => {
-      const settings = createSettings(false, false);
-      const activeActivity = ACTIVITY_MIGRATION;
-      const store = mockStore({
-        global: {
-          activeActivity,
-        },
-        entities: {
-          settings: [settings],
-        },
-      });
-      await store.dispatch(goToNextActivity());
-      expect(store.getActions()).toEqual([
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_ANALYTICS,
-        },
-      ]);
-    });
-
-    it('should go from migration to home', async () => {
-      const settings = createSettings(true, true);
-      const activeActivity = ACTIVITY_MIGRATION;
-      const store = mockStore({
-        global: {
-          activeActivity,
-        },
-        entities: {
-          settings: [settings],
-        },
-      });
-      await store.dispatch(goToNextActivity());
-      expect(store.getActions()).toEqual([
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_HOME,
-        },
-      ]);
-    });
-
-    it.each([ACTIVITY_SPEC, ACTIVITY_DEBUG, ACTIVITY_UNIT_TEST, ACTIVITY_HOME])(
-      'should not change activity from: %s',
-      async (activeActivity: GlobalActivity) => {
-        const settings = createSettings(false, true);
-        const store = mockStore({
-          global: {
-            activeActivity,
-          },
-          entities: {
-            settings: [settings],
-          },
-        });
-        await store.dispatch(goToNextActivity());
-        expect(store.getActions()).toEqual([]);
-      },
-    );
   });
 
   describe('initActiveWorkspace', () => {
@@ -278,7 +178,6 @@ describe('global', () => {
       ACTIVITY_DEBUG,
       ACTIVITY_UNIT_TEST,
       ACTIVITY_HOME,
-      ACTIVITY_ANALYTICS,
     ])('should initialize %s from local storage', async activity => {
       const settings = createSettings(true, true);
       const store = mockStore({
@@ -292,25 +191,7 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity,
       };
-      await store.dispatch(initActiveActivity());
-      expect(store.getActions()).toEqual([expectedEvent]);
-    });
-
-    it('should initialize from local storage and migrate deprecated activity', async () => {
-      const settings = createSettings(true, true);
-      const store = mockStore({
-        global: {},
-        entities: {
-          settings: [settings],
-        },
-      });
-      const activity = DEPRECATED_ACTIVITY_INSOMNIA;
-      global.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-      const expectedEvent = {
-        type: SET_ACTIVE_ACTIVITY,
-        activity: ACTIVITY_DEBUG,
-      };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
@@ -328,7 +209,7 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity: ACTIVITY_HOME,
       };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
@@ -349,7 +230,7 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity: ACTIVITY_HOME,
       };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
@@ -365,11 +246,11 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity: ACTIVITY_HOME,
       };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
-    it('should go to home if initialized at migration and onboarding seen', async () => {
+    it('should go to home if initialized at migration seen', async () => {
       const settings = createSettings(true, true);
       const store = mockStore({
         global: {},
@@ -383,7 +264,7 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity: ACTIVITY_HOME,
       };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
@@ -402,7 +283,7 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity: ACTIVITY_MIGRATION,
       };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
       expect(fsExistsSyncSpy).toHaveBeenCalledWith(getDesignerDataDir());
     });
@@ -422,27 +303,9 @@ describe('global', () => {
         type: SET_ACTIVE_ACTIVITY,
         activity,
       };
-      await store.dispatch(initActiveActivity());
+      store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
       expect(fsExistsSyncSpy).toHaveBeenCalledWith(getDesignerDataDir());
-    });
-
-    it('should prompt to change analytics settings', async () => {
-      const settings = createSettings(true, false);
-      const store = mockStore({
-        global: {},
-        entities: {
-          settings: [settings],
-        },
-      });
-      const activity = ACTIVITY_HOME;
-      global.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-      const expectedEvent = {
-        type: SET_ACTIVE_ACTIVITY,
-        activity: ACTIVITY_ANALYTICS,
-      };
-      await store.dispatch(initActiveActivity());
-      expect(store.getActions()).toEqual([expectedEvent]);
     });
   });
 });

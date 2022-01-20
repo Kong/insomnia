@@ -1,7 +1,5 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-
 import * as electron from 'electron';
+import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
@@ -37,11 +35,13 @@ log.info(`Running version ${getAppVersion()}`);
 if (!isDevelopment()) {
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
-  app.setPath('userData', newPath);
+  app.setPath('userData', process.env.INSOMNIA_DATA_PATH ?? newPath);
 }
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
+
+contextMenu();
 
 // When the app is first launched
 app.on('ready', async () => {
@@ -70,11 +70,8 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
-  await errorHandling.init();
-  await windowUtils.init();
-  // Init the app
-  const updatedStats = await _trackStats();
-  await _updateFlags(updatedStats);
+  errorHandling.init();
+  windowUtils.init();
   await _launchApp();
 
   // Init the rest
@@ -134,20 +131,26 @@ app.on('activate', (_error, hasVisibleWindows) => {
   }
 });
 
-function _launchApp() {
+const _launchApp = async () => {
+  await _trackStats();
+
   app.removeListener('open-url', _addUrlToOpen);
   const window = windowUtils.createWindow();
+
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
     // @ts-expect-error -- TSCONVERSION
     commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
-  const gotTheLock = app.requestSingleInstanceLock();
-
-  if (!gotTheLock) {
-    console.error('[app] Failed to get instance lock');
-    return;
+  // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
+  // and find a better solution.
+  if (!process.env.PLAYWRIGHT) {
+    const gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+      console.error('[app] Failed to get instance lock');
+      return;
+    }
   }
 
   app.on('second-instance', () => {
@@ -175,7 +178,7 @@ function _launchApp() {
       requestHeaders: details.requestHeaders,
     });
   });
-}
+};
 
 /*
   Only one instance should exist of these models
@@ -185,13 +188,6 @@ function _launchApp() {
 async function _createModelInstances() {
   await models.stats.get();
   await models.settings.getOrCreate();
-}
-
-async function _updateFlags({ launches }: Stats) {
-  const firstLaunch = launches === 1;
-  if (firstLaunch) {
-    await models.settings.patch({ hasPromptedAnalytics: false });
-  }
 }
 
 async function _trackStats() {

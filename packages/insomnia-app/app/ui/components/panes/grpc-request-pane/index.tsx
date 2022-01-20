@@ -1,8 +1,10 @@
+import { SvgIcon } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
+import { documentationLinks } from '../../../../common/documentation';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import type { GrpcRequest } from '../../../../models/grpc-request';
@@ -15,6 +17,7 @@ import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { KeydownBinder } from '../../keydown-binder';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
+import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
 import useChangeHandlers from './use-change-handlers';
@@ -153,20 +156,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             </Tabs>
           )}
           {!methodType && (
-            <div className="overflow-hidden editor vertically-center text-center">
-              <p className="pad super-faint text-sm text-center">
-                <i
-                  className="fa fa-hand-peace-o"
-                  style={{
-                    fontSize: '8rem',
-                    opacity: 0.3,
-                  }}
-                />
-                <br />
-                <br />
-                Select a gRPC method from above
-              </p>
-            </div>
+            <EmptyStatePane
+              icon={<SvgIcon icon="bug" />}
+              documentationLinks={[documentationLinks.introductionToInsomnia]}
+              secondaryAction="Select a body type from above to send data in the body of a request"
+              title="Enter a URL and send to get a response"
+            />
           )}
         </PaneBody>
       </Pane>

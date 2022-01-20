@@ -97,13 +97,13 @@ export async function runInsomniaTests(
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
 
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !disableCertValidation });
-  return await noConsoleLog(() =>
-    runTestsCli(testFileContents, {
-      reporter,
-      bail,
-      keepFile,
-      sendRequest,
-      testFilter: testNamePattern,
-    }),
-  );
+  const res = runTestsCli(testFileContents, {
+    reporter,
+    bail,
+    keepFile,
+    sendRequest,
+    testFilter: testNamePattern,
+  });
+
+  return options.verbose ? res : noConsoleLog(() => res);
 }

@@ -86,19 +86,18 @@ import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
   exportRequestsToFile,
-  goToNextActivity,
   loadRequestStart,
   loadRequestStop,
   newCommand,
   setActiveActivity,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
+import { activateWorkspace } from '../redux/modules/workspace';
 import {
   selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
-  selectActiveOAuth2Token,
   selectActiveProject,
   selectActiveRequest,
   selectActiveRequestMeta,
@@ -114,6 +113,7 @@ import {
   selectActiveWorkspaceName,
   selectEntitiesLists,
   selectSettings,
+  selectStats,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
@@ -1428,6 +1428,11 @@ class App extends PureComponent<AppProps, State> {
       return null;
     }
 
+    if (!this.props.isFinishedBooting) {
+      console.log('[app] Waiting to finish booting');
+      return null;
+    }
+
     const { activeWorkspace } = this.props;
     const {
       paneWidth,
@@ -1507,7 +1512,14 @@ class App extends PureComponent<AppProps, State> {
 }
 
 function mapStateToProps(state: RootState) {
-  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = state.global;
+  const {
+    activeActivity,
+    isLoading,
+    loadingRequestIds,
+    isLoggedIn,
+    isFinishedBooting,
+  } = state.global;
+
   // Entities
   const entitiesLists = selectEntitiesLists(state);
   const {
@@ -1521,6 +1533,7 @@ function mapStateToProps(state: RootState) {
     workspaceMetas,
   } = entitiesLists;
 
+  const stats = selectStats(state);
   const settings = selectSettings(state);
 
   // Workspace stuff
@@ -1556,9 +1569,6 @@ function mapStateToProps(state: RootState) {
 
   // Environment stuff
   const activeEnvironment = selectActiveEnvironment(state);
-
-  // OAuth2Token stuff
-  const oAuth2Token = selectActiveOAuth2Token(state);
 
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
@@ -1601,8 +1611,8 @@ function mapStateToProps(state: RootState) {
     gitRepositories,
     isLoading,
     isLoggedIn,
+    isFinishedBooting,
     loadStartTime,
-    oAuth2Token,
     paneHeight,
     paneWidth,
     requestGroups,
@@ -1618,6 +1628,7 @@ function mapStateToProps(state: RootState) {
     sidebarFilter,
     sidebarHidden,
     sidebarWidth,
+    stats,
     syncItems,
     unseenWorkspaces,
     workspaceChildren,
@@ -1633,7 +1644,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
-    goToNextActivity: handleGoToNextActivity,
+    activateWorkspace: handleActivateWorkspace,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1642,7 +1653,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop,
     newCommand,
     setActiveActivity,
-    goToNextActivity,
+    activateWorkspace,
     exportRequestsToFile,
     initialize,
   }, dispatch);
@@ -1650,9 +1661,9 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     handleCommand,
     handleImportUri,
     handleSetActiveActivity,
+    handleActivateWorkspace,
     handleStartLoading,
     handleStopLoading,
-    handleGoToNextActivity,
     handleExportRequestsToFile,
     handleInitializeEntities,
   };

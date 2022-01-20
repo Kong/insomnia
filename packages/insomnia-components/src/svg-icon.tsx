@@ -5,12 +5,14 @@ import { ValueOf } from 'type-fest';
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
 import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';
 import { SvgIcnBrackets } from './assets/svgr/IcnBrackets';
+import { SvgIcnBug } from './assets/svgr/IcnBug';
 import { SvgIcnBurgerMenu } from './assets/svgr/IcnBurgerMenu';
 import { SvgIcnCheckmark } from './assets/svgr/IcnCheckmark';
 import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
 import { SvgIcnChevronUp } from './assets/svgr/IcnChevronUp';
 import { SvgIcnClock } from './assets/svgr/IcnClock';
 import { SvgIcnCookie } from './assets/svgr/IcnCookie';
+import { SvgIcnDraftingCompass } from './assets/svgr/IcnDraftingCompass';
 import { SvgIcnDragGrip } from './assets/svgr/IcnDragGrip';
 import { SvgIcnElevator } from './assets/svgr/IcnElevator';
 import { SvgIcnEllipsis } from './assets/svgr/IcnEllipsis';
@@ -29,6 +31,7 @@ import { SvgIcnGui } from './assets/svgr/IcnGui';
 import { SvgIcnHome } from './assets/svgr/IcnHome';
 import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';
 import { SvgIcnInfo } from './assets/svgr/IcnInfo';
+import { SvgIcnJump } from './assets/svgr/IcnJump';
 import { SvgIcnKey } from './assets/svgr/IcnKey';
 import { SvgIcnLaptop } from './assets/svgr/IcnLaptop';
 import { SvgIcnMinusCircle } from './assets/svgr/IcnMinusCircle';
@@ -46,6 +49,7 @@ import { SvgIcnSync } from './assets/svgr/IcnSync';
 import { SvgIcnTrashcan } from './assets/svgr/IcnTrashcan';
 import { SvgIcnTriangle } from './assets/svgr/IcnTriangle';
 import { SvgIcnUser } from './assets/svgr/IcnUser';
+import { SvgIcnVial } from './assets/svgr/IcnVial';
 import { SvgIcnWarning } from './assets/svgr/IcnWarning';
 import { SvgIcnWarningCircle } from './assets/svgr/IcnWarningCircle';
 import { SvgIcnX } from './assets/svgr/IcnX';
@@ -69,12 +73,14 @@ export const IconEnum = {
   arrowRight: 'arrow-right',
   bitbucket: 'bitbucket',
   brackets: 'brackets',
+  bug: 'bug',
   burgerMenu: 'burger-menu',
   checkmark: 'checkmark',
   chevronDown: 'chevron-down',
   chevronUp: 'chevron-up',
   clock: 'clock',
   cookie: 'cookie',
+  draftingCompass: 'drafting-compass',
   dragGrip: 'drag-grip',
   elevator: 'elevator',
   ellipsesCircle: 'ellipses-circle',
@@ -91,6 +97,7 @@ export const IconEnum = {
   gui: 'gui',
   indentation: 'indentation',
   info: 'info',
+  jump: 'jump',
   home: 'home',
   key: 'key',
   laptop: 'laptop',
@@ -109,6 +116,7 @@ export const IconEnum = {
   trashcan: 'trashcan',
   triangle: 'triangle',
   user: 'user',
+  vial: 'vial',
   warning: 'warning',
   warningCircle: 'warning-circle',
   x: 'x',
@@ -164,12 +172,14 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.arrowRight]: [ThemeEnum.highlight, SvgIcnArrowRight],
     [IconEnum.bitbucket]: [ThemeEnum.default, SvgIcnBitbucketLogo],
     [IconEnum.brackets]: [ThemeEnum.default, SvgIcnBrackets],
+    [IconEnum.bug]: [ThemeEnum.default, SvgIcnBug],
     [IconEnum.burgerMenu]: [ThemeEnum.default, SvgIcnBurgerMenu],
     [IconEnum.checkmark]: [ThemeEnum.default, SvgIcnCheckmark],
     [IconEnum.chevronDown]: [ThemeEnum.default, SvgIcnChevronDown],
     [IconEnum.chevronUp]: [ThemeEnum.default, SvgIcnChevronUp],
     [IconEnum.clock]: [ThemeEnum.default, SvgIcnClock],
     [IconEnum.cookie]: [ThemeEnum.default, SvgIcnCookie],
+    [IconEnum.draftingCompass]: [ThemeEnum.default, SvgIcnDraftingCompass],
     [IconEnum.dragGrip]: [ThemeEnum.default, SvgIcnDragGrip],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
     [IconEnum.elevator]: [ThemeEnum.default, SvgIcnElevator],
@@ -189,6 +199,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.home]: [ThemeEnum.default, SvgIcnHome],
     [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
     [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],
+    [IconEnum.jump]: [ThemeEnum.default, SvgIcnJump],
     [IconEnum.key]: [ThemeEnum.default, SvgIcnKey],
     [IconEnum.laptop]: [ThemeEnum.default, SvgIcnLaptop],
     [IconEnum.minusCircleFill]: [ThemeEnum.default, SvgIcnMinusCircleFill],
@@ -206,6 +217,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],
     [IconEnum.triangle]: [ThemeEnum.default, SvgIcnTriangle],
     [IconEnum.user]: [ThemeEnum.default, SvgIcnUser],
+    [IconEnum.vial]: [ThemeEnum.default, SvgIcnVial],
     [IconEnum.warningCircle]: [ThemeEnum.default, SvgIcnWarningCircle],
     [IconEnum.warning]: [ThemeEnum.notice, SvgIcnWarning],
     [IconEnum.x]: [ThemeEnum.default, SvgIcnX],

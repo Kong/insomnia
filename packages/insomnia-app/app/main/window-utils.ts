@@ -1,8 +1,9 @@
+import { Curl } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
-import { Curl } from 'node-libcurl';
 import * as os from 'os';
 import path from 'path';
+import url from 'url';
 
 import {
   changelogUrl,
@@ -42,7 +43,6 @@ interface Bounds {
 
 export function init() {
   initLocalStorage();
-  initContextMenus();
 }
 
 export function createWindow() {
@@ -124,8 +124,8 @@ export function createWindow() {
   });
 
   // Load the html of the app.
-  const url = process.env.APP_RENDER_URL;
-  const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
+  const appPath = path.resolve(__dirname, './renderer.html');
+  const appUrl = process.env.APP_RENDER_URL || url.pathToFileURL(appPath).href;
   console.log(`[main] Loading ${appUrl}`);
   mainWindow?.loadURL(appUrl);
   // Emitted when the window is closed.
@@ -594,9 +594,4 @@ function getZoomFactor() {
 function initLocalStorage() {
   const localStoragePath = path.join(getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
-}
-
-function initContextMenus() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require('electron-context-menu')({});
 }

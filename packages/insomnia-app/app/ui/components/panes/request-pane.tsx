@@ -48,7 +48,6 @@ interface Props {
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
   updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleImport: Function;
@@ -130,7 +129,6 @@ export class RequestPane extends PureComponent<Props> {
       handleSend,
       handleSendAndDownload,
       handleUpdateDownloadPath,
-      oAuth2Token,
       request,
       workspace,
       environmentId,
@@ -139,19 +137,16 @@ export class RequestPane extends PureComponent<Props> {
       updateRequestBody,
       updateRequestHeaders,
       updateRequestMimeType,
-      updateSettingsShowPasswords,
       updateRequestMethod,
       updateRequestParameters,
       updateRequestUrl,
       headerEditorKey,
       downloadPath,
     } = this.props;
-    const hotKeyRegistry = settings.hotKeyRegistry;
 
     if (!request) {
       return (
         <PlaceholderRequestPane
-          hotKeyRegistry={hotKeyRegistry}
           handleCreateRequest={handleCreateRequest}
         />
       );
@@ -252,13 +247,7 @@ export class RequestPane extends PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
               <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-                <AuthWrapper
-                  oAuth2Token={oAuth2Token}
-                  showPasswords={settings.showPasswords}
-                  request={request}
-                  handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                  onChange={updateRequestAuthentication}
-                />
+                <AuthWrapper />
               </ErrorBoundary>
             </div>
           </TabPanel>

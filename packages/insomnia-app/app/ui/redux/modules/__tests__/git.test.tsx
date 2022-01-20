@@ -425,7 +425,7 @@ describe('git', () => {
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Setup Problem');
       expect(alertArgs.message).toBe(
-        'This repository already contains a workspace; create a fresh clone from the dashboard.',
+        'This repository is already connected to Insomnia; try creating a clone from the dashboard instead.',
       );
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
