@@ -447,6 +447,14 @@ export function createWindow() {
           }),
       },
       {
+        label: `Resize for recordin${MNEMONIC_SYM}g`,
+        click: () =>
+          mainWindow?.setBounds({
+            width: 1024,
+            height: 512,
+          }),
+      },
+      {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
