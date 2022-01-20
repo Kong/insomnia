@@ -275,6 +275,27 @@ export function createWindow() {
         type: 'separator',
       },
       {
+        label: `Resize to Defaul${MNEMONIC_SYM}t`,
+        click: () =>
+          mainWindow?.setBounds({
+            x: 100,
+            y: 100,
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
+          }),
+      },
+      {
+        label: `Resize for recordin${MNEMONIC_SYM}g`,
+        click: () =>
+          mainWindow?.setBounds({
+            width: 1024,
+            height: 512,
+          }),
+      },
+      {
+        type: 'separator',
+      },
+      {
         label: 'Toggle Sidebar',
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
@@ -435,24 +456,6 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
         click: () => mainWindow?.reload(),
-      },
-      {
-        label: `Resize to Defaul${MNEMONIC_SYM}t`,
-        click: () =>
-          mainWindow?.setBounds({
-            x: 100,
-            y: 100,
-            width: DEFAULT_WIDTH,
-            height: DEFAULT_HEIGHT,
-          }),
-      },
-      {
-        label: `Resize for recordin${MNEMONIC_SYM}g`,
-        click: () =>
-          mainWindow?.setBounds({
-            width: 1024,
-            height: 512,
-          }),
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
