@@ -1,4 +1,4 @@
-import { PlaywrightWorkerArgs, test } from '@playwright/test';
+import { PlaywrightWorkerArgs, test, expect } from '@playwright/test';
 
 import { cwd, DESIGNER_DATA_PATH, executablePath, loadFixture, mainPath, randomDataPath } from '../playwright/paths';
 
@@ -26,6 +26,18 @@ const newPage = async ({ playwright, options }: ({ playwright: Playwright; optio
   if (process.platform === 'win32') await page.reload();
   return { electronApp, page };
 };
+
+test('url field is focused for first time users', async ({ playwright }) => {
+  const options = { INSOMNIA_DATA_PATH: randomDataPath() };
+  const { page } = await newPage({ playwright, options });
+  await page.click('text=Don\'t share usage analytics');
+  const textArea = ':nth-match(textarea, 2)';
+  // Uncomment to click on and force element to be focused:
+  // const urlInput = "//div[contains(@class, 'editor__container input editor--single-line')]";
+  // page.click(urlInput);
+  const locator = page.locator(textArea);
+  await expect(locator).toBeFocused();
+});
 
 test('can send requests', async ({ playwright }) => {
   const options = { INSOMNIA_DATA_PATH: randomDataPath() };
