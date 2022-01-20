@@ -393,6 +393,12 @@ db.onChange(async changes => {
 });
 
 async function _sendToGoogle({ params }: { params: RequestParameter[] }) {
+  const settings = await models.settings.getOrCreate();
+
+  if (!settings.enableAnalytics) {
+    return;
+  }
+
   const baseParams = await _getDefaultParams();
   const allParams = [...baseParams, ...params];
   const qs = buildQueryStringFromParams(allParams);
