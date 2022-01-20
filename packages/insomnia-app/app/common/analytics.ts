@@ -147,14 +147,13 @@ interface QueuedSegmentEvent {
 let queuedEvents: QueuedSegmentEvent[] = [];
 
 async function flushQueuedEvents() {
-  console.log(`[segment] Flushing ${queuedEvents.length} queued events`);
-  const params = [...queuedEvents];
+  console.log(`[segment] Flushing ${queuedEvents.length} queued events`, queuedEvents);
+  const events = [...queuedEvents];
 
   // Clear queue before we even start sending to prevent races
   queuedEvents = [];
 
-  console.log('[segment] Flushing queued event', params);
-  await Promise.all(params.map(({ event, properties }) => (
+  await Promise.all(events.map(({ event, properties }) => (
     trackSegmentEvent(event, properties)
   )));
 }
