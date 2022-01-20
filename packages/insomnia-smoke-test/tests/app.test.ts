@@ -1,4 +1,4 @@
-import { PlaywrightWorkerArgs, test, expect } from '@playwright/test';
+import { expect, PlaywrightWorkerArgs, test } from '@playwright/test';
 
 import { cwd, DESIGNER_DATA_PATH, executablePath, loadFixture, mainPath, randomDataPath } from '../playwright/paths';
 
