@@ -15,11 +15,15 @@ class NotCurl extends EventEmitter {
   responseBodyBytes: number;
   elapsedTime: number;
   followRedirects: boolean;
-  caBundle: string | Buffer | (string | Buffer)[] | undefined;
   username: any;
   password: any;
   httpAuth: any;
   cookies: string[];
+  caBundle: (string | Buffer)[];
+  sslCertType: string;
+  sslCert: any; // blob or filename
+  sslKey: any; // blob or filename
+  sslKeyPasswd: string;
 
   constructor() {
     super();
@@ -28,6 +32,7 @@ class NotCurl extends EventEmitter {
     this.responseBodyBytes = 0;
     this.elapsedTime = 0;
     this.cookies = [];
+    this.caBundle = [];
   }
   static option = CurlEnums.option;
   static info = CurlEnums.info;
@@ -85,6 +90,7 @@ class NotCurl extends EventEmitter {
         break;
       case 'READDATA':
         this.reqOptions.data = fs.readFileSync(val, 'utf8');
+        this.reqOptions.maxBodyLength = 100 * 1024 * 1024; // 100 MB or Infinity? what do we intend to support? :shrug:
         break;
       case 'TIMEOUT_MS':
         this.reqOptions.timeout = val;
@@ -97,7 +103,7 @@ class NotCurl extends EventEmitter {
         break;
       case 'CAINFO':
         // NOTE: needs testing
-        this.caBundle = fs.readFileSync(val);
+        this.caBundle.push(fs.readFileSync(val));
         break;
       case 'POSTFIELDS':
         this.reqOptions.data = val;
@@ -129,7 +135,20 @@ class NotCurl extends EventEmitter {
         // do nothing
         break;
       case 'COOKIE':
+        console.log('cookie', val);
         this.cookies.push(val);
+        break;
+      case 'SSLCERT':
+        this.sslCert = val;
+        break;
+      case 'SSLKEY':
+        this.sslKey = val;
+        break;
+      case 'SSLCERTTYPE':
+        this.sslCertType = val;
+        break;
+      case 'KEYPASSWD':
+        this.sslKeyPasswd = val;
         break;
       default:
         console.log('unhandled option', opt, name, val);
@@ -141,13 +160,14 @@ class NotCurl extends EventEmitter {
   }
   perform() {
 
-    if (this.cookies.length) this.reqOptions.headers['Cookie'] = this.cookies.join(';');
+    if (this.cookies.length) this.reqOptions.headers['Cookie'] = this.cookies.join('; ');
     // NOTE: disable follow redirects https://github.com/axios/axios/pull/307/files#diff-586c04c24
     if (!this.followRedirects) this.reqOptions.maxRedirects = 0;
     const agentConfig: https.AgentOptions = { rejectUnauthorized: this.sslVerify };
-    if (this.caBundle) {
-      agentConfig.ca = this.caBundle;
-    }
+    if (!!this.caBundle.length) agentConfig.ca = this.caBundle;
+    if (this.sslKey) agentConfig.key = this.sslKey;
+    if (this.sslCert) agentConfig.cert = this.sslCert;
+    if (this.sslKeyPasswd) agentConfig.passphrase = this.sslKeyPasswd;
 
     // TODO: digest, ntlm, netrc etc
     if (this.httpAuth === CurlAuth.Basic) {
