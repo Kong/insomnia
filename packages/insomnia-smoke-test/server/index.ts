@@ -1,4 +1,6 @@
 import express from 'express';
+import fs from 'fs';
+import multer from 'multer';
 
 import { basicAuthRouter } from './basic-auth';
 import { oauthRoutes } from './oauth';
@@ -35,6 +37,25 @@ app.get('/delay/seconds/:duration', (req, res) => {
 
 app.use('/oidc', oauthRoutes(port));
 
-app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}`);
+app.get('/multipart-form', (_, res) => {
+  res.send(`<form action="http://localhost:4010/upload-multipart" method="post" enctype="multipart/form-data">
+<p><input type="text" name="text" value="some text">
+<p><input type="file" name="fileToUpload">
+<p><button type="submit">Submit</button>
+</form>`);
 });
+
+const upload = multer({ dest: './public/data/uploads/' });
+app.post('/upload-multipart', upload.single('fileToUpload'), (req, res) => {
+  // req.file is the name of your file in the form above, here 'uploaded_file'
+  // req.body will hold the text fields, if there were any
+  console.log(req.file, req.body);
+
+  if (req.file?.fieldname !== 'fileToUpload') return res.status(500).send('must include file');
+  const isMimetypeReadable = !!['yaml', 'json', 'xml'].filter(x => req.file?.mimetype.includes(x)).length;
+  const fileContents = !isMimetypeReadable ? '' : fs.readFileSync(req.file?.path).toString();
+  return res.status(200).send(JSON.stringify(req.file, null, '\t') + `
+  ${fileContents}`);
+});
+
+app.listen(port, () => console.log(`Listening at http://localhost:${port}`));
