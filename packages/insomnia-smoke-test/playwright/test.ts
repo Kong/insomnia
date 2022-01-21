@@ -38,8 +38,6 @@ export const test = baseTest.extend<{
       },
     });
 
-    await electronApp.waitForEvent('window');
-
     await use(electronApp);
 
     await electronApp.close();
@@ -71,8 +69,6 @@ export const test = baseTest.extend<{
         PLAYWRIGHT: 'true',
       },
     });
-
-    await electronApp.waitForEvent('window');
 
     await use(electronApp);
 
