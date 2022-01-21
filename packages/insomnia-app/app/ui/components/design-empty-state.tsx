@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import * as models from '../../models';
+import { axiosRequest } from '../../network/axios-request';
 import { faint } from '../css/css-in-js';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { showPrompt } from './modals';
@@ -78,11 +79,12 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
       label: 'URL',
       placeholder: 'e.g. https://petstore.swagger.io/v2/swagger.json',
       onComplete: async (uri: string) => {
-        const response = await window.fetch(uri);
+        // NOTE: does not respect user preferences
+        const response = await axiosRequest({ url: uri, responseType: 'text', transformResponse: _ => _ });
         if (!response) {
           return;
         }
-        const contents = await response.text();
+        const contents = await response.data;
         await updateApiSpecContents(contents);
         onUpdateContents();
       },
@@ -119,11 +121,12 @@ const SecondaryAction: FC<Props> = ({ onUpdateContents }) => {
 
   const updateApiSpecContents = useUpdateApiSpecContents();
   const onClick = useCallback(async () => {
-    const response = await window.fetch(PETSTORE_EXAMPLE_URI);
+    // NOTE: does not respect user preferences
+    const response = await axiosRequest({ url: PETSTORE_EXAMPLE_URI, responseType: 'text', transformResponse: _ => _ });
     if (!response) {
       return;
     }
-    const contents = await response.text();
+    const contents = await response.data;
     await updateApiSpecContents(contents);
     onUpdateContents();
   }, [updateApiSpecContents, onUpdateContents]);

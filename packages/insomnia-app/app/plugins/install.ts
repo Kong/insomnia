@@ -58,6 +58,7 @@ export default async function(lookupName: string) {
 
       // Download the module
       try {
+        // NOTE: does not respect user preferences
         await axiosRequest({ url: info.dist.tarball });
       } catch (err) {
         reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));

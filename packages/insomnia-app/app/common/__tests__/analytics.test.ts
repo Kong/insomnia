@@ -147,7 +147,7 @@ describe('init()', () => {
       value: 'val',
     });
     expect(axiosRequest.mock.calls).toEqual([
-      [
+      [{ url:
         'https://www.google-analytics.com/collect?' +
         'v=1&' +
         `tid=${getGoogleAnalyticsId()}&` +

@@ -9,16 +9,17 @@ import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
 
 export const axiosRequestWithOptionalSSLVerify = async (config: AxiosRequestConfig) => {
   const settings = await models.settings.getOrCreate();
-  return axiosRequest({
+  return axiosRequestWithUserDefinedProxy({
     ...config,
     httpsAgent: new https.Agent({
       rejectUnauthorized: settings.validateSSL,
     }),
   });
 };
-export async function axiosRequest(config: AxiosRequestConfig) {
+
+export const axiosRequestWithUserDefinedProxy = async (config: AxiosRequestConfig) => {
   const settings = await models.settings.getOrCreate();
-  const isHttps = config.url?.indexOf('https:') === 0;
+  const isHttps = config.url?.startsWith('https:');
   let proxyUrl: string | null = null;
 
   if (isHttps && settings.httpsProxy) {
@@ -27,25 +28,25 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     proxyUrl = settings.httpProxy;
   }
 
-  const finalConfig: AxiosRequestConfig = {
-    ...config,
-    adapter: global.require('axios/lib/adapters/http'),
-  };
-
   // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
-  finalConfig.proxy = false;
-  if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
+  config.proxy = false;
+  if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(config.url, settings.noProxy)) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
 
     if (hostname && port) {
-      finalConfig.proxy = {
+      config.proxy = {
         host: hostname,
         port: parseInt(port, 10),
       };
     }
   }
+  return axiosRequest(config);
+};
 
-  const response = await axios(finalConfig);
+export async function axiosRequest(config: AxiosRequestConfig) {
+  // NOTE axios default adapter is XMLHttpRequest which only works in the renderer
+  config.adapter = global.require('axios/lib/adapters/http');
+  const response = await axios(config);
 
   if (isDevelopment()) {
     console.log('[axios] Response', {

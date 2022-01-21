@@ -66,6 +66,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   const url = _getUrl(path);
 
   try {
+    // NOTE: does not respect user preferences
     response = await axiosRequest({
       url,
       method: config.method,
