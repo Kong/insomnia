@@ -11,6 +11,7 @@ export const loadFixture = async (fixturePath: string) => {
 
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
 export const DESIGNER_DATA_PATH = path.join(__dirname, '..', 'fixtures', 'basic-designer');
+export const INSOMNIA_DATA_PATH = randomDataPath();
 
 const pathLookup = {
   win32: path.join('win-unpacked', 'Insomnia.exe'),
