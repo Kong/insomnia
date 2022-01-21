@@ -16,7 +16,6 @@ interface EnvOptions {
 }
 
 export const test = baseTest.extend<{
-  gitServer: { url: string };
   app: ElectronApplication;
   appWithDesignerDataPath: ElectronApplication;
   pageWithDesignerDataPath: Page;

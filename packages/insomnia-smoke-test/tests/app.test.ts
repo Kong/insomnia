@@ -30,7 +30,6 @@ test('can send requests', async ({ app, page }) => {
   await page.click('button:has-text("GETsends request with basic authentication")');
   await page.click('text=http://127.0.0.1:4010/auth/basicSend >> button');
   await page.click('text=200 OK');
-  await page.close();
 });
 
 test.describe.serial('given a designer and data directory', () => {
@@ -40,12 +39,10 @@ test.describe.serial('given a designer and data directory', () => {
     await page.click('text=Copy Designer Application Settings');
     await page.click('text=Start Migration');
     await page.click('text=Migrated successfully!');
-    await page.close();
   });
 
   test('then on restart should see the migrated workspace', async ({ pageWithDesignerDataPath: page }) => {
     await page.click('text=Don\'t share usage analytics');
     await page.click('text=BASIC-DESIGNER-FIXTURE');
-    await page.close();
   });
 });
