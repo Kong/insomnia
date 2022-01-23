@@ -1,5 +1,6 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import { ElectronApplication, Page, test as baseTest } from '@playwright/test';
+import { platform } from 'os';
 
 import {
   cwd,
@@ -39,7 +40,10 @@ export const test = baseTest.extend<{
 
     await use(electronApp);
 
-    await electronApp.close();
+    // Closing the window (page) doesn't close the app on osx
+    if (platform() === 'darwin') {
+      await electronApp.close();
+    }
   },
   page: async ({ app }, use) => {
     const page = await app.firstWindow();
@@ -71,7 +75,10 @@ export const test = baseTest.extend<{
 
     await use(electronApp);
 
-    await electronApp.close();
+    // Closing the window (page) doesn't close the app on osx
+    if (platform() === 'darwin') {
+      await electronApp.close();
+    }
   },
   pageWithDesignerDataPath: async ({ appWithDesignerDataPath }, use) => {
     const page = await appWithDesignerDataPath.firstWindow();
