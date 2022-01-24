@@ -191,6 +191,22 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
         .map(s => flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST))
         .join('/');
     }
+    // ~~~~~~~~~~~~~~ //
+    // 2. Querystring //
+    // ~~~~~~~~~~~~~~ //
+
+    if (parsedUrl.search) {
+      const qsParams = deconstructQueryStringToParams(parsedUrl.search.substring(1));
+      const encodedQsParams = [];
+      for (const { name, value } of qsParams) {
+        encodedQsParams.push({
+          name: flexibleEncodeComponent(name),
+          value: flexibleEncodeComponent(value),
+        });
+      }
+
+      parsedUrl.search = `?${buildQueryStringFromParams(encodedQsParams)}`;
+    }
 
     return parsedUrl.href;
   }

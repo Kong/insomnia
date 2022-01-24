@@ -1308,9 +1308,9 @@ class App extends PureComponent<AppProps, State> {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
     });
     ipcRenderer.on('run-command', (_, commandUri) => {
-      const parsed = new URL(commandUri);
-      const command = `${parsed.hostname}${parsed.pathname}`;
-      const args = JSON.parse(JSON.stringify(parsed.searchParams.toString()));
+      const { hostname, pathname, search } = new URL(commandUri);
+      const command = `${hostname}${pathname}`;
+      const args = JSON.parse(JSON.stringify(search.substring(1)));
       args.workspaceId = args.workspaceId || this.props.activeWorkspace?._id;
       this.props.handleCommand(command, args);
     });

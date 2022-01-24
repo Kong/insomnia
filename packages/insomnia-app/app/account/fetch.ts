@@ -101,9 +101,9 @@ function _getUrl(path) {
   return `${_baseUrl}${path}`;
 }
 function _notifyCommandListeners(uri) {
-  const parsed = new URL(uri);
-  const command = `${parsed.hostname}${parsed.pathname}`;
-  const args = JSON.parse(JSON.stringify(parsed.searchParams.toString()));
+  const { hostname, pathname, search } = new URL(uri);
+  const command = `${hostname}${pathname}`;
+  const args = JSON.parse(JSON.stringify(search.substring(1)));
 
   _commandListeners.map(fn => fn(command, args));
 }
