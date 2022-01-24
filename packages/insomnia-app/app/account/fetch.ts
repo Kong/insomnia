@@ -35,7 +35,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   }
 
   const config: {
-    method: Method | undefined;
+    method?: Method;
     headers: HeadersInit;
     body?: string | Buffer;
   } = {
