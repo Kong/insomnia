@@ -4,27 +4,19 @@ const parseGrpcUrl = (
   url: string;
   enableTls: boolean;
 } => {
-  const { protocol, host, href } = new URL(grpcUrl?.toLowerCase() || '');
 
-  switch (protocol) {
-    case 'grpcs:':
-      return {
-        url: host,
-        enableTls: true,
-      };
-
-    case 'grpc:':
-      return {
-        url: host,
-        enableTls: false,
-      };
-
-    default:
-      return {
-        url: href,
-        enableTls: false,
-      };
+  if (!grpcUrl){
+    return { url: '', enableTls: false };
   }
+  const lowercaseUrl = grpcUrl.toLowerCase();
+  const isGRPCURL = lowercaseUrl.startsWith('grpc:');
+  const isGRPCSURL = lowercaseUrl.startsWith('grpcs:');
+  if (!isGRPCURL && !isGRPCSURL){
+    return { url: lowercaseUrl || '', enableTls: false };
+  }
+
+  return { url: new URL(lowercaseUrl).host, enableTls: isGRPCSURL };
+
 };
 
 export default parseGrpcUrl;
