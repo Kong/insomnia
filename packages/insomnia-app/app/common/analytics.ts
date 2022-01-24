@@ -1,5 +1,6 @@
 import Analytics from 'analytics-node';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
+import { map } from 'ramda';
 import * as uuid from 'uuid';
 
 import { getAccountId } from '../account/session';
@@ -414,11 +415,14 @@ async function _sendToGoogle({ params }: { params: RequestParameter[] }) {
       return;
     }
 
-    if (data?.hitParsingResult?.valid) {
+    if (data?.hitParsingResult?.find(r => r.valid)) {
       return;
     }
-    data?.hitParsingResult?.parserMessage?.map(msg =>
-      console.warn(`[ga] Error ${msg?.description}`));
+    data?.hitParsingResult?.map(r =>
+      r?.parserMessage?.map(msg =>
+        console.warn(`[ga] Error ${msg?.description}`)
+      )
+    );
 
   }).catch(err => console.warn('[ga] Network error', err));
 }
