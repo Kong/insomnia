@@ -1,13 +1,12 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import React, { PureComponent } from 'react';
+import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import { useMount } from 'react-use';
 
-import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
+import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import type { OAuth2Token } from '../../../models/o-auth-2-token';
 import type {
   Request,
   RequestAuthentication,
@@ -33,65 +32,79 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
 interface Props {
-  // Functions
-  forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleSend: () => void;
-  handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleCreateRequest: () => void;
-  handleGenerateCode: Function;
-  handleUpdateDownloadPath: Function;
-  updateRequestUrl: (r: Request, url: string) => Promise<Request>;
-  updateRequestMethod: (r: Request, method: string) => Promise<Request>;
-  updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
-  updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateSettingsUseBulkHeaderEditor: Function;
-  updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
-  handleImport: Function;
-  workspace: Workspace;
-  settings: Settings;
+  downloadPath: string | null;
   environmentId: string;
   forceRefreshCounter: number;
+  forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
+  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  handleCreateRequest: () => void;
+  handleGenerateCode: Function;
+  handleImport: Function;
+  handleSend: () => void;
+  handleSendAndDownload: (filepath?: string) => Promise<void>;
+  handleUpdateDownloadPath: Function;
   headerEditorKey: string;
   request?: Request | null;
-  downloadPath: string | null;
-  oAuth2Token?: OAuth2Token | null;
+  settings: Settings;
+  updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
+  updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
+  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  updateRequestMethod: (r: Request, method: string) => Promise<Request>;
+  updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
+  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
+  updateRequestUrl: (r: Request, url: string) => Promise<Request>;
+  updateSettingsUseBulkHeaderEditor: Function;
+  updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
+  workspace: Workspace;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestPane extends PureComponent<Props> {
-  _handleEditDescriptionAdd() {
-    this._handleEditDescription(true);
-  }
+export const RequestPane: FC<Props> = ({
+  downloadPath,
+  environmentId,
+  forceRefreshCounter,
+  forceUpdateRequest,
+  forceUpdateRequestHeaders,
+  handleCreateRequest,
+  handleGenerateCode,
+  handleImport,
+  handleSend,
+  handleSendAndDownload,
+  handleUpdateDownloadPath,
+  headerEditorKey,
+  request,
+  settings,
+  updateRequestAuthentication,
+  updateRequestBody,
+  updateRequestHeaders,
+  updateRequestMethod,
+  updateRequestMimeType,
+  updateRequestParameters,
+  updateRequestUrl,
+  updateSettingsUseBulkHeaderEditor,
+  updateSettingsUseBulkParametersEditor,
+  workspace,
+}) => {
+  const handleEditDescription = useCallback((forceEditMode: boolean) => {
+    showModal(RequestSettingsModal, { request, forceEditMode });
+  }, [request]);
 
-  _handleEditDescription(addDescription: boolean) {
-    showModal(RequestSettingsModal, {
-      request: this.props.request,
-      forceEditMode: addDescription,
-    });
-  }
+  const handleEditDescriptionAdd = useCallback(() => {
+    handleEditDescription(true);
+  }, [handleEditDescription]);
 
-  _autocompleteUrls(): Promise<string[]> {
-    const { workspace, request } = this.props;
+  const autocompleteUrls = useCallback(() => {
     return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
-  }
+  }, [workspace, request]);
 
-  _handleUpdateSettingsUseBulkHeaderEditor() {
-    const { settings, updateSettingsUseBulkHeaderEditor } = this.props;
+  const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
     updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
-  }
+  }, [settings, updateSettingsUseBulkHeaderEditor]);
 
-  _handleUpdateSettingsUseBulkParametersEditor() {
-    const { settings, updateSettingsUseBulkParametersEditor } = this.props;
+  const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
     updateSettingsUseBulkParametersEditor(!settings.useBulkParametersEditor);
-  }
+  }, [settings, updateSettingsUseBulkParametersEditor]);
 
-  _handleImportQueryFromUrl() {
-    const { request, forceUpdateRequest } = this.props;
-
+  const handleImportQueryFromUrl = useCallback(() => {
     if (!request) {
       console.warn('Tried to import query when no request active');
       return;
@@ -117,245 +130,232 @@ export class RequestPane extends PureComponent<Props> {
         parameters,
       });
     }
+  }, [request, forceUpdateRequest]);
+
+  const requestUrlBarRef = useRef<RequestUrlBar | null>(null);
+  useMount(() => {
+    requestUrlBarRef.current?.focusInput();
+  });
+  useEffect(() => {
+    requestUrlBarRef.current?.focusInput();
+  }, [
+    request?._id, // happens when the user switches requests
+    settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
+  ]);
+
+  if (!request) {
+    return (
+      <PlaceholderRequestPane
+        handleCreateRequest={handleCreateRequest}
+      />
+    );
   }
 
-  render() {
-    const {
-      forceRefreshCounter,
-      forceUpdateRequestHeaders,
-      handleGenerateCode,
-      handleImport,
-      handleCreateRequest,
-      handleSend,
-      handleSendAndDownload,
-      handleUpdateDownloadPath,
-      request,
-      workspace,
-      environmentId,
-      settings,
-      updateRequestAuthentication,
-      updateRequestBody,
-      updateRequestHeaders,
-      updateRequestMimeType,
-      updateRequestMethod,
-      updateRequestParameters,
-      updateRequestUrl,
-      headerEditorKey,
-      downloadPath,
-    } = this.props;
+  let numBodyParams = 0;
 
-    if (!request) {
-      return (
-        <PlaceholderRequestPane
-          handleCreateRequest={handleCreateRequest}
-        />
-      );
-    }
+  if (request.body && request.body.params) {
+    numBodyParams = request.body.params.filter(p => !p.disabled).length;
+  }
 
-    let numBodyParams = 0;
+  const numParameters = request.parameters.filter(p => !p.disabled).length;
+  const numHeaders = request.headers.filter(h => !h.disabled).length;
+  const urlHasQueryParameters = request.url.indexOf('?') >= 0;
+  const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
-    if (request.body && request.body.params) {
-      numBodyParams = request.body.params.filter(p => !p.disabled).length;
-    }
-
-    const numParameters = request.parameters.filter(p => !p.disabled).length;
-    const numHeaders = request.headers.filter(h => !h.disabled).length;
-    const urlHasQueryParameters = request.url.indexOf('?') >= 0;
-    const uniqueKey = `${forceRefreshCounter}::${request._id}`;
-    return (
-      <Pane type="request">
-        <PaneHeader>
-          <ErrorBoundary errorClassName="font-error pad text-center">
-            <RequestUrlBar
-              uniquenessKey={uniqueKey}
-              onMethodChange={updateRequestMethod}
-              onUrlChange={updateRequestUrl}
-              handleAutocompleteUrls={this._autocompleteUrls}
-              handleImport={handleImport}
-              handleGenerateCode={handleGenerateCode}
-              handleSend={handleSend}
-              handleSendAndDownload={handleSendAndDownload}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+  return (
+    <Pane type="request">
+      <PaneHeader>
+        <ErrorBoundary errorClassName="font-error pad text-center">
+          <RequestUrlBar
+            ref={requestUrlBarRef}
+            uniquenessKey={uniqueKey}
+            onMethodChange={updateRequestMethod}
+            onUrlChange={updateRequestUrl}
+            handleAutocompleteUrls={autocompleteUrls}
+            handleImport={handleImport}
+            handleGenerateCode={handleGenerateCode}
+            handleSend={handleSend}
+            handleSendAndDownload={handleSendAndDownload}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            request={request}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            handleUpdateDownloadPath={handleUpdateDownloadPath}
+            downloadPath={downloadPath}
+          />
+        </ErrorBoundary>
+      </PaneHeader>
+      <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
+        <TabList>
+          <Tab tabIndex="=1">
+            <ContentTypeDropdown
+              onChange={updateRequestMimeType}
+              contentType={request.body.mimeType}
               request={request}
-              hotKeyRegistry={settings.hotKeyRegistry}
-              handleUpdateDownloadPath={handleUpdateDownloadPath}
-              downloadPath={downloadPath}
-            />
-          </ErrorBoundary>
-        </PaneHeader>
-        <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
-          <TabList>
-            <Tab tabIndex="=1">
-              <ContentTypeDropdown
-                onChange={updateRequestMimeType}
-                contentType={request.body.mimeType}
-                request={request}
-                className="tall"
-              >
-                {typeof request.body.mimeType === 'string'
-                  ? getContentTypeName(request.body.mimeType)
-                  : 'Body'}
-                {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
-                <i className="fa fa-caret-down space-left" />
-              </ContentTypeDropdown>
-            </Tab>
-            <Tab tabIndex="=1">
-              <AuthDropdown
-                onChange={updateRequestAuthentication}
-                request={request}
-                className="tall"
-              >
-                {getAuthTypeName(request.authentication.type) || 'Auth'}
-                <i className="fa fa-caret-down space-left" />
-              </AuthDropdown>
-            </Tab>
-            <Tab tabIndex="=1">
-              <button>
-                Query
-                {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
-              </button>
-            </Tab>
-            <Tab tabIndex="=1">
-              <button>
-                Header
-                {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
-              </button>
-            </Tab>
-            <Tab tabIndex="=1">
-              <button>
-                Docs
-                {request.description && (
-                  <span className="bubble space-left">
-                    <i className="fa fa--skinny fa-check txt-xxs" />
-                  </span>
-                )}
-              </button>
-            </Tab>
-          </TabList>
-          <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
-            <BodyEditor
-              key={uniqueKey}
-              handleUpdateRequestMimeType={updateRequestMimeType}
+              className="tall"
+            >
+              {typeof request.body.mimeType === 'string'
+                ? getContentTypeName(request.body.mimeType)
+                : 'Body'}
+              {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
+              <i className="fa fa-caret-down space-left" />
+            </ContentTypeDropdown>
+          </Tab>
+          <Tab tabIndex="=1">
+            <AuthDropdown
+              onChange={updateRequestAuthentication}
               request={request}
-              workspace={workspace}
-              environmentId={environmentId}
-              settings={settings}
-              onChange={updateRequestBody}
-              onChangeHeaders={forceUpdateRequestHeaders}
-            />
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel scrollable-container">
-            <div className="scrollable">
-              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-                <AuthWrapper />
-              </ErrorBoundary>
-            </div>
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel query-editor">
-            <div className="pad pad-bottom-sm query-editor__preview">
-              <label className="label--small no-pad-top">Url Preview</label>
-              <code className="txt-sm block faint">
-                <ErrorBoundary
-                  key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center"
-                >
-                  <RenderedQueryString request={request} />
-                </ErrorBoundary>
-              </code>
-            </div>
-            <div className="query-editor__editor">
+              className="tall"
+            >
+              {getAuthTypeName(request.authentication.type) || 'Auth'}
+              <i className="fa fa-caret-down space-left" />
+            </AuthDropdown>
+          </Tab>
+          <Tab tabIndex="=1">
+            <button>
+              Query
+              {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
+            </button>
+          </Tab>
+          <Tab tabIndex="=1">
+            <button>
+              Header
+              {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
+            </button>
+          </Tab>
+          <Tab tabIndex="=1">
+            <button>
+              Docs
+              {request.description && (
+                <span className="bubble space-left">
+                  <i className="fa fa--skinny fa-check txt-xxs" />
+                </span>
+              )}
+            </button>
+          </Tab>
+        </TabList>
+        <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
+          <BodyEditor
+            key={uniqueKey}
+            handleUpdateRequestMimeType={updateRequestMimeType}
+            request={request}
+            workspace={workspace}
+            environmentId={environmentId}
+            settings={settings}
+            onChange={updateRequestBody}
+            onChangeHeaders={forceUpdateRequestHeaders}
+          />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel scrollable-container">
+          <div className="scrollable">
+            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+              <AuthWrapper />
+            </ErrorBoundary>
+          </div>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel query-editor">
+          <div className="pad pad-bottom-sm query-editor__preview">
+            <label className="label--small no-pad-top">Url Preview</label>
+            <code className="txt-sm block faint">
               <ErrorBoundary
                 key={uniqueKey}
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
-                <RequestParametersEditor
-                  key={headerEditorKey}
-                  onChange={updateRequestParameters}
-                  request={request}
-                  bulk={settings.useBulkParametersEditor}
-                />
+                <RenderedQueryString request={request} />
               </ErrorBoundary>
-            </div>
-            <div className="pad-right text-right">
-              <button
-                className="margin-top-sm btn btn--clicky"
-                title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
-                onClick={this._handleImportQueryFromUrl}
-              >
-                Import from URL
-              </button>
-              <button
-                className="margin-top-sm btn btn--clicky space-left"
-                onClick={this._handleUpdateSettingsUseBulkParametersEditor}
-              >
-                {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
-              </button>
-            </div>
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel header-editor">
-            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-              <RequestHeadersEditor
+            </code>
+          </div>
+          <div className="query-editor__editor">
+            <ErrorBoundary
+              key={uniqueKey}
+              errorClassName="tall wide vertically-align font-error pad text-center"
+            >
+              <RequestParametersEditor
                 key={headerEditorKey}
-                onChange={updateRequestHeaders}
+                onChange={updateRequestParameters}
                 request={request}
-                bulk={settings.useBulkHeaderEditor}
+                bulk={settings.useBulkParametersEditor}
               />
             </ErrorBoundary>
+          </div>
+          <div className="pad-right text-right">
+            <button
+              className="margin-top-sm btn btn--clicky"
+              title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
+              onClick={handleImportQueryFromUrl}
+            >
+              Import from URL
+            </button>
+            <button
+              className="margin-top-sm btn btn--clicky space-left"
+              onClick={handleUpdateSettingsUseBulkParametersEditor}
+            >
+              {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
+            </button>
+          </div>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel header-editor">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <RequestHeadersEditor
+              key={headerEditorKey}
+              onChange={updateRequestHeaders}
+              request={request}
+              bulk={settings.useBulkHeaderEditor}
+            />
+          </ErrorBoundary>
 
-            <div className="pad-right text-right">
-              <button
-                className="margin-top-sm btn btn--clicky"
-                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}
-              >
-                {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-              </button>
+          <div className="pad-right text-right">
+            <button
+              className="margin-top-sm btn btn--clicky"
+              onClick={handleUpdateSettingsUseBulkHeaderEditor}
+            >
+              {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+            </button>
+          </div>
+        </TabPanel>
+        <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
+          {request.description ? (
+            <div>
+              <div className="pull-right pad bg-default">
+                {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
+                <button className="btn btn--clicky" onClick={handleEditDescription}>
+                  Edit
+                </button>
+              </div>
+              <div className="pad">
+                <ErrorBoundary errorClassName="font-error pad text-center">
+                  <MarkdownPreview
+                    heading={request.name}
+                    debounceMillis={1000}
+                    markdown={request.description}
+                  />
+                </ErrorBoundary>
+              </div>
             </div>
-          </TabPanel>
-          <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
-            {request.description ? (
-              <div>
-                <div className="pull-right pad bg-default">
-                  {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
-                  <button className="btn btn--clicky" onClick={this._handleEditDescription}>
-                    Edit
-                  </button>
-                </div>
-                <div className="pad">
-                  <ErrorBoundary errorClassName="font-error pad text-center">
-                    <MarkdownPreview
-                      heading={request.name}
-                      debounceMillis={1000}
-                      markdown={request.description}
-                    />
-                  </ErrorBoundary>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-hidden editor vertically-center text-center">
-                <p className="pad text-sm text-center">
-                  <span className="super-faint">
-                    <i
-                      className="fa fa-file-text-o"
-                      style={{
-                        fontSize: '8rem',
-                        opacity: 0.3,
-                      }}
-                    />
-                  </span>
-                  <br />
-                  <br />
-                  <button
-                    className="btn btn--clicky faint"
-                    onClick={this._handleEditDescriptionAdd}
-                  >
-                    Add Description
-                  </button>
-                </p>
-              </div>
-            )}
-          </TabPanel>
-        </Tabs>
-      </Pane>
-    );
-  }
-}
+          ) : (
+            <div className="overflow-hidden editor vertically-center text-center">
+              <p className="pad text-sm text-center">
+                <span className="super-faint">
+                  <i
+                    className="fa fa-file-text-o"
+                    style={{
+                      fontSize: '8rem',
+                      opacity: 0.3,
+                    }}
+                  />
+                </span>
+                <br />
+                <br />
+                <button
+                  className="btn btn--clicky faint"
+                  onClick={handleEditDescriptionAdd}
+                >
+                  Add Description
+                </button>
+              </p>
+            </div>
+          )}
+        </TabPanel>
+      </Tabs>
+    </Pane>
+  );
+};
