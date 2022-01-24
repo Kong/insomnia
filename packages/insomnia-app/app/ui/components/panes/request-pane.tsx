@@ -74,7 +74,6 @@ export const RequestPane: FC<Props> = ({
   handleSendAndDownload,
   handleUpdateDownloadPath,
   headerEditorKey,
-  oAuth2Token,
   request,
   settings,
   updateRequestAuthentication,
@@ -84,7 +83,6 @@ export const RequestPane: FC<Props> = ({
   updateRequestMimeType,
   updateRequestParameters,
   updateRequestUrl,
-  updateSettingsShowPasswords,
   updateSettingsUseBulkHeaderEditor,
   updateSettingsUseBulkParametersEditor,
   workspace,
@@ -253,13 +251,7 @@ export const RequestPane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel scrollable-container">
           <div className="scrollable">
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-              <AuthWrapper
-                oAuth2Token={oAuth2Token}
-                showPasswords={settings.showPasswords}
-                request={request}
-                handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                onChange={updateRequestAuthentication}
-              />
+              <AuthWrapper />
             </ErrorBoundary>
           </div>
         </TabPanel>
