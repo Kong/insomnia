@@ -698,7 +698,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     // Start loading
     handleStartLoading(requestId);
 
@@ -785,7 +785,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     handleStartLoading(requestId);
 
     try {
