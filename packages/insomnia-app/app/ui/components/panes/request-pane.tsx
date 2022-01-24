@@ -7,7 +7,6 @@ import { useMount } from 'react-use';
 import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import type { OAuth2Token } from '../../../models/o-auth-2-token';
 import type {
   Request,
   RequestAuthentication,
@@ -45,7 +44,6 @@ interface Props {
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
   headerEditorKey: string;
-  oAuth2Token?: OAuth2Token | null;
   request?: Request | null;
   settings: Settings;
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
@@ -55,7 +53,6 @@ interface Props {
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
-  updateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   workspace: Workspace;
