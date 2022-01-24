@@ -11,6 +11,7 @@ export const loadFixture = async (fixturePath: string) => {
 
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
 export const DESIGNER_DATA_PATH = path.join(__dirname, '..', 'fixtures', 'basic-designer');
+export const INSOMNIA_DATA_PATH = randomDataPath();
 
 const pathLookup = {
   win32: path.join('win-unpacked', 'Insomnia.exe'),
@@ -30,7 +31,12 @@ const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
 const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 
 // NOTE: guard against missing build artifacts
-if (process.env.BUNDLE !== 'package' && !hasMainBeenBuilt) {
+if (process.env.BUNDLE === 'dev' && !hasMainBeenBuilt) {
+  console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
+  Have you run "npm run app-start-playwright"?`);
+  exit(1);
+}
+if (process.env.BUNDLE === 'build' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
   Have you run "npm run app-build:smoke"?`);
   exit(1);
