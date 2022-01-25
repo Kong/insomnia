@@ -10,12 +10,9 @@ export enum ChromiumVerificationResult {
 }
 
 export const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-export function getOAuthSession() {
-  if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
-    return window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-  } else {
-    return initNewOAuthSession();
-  }
+export function getOAuthSession(): string {
+  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  return token || initNewOAuthSession();
 }
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
