@@ -169,6 +169,63 @@ const RenderEditor: FC<Pick<Props,
   );
 };
 
+const RenderPreview: FC<Pick<Props, 'wrapperProps'>> = ({ wrapperProps }) => {
+  const { activeApiSpec, activeWorkspaceMeta } = wrapperProps;
+
+  if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
+    return null;
+  }
+
+  if (!activeApiSpec.contents) {
+    return (
+      <EmptySpaceHelper>
+        Documentation for your OpenAPI spec will render here
+      </EmptySpaceHelper>
+    );
+  }
+
+  let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
+
+  try {
+    swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
+  } catch (err) {}
+
+  if (!swaggerUiSpec) {
+    swaggerUiSpec = {};
+  }
+
+  return (
+    <div id="swagger-ui-wrapper">
+      <ErrorBoundary
+        invalidationKey={activeApiSpec.contents}
+        renderError={() => (
+          <div className="text-left margin pad">
+            <h3>An error occurred while trying to render Swagger UI</h3>
+            <p>
+              This preview will automatically refresh, once you have a valid specification that
+              can be previewed.
+            </p>
+          </div>
+        )}
+      >
+        <SwaggerUI
+          spec={swaggerUiSpec}
+          supportedSubmitMethods={[
+            'get',
+            'put',
+            'post',
+            'delete',
+            'options',
+            'head',
+            'patch',
+            'trace',
+          ]}
+        />
+      </ErrorBoundary>
+    </div>
+  );
+};
+
 interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
@@ -185,63 +242,6 @@ export class WrapperDesign extends PureComponent<Props> {
       return;
     }
     this.editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
-  }
-
-  _renderPreview() {
-    const { activeApiSpec, activeWorkspaceMeta } = this.props.wrapperProps;
-
-    if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
-      return null;
-    }
-
-    if (!activeApiSpec.contents) {
-      return (
-        <EmptySpaceHelper>
-          Documentation for your OpenAPI spec will render here
-        </EmptySpaceHelper>
-      );
-    }
-
-    let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
-
-    try {
-      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
-    } catch (err) {}
-
-    if (!swaggerUiSpec) {
-      swaggerUiSpec = {};
-    }
-
-    return (
-      <div id="swagger-ui-wrapper">
-        <ErrorBoundary
-          invalidationKey={activeApiSpec.contents}
-          renderError={() => (
-            <div className="text-left margin pad">
-              <h3>An error occurred while trying to render Swagger UI</h3>
-              <p>
-                This preview will automatically refresh, once you have a valid specification that
-                can be previewed.
-              </p>
-            </div>
-          )}
-        >
-          <SwaggerUI
-            spec={swaggerUiSpec}
-            supportedSubmitMethods={[
-              'get',
-              'put',
-              'post',
-              'delete',
-              'options',
-              'head',
-              'patch',
-              'trace',
-            ]}
-          />
-        </ErrorBoundary>
-      </div>
-    );
   }
 
   _renderPageSidebar() {
@@ -304,12 +304,18 @@ export class WrapperDesign extends PureComponent<Props> {
       />
     );
 
+    const renderPreview = () => (
+      <RenderPreview
+        wrapperProps={wrapperProps}
+      />
+    );
+
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={renderPageHeader}
         renderPaneOne={renderEditor}
-        renderPaneTwo={this._renderPreview}
+        renderPaneTwo={renderPreview}
         renderPageSidebar={this._renderPageSidebar}
       />
     );
