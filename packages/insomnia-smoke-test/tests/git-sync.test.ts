@@ -1,6 +1,6 @@
 import { test } from '../playwright/test';
 
-test('Git Sync', async ({ page, gitServer }) => {
+test('Git Sync', async ({ page }) => {
   // Set up Git Sync
   await page.click('text=Setup Git Sync');
 
@@ -8,7 +8,7 @@ test('Git Sync', async ({ page, gitServer }) => {
 
   await page.fill(
     '[placeholder="https://github.com/org/repo.git"]',
-    `${gitServer.url}/example.git`
+    'http://127.0.0.1:4010/git/example.git'
   );
 
   await page.press('[placeholder="https://github.com/org/repo.git"]', 'Tab');

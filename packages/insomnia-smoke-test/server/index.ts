@@ -1,10 +1,32 @@
 import express from 'express';
+import cors from 'git-http-mock-server/cors';
+import createGitHTTPServerMiddleware from 'git-http-mock-server/middleware';
+import * as path from 'path';
 
 import { basicAuthRouter } from './basic-auth';
 import { oauthRoutes } from './oauth';
 
 const app = express();
 const port = 4010;
+
+/**
+ * Add a git http server middleware.
+ *
+ * The cors middleware is needed because it accepts/adds specific cors headers for git https://github.com/isomorphic-git/git-http-mock-server/blob/main/http-server.js#L14
+ */
+app.use(
+  cors(
+    createGitHTTPServerMiddleware({
+      root: path.resolve(
+        process.cwd(),
+        process.env.GIT_HTTP_MOCK_SERVER_ROOT ||
+          path.join(__dirname, '..', 'fixtures', 'git-repos')
+      ),
+      glob: '*',
+      route: process.env.GIT_HTTP_MOCK_SERVER_ROUTE || '/git/',
+    })
+  )
+);
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });

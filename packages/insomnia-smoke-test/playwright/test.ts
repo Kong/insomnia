@@ -1,6 +1,5 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
-import { execSync } from 'child_process';
 import path from 'path';
 
 import {
@@ -64,14 +63,5 @@ export const test = baseTest.extend<{
     await page.click("text=Don't share usage analytics");
 
     await use(page);
-  },
-  gitServer: async ({}, use) => {
-    const GIT_HTTP_MOCK_SERVER_PORT = '8174';
-
-    execSync('npm run mock:git-server:start');
-
-    await use({ url: `http://localhost:${GIT_HTTP_MOCK_SERVER_PORT}` });
-
-    execSync('npm run mock:git-server:stop');
   },
 });

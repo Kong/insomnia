@@ -25,9 +25,7 @@
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "ts-node server/index.ts",
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
-    "test:cli": "npm run with-mock \"npm run cli\"",
-    "mock:git-server:start": "cross-env GIT_HTTP_MOCK_SERVER_PORT=8174 GIT_HTTP_MOCK_SERVER_ROOT=fixtures/git-repos git-http-mock-server start",
-    "mock:git-server:stop": "cross-env GIT_HTTP_MOCK_SERVER_PORT=8174 GIT_HTTP_MOCK_SERVER_ROOT=fixtures/git-repos git-http-mock-server stop"
+    "test:cli": "npm run with-mock \"npm run cli\""
   },
   "devDependencies": {
     "@playwright/test": "^1.19.2",
