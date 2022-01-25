@@ -321,7 +321,7 @@ export async function importRaw(
   }
 
   await db.flushChanges();
-  trackSegmentEvent(SegmentEvent.dataImport);
+  trackSegmentEvent(SegmentEvent.dataImport, { type: resultsType.id });
   const importRequest: ImportResult = {
     source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
     summary: importedDocs,
