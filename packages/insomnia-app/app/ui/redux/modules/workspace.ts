@@ -1,7 +1,7 @@
 import { Dispatch } from 'redux';
 import { RequireExactlyOne } from 'type-fest';
 
-import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
@@ -31,7 +31,8 @@ const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateC
       await onCreate(workspace);
     }
 
-    trackEvent('Workspace', 'Create');
+    trackSegmentEvent(SegmentEvent.collectionCreate);
+
     await dispatch(activateWorkspace({ workspace }));
   };
 };

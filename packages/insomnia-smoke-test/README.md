@@ -33,7 +33,7 @@ PWDEBUG=1 npm run test:smoke:dev                # Write Insomnia tests with the 
 DEBUG=pw:browser,pw:api npm run test:smoke:dev  # Run Insomnia tests, with verbose output
 ```
 
-Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases (such as a <!-- TODO(TSCONVERSION) update this link -->[plugin installation](https://github.com/Kong/insomnia/blob/357b8f05f89fd5c07a75d8418670abe37b2882dc/packages/insomnia-smoke-test/designer/app.test.js#L36)), so we typically run tests against a build. To run packaged tests, from the root:
+Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases, so we typically run tests against a build. To run packaged tests, from the root:
 
 ```shell
 npm run app-package:smoke      # Package Insomnia

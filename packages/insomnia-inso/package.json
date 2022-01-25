@@ -69,6 +69,7 @@
   },
   "dependencies": {
     "@stoplight/spectral": "^5.9.0",
+    "axios": "^0.21.2",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
