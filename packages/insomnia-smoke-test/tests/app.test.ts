@@ -4,11 +4,8 @@ import { loadFixture } from '../playwright/paths';
 import { test } from '../playwright/test';
 
 test('url field is focused for first time users', async ({ page }) => {
-  const textArea = ':nth-match(textarea, 2)';
-  // Uncomment to click on and force element to be focused:
-  // const urlInput = "//div[contains(@class, 'editor__container input editor--single-line')]";
-  // page.click(urlInput);
-  const locator = page.locator(textArea);
+  const urlInput = ':nth-match(textarea, 2)';
+  const locator = page.locator(urlInput);
   await expect(locator).toBeFocused();
 });
 
