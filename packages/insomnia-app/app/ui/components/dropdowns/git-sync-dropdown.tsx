@@ -111,7 +111,6 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleOpen() {
-    trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'setup'));
     await this._refreshState();
   }
 
