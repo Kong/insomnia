@@ -3,7 +3,7 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { DEFAULT_PROJECT_ID } from '../../../../models/project';
@@ -49,7 +49,6 @@ describe('project', () => {
       const project = projects[1];
       expect(project.name).toBe(projectName);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalCreate);
-      expect(trackEvent).toHaveBeenCalledWith('Project', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_PROJECT,
@@ -93,7 +92,6 @@ describe('project', () => {
       const project = projects[1];
       expect(project).toStrictEqual(projectTwo);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalDelete);
-      expect(trackEvent).toHaveBeenCalledWith('Project', 'Delete');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_PROJECT,

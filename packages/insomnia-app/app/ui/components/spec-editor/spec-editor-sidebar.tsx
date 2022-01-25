@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
-import { trackEvent } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import type { ApiSpec } from '../../../models/api-spec';
 

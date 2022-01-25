@@ -12,7 +12,7 @@ type Props = {
     data: Object,
     status: number,
   }>,
-  trackEvent: (category: string, action: string, label: ?string, value: ?string) => any,
+  trackSegmentEvent: (event: string, properties?: Record<string, any>) => any,
   store: {
     hasItem: (key: string) => Promise<boolean>,
     setItem: (key: string, value: string) => Promise<void>,
@@ -90,7 +90,7 @@ class DeployToPortal extends React.Component<Props, State> {
       e.preventDefault();
     }
 
-    const { spec, axios, trackEvent } = this.props;
+    const { spec, axios, trackSegmentEvent } = this.props;
 
     const {
       kongSpecFileName,
@@ -145,12 +145,14 @@ class DeployToPortal extends React.Component<Props, State> {
       });
       if (response.statusText === 'Created' || response.statusText === 'OK') {
         this.setState({ kongPortalDeployView: 'success' });
-        trackEvent('Portal', 'Upload', overwrite ? 'Replace' : 'Create');
+        const action = overwrite ? 'replace_portal' : 'create_portal'
+        trackSegmentEvent('Kong Synced', { type: 'deploy', action })
       }
     } catch (err) {
       if (err.response && err.response.status === 409) {
         this.setState({ kongPortalDeployView: 'overwrite' });
-        trackEvent('Portal', 'Upload Error', overwrite ? 'Replace' : 'Create');
+        const action = overwrite ? 'replace_portal' : 'create_portal'
+        trackSegmentEvent('Kong Synced', { type: 'deploy', action, error: err.response.status + ': ' + err.response.statusText })
       } else {
         console.log('Failed to upload to dev portal', err.response);
         if (err.response && err.response.data && err.response.data.message) {
@@ -164,7 +166,7 @@ class DeployToPortal extends React.Component<Props, State> {
   async _handleConnectKong(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const { axios, trackEvent } = this.props;
+    const { axios, trackSegmentEvent } = this.props;
 
     const { kongPortalUserWorkspace, kongPortalApiUrl, kongPortalRbacToken } = this.state;
 
@@ -182,7 +184,8 @@ class DeployToPortal extends React.Component<Props, State> {
         },
       });
       if (response.status === 200 || response.status === 201) {
-        trackEvent('Portal', 'Connection');
+        trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy' })
+
         // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
         const guiHost = response.data.configuration.portal_gui_host;
         this.setState({
@@ -195,7 +198,8 @@ class DeployToPortal extends React.Component<Props, State> {
         this._handleLoadingToggle(false);
       }
     } catch (error) {
-      trackEvent('Portal', 'Connection Error');
+      trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy', error: error.message })
+
       console.log('Connection error', error);
       this._handleLoadingToggle(false);
       this.setState({ connectionError: error });

@@ -9,7 +9,6 @@ import * as models from '../models';
 import { getModelName } from '../models';
 import type { Settings } from '../models/settings';
 import { forceWorkspaceScopeToDesign } from '../sync/git/force-workspace-scope-to-design';
-import { trackEvent } from './analytics';
 import { database as db } from './database';
 
 async function loadDesignerDb(

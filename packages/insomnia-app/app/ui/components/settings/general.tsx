@@ -3,7 +3,6 @@ import { Tooltip } from 'insomnia-components';
 import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { trackEvent } from '../../../common/analytics';
 import {
   ACTIVITY_MIGRATION,
   EditorKeyMap,
