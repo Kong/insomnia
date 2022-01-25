@@ -11,28 +11,15 @@ test('Git Sync', async ({ page }) => {
     'http://127.0.0.1:4010/git/example.git'
   );
 
-  await page.press('[placeholder="https://github.com/org/repo.git"]', 'Tab');
-
   await page.fill('[placeholder="Name"]', 'sleepyhead');
-
-  await page.press('[placeholder="Name"]', 'Tab');
 
   await page.fill('[placeholder="Email"]', 'sleepyhead@konghq.com');
 
-  await page.press('[placeholder="Email"]', 'Tab');
-
   await page.fill('[placeholder="MyUser"]', 'sleepyhead');
-
-  await page.press('[placeholder="MyUser"]', 'Tab');
 
   await page.fill(
     '[placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"]',
     'supersecrettoken'
-  );
-
-  await page.press(
-    '[placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"]',
-    'Tab'
   );
 
   await page.press('text=Done', 'Enter');
@@ -94,12 +81,6 @@ test('Git Sync', async ({ page }) => {
   await page.click('button:has-text("Branches")');
 
   await page.click('text=Checkout');
-
-  await page.click('text=Merge');
-
-  await page.click('button:has-text("Click to confirm")');
-
-  await page.click('text=Local Branches');
 
   await page.click('text=Done');
 });
