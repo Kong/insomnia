@@ -9,7 +9,7 @@
   "dependencies": {
     "@hapi/hawk": "^8.0.0",
     "@stoplight/spectral": "^5.9.0",
-    "analytics-node": "^4.0.1",
+    "analytics-node": "^6.0.0",
     "aws4": "^1.10.0",
     "axios": "^0.21.2",
     "clone": "^2.1.2",

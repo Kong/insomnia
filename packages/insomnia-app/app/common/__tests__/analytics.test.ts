@@ -34,7 +34,7 @@ describe('init()', () => {
     });
     expect(settings.enableAnalytics).toBe(false);
     expect(electron.net.request.mock.calls).toEqual([]);
-    await _trackEvent(true, 'Foo', 'Bar');
+    await _trackEvent({ interactive: true, category: 'Foo', action: 'Bar' });
     jest.runAllTimers();
     expect(electron.net.request.mock.calls).toEqual([]);
   });
@@ -46,7 +46,7 @@ describe('init()', () => {
     });
     expect(settings.enableAnalytics).toBe(true);
     expect(electron.net.request.mock.calls).toEqual([]);
-    await _trackEvent(true, 'Foo', 'Bar');
+    await _trackEvent({ interactive: true, category: 'Foo', action: 'Bar' });
     jest.runAllTimers();
     expect(electron.net.request.mock.calls).toEqual([
       [
@@ -79,7 +79,7 @@ describe('init()', () => {
       deviceId: 'device',
       enableAnalytics: true,
     });
-    await _trackEvent(false, 'Foo', 'Bar');
+    await _trackEvent({ interactive: false, category: 'Foo', action: 'Bar' });
     jest.runAllTimers();
     expect(electron.net.request.mock.calls).toEqual([
       [
@@ -146,7 +146,13 @@ describe('init()', () => {
     });
     await _trackPageView('/my/path');
     jest.runAllTimers();
-    await _trackEvent(true, 'cat', 'act', 'lab', 'val');
+    await _trackEvent({
+      interactive: true,
+      category: 'cat',
+      action: 'act',
+      label: 'lab',
+      value: 'val',
+    });
     expect(electron.net.request.mock.calls).toEqual([
       [
         'https://www.google-analytics.com/collect?' +
