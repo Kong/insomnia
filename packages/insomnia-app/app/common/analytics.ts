@@ -24,14 +24,18 @@ const segmentClient = new Analytics(getSegmentWriteKey(), {
 
 const getDeviceId = async () => {
   const settings = await models.settings.getOrCreate();
-  return settings.deviceId || (await models.settings.update(settings, { deviceId:uuid.v4() })).deviceId;
+  return settings.deviceId || (await models.settings.update(settings, { deviceId: uuid.v4() })).deviceId;
 };
 
 const sendSegment = async (segmentType: 'track' | 'page', options) => {
   try {
     const anonymousId = await getDeviceId();
     const userId = getAccountId();
-    segmentClient?.[segmentType]({ ...options, anonymousId, userId }, error => {
+    const context = {
+      app: { name: getAppName(), version: getAppVersion() },
+      os: { name: _getOsName(), version: process.getSystemVersion() },
+    };
+    segmentClient?.[segmentType]({ ...options, context, anonymousId, userId }, error => {
       if (error) console.warn('[analytics] Error sending segment event', error);
     });
   } catch (error: unknown) {
@@ -69,9 +73,9 @@ type PushPull = 'push' | 'pull';
 export function vcsSegmentEventProperties(
   type: 'git',
   action: PushPull | `force_${PushPull}` |
-   'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
-   'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
-   'update' | 'setup' | 'clone',
+    'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
+    'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
+    'update' | 'setup' | 'clone',
   error?: string
 ) {
   return {
@@ -139,16 +143,6 @@ export async function trackSegmentEvent(
     event,
     properties,
     ...(timestamp ? { timestamp } : {}),
-    context: {
-      app: {
-        name: getAppName(),
-        version: getAppVersion(),
-      },
-      os: {
-        name: _getOsName(),
-        version: process.getSystemVersion(),
-      },
-    },
   });
 }
 
