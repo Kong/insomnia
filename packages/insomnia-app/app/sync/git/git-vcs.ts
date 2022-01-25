@@ -1,7 +1,6 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import { gitCallbacks } from './utils';
