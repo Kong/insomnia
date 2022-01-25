@@ -247,13 +247,6 @@ export const database = {
     for (const fn of changeListeners) {
       await fn(changes);
     }
-
-    // Notify remote listeners
-    const windows = electron.BrowserWindow.getAllWindows();
-
-    for (const window of windows) {
-      window.webContents.send('db.changes', changes);
-    }
   },
 
   flushChangesAsync: async (fake = false) => {
