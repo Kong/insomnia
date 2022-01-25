@@ -319,7 +319,7 @@ export const loadRequestStop = (requestId: string) => ({
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  trackPageView('activity', activity);
+  trackPageView(activity);
   return {
     type: SET_ACTIVE_ACTIVITY,
     activity,

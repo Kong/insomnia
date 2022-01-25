@@ -15,7 +15,7 @@ export function registerModal(instance) {
 }
 
 export function showModal(modalCls, ...args) {
-  trackPageView('modal', modalCls.name);
+  trackPageView(modalCls.name);
   return _getModal(modalCls).show(...args);
 }
 

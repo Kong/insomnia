@@ -150,11 +150,12 @@ export async function trackSegmentEvent(
   }
 }
 
-export function trackPageView(category: string, name: string) {
+export async function trackPageView(name: string) {
   console.log('[segment] Page view', name);
+  const anonymousId = await getDeviceId();
   segmentClient.page({
+    anonymousId,
     userId: getAccountId(),
-    category: category,
     name,
   });
 }
