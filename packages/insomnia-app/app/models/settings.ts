@@ -57,7 +57,6 @@ export function init(): BaseSettings {
      * So by default this flag is set to false, and is toggled to true during initialization for new users.
      */
     hasPromptedAnalytics: false,
-    hasPromptedToMigrateFromDesigner: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
