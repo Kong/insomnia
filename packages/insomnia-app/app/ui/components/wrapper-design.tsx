@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Button, NoticeTable } from 'insomnia-components';
-import React, { createRef, Fragment, PureComponent, ReactNode } from 'react';
+import React, { createRef, Fragment, PureComponent, ReactNode, useCallback } from 'react';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
@@ -30,6 +30,44 @@ const EmptySpaceHelper = styled.div({
 });
 
 const spectral = initializeSpectral();
+
+const RenderPageHeader = ({
+  gitSyncDropdown,
+  handleActivityChange,
+  wrapperProps,
+}: Pick<Props,
+  | 'gitSyncDropdown'
+  | 'handleActivityChange'
+  | 'wrapperProps'
+>) => {
+  const { activeWorkspace, activeWorkspaceMeta } = wrapperProps;
+  const previewHidden = Boolean(activeWorkspaceMeta?.previewHidden);
+
+  const handleTogglePreview = useCallback(async () => {
+    if (!activeWorkspace) {
+      return;
+    }
+
+    const workspaceId = activeWorkspace._id;
+    await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
+  }, [activeWorkspace, previewHidden]);
+
+  return (
+    <WorkspacePageHeader
+      wrapperProps={wrapperProps}
+      handleActivityChange={handleActivityChange}
+      gridRight={
+        <Fragment>
+          <Button variant="contained" onClick={handleTogglePreview}>
+            <img src={previewIcon} alt="Preview" width="15" />
+            &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+          </Button>
+          {gitSyncDropdown}
+        </Fragment>
+      }
+    />
+  );
+};
 
 interface Props {
   gitSyncDropdown: ReactNode;
@@ -65,18 +103,6 @@ export class WrapperDesign extends PureComponent<Props, State> {
   static lintOptions = {
     delay: 1000,
   };
-
-  async _handleTogglePreview() {
-    const { activeWorkspace } = this.props.wrapperProps;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    const workspaceId = activeWorkspace._id;
-    const previewHidden = Boolean(this.props.wrapperProps.activeWorkspaceMeta?.previewHidden);
-    await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
-  }
 
   onChangeSpecContents(contents: string) {
     const {
@@ -248,26 +274,6 @@ export class WrapperDesign extends PureComponent<Props, State> {
     );
   }
 
-  _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const previewHidden = Boolean(wrapperProps.activeWorkspaceMeta?.previewHidden);
-    return (
-      <WorkspacePageHeader
-        wrapperProps={wrapperProps}
-        handleActivityChange={handleActivityChange}
-        gridRight={
-          <Fragment>
-            <Button variant="contained" onClick={this._handleTogglePreview}>
-              <img src={previewIcon} alt="Preview" width="15" />
-              &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
-            </Button>
-            {gitSyncDropdown}
-          </Fragment>
-        }
-      />
-    );
-  }
-
   _renderPageSidebar() {
     const { activeApiSpec } = this.props.wrapperProps;
 
@@ -302,10 +308,20 @@ export class WrapperDesign extends PureComponent<Props, State> {
   }
 
   render() {
+    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+
+    const renderPageHeader = () => (
+      <RenderPageHeader
+        gitSyncDropdown={gitSyncDropdown}
+        handleActivityChange={handleActivityChange}
+        wrapperProps={wrapperProps}
+      />
+    );
+
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageHeader={this._renderPageHeader}
+        renderPageHeader={renderPageHeader}
         renderPaneOne={this._renderEditor}
         renderPaneTwo={this._renderPreview}
         renderPageSidebar={this._renderPageSidebar}
