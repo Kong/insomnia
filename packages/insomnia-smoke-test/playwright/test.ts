@@ -4,7 +4,6 @@ import { platform } from 'os';
 
 import {
   cwd,
-  DESIGNER_DATA_PATH,
   executablePath,
   INSOMNIA_DATA_PATH,
   mainPath,
@@ -13,7 +12,6 @@ import {
 
 interface EnvOptions {
   INSOMNIA_DATA_PATH: string;
-  DESIGNER_DATA_PATH?: string;
 }
 
 export const test = baseTest.extend<{
@@ -24,7 +22,6 @@ export const test = baseTest.extend<{
   app: async ({ playwright }, use) => {
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: randomDataPath(),
-      DESIGNER_DATA_PATH: 'doesnt-exist',
     };
 
     const electronApp = await playwright._electron.launch({
@@ -59,7 +56,6 @@ export const test = baseTest.extend<{
   appWithDesignerDataPath: async ({ playwright }, use) => {
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH,
-      DESIGNER_DATA_PATH,
     };
 
     const electronApp = await playwright._electron.launch({

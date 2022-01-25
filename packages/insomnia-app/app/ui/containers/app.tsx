@@ -12,7 +12,6 @@ import { parse as urlParse } from 'url';
 import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -1041,7 +1040,7 @@ class App extends PureComponent<AppProps, State> {
     } = this.props;
     let title;
 
-    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
+    if (activity === ACTIVITY_HOME) {
       title = getAppName();
     } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;

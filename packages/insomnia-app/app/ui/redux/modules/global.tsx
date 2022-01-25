@@ -11,11 +11,9 @@ import type { DashboardSortOrder, GlobalActivity } from '../../../common/constan
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   isValidActivity,
 } from '../../../common/constants';
 import { database } from '../../../common/database';
-import { getDesignerDataDir } from '../../../common/electron-helpers';
 import {
   exportRequestsData,
   exportRequestsHAR,
@@ -45,7 +43,7 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveActivity, selectActiveProjectName, selectSettings, selectStats, selectWorkspacesForActiveProject } from '../selectors';
+import { selectActiveProjectName, selectStats, selectWorkspacesForActiveProject } from '../selectors';
 import { importUri } from './import';
 import { activateWorkspace } from './workspace';
 
@@ -667,7 +665,6 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
  */
 export const initActiveActivity = () => (dispatch, getState) => {
   const state = getState();
-  const settings = selectSettings(state);
   // Default to home
   let activeActivity = ACTIVITY_HOME;
 
@@ -680,21 +677,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
     // Nothing here...
   }
 
-  activeActivity = _normalizeActivity(activeActivity);
-  let overrideActivity: GlobalActivity | null = null;
-
-  if (activeActivity === ACTIVITY_MIGRATION) {
-    // If relaunched after a migration, go to the next activity
-    // Don't need to do this for migration because that doesn't require a restart
-    overrideActivity = ACTIVITY_HOME;
-  } else {
-    // Always check if user has been prompted to migrate or onboard
-    if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-      overrideActivity = ACTIVITY_MIGRATION;
-    }
-  }
-
-  const initializeToActivity = overrideActivity || activeActivity;
+  const initializeToActivity = _normalizeActivity(activeActivity);
   if (initializeToActivity === state.global.activeActivity) {
     // no need to dispatch the action twice if it has already been set to the correct value.
     return;
@@ -704,17 +687,6 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
 export const initFirstLaunch = () => async (dispatch, getState) => {
   const state = getState();
-
-  const activeActivity = selectActiveActivity(state);
-  // If the active activity is migration, then don't initialize into the analytics prompt, because we'll migrate the analytics opt-in setting from Designer.
-  if (activeActivity === ACTIVITY_MIGRATION) {
-    const { hasPromptedToMigrateFromDesigner } = selectSettings(state);
-    if (!hasPromptedToMigrateFromDesigner) {
-      await models.settings.patch({ hasPromptedAnalytics: true });
-      dispatch(setIsFinishedBooting(true));
-      return;
-    }
-  }
 
   const stats = selectStats(state);
   if (stats.launches > 1) {

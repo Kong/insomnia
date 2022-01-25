@@ -31,18 +31,3 @@ test('can send requests', async ({ app, page }) => {
   await page.click('text=http://127.0.0.1:4010/auth/basicSend >> button');
   await page.click('text=200 OK');
 });
-
-test.describe.serial('given a designer and data directory', () => {
-  test('should complete migration dialog', async ({ pageWithDesignerDataPath: page }) => {
-    await page.click('text=Copy Workspaces');
-    await page.click('text=Copy Plugins');
-    await page.click('text=Copy Designer Application Settings');
-    await page.click('text=Start Migration');
-    await page.click('text=Migrated successfully!');
-  });
-
-  test('then on restart should see the migrated workspace', async ({ pageWithDesignerDataPath: page }) => {
-    await page.click('text=Don\'t share usage analytics');
-    await page.click('text=BASIC-DESIGNER-FIXTURE');
-  });
-});
