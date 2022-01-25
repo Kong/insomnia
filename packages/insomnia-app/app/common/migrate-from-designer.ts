@@ -158,7 +158,6 @@ export default async function migrateFromDesigner({
   const modelTypesToMerge = [];
 
   if (useDesignerSettings) {
-    trackEvent('Data', 'Migration', 'Settings');
     // @ts-expect-error -- TSCONVERSION
     modelTypesToMerge.push(models.settings.type);
     console.log('[db-merge] keeping settings from Insomnia Designer');
@@ -167,7 +166,6 @@ export default async function migrateFromDesigner({
   }
 
   if (copyWorkspaces) {
-    trackEvent('Data', 'Migration', 'Workspaces');
     // @ts-expect-error -- TSCONVERSION
     modelTypesToMerge.push(...workspaceModels);
   }
@@ -222,17 +220,14 @@ export default async function migrateFromDesigner({
 
     if (copyPlugins) {
       console.log('[db-merge] migrating plugins from designer to core');
-      trackEvent('Data', 'Migration', 'Plugins');
       await migratePlugins(designerDataDir, coreDataDir);
     }
 
     console.log('[db-merge] done!');
-    trackEvent('Data', 'Migration', 'Success');
     return {};
   } catch (error) {
     console.log('[db-merge] an error occurred while migrating');
     console.error(error);
-    trackEvent('Data', 'Migration', 'Failure');
     await restoreCoreBackup(backupDir, coreDataDir);
     return {
       error,

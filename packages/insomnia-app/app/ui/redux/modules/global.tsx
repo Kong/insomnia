@@ -690,7 +690,6 @@ export const initActiveActivity = () => (dispatch, getState) => {
   } else {
     // Always check if user has been prompted to migrate or onboard
     if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-      trackEvent('Data', 'Migration', 'Auto');
       overrideActivity = ACTIVITY_MIGRATION;
     }
   }

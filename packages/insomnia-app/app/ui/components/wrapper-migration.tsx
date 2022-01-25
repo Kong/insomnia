@@ -276,7 +276,6 @@ const MigrationBody = () => {
 
   const reduxDispatch = useDispatch();
   const cancel = useCallback(() => {
-    trackEvent('Data', 'Migration', 'Skip');
     reduxDispatch(setActiveActivity(ACTIVITY_HOME));
   }, [reduxDispatch]);
 

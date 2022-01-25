@@ -102,7 +102,6 @@ export const General: FC<Props> = ({ hideModal }) => {
   const settings = useSelector(selectSettings);
 
   const handleStartMigration = useCallback(() => {
-    trackEvent('Data', 'Migration', 'Manual');
     dispatch(setActiveActivity(ACTIVITY_MIGRATION));
     hideModal();
   }, [hideModal, dispatch]);
