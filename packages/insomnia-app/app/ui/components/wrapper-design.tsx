@@ -1,12 +1,14 @@
+import { IRuleResult } from '@stoplight/spectral';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Button, NoticeTable } from 'insomnia-components';
-import React, { createRef, Fragment, PureComponent, ReactNode, useCallback } from 'react';
+import { Button, Notice, NoticeTable } from 'insomnia-components';
+import React, { createRef, FC, Fragment, PureComponent, ReactNode, RefObject, useCallback, useState } from 'react';
+import { useAsync, useDebounce } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
@@ -31,15 +33,15 @@ const EmptySpaceHelper = styled.div({
 
 const spectral = initializeSpectral();
 
-const RenderPageHeader = ({
+const RenderPageHeader: FC<Pick<Props,
+| 'gitSyncDropdown'
+| 'handleActivityChange'
+| 'wrapperProps'
+>> = ({
   gitSyncDropdown,
   handleActivityChange,
   wrapperProps,
-}: Pick<Props,
-  | 'gitSyncDropdown'
-  | 'handleActivityChange'
-  | 'wrapperProps'
->) => {
+}) => {
   const { activeWorkspace, activeWorkspaceMeta } = wrapperProps;
   const previewHidden = Boolean(activeWorkspaceMeta?.previewHidden);
 
@@ -69,6 +71,104 @@ const RenderPageHeader = ({
   );
 };
 
+interface LintMessage {
+  message: string;
+  line: number;
+  type: 'error' | 'warning';
+  range: IRuleResult['range'];
+}
+
+const RenderEditor: FC<Pick<Props,
+  | 'wrapperProps'
+  | 'handleUpdateApiSpec'
+> & {
+  editor: RefObject<UnconnectedCodeEditor>;
+}> = ({
+  editor,
+  handleUpdateApiSpec,
+  wrapperProps,
+}) => {
+  const { activeApiSpec } = wrapperProps;
+  const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
+  const [contentsState, setContentsState] = useState(activeApiSpec?.contents ?? '');
+
+  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+
+  const onUpdateContents = useCallback(() => {
+    setForceRefreshCounter(forceRefreshCounter + 1);
+  }, [forceRefreshCounter]);
+
+  useDebounce(async (contents: string) => {
+    if (!activeApiSpec) {
+      return;
+    }
+
+    await handleUpdateApiSpec({ ...activeApiSpec, contents });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
+  }, 500, [contentsState]);
+
+  const contents = activeApiSpec?.contents;
+
+  useAsync(async () => {
+    // Lint only if spec has content
+    if (contents && contents.length !== 0) {
+      const results: LintMessage[] = (await spectral.run(contents))
+        .filter(isLintError)
+        .map(({ severity, code, message, range }) => ({
+          type: severity === 0 ? 'error' : 'warning',
+          message: `${code} ${message}`,
+          line: range.start.line,
+          // Attach range that will be returned to our click handler
+          range,
+        }));
+      setLintMessages(results);
+    } else {
+      setLintMessages([]);
+    }
+  }, [contents]);
+
+  const handleScrollToSelection = useCallback((notice: Notice<Pick<LintMessage, 'range'>>) => {
+    if (!editor.current) {
+      return;
+    }
+    if (!notice.range) {
+      return;
+    }
+    const { start, end } = notice.range;
+    editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
+  }, [editor]);
+
+  if (!activeApiSpec) {
+    return null;
+  }
+
+  return (
+    <div className="column tall theme--pane__body">
+      <div className="tall relative overflow-hidden">
+        <CodeEditor
+          manualPrettify
+          ref={editor}
+          lintOptions={{ delay: 1000 }}
+          mode="openapi"
+          defaultValue={activeApiSpec.contents}
+          onChange={setContentsState}
+          uniquenessKey={uniquenessKey}
+        />
+        <DesignEmptyState
+          onUpdateContents={onUpdateContents}
+        />
+      </div>
+      {lintMessages.length > 0 && (
+        <NoticeTable<Pick<LintMessage, 'range'>>
+          notices={lintMessages}
+          onClick={handleScrollToSelection}
+        />
+      )}
+    </div>
+  );
+};
+
 interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
@@ -76,141 +176,15 @@ interface Props {
   wrapperProps: WrapperProps;
 }
 
-interface State {
-  lintMessages: {
-    message: string;
-    line: number;
-    type: 'error' | 'warning';
-  }[];
-  forceRefreshCounter: number;
-}
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WrapperDesign extends PureComponent<Props, State> {
+export class WrapperDesign extends PureComponent<Props> {
   editor = createRef<UnconnectedCodeEditor>();
-  debounceTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      lintMessages: [],
-      forceRefreshCounter: 0,
-    };
-  }
-
-  // Defining it here instead of in render() so it won't act as a changed prop
-  // when being passed to <CodeEditor> again
-  static lintOptions = {
-    delay: 1000,
-  };
-
-  onChangeSpecContents(contents: string) {
-    const {
-      wrapperProps: { activeApiSpec },
-      handleUpdateApiSpec,
-    } = this.props;
-
-    if (!activeApiSpec) {
-      return;
-    }
-
-    // TODO: this seems strange, should the timeout be set and cleared on every change??
-    // Debounce the update because these specs can get pretty large
-    if (this.debounceTimeout !== null) {
-      clearTimeout(this.debounceTimeout);
-    }
-
-    this.debounceTimeout = setTimeout(async () => {
-      await handleUpdateApiSpec({ ...activeApiSpec, contents });
-    }, 500);
-  }
-
-  _handleSetSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
+  handleScrollToSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
     if (!this.editor.current) {
       return;
     }
-
     this.editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
-  }
-
-  _handleLintClick(notice) {
-    // TODO: Export Notice from insomnia-components and use here, instead of {}
-    const { start, end } = notice._range;
-
-    this._handleSetSelection(start.character, end.character, start.line, end.line);
-  }
-
-  async _reLint() {
-    const { activeApiSpec } = this.props.wrapperProps;
-
-    // Lint only if spec has content
-    if (activeApiSpec && activeApiSpec.contents.length !== 0) {
-      const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
-      this.setState({
-        lintMessages: results.map(r => ({
-          type: r.severity === 0 ? 'error' : 'warning',
-          message: `${r.code} ${r.message}`,
-          line: r.range.start.line,
-          // Attach range that will be returned to our click handler
-          _range: r.range,
-        })),
-      });
-    } else {
-      this.setState({
-        lintMessages: [],
-      });
-    }
-  }
-
-  async componentDidMount() {
-    await this._reLint();
-  }
-
-  componentDidUpdate(prevProps: Props) {
-    const { activeApiSpec } = this.props.wrapperProps;
-
-    // Re-lint if content changed
-    if (activeApiSpec?.contents !== prevProps.wrapperProps.activeApiSpec?.contents) {
-      this._reLint();
-    }
-  }
-
-  _onUpdateContents() {
-    const { forceRefreshCounter } = this.state;
-    this.setState({ forceRefreshCounter: forceRefreshCounter + 1 });
-  }
-
-  _renderEditor() {
-    const { activeApiSpec } = this.props.wrapperProps;
-    const { lintMessages, forceRefreshCounter } = this.state;
-
-    if (!activeApiSpec) {
-      return null;
-    }
-
-    const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec._id}`;
-
-    return (
-      <div className="column tall theme--pane__body">
-        <div className="tall relative overflow-hidden">
-          <CodeEditor
-            manualPrettify
-            ref={this.editor}
-            lintOptions={WrapperDesign.lintOptions}
-            mode="openapi"
-            defaultValue={activeApiSpec.contents}
-            onChange={this.onChangeSpecContents}
-            uniquenessKey={uniquenessKey}
-          />
-          <DesignEmptyState
-            onUpdateContents={this._onUpdateContents}
-          />
-        </div>
-        {lintMessages.length > 0 && (
-          <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
-        )}
-      </div>
-    );
   }
 
   _renderPreview() {
@@ -298,13 +272,21 @@ export class WrapperDesign extends PureComponent<Props, State> {
           </div>
         )}
       >
-        <SpecEditorSidebar apiSpec={activeApiSpec} handleSetSelection={this._handleSetSelection} />
+        <SpecEditorSidebar
+          apiSpec={activeApiSpec}
+          handleSetSelection={this.handleScrollToSelection}
+        />
       </ErrorBoundary>
     );
   }
 
   render() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+    const {
+      gitSyncDropdown,
+      handleActivityChange,
+      handleUpdateApiSpec,
+      wrapperProps,
+    } = this.props;
 
     const renderPageHeader = () => (
       <RenderPageHeader
@@ -314,11 +296,19 @@ export class WrapperDesign extends PureComponent<Props, State> {
       />
     );
 
+    const renderEditor = () => (
+      <RenderEditor
+        editor={this.editor}
+        handleUpdateApiSpec={handleUpdateApiSpec}
+        wrapperProps={wrapperProps}
+      />
+    );
+
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={renderPageHeader}
-        renderPaneOne={this._renderEditor}
+        renderPaneOne={renderEditor}
         renderPaneTwo={this._renderPreview}
         renderPageSidebar={this._renderPageSidebar}
       />

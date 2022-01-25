@@ -5,15 +5,15 @@ import { Button } from './button';
 import { IconEnum, SvgIcon } from './svg-icon';
 import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 
-export interface Notice {
+export type Notice<T extends Record<string, any> = {}> = T & {
   type: 'warning' | 'error';
   line: number;
   message: string;
-}
+};
 
-export interface NoticeTableProps {
-  notices: Notice[];
-  onClick?: (n: Notice, e: React.SyntheticEvent<HTMLElement>) => any;
+export interface NoticeTableProps<T extends Record<string, any> = {}> {
+  notices: Notice<T>[];
+  onClick?: (n: Notice<T>, e: React.SyntheticEvent<HTMLElement>) => any;
   onVisibilityToggle?: (expanded: boolean) => any;
   compact?: boolean;
   className?: string;
@@ -94,7 +94,7 @@ const Header = styled.header`
   padding-left: var(--padding-md);
 `;
 
-export class NoticeTable extends PureComponent<NoticeTableProps, State> {
+export class NoticeTable<T extends Record<string, any> = {}> extends PureComponent<NoticeTableProps<T>, State> {
   state: State = {
     collapsed: false,
   };
@@ -113,7 +113,7 @@ export class NoticeTable extends PureComponent<NoticeTableProps, State> {
     );
   }
 
-  onClick(notice: Notice, e: React.SyntheticEvent<HTMLButtonElement>) {
+  onClick(notice: Notice<T>, e: React.SyntheticEvent<HTMLButtonElement>) {
     const { onClick } = this.props;
 
     if (!onClick) {
