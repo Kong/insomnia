@@ -162,10 +162,6 @@ export class WrapperDesign extends PureComponent<Props, State> {
     }
   }
 
-  _handleBreadcrumb() {
-    this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-  }
-
   async componentDidMount() {
     await this._reLint();
   }
