@@ -8,7 +8,6 @@ import SwaggerUI from 'swagger-ui-react';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
@@ -76,37 +75,29 @@ interface LintMessage {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<Pick<Props,
-  | 'wrapperProps'
-  | 'handleUpdateApiSpec'
-> & {
+const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
   editor: RefObject<UnconnectedCodeEditor>;
 }> = ({
   editor,
-  handleUpdateApiSpec,
   wrapperProps,
 }) => {
   const { activeApiSpec } = wrapperProps;
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
-  const [contentsState, setContentsState] = useState(activeApiSpec?.contents ?? '');
+  const contents = activeApiSpec?.contents ?? '';
+  const [contentsState, setContentsState] = useState(contents);
 
   const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
 
-  const onUpdateContents = useCallback(() => {
-    setForceRefreshCounter(forceRefreshCounter + 1);
-  }, [forceRefreshCounter]);
-
-  useDebounce(async (contents: string) => {
+  useDebounce(async () => {
     if (!activeApiSpec) {
       return;
     }
 
-    await handleUpdateApiSpec({ ...activeApiSpec, contents });
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
+    await models.apiSpec.update({ ...activeApiSpec, contents: contentsState });
+    setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
   }, 500, [contentsState]);
-
-  const contents = activeApiSpec?.contents;
 
   useAsync(async () => {
     // Lint only if spec has content
@@ -149,12 +140,12 @@ const RenderEditor: FC<Pick<Props,
           ref={editor}
           lintOptions={{ delay: 1000 }}
           mode="openapi"
-          defaultValue={activeApiSpec.contents}
+          defaultValue={contentsState}
           onChange={setContentsState}
           uniquenessKey={uniquenessKey}
         />
         <DesignEmptyState
-          onUpdateContents={onUpdateContents}
+          onUpdateContents={setContentsState}
         />
       </div>
       {lintMessages.length > 0 && (
@@ -271,14 +262,12 @@ const RenderPageSidebar: FC<Pick<Props, 'wrapperProps'> & { editor: RefObject<Un
 interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
-  handleUpdateApiSpec: (apiSpec: ApiSpec) => Promise<void>;
   wrapperProps: WrapperProps;
 }
 
 export const WrapperDesign: FC<Props> = ({
   gitSyncDropdown,
   handleActivityChange,
-  handleUpdateApiSpec,
   wrapperProps,
 }) => {
   const editor = createRef<UnconnectedCodeEditor>();
@@ -294,10 +283,9 @@ export const WrapperDesign: FC<Props> = ({
   const renderEditor = useCallback(() => (
     <RenderEditor
       editor={editor}
-      handleUpdateApiSpec={handleUpdateApiSpec}
       wrapperProps={wrapperProps}
     />
-  ), [editor, handleUpdateApiSpec, wrapperProps]);
+  ), [editor, wrapperProps]);
 
   const renderPreview = useCallback(() => (
     <RenderPreview
