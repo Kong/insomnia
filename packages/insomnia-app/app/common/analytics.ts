@@ -22,6 +22,23 @@ const segmentClient = new Analytics(getSegmentWriteKey(), {
   },
 });
 
+const getDeviceId = async () => {
+  const settings = await models.settings.getOrCreate();
+  return settings.deviceId || (await models.settings.update(settings, { deviceId:uuid.v4() })).deviceId;
+};
+
+const sendSegment = async (segmentType: 'track' | 'page', options) => {
+  try {
+    const anonymousId = await getDeviceId();
+    const userId = getAccountId();
+    segmentClient?.[segmentType]({ ...options, anonymousId, userId }, error => {
+      if (error) console.warn('[analytics] Error sending segment event', error);
+    });
+  } catch (error: unknown) {
+    console.warn('[analytics] Unexpected error while sending segment event', error);
+  }
+};
+
 export enum SegmentEvent {
   appStarted = 'App Started',
   collectionCreate = 'Collection Created',
@@ -120,77 +137,34 @@ export async function trackSegmentEvent(
     }
     return;
   }
-
-  try {
-    const anonymousId = await getDeviceId();
-    segmentClient.track({
-      anonymousId,
-      // This may return an empty string or undefined when a user is not logged in
-      userId: getAccountId(),
-      event,
-      properties,
-      ...(timestamp ? { timestamp } : {}),
-      context: {
-        app: {
-          name: getAppName(),
-          version: getAppVersion(),
-        },
-        os: {
-          name: _getOsName(),
-          version: process.getSystemVersion(),
-        },
+  sendSegment('track', {
+    event,
+    properties,
+    ...(timestamp ? { timestamp } : {}),
+    context: {
+      app: {
+        name: getAppName(),
+        version: getAppVersion(),
       },
-    }, error => {
-      if (error) {
-        console.warn('[analytics] Error sending segment event', error);
-      }
-    });
-  } catch (error: unknown) {
-    console.warn('[analytics] Unexpected error while sending segment event', error);
-  }
+      os: {
+        name: _getOsName(),
+        version: process.getSystemVersion(),
+      },
+    },
+  });
 }
 
 export async function trackPageView(name: string) {
   console.log('[segment] Page view', name);
-  const anonymousId = await getDeviceId();
-  segmentClient.page({
-    anonymousId,
-    userId: getAccountId(),
-    name,
-  });
+  sendSegment('page', { name });
 }
 
-export async function getDeviceId() {
-  const settings = await models.settings.getOrCreate();
-  let { deviceId } = settings;
-
-  if (!deviceId) {
-    // Migrate old GA ID into settings model if needed
-    const oldId = (window && window.localStorage.getItem('gaClientId')) || null;
-    deviceId = oldId || uuid.v4();
-    await models.settings.update(settings, {
-      deviceId,
-    });
-  }
-
-  return deviceId;
-}
 // ~~~~~~~~~~~~~~~~~ //
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
 function _getOsName() {
   const platform = getAppPlatform();
-
-  switch (platform) {
-    case 'darwin':
-      return 'mac';
-
-    case 'win32':
-      return 'windows';
-
-    default:
-      return platform;
-  }
+  return { darwin: 'mac', win32: 'windows' }[platform] || platform;
 }
 
 // Monitor database changes to see if analytics gets enabled.
@@ -198,11 +172,9 @@ function _getOsName() {
 db.onChange(async changes => {
   for (const change of changes) {
     const [event, doc] = change;
-
-    if (isSettings(doc) && event === 'update') {
-      if (doc.enableAnalytics) {
-        await flushQueuedEvents();
-      }
+    const isUpdatingSettings = isSettings(doc) && event === 'update';
+    if (isUpdatingSettings && doc.enableAnalytics) {
+      await flushQueuedEvents();
     }
   }
 });
