@@ -441,7 +441,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
   componentDidMount() {
     const { activity } = this.props;
-    trackPageView(`/${activity || ''}`);
+    trackPageView('activity', activity || '');
   }
 
   componentDidUpdate(prevProps: WrapperProps) {
@@ -450,7 +450,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     const { activity } = this.props;
 
     if (prevProps.activity !== activity) {
-      trackPageView(`/${activity || ''}`);
+      trackPageView('activity', activity || '');
     }
   }
 

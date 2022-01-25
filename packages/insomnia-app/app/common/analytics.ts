@@ -62,9 +62,12 @@ export function trackEvent(
   });
 }
 
-export function trackPageView(path: string) {
-  process.nextTick(async () => {
-    await _trackPageView(path);
+export function trackPageView(category: string, name: string) {
+  console.log('[segment] Page view', name);
+  segmentClient.page({
+    userId: getAccountId(),
+    category: category,
+    name,
   });
 }
 
@@ -84,7 +87,15 @@ export async function getDeviceId() {
   return deviceId;
 }
 
-let segmentClient: Analytics | null = null;
+const segmentClient = new Analytics(getSegmentWriteKey(), {
+  // @ts-expect-error -- TSCONVERSION
+  axiosConfig: {
+    // This is needed to ensure that we use the NodeJS adapter in the render process
+    ...(global?.require && {
+      adapter: global.require('axios/lib/adapters/http'),
+    }),
+  },
+});
 
 export enum SegmentEvent {
   appStarted = 'App Started',
@@ -180,24 +191,11 @@ export async function trackSegmentEvent(
   }
 
   try {
-    if (!segmentClient) {
-      segmentClient = new Analytics(getSegmentWriteKey(), {
-      // @ts-expect-error -- TSCONVERSION
-        axiosConfig: {
-          // This is needed to ensure that we use the NodeJS adapter in the render process
-          ...(global?.require && {
-            adapter: global.require('axios/lib/adapters/http'),
-          }),
-        },
-      });
-    }
-
     const anonymousId = await getDeviceId();
-    // This may return an empty string or undefined when a user is not logged in
-    const userId = getAccountId();
     segmentClient.track({
       anonymousId,
-      userId,
+      // This may return an empty string or undefined when a user is not logged in
+      userId: getAccountId(),
       event,
       properties,
       ...(timestamp ? { timestamp } : {}),
