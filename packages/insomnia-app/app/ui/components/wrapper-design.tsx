@@ -1,14 +1,12 @@
 import { IRuleResult } from '@stoplight/spectral';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, PureComponent, ReactNode, RefObject, useCallback, useState } from 'react';
+import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useState } from 'react';
 import { useAsync, useDebounce } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
-import { AUTOBIND_CFG } from '../../common/constants';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
@@ -226,6 +224,50 @@ const RenderPreview: FC<Pick<Props, 'wrapperProps'>> = ({ wrapperProps }) => {
   );
 };
 
+const RenderPageSidebar: FC<Pick<Props, 'wrapperProps'> & { editor: RefObject<UnconnectedCodeEditor>}> = ({
+  editor,
+  wrapperProps: { activeApiSpec },
+}) => {
+  const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
+    if (!editor.current) {
+      return;
+    }
+    editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
+  }, [editor]);
+
+  if (!activeApiSpec) {
+    return null;
+  }
+
+  if (!activeApiSpec.contents) {
+    return (
+      <EmptySpaceHelper>
+        A spec navigator will render here
+      </EmptySpaceHelper>
+    );
+  }
+
+  return (
+    <ErrorBoundary
+      invalidationKey={activeApiSpec.contents}
+      renderError={() => (
+        <div className="text-left margin pad">
+          <h4>An error occurred while trying to render your spec's navigation.</h4>
+          <p>
+            This navigation will automatically refresh, once you have a valid specification that
+            can be rendered.
+          </p>
+        </div>
+      )}
+    >
+      <SpecEditorSidebar
+        apiSpec={activeApiSpec}
+        handleSetSelection={handleScrollToSelection}
+      />
+    </ErrorBoundary>
+  );
+};
+
 interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
@@ -233,91 +275,50 @@ interface Props {
   wrapperProps: WrapperProps;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class WrapperDesign extends PureComponent<Props> {
-  editor = createRef<UnconnectedCodeEditor>();
+export const WrapperDesign: FC<Props> = ({
+  gitSyncDropdown,
+  handleActivityChange,
+  handleUpdateApiSpec,
+  wrapperProps,
+}) => {
+  const editor = createRef<UnconnectedCodeEditor>();
 
-  handleScrollToSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
-    if (!this.editor.current) {
-      return;
-    }
-    this.editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
-  }
+  const renderPageHeader = useCallback(() => (
+    <RenderPageHeader
+      gitSyncDropdown={gitSyncDropdown}
+      handleActivityChange={handleActivityChange}
+      wrapperProps={wrapperProps}
+    />
+  ), [gitSyncDropdown, handleActivityChange, wrapperProps]);
 
-  _renderPageSidebar() {
-    const { activeApiSpec } = this.props.wrapperProps;
+  const renderEditor = useCallback(() => (
+    <RenderEditor
+      editor={editor}
+      handleUpdateApiSpec={handleUpdateApiSpec}
+      wrapperProps={wrapperProps}
+    />
+  ), [editor, handleUpdateApiSpec, wrapperProps]);
 
-    if (!activeApiSpec) {
-      return null;
-    }
+  const renderPreview = useCallback(() => (
+    <RenderPreview
+      wrapperProps={wrapperProps}
+    />
+  ), [wrapperProps]);
 
-    if (!activeApiSpec.contents) {
-      return (
-        <EmptySpaceHelper>
-          A spec navigator will render here
-        </EmptySpaceHelper>
-      );
-    }
+  const renderPageSidebar = useCallback(() => (
+    <RenderPageSidebar
+      editor={editor}
+      wrapperProps={wrapperProps}
+    />
+  ), [editor, wrapperProps]);
 
-    return (
-      <ErrorBoundary
-        invalidationKey={activeApiSpec.contents}
-        renderError={() => (
-          <div className="text-left margin pad">
-            <h4>An error occurred while trying to render your spec's navigation.</h4>
-            <p>
-              This navigation will automatically refresh, once you have a valid specification that
-              can be rendered.
-            </p>
-          </div>
-        )}
-      >
-        <SpecEditorSidebar
-          apiSpec={activeApiSpec}
-          handleSetSelection={this.handleScrollToSelection}
-        />
-      </ErrorBoundary>
-    );
-  }
-
-  render() {
-    const {
-      gitSyncDropdown,
-      handleActivityChange,
-      handleUpdateApiSpec,
-      wrapperProps,
-    } = this.props;
-
-    const renderPageHeader = () => (
-      <RenderPageHeader
-        gitSyncDropdown={gitSyncDropdown}
-        handleActivityChange={handleActivityChange}
-        wrapperProps={wrapperProps}
-      />
-    );
-
-    const renderEditor = () => (
-      <RenderEditor
-        editor={this.editor}
-        handleUpdateApiSpec={handleUpdateApiSpec}
-        wrapperProps={wrapperProps}
-      />
-    );
-
-    const renderPreview = () => (
-      <RenderPreview
-        wrapperProps={wrapperProps}
-      />
-    );
-
-    return (
-      <PageLayout
-        wrapperProps={this.props.wrapperProps}
-        renderPageHeader={renderPageHeader}
-        renderPaneOne={renderEditor}
-        renderPaneTwo={renderPreview}
-        renderPageSidebar={this._renderPageSidebar}
-      />
-    );
-  }
-}
+  return (
+    <PageLayout
+      wrapperProps={wrapperProps}
+      renderPageHeader={renderPageHeader}
+      renderPaneOne={renderEditor}
+      renderPaneTwo={renderPreview}
+      renderPageSidebar={renderPageSidebar}
+    />
+  );
+};
