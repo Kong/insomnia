@@ -10,7 +10,7 @@ export function createBWRedirectMock({
   redirectTo,
   setCertificateVerifyProc = () => {},
 }: Options) {
-  electron.remote.BrowserWindow = jest.fn(function() {
+  electron.BrowserWindow = jest.fn(function() {
     this._emitter = new EventEmitter();
 
     this.loadURL = () => this.webContents.emit('did-navigate');

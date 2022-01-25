@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as electron from 'electron';
 import { PluginConfig } from 'insomnia-common';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
@@ -88,7 +87,7 @@ export class Plugins extends PureComponent<Props, State> {
   }
 
   static _handleOpenDirectory(directory: string) {
-    electron.remote.shell.showItemInFolder(directory);
+    window.shell.showItemInFolder(directory);
   }
 
   async _handleRefreshPlugins() {
@@ -116,7 +115,7 @@ export class Plugins extends PureComponent<Props, State> {
   }
 
   static _handleClickShowPluginsFolder() {
-    electron.remote.shell.showItemInFolder(PLUGIN_PATH);
+    window.shell.showItemInFolder(PLUGIN_PATH);
   }
 
   _handleCreatePlugin() {

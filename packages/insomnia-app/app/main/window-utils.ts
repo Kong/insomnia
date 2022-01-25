@@ -17,7 +17,7 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import { clickLink, getDataDirectory, restartApp } from '../common/electron-helpers';
+import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import LocalStorage from './local-storage';
 
@@ -85,10 +85,10 @@ export function createWindow() {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       zoomFactor: zoomFactor,
       nodeIntegration: true,
       webviewTag: true,
-      enableRemoteModule: true,
       // TODO: enable context isolation
       contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
@@ -482,7 +482,7 @@ export function createWindow() {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: restartApp,
+        click: window?.main.restart,
       },
     ],
   };

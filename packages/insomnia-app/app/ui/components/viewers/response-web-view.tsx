@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import contextMenu from 'electron-context-menu';
 import { EventEmitter } from 'events';
 import React, { createRef, PureComponent } from 'react';
 
@@ -37,11 +36,7 @@ export class ResponseWebView extends PureComponent<Props> {
 
     this.webview.current.removeEventListener('dom-ready', this._handleDOMReady);
 
-    contextMenu({
-      // @ts-expect-error -- TSCONVERSION type mismatch
-      window: this.webview.current,
-    });
-
+    // TODO: this needs attention
     this._setBody();
   }
 

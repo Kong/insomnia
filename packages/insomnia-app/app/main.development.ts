@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from 'axios';
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
@@ -7,7 +8,7 @@ import appConfig from '../config/config.json';
 import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
+import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
@@ -17,6 +18,8 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import { axiosRequest } from './network/axios-request';
+import { authorizeUserInWindow } from './network/o-auth-2/misc';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -50,7 +53,7 @@ app.on('ready', async () => {
   if (error) {
     electron.dialog.showErrorBox(error.title, error.message);
     console.log('[config] Insomnia config is invalid, preventing app initialization');
-    exitAppFailure();
+    app.exit(1);
     return;
   }
 
@@ -202,6 +205,58 @@ async function _trackStats() {
   });
 
   trackSegmentEvent(SegmentEvent.appStarted, {}, { queueable: true });
+
+  ipcMain.handle('showOpenDialog', async (_, options: Electron.OpenDialogOptions) => {
+    const { filePaths, canceled } = await electron.dialog.showOpenDialog(options);
+    return { filePaths, canceled };
+  });
+
+  ipcMain.handle('showSaveDialog', async (_, options: Electron.SaveDialogOptions) => {
+    const { filePath, canceled } = await electron.dialog.showSaveDialog(options);
+    return { filePath, canceled };
+  });
+
+  ipcMain.handle('request', async (_, options: AxiosRequestConfig) => {
+    try {
+      const { data, status, statusText, headers } = await axiosRequest(options);
+      return { data, status, statusText, headers };
+    } catch (err){
+      return err;
+    }
+  });
+
+  ipcMain.on('showItemInFolder', (_, name) => {
+    electron.shell.showItemInFolder(name);
+  });
+
+  ipcMain.on('restart', () => {
+    app.relaunch();
+    app.exit();
+  });
+
+  ipcMain.handle('setMenuBarVisibility', (_, visible) => {
+    electron.BrowserWindow.getAllWindows()
+      .forEach(window => {
+        // the `setMenuBarVisibility` signature uses `visible` semantics
+        window.setMenuBarVisibility(visible);
+        // the `setAutoHideMenu` signature uses `hide` semantics
+        const hide = !visible;
+        window.setAutoHideMenuBar(hide);
+      });
+  });
+
+  ipcMain.on('getPath', (event, name) => {
+    event.returnValue = electron.app.getPath(name);
+  });
+
+  ipcMain.on('getAppPath', event => {
+    event.returnValue = electron.app.getAppPath();
+  });
+
+  ipcMain.handle('authorizeUserInWindow', (_, options) => {
+    const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
+    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+  });
 
   ipcMain.once('window-ready', () => {
     const { currentVersion, launches, lastVersion } = stats;
