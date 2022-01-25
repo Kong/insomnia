@@ -97,7 +97,6 @@ interface QueuedSegmentEvent {
 let queuedEvents: QueuedSegmentEvent[] = [];
 
 async function flushQueuedEvents() {
-  console.log(`[segment] Flushing ${queuedEvents.length} queued events`, queuedEvents);
   const events = [...queuedEvents];
 
   // Clear queue before we even start sending to prevent races
@@ -132,7 +131,6 @@ export async function trackSegmentEvent(
         properties,
         timestamp: new Date(),
       };
-      console.log('[segment] Queued event', queuedEvent);
       queuedEvents.push(queuedEvent);
     }
     return;
@@ -155,7 +153,8 @@ export async function trackSegmentEvent(
 }
 
 export async function trackPageView(name: string) {
-  console.log('[segment] Page view', name);
+  const settings = await models.settings.getOrCreate();
+  if (!settings.enableAnalytics) return;
   sendSegment('page', { name });
 }
 
