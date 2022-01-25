@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Button, NoticeTable } from 'insomnia-components';
-import React, { Fragment, PureComponent, ReactNode } from 'react';
+import React, { createRef, Fragment, PureComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
@@ -49,7 +49,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class WrapperDesign extends PureComponent<Props, State> {
-  editor: UnconnectedCodeEditor | null = null;
+  editor = createRef<UnconnectedCodeEditor>();
   debounceTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -65,10 +65,6 @@ export class WrapperDesign extends PureComponent<Props, State> {
   static lintOptions = {
     delay: 1000,
   };
-
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this.editor = n;
-  }
 
   async _handleTogglePreview() {
     const { activeWorkspace } = this.props.wrapperProps;
@@ -104,13 +100,11 @@ export class WrapperDesign extends PureComponent<Props, State> {
   }
 
   _handleSetSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
-    const editor = this.editor;
-
-    if (!editor) {
+    if (!this.editor.current) {
       return;
     }
 
-    editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
+    this.editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
   _handleLintClick(notice) {
@@ -179,7 +173,7 @@ export class WrapperDesign extends PureComponent<Props, State> {
         <div className="tall relative overflow-hidden">
           <CodeEditor
             manualPrettify
-            ref={this._setEditorRef}
+            ref={this.editor}
             lintOptions={WrapperDesign.lintOptions}
             mode="openapi"
             defaultValue={activeApiSpec.contents}
