@@ -1,11 +1,11 @@
-# Insomnia REST Client
+# Insomnia API Client
 
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 
-Insomnia is an open-source, cross-platform API Client for GraphQL, REST, and gRPC.
+Insomnia is an open-source, cross-platform API client for GraphQL, REST, and gRPC.
 
-![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
+![Insomnia API Client](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
 
 ## Download
 
