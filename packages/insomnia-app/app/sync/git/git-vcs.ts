@@ -1,7 +1,6 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
 
-import { trackEvent } from '../../common/analytics';
 import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import { gitCallbacks } from './utils';
@@ -223,7 +222,6 @@ export class GitVCS {
 
   async commit(message: string) {
     console.log(`[git] Commit "${message}"`);
-    trackEvent('Git', 'Commit');
     return git.commit({ ...this._baseOpts, message });
   }
 
@@ -264,7 +262,6 @@ export class GitVCS {
 
   async push(gitCredentials?: GitCredentials | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
-    trackEvent('Git', 'Push');
     // eslint-disable-next-line no-unreachable
     const response: git.PushResult = await git.push({
       ...this._baseOpts,
@@ -286,7 +283,6 @@ export class GitVCS {
 
   async pull(gitCredentials?: GitCredentials | null) {
     console.log('[git] Pull remote=origin', await this.getBranch());
-    trackEvent('Git', 'Pull');
     return git.pull({
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
@@ -298,7 +294,6 @@ export class GitVCS {
   async merge(theirBranch: string) {
     const ours = await this.getBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
-    trackEvent('Git', 'Merge');
     return git.merge({
       ...this._baseOpts,
       ours,
@@ -336,13 +331,11 @@ export class GitVCS {
   }
 
   async branch(branch: string, checkout = false) {
-    trackEvent('Git', 'Create Branch');
     // @ts-expect-error -- TSCONVERSION remote doesn't exist as an option
     await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 
   async deleteBranch(branch: string) {
-    trackEvent('Git', 'Delete Branch');
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
@@ -353,7 +346,6 @@ export class GitVCS {
     const branches = await this.listBranches();
 
     if (branches.includes(branch)) {
-      trackEvent('Git', 'Checkout Branch');
       await git.checkout({ ...this._baseOpts, ref: branch, remote: 'origin' });
     } else {
       await this.branch(branch, true);

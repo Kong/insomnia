@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
-import { trackEvent } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import type { ApiSpec } from '../../../models/api-spec';
 
@@ -41,7 +40,6 @@ export class SpecEditorSidebar extends Component<Props, State> {
       col: number;
     };
   }) {
-    trackEvent('Spec Sidebar', 'Navigate');
     const { handleSetSelection } = this.props;
     // NOTE: We're subtracting 1 from everything because YAML CST uses
     //   1-based indexing and we use 0-based.

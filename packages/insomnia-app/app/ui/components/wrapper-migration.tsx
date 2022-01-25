@@ -3,7 +3,6 @@ import React, { FunctionComponent, useCallback, useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { useMount } from 'react-use';
 
-import { trackEvent } from '../../common/analytics';
 import { ACTIVITY_HOME } from '../../common/constants';
 import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/electron-helpers';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
@@ -276,7 +275,6 @@ const MigrationBody = () => {
 
   const reduxDispatch = useDispatch();
   const cancel = useCallback(() => {
-    trackEvent('Data', 'Migration', 'Skip');
     reduxDispatch(setActiveActivity(ACTIVITY_HOME));
   }, [reduxDispatch]);
 

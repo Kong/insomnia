@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import { trackEvent } from '../../../common/analytics';
+import { trackPageView } from '../../../common/analytics';
 import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_DEBUG,
@@ -319,7 +319,7 @@ export const loadRequestStop = (requestId: string) => ({
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  trackEvent('Activity', 'Change', activity);
+  trackPageView(activity);
   return {
     type: SET_ACTIVE_ACTIVITY,
     activity,
@@ -690,7 +690,6 @@ export const initActiveActivity = () => (dispatch, getState) => {
   } else {
     // Always check if user has been prompted to migrate or onboard
     if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-      trackEvent('Data', 'Migration', 'Auto');
       overrideActivity = ACTIVITY_MIGRATION;
     }
   }

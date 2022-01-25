@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
 import React, { Fragment, PureComponent, Ref } from 'react';
 
-import { trackPageView } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import {
   ACTIVITY_DEBUG,
@@ -437,21 +436,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     this.setState({
       activeGitBranch: branch || 'no-vcs',
     });
-  }
-
-  componentDidMount() {
-    const { activity } = this.props;
-    trackPageView(`/${activity || ''}`);
-  }
-
-  componentDidUpdate(prevProps: WrapperProps) {
-    // We're using activities as page views so here we monitor
-    // for a change in activity and send it as a pageview.
-    const { activity } = this.props;
-
-    if (prevProps.activity !== activity) {
-      trackPageView(`/${activity || ''}`);
-    }
   }
 
   render() {

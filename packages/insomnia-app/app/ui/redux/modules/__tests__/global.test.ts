@@ -3,7 +3,6 @@ import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
-import { trackEvent } from '../../../../common/analytics';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -68,7 +67,6 @@ describe('global', () => {
         activity,
       };
       expect(setActiveActivity(activity)).toStrictEqual(expectedEvent);
-      expect(trackEvent).toHaveBeenCalledWith('Activity', 'Change', activity);
       expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activity`)).toBe(
         JSON.stringify(activity),
       );
