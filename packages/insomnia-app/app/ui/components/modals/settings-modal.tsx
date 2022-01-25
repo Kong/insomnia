@@ -106,7 +106,7 @@ export class SettingsModal extends PureComponent<Props, State> {
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <General hideModal={this.hide} />
+              <General />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport

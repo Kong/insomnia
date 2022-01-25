@@ -6,7 +6,6 @@ import type { GlobalActivity } from '../../common/constants';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
@@ -79,7 +78,6 @@ import { WrapperModal } from './modals/wrapper-modal';
 import { WrapperDebug } from './wrapper-debug';
 import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
-import { WrapperMigration } from './wrapper-migration';
 import { WrapperUnitTest } from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
@@ -700,8 +698,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               wrapperProps={this.props}
             />
           )}
-
-          {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
         </Fragment>
       </Fragment>
     );

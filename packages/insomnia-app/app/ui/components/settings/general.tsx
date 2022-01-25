@@ -1,10 +1,9 @@
 import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
 import { Tooltip } from 'insomnia-components';
 import React, { FC, Fragment, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import {
-  ACTIVITY_MIGRATION,
   EditorKeyMap,
   isDevelopment,
   isMac,
@@ -18,7 +17,6 @@ import { docsKeyMaps } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { setActiveActivity } from '../../redux/modules/global';
 import { selectSettings, selectStats } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
@@ -61,13 +59,6 @@ const DevelopmentOnlySettings: FC = () => {
 
       <div className="form-row pad-top-sm">
         <BooleanSetting
-          label="Has been prompted to migrate from Insomnia Designer"
-          setting="hasPromptedToMigrateFromDesigner"
-        />
-      </div>
-
-      <div className="form-row pad-top-sm">
-        <BooleanSetting
           label="Has seen analytics prompt"
           setting="hasPromptedAnalytics"
         />
@@ -92,19 +83,8 @@ const DevelopmentOnlySettings: FC = () => {
   );
 };
 
-interface Props {
-  hideModal: () => void;
-}
-
-export const General: FC<Props> = ({ hideModal }) => {
-  const dispatch = useDispatch();
+export const General: FC = () => {
   const settings = useSelector(selectSettings);
-
-  const handleStartMigration = useCallback(() => {
-    dispatch(setActiveActivity(ACTIVITY_MIGRATION));
-    hideModal();
-  }, [hideModal, dispatch]);
-
   return (
     <div className="pad-bottom">
       <div className="row-fill row-fill--top">
@@ -465,15 +445,6 @@ export const General: FC<Props> = ({ hideModal }) => {
         label="Allow Notification Requests"
         setting="allowNotificationRequests"
       />
-
-      <hr className="pad-top" />
-
-      <h2>Migrate from Designer</h2>
-      <div className="form-row--start pad-top-sm">
-        <button className="btn btn--clicky pointer" onClick={handleStartMigration}>
-          Show migration workflow
-        </button>
-      </div>
 
       <DevelopmentOnlySettings />
     </div>
