@@ -1,5 +1,13 @@
+import { expect } from '@playwright/test';
+
 import { loadFixture } from '../playwright/paths';
 import { test } from '../playwright/test';
+
+test('url field is focused for first time users', async ({ page }) => {
+  const urlInput = ':nth-match(textarea, 2)';
+  const locator = page.locator(urlInput);
+  await expect(locator).toBeFocused();
+});
 
 test('can send requests', async ({ app, page }) => {
   await page.click('[data-testid="project"]');
