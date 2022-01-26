@@ -1,12 +1,3 @@
-/*
-example usage:
-
-```console
-npm run generate:changelog -- --base="core@2021.7.2" --head="21ab3dd" --releaseName="core@2021.7.3"
-```
-
-*/
-
 import { Octokit } from '@octokit/rest';
 import yargs from 'yargs';
 
