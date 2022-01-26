@@ -153,15 +153,13 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
     }
   }, [contents]);
 
-  const handleScrollToSelection = useCallback((notice: Notice) => {
+  const handleScrollToSelection = useCallback((notice: Notice<Pick<LintMessage, 'range'>>) => {
     if (!editor.current) {
       return;
     }
-    // @ts-expect-error Notice is not generic, and thus cannot be provided more data like we are doing elsewhere in this file
     if (!notice.range) {
       return;
     }
-    // @ts-expect-error Notice is not generic, and thus cannot be provided more data like we are doing elsewhere in this file
     const { start, end } = notice.range;
     editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
   }, [editor]);
@@ -185,7 +183,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
         {emptyStateNode}
       </div>
       {lintMessages.length > 0 && (
-        <NoticeTable
+        <NoticeTable<Pick<LintMessage, 'range'>>
           notices={lintMessages}
           onClick={handleScrollToSelection}
         />
