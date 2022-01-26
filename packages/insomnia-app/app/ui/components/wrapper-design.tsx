@@ -117,13 +117,15 @@ const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
     }
   }, [contents]);
 
-  const handleScrollToSelection = useCallback((notice: Notice<Pick<LintMessage, 'range'>>) => {
+  const handleScrollToSelection = useCallback((notice: Notice) => {
     if (!editor.current) {
       return;
     }
+    // @ts-expect-error Notice is not generic, and thus cannot be provided more data like we are doing elsewhere in this file
     if (!notice.range) {
       return;
     }
+    // @ts-expect-error Notice is not generic, and thus cannot be provided more data like we are doing elsewhere in this file
     const { start, end } = notice.range;
     editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
   }, [editor]);
@@ -149,7 +151,7 @@ const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
         />
       </div>
       {lintMessages.length > 0 && (
-        <NoticeTable<Pick<LintMessage, 'range'>>
+        <NoticeTable
           notices={lintMessages}
           onClick={handleScrollToSelection}
         />
