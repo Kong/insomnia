@@ -40,6 +40,14 @@ const configuration: Configuration[] = [{
   },
   target: 'electron-main',
   plugins,
+},
+{
+  entry: './app/preload.js',
+  target: 'electron-preload',
+  output: {
+    path: path.join(__dirname, '../build'),
+    filename: 'preload.js',
+  },
 }];
 
 export default configuration;
