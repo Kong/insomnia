@@ -1,4 +1,4 @@
-import { trackEvent } from '../../../common/analytics';
+import { trackPageView } from '../../../common/analytics';
 import { AlertModal, AlertModalOptions } from './alert-modal';
 import { ErrorModal, ErrorModalOptions } from './error-modal';
 import { PromptModal, PromptModalOptions } from './prompt-modal';
@@ -15,7 +15,7 @@ export function registerModal(instance) {
 }
 
 export function showModal(modalCls, ...args) {
-  trackEvent('Modals', 'Show', modalCls.name);
+  trackPageView(modalCls.name);
   return _getModal(modalCls).show(...args);
 }
 

@@ -4,7 +4,7 @@ import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { SegmentEvent, trackEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
@@ -111,7 +111,6 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleOpen() {
-    trackEvent('Git Dropdown', 'Open');
     await this._refreshState();
   }
 

@@ -16,7 +16,7 @@ import { isUnitTest } from '../models/unit-test';
 import { isUnitTestSuite } from '../models/unit-test-suite';
 import { isWorkspace, Workspace } from '../models/workspace';
 import { resetKeys } from '../sync/ignore-keys';
-import { trackEvent } from './analytics';
+import { SegmentEvent, trackSegmentEvent } from './analytics';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -113,7 +113,7 @@ export async function exportRequestsHAR(
   }
 
   const data = await har.exportHar(harRequests);
-  trackEvent('Data', 'Export', 'HAR');
+  trackSegmentEvent(SegmentEvent.dataExport, { type: 'har' });
   return JSON.stringify(data, null, '\t');
 }
 
@@ -247,7 +247,7 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
-  trackEvent('Data', 'Export', `Insomnia ${format}`);
+  trackSegmentEvent(SegmentEvent.dataExport, { type: format });
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);

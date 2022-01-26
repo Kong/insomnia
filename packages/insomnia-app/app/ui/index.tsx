@@ -6,7 +6,7 @@ import { hot } from 'react-hot-loader';
 import { Provider } from 'react-redux';
 import * as styledComponents from 'styled-components';
 
-import { trackEvent } from '../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../common/analytics';
 import { getAppLongName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
@@ -69,11 +69,11 @@ window['styled-components'] = styledComponents;
 if (window && !isDevelopment()) {
   window.addEventListener('error', e => {
     console.error('Uncaught Error', e.error || e);
-    trackEvent('Error', 'Uncaught Error');
+    trackSegmentEvent(SegmentEvent.criticalError, { detail: e?.message });
   });
   window.addEventListener('unhandledrejection', e => {
     console.error('Unhandled Promise', e.reason);
-    trackEvent('Error', 'Uncaught Promise');
+    trackSegmentEvent(SegmentEvent.criticalError, { detail: e?.reason });
   });
 }
 

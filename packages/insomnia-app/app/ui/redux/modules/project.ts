@@ -1,4 +1,4 @@
-import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -18,7 +18,6 @@ export const createProject = () => dispatch => {
     selectText: true,
     onComplete: async name => {
       const project = await models.project.create({ name });
-      trackEvent('Project', 'Create');
       dispatch(setActiveProject(project._id));
       dispatch(setActiveActivity(ACTIVITY_HOME));
       trackSegmentEvent(SegmentEvent.projectLocalCreate);
@@ -39,7 +38,6 @@ export const removeProject = (project: Project) => dispatch => {
     onConfirm: async () => {
       await models.stats.incrementDeletedRequestsForDescendents(project);
       await models.project.remove(project);
-      trackEvent('Project', 'Delete');
       // Show default project
       dispatch(setActiveProject(DEFAULT_PROJECT_ID));
       // Show home in case not already on home
