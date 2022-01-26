@@ -113,7 +113,7 @@ export async function exportRequestsHAR(
   }
 
   const data = await har.exportHar(harRequests);
-  trackSegmentEvent(SegmentEvent.dataExport);
+  trackSegmentEvent(SegmentEvent.dataExport, { type: 'har' });
   return JSON.stringify(data, null, '\t');
 }
 
@@ -247,7 +247,7 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
-  trackSegmentEvent(SegmentEvent.dataExport);
+  trackSegmentEvent(SegmentEvent.dataExport, { type: format });
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);
