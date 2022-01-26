@@ -3,7 +3,7 @@ import path from 'path';
 import React, { ReactNode } from 'react';
 import YAML from 'yaml';
 
-import { SegmentEvent, trackEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -164,7 +164,6 @@ export const cloneGitRepository = ({ createFsClient }: {
         dispatch(loadStart());
         repoSettingsPatch.needsFullClone = true;
         repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
-        trackEvent('Git', 'Clone');
         let fsClient = createFsClient();
 
         try {

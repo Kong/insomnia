@@ -159,13 +159,11 @@ export type GlobalActivity =
   | 'spec'
   | 'debug'
   | 'unittest'
-  | 'home'
-  | 'migration';
+  | 'home';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
-export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 
 export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
   isDesignActivity(activity) || isCollectionActivity(activity);
@@ -178,7 +176,6 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
       return true;
 
     case ACTIVITY_HOME:
-    case ACTIVITY_MIGRATION:
     default:
       return false;
   }
@@ -192,7 +189,6 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
     case ACTIVITY_SPEC:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
-    case ACTIVITY_MIGRATION:
     default:
       return false;
   }
@@ -204,7 +200,6 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
-    case ACTIVITY_MIGRATION:
       return true;
 
     default:

@@ -4,7 +4,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electro
 import path from 'path';
 
 import appConfig from '../config/config.json';
-import { trackNonInteractiveEventQueueable } from './common/analytics';
+import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
@@ -200,21 +200,14 @@ async function _trackStats() {
     lastVersion: oldStats.currentVersion,
     launches: oldStats.launches + 1,
   });
-  // Update Stats Object
-  const firstLaunch = stats.launches === 1;
-  const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
 
-  if (firstLaunch) {
-    trackNonInteractiveEventQueueable('General', 'First Launch', stats.currentVersion);
-  } else if (justUpdated) {
-    trackNonInteractiveEventQueueable('General', 'Updated', stats.currentVersion);
-  } else {
-    trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
-  }
+  trackSegmentEvent(SegmentEvent.appStarted, {}, { queueable: true });
 
   ipcMain.once('window-ready', () => {
-    const { currentVersion } = stats;
+    const { currentVersion, launches, lastVersion } = stats;
 
+    const firstLaunch = launches === 1;
+    const justUpdated = !firstLaunch && currentVersion !== lastVersion;
     if (!justUpdated || !currentVersion) {
       return;
     }

@@ -2,12 +2,10 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
 import React, { Fragment, PureComponent, Ref } from 'react';
 
-import { trackPageView } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
@@ -80,7 +78,6 @@ import { WrapperModal } from './modals/wrapper-modal';
 import { WrapperDebug } from './wrapper-debug';
 import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
-import { WrapperMigration } from './wrapper-migration';
 import { WrapperUnitTest } from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
@@ -439,21 +436,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  componentDidMount() {
-    const { activity } = this.props;
-    trackPageView(`/${activity || ''}`);
-  }
-
-  componentDidUpdate(prevProps: WrapperProps) {
-    // We're using activities as page views so here we monitor
-    // for a change in activity and send it as a pageview.
-    const { activity } = this.props;
-
-    if (prevProps.activity !== activity) {
-      trackPageView(`/${activity || ''}`);
-    }
-  }
-
   render() {
     const {
       activeCookieJar,
@@ -716,8 +698,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               wrapperProps={this.props}
             />
           )}
-
-          {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
         </Fragment>
       </Fragment>
     );
