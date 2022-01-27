@@ -14,8 +14,6 @@ export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getGoogleAnalyticsId = () => appConfig.gaId;
-export const getGoogleAnalyticsLocation = () => appConfig.gaLocation;
 export const getAppPlatform = () => process.platform;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
