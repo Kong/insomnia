@@ -14,7 +14,6 @@ import {
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import type { ApiSpec } from '../../models/api-spec';
 import type { Cookie } from '../../models/cookie-jar';
 import * as models from '../../models/index';
 import {
@@ -153,10 +152,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return this._handleForceUpdateRequest(r, { headers });
-  }
-
-  async _handleUpdateApiSpec(apiSpec: ApiSpec) {
-    await models.apiSpec.update(apiSpec);
   }
 
   static _handleUpdateRequestBody(request: Request, body: RequestBody) {
@@ -646,7 +641,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
               handleActivityChange={this._handleWorkspaceActivityChange}
-              handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
             />
           )}
