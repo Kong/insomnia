@@ -44,8 +44,14 @@ if (!isDevelopment()) {
 // So if (window) checks don't throw
 global.window = global.window || undefined;
 
+// NOTE: this provides a global right click context menu
 contextMenu();
-
+app.on('web-contents-created', (_, contents) => {
+  if (contents.getType() === 'webview') {
+  // set context menu in webview
+    contextMenu({ window: contents });
+  }
+});
 // When the app is first launched
 app.on('ready', async () => {
   const { error } = validateInsomniaConfig();

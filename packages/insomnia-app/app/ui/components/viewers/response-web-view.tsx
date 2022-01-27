@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { EventEmitter } from 'events';
 import React, { createRef, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -36,7 +35,6 @@ export class ResponseWebView extends PureComponent<Props> {
 
     this.webview.current.removeEventListener('dom-ready', this._handleDOMReady);
 
-    // TODO: this needs attention
     this._setBody();
   }
 
@@ -54,17 +52,11 @@ export class ResponseWebView extends PureComponent<Props> {
     //
     //    https://github.com/electron/electron/issues/20700
     //
-    // webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
+    // this.webview.current.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
     //   baseURLForDataURL: url,
     // });
     // @ts-expect-error -- TSCONVERSION type mismatch
     this.webview.current.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
-
-    // This is kind of hacky but electron-context-menu fails to save images if this isn't here.
-    // @ts-expect-error -- TSCONVERSION type mismatch
-    this.webview.current.webContents = this.webview.current;
-    // @ts-expect-error -- TSCONVERSION type mismatch
-    this.webview.current.webContents.session = new EventEmitter();
   }
 
   render() {
