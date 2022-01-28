@@ -6,45 +6,60 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 
 ## Structure
 
-| Folder      | Purpose                           |
-| ----------- | --------------------------------- |
-| `/cli`      | tests for inso                    |
-| `/tests`    | tests for Insomnia                |
-| `/server`   | Express server used by the tests  |
-| `/fixtures` | data used by tests and the server |
+| Folder       | Purpose                           |
+| ------------ | --------------------------------- |
+| `/cli`       | tests for inso                    |
+| `/tests`     | tests for Insomnia                |
+| `/playwright`| test helpers                      |
+| `/server`    | Express server used by the tests  |
+| `/fixtures`  | data used by tests and the server |
 
-## How to run
+## Run Insomnia app smoke tests
 
-There are several ways to run a test but the first step is to bootstrap and build or package the relevant application.
+### Development method
 
-From the root of this repository:
+In one terminal run the watcher
 
 ```shell
-npm run bootstrap                   # Install packages and compile inso
-npm run app-build:smoke             # Compile Insomnia
-npm run inso-package                # Package the Inso CLI binaries
+npm run app-start-playwright    # Run watcher
 ```
 
-You can then run the smoke tests, again from the root:
+In a second terminal run/debug/step through smoke tests
 
 ```shell
-npm run app-start-playwright                    # Run Insomnia tests
-PWDEBUG=1 npm run test:smoke:dev                # Write Insomnia tests with the playwrite recorder
-DEBUG=pw:browser,pw:api npm run test:smoke:dev  # Run Insomnia tests, with verbose output
+# Run tests
+npm run test:smoke:dev
+# Debug tests with verbose output
+DEBUG=pw:browser,pw:api npm run test:smoke:dev
+# Step through tests with playwright inspector
+PWDEBUG=1 npm run test:smoke:dev
 ```
 
-Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases, so we typically run tests against a build. To run packaged tests, from the root:
+### Build and package methods
+
+Build = js bundle to load into an electron client
+Package = executable binary `.dmg` or `.exe`
 
 ```shell
-npm run app-package:smoke      # Package Insomnia
-npm run test:smoke:package     # Run Insomnia tests
+npm run app-build:smoke             # Transpile js bundle
+npm run test:smoke:package          # Run tests
+```
+
+```shell
+npm run app-package:smoke           # Build executable in /packages/insomnia-app/dist
+npm run test:smoke:package          # Run tests
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
 
-## How to write
+## Run Inso CLI smoke tests
 
-When writing tests, it is recommended to use the scripts in this project directly (instead of from the root, as per the section above). After building and/or packaging your application under test, it will be available under `packages/insomnia-app/{build|dist}` and you can begin writing your test.
+```shell
+npm run inso-package                # Package the Inso CLI binaries
+npm run test:smoke:cli              # Run CLI tests
+```
+
+### Write Inso CLI smoke tests
 
 In order to run CLI tests for development, open two terminal tabs in `packages/insomnia-smoke-test`:
 
