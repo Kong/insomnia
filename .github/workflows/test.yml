@@ -50,12 +50,15 @@ jobs:
         run: npm run bootstrap
 
       - name: Lint
+        if: matrix.os == 'ubuntu-latest'
         run: npm run lint
 
       - name: Lint markdown
+        if: matrix.os == 'ubuntu-latest'
         run: npm run lint:markdown
 
       - name: Type checks
+        if: matrix.os == 'ubuntu-latest'
         run: npm run type-check
 
       - name: Run tests
