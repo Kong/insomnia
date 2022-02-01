@@ -1,6 +1,7 @@
 import { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useAsync, useDebounce } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
@@ -10,6 +11,7 @@ import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
 import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
@@ -32,13 +34,12 @@ const spectral = initializeSpectral();
 const RenderPageHeader: FC<Pick<Props,
 | 'gitSyncDropdown'
 | 'handleActivityChange'
-| 'wrapperProps'
 >> = ({
   gitSyncDropdown,
   handleActivityChange,
-  wrapperProps,
 }) => {
-  const { activeWorkspace, activeWorkspaceMeta } = wrapperProps;
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const previewHidden = Boolean(activeWorkspaceMeta?.previewHidden);
 
   const handleTogglePreview = useCallback(async () => {
