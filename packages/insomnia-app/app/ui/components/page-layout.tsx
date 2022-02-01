@@ -1,6 +1,9 @@
 import classnames from 'classnames';
 import React, { FC, forwardRef, ReactNode, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
+import { selectIsLoading } from '../redux/modules/global';
+import { selectActiveEnvironment, selectActiveGitRepository, selectSettings, selectUnseenWorkspaces, selectWorkspacesForActiveProject } from '../redux/selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
 import type { WrapperProps } from './wrapper';
@@ -32,9 +35,14 @@ export const PageLayout: FC<Props> = ({
   renderPageSidebar,
   wrapperProps,
 }) => {
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeGitRepository = useSelector(selectActiveGitRepository);
+  const isLoading = useSelector(selectIsLoading);
+  const settings = useSelector(selectSettings);
+  const unseenWorkspaces = useSelector(selectUnseenWorkspaces);
+  const workspaces = useSelector(selectWorkspacesForActiveProject);
+
   const {
-    activeEnvironment,
-    activeGitRepository,
     gitVCS,
     handleInitializeEntities,
     handleResetDragSidebar,
@@ -47,14 +55,10 @@ export const PageLayout: FC<Props> = ({
     handleResetDragPaneHorizontal,
     handleStartDragPaneVertical,
     handleResetDragPaneVertical,
-    isLoading,
     paneHeight,
     paneWidth,
-    settings,
     sidebarHidden,
     sidebarWidth,
-    unseenWorkspaces,
-    workspaces,
   } = wrapperProps;
 
   // Special request updaters
