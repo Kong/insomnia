@@ -41,15 +41,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
   return (
     <AppHeader
       breadcrumbProps={{ crumbs }}
-      gridCenter={
-        isDesign(activeWorkspace) && (
-          <ActivityToggle
-            activity={activity}
-            handleActivityChange={handleActivityChange}
-            workspace={activeWorkspace}
-          />
-        )
-      }
+      gridCenter={<ActivityToggle handleActivityChange={handleActivityChange} />}
       gridRight={gridRight}
     />
   );
