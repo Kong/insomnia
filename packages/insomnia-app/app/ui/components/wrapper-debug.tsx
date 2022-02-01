@@ -54,18 +54,22 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject, syncItems, isLoggedIn } = this.props.wrapperProps;
+    const { gitSyncDropdown, handleActivityChange, wrapperProps: {
+      vcs,
+      activeWorkspace,
+      activeWorkspaceMeta,
+      activeProject,
+      syncItems,
+      isLoggedIn,
+    } } = this.props;
 
     if (!activeWorkspace) {
       return null;
     }
 
     const collection = isCollection(activeWorkspace);
-    const design = isDesign(activeWorkspace);
 
     let insomniaSync: ReactNode = null;
-
     if (isLoggedIn && collection && isRemoteProject(activeProject) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
@@ -76,12 +80,11 @@ export class WrapperDebug extends PureComponent<Props> {
       />;
     }
 
-    const gitSync = design && gitSyncDropdown;
+    const gitSync = isDesign(activeWorkspace) && gitSyncDropdown;
     const sync = insomniaSync || gitSync;
 
     return (
       <WorkspacePageHeader
-        wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
         gridRight={sync}
       />

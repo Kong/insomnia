@@ -545,10 +545,9 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+    const { gitSyncDropdown, handleActivityChange } = this.props;
     return (
       <WorkspacePageHeader
-        wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
         gridRight={gitSyncDropdown}
       />
