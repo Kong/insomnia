@@ -77,7 +77,7 @@
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "eslint-plugin-standard": "^5.0.0",
     "jest": "^26.6.3",
-    "lerna": "^3.22.0",
+    "lerna": "^4.0.0",
     "markdownlint-cli2": "^0.2.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.6",
