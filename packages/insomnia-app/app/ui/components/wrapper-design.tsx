@@ -11,7 +11,7 @@ import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
-import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
+import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
 import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
@@ -74,13 +74,8 @@ interface LintMessage {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
-  editor: RefObject<UnconnectedCodeEditor>;
-}> = ({
-  editor,
-  wrapperProps,
-}) => {
-  const { activeApiSpec } = wrapperProps;
+const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
