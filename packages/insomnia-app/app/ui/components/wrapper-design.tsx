@@ -154,8 +154,9 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   );
 };
 
-const RenderPreview: FC<Pick<Props, 'wrapperProps'>> = ({ wrapperProps }) => {
-  const { activeApiSpec, activeWorkspaceMeta } = wrapperProps;
+const RenderPreview: FC = () => {
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
 
   if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
     return null;
@@ -272,22 +273,16 @@ export const WrapperDesign: FC<Props> = ({
     <RenderPageHeader
       gitSyncDropdown={gitSyncDropdown}
       handleActivityChange={handleActivityChange}
-      wrapperProps={wrapperProps}
     />
-  ), [gitSyncDropdown, handleActivityChange, wrapperProps]);
+  ), [gitSyncDropdown, handleActivityChange]);
 
   const renderEditor = useCallback(() => (
-    <RenderEditor
-      editor={editor}
-      wrapperProps={wrapperProps}
-    />
-  ), [editor, wrapperProps]);
+    <RenderEditor editor={editor} />
+  ), [editor]);
 
   const renderPreview = useCallback(() => (
-    <RenderPreview
-      wrapperProps={wrapperProps}
-    />
-  ), [wrapperProps]);
+    <RenderPreview />
+  ), []);
 
   const renderPageSidebar = useCallback(() => (
     <RenderPageSidebar
