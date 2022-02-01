@@ -52,7 +52,6 @@ const RenderPageHeader: FC<Pick<Props,
 
   return (
     <WorkspacePageHeader
-      wrapperProps={wrapperProps}
       handleActivityChange={handleActivityChange}
       gridRight={
         <Fragment>
