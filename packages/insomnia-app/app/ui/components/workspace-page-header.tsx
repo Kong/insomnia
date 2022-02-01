@@ -1,17 +1,16 @@
 import React, { FunctionComponent, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
+import { ACTIVITY_HOME } from '../../common/constants';
 import { isDesign } from '../../models/workspace';
 import { selectActiveProjectName } from '../redux/selectors';
 import { ActivityToggle } from './activity-toggle';
 import { AppHeader } from './app-header';
 import { WorkspaceDropdown } from './dropdowns/workspace-dropdown';
-import type { WrapperProps } from './wrapper';
+import { HandleActivityChange } from './wrapper';
 
 interface Props {
-  wrapperProps: WrapperProps;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   gridRight: ReactNode;
 }
 

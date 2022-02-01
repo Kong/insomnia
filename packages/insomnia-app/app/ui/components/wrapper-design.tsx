@@ -6,7 +6,6 @@ import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import type { GlobalActivity } from '../../common/constants';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
@@ -17,7 +16,7 @@ import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
 import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { WrapperProps } from './wrapper';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
@@ -263,7 +262,7 @@ const RenderPageSidebar: FC<Pick<Props, 'wrapperProps'> & { editor: RefObject<Un
 
 interface Props {
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   wrapperProps: WrapperProps;
 }
 

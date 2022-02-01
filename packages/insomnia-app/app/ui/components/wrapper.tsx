@@ -122,6 +122,11 @@ export type WrapperProps = AppProps & {
   gitVCS: GitVCS | null;
 };
 
+export type HandleActivityChange = (options: {
+  workspaceId?: string;
+  nextActivity: GlobalActivity;
+}) => Promise<void>;
+
 interface State {
   forceRefreshKey: number;
   activeGitBranch: string;
@@ -213,7 +218,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string; nextActivity: GlobalActivity}) {
+  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME

@@ -4,10 +4,11 @@ import React, { FunctionComponent } from 'react';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
+import { HandleActivityChange } from './wrapper';
 
 interface Props {
   activity: GlobalActivity;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   workspace: Workspace;
 }
 
