@@ -1,5 +1,5 @@
 import { isDesign, Workspace } from '../models/workspace';
 import { strings } from './strings';
 
-export const getWorkspaceLabel = (w: Workspace) =>
-  isDesign(w) ? strings.document : strings.collection;
+export const getWorkspaceLabel = (workspace: Workspace) =>
+  isDesign(workspace) ? strings.document : strings.collection;

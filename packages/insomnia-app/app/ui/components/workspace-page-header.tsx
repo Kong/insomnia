@@ -21,12 +21,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
   wrapperProps: {
     activeApiSpec,
     activeWorkspace,
-    activeWorkspaceName,
-    activeProject,
-    activeEnvironment,
-    settings,
     activity,
-    isLoading,
   },
 }) => {
   const homeCallback = useCallback(
@@ -39,22 +34,9 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
     return null;
   }
 
-  const workspace = (
-    <WorkspaceDropdown
-      key="workspace-dd"
-      activeEnvironment={activeEnvironment}
-      activeWorkspace={activeWorkspace}
-      activeWorkspaceName={activeWorkspaceName}
-      activeApiSpec={activeApiSpec}
-      activeProject={activeProject}
-      hotKeyRegistry={settings.hotKeyRegistry}
-      isLoading={isLoading}
-    />
-  );
-
   const crumbs = [
     { id: 'project', node: activeProjectName, onClick: homeCallback },
-    { id: 'workspace', node: workspace },
+    { id: 'workspace', node: <WorkspaceDropdown key="workspace-dd" /> },
   ];
 
   return (

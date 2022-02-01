@@ -44,6 +44,7 @@ import {
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
 import { selectActiveProjectName, selectStats, selectWorkspacesForActiveProject } from '../selectors';
+import { RootState } from '.';
 import { importUri } from './import';
 import { activateWorkspace } from './workspace';
 
@@ -179,6 +180,8 @@ export const reducer = combineReducers<GlobalState>({
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
+
+export const selectIsLoading = (state: RootState) => state.global.isLoading;
 
 // ~~~~~~~ //
 // ACTIONS //
