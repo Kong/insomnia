@@ -52,7 +52,7 @@
     "@babel/preset-react": "^7.9.4",
     "@jest/types": "^26.6.2",
     "@types/chai": "^4.2.15",
-    "@types/eslint": "4.16.1",
+    "@types/eslint": "8.4.1",
     "@types/jest": "^26.0.23",
     "@types/node": "^14.14.32",
     "@types/rimraf": "^3.0.0",
