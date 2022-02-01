@@ -127,8 +127,6 @@ export const PageLayout: FC<Props> = ({
             hidden={sidebarHidden || false}
             hotKeyRegistry={settings.hotKeyRegistry}
             isLoading={isLoading}
-            // @ts-expect-error -- TSCONVERSION appears to be a genuine error, or is it that it comes from Wrapper?
-            showEnvironmentsModal={this._handleShowEnvironmentsModal}
             unseenWorkspaces={unseenWorkspaces}
             gitVCS={gitVCS}
             width={sidebarWidth}
