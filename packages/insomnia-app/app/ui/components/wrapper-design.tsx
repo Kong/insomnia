@@ -212,10 +212,8 @@ const RenderPreview: FC = () => {
   );
 };
 
-const RenderPageSidebar: FC<Pick<Props, 'wrapperProps'> & { editor: RefObject<UnconnectedCodeEditor>}> = ({
-  editor,
-  wrapperProps: { activeApiSpec },
-}) => {
+const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor>}> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
   const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
     if (!editor.current) {
       return;
@@ -285,11 +283,8 @@ export const WrapperDesign: FC<Props> = ({
   ), []);
 
   const renderPageSidebar = useCallback(() => (
-    <RenderPageSidebar
-      editor={editor}
-      wrapperProps={wrapperProps}
-    />
-  ), [editor, wrapperProps]);
+    <RenderPageSidebar editor={editor} />
+  ), [editor]);
 
   return (
     <PageLayout
