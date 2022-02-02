@@ -7,6 +7,13 @@ const config: PlaywrightTestConfig = {
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
+  use: {
+    trace: {
+      mode: 'on',
+      screenshots: true,
+      snapshots: true,
+    },
+  },
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'screenshots',

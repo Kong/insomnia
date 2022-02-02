@@ -1,6 +1,6 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import { ElectronApplication, test as baseTest } from '@playwright/test';
-import { platform } from 'os';
+import path from 'path';
 
 import {
   cwd,
@@ -16,7 +16,7 @@ interface EnvOptions {
 export const test = baseTest.extend<{
   app: ElectronApplication;
 }>({
-  app: async ({ playwright }, use) => {
+  app: async ({ playwright }, use, testInfo) => {
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: randomDataPath(),
     };
@@ -32,12 +32,22 @@ export const test = baseTest.extend<{
       },
     });
 
+    const appContext = electronApp.context();
+
+    await appContext.tracing.start({
+      title: testInfo.title,
+      name: testInfo.title,
+      screenshots: true,
+      snapshots: true,
+    });
+
     await use(electronApp);
 
-    // Closing the window (page) doesn't close the app on osx
-    if (platform() === 'darwin') {
-      await electronApp.close();
-    }
+    await appContext.tracing.stop({
+      path: path.join(testInfo.outputDir, 'trace.zip'),
+    });
+
+    await electronApp.close();
   },
   page: async ({ app }, use) => {
     const page = await app.firstWindow();
@@ -47,7 +57,5 @@ export const test = baseTest.extend<{
     await page.click("text=Don't share usage analytics");
 
     await use(page);
-
-    await page.close();
   },
 });
