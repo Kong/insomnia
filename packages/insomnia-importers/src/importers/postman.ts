@@ -475,7 +475,23 @@ class ImportCollection {
       return {};
     } // Note: Postman v2.0 and v2.1 don't export any Oauth config. They only export the token
     // So just return a disabled and empty Oauth 2 configuration so the user can fill it in later.
-
+    const { schema } = this.collection.info;
+    // Workaround for https://github.com/Kong/insomnia/issues/4437
+    if (schema === POSTMAN_SCHEMA_V2_1) {
+      const oauth2 = auth.oauth2 as V210Auth['oauth2'];
+      return {
+        type: 'oauth2',
+        disabled: false,
+        accessTokenUrl: this.findValueByKey(oauth2, 'accessTokenUrl'),
+        authorizationUrl: this.findValueByKey(oauth2, 'authUrl'),
+        grantType: this.findValueByKey(oauth2, 'grant_type'),
+        password: '',
+        username: '',
+        clientId: this.findValueByKey(oauth2, 'clientId'),
+        clientSecret: this.findValueByKey(oauth2, 'clientSecret'),
+        redirectUrl: this.findValueByKey(oauth2, 'redirect_uri'),
+      };
+    }
     const item = {
       type: 'oauth2',
       disabled: true,
