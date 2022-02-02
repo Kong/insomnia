@@ -6,7 +6,6 @@ import styled from 'styled-components';
 
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
-import * as models from '../../models';
 import { faint } from '../css/css-in-js';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { showPrompt } from './modals';
@@ -41,22 +40,7 @@ interface Props {
   onUpdateContents: (contents: string) => void;
 }
 
-const useUpdateApiSpecContents = () => {
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  return useCallback(async (contents: string) => {
-    if (!contents) {
-      return;
-    }
-    if (!activeApiSpec) {
-      return;
-    }
-    await models.apiSpec.update(activeApiSpec, { contents });
-  }, [activeApiSpec]);
-};
-
 const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
-  const updateApiSpecContents = useUpdateApiSpecContents();
-
   const handleImportFile = useCallback(async () => {
     const { canceled, filePath } = await selectFileOrFolder({
       extensions: ['yml', 'yaml'],
@@ -68,8 +52,8 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
     }
 
     const contents = String(await fs.promises.readFile(filePath));
-    await updateApiSpecContents(contents);
-  }, [updateApiSpecContents]);
+    onUpdateContents(contents);
+  }, [onUpdateContents]);
 
   const handleImportUri = useCallback(async () => {
     showPrompt({
@@ -83,11 +67,10 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
           return;
         }
         const contents = await response.text();
-        await updateApiSpecContents(contents);
         onUpdateContents(contents);
       },
     });
-  }, [updateApiSpecContents, onUpdateContents]);
+  }, [onUpdateContents]);
 
   const button = (
     <StyledButton variant="outlined" bg="surprise" className="margin-left">
@@ -117,16 +100,14 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
 const SecondaryAction: FC<Props> = ({ onUpdateContents }) => {
   const PETSTORE_EXAMPLE_URI = 'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml';
 
-  const updateApiSpecContents = useUpdateApiSpecContents();
   const onClick = useCallback(async () => {
     const response = await window.fetch(PETSTORE_EXAMPLE_URI);
     if (!response) {
       return;
     }
     const contents = await response.text();
-    await updateApiSpecContents(contents);
     onUpdateContents(contents);
-  }, [updateApiSpecContents, onUpdateContents]);
+  }, [onUpdateContents]);
 
   return (
     <div>

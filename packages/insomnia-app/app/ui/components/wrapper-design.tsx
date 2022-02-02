@@ -79,23 +79,32 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
-  const [contentsState, setContentsState] = useState(contents);
 
   const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
 
-  useDebounce(async () => {
-    if (!activeApiSpec) {
-      return;
-    }
+  // NOTE: will need to be debounced if current functionality is to be maintained
+  const onCodeEditorChange = useCallback((contents: string) => {
+    const fn = async () => {
+      if (!activeApiSpec) {
+        return;
+      }
 
-    await models.apiSpec.update({ ...activeApiSpec, contents: contentsState });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
-  }, 500, [contentsState]);
+      await models.apiSpec.update({ ...activeApiSpec, contents });
+    };
+    fn();
+  }, [activeApiSpec]);
 
-  useEffect(() => {
-    setContentsState(contents);
-    setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
-  }, [contents]);
+  const onCallbackBasedChange = useCallback((contents: string) => {
+    const fn = async () => {
+      if (!activeApiSpec) {
+        return;
+      }
+
+      await models.apiSpec.update({ ...activeApiSpec, contents });
+      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1); // INTRODUCES RACE CONDITION!
+    };
+    fn();
+  }, [activeApiSpec]);
 
   useAsync(async () => {
     // Lint only if spec has content
@@ -140,13 +149,15 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
           ref={editor}
           lintOptions={{ delay: 1000 }}
           mode="openapi"
-          defaultValue={contentsState}
-          onChange={setContentsState}
+          defaultValue={contents}
+          onChange={onCodeEditorChange}
           uniquenessKey={uniquenessKey}
         />
-        <DesignEmptyState
-          onUpdateContents={setContentsState}
-        />
+        {contents ? null : (
+          <DesignEmptyState
+            onUpdateContents={onCallbackBasedChange}
+          />
+        )}
       </div>
       {lintMessages.length > 0 && (
         <NoticeTable
