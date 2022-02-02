@@ -1,6 +1,6 @@
 import { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useState } from 'react';
+import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync, useDebounce } from 'react-use';
 import styled from 'styled-components';
@@ -89,9 +89,13 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
     }
 
     await models.apiSpec.update({ ...activeApiSpec, contents: contentsState });
-    setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
   }, 500, [contentsState]);
+
+  useEffect(() => {
+    setContentsState(contents);
+    setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+  }, [contents]);
 
   useAsync(async () => {
     // Lint only if spec has content
