@@ -74,7 +74,7 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
 
   const button = (
     <StyledButton variant="outlined" bg="surprise" className="margin-left">
-      Import
+      Import OpenAPI
       <i className="fa fa-caret-down pad-left-sm" />
     </StyledButton>
   );
