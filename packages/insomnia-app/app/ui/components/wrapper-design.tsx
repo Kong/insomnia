@@ -108,7 +108,8 @@ const useDesignEmptyState = () => {
     />
   );
 
-  return { forceRefreshCounter, emptyStateNode };
+  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  return { uniquenessKey, emptyStateNode };
 };
 
 const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
@@ -116,9 +117,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
 
-  const { forceRefreshCounter, emptyStateNode } = useDesignEmptyState();
-
-  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
 
   // NOTE: will need to be debounced if current functionality is to be maintained
   const onCodeEditorChange = useCallback((contents: string) => {
