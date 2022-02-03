@@ -77,6 +77,7 @@ interface LintMessage {
 const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
+  const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
 
@@ -101,10 +102,18 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
       }
 
       await models.apiSpec.update({ ...activeApiSpec, contents });
-      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1); // INTRODUCES RACE CONDITION!
+      setShouldIncrementCounter(true);
     };
     fn();
   }, [activeApiSpec]);
+
+  useEffect(() => {
+    if (contents && shouldIncrementCounter){
+      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+      setShouldIncrementCounter(false);
+    }
+
+  }, [contents, shouldIncrementCounter]);
 
   useAsync(async () => {
     // Lint only if spec has content
