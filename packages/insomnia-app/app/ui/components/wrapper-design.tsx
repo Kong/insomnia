@@ -2,7 +2,7 @@ import { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAsync, useDebounce } from 'react-use';
+import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
@@ -74,12 +74,49 @@ interface LintMessage {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+const useDesignEmptyState = () => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
+  const contents = activeApiSpec?.contents;
+
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
   const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
+
+  useEffect(() => {
+    if (contents && shouldIncrementCounter){
+      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+      setShouldIncrementCounter(false);
+    }
+  }, [contents, shouldIncrementCounter]);
+
+  const onUpdateContents = useCallback((value: string) => {
+    if (!activeApiSpec) {
+      return;
+    }
+
+    const fn = async () => {
+      await models.apiSpec.update({ ...activeApiSpec, contents: value });
+    };
+    fn();
+
+    // Because we can't await activeApiSpec.contents to have propageted to redux, we flip a toggle to decide if we should do something when redux does eventually change
+    setShouldIncrementCounter(true);
+  }, [activeApiSpec]);
+
+  const emptyStateNode = contents ? null : (
+    <DesignEmptyState
+      onUpdateContents={onUpdateContents}
+    />
+  );
+
+  return { forceRefreshCounter, emptyStateNode };
+};
+
+const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
+
+  const { forceRefreshCounter, emptyStateNode } = useDesignEmptyState();
 
   const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
 
@@ -94,26 +131,6 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
     };
     fn();
   }, [activeApiSpec]);
-
-  const onCallbackBasedChange = useCallback((contents: string) => {
-    const fn = async () => {
-      if (!activeApiSpec) {
-        return;
-      }
-
-      await models.apiSpec.update({ ...activeApiSpec, contents });
-      setShouldIncrementCounter(true);
-    };
-    fn();
-  }, [activeApiSpec]);
-
-  useEffect(() => {
-    if (contents && shouldIncrementCounter){
-      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
-      setShouldIncrementCounter(false);
-    }
-
-  }, [contents, shouldIncrementCounter]);
 
   useAsync(async () => {
     // Lint only if spec has content
@@ -162,11 +179,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
           onChange={onCodeEditorChange}
           uniquenessKey={uniquenessKey}
         />
-        {contents ? null : (
-          <DesignEmptyState
-            onUpdateContents={onCallbackBasedChange}
-          />
-        )}
+        {emptyStateNode}
       </div>
       {lintMessages.length > 0 && (
         <NoticeTable
