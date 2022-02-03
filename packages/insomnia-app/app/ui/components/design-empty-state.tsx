@@ -43,7 +43,7 @@ interface Props {
 const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
   const handleImportFile = useCallback(async () => {
     const { canceled, filePath } = await selectFileOrFolder({
-      extensions: ['yml', 'yaml'],
+      extensions: ['yml', 'yaml', 'json'],
       itemTypes: ['file'],
     });
     // Exit if no file selected
