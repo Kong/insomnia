@@ -12,11 +12,6 @@ export function clickLink(href: string) {
   }
 }
 
-export function getDesignerDataDir() {
-  const { app } = electron.remote || electron;
-  return process.env.DESIGNER_DATA_PATH || join(app.getPath('appData'), 'Insomnia Designer');
-}
-
 /**
  * This environment variable is added by electron-builder.
  * see: https://www.electron.build/configuration/nsis.html#portable\

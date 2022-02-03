@@ -3,7 +3,7 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
 import * as models from '../../../../models';
@@ -62,7 +62,6 @@ describe('workspace', () => {
       const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, projectId);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.documentCreate);
-      expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_PROJECT,
@@ -96,7 +95,6 @@ describe('workspace', () => {
       const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, projectId);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.collectionCreate);
-      expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_PROJECT,

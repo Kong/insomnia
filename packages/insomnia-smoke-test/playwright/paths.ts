@@ -10,7 +10,7 @@ export const loadFixture = async (fixturePath: string) => {
 };
 
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
-export const DESIGNER_DATA_PATH = path.join(__dirname, '..', 'fixtures', 'basic-designer');
+export const INSOMNIA_DATA_PATH = randomDataPath();
 
 const pathLookup = {
   win32: path.join('win-unpacked', 'Insomnia.exe'),
@@ -21,14 +21,21 @@ const insomniaBinary = path.join('dist', pathLookup[process.platform]);
 const electronBinary = path.join('node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
 
 export const executablePath = process.env.BUNDLE === 'package' ? insomniaBinary : electronBinary;
-export const mainPath = path.join('build', 'main.min.js');
+
+// NOTE: main.min.js is built by app-build:smoke in /build and also by the watcher in /app
+export const mainPath = path.join(process.env.BUNDLE === 'dev' ? 'app' : 'build', 'main.min.js');
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia-app');
 
 const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
 const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 
 // NOTE: guard against missing build artifacts
-if (process.env.BUNDLE !== 'package' && !hasMainBeenBuilt) {
+if (process.env.BUNDLE === 'dev' && !hasMainBeenBuilt) {
+  console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
+  Have you run "npm run app-start-playwright"?`);
+  exit(1);
+}
+if (process.env.BUNDLE === 'build' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
   Have you run "npm run app-build:smoke"?`);
   exit(1);

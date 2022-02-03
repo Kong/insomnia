@@ -2,12 +2,10 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
 import React, { Fragment, PureComponent, Ref } from 'react';
 
-import { trackPageView } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
@@ -16,7 +14,6 @@ import {
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import type { ApiSpec } from '../../models/api-spec';
 import type { Cookie } from '../../models/cookie-jar';
 import * as models from '../../models/index';
 import {
@@ -80,7 +77,6 @@ import { WrapperModal } from './modals/wrapper-modal';
 import { WrapperDebug } from './wrapper-debug';
 import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
-import { WrapperMigration } from './wrapper-migration';
 import { WrapperUnitTest } from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
@@ -126,6 +122,11 @@ export type WrapperProps = AppProps & {
   gitVCS: GitVCS | null;
 };
 
+export type HandleActivityChange = (options: {
+  workspaceId?: string;
+  nextActivity: GlobalActivity;
+}) => Promise<void>;
+
 interface State {
   forceRefreshKey: number;
   activeGitBranch: string;
@@ -156,10 +157,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return this._handleForceUpdateRequest(r, { headers });
-  }
-
-  async _handleUpdateApiSpec(apiSpec: ApiSpec) {
-    await models.apiSpec.update(apiSpec);
   }
 
   static _handleUpdateRequestBody(request: Request, body: RequestBody) {
@@ -221,7 +218,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string; nextActivity: GlobalActivity}) {
+  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
@@ -282,10 +279,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords(showPasswords: boolean) {
-    return models.settings.update(this.props.settings, { showPasswords });
-  }
-
   _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
     return models.settings.update(this.props.settings, { useBulkHeaderEditor });
   }
@@ -441,21 +434,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     this.setState({
       activeGitBranch: branch || 'no-vcs',
     });
-  }
-
-  componentDidMount() {
-    const { activity } = this.props;
-    trackPageView(`/${activity || ''}`);
-  }
-
-  componentDidUpdate(prevProps: WrapperProps) {
-    // We're using activities as page views so here we monitor
-    // for a change in activity and send it as a pageview.
-    const { activity } = this.props;
-
-    if (prevProps.activity !== activity) {
-      trackPageView(`/${activity || ''}`);
-    }
   }
 
   render() {
@@ -668,7 +646,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
               handleActivityChange={this._handleWorkspaceActivityChange}
-              handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
             />
           )}
@@ -711,7 +688,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
               handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
               handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-              handleUpdateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
               handleUpdateSettingsUseBulkHeaderEditor={
                 this._handleUpdateSettingsUseBulkHeaderEditor
               }
@@ -721,8 +697,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               wrapperProps={this.props}
             />
           )}
-
-          {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
         </Fragment>
       </Fragment>
     );

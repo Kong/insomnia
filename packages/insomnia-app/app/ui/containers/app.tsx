@@ -12,7 +12,6 @@ import { parse as urlParse } from 'url';
 import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -98,7 +97,6 @@ import {
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
-  selectActiveOAuth2Token,
   selectActiveProject,
   selectActiveRequest,
   selectActiveRequestMeta,
@@ -699,7 +697,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     // Start loading
     handleStartLoading(requestId);
 
@@ -786,7 +784,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     handleStartLoading(requestId);
 
     try {
@@ -1042,7 +1040,7 @@ class App extends PureComponent<AppProps, State> {
     } = this.props;
     let title;
 
-    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
+    if (activity === ACTIVITY_HOME) {
       title = getAppName();
     } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
@@ -1571,9 +1569,6 @@ function mapStateToProps(state: RootState) {
   // Environment stuff
   const activeEnvironment = selectActiveEnvironment(state);
 
-  // OAuth2Token stuff
-  const oAuth2Token = selectActiveOAuth2Token(state);
-
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state);
@@ -1617,7 +1612,6 @@ function mapStateToProps(state: RootState) {
     isLoggedIn,
     isFinishedBooting,
     loadStartTime,
-    oAuth2Token,
     paneHeight,
     paneWidth,
     requestGroups,

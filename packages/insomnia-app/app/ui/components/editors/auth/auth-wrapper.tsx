@@ -1,5 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, ReactNode } from 'react';
+import { useSelector } from 'react-redux';
 
 import {
   AUTH_ASAP,
@@ -12,11 +12,9 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-  AUTOBIND_CFG,
 } from '../../../../common/constants';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import type { Settings } from '../../../../models/settings';
+import { isRequest } from '../../../../models/request';
+import { selectActiveRequest } from '../../../redux/selectors';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
@@ -28,124 +26,55 @@ import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
-interface Props {
-  handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
-  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  request: Request;
-  showPasswords: boolean;
-  oAuth2Token?: OAuth2Token | null;
-}
+export const AuthWrapper: FC = () => {
+  const request = useSelector(selectActiveRequest);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class AuthWrapper extends PureComponent<Props> {
-  renderEditor() {
-    const {
-      oAuth2Token,
-      request,
-      handleUpdateSettingsShowPasswords,
-      onChange,
-      showPasswords,
-    } = this.props;
-    const { authentication } = request;
-
-    if (authentication.type === AUTH_BASIC) {
-      return (
-        <BasicAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-        />
-      );
-    } else if (authentication.type === AUTH_OAUTH_2) {
-      return (
-        <OAuth2Auth
-          oAuth2Token={oAuth2Token}
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-        />
-      );
-    } else if (authentication.type === AUTH_HAWK) {
-      return (
-        <HawkAuth
-          request={request}
-          onChange={onChange}
-        />
-      );
-    } else if (authentication.type === AUTH_OAUTH_1) {
-      return (
-        <OAuth1Auth
-          request={request}
-          showPasswords={showPasswords}
-          onChange={onChange}
-        />
-      );
-    } else if (authentication.type === AUTH_DIGEST) {
-      return (
-        <DigestAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-        />
-      );
-    } else if (authentication.type === AUTH_NTLM) {
-      return (
-        <NTLMAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-        />
-      );
-    } else if (authentication.type === AUTH_BEARER) {
-      return (
-        <BearerAuth
-          request={request}
-          onChange={onChange}
-        />
-      );
-    } else if (authentication.type === AUTH_AWS_IAM) {
-      return (
-        <AWSAuth
-          request={request}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-        />
-      );
-    } else if (authentication.type === AUTH_NETRC) {
-      return <NetrcAuth />;
-    } else if (authentication.type === AUTH_ASAP) {
-      return (
-        <AsapAuth
-          request={request}
-          onChange={onChange}
-        />
-      );
-    } else {
-      return (
-        <div className="vertically-center text-center">
-          <p className="pad super-faint text-sm text-center">
-            <i
-              className="fa fa-unlock-alt"
-              style={{
-                fontSize: '8rem',
-                opacity: 0.3,
-              }}
-            />
-            <br />
-            <br />
-            Select an auth type from above
-          </p>
-        </div>
-      );
-    }
+  if (!request || !isRequest(request)) {
+    return null;
   }
 
-  render() {
-    return <div className="tall">{this.renderEditor()}</div>;
+  const { authentication: { type } } = request;
+
+  let authBody: ReactNode = null;
+
+  if (type === AUTH_BASIC) {
+    authBody = <BasicAuth />;
+  } else if (type === AUTH_OAUTH_2) {
+    authBody = <OAuth2Auth />;
+  } else if (type === AUTH_HAWK) {
+    authBody = <HawkAuth />;
+  } else if (type === AUTH_OAUTH_1) {
+    authBody = <OAuth1Auth />;
+  } else if (type === AUTH_DIGEST) {
+    authBody = <DigestAuth />;
+  } else if (type === AUTH_NTLM) {
+    authBody = <NTLMAuth />;
+  } else if (type === AUTH_BEARER) {
+    authBody = <BearerAuth />;
+  } else if (type === AUTH_AWS_IAM) {
+    authBody = <AWSAuth />;
+  } else if (type === AUTH_NETRC) {
+    authBody = <NetrcAuth />;
+  } else if (type === AUTH_ASAP) {
+    authBody = <AsapAuth />;
+  } else {
+    authBody = (
+      <div className="vertically-center text-center">
+        <p className="pad super-faint text-sm text-center">
+          <i
+            className="fa fa-unlock-alt"
+            style={{
+              fontSize: '8rem',
+              opacity: 0.3,
+            }}
+          />
+          <br />
+          <br />
+          Select an auth type from above
+        </p>
+      </div>
+    );
   }
-}
+
+  return <div className='tall'>{authBody}</div>;
+};

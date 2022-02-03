@@ -9,7 +9,7 @@ import { isWorkspace, Workspace } from '../models/workspace';
 import { AlertModal } from '../ui/components/modals/alert-modal';
 import { showError, showModal } from '../ui/components/modals/index';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
-import { trackEvent } from './analytics';
+import { SegmentEvent, trackSegmentEvent } from './analytics';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
@@ -321,7 +321,7 @@ export async function importRaw(
   }
 
   await db.flushChanges();
-  trackEvent('Data', 'Import', resultsType.id);
+  trackSegmentEvent(SegmentEvent.dataImport, { type: resultsType.id });
   const importRequest: ImportResult = {
     source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
     summary: importedDocs,

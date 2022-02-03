@@ -1,16 +1,12 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import classnames from 'classnames';
-import React, { FC, PureComponent } from 'react';
+import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../../common/constants';
-import { convertEpochToMilliseconds } from '../../../../common/misc';
-import { HandleRender } from '../../../../common/render';
+import { convertEpochToMilliseconds, kebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import type { Settings } from '../../../../models/settings';
+import type { Request } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -25,729 +21,468 @@ import {
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
-import { Button } from '../../base/button';
+import { useActiveRequest } from '../../../hooks/use-active-request';
+import { selectActiveOAuth2Token } from '../../../redux/selectors';
 import { Link } from '../../base/link';
 import { PromptButton } from '../../base/prompt-button';
-import { OneLineEditor } from '../../codemirror/one-line-editor';
-import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
-
-interface Props {
-  handleRender: HandleRender;
-  handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
-  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  request: Request;
-  showPasswords: boolean;
-  oAuth2Token?: OAuth2Token | null;
-}
-
-interface State {
-  error: string;
-  loading: boolean;
-  showAdvanced: boolean;
-}
+import { AuthAccordion } from './components/auth-accordion';
+import { AuthInputRow } from './components/auth-input-row';
+import { AuthSelectRow } from './components/auth-select-row';
+import { AuthTableBody } from './components/auth-table-body';
+import { AuthToggleRow } from './components/auth-toggle-row';
 
 const getAuthorizationUrls = () => authorizationUrls;
-
 const getAccessTokenUrls = () => accessTokenUrls;
 
-let showAdvanced = false;
+const grantTypeOptions = [
+  {
+    name: 'Authorization Code',
+    value: GRANT_TYPE_AUTHORIZATION_CODE,
+  },
+  {
+    name: 'Implicit',
+    value: GRANT_TYPE_IMPLICIT,
+  },
+  {
+    name: 'Resource Owner Password Credentials',
+    value: GRANT_TYPE_PASSWORD,
+  },
+  {
+    name: 'Client Credentials',
+    value: GRANT_TYPE_CLIENT_CREDENTIALS,
+  },
+];
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class OAuth2AuthInternal extends PureComponent<Props, State> {
-  state: State = {
-    error: '',
-    loading: false,
-    showAdvanced, // Remember from last time
+const pkceMethodOptions = [
+  {
+    name: 'SHA-256',
+    value: PKCE_CHALLENGE_S256,
+  },
+  {
+    name: 'Plain',
+    value: PKCE_CHALLENGE_PLAIN,
+  },
+];
+
+const responseTypeOptions = [
+  {
+    name: 'Access Token',
+    value: RESPONSE_TYPE_TOKEN,
+  },
+  {
+    name: 'ID Token',
+    value: RESPONSE_TYPE_ID_TOKEN,
+  },
+  {
+    name: 'ID and Access Token',
+    value: RESPONSE_TYPE_ID_TOKEN_TOKEN,
+  },
+];
+
+const credentialsInBodyOptions = [
+  {
+    name: 'As Basic Auth Header (default)',
+    value: 'false',
+  },
+  {
+    name: 'In Request Body',
+    value: 'true',
+  },
+];
+
+const getFields = (authentication: Request['authentication']) => {
+  const clientId = <AuthInputRow label='Client ID' property='clientId' key='clientId' />;
+  const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' key='clientSecret' />;
+  const usePkce = <AuthToggleRow label='Use PKCE' property='usePkce' key='usePkce' onTitle='Disable PKCE' offTitle='Enable PKCE' />;
+  const pkceMethod = <AuthSelectRow
+    label='Code Challenge Method'
+    property='pkceMethod'
+    key='pkceMethod'
+    disabled={!authentication.usePkce}
+    options={pkceMethodOptions}
+  />;
+  const authorizationUrl = <AuthInputRow label='Authorization URL' property='authorizationUrl' key='authorizationUrl' getAutocompleteConstants={getAuthorizationUrls} />;
+  const accessTokenUrl = <AuthInputRow label='Access Token URL' property='accessTokenUrl' key='accessTokenUrl'  getAutocompleteConstants={getAccessTokenUrls} />;
+  const redirectUri = <AuthInputRow label='Redirect URL' property='redirectUrl' key='redirectUrl' help='This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.' />;
+  const state = <AuthInputRow label='State' property='state' key='state' />;
+  const scope = <AuthInputRow label='Scope' property='scope' key='scope' />;
+  const username = <AuthInputRow label='Username' property='username' key='username' />;
+  const password = <AuthInputRow label='Password' property='password' key='password' mask/>;
+  const tokenPrefix = <AuthInputRow label='Header Prefix' property='tokenPrefix' key='tokenPrefix' help='Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to send raw token without prefix.' />;
+  const responseType = <AuthSelectRow
+    label='Response Type'
+    property='responseType'
+    key='responseType'
+    options={responseTypeOptions}
+    help='Indicates the type of credentials returned in the response'
+  />;
+  const audience = <AuthInputRow label='Audience' property='audience' key='audience' help='Indicate what resource server to access' />;
+  const resource = <AuthInputRow label='Resource' property='resource' key='resource' help='Indicate what resource to access' />;
+  const origin = <AuthInputRow label='Origin' property='origin' key='origin' help='Specify Origin header when CORS is required for oauth endpoints' />;
+  const credentialsInBody = <AuthSelectRow
+    label='Credentials'
+    property='credentialsInBody'
+    key='credentialsInBody'
+    options={credentialsInBodyOptions}
+    help='Whether or not to send credentials as Basic Auth, or as plain text in the request body'
+  />;
+
+  return {
+    clientId,
+    clientSecret,
+    usePkce,
+    pkceMethod,
+    authorizationUrl,
+    accessTokenUrl,
+    redirectUri,
+    state,
+    scope,
+    username,
+    password,
+    tokenPrefix,
+    responseType,
+    audience,
+    resource,
+    origin,
+    credentialsInBody,
+  };
+};
+
+const getFieldsForGrantType = (authentication: Request['authentication']) => {
+  const {
+    clientId,
+    clientSecret,
+    usePkce,
+    pkceMethod,
+    authorizationUrl,
+    accessTokenUrl,
+    redirectUri,
+    state,
+    scope,
+    username,
+    password,
+    tokenPrefix,
+    responseType,
+    audience,
+    resource,
+    origin,
+    credentialsInBody,
+  } = getFields(authentication);
+
+  const { grantType } = authentication;
+
+  let basic: ReactNode[] = [];
+  let advanced: ReactNode[] = [];
+
+  if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
+    basic = [
+      authorizationUrl,
+      accessTokenUrl,
+      clientId,
+      clientSecret,
+      usePkce,
+      pkceMethod,
+      redirectUri,
+    ];
+
+    advanced = [
+      scope,
+      state,
+      credentialsInBody,
+      tokenPrefix,
+      audience,
+      resource,
+      origin,
+    ];
+  } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
+    basic = [
+      accessTokenUrl,
+      clientId,
+      clientSecret,
+    ];
+
+    advanced = [
+      scope,
+      credentialsInBody,
+      tokenPrefix,
+      audience,
+      resource,
+    ];
+  } else if (grantType === GRANT_TYPE_PASSWORD) {
+    basic = [
+      username,
+      password,
+      accessTokenUrl,
+      clientId,
+      clientSecret,
+    ];
+
+    advanced = [
+      scope,
+      credentialsInBody,
+      tokenPrefix,
+      audience,
+    ];
+  } else if (grantType === GRANT_TYPE_IMPLICIT) {
+    basic = [
+      authorizationUrl,
+      clientId,
+      redirectUri,
+    ];
+
+    advanced = [
+      responseType,
+      scope,
+      state,
+      tokenPrefix,
+      audience,
+    ];
+  }
+
+  return {
+    basic,
+    advanced,
+  };
+};
+
+export const OAuth2Auth: FC = () => {
+  const { activeRequest: { authentication } } = useActiveRequest();
+  const { basic, advanced } = getFieldsForGrantType(authentication);
+
+  return (
+    <>
+      <AuthTableBody>
+        <AuthSelectRow
+          label='Grant Type'
+          property='grantType'
+          options={grantTypeOptions}
+        />
+        {basic}
+        <AuthAccordion accordionKey='OAuth2AdvancedOptions' label='Advanced Options'>
+          {advanced}
+          {
+            <tr>
+              <td/>
+              <td className="wide">
+                <div className="pad-top text-right">
+                  <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+                    Clear OAuth 2 session
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </AuthAccordion>
+      </AuthTableBody>
+      <div className='pad'>
+        <OAuth2Tokens />
+      </div>
+    </>
+  );
+};
+
+const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) => {
+  if (!token || !token.identityToken) {
+    return;
+  }
+
+  const base64Url = token.identityToken.split('.')[1];
+  let decodedString = '';
+
+  try {
+    decodedString = window.atob(base64Url);
+  } catch (error) {
+    return;
+  }
+
+  const { exp } = JSON.parse(decodedString);
+
+  if (!exp) {
+    return '(never expires)';
+  }
+
+  const convertedExp = convertEpochToMilliseconds(exp);
+  return (
+    <span>
+      &#x28;expires <TimeFromNow timestamp={convertedExp} />
+      &#x29;
+    </span>
+  );
+};
+
+const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expiresAt'>) => {
+  if (!token || !token.accessToken) {
+    return null;
+  }
+
+  if (!token.expiresAt) {
+    return '(never expires)';
+  }
+
+  return (
+    <span>
+      &#x28;expires <TimeFromNow timestamp={token.expiresAt} />
+      &#x29;
+    </span>
+  );
+};
+
+const OAuth2TokenInput: FC<{label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>}> = ({ label, property }) => {
+  const { activeRequest } = useActiveRequest();
+  const token = useSelector(selectActiveOAuth2Token);
+
+  const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
+    if (token) {
+      await models.oAuth2Token.update(token, { [property]: value });
+    } else {
+      await models.oAuth2Token.create({ [property]: value, parentId: activeRequest._id });
+    }
   };
 
-  _handleToggleAdvanced() {
-    // Remember this for the entirety of the session
-    showAdvanced = !this.state.showAdvanced;
-    this.setState({
-      showAdvanced,
-    });
-  }
-
-  async _handleUpdateAccessToken(e: React.SyntheticEvent<HTMLInputElement>) {
-    const { oAuth2Token } = this.props;
-    const accessToken = e.currentTarget.value;
-
-    if (oAuth2Token) {
-      await models.oAuth2Token.update(oAuth2Token, {
-        accessToken,
-      });
+  const expiryLabel = useMemo(() => {
+    if (property === 'identityToken') {
+      return renderIdentityTokenExpiry(token);
+    } else if (property === 'accessToken') {
+      return renderAccessTokenExpiry(token);
     } else {
-      await models.oAuth2Token.create({
-        accessToken,
-        parentId: this.props.request._id,
-      });
+      return null;
     }
-  }
+  }, [property, token]);
 
-  async _handleUpdateIdentityToken(e: React.SyntheticEvent<HTMLInputElement>) {
-    const { oAuth2Token } = this.props;
-    const identityToken = e.currentTarget.value;
+  const id = kebabCase(label);
 
-    if (oAuth2Token) {
-      await models.oAuth2Token.update(oAuth2Token, {
-        identityToken,
-      });
-    } else {
-      await models.oAuth2Token.create({
-        identityToken,
-        parentId: this.props.request._id,
-      });
-    }
-  }
+  return (
+    <div className='form-control form-control--outlined'>
+      <label htmlFor={id}>
+        <small>{label}{expiryLabel ? <em> {expiryLabel}</em> : null}</small>
+        <input
+          value={token?.[property] || ''}
+          placeholder='n/a'
+          onChange={onChange}
+        />
+      </label>
+    </div>
+  );
+};
 
-  async _handleUpdateRefreshToken(e: React.SyntheticEvent<HTMLInputElement>) {
-    const { oAuth2Token } = this.props;
-    const refreshToken = e.currentTarget.value;
+const OAuth2Error: FC = () => {
+  const token = useSelector(selectActiveOAuth2Token);
 
-    if (oAuth2Token) {
-      await models.oAuth2Token.update(oAuth2Token, {
-        refreshToken,
-      });
-    } else {
-      await models.oAuth2Token.create({
-        refreshToken,
-        parentId: this.props.request._id,
-      });
-    }
-  }
-
-  async _handleClearTokens() {
-    const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
-
-    if (oAuth2Token) {
-      await models.oAuth2Token.remove(oAuth2Token);
-    }
-  }
-
-  _handleDebugResponseClick() {
-    const { oAuth2Token } = this.props;
-
-    if (!oAuth2Token || !oAuth2Token.xResponseId) {
+  const debug = () => {
+    if (!token || !token.xResponseId) {
       return;
     }
 
     showModal(ResponseDebugModal, {
-      responseId: oAuth2Token.xResponseId,
+      responseId: token.xResponseId,
     });
-  }
+  };
 
-  async _handleRefreshToken() {
-    // First, clear the state and the current tokens
-    this.setState({
-      error: '',
-      loading: true,
-    });
-    const { request } = this.props;
+  const debugButton = token?.xResponseId ? (
+    <button
+      onClick={debug}
+      className="icon icon--success space-left"
+      title="View response timeline"
+    >
+      <i className="fa fa-bug" />
+    </button>
+  ) : null;
 
-    try {
-      const authentication = await this.props.handleRender(request.authentication);
-      await getAccessToken(request._id, authentication, true);
-      this.setState({
-        loading: false,
-      });
-    } catch (err) {
-      await this._handleClearTokens(); // Clear existing tokens if there's an error
+  const errorUriButton = token?.errorUri ? (
+    <Link href={token.errorUri} title={token.errorUri} className="space-left icon">
+      <i className="fa fa-question-circle" />
+    </Link>
+  ) : null;
 
-      this.setState({
-        error: err.message,
-        loading: false,
-      });
-    }
-  }
+  const error = token ? token.error || token.xError : null;
 
-  _handleChangeProperty(property: string, value: string | boolean) {
-    const { onChange, request } = this.props;
-    const authentication = Object.assign({}, request.authentication, {
-      [property]: value,
-    });
-    onChange(request, authentication);
-  }
-
-  _handlerChangeResponseType(e: React.SyntheticEvent<HTMLInputElement>) {
-    this._handleChangeProperty('responseType', e.currentTarget.value);
-  }
-
-  _handleChangeClientId(value: string) {
-    this._handleChangeProperty('clientId', value);
-  }
-
-  _handleChangeCredentialsInBody(e: React.SyntheticEvent<HTMLInputElement>) {
-    this._handleChangeProperty('credentialsInBody', e.currentTarget.value === 'true');
-  }
-
-  _handleChangeEnabled(value: boolean) {
-    this._handleChangeProperty('disabled', value);
-  }
-
-  _handleChangeClientSecret(value: string) {
-    this._handleChangeProperty('clientSecret', value);
-  }
-
-  _handleChangePkce(value: boolean) {
-    this._handleChangeProperty('usePkce', value);
-  }
-
-  _handleChangePkceMethod(e: React.SyntheticEvent<HTMLInputElement>) {
-    this._handleChangeProperty('pkceMethod', e.currentTarget.value);
-  }
-
-  _handleChangeAuthorizationUrl(value: string) {
-    this._handleChangeProperty('authorizationUrl', value);
-  }
-
-  _handleChangeAccessTokenUrl(value: string) {
-    this._handleChangeProperty('accessTokenUrl', value);
-  }
-
-  _handleChangeRedirectUrl(value: string) {
-    this._handleChangeProperty('redirectUrl', value);
-  }
-
-  _handleChangeScope(value: string) {
-    this._handleChangeProperty('scope', value);
-  }
-
-  _handleChangeState(value: string) {
-    this._handleChangeProperty('state', value);
-  }
-
-  _handleChangeUsername(value: string) {
-    this._handleChangeProperty('username', value);
-  }
-
-  _handleChangePassword(value: string) {
-    this._handleChangeProperty('password', value);
-  }
-
-  _handleChangeTokenPrefix(value: string) {
-    this._handleChangeProperty('tokenPrefix', value);
-  }
-
-  _handleChangeAudience(value: string) {
-    this._handleChangeProperty('audience', value);
-  }
-
-  _handleChangeResource(value: string) {
-    this._handleChangeProperty('resource', value);
-  }
-
-  _handleChangeOrigin(value: string) {
-    this._handleChangeProperty('origin', value);
-  }
-
-  _handleChangeGrantType(e: React.SyntheticEvent<HTMLInputElement>) {
-    this._handleChangeProperty('grantType', e.currentTarget.value);
-  }
-
-  renderEnabledRow(onChange: (arg0: boolean) => void) {
-    const { request } = this.props;
-    const { authentication } = request;
+  if (token && error) {
+    const { errorDescription } = token;
     return (
-      <tr key="enabled">
-        <td className="pad-right no-wrap valign-middle">
-          <label htmlFor="enabled" className="label--small no-pad">
-            Enabled
-          </label>
-        </td>
-        <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
-            <Button
-              className="btn btn--super-duper-compact"
-              id="enabled"
-              onClick={onChange}
-              value={!authentication.disabled}
-              title={authentication.disabled ? 'Enable item' : 'Disable item'}
-            >
-              {authentication.disabled ? (
-                <i className="fa fa-square-o" />
-              ) : (
-                <i className="fa fa-check-square-o" />
-              )}
-            </Button>
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
-  renderUsePkceRow(onChange: (arg0: boolean) => void) {
-    const { request } = this.props;
-    const { authentication } = request;
-    return (
-      <tr key="use-pkce">
-        <td className="pad-right no-wrap valign-middle">
-          <label htmlFor="use-pkce" className="label--small no-pad">
-            Use PKCE
-          </label>
-        </td>
-        <td className="wide">
-          <div
-            className={classnames('form-control form-control--underlined no-margin', {
-              'form-control--inactive': authentication.disabled,
-            })}
-          >
-            <Button
-              className="btn btn--super-duper-compact"
-              id="use-pkce"
-              onClick={onChange}
-              value={!authentication.usePkce}
-              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}
-            >
-              {authentication.usePkce ? (
-                <i className="fa fa-check-square-o" />
-              ) : (
-                <i className="fa fa-square-o" />
-              )}
-            </Button>
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
-  renderInputRow(
-    label: string,
-    property: string,
-    onChange: (...args: any[]) => any,
-    help: string | null = null,
-    handleAutocomplete?: (...args: any[]) => any,
-  ) {
-    const {
-      request,
-    } = this.props;
-    const { authentication } = request;
-    const id = label.replace(/ /g, '-');
-    const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
-    return (
-      <tr key={id}>
-        <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id} className="label--small no-pad">
-            {label}
-            {help && <HelpTooltip>{help}</HelpTooltip>}
-          </label>
-        </td>
-        <td className="wide">
-          <div
-            className={classnames('form-control form-control--underlined no-margin', {
-              'form-control--inactive': authentication.disabled,
-            })}
-          >
-            <OneLineEditor
-              id={id}
-              type={type}
-              onChange={onChange}
-              defaultValue={request.authentication[property] || ''}
-              getAutocompleteConstants={handleAutocomplete}
-            />
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
-  renderSelectRow(
-    label: string,
-    property: string,
-    options: {
-      name: string;
-      value: string;
-    }[],
-    onChange: (...args: any[]) => any,
-    help: string | null = null,
-    disabled = false,
-  ) {
-    const { request } = this.props;
-    const { authentication } = request;
-    const id = label.replace(/ /g, '-');
-    const value = request.authentication.hasOwnProperty(property)
-      ? request.authentication[property]
-      : options[0];
-    return (
-      <tr key={id}>
-        <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id} className="label--small no-pad">
-            {label}
-            {help && <HelpTooltip>{help}</HelpTooltip>}
-          </label>
-        </td>
-        <td className="wide">
-          <div
-            className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled || disabled,
-            })}
-          >
-            <select id={id} onChange={onChange} value={value}>
-              {options.map(({ name, value }) => (
-                <option key={value} value={value}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
-  renderGrantTypeFields(grantType: string) {
-    const { authentication } = this.props.request;
-
-    let basicFields: JSX.Element[] = [];
-    let advancedFields: JSX.Element[] = [];
-    const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
-    const clientSecret = this.renderInputRow(
-      'Client Secret',
-      'clientSecret',
-      this._handleChangeClientSecret,
-    );
-    const usePkce = this.renderUsePkceRow(this._handleChangePkce);
-    const pkceMethod = this.renderSelectRow(
-      'Code Challenge Method',
-      'pkceMethod',
-      [
-        {
-          name: 'SHA-256',
-          value: PKCE_CHALLENGE_S256,
-        },
-        {
-          name: 'Plain',
-          value: PKCE_CHALLENGE_PLAIN,
-        },
-      ],
-      this._handleChangePkceMethod,
-      null,
-      !Boolean(authentication.usePkce)
-    );
-    const authorizationUrl = this.renderInputRow(
-      'Authorization URL',
-      'authorizationUrl',
-      this._handleChangeAuthorizationUrl,
-      null,
-      getAuthorizationUrls,
-    );
-    const accessTokenUrl = this.renderInputRow(
-      'Access Token URL',
-      'accessTokenUrl',
-      this._handleChangeAccessTokenUrl,
-      null,
-      getAccessTokenUrls,
-    );
-    const redirectUri = this.renderInputRow(
-      'Redirect URL',
-      'redirectUrl',
-      this._handleChangeRedirectUrl,
-      'This can be whatever you want or need it to be. Insomnia will automatically ' +
-        'detect a redirect in the client browser window and extract the code from the ' +
-        'redirected URL',
-    );
-    const state = this.renderInputRow('State', 'state', this._handleChangeState);
-    const scope = this.renderInputRow('Scope', 'scope', this._handleChangeScope);
-    const username = this.renderInputRow('Username', 'username', this._handleChangeUsername);
-    const password = this.renderInputRow('Password', 'password', this._handleChangePassword);
-    const tokenPrefix = this.renderInputRow(
-      'Header Prefix',
-      'tokenPrefix',
-      this._handleChangeTokenPrefix,
-      'Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to ' +
-        'send raw token without prefix.',
-    );
-    const responseType = this.renderSelectRow(
-      'Response Type',
-      'responseType',
-      [
-        {
-          name: 'Access Token',
-          value: RESPONSE_TYPE_TOKEN,
-        },
-        {
-          name: 'ID Token',
-          value: RESPONSE_TYPE_ID_TOKEN,
-        },
-        {
-          name: 'ID and Access Token',
-          value: RESPONSE_TYPE_ID_TOKEN_TOKEN,
-        },
-      ],
-      this._handlerChangeResponseType,
-      'Indicates the type of credentials returned in the response',
-    );
-    const audience = this.renderInputRow(
-      'Audience',
-      'audience',
-      this._handleChangeAudience,
-      'Indicate what resource server to access',
-    );
-    const resource = this.renderInputRow(
-      'Resource',
-      'resource',
-      this._handleChangeResource,
-      'Indicate what resource to access',
-    );
-    const origin = this.renderInputRow(
-      'Origin',
-      'origin',
-      this._handleChangeOrigin,
-      'Specify Origin header when CORS is required for oauth endpoints',
-    );
-    const credentialsInBody = this.renderSelectRow(
-      'Credentials',
-      'credentialsInBody',
-      [
-        {
-          name: 'As Basic Auth Header (default)',
-          value: 'false',
-        },
-        {
-          name: 'In Request Body',
-          value: 'true',
-        },
-      ],
-      this._handleChangeCredentialsInBody,
-      'Whether or not to send credentials as Basic Auth, or as plain text in the request body',
-    );
-    const enabled = this.renderEnabledRow(this._handleChangeEnabled);
-
-    if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-      basicFields = [
-        authorizationUrl,
-        accessTokenUrl,
-        clientId,
-        clientSecret,
-        usePkce,
-        pkceMethod,
-        redirectUri,
-        enabled,
-      ];
-
-      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource, origin];
-    } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-      basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
-      advancedFields = [scope, credentialsInBody, tokenPrefix, audience, resource];
-    } else if (grantType === GRANT_TYPE_PASSWORD) {
-      basicFields = [username, password, accessTokenUrl, clientId, clientSecret, enabled];
-      advancedFields = [scope, credentialsInBody, tokenPrefix, audience];
-    } else if (grantType === GRANT_TYPE_IMPLICIT) {
-      basicFields = [authorizationUrl, clientId, redirectUri, enabled];
-      advancedFields = [responseType, scope, state, tokenPrefix, audience];
-    }
-
-    return {
-      basic: basicFields,
-      advanced: advancedFields,
-    };
-  }
-
-  static renderIdentityTokenExpiry(token?: OAuth2Token | null) {
-    if (!token || !token.identityToken) {
-      return null;
-    }
-
-    const base64Url = token.identityToken.split('.')[1];
-    let decodedString = '';
-
-    try {
-      decodedString = window.atob(base64Url);
-    } catch (error) {
-      return null;
-    }
-
-    const { exp } = JSON.parse(decodedString);
-
-    if (!exp) {
-      return '(never expires)';
-    }
-
-    const convertedExp = convertEpochToMilliseconds(exp);
-    return (
-      <span>
-        &#x28;expires <TimeFromNow timestamp={convertedExp} />
-        &#x29;
-      </span>
-    );
-  }
-
-  static renderAccessTokenExpiry(token?: OAuth2Token | null) {
-    if (!token || !token.accessToken) {
-      return null;
-    }
-
-    if (!token.expiresAt) {
-      return '(never expires)';
-    }
-
-    return (
-      <span>
-        &#x28;expires <TimeFromNow timestamp={token.expiresAt} />
-        &#x29;
-      </span>
-    );
-  }
-
-  renderError() {
-    const { oAuth2Token } = this.props;
-    const debugButton =
-      oAuth2Token && oAuth2Token.xResponseId ? (
-        <button
-          onClick={this._handleDebugResponseClick}
-          className="icon icon--success space-left"
-          title="View response timeline"
-        >
-          <i className="fa fa-bug" />
-        </button>
-      ) : null;
-    const errorUriButton =
-      oAuth2Token && oAuth2Token.errorUri ? (
-        <Link href={oAuth2Token.errorUri} title={oAuth2Token.errorUri} className="space-left icon">
-          <i className="fa fa-question-circle" />
-        </Link>
-      ) : null;
-    const error = oAuth2Token ? oAuth2Token.error || oAuth2Token.xError : null;
-
-    if (oAuth2Token && error) {
-      const { errorDescription } = oAuth2Token;
-      return (
-        <div className="notice error margin-bottom">
-          <h2 className="no-margin-top txt-lg force-wrap">{error}</h2>
-          <p>
-            {errorDescription || 'no description provided'}
-            {errorUriButton}
-            {debugButton}
-          </p>
-        </div>
-      );
-    }
-    return undefined;
-  }
-
-  render() {
-    const { request, oAuth2Token: tok } = this.props;
-    const { loading, error, showAdvanced } = this.state;
-    const accessExpireLabel = OAuth2AuthInternal.renderAccessTokenExpiry(tok);
-    const identityExpireLabel = OAuth2AuthInternal.renderIdentityTokenExpiry(tok);
-    const fields = this.renderGrantTypeFields(request.authentication.grantType);
-    return (
-      <div className="pad">
-        <table>
-          <tbody>
-            {this.renderSelectRow(
-              'Grant Type',
-              'grantType',
-              [
-                {
-                  name: 'Authorization Code',
-                  value: GRANT_TYPE_AUTHORIZATION_CODE,
-                },
-                {
-                  name: 'Implicit',
-                  value: GRANT_TYPE_IMPLICIT,
-                },
-                {
-                  name: 'Resource Owner Password Credentials',
-                  value: GRANT_TYPE_PASSWORD,
-                },
-                {
-                  name: 'Client Credentials',
-                  value: GRANT_TYPE_CLIENT_CREDENTIALS,
-                },
-              ],
-              this._handleChangeGrantType,
-            )}
-            {fields.basic}
-            <tr>
-              <td className="pad-top">
-                <button onClick={this._handleToggleAdvanced} className="faint">
-                  <i
-                    style={{
-                      minWidth: '0.8rem',
-                    }}
-                    className={classnames(
-                      'fa fa--skinny',
-                      `fa-caret-${showAdvanced ? 'down' : 'right'}`,
-                    )}
-                  />
-                  Advanced Options
-                </button>
-              </td>
-            </tr>
-            {showAdvanced && fields.advanced}
-          </tbody>
-        </table>
-        {showAdvanced ? (
-          <div className="pad-top text-right">
-            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
-              Clear OAuth 2 session
-            </button>
-          </div>
-        ) : null}
-        <div className="notice subtle margin-top text-left">
-          {error && <p className="selectable notice warning margin-bottom">{error}</p>}
-          {this.renderError()}
-          <div className="form-control form-control--outlined">
-            <label>
-              <small>Refresh Token</small>
-              <input
-                value={(tok && tok.refreshToken) || ''}
-                placeholder="n/a"
-                onChange={this._handleUpdateRefreshToken}
-              />
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              <small>Identity Token {tok ? <em>{identityExpireLabel}</em> : null}</small>
-              <input
-                value={(tok && tok.identityToken) || ''}
-                placeholder="n/a"
-                onChange={this._handleUpdateIdentityToken}
-              />
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              <small>Access Token {tok ? <em>{accessExpireLabel}</em> : null}</small>
-              <input
-                value={(tok && tok.accessToken) || ''}
-                placeholder="n/a"
-                onChange={this._handleUpdateAccessToken}
-              />
-            </label>
-          </div>
-          <div className="pad-top text-right">
-            {tok ? (
-              <PromptButton className="btn btn--clicky" onClick={this._handleClearTokens}>
-                Clear
-              </PromptButton>
-            ) : null}
-            &nbsp;&nbsp;
-            <button
-              className="btn btn--clicky"
-              onClick={this._handleRefreshToken}
-              disabled={loading}
-            >
-              {loading
-                ? tok
-                  ? 'Refreshing...'
-                  : 'Fetching...'
-                : tok
-                  ? 'Refresh Token'
-                  : 'Fetch Tokens'}
-            </button>
-          </div>
-        </div>
+      <div className="notice error margin-bottom">
+        <h2 className="no-margin-top txt-lg force-wrap">{error}</h2>
+        <p>
+          {errorDescription || 'no description provided'}
+          {errorUriButton}
+          {debugButton}
+        </p>
       </div>
     );
   }
-}
+  return null;
+};
 
-export const OAuth2Auth: FC<Omit<Props, 'handleRender'>> = props => {
+const useActiveOAuth2Token = () => {
+  const token = useSelector(selectActiveOAuth2Token);
+  const { activeRequest: { authentication, _id: requestId } } = useActiveRequest();
   const { handleRender } = useNunjucks();
-  return <OAuth2AuthInternal {...props} handleRender={handleRender} />;
+
+  const clearTokens = useCallback(async () => {
+    if (token) {
+      await models.oAuth2Token.remove(token);
+    }
+  }, [token]);
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const refreshToken = useCallback(async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const renderedAuthentication = await handleRender(authentication);
+      await getAccessToken(requestId, renderedAuthentication, true);
+      setLoading(false);
+    } catch (err) {
+      // Clear existing tokens if there's an error
+      await clearTokens();
+      setError(err.message);
+      setLoading(false);
+    }
+  }, [authentication, clearTokens, handleRender, requestId]);
+
+  return { error, loading, token, clearTokens, refreshToken };
+};
+
+const OAuth2Tokens: FC = () => {
+  const { token, clearTokens, refreshToken, loading, error } = useActiveOAuth2Token();
+
+  return (
+    <div className='notice subtle text-left'>
+      {error && (
+        <p className="selectable notice warning margin-bottom">
+          {error}
+        </p>
+      )}
+      <OAuth2Error />
+      <OAuth2TokenInput label='Refresh Token' property='refreshToken' />
+      <OAuth2TokenInput label='Identity Token' property='identityToken' />
+      <OAuth2TokenInput label='Access Token' property='accessToken' />
+      <div className='pad-top text-right'>
+        {token ? (
+          <PromptButton className="btn btn--clicky" onClick={clearTokens}>
+            Clear
+          </PromptButton>
+        ) : null}
+        &nbsp;&nbsp;
+        <button
+          className="btn btn--clicky"
+          onClick={refreshToken}
+          disabled={loading}
+        >
+          {loading
+            ? token
+              ? 'Refreshing...'
+              : 'Fetching...'
+            : token
+              ? 'Refresh Token'
+              : 'Fetch Tokens'}
+        </button>
+      </div>
+    </div>
+  );
 };

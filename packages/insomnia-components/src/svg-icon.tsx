@@ -49,6 +49,7 @@ import { SvgIcnSync } from './assets/svgr/IcnSync';
 import { SvgIcnTrashcan } from './assets/svgr/IcnTrashcan';
 import { SvgIcnTriangle } from './assets/svgr/IcnTriangle';
 import { SvgIcnUser } from './assets/svgr/IcnUser';
+import { SvgIcnVial } from './assets/svgr/IcnVial';
 import { SvgIcnWarning } from './assets/svgr/IcnWarning';
 import { SvgIcnWarningCircle } from './assets/svgr/IcnWarningCircle';
 import { SvgIcnX } from './assets/svgr/IcnX';
@@ -115,6 +116,7 @@ export const IconEnum = {
   trashcan: 'trashcan',
   triangle: 'triangle',
   user: 'user',
+  vial: 'vial',
   warning: 'warning',
   warningCircle: 'warning-circle',
   x: 'x',
@@ -215,6 +217,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.trashcan]: [ThemeEnum.default, SvgIcnTrashcan],
     [IconEnum.triangle]: [ThemeEnum.default, SvgIcnTriangle],
     [IconEnum.user]: [ThemeEnum.default, SvgIcnUser],
+    [IconEnum.vial]: [ThemeEnum.default, SvgIcnVial],
     [IconEnum.warningCircle]: [ThemeEnum.default, SvgIcnWarningCircle],
     [IconEnum.warning]: [ThemeEnum.notice, SvgIcnWarning],
     [IconEnum.x]: [ThemeEnum.default, SvgIcnX],
