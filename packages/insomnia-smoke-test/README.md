@@ -21,7 +21,7 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 In one terminal run the watcher
 
 ```shell
-npm run app-start-playwright    # Run watcher
+npm run watch:app   # Run watcher
 ```
 
 In a second terminal run/debug/step through smoke tests
