@@ -43,7 +43,7 @@ It's possible to run the smoke tests for:
 
 ```shell
 npm run app-build:smoke             # Transpile js bundle
-npm run test:smoke:package          # Run tests
+npm run test:smoke:build          # Run tests
 ```
 
 ```shell
