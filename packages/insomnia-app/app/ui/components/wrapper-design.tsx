@@ -1,12 +1,13 @@
 import { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useState } from 'react';
+import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
@@ -119,16 +120,19 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
 
   const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
 
-  // NOTE: will need to be debounced if current functionality is to be maintained
-  const onCodeEditorChange = useCallback((contents: string) => {
-    const fn = async () => {
-      if (!activeApiSpec) {
-        return;
-      }
+  const onCodeEditorChange = useMemo(() => {
+    const handler = (contents: string) => {
+      const fn = async () => {
+        if (!activeApiSpec) {
+          return;
+        }
 
-      await models.apiSpec.update({ ...activeApiSpec, contents });
+        await models.apiSpec.update({ ...activeApiSpec, contents });
+      };
+      fn();
     };
-    fn();
+
+    return debounce(handler, 500);
   }, [activeApiSpec]);
 
   useAsync(async () => {
