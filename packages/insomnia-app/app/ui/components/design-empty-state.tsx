@@ -112,7 +112,7 @@ const SecondaryAction: FC<Props> = ({ onUpdateContents }) => {
   return (
     <div>
       <div>
-        Or import existing an OpenAPI spec or <ExampleButton onClick={onClick}>start from an example</ExampleButton>
+        Or import an existing OpenAPI spec or <ExampleButton onClick={onClick}>start from an example</ExampleButton>
       </div>
       <ImportSpecButton onUpdateContents={onUpdateContents} />
     </div>
