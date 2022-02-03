@@ -14,6 +14,7 @@ const config: PlaywrightTestConfig = {
       snapshots: true,
     },
   },
+  reporter: process.env.CI ? 'github' : 'list',
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'screenshots',
