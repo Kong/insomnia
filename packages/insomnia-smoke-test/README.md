@@ -40,7 +40,7 @@ PWDEBUG=1 npm run test:smoke:dev
 It's possible to run the smoke tests for:
 - A `build`, the JS bundle that is loaded into an electron client;
 - A `package`, the executable binary (e.g. `.dmg` or `.exe`);
-
+For `build`:
 ```shell
 npm run app-build:smoke             # Transpile js bundle
 npm run test:smoke:build          # Run tests
