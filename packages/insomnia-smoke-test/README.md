@@ -46,6 +46,7 @@ npm run app-build:smoke             # Transpile js bundle
 npm run test:smoke:build          # Run tests
 ```
 
+For `package`:
 ```shell
 npm run app-package:smoke           # Build executable in /packages/insomnia-app/dist
 npm run test:smoke:package          # Run tests
