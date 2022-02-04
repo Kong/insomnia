@@ -1,5 +1,5 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
-import { ElectronApplication, test as baseTest } from '@playwright/test';
+import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
 import path from 'path';
 
 import {
@@ -16,7 +16,7 @@ interface EnvOptions {
 export const test = baseTest.extend<{
   app: ElectronApplication;
 }>({
-  app: async ({ playwright }, use, testInfo) => {
+  app: async ({ playwright, trace }, use, testInfo) => {
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: randomDataPath(),
     };
@@ -33,19 +33,23 @@ export const test = baseTest.extend<{
     });
 
     const appContext = electronApp.context();
+    const traceMode: TraceMode = typeof trace === 'string' ? trace as TraceMode : trace.mode;
 
-    await appContext.tracing.start({
-      title: testInfo.title,
-      name: testInfo.title,
-      screenshots: true,
-      snapshots: true,
-    });
+    const defaultTraceOptions = { screenshots: true, snapshots: true, sources: true };
+    const traceOptions = typeof trace === 'string' ? defaultTraceOptions : { ...defaultTraceOptions, ...trace, mode: undefined };
+    const captureTrace = (traceMode === 'on' || traceMode === 'retain-on-failure' || (traceMode === 'on-first-retry' && testInfo.retry === 1));
+
+    if (captureTrace) {
+      await appContext.tracing.start(traceOptions);
+    }
 
     await use(electronApp);
 
-    await appContext.tracing.stop({
-      path: path.join(testInfo.outputDir, 'trace.zip'),
-    });
+    if (captureTrace) {
+      await appContext.tracing.stop({
+        path: path.join(testInfo.outputDir, 'trace.zip'),
+      });
+    }
 
     await electronApp.close();
   },

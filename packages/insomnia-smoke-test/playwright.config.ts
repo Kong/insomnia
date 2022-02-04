@@ -9,7 +9,7 @@ const config: PlaywrightTestConfig = {
   },
   use: {
     trace: {
-      mode: 'on',
+      mode: 'retain-on-failure',
       screenshots: true,
       snapshots: true,
     },
