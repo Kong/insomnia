@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-export * from './generate';
+export * from './cli';

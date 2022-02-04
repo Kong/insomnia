@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest';
-import yargs from 'yargs';
+import { Command, createCommand } from 'commander';
 
 import {
   compareCommits,
@@ -9,103 +9,79 @@ import {
   uniqueAuthors,
 } from './utils';
 
-const handler = async ({
-  base,
-  githubToken,
-  head,
-  owner,
-  releaseName,
-  repo,
-}: {
-  base: string;
-  githubToken?: string;
-  head: string;
-  owner: string;
-  releaseName: string;
-  repo: string;
-}) => {
-  if (!githubToken) {
-    throw new TypeError('Unable to authenticate. Make sure you either call the script with `--githubToken $token` or set `process.env.GITHUB_TOKEN`. The token needs `public_repo` permissions.');
-  }
+export const generateCommand = createCommand('generate')
+  .description('Creates a changelog')
+  .option(
+    '--githubToken <token>',
+    'The personal access token to use for authenticating with GitHub. Needs public_repo permissions.'
+  )
+  .requiredOption(
+    '--owner <owner username>',
+    'The GitHub organization'
+  )
+  .requiredOption(
+    '--repo <repo name>',
+    'The GitHub Repo'
+  )
+  .requiredOption(
+    '--base <git ref>',
+    'The release to compare against, e.g. `core@2021.6.0`'
+  )
+  .option(
+    '--head <git ref>',
+    'Ref which we want to release',
+    'HEAD',
+  )
+  .requiredOption(
+    '--releaseName <name>',
+    'Name of the release, e.g. `core@2021.7.0'
+  )
+  .action(async (_, command: Command) => {
+    const {
+      base,
+      githubToken = process.env.GITHUB_TOKEN,
+      head,
+      owner,
+      releaseName,
+      repo,
+    } = command.opts();
 
-  const octokit = new Octokit({ auth: githubToken });
+    if (!githubToken) {
+      throw new TypeError('Unable to authenticate. Make sure you either call the script with `--githubToken $token` or set `process.env.GITHUB_TOKEN`. The token needs `public_repo` permissions.');
+    }
 
-  const responseCommits = await compareCommits({
-    owner,
-    repo,
-    base,
-    head,
-    octokit,
+    const octokit = new Octokit({ auth: githubToken });
+
+    const responseCommits = await compareCommits({
+      owner,
+      repo,
+      base,
+      head,
+      octokit,
+    });
+
+    const authors = uniqueAuthors(responseCommits);
+
+    const changes = await fetchChanges({
+      owner,
+      repo,
+      octokit,
+      responseCommits,
+    });
+    const changeLines = groupChanges(changes);
+
+    const changelog = [
+      `## ${releaseName}`,
+      `<!-- generated comparing ${base}..${head} -->`,
+      `_${formattedDate()}_`,
+      '',
+      `A big thanks to the ${authors.length} contributors who made this release possible. Here are some highlights ✨:`,
+      '',
+      changeLines,
+      '',
+      `All contributors of this release in alphabetical order: ${authors.join(', ')}`,
+      '',
+    ].join('\n');
+
+    console.log(changelog);
   });
-
-  const authors = uniqueAuthors(responseCommits);
-
-  const changes = await fetchChanges({
-    owner,
-    repo,
-    octokit,
-    responseCommits,
-  });
-  const changeLines = groupChanges(changes);
-
-  const changelog = [
-    `## ${releaseName}`,
-    `<!-- generated comparing ${base}..${head} -->`,
-    `_${formattedDate()}_`,
-    '',
-    `A big thanks to the ${authors.length} contributors who made this release possible. Here are some highlights ✨:`,
-    '',
-    changeLines,
-    '',
-    `All contributors of this release in alphabetical order: ${authors.join(', ')}`,
-    '',
-  ].join('\n');
-
-  console.log(changelog);
-  return changelog;
-};
-
-yargs
-  .command({
-    command: '$0',
-    describe: 'Creates a changelog',
-    builder: command => (
-      command
-        .option('githubToken', {
-          default: process.env.GITHUB_TOKEN,
-          describe: 'The personal access token to use for authenticating with GitHub. Needs public_repo permissions.',
-          type: 'string',
-        })
-        .option('owner', {
-          demandOption: true,
-          describe: 'The GitHub organization',
-          type: 'string',
-        })
-        .option('repo', {
-          demandOption: true,
-          describe: 'The GitHub Repo',
-          type: 'string',
-        })
-        .option('base', {
-          demandOption: true,
-          describe: 'The release to compare against, e.g. `core@2021.6.0`',
-          type: 'string',
-        })
-        .option('head', {
-          demandOption: true,
-          default: 'HEAD',
-          describe: 'Ref which we want to release',
-          type: 'string',
-        })
-        .option('releaseName', {
-          demandOption: true,
-          describe: 'Name of the release, e.g. `core@2021.7.0',
-          type: 'string',
-        })
-    ),
-    handler,
-  })
-  .help()
-  .strict(true)
-  .version(false)
-  .parse();
