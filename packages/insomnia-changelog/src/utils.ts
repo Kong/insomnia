@@ -1,5 +1,5 @@
 import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
-import { any, flatten, groupBy, head, join, map, partition, pipe, reject, sort, sortBy, take, toPairs, uniq } from 'ramda';
+import { any, flatten, groupBy, head, join, map, mergeAll, pipe, reduce, reject, sort, sortBy, take, toPairs, uniq } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Entries } from 'type-fest';
 
@@ -118,6 +118,10 @@ export const getPull = ({
   return (pull.data.items[0] ?? null) as PullsResponse | null;
 };
 
+type ChangelogLine = string;
+type MissingChanges = string;
+type FetchedChanges = [ChangelogLine[], MissingChanges[]];
+
 export const fetchChanges = async ({
   responseCommits,
   octokit,
@@ -129,21 +133,28 @@ export const fetchChanges = async ({
   owner: string;
   repo: string;
 }) => {
-  const promises = map(async responseCommit => {
-    const pull = await getPull({ octokit, owner, repo })(responseCommit);
-    const changelogLine = getChangelogLine(responseCommit, pull);
-    if (changelogLine !== null) {
-      return [true, changelogLine] as const;
-    }
-    if (pull !== null) {
-      return [false, pull.url] as const;
-    }
-    return [false, responseCommit.html_url] as const;
-  }, responseCommits);
+  const pullGetter = getPull({ octokit, owner, repo });
+  const pullsById = mergeAll(await Promise.all(map(async responseCommit => ({
+    [responseCommit.sha]: await pullGetter(responseCommit),
+  }), responseCommits)));
 
-  const results = await Promise.all(promises);
-  const [changes, missingChanges] = partition(head, results).map(map(result => result[1]));
-  return [changes, missingChanges];
+  return reduce<ResponseCommit, FetchedChanges>(([changes, missingChanges], responseCommit) => {
+    const pull = pullsById[responseCommit.sha];
+    const changelogLine = getChangelogLine(responseCommit, pull);
+
+    if (changelogLine !== null) {
+      // this commit associates to a valid changelog, so append it to the changes list
+      return [[...changes, changelogLine], missingChanges];
+    }
+
+    if (pull !== null) {
+      // no changelog found, but there is a pull URL, so output that.
+      return [changes, [...missingChanges, pull.url]];
+    }
+
+    // no changelog or pull request found, so just append a link to the URL
+    return [changes, [...missingChanges, responseCommit.html_url]];
+  }, [[], []], responseCommits);
 };
 
 export const groupChanges: (changes: string[]) => string = pipe(
