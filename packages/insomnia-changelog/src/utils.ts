@@ -5,7 +5,13 @@ import { Entries } from 'type-fest';
 
 type CompareCommitsRepoResponse = RestEndpointMethodTypes['repos']['compareCommitsWithBasehead']['response'];
 export type ResponseCommit = CompareCommitsRepoResponse['data']['commits'][0];
-export type PullsResponse = Pick<RestEndpointMethodTypes['pulls']['get']['response']['data'], 'number' | 'body' | 'url'>;
+export type PullsResponse = Pick<
+  RestEndpointMethodTypes['pulls']['get']['response']['data'],
+  | 'title'
+  | 'number'
+  | 'body'
+  | 'html_url'
+>;
 
 /** look for the first occurance of `changelog:` at the beginning of a line, case insensitive */
 export const extractChangelog = (pullRequestDescription: string | null | undefined) => pullRequestDescription ? (
@@ -149,11 +155,11 @@ export const fetchChanges = async ({
 
     if (pull !== null) {
       // no changelog found, but there is a pull URL, so output that.
-      return [changes, [...missingChanges, pull.url]];
+      return [changes, [...missingChanges, `- ${pull.html_url} ${pull.title}`]];
     }
 
     // no changelog or pull request found, so just append a link to the URL
-    return [changes, [...missingChanges, responseCommit.html_url]];
+    return [changes, [...missingChanges, `- ${responseCommit.html_url} ${responseCommit.commit.message}`]];
   }, [[], []], responseCommits);
 };
 
