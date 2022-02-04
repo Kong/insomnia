@@ -37,16 +37,16 @@ jobs:
       - name: Bump Inso (Beta) Formula
         uses: Homebrew/actions/bump-formulae@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           formulae: --open-pr inso-beta
       - name: Bump Inso Formula
         uses: Homebrew/actions/bump-formulae@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           formulae: --open-pr inso
       - name: Bump Insomnia Formula
         uses: Homebrew/actions/bump-formulae@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.HOMEBREW_PR_GH_TOKEN }}
           # Bump only these formulae if outdated
           formulae: --open-pr insomnia
