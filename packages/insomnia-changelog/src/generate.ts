@@ -88,7 +88,7 @@ yargs
         })
         .option('base', {
           demandOption: true,
-          describe: 'The release to compare gainst e.g. `core@2021.6.0`. Default: The latest tag on the current branch.',
+          describe: 'The release to compare against, e.g. `core@2021.6.0`',
           type: 'string',
         })
         .option('head', {

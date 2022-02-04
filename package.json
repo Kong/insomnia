@@ -12,7 +12,7 @@
   "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
     "build": "lerna run build --parallel",
-    "generate:changelog": "esr scripts/generate-changelog.ts",
+    "generate:changelog": "npm --prefix packages/insomnia-changelog start",
     "lint": "lerna run lint --stream --no-bail",
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",

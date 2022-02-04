@@ -1,15 +1,18 @@
 {
   "private": true,
-  "name": "insomnia-common",
+  "name": "insomnia-changelog",
   "version": "2.4.1",
   "homepage": "https://insomnia.rest",
-  "description": "Top-level entities and utilities for Insomnia",
+  "description": "General Purpose changelog generator, not just for insomnia",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/insomnia.git",
-    "directory": "packages/insomnia-common"
+    "directory": "packages/insomnia-changelog"
+  },
+  "bin": {
+    "insomnia-changelog": "./dist/index.js"
   },
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
@@ -17,6 +20,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "start": "esr src/generate.ts --owner=Kong --repo=insomnia",
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
@@ -30,11 +34,14 @@
     "ramda-adjunct": "2.33.0"
   },
   "devDependencies": {
+    "@octokit/rest": "^18.12.0",
+    "@octokit/types": "^6.34.0",
     "@types/ramda": "^0.27.44",
-    "ajv": "^8.6.2",
+    "esbuild": "^0.14.2",
     "jest": "^26.6.3",
+    "esbuild-runner": "^2.2.1",
     "type-fest": "^1.0.2",
-    "typescript": "^4.5.5",
-    "typescript-json-schema": "^0.50.1"
+    "typescript": "^4.2.3",
+    "yargs": "^17.3.0"
   }
 }
