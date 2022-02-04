@@ -13,34 +13,39 @@ export const generateCommand = createCommand('generate')
   .description('Creates a changelog')
   .option(
     '--githubToken <token>',
-    'The personal access token to use for authenticating with GitHub. Needs public_repo permissions.'
+    'The personal access token to use for authenticating with GitHub. Needs the `public_repo` permission.',
   )
   .requiredOption(
     '--owner <owner username>',
-    'The GitHub organization'
+    'the GitHub organization'
   )
   .requiredOption(
     '--repo <repo name>',
-    'The GitHub Repo'
+    'the GitHub repository'
   )
   .requiredOption(
     '--base <git ref>',
-    'The release to compare against, e.g. `core@2021.6.0`'
+    'the release to compare against, e.g. `core@2021.6.0`'
   )
   .option(
     '--head <git ref>',
-    'Ref which we want to release',
+    'ref which we want to release',
     'HEAD',
   )
   .requiredOption(
     '--releaseName <name>',
-    'Name of the release, e.g. `core@2021.7.0'
+    'name of the release, e.g. `core@2021.7.0'
+  )
+  .option(
+    '--onlyShowMissing',
+    'only show commits that are missing a changelog (useful for verifying we didn\'t miss one)'
   )
   .action(async (_, command: Command) => {
     const {
       base,
       githubToken = process.env.GITHUB_TOKEN,
       head,
+      onlyShowMissing,
       owner,
       releaseName,
       repo,
@@ -60,15 +65,20 @@ export const generateCommand = createCommand('generate')
       octokit,
     });
 
-    const authors = uniqueAuthors(responseCommits);
-
-    const changes = await fetchChanges({
+    const [changes, missingChanges] = await fetchChanges({
       owner,
       repo,
       octokit,
       responseCommits,
     });
+
+    if (onlyShowMissing) {
+      console.log(missingChanges.join('\n'));
+      return;
+    }
+
     const changeLines = groupChanges(changes);
+    const authors = uniqueAuthors(responseCommits);
 
     const changelog = [
       `## ${releaseName}`,

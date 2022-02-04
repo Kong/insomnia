@@ -1,13 +1,14 @@
 import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
-import { flatten, groupBy, head, join, map, pipe, sort, sortBy, toPairs, uniq } from 'ramda';
+import { any, flatten, groupBy, head, join, map, partition, pipe, reject, sort, sortBy, take, toPairs, uniq } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Entries } from 'type-fest';
 
 type CompareCommitsRepoResponse = RestEndpointMethodTypes['repos']['compareCommitsWithBasehead']['response'];
 export type ResponseCommit = CompareCommitsRepoResponse['data']['commits'][0];
+export type PullsResponse = Pick<RestEndpointMethodTypes['pulls']['get']['response']['data'], 'number' | 'body' | 'url'>;
 
 /** look for the first occurance of `changelog:` at the beginning of a line, case insensitive */
-export const extractChangelog = (pullRequestDescription: string | null) => pullRequestDescription ? (
+export const extractChangelog = (pullRequestDescription: string | null | undefined) => pullRequestDescription ? (
   pullRequestDescription.match(/^changelog:[ \t]*(.*)/mi)?.[1] || undefined
 ) : null;
 
@@ -17,6 +18,15 @@ export const getAuthorHandles = ({ author }: ResponseCommit) => (
   author && author.login ? [`@${author.login}`] as AuthorHandle[] : null
 );
 
+// TODO: make this configurable by the end user
+const ignoreCommitMessagePatterns = [
+  /Merge branch 'release/,
+];
+
+export const shouldIgnoreCommit = ({ commit }: ResponseCommit) => any(regex => (
+  regex.test(commit.message)
+), ignoreCommitMessagePatterns);
+
 export const uniqueAuthors: (responseCommits: ResponseCommit[]) => AuthorHandle[] = pipe(
   map(getAuthorHandles),
   flatten,
@@ -25,28 +35,16 @@ export const uniqueAuthors: (responseCommits: ResponseCommit[]) => AuthorHandle[
   sort((a, b) => a.localeCompare(b)),
 );
 
-export const getPullRequestNumber = ({ commit }: ResponseCommit) => {
-  const firstLine = commit.message.split('\n')[0];
-  const stringPRNumber = firstLine.match(/\(#([0-9]+)\)$/)?.[1];
-  if (!stringPRNumber) {
-    return undefined;
-  }
-  return parseInt(stringPRNumber);
-};
-
-export const getChangelogLine = (getPullBody: (prNumber?: number) => Promise<string | null>) => async (responseCommit: ResponseCommit) => {
-  const pullRequestNumber = getPullRequestNumber(responseCommit);
-  const prBody = await getPullBody(pullRequestNumber);
-  const prChangelog = extractChangelog(prBody);
-  const pullRequestSection = pullRequestNumber ? ` (#${pullRequestNumber})` : '';
-
+export const getChangelogLine = (responseCommit: ResponseCommit, pull: PullsResponse | null | undefined) => {
+  const prChangelog = extractChangelog(pull?.body);
   const commitChangelog = extractChangelog(responseCommit.commit.message);
   if (!prChangelog && !commitChangelog) {
-    return;
+    return null;
   }
 
   // if there's no PR changelog (such as a situation where there's no PR), then fall back to the commit
   const changelog = prChangelog || commitChangelog;
+  const pullRequestSection = pull?.number ? ` (#${pull.number})` : '';
 
   const author = getAuthorHandles(responseCommit)?.join(' ');
   const authorSection = author ? ` ${author}` : '';
@@ -88,10 +86,36 @@ export const compareCommits = async ({
     if (commitsItems.length === 0) {
       throw notFound;
     }
-    return commitsItems;
+    return reject(shouldIgnoreCommit, commitsItems);
   } catch (error: unknown) {
     throw notFound;
   }
+};
+
+export const getPull = ({
+  octokit,
+  owner,
+  repo,
+}: {
+  octokit: Octokit;
+  owner: string;
+  repo: string;
+}) => async ({ sha }: ResponseCommit) => {
+  /**
+   * !BEWARE! GitHub has a strange API behavior whereby if you send the full hash it will return different results.
+   *
+   * If you don't believe me try for yourself:
+   * > search `is:pr b2c94ebbdbcc72750d1cb415f058d49a57ca5676` on https://github.com/Kong/insomnia/pulls and then again but remove one character from the end of the hash.
+   */
+  const shortenedHash = take(10, sha);
+  const q = `org:${owner} repo:${repo} is:pr ${shortenedHash}`;
+  const pull = await octokit.search.issuesAndPullRequests({ q });
+
+  if (pull.data.items.length > 1) {
+    throw new Error(`found multiple PRs for a commit ${JSON.stringify({ sha, pulls: pull.data.items })}`);
+  }
+
+  return (pull.data.items[0] ?? null) as PullsResponse | null;
 };
 
 export const fetchChanges = async ({
@@ -105,16 +129,21 @@ export const fetchChanges = async ({
   owner: string;
   repo: string;
 }) => {
-  const getPullBody = async (pullNumber?: number) => pullNumber ? (await octokit.pulls.get({
-    owner,
-    repo,
-    // eslint-disable-next-line camelcase -- this defined by the GitHub API
-    pull_number: pullNumber,
-  })).data.body : null;
+  const promises = map(async responseCommit => {
+    const pull = await getPull({ octokit, owner, repo })(responseCommit);
+    const changelogLine = getChangelogLine(responseCommit, pull);
+    if (changelogLine !== null) {
+      return [true, changelogLine] as const;
+    }
+    if (pull !== null) {
+      return [false, pull.url] as const;
+    }
+    return [false, responseCommit.html_url] as const;
+  }, responseCommits);
 
-  const getLine = getChangelogLine(getPullBody);
-  const changes = await Promise.all(map(getLine, responseCommits));
-  return compact(changes);
+  const results = await Promise.all(promises);
+  const [changes, missingChanges] = partition(head, results).map(map(result => result[1]));
+  return [changes, missingChanges];
 };
 
 export const groupChanges: (changes: string[]) => string = pipe(

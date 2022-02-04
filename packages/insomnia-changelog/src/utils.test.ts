@@ -7,11 +7,34 @@ import {
   formattedDate,
   getAuthorHandles,
   getChangelogLine,
-  getPullRequestNumber,
   groupChanges,
+  PullsResponse,
   ResponseCommit,
+  shouldIgnoreCommit,
   uniqueAuthors,
 } from './utils';
+
+describe('shouldIgnoreCommit', () => {
+  it('it will ignore release commits', () => {
+    const commit = {
+      commit: {
+        message: 'Merge branch \'release/2021.7.2\' into develop',
+      },
+    } as ResponseCommit;
+
+    expect(shouldIgnoreCommit(commit)).toEqual(true);
+  });
+
+  it('it will not ignore other commits commits', () => {
+    const commit = {
+      commit: {
+        message: 'The same thing we do every night, Pinky.',
+      },
+    } as ResponseCommit;
+
+    expect(shouldIgnoreCommit(commit)).toEqual(false);
+  });
+});
 
 describe('extractChangelog', () => {
   const result = 'Fixed an issue with xyz.';
@@ -113,43 +136,6 @@ describe('uniqueAuthors', () => {
   });
 });
 
-describe('getPullRequestNumber', () => {
-  it('extracts PR number when one is present', () => {
-    const message = 'ensures Ziltoid\'s omniscience (and fixes type error) (#9001)';
-    const commit = { commit: { message } } as ResponseCommit;
-    const result = getPullRequestNumber(commit);
-    expect(result).toEqual(9001);
-  });
-
-  it('handles missing number', () => {
-    const message = 'ensures Ziltoid\'s omniscience (and fixes type error) (#)';
-    const commit = { commit: { message } } as ResponseCommit;
-    const result = getPullRequestNumber(commit);
-    expect(result).toEqual(undefined);
-  });
-
-  it('only looks for a match at the end of a line', () => {
-    const message = '(#1234) (#9001)';
-    const commit = { commit: { message } } as ResponseCommit;
-    const result = getPullRequestNumber(commit);
-    expect(result).toEqual(9001);
-  });
-
-  it('returns undefined when no match is found', () => {
-    const message = 'adds more documentation to codemirror addon (and fixes type error)';
-    const commit = { commit: { message } } as ResponseCommit;
-    const result = getPullRequestNumber(commit);
-    expect(result).toEqual(undefined);
-  });
-
-  it('handles co-authorship', () => {
-    const message = 'fixes a thing (#9001)\n\nCo-authored-by: Ziltoid The Omniscient <ziltoid@hevydevy.galaxy>';
-    const commit = { commit: { message } } as ResponseCommit;
-    const result = getPullRequestNumber(commit);
-    expect(result).toEqual(9001);
-  });
-});
-
 describe('getChangelogLine', () => {
   const changelog = 'If there were to omnisciences, Ziltoid would be both.';
   const author = { login: 'CaptainSpectacular' };
@@ -157,25 +143,27 @@ describe('getChangelogLine', () => {
 
   it('exits if the pull request number is not found', async () => {
     const commit = { commit: { message: '' } } as ResponseCommit;
-    const result = await getChangelogLine(async () => null)(commit);
+    const result = getChangelogLine(commit, null);
     expect(result).toEqual(undefined);
   });
 
   it('exits if the pull request body is not found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const result = await getChangelogLine(async () => null)(commit);
+    const result = getChangelogLine(commit, null);
     expect(result).toEqual(undefined);
   });
 
   it('exits if the pull request body is not found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const result = await getChangelogLine(async () => 'a body with no changelog')(commit);
+    const pull = { body: 'a body with no changelog' } as PullsResponse;
+    const result = getChangelogLine(commit, pull);
     expect(result).toEqual(undefined);
   });
 
   it('shows the changelog, even without an author found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const result = await getChangelogLine(async () => `changelog: ${changelog}`)(commit);
+    const pull = { body: `changelog: ${changelog}` } as PullsResponse;
+    const result = getChangelogLine(commit, pull);
     expect(result).toEqual(`- ${changelog} (#9001)`);
   });
 
@@ -184,7 +172,7 @@ describe('getChangelogLine', () => {
       author,
       commit: { message: `ziltoid\nchangelog: ${changelog}` },
     } as ResponseCommit;
-    const result = await getChangelogLine(async () => null)(commit);
+    const result = getChangelogLine(commit, null);
     expect(result).toEqual(`- ${changelog} ${authorHandle}`);
   });
 
@@ -193,7 +181,8 @@ describe('getChangelogLine', () => {
       author,
       commit: { message: `ziltoid\nchangelog: ${changelog}` },
     } as ResponseCommit;
-    const result = await getChangelogLine(async () => `changelog: ${changelog}`)(commit);
+    const pull = { body: `changelog: ${changelog}` } as PullsResponse;
+    const result = getChangelogLine(commit, pull);
     expect(result).toEqual(`- ${changelog} ${authorHandle}`);
   });
 
@@ -202,7 +191,8 @@ describe('getChangelogLine', () => {
       author,
       commit: { message: 'ziltoid (#9001)' },
     } as ResponseCommit;
-    const result = await getChangelogLine(async () => `changelog: ${changelog}`)(commit);
+    const pull = { body: `changelog: ${changelog}` } as PullsResponse;
+    const result = getChangelogLine(commit, pull);
     expect(result).toEqual(`- ${changelog} (#9001) ${authorHandle}`);
   });
 });

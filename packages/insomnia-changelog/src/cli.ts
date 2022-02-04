@@ -10,5 +10,5 @@ const main = async () => {
 };
 
 main()
-  .then(console.log)
+  .then()
   .catch(console.error);
