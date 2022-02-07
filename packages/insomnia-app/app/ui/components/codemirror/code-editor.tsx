@@ -37,6 +37,7 @@ import { KeydownBinder } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
+import { shouldIndentWithTabs } from './should-indent-with-tabs';
 
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
@@ -191,7 +192,7 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawPr
 
 export const CodeEditor = forwardRef(CodeEditorFCWithRef);
 
-type Props = RawProps & ReturnType<typeof useDerivedProps>;
+export type CodeEditorProps = RawProps & ReturnType<typeof useDerivedProps>;
 
 interface State {
   filter: string;
@@ -206,7 +207,7 @@ function isMarkerRange(mark?: CodeMirror.Position | CodeMirror.MarkerRange): mar
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedCodeEditor extends Component<Props, State> {
+export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   private _uniquenessKey?: string;
   private _previousUniquenessKey?: string;
   private _originalCode: string;
@@ -215,7 +216,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   private _autocompleteDebounce: NodeJS.Timeout | null = null;
   private _filterTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: Props) {
+  constructor(props: CodeEditorProps) {
     super(props);
     this.state = {
       filter: props.filter || '',
@@ -233,7 +234,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps(nextProps: CodeEditorProps) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
     // Sync the filter too
@@ -799,9 +800,6 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       mode = UnconnectedCodeEditor._normalizeMode(rawMode);
     }
 
-    // NOTE: YAML is not valid when indented with Tabs
-    const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
-    const actuallyIndentWithTabs = indentWithTabs && !isYaml && mode !== 'openapi';
     const options: CodeMirror.EditorConfiguration = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
@@ -813,7 +811,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       lineNumbers: !hideGutters && !hideLineNumbers,
       foldGutter: !hideGutters && !hideLineNumbers,
       lineWrapping: lineWrapping,
-      indentWithTabs: actuallyIndentWithTabs,
+      indentWithTabs: shouldIndentWithTabs({ mode: rawMode, indentWithTabs }),
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
       gutters: [],

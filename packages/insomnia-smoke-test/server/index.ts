@@ -20,6 +20,14 @@ app.get('/sleep', (_req, res) => {
   res.status(200).send({ sleep: true });
 });
 
+app.get('/cookies', (_req, res) => {
+  res
+    .status(200)
+    .header('content-type', 'text/plain')
+    .cookie('insomnia-test-cookie', 'value123')
+    .send(`${_req.headers['cookie']}`);
+});
+
 app.use('/file', express.static('fixtures/files'));
 
 const { utf8, latin1 } = basicAuthCreds;

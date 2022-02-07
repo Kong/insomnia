@@ -38,7 +38,7 @@ const ExampleButton = styled.div({
 });
 
 interface Props {
-  onUpdateContents: () => void;
+  onUpdateContents: (contents: string) => void;
 }
 
 const useUpdateApiSpecContents = () => {
@@ -84,7 +84,7 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
         }
         const contents = await response.text();
         await updateApiSpecContents(contents);
-        onUpdateContents();
+        onUpdateContents(contents);
       },
     });
   }, [updateApiSpecContents, onUpdateContents]);
@@ -125,7 +125,7 @@ const SecondaryAction: FC<Props> = ({ onUpdateContents }) => {
     }
     const contents = await response.text();
     await updateApiSpecContents(contents);
-    onUpdateContents();
+    onUpdateContents(contents);
   }, [updateApiSpecContents, onUpdateContents]);
 
   return (

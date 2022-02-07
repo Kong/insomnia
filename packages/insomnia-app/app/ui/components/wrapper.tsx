@@ -14,7 +14,6 @@ import {
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import type { ApiSpec } from '../../models/api-spec';
 import type { Cookie } from '../../models/cookie-jar';
 import * as models from '../../models/index';
 import {
@@ -123,6 +122,11 @@ export type WrapperProps = AppProps & {
   gitVCS: GitVCS | null;
 };
 
+export type HandleActivityChange = (options: {
+  workspaceId?: string;
+  nextActivity: GlobalActivity;
+}) => Promise<void>;
+
 interface State {
   forceRefreshKey: number;
   activeGitBranch: string;
@@ -153,10 +157,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return this._handleForceUpdateRequest(r, { headers });
-  }
-
-  async _handleUpdateApiSpec(apiSpec: ApiSpec) {
-    await models.apiSpec.update(apiSpec);
   }
 
   static _handleUpdateRequestBody(request: Request, body: RequestBody) {
@@ -218,7 +218,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string; nextActivity: GlobalActivity}) {
+  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
@@ -646,7 +646,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
               handleActivityChange={this._handleWorkspaceActivityChange}
-              handleUpdateApiSpec={this._handleUpdateApiSpec}
               wrapperProps={this.props}
             />
           )}

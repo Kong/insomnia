@@ -17,7 +17,6 @@ interface Props {
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
-  showEnvironmentsModal: (...args: any[]) => any;
   unseenWorkspaces: Workspace[];
   width: number;
   workspaces: Workspace[];

@@ -14,7 +14,6 @@ import { isEmpty } from 'ramda';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
-import type { GlobalActivity } from '../../common/constants';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { documentationLinks } from '../../common/documentation';
 import { getSendRequestCallback } from '../../common/send-request';
@@ -33,12 +32,12 @@ import { EmptyStatePane } from './panes/empty-state-pane';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { WrapperProps } from './wrapper';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
 
 interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   wrapperProps: WrapperProps;
 }
 
@@ -546,10 +545,9 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+    const { gitSyncDropdown, handleActivityChange } = this.props;
     return (
       <WorkspacePageHeader
-        wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
         gridRight={gitSyncDropdown}
       />
