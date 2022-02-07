@@ -201,6 +201,27 @@ resources:
         lastAccessed: 2021-11-18T23:53:49.637Z
         id: "5403425689099031"
     _type: cookie_jar
+  - _id: req_0769dca586df49358082b2183cfa073e
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1643892278711
+    created: 1643892270079
+    url: http://127.0.0.1:4010/cookies
+    name: sends request with cookie and get cookie in response
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1643892270079
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: spc_255904e6a8774d24b29c9c3718feb07f
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1636140994428
