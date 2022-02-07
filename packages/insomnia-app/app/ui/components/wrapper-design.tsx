@@ -1,12 +1,13 @@
 import { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useState } from 'react';
+import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAsync, useDebounce } from 'react-use';
+import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
@@ -74,24 +75,65 @@ interface LintMessage {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+const useDesignEmptyState = () => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
+  const contents = activeApiSpec?.contents;
+
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
-  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
-  const contents = activeApiSpec?.contents ?? '';
-  const [contentsState, setContentsState] = useState(contents);
+  const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
 
-  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  useEffect(() => {
+    if (contents && shouldIncrementCounter){
+      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+      setShouldIncrementCounter(false);
+    }
+  }, [contents, shouldIncrementCounter]);
 
-  useDebounce(async () => {
+  const onUpdateContents = useCallback((value: string) => {
     if (!activeApiSpec) {
       return;
     }
 
-    await models.apiSpec.update({ ...activeApiSpec, contents: contentsState });
-    setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
-  }, 500, [contentsState]);
+    const fn = async () => {
+      await models.apiSpec.update({ ...activeApiSpec, contents: value });
+    };
+    fn();
+
+    // Because we can't await activeApiSpec.contents to have propageted to redux, we flip a toggle to decide if we should do something when redux does eventually change
+    setShouldIncrementCounter(true);
+  }, [activeApiSpec]);
+
+  const emptyStateNode = contents ? null : (
+    <DesignEmptyState
+      onUpdateContents={onUpdateContents}
+    />
+  );
+
+  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  return { uniquenessKey, emptyStateNode };
+};
+
+const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
+  const contents = activeApiSpec?.contents ?? '';
+
+  const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
+
+  const onCodeEditorChange = useMemo(() => {
+    const handler = (contents: string) => {
+      const fn = async () => {
+        if (!activeApiSpec) {
+          return;
+        }
+
+        await models.apiSpec.update({ ...activeApiSpec, contents });
+      };
+      fn();
+    };
+
+    return debounce(handler, 500);
+  }, [activeApiSpec]);
 
   useAsync(async () => {
     // Lint only if spec has content
@@ -136,13 +178,11 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
           ref={editor}
           lintOptions={{ delay: 1000 }}
           mode="openapi"
-          defaultValue={contentsState}
-          onChange={setContentsState}
+          defaultValue={contents}
+          onChange={onCodeEditorChange}
           uniquenessKey={uniquenessKey}
         />
-        <DesignEmptyState
-          onUpdateContents={setContentsState}
-        />
+        {emptyStateNode}
       </div>
       {lintMessages.length > 0 && (
         <NoticeTable
