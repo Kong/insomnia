@@ -13,4 +13,5 @@
     "*.njson": "ndjson"
   },
   "files.insertFinalNewline": true,
+  "markdown.extension.toc.updateOnSave": true
 }

@@ -12,9 +12,13 @@
     - [The script only prints out a string](#the-script-only-prints-out-a-string)
     - [100% test coverage](#100-test-coverage)
   - [Example Usage](#example-usage)
+    - [Generating a changelog](#generating-a-changelog-1)
+    - [Double checking commits without changelogs](#double-checking-commits-without-changelogs)
   - [Other approaches](#other-approaches)
     - [Why not use a CHANGELOG.md?](#why-not-use-a-changelogmd)
     - [Why not write it by hand before every release?](#why-not-write-it-by-hand-before-every-release)
+  - [FAQ](#faq)
+    - [Help! I'm getting rate limited by GitHub!](#help-im-getting-rate-limited-by-github)
 
 ## General Principles
 
@@ -92,16 +96,32 @@ Wanna see what it would do in a certain scenario?  Write a new test.
 
 ## Example Usage
 
-1. Tell the script about your GitHub token with the standard `GITHUB_TOKEN` environment variable, or via the `--githubToken` command line argument.
-1. Run the script:
+### Generating a changelog
+
+1. Tell the script about your GitHub token with the standard `GITHUB_TOKEN` environment variable, or via the `--githubToken` command line argument.  The token can be generated in your [GitHub Token Settings](https://github.com/settings/tokens), and needs `public_repo` permissions.
+1. Run the script (from this package):
 
     ```console
-    npm run generate:changelog -- --base="core@2021.7.2" --head="HEAD" --releaseName="core@2021.7.3"
+    npm run start -- --base="core@2021.7.2" --head="core@2022.1.0" --releaseName="core@2022.1.0"
     ```
 
-- `--base` is the oldest commit you'd like the tool to search from, inclusively.
-- `--head` is the newest commit you'd like the tool to search to, inclusively.
+- `--base` is the oldest git ref you'd like the tool to search from, inclusively.
+- `--head` is the newest git ref you'd like the tool to search to, inclusively.
 - `--releaseName` will be used in the header as the name of the release.
+
+### Double checking commits without changelogs
+
+Do you have this sinking feeling that there's some PR that was simply missed at some stage during review and doesn't have a changelog?  Don't worry, this script's _got you covered_.
+
+Run the same thing as above, but just add `--onlyShowMissing`, e.g.:
+
+```console
+npm run start -- --base core@2021.7.2 --head core@2022.1.0 --releaseName core@2022.1.0 --onlyShowMissing
+```
+
+Adding that flag will look at the same commits as before, but will instead show you all the commits that do _not_ have a changelog entry.  That way, you can click through the PRs and just verify that nothing important was missed.
+
+If you find a PR that was missed, you simply edit the PR description to include a changelog line (like normal) and run the script again.  Presto-changeo!  All fixed.
 
 ## Other approaches
 
@@ -120,3 +140,9 @@ This tool tries to find the _path of least resistance_ for generating quality ch
 1. Not possible if we're going to meet the goal of releasing a changelog at any arbitrary point in time (i.e. if doing continuous development).
 1. No ability to review the current state of the changelog.  With this script, a member of the team focused on documentation (or someone focused on marketing, or someone product focused, perhaps) can run the script every morning, for example, and stay aware of which changes appeared in the changelog over the last day.
 1. There's no review process for doing such a thing.  If we build it into our PR review process, then it's done right there in the review process when the information is freshest in the reviewer's mind.
+
+## FAQ
+
+### Help! I'm getting rate limited by GitHub!
+
+Just wait a minute or two and try again, it has been our experience that if you quickly run the script in quick succession this can happen, but otherwise it can run once just fine.  File a GitHub issue if you still have trouble after waiting.
