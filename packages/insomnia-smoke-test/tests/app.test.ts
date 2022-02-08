@@ -38,4 +38,12 @@ test('can send requests', async ({ app, page }) => {
   await page.click('button:has-text("GETsends request with basic authentication")');
   await page.click('text=http://127.0.0.1:4010/auth/basicSend >> button');
   await page.click('text=200 OK');
+
+  // Send request, check if no cookie was sent (server will reply with received cookies + a new cookie as response)
+  await page.click('button:has-text("GETsends request with cookie and get cookie in response")');
+  await page.click('text=http://127.0.0.1:4010/cookiesSend >> button');
+  await page.click('text=undefined');
+  // Send request, check if new cookie sent by server in previous request is now also sent
+  await page.click('text=http://127.0.0.1:4010/cookiesSend >> button');
+  await page.click('text=insomnia-test-cookie=value123');
 });

@@ -1,23 +1,25 @@
 import { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useState } from 'react';
-import { useAsync, useDebounce } from 'react-use';
+import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import type { GlobalActivity } from '../../common/constants';
+import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
+import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
 import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
 import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { WrapperProps } from './wrapper';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
@@ -33,13 +35,12 @@ const spectral = initializeSpectral();
 const RenderPageHeader: FC<Pick<Props,
 | 'gitSyncDropdown'
 | 'handleActivityChange'
-| 'wrapperProps'
 >> = ({
   gitSyncDropdown,
   handleActivityChange,
-  wrapperProps,
 }) => {
-  const { activeWorkspace, activeWorkspaceMeta } = wrapperProps;
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const previewHidden = Boolean(activeWorkspaceMeta?.previewHidden);
 
   const handleTogglePreview = useCallback(async () => {
@@ -53,7 +54,6 @@ const RenderPageHeader: FC<Pick<Props,
 
   return (
     <WorkspacePageHeader
-      wrapperProps={wrapperProps}
       handleActivityChange={handleActivityChange}
       gridRight={
         <Fragment>
@@ -75,29 +75,65 @@ interface LintMessage {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
-  editor: RefObject<UnconnectedCodeEditor>;
-}> = ({
-  editor,
-  wrapperProps,
-}) => {
-  const { activeApiSpec } = wrapperProps;
+const useDesignEmptyState = () => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const contents = activeApiSpec?.contents;
+
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
-  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
-  const contents = activeApiSpec?.contents ?? '';
-  const [contentsState, setContentsState] = useState(contents);
+  const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
 
-  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  useEffect(() => {
+    if (contents && shouldIncrementCounter){
+      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+      setShouldIncrementCounter(false);
+    }
+  }, [contents, shouldIncrementCounter]);
 
-  useDebounce(async () => {
+  const onUpdateContents = useCallback((value: string) => {
     if (!activeApiSpec) {
       return;
     }
 
-    await models.apiSpec.update({ ...activeApiSpec, contents: contentsState });
-    setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- this is a problem with react-use
-  }, 500, [contentsState]);
+    const fn = async () => {
+      await models.apiSpec.update({ ...activeApiSpec, contents: value });
+    };
+    fn();
+
+    // Because we can't await activeApiSpec.contents to have propageted to redux, we flip a toggle to decide if we should do something when redux does eventually change
+    setShouldIncrementCounter(true);
+  }, [activeApiSpec]);
+
+  const emptyStateNode = contents ? null : (
+    <DesignEmptyState
+      onUpdateContents={onUpdateContents}
+    />
+  );
+
+  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  return { uniquenessKey, emptyStateNode };
+};
+
+const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
+  const contents = activeApiSpec?.contents ?? '';
+
+  const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
+
+  const onCodeEditorChange = useMemo(() => {
+    const handler = (contents: string) => {
+      const fn = async () => {
+        if (!activeApiSpec) {
+          return;
+        }
+
+        await models.apiSpec.update({ ...activeApiSpec, contents });
+      };
+      fn();
+    };
+
+    return debounce(handler, 500);
+  }, [activeApiSpec]);
 
   useAsync(async () => {
     // Lint only if spec has content
@@ -142,13 +178,11 @@ const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
           ref={editor}
           lintOptions={{ delay: 1000 }}
           mode="openapi"
-          defaultValue={contentsState}
-          onChange={setContentsState}
+          defaultValue={contents}
+          onChange={onCodeEditorChange}
           uniquenessKey={uniquenessKey}
         />
-        <DesignEmptyState
-          onUpdateContents={setContentsState}
-        />
+        {emptyStateNode}
       </div>
       {lintMessages.length > 0 && (
         <NoticeTable
@@ -160,8 +194,9 @@ const RenderEditor: FC<Pick<Props, 'wrapperProps'> & {
   );
 };
 
-const RenderPreview: FC<Pick<Props, 'wrapperProps'>> = ({ wrapperProps }) => {
-  const { activeApiSpec, activeWorkspaceMeta } = wrapperProps;
+const RenderPreview: FC = () => {
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
 
   if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
     return null;
@@ -217,10 +252,8 @@ const RenderPreview: FC<Pick<Props, 'wrapperProps'>> = ({ wrapperProps }) => {
   );
 };
 
-const RenderPageSidebar: FC<Pick<Props, 'wrapperProps'> & { editor: RefObject<UnconnectedCodeEditor>}> = ({
-  editor,
-  wrapperProps: { activeApiSpec },
-}) => {
+const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor>}> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
   const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
     if (!editor.current) {
       return;
@@ -263,7 +296,7 @@ const RenderPageSidebar: FC<Pick<Props, 'wrapperProps'> & { editor: RefObject<Un
 
 interface Props {
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   wrapperProps: WrapperProps;
 }
 
@@ -278,29 +311,20 @@ export const WrapperDesign: FC<Props> = ({
     <RenderPageHeader
       gitSyncDropdown={gitSyncDropdown}
       handleActivityChange={handleActivityChange}
-      wrapperProps={wrapperProps}
     />
-  ), [gitSyncDropdown, handleActivityChange, wrapperProps]);
+  ), [gitSyncDropdown, handleActivityChange]);
 
   const renderEditor = useCallback(() => (
-    <RenderEditor
-      editor={editor}
-      wrapperProps={wrapperProps}
-    />
-  ), [editor, wrapperProps]);
+    <RenderEditor editor={editor} />
+  ), [editor]);
 
   const renderPreview = useCallback(() => (
-    <RenderPreview
-      wrapperProps={wrapperProps}
-    />
-  ), [wrapperProps]);
+    <RenderPreview />
+  ), []);
 
   const renderPageSidebar = useCallback(() => (
-    <RenderPageSidebar
-      editor={editor}
-      wrapperProps={wrapperProps}
-    />
-  ), [editor, wrapperProps]);
+    <RenderPageSidebar editor={editor} />
+  ), [editor]);
 
   return (
     <PageLayout

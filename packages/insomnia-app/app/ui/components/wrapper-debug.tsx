@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 
-import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
+import { AUTOBIND_CFG, SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
@@ -19,12 +19,12 @@ import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
 import { SidebarFilter } from './sidebar/sidebar-filter';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { WrapperProps } from './wrapper';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
 
 interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   handleChangeEnvironment: Function;
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;
@@ -54,18 +54,22 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject, syncItems, isLoggedIn } = this.props.wrapperProps;
+    const { gitSyncDropdown, handleActivityChange, wrapperProps: {
+      vcs,
+      activeWorkspace,
+      activeWorkspaceMeta,
+      activeProject,
+      syncItems,
+      isLoggedIn,
+    } } = this.props;
 
     if (!activeWorkspace) {
       return null;
     }
 
     const collection = isCollection(activeWorkspace);
-    const design = isDesign(activeWorkspace);
 
     let insomniaSync: ReactNode = null;
-
     if (isLoggedIn && collection && isRemoteProject(activeProject) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
@@ -76,12 +80,11 @@ export class WrapperDebug extends PureComponent<Props> {
       />;
     }
 
-    const gitSync = design && gitSyncDropdown;
+    const gitSync = isDesign(activeWorkspace) && gitSyncDropdown;
     const sync = insomniaSync || gitSync;
 
     return (
       <WorkspacePageHeader
-        wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
         gridRight={sync}
       />
