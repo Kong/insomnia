@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { map, path } from 'ramda';
 
 import {
   compareCommits,
@@ -7,6 +8,7 @@ import {
   formattedDate,
   getAuthorHandles,
   getChangelogLine,
+  getPull,
   groupChanges,
   PullsResponse,
   ResponseCommit,
@@ -144,25 +146,25 @@ describe('getChangelogLine', () => {
   it('exits if the pull request number is not found', async () => {
     const commit = { commit: { message: '' } } as ResponseCommit;
     const result = getChangelogLine(commit, null);
-    expect(result).toEqual(undefined);
+    expect(result).toEqual(null);
   });
 
   it('exits if the pull request body is not found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
     const result = getChangelogLine(commit, null);
-    expect(result).toEqual(undefined);
+    expect(result).toEqual(null);
   });
 
   it('exits if the pull request body is not found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
     const pull = { body: 'a body with no changelog' } as PullsResponse;
     const result = getChangelogLine(commit, pull);
-    expect(result).toEqual(undefined);
+    expect(result).toEqual(null);
   });
 
   it('shows the changelog, even without an author found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
-    const pull = { body: `changelog: ${changelog}` } as PullsResponse;
+    const pull = { body: `changelog: ${changelog}`, number: 9001 } as PullsResponse;
     const result = getChangelogLine(commit, pull);
     expect(result).toEqual(`- ${changelog} (#9001)`);
   });
@@ -191,7 +193,7 @@ describe('getChangelogLine', () => {
       author,
       commit: { message: 'ziltoid (#9001)' },
     } as ResponseCommit;
-    const pull = { body: `changelog: ${changelog}` } as PullsResponse;
+    const pull = { body: `changelog: ${changelog}`, number: 9001 } as PullsResponse;
     const result = getChangelogLine(commit, pull);
     expect(result).toEqual(`- ${changelog} (#9001) ${authorHandle}`);
   });
@@ -256,15 +258,16 @@ describe('compareCommits', () => {
       paginate: {
         iterator: () => ({
           async* [Symbol.asyncIterator]() {
-            yield { data: { commits: ['c'] } };
-            yield { data: { commits: ['d'] } };
+            yield { data: { commits: [{ commit: { message: 'c' } }] } };
+            yield { data: { commits: [{ commit: { message: 'd' } }] } };
           },
         }),
       },
     } as unknown as Octokit;
 
     const commits = await compareCommits({ octokit, ...commitInfo });
-    expect(commits).toEqual(['c', 'd']);
+    const messages = map(path(['commit', 'message']), commits);
+    expect(messages).toEqual(['c', 'd']);
   });
 });
 
@@ -310,12 +313,39 @@ describe('groupChanges', () => {
   });
 });
 
+describe('getPull', () => {
+  it('errors if multiple commits are found', async () => {
+    const octokit = {
+      search: {
+        issuesAndPullRequests: async () => ({
+          data: { items: ['>', '1'] },
+        }),
+      },
+    } as unknown as Octokit;
+
+    const doPull = () => getPull({ octokit, owner: '', repo: '' })({
+      sha: 'shank redemption',
+    } as ResponseCommit);
+
+    await expect(doPull).rejects.toThrow('found multiple PRs for a commit: {"sha":"shank redemption","pulls":[">","1"]}');
+  });
+});
+
 describe('fetchChanges', () => {
   it('can handle commits without pull request numbers', async () => {
-    const octokit = {} as unknown as Octokit;
+    const octokit = {
+      search: {
+        issuesAndPullRequests: async () => ({
+          data: { items: [] },
+        }),
+      },
+    } as unknown as Octokit;
 
     const responseCommits = [{
+      // eslint-disable-next-line camelcase -- from the GitHub API
+      html_url: 'http://example.com',
       commit: { message: 'a commit message without a PR number' },
+      sha: 'shank redemption',
     }] as ResponseCommit[];
 
     const result = await fetchChanges({
@@ -325,16 +355,53 @@ describe('fetchChanges', () => {
       repo: '',
     });
 
-    expect(result).toEqual([]);
+    expect(result[0]).toEqual([]);
+    expect(result[1]).toEqual([
+      '- http://example.com a commit message without a PR number',
+    ]);
+  });
+
+  it('can handle no changelog or pull request found', async () => {
+    const octokit = {
+      search: {
+        issuesAndPullRequests: async () => ({
+          data: { items: [{
+            number: 9001,
+            body: 'some non-changelog',
+            // eslint-disable-next-line camelcase -- from the GitHub API
+            html_url: 'http://example.com',
+            title: 'some PR',
+          }] },
+        }),
+      },
+    } as unknown as Octokit;
+
+    const responseCommits = [{
+      commit: { message: 'a commit message without a PR number' },
+      sha: 'shank redemption',
+    }] as ResponseCommit[];
+
+    const result = await fetchChanges({
+      responseCommits,
+      octokit,
+      owner: '',
+      repo: '',
+    });
+
+    expect(result[0]).toEqual([]);
+    expect(result[1]).toEqual(['- http://example.com some PR']);
   });
 
   it('will get pull request changes', async () => {
     const octokit = {
-      pulls: {
-        // eslint-disable-next-line camelcase -- this defined by the GitHub API
-        get: async ({ pull_number: pullNumber }: { pull_number: number }) => ({
+      search: {
+        issuesAndPullRequests: async ({ q }: { q: string }) => ({
           data: {
-            body: pullNumber === 9001 ? 'changelog: they hide their finest bean!' : 'changelog: prepare the attack!',
+            items: [
+              q.includes('9001') ?
+                { number: 9001, body: 'changelog: they hide their finest bean!' }
+                : { number: 9002, body: 'changelog: prepare the attack!' },
+            ] as PullsResponse[],
           },
         }),
       },
@@ -344,10 +411,12 @@ describe('fetchChanges', () => {
       {
         author: { login: 'ziltoid' },
         commit: { message: 'a commit message (#9001)' },
+        sha: '9001',
       },
       {
         author: { login: 'ziltoid' },
         commit: { message: 'a commit message (#9002)' },
+        sha: '9002',
       },
     ] as ResponseCommit[];
 
@@ -358,9 +427,10 @@ describe('fetchChanges', () => {
       repo: '',
     });
 
-    expect(result).toEqual([
+    expect(result[0]).toEqual([
       '- they hide their finest bean! (#9001) @ziltoid',
       '- prepare the attack! (#9002) @ziltoid',
     ]);
+    expect(result[1]).toEqual([]);
   });
 });

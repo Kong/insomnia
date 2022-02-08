@@ -118,7 +118,7 @@ export const getPull = ({
   const pull = await octokit.search.issuesAndPullRequests({ q });
 
   if (pull.data.items.length > 1) {
-    throw new Error(`found multiple PRs for a commit ${JSON.stringify({ sha, pulls: pull.data.items })}`);
+    throw new Error(`found multiple PRs for a commit: ${JSON.stringify({ sha, pulls: pull.data.items })}`);
   }
 
   return (pull.data.items[0] ?? null) as PullsResponse | null;
