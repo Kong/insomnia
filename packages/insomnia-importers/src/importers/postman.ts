@@ -119,7 +119,7 @@ export class ImportPostman {
         name: header.key,
         value: header.value,
       })),
-      body: this.importBody(request.body, ((request.header) as Header[]).find(x => x.key === 'Content-Type')?.value),
+      body: this.importBody(request.body, ((request.header) as Header[]).find(header => header.key === 'Content-Type')?.value),
       authentication: this.importAuthentication(request.auth, (request.header) as Header[]),
       parameters: this.importQueryParams(request.url),
     };
