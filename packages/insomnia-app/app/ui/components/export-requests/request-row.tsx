@@ -35,7 +35,6 @@ export class RequestRow extends PureComponent<Props> {
             {isGrpc ? (
               <GrpcTag />
             ) : (
-            // @ts-expect-error -- TSCONVERSION
               <MethodTag method={request.method} />
             )}
             <span className="inline-block">{request.name}</span>
