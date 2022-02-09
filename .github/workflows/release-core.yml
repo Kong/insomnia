@@ -21,13 +21,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Type checks
@@ -43,13 +40,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release NPM packages
@@ -120,13 +114,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
 
@@ -211,13 +202,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release app
@@ -238,13 +226,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release app
@@ -271,13 +256,10 @@ jobs:
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release app
