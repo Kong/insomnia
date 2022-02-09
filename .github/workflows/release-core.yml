@@ -21,20 +21,17 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Type checks
         run: npm run type-check
       - name: Run tests
         run: npm test
-  
+
   # Publish to NPM
   npm:
     needs: [ test ]
@@ -43,13 +40,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release NPM packages
@@ -58,7 +52,7 @@ jobs:
           npm run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  
+
   # Check if a GitHub Release for Inso already exists
   inso_release_info:
     needs: [ npm ]
@@ -90,7 +84,7 @@ jobs:
       - name: Check release exists
         id: check-release
         run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
-  
+
   # Create GitHub Release for Inso
   create_inso_release:
     needs: [ inso_release_info ]
@@ -107,7 +101,7 @@ jobs:
           body: Full changelog ⇒ https://insomnia.rest/changelog
           draft: false
           prerelease: true
-  
+
   # Package and upload Inso release artifacts
   upload_inso:
     needs: [ inso_release_info, create_inso_release ]
@@ -120,13 +114,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
 
@@ -198,7 +189,7 @@ jobs:
           tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
           files: packages/insomnia-inso/artifacts/*
           fail_on_unmatched_files: true
-  
+
   # Package and upload Insomnia Windows release artifacts
   windows_app:
     needs: [ npm ]
@@ -211,13 +202,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release app
@@ -225,7 +213,7 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
-  
+
   # Package and upload Insomnia MacOS release artifacts
   mac_app:
     needs: [ npm ]
@@ -238,13 +226,10 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release app
@@ -254,7 +239,7 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
-  
+
   # Package and upload Insomnia Linux release artifacts
   linux_app:
     needs: [ npm ]
@@ -271,13 +256,10 @@ jobs:
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
+          node-version-file: '.nvmrc'
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Release app
