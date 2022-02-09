@@ -1,6 +1,7 @@
 # Generating A Changelog
 
 - [Generating A Changelog](#generating-a-changelog)
+  - [Quick Start Guide](#quick-start-guide)
   - [General Principles](#general-principles)
     - [A good changelog is not a laundry-list of assorted changes](#a-good-changelog-is-not-a-laundry-list-of-assorted-changes)
     - [The script looks between two arbitrary commits](#the-script-looks-between-two-arbitrary-commits)
@@ -19,6 +20,27 @@
     - [Why not write it by hand before every release?](#why-not-write-it-by-hand-before-every-release)
   - [FAQ](#faq)
     - [Help! I'm getting rate limited by GitHub](#help-im-getting-rate-limited-by-github)
+
+## Quick Start Guide
+
+<!-- markdownlint-disable-next-line MD038 -->
+1. Add a line beginning with `changelog: ` to any Pull Requests you would like to be included in the changelog.  The remainder of this line will be used to generate a changelog a Pull Request's changes.
+1. Have a [GitHub Auth Token](https://github.com/settings/tokens) with the `public_repo` permission.
+1. run
+  
+    ```console
+    npm install
+    ```
+
+1. run
+
+    ```console
+    npm run start -- --base v1.1.3 --head e64aa81 --releaseName "v1.2.0 - Cool New features!"
+    ```
+
+   - `base` is a git ref (in this example, a pre-existing git tag) where the script will start searching, inclusively
+   - `head` is a git ref (in this example, a commit hash) where the script will stop searching, inclusively
+   - `releaseName` is the name of your release, and will appear on the first line of the changelog
 
 ## General Principles
 
@@ -102,12 +124,12 @@ Wanna see what it would do in a certain scenario?  Write a new test.
 1. Run the script (from this package):
 
     ```console
-    npm run start -- --base="core@2021.7.2" --head="core@2022.1.0" --releaseName="core@2022.1.0"
+    npm run start -- --base core@2021.7.2 --head core@2022.1.0 --releaseName core@2022.1.0
     ```
 
 - `--base` is the oldest git ref you'd like the tool to search from, inclusively.
 - `--head` is the newest git ref you'd like the tool to search to, inclusively.
-- `--releaseName` will be used in the header as the name of the release.
+- `--releaseName` will be used in the first line as the name of the release.
 
 ### Double checking commits without changelogs
 
