@@ -36,7 +36,7 @@ jobs:
         run: npm run bootstrap
 
       - name: Package
-        run: BUILD_REF='$(git rev-parse --short HEAD)' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+        run: BUILD_REF="$(git rev-parse --short HEAD)" BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
