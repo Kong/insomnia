@@ -355,8 +355,8 @@ describe('fetchChanges', () => {
       repo: '',
     });
 
-    expect(result[0]).toEqual([]);
-    expect(result[1]).toEqual([
+    expect(result.changelogLines).toEqual([]);
+    expect(result.missingChanges).toEqual([
       '- http://example.com a commit message without a PR number',
     ]);
   });
@@ -388,8 +388,8 @@ describe('fetchChanges', () => {
       repo: '',
     });
 
-    expect(result[0]).toEqual([]);
-    expect(result[1]).toEqual(['- http://example.com some PR']);
+    expect(result.changelogLines).toEqual([]);
+    expect(result.missingChanges).toEqual(['- http://example.com some PR']);
   });
 
   it('will get pull request changes', async () => {
@@ -427,10 +427,10 @@ describe('fetchChanges', () => {
       repo: '',
     });
 
-    expect(result[0]).toEqual([
+    expect(result.changelogLines).toEqual([
       '- they hide their finest bean! (#9001) @ziltoid',
       '- prepare the attack! (#9002) @ziltoid',
     ]);
-    expect(result[1]).toEqual([]);
+    expect(result.missingChanges).toEqual([]);
   });
 });

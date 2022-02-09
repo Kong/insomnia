@@ -65,7 +65,7 @@ export const generateCommand = createCommand('generate')
       octokit,
     });
 
-    const [changes, missingChanges] = await fetchChanges({
+    const { changelogLines, missingChanges } = await fetchChanges({
       owner,
       repo,
       octokit,
@@ -77,7 +77,7 @@ export const generateCommand = createCommand('generate')
       return;
     }
 
-    const changeLines = groupChanges(changes);
+    const changeLines = groupChanges(changelogLines);
     const authors = uniqueAuthors(responseCommits);
 
     const changelog = [

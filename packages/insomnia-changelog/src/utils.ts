@@ -126,7 +126,10 @@ export const getPull = ({
 
 type ChangelogLine = string;
 type MissingChanges = string;
-type FetchedChanges = [ChangelogLine[], MissingChanges[]];
+interface FetchedChanges {
+  changelogLines: ChangelogLine[];
+  missingChanges: MissingChanges[];
+}
 
 export const fetchChanges = async ({
   responseCommits,
@@ -144,23 +147,41 @@ export const fetchChanges = async ({
     [responseCommit.sha]: await pullGetter(responseCommit),
   }), responseCommits)));
 
-  return reduce<ResponseCommit, FetchedChanges>(([changes, missingChanges], responseCommit) => {
+  return reduce<ResponseCommit, FetchedChanges>(({ changelogLines, missingChanges }, responseCommit) => {
     const pull = pullsById[responseCommit.sha];
     const changelogLine = getChangelogLine(responseCommit, pull);
 
     if (changelogLine !== null) {
       // this commit associates to a valid changelog, so append it to the changes list
-      return [[...changes, changelogLine], missingChanges];
+      return {
+        changelogLines: [
+          ...changelogLines,
+          changelogLine,
+        ],
+        missingChanges,
+      };
     }
 
     if (pull !== null) {
       // no changelog found, but there is a pull URL, so output that.
-      return [changes, [...missingChanges, `- ${pull.html_url} ${pull.title}`]];
+      return {
+        changelogLines,
+        missingChanges: [
+          ...missingChanges,
+          `- ${pull.html_url} ${pull.title}`,
+        ],
+      };
     }
 
     // no changelog or pull request found, so just append a link to the URL
-    return [changes, [...missingChanges, `- ${responseCommit.html_url} ${responseCommit.commit.message}`]];
-  }, [[], []], responseCommits);
+    return {
+      changelogLines,
+      missingChanges: [
+        ...missingChanges,
+        `- ${responseCommit.html_url} ${responseCommit.commit.message}`,
+      ],
+    };
+  }, { changelogLines: [], missingChanges: [] }, responseCommits);
 };
 
 export const groupChanges: (changes: string[]) => string = pipe(
