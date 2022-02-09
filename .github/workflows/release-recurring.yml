@@ -1,23 +1,17 @@
 name: Release recurring
 # This workflow bakes executables of the major platforms for Testing purposes
-# Runs on dispatch and when `Test` workflow starts (for develop and for PRs)
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Test
+  push:
+    branches:
+      - develop
+  pull_request:
     types:
-       - requested
+      - opened
+      - synchronize
 
 jobs:
-  on-success:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - run: echo 'The Test workflow passed'
-
   build-and-upload-artifacts:
-    needs: [on-success]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
@@ -57,9 +51,3 @@ jobs:
             packages/insomnia-app/dist/*.exe
             packages/insomnia-app/dist/*.tar.gz
             packages/insomnia-app/dist/*.zip
-
-  on-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - run: echo 'The Test workflow failed, skipping recurring release.'
