@@ -22,7 +22,7 @@ jobs:
          - os: "windows-latest"
            build-targets: "portable"
          - os: "ubuntu-latest"
-           build-targets: ".tar.gz"
+           build-targets: "tar.gz"
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
