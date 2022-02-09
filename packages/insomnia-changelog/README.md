@@ -18,7 +18,7 @@
     - [Why not use a CHANGELOG.md?](#why-not-use-a-changelogmd)
     - [Why not write it by hand before every release?](#why-not-write-it-by-hand-before-every-release)
   - [FAQ](#faq)
-    - [Help! I'm getting rate limited by GitHub!](#help-im-getting-rate-limited-by-github)
+    - [Help! I'm getting rate limited by GitHub](#help-im-getting-rate-limited-by-github)
 
 ## General Principles
 
@@ -143,6 +143,6 @@ This tool tries to find the _path of least resistance_ for generating quality ch
 
 ## FAQ
 
-### Help! I'm getting rate limited by GitHub!
+### Help! I'm getting rate limited by GitHub
 
 Just wait a minute or two and try again, it has been our experience that if you quickly run the script in quick succession this can happen, but otherwise it can run once just fine.  File a GitHub issue if you still have trouble after waiting.
