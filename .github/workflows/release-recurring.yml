@@ -1,0 +1,65 @@
+name: Release recurring
+# This workflow bakes executables of the major platforms for Testing purposes
+# Runs on dispatch and when `Test` workflow starts (for develop and for PRs)
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Test
+    types:
+       - requested
+
+jobs:
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - run: echo 'The Test workflow passed'
+
+  build-and-upload-artifacts:
+    needs: [on-success]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+         - os: "macos-latest"
+           build-targets: "zip"
+         - os: "windows-latest"
+           build-targets: "portable"
+         - os: "ubuntu-latest"
+           build-targets: ".tar.gz"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      - name: Package
+        run: BUILD_REF='$(git rev-parse --short HEAD)' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
+          path: |
+            packages/insomnia-app/dist/*.exe
+            packages/insomnia-app/dist/*.tar.gz
+            packages/insomnia-app/dist/*.zip
+
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The Test workflow failed, skipping recurring release.'
