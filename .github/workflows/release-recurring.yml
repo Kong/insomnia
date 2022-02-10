@@ -9,6 +9,9 @@ on:
     types:
       - opened
       - synchronize
+concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
 
 jobs:
   build-and-upload-artifacts:
@@ -23,9 +26,6 @@ jobs:
            build-targets: "portable"
          - os: "ubuntu-latest"
            build-targets: "tar.gz"
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
