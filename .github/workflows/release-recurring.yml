@@ -1,0 +1,53 @@
+name: Release recurring
+# This workflow bakes executables of the major platforms for Testing purposes
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+jobs:
+  build-and-upload-artifacts:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+         - os: "macos-latest"
+           build-targets: "zip"
+         - os: "windows-latest"
+           build-targets: "portable"
+         - os: "ubuntu-latest"
+           build-targets: "tar.gz"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      - name: Package
+        shell: bash
+        run: BUILD_REF="$(git rev-parse --short HEAD)" BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
+          path: |
+            packages/insomnia-app/dist/*.exe
+            packages/insomnia-app/dist/*.tar.gz
+            packages/insomnia-app/dist/*.zip
