@@ -192,14 +192,12 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
 
 export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) => {
   const buildContext = getBuildContext(forceFromGitRef);
-  const { gitRef, smokeTest, version } = buildContext;
+  const { gitRef, version } = buildContext;
 
-  if (smokeTest) {
-    console.log('[build] Starting build to smoke test');
-  } else {
+  if (forceFromGitRef) { // Require a valid git tag for release builds
     if (!version) {
       if (!gitRef) {
-        console.log('[build] No git ref found. Check for the presence of a `GIT_TAG`, `GITHUB_REF`, `TRAVIS_TAG`, or `TRAVIS_CURRENT_BRANCH` environment variable');
+        console.log('[build] No git ref found. Check for the presence of a `GIT_TAG`, `GITHUB_REF` environment variable');
       } else {
         console.log(`[build] git ref \`${gitRef}\` found`);
       }
@@ -213,6 +211,22 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
       process.exit(1);
     }
     console.log(`[build] Starting build for ref "${gitRef}"`);
+  } else {
+    console.log('[build] Starting build');
+    const buildRef = process.env.BUILD_REF;
+    if (buildRef) {
+      // Ignore any existing semver prerelease/build tags
+      const cleanedVersion = appConfig.version.match(/^(\d{4}\.\d+\.\d)/);
+      if (!cleanedVersion) {
+        console.log('[build] Invalid version found in app config');
+        process.exit(1);
+      }
+
+      const fullVersion = `${cleanedVersion[1]}-dev+${buildRef}`;
+      console.log('Overwriting app config version:', fullVersion);
+      appConfig.version = fullVersion;
+      writeFileSync(path.resolve(__dirname, '../config/config.json'), JSON.stringify(appConfig, null, 2) + '\n');
+    }
   }
 
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
