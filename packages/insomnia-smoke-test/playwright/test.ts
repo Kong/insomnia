@@ -1,6 +1,6 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
-import { ElectronApplication, test as baseTest } from '@playwright/test';
-import { platform } from 'os';
+import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
+import path from 'path';
 
 import {
   cwd,
@@ -16,7 +16,7 @@ interface EnvOptions {
 export const test = baseTest.extend<{
   app: ElectronApplication;
 }>({
-  app: async ({ playwright }, use) => {
+  app: async ({ playwright, trace }, use, testInfo) => {
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: randomDataPath(),
     };
@@ -32,12 +32,26 @@ export const test = baseTest.extend<{
       },
     });
 
+    const appContext = electronApp.context();
+    const traceMode: TraceMode = typeof trace === 'string' ? trace as TraceMode : trace.mode;
+
+    const defaultTraceOptions = { screenshots: true, snapshots: true, sources: true };
+    const traceOptions = typeof trace === 'string' ? defaultTraceOptions : { ...defaultTraceOptions, ...trace, mode: undefined };
+    const captureTrace = (traceMode === 'on' || traceMode === 'retain-on-failure' || (traceMode === 'on-first-retry' && testInfo.retry === 1));
+
+    if (captureTrace) {
+      await appContext.tracing.start(traceOptions);
+    }
+
     await use(electronApp);
 
-    // Closing the window (page) doesn't close the app on osx
-    if (platform() === 'darwin') {
-      await electronApp.close();
+    if (captureTrace) {
+      await appContext.tracing.stop({
+        path: path.join(testInfo.outputDir, 'trace.zip'),
+      });
     }
+
+    await electronApp.close();
   },
   page: async ({ app }, use) => {
     const page = await app.firstWindow();
@@ -47,7 +61,5 @@ export const test = baseTest.extend<{
     await page.click("text=Don't share usage analytics");
 
     await use(page);
-
-    await page.close();
   },
 });
