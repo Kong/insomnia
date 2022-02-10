@@ -79,7 +79,11 @@
     "synopsis": "__SYNOPSIS__",
     "category": "Development",
     "target": [
-      "AppImage"
+      "AppImage",
+      "deb",
+      "tar.gz",
+      "rpm",
+      "snap"
     ]
   }
 }

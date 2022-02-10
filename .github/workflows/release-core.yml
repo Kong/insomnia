@@ -264,5 +264,3 @@ jobs:
         run: npm run bootstrap
       - name: Release app
         run: npm run app-release
-        env:
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
