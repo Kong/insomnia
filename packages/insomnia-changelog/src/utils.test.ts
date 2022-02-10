@@ -2,6 +2,7 @@ import { Octokit } from '@octokit/rest';
 import { map, path } from 'ramda';
 
 import {
+  ChangelogLine,
   compareCommits,
   extractChangelog,
   fetchChanges,
@@ -42,38 +43,71 @@ describe('extractChangelog', () => {
   const result = 'Fixed an issue with xyz.';
 
   it('will grab a changelog from a single line', () => {
-    expect(extractChangelog(`changelog: ${result}`)).toEqual(result);
+    expect(extractChangelog(`changelog: ${result}`)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it('is case insensitive', () => {
-    expect(extractChangelog(`cHaNgElOg: ${result}`)).toEqual(result);
+    expect(extractChangelog(`cHaNgElOg: ${result}`)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it('requires the colon', () => {
-    expect(extractChangelog(`changelog ${result}`)).toEqual(undefined);
+    expect(extractChangelog(`changelog ${result}`)).toEqual(null);
   });
 
   it('allows zero whitespace after `changelog:`', () => {
-    expect(extractChangelog(`changelog:${result}`)).toEqual(result);
+    expect(extractChangelog(`changelog:${result}`)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
-  it('allows one or more spaces after `changelog:`', () => {
-    expect(extractChangelog(`changelog: ${result}`)).toEqual(result);
-    expect(extractChangelog(`changelog:  ${result}`)).toEqual(result);
+  it('allows multiple spaces after `changelog:`', () => {
+    expect(extractChangelog(`changelog:  ${result}`)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it('allows one or more tabs after `changelog:`', () => {
-    expect(extractChangelog(`changelog:\t${result}`)).toEqual(result);
-    expect(extractChangelog(`changelog:\t\t${result}`)).toEqual(result);
+    expect(extractChangelog(`changelog:\t${result}`)).toEqual({
+      change: result,
+      category: undefined,
+    });
+
+    expect(extractChangelog(`changelog:\t\t${result}`)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it('does not allow newlines after `changelog:`', () => {
-    expect(extractChangelog(`changelog:\n${result}`)).toEqual(undefined);
+    expect(extractChangelog(`changelog:\n${result}`)).toEqual(null);
+  });
+
+  it('does not allow newlines after `changelog: `', () => {
+    expect(extractChangelog(`changelog: \n${result}`)).toEqual(null);
+  });
+
+  it('does not allow empty string changelogs', () => {
+    expect(extractChangelog('changelog: ')).toEqual(null);
+  });
+
+  it('trims trailing whitespace', () => {
+    expect(extractChangelog(`changelog: ${result} `)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it('requires that the line begins with `changelog:`', () => {
-    expect(extractChangelog(` changelog:${result}`)).toEqual(undefined);
-    expect(extractChangelog(`for the changelog:${result}`)).toEqual(undefined);
+    expect(extractChangelog(` changelog:${result}`)).toEqual(null);
+    expect(extractChangelog(`for the changelog:${result}`)).toEqual(null);
   });
 
   it('only returns the first match', () => {
@@ -81,7 +115,10 @@ describe('extractChangelog', () => {
       `changelog: ${result}`,
       'changelog: will not match',
     ].join('\n');
-    expect(extractChangelog(description)).toEqual(result);
+    expect(extractChangelog(description)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it('does not require the match line to be the first line', () => {
@@ -89,7 +126,10 @@ describe('extractChangelog', () => {
       'first line of PR or commit',
       `changelog: ${result}`,
     ].join('\n');
-    expect(extractChangelog(description)).toEqual(result);
+    expect(extractChangelog(description)).toEqual({
+      change: result,
+      category: undefined,
+    });
   });
 
   it("disregards the match text that doesn't start at the beginning of the line", () => {
@@ -97,7 +137,24 @@ describe('extractChangelog', () => {
       'check out the changelog: tomorrow',
       `changelog: ${result}`,
     ].join('\n');
-    expect(extractChangelog(description)).toEqual(result);
+    expect(extractChangelog(description)).toEqual({
+      change: result,
+      category: undefined,
+    });
+  });
+
+  it('will extract a changelog group', () => {
+    expect(extractChangelog(`changelog(Fixes): ${result}`)).toEqual<ChangelogLine>({
+      change: result,
+      category: 'Fixes',
+    });
+  });
+
+  it('will not extract a missing changelog group', () => {
+    expect(extractChangelog(`changelog(): ${result}`)).toEqual<ChangelogLine>({
+      change: result,
+      category: undefined,
+    });
   });
 });
 
@@ -165,7 +222,7 @@ describe('getChangelogLine', () => {
   it('shows the changelog, even without an author found', async () => {
     const commit = { commit: { message: 'ziltoid (#9001)' } } as ResponseCommit;
     const pull = { body: `changelog: ${changelog}`, number: 9001 } as PullsResponse;
-    const result = getChangelogLine(commit, pull);
+    const result = getChangelogLine(commit, pull)?.line;
     expect(result).toEqual(`- ${changelog} (#9001)`);
   });
 
@@ -174,7 +231,7 @@ describe('getChangelogLine', () => {
       author,
       commit: { message: `ziltoid\nchangelog: ${changelog}` },
     } as ResponseCommit;
-    const result = getChangelogLine(commit, null);
+    const result = getChangelogLine(commit, null)?.line;
     expect(result).toEqual(`- ${changelog} ${authorHandle}`);
   });
 
@@ -184,7 +241,7 @@ describe('getChangelogLine', () => {
       commit: { message: `ziltoid\nchangelog: ${changelog}` },
     } as ResponseCommit;
     const pull = { body: `changelog: ${changelog}` } as PullsResponse;
-    const result = getChangelogLine(commit, pull);
+    const result = getChangelogLine(commit, pull)?.line;
     expect(result).toEqual(`- ${changelog} ${authorHandle}`);
   });
 
@@ -194,7 +251,7 @@ describe('getChangelogLine', () => {
       commit: { message: 'ziltoid (#9001)' },
     } as ResponseCommit;
     const pull = { body: `changelog: ${changelog}`, number: 9001 } as PullsResponse;
-    const result = getChangelogLine(commit, pull);
+    const result = getChangelogLine(commit, pull)?.line;
     expect(result).toEqual(`- ${changelog} (#9001) ${authorHandle}`);
   });
 });
@@ -274,23 +331,41 @@ describe('compareCommits', () => {
 describe('groupChanges', () => {
   it('groups changes, case insensitively', () => {
     const changes = [
-      '- fixed a thing',
-      '- added some thing',
-      '- Fixed some other thing',
-      '- did another thing',
-      '- improved all the things',
+      {
+        category: 'Fixes',
+        change: '- fixed a thing',
+      },
+      {
+        category: 'Additions',
+        change: '- added some thing',
+      },
+      {
+        category: 'Fixes',
+        change: '- Fixed some other thing',
+      },
+      {
+        category: undefined,
+        change: '- did another thing',
+      },
+      {
+        category: 'Improvements',
+        change: '- improved all the things',
+      },
     ];
     const result = groupChanges(changes);
     const expectedResult = [
-      '### Additions and Improvements',
+      '### Additions',
       '',
       '- added some thing',
-      '- improved all the things',
       '',
-      '### Notable Fixes',
+      '### Fixes',
       '',
       '- fixed a thing',
       '- Fixed some other thing',
+      '',
+      '### Improvements',
+      '',
+      '- improved all the things',
       '',
       '### Other Changes',
       '',
@@ -299,9 +374,24 @@ describe('groupChanges', () => {
     expect(result).toEqual(expectedResult);
   });
 
+  it('groups other changes into the "Other Changes" category', () => {
+    const changes = [{
+      category: undefined,
+      change: '- fixed a thing',
+    }];
+    expect(groupChanges(changes)).toEqual([
+      '### Other Changes',
+      '',
+      '- fixed a thing',
+    ].join('\n'));
+  });
+
   it('drops sections that are not present', () => {
     const changes = [
-      '- fixed a thing',
+      {
+        category: 'Notable Fixes',
+        change: '- fixed a thing',
+      },
     ];
     const result = groupChanges(changes);
     const expectedResult = [
@@ -428,8 +518,14 @@ describe('fetchChanges', () => {
     });
 
     expect(result.changelogLines).toEqual([
-      '- they hide their finest bean! (#9001) @ziltoid',
-      '- prepare the attack! (#9002) @ziltoid',
+      {
+        category: undefined,
+        change: '- they hide their finest bean! (#9001) @ziltoid',
+      },
+      {
+        category: undefined,
+        change: '- prepare the attack! (#9002) @ziltoid',
+      },
     ]);
     expect(result.missingChanges).toEqual([]);
   });

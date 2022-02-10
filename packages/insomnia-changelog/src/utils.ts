@@ -14,9 +14,24 @@ export type PullsResponse = Pick<
 >;
 
 /** look for the first occurance of `changelog:` at the beginning of a line, case insensitive */
-export const extractChangelog = (pullRequestDescription: string | null | undefined) => pullRequestDescription ? (
-  pullRequestDescription.match(/^changelog:[ \t]*(.*)/mi)?.[1] || undefined
-) : null;
+export const extractChangelog = (input: string | null | undefined) => {
+  if (!input) {
+    return null;
+  }
+
+  const regex = /^changelog(?:\((?<category>.+)?\))?:[ \t]*(?<change>.+)$/mi;
+  const match = input.match(regex);
+  if (!match) {
+    return null;
+  }
+  const chanelogLine = match.groups as unknown as ChangelogLine;
+  chanelogLine.change = chanelogLine.change.trim();
+  if (!chanelogLine.change) {
+    return null;
+  }
+
+  return chanelogLine;
+};
 
 type AuthorHandle = `@${string}`;
 
@@ -44,17 +59,21 @@ export const uniqueAuthors: (responseCommits: ResponseCommit[]) => AuthorHandle[
 export const getChangelogLine = (responseCommit: ResponseCommit, pull: PullsResponse | null | undefined) => {
   const prChangelog = extractChangelog(pull?.body);
   const commitChangelog = extractChangelog(responseCommit.commit.message);
-  if (!prChangelog && !commitChangelog) {
+  const changelogLine = prChangelog || commitChangelog;
+  if (!changelogLine) {
     return null;
   }
 
   // if there's no PR changelog (such as a situation where there's no PR), then fall back to the commit
-  const changelog = prChangelog || commitChangelog;
+  const { change, category } = changelogLine;
   const pullRequestSection = pull?.number ? ` (#${pull.number})` : '';
 
   const author = getAuthorHandles(responseCommit)?.join(' ');
   const authorSection = author ? ` ${author}` : '';
-  return `- ${changelog}${pullRequestSection}${authorSection}`;
+  return {
+    line: `- ${change}${pullRequestSection}${authorSection}`,
+    category,
+  };
 };
 
 export const formattedDate = () => new Date().toLocaleDateString('en-US', {
@@ -124,7 +143,10 @@ export const getPull = ({
   return (pull.data.items[0] ?? null) as PullsResponse | null;
 };
 
-type ChangelogLine = string;
+export interface ChangelogLine {
+  change: string;
+  category?: string;
+}
 type MissingChanges = string;
 interface FetchedChanges {
   changelogLines: ChangelogLine[];
@@ -149,14 +171,17 @@ export const fetchChanges = async ({
 
   return reduce<ResponseCommit, FetchedChanges>(({ changelogLines, missingChanges }, responseCommit) => {
     const pull = pullsById[responseCommit.sha];
-    const changelogLine = getChangelogLine(responseCommit, pull);
+    const { line: changelogLine, category } = getChangelogLine(responseCommit, pull) || {};
 
-    if (changelogLine !== null) {
+    if (changelogLine !== null && changelogLine !== undefined) {
       // this commit associates to a valid changelog, so append it to the changes list
       return {
         changelogLines: [
           ...changelogLines,
-          changelogLine,
+          {
+            change: changelogLine,
+            category,
+          },
         ],
         missingChanges,
       };
@@ -184,24 +209,16 @@ export const fetchChanges = async ({
   }, { changelogLines: [], missingChanges: [] }, responseCommits);
 };
 
-export const groupChanges: (changes: string[]) => string = pipe(
-  groupBy(change => {
-    if (/\- fixed/i.exec(change)) {
-      return 'Notable Fixes';
-    }
+const FALLBACK_CATEGORY = 'Other Changes';
 
-    if (/\- improved/i.exec(change) || /\- added/i.exec(change)) {
-      return 'Additions and Improvements';
-    }
-
-    return 'Other Changes';
-  }),
+export const groupChanges: (changelogLine: ChangelogLine[]) => string = pipe(
+  groupBy(({ category }) => category || FALLBACK_CATEGORY),
   toPairs as <T>(t: T) => Entries<typeof t>,
   pairs => sortBy(head, pairs),
-  map(([group, items]) => join('\n', [
-    `### ${group}`,
+  map(([category, changelogLines]) => [
+    `### ${category}`,
     '',
-    ...items,
-  ])),
+    ...changelogLines.map(item => item.change),
+  ].join('\n')),
   join('\n\n'),
 );
