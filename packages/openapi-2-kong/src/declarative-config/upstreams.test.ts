@@ -11,6 +11,7 @@ const getSpecResult = (): DCUpstream =>
       targets: [
         {
           target: 'server1.com:443',
+          weight: 100,
           tags,
         },
       ],

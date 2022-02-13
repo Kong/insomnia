@@ -34,10 +34,12 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
   for (const server of servers) {
     const serverWithVars = fillServerVariables(server);
     const hostWithPort = parseUrl(serverWithVars).host;
+    const targetWeight = server['x-kong-upstream-target-weight'] || 100;
 
     if (hostWithPort) {
       upstream.targets.push({
         target: hostWithPort,
+        weight: targetWeight,
         tags,
       });
     }

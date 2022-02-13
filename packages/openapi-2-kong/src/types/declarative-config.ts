@@ -25,6 +25,7 @@ export interface DCService extends Taggable, Pluggable {
 
 export interface DCTarget extends Taggable {
   target: string;
+  weight: number;
 }
 
 export interface DCUpstream extends Taggable {
