@@ -10,7 +10,6 @@ import webpack from 'webpack';
 import appConfig from '../config/config.json';
 import electronWebpackConfig from '../webpack/webpack.config.electron';
 import productionWebpackConfig from '../webpack/webpack.config.production';
-import { getBuildContext } from './getBuildContext';
 
 const { readFile, writeFile } = promises;
 
@@ -18,7 +17,7 @@ const { readFile, writeFile } = promises;
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await module.exports.start(false);
+      await module.exports.start({ releaseBuild: false });
     } catch (err) {
       console.log('[build] ERROR:', err);
       process.exit(1);
@@ -190,43 +189,36 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   await writeFile(outPath, outputFile);
 };
 
-export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) => {
-  const buildContext = getBuildContext(forceFromGitRef);
-  const { gitRef, version } = buildContext;
+export const start = async ({ releaseBuild }: { releaseBuild: boolean }) => {
+  console.log('[build] Starting build');
 
-  if (forceFromGitRef) { // Require a valid git tag for release builds
-    if (!version) {
-      if (!gitRef) {
-        console.log('[build] No git ref found. Check for the presence of a `GIT_TAG`, `GITHUB_REF` environment variable');
-      } else {
-        console.log(`[build] git ref \`${gitRef}\` found`);
-      }
-      console.log('[build] Skipping build because no version was found (the version is derived from the git ref)');
+  let appVersionOverride = '';
+  // Used to overwrite the app version entirely for release builds
+  const appVersion = process.env.APP_VERSION;
+  // Used to append a build ref to the end of an existing app version for non-release builds
+  const buildRef = process.env.BUILD_REF;
+  if (releaseBuild) {
+    if (!appVersion) {
+      console.log('[build] Missing app version for release build, please ensure the environment variable APP_VERSION is set correctly.');
       process.exit(1);
     }
 
-    if (appConfig.version !== version) {
-      const tags = `${appConfig.version} != ${version}`;
-      console.log(`[build] App version mismatch with Git tag ${tags}`);
+    appVersionOverride = appVersion;
+  } else if (buildRef) {
+    // Ignore any existing semver prerelease/build tags
+    const cleanedVersion = appConfig.version.match(/^(\d{4}\.\d+\.\d)/);
+    if (!cleanedVersion) {
+      console.log('[build] Invalid version found in app config');
       process.exit(1);
     }
-    console.log(`[build] Starting build for ref "${gitRef}"`);
-  } else {
-    console.log('[build] Starting build');
-    const buildRef = process.env.BUILD_REF;
-    if (buildRef) {
-      // Ignore any existing semver prerelease/build tags
-      const cleanedVersion = appConfig.version.match(/^(\d{4}\.\d+\.\d)/);
-      if (!cleanedVersion) {
-        console.log('[build] Invalid version found in app config');
-        process.exit(1);
-      }
 
-      const fullVersion = `${cleanedVersion[1]}-dev+${buildRef}`;
-      console.log('Overwriting app config version:', fullVersion);
-      appConfig.version = fullVersion;
-      writeFileSync(path.resolve(__dirname, '../config/config.json'), JSON.stringify(appConfig, null, 2) + '\n');
-    }
+    appVersionOverride = `${cleanedVersion[1]}-dev+${buildRef}`;
+  }
+
+  if (appVersionOverride) {
+    console.log('Overwriting app config version:', appVersionOverride);
+    appConfig.version = appVersionOverride;
+    writeFileSync(path.resolve(__dirname, '../config/config.json'), JSON.stringify(appConfig, null, 2) + '\n');
   }
 
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
@@ -267,5 +259,4 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
   await install();
 
   console.log('[build] Complete!');
-  return buildContext;
 };
