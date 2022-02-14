@@ -7,6 +7,7 @@ import {
   Dropdown,
   DropdownDivider,
   DropdownItem,
+  SvgIcon,
 } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -375,9 +376,13 @@ class WrapperHome extends PureComponent<Props, State> {
               )}
             </div>
             <div className="document-listing__footer vertically-center">
+              <span className="flexSpacer" />
               <span>
                 {cards.length} {countLabel}
               </span>
+              <a className='made-with-love super-faint' href="https://github.com/Kong/insomnia">
+                Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
+              </a>
             </div>
           </div>
         )}
