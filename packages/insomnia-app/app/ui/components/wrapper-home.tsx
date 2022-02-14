@@ -380,7 +380,7 @@ class WrapperHome extends PureComponent<Props, State> {
               <span>
                 {cards.length} {countLabel}
               </span>
-              <a className='made-with-love super-faint' href="https://github.com/Kong/insomnia">
+              <a className='made-with-love' href="https://github.com/Kong/insomnia">
                 Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
               </a>
             </div>
