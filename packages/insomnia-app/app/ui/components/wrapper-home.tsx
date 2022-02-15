@@ -23,7 +23,6 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
 import { isRemoteProject } from '../../models/project';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
@@ -343,8 +342,6 @@ class WrapperHome extends PureComponent<Props, State> {
         />
       ));
 
-    const countLabel =
-      cards.length === 1 ? strings.document.singular : strings.document.plural;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
@@ -376,11 +373,7 @@ class WrapperHome extends PureComponent<Props, State> {
               )}
             </div>
             <div className="document-listing__footer vertically-center">
-              <span className="flexSpacer" />
-              <span>
-                {cards.length} {countLabel}
-              </span>
-              <a className='made-with-love' href="https://github.com/Kong/insomnia">
+              <a className="made-with-love" href="https://github.com/Kong/insomnia">
                 Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
               </a>
             </div>
