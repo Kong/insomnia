@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import { clickLink } from '../../../common/electron-helpers';
 import * as models from '../../../models';
 import { Response, ResponseTimelineEntry } from '../../../models/response';
+import { LIBCURL_DEBUG_MIGRATION_MAP } from '../../../network/network';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
@@ -49,31 +50,31 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
     let prefix: string | null = null;
 
     switch (name) {
-      case 'HEADER_IN':
+      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderIn:
         prefix = '< ';
         break;
 
-      case 'DATA_IN':
+      case LIBCURL_DEBUG_MIGRATION_MAP.DataIn:
         prefix = '| ';
         break;
 
-      case 'SSL_DATA_IN':
+      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataIn:
         prefix = '<< ';
         break;
 
-      case 'HEADER_OUT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderOut:
         prefix = '> ';
         break;
 
-      case 'DATA_OUT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.DataOut:
         prefix = '| ';
         break;
 
-      case 'SSL_DATA_OUT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataOut:
         prefix = '>> ';
         break;
 
-      case 'TEXT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.Text:
         prefix = '* ';
         break;
 
