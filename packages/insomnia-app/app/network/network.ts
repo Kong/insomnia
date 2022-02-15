@@ -97,7 +97,7 @@ const MAX_DELAY_TIME = 1000;
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
 // Because node-libcurl changed some names that we used in the timeline
-const LIBCURL_DEBUG_MIGRATION_MAP = {
+export const LIBCURL_DEBUG_MIGRATION_MAP = {
   HeaderIn: 'HEADER_IN',
   DataIn: 'DATA_IN',
   SslDataIn: 'SSL_DATA_IN',

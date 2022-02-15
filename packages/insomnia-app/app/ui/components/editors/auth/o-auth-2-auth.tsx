@@ -378,6 +378,7 @@ const OAuth2Error: FC = () => {
 
     showModal(ResponseDebugModal, {
       responseId: token.xResponseId,
+      showBody: true,
     });
   };
 

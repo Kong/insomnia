@@ -134,7 +134,7 @@ export class ResponsePane extends PureComponent<Props> {
       return;
     }
 
-    const timeline = await models.response.getTimeline(response);
+    const timeline = models.response.getTimeline(response);
     const headers = timeline
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)

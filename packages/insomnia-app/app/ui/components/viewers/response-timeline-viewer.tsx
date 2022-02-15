@@ -2,24 +2,23 @@ import React, { PureComponent } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
 import * as models from '../../../models';
-import { Response } from '../../../models/response';
+import { Response, ResponseTimelineEntry } from '../../../models/response';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
+  showBody?: boolean;
   response: Response;
 }
 
 interface State {
-  timeline: any[];
+  timeline: ResponseTimelineEntry[];
   timelineKey: string;
-  body: string;
 }
 
 export class ResponseTimelineViewer extends PureComponent<Props, State> {
   state: State = {
     timeline: [],
     timelineKey: '',
-    body: '',
   };
 
   componentDidMount() {
@@ -35,18 +34,16 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   }
 
   async refreshTimeline() {
-    const { response } = this.props;
-    const timeline = await models.response.getTimeline(response);
-    const body = await models.response.getBodyBuffer(response)?.toString('utf8') || '';
+    const { response, showBody } = this.props;
+    const timeline = models.response.getTimeline(response, showBody);
 
     this.setState({
       timeline,
       timelineKey: response._id,
-      body: body,
     });
   }
 
-  renderRow(row, i, all) {
+  renderRow(row: ResponseTimelineEntry, i: number, all: ResponseTimelineEntry[]) {
     const { name, value } = row;
     const previousName = i > 0 ? all[i - 1].name : '';
     let prefix: string | null = null;
@@ -101,11 +98,7 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
     const { timeline, timelineKey } = this.state;
     const rows = timeline
       .map(this.renderRow)
-      .filter(r => r !== null);
-
-    rows.push(`\n|\n${this.state.body}`);
-
-    const value = rows
+      .filter(r => r !== null)
       .join('\n')
       .trim();
 
@@ -115,7 +108,7 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
         hideLineNumbers
         readOnly
         onClickLink={clickLink}
-        defaultValue={value}
+        defaultValue={rows}
         className="pad-left"
         mode="curl"
       />

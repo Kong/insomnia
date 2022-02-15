@@ -7,6 +7,7 @@ import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
+import { LIBCURL_DEBUG_MIGRATION_MAP } from '../network/network';
 import type { BaseModel } from './index';
 import * as models from './index';
 
@@ -228,8 +229,37 @@ export const getBodyBuffer = <TFail = null>(
     readFailureValue,
   );
 
-export function getTimeline(response: Response) {
-  return getTimelineFromPath(response.timelinePath || '');
+export function getTimeline(response: Response, showBody?: boolean) {
+  const { timelinePath, bodyPath } = response;
+
+  // No body, so return empty Buffer
+  if (!timelinePath) {
+    return [];
+  }
+
+  try {
+    const rawBuffer = fs.readFileSync(timelinePath);
+    const timeline = JSON.parse(rawBuffer.toString());
+    let body: ResponseTimelineEntry[] = [];
+    if (showBody) {
+      const name = LIBCURL_DEBUG_MIGRATION_MAP.DataOut;
+      body = [
+        {
+          name,
+          timestamp: Date.now(),
+          value: fs.readFileSync(bodyPath).toString(),
+        },
+      ];
+    }
+    const output = [
+      ...timeline,
+      ...body,
+    ] as ResponseTimelineEntry[];
+    return output;
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return [];
+  }
 }
 
 function getBodyStreamFromPath<TFail extends Readable>(
@@ -279,21 +309,6 @@ function getBodyBufferFromPath<T>(
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return readFailureValue === undefined ? null : readFailureValue;
-  }
-}
-
-function getTimelineFromPath(timelinePath: string) {
-  // No body, so return empty Buffer
-  if (!timelinePath) {
-    return [];
-  }
-
-  try {
-    const rawBuffer = fs.readFileSync(timelinePath);
-    return JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return [];
   }
 }
 

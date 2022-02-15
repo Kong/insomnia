@@ -11,6 +11,7 @@ import { ModalHeader } from '../base/modal-header';
 
 interface State {
   response: Response | null;
+  showBody?: boolean;
   title: string | null;
 }
 
@@ -20,6 +21,7 @@ export class ResponseDebugModal extends PureComponent<{}, State> {
 
   state: State = {
     response: null,
+    showBody: false,
     title: '',
   };
 
@@ -31,19 +33,20 @@ export class ResponseDebugModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  async show(options: { responseId?: string; response?: Response; title?: string }) {
+  async show(options: { responseId?: string; response?: Response; title?: string; showBody?: boolean }) {
     const response = options.response
       ? options.response
       : await models.response.getById(options.responseId || 'n/a');
     this.setState({
       response,
       title: options.title || null,
+      showBody: options.showBody,
     });
     this.modal?.show();
   }
 
   render() {
-    const { response, title } = this.state;
+    const { response, title, showBody } = this.state;
     return (
       <Modal ref={this._setModalRef} tall>
         <ModalHeader>{title || 'Response Timeline'}</ModalHeader>
@@ -57,6 +60,7 @@ export class ResponseDebugModal extends PureComponent<{}, State> {
             {response ? (
               <ResponseTimelineViewer
                 response={response}
+                showBody={showBody}
               />
             ) : (
               <div>No response found</div>
