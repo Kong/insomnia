@@ -12,7 +12,8 @@ on:
 concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
-
+env:
+  PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
     runs-on: ${{ matrix.os }}
@@ -40,7 +41,7 @@ jobs:
 
       - name: Package
         shell: bash
-        run: BUILD_REF="$(git rev-parse --short HEAD)" BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+        run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
