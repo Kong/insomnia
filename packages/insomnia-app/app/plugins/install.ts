@@ -56,10 +56,8 @@ export default async function(lookupName: string) {
       mkdirp.sync(pluginDir);
 
       // Download the module
-      const request = window.net.request(info.dist.tarball);
-      if (request.error) {
-        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${request.error.message}`));
-      }
+      window.net.request(info.dist.tarball).catch(reject);
+
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 

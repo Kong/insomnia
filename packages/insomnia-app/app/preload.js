@@ -17,7 +17,7 @@ const shell = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
 };
 const net = {
-  request: options => ipcRenderer.send('request', options),
+  request: options => ipcRenderer.invoke('request', options),
 };
 
 // if (process.contextIsolated) { TODO: use if rather than try after upgrading to electron 13

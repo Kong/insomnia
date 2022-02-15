@@ -44,14 +44,15 @@ if (!isDevelopment()) {
 // So if (window) checks don't throw
 global.window = global.window || undefined;
 
-// NOTE: this provides a global right click context menu
-contextMenu();
+// setup right click menu
 app.on('web-contents-created', (_, contents) => {
   if (contents.getType() === 'webview') {
-  // set context menu in webview
     contextMenu({ window: contents });
+  } else {
+    contextMenu();
   }
 });
+
 // When the app is first launched
 app.on('ready', async () => {
   const { error } = validateInsomniaConfig();
@@ -222,13 +223,11 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
-  ipcMain.handle('request', async (_, options: AxiosRequestConfig) => {
-    try {
-      const { data, status, statusText, headers } = await axiosRequest(options);
-      return { data, status, statusText, headers };
-    } catch (err){
-      return err;
-    }
+  ipcMain.handle('request', async (_, options) => {
+    const request = electron.net.request(options);
+    request.on('error', err => {
+      return Promise.reject(new Error(`Failed to make plugin request ${options}: ${err.message}`));
+    });
   });
 
   ipcMain.on('showItemInFolder', (_, name) => {
