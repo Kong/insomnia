@@ -48,6 +48,7 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
   hasUserAgentHeader,
+  LIBCURL_DEBUG_MIGRATION_MAP,
   waitForStreamToFinish,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
@@ -95,17 +96,6 @@ const MAX_DELAY_TIME = 1000;
 
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
-
-// Because node-libcurl changed some names that we used in the timeline
-export const LIBCURL_DEBUG_MIGRATION_MAP = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-} as const;
 
 const cancelRequestFunctionMap = {};
 

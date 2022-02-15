@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
+import { LIBCURL_DEBUG_MIGRATION_MAP } from '../../../common/misc';
 import * as models from '../../../models';
 import { Response, ResponseTimelineEntry } from '../../../models/response';
-import { LIBCURL_DEBUG_MIGRATION_MAP } from '../../../network/network';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {

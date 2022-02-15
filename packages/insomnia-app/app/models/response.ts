@@ -3,11 +3,12 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable } from 'stream';
+import { ValueOf } from 'type-fest';
 import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
-import { LIBCURL_DEBUG_MIGRATION_MAP } from '../network/network';
+import { LIBCURL_DEBUG_MIGRATION_MAP } from '../common/misc';
 import type { BaseModel } from './index';
 import * as models from './index';
 
@@ -27,7 +28,7 @@ export interface ResponseHeader {
 }
 
 export interface ResponseTimelineEntry {
-  name: string;
+  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
   timestamp: number;
   value: string;
 }
