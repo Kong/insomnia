@@ -1,6 +1,6 @@
 {
   "name": "insomnia-importers",
-  "version": "2.4.1",
+  "version": "2.5.0-beta.1",
   "author": "Kong <office@konghq.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
@@ -32,9 +32,9 @@
     "change-case": "^4.1.1",
     "commander": "^7.1.0",
     "lodash": "^4.17.15",
-    "shell-quote": "^1.7.2",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",
+    "shell-quote": "^1.7.2",
     "yaml": "^1.10.0"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1",
