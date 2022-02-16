@@ -22,6 +22,23 @@ declare namespace NodeJS {
 
 interface Window {
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: Function;
+  main: {
+    restart: () => void;
+    authorizeUserInWindow: (options: { url: string; urlSuccessRegex?: RegExp; urlFailureRegex?: RegExp; sessionId: string }) => Promise<string>;
+    setMenuBarVisibility: (visible: boolean) => void;
+    installPlugin: (url: string) => void;
+  };
+  dialog: {
+    showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;
+    showSaveDialog: (options: Electron.SaveDialogOptions) => Promise<Electron.SaveDialogReturnValue>;
+  };
+  app: {
+    getPath: (name: string) => string;
+    getAppPath: () => string;
+  };
+  shell: {
+    showItemInFolder: (fullPath: string) => void;
+  };
 }
 
 // needed for @hot-loader/react-dom in order for TypeScript to build

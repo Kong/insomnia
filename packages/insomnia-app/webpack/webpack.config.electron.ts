@@ -30,7 +30,7 @@ if (process.env.NODE_ENV === 'development') {
   plugins = productionConfig.plugins;
 }
 
-const configuration: Configuration = {
+const configuration: Configuration[] = [{
   ...productionConfig,
   devtool,
   entry: ['./main.development.ts'],
@@ -40,6 +40,14 @@ const configuration: Configuration = {
   },
   target: 'electron-main',
   plugins,
-};
+},
+{
+  entry: './app/preload.js',
+  target: 'electron-preload',
+  output: {
+    path: path.join(__dirname, '../build'),
+    filename: 'preload.js',
+  },
+}];
 
 export default configuration;

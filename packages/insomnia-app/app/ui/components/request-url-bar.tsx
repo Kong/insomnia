@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { OpenDialogOptions, remote } from 'electron';
+import { OpenDialogOptions } from 'electron';
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent, ReactNode } from 'react';
 
@@ -123,7 +123,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
       buttonLabel: 'Select',
       properties: ['openDirectory'],
     };
-    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
 
     if (canceled) {
       return;

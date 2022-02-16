@@ -1,4 +1,5 @@
 import { CurlHttpVersion } from '@getinsomnia/node-libcurl';
+import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
 import { join as pathJoin, resolve as pathResolve } from 'path';
@@ -18,6 +19,7 @@ import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
+window.app = electron.app;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 

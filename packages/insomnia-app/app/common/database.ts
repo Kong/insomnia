@@ -247,12 +247,14 @@ export const database = {
     for (const fn of changeListeners) {
       await fn(changes);
     }
-
     // Notify remote listeners
-    const windows = electron.BrowserWindow.getAllWindows();
+    const isMainContext = process.type === 'browser';
+    if (isMainContext){
+      const windows = electron.BrowserWindow.getAllWindows();
 
-    for (const window of windows) {
-      window.webContents.send('db.changes', changes);
+      for (const window of windows) {
+        window.webContents.send('db.changes', changes);
+      }
     }
   },
 
