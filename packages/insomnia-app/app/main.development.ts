@@ -7,7 +7,7 @@ import appConfig from '../config/config.json';
 import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
+import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
@@ -17,6 +17,8 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import { authorizeUserInWindow } from './network/o-auth-2/misc';
+import installPlugin from './plugins/install';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -41,7 +43,14 @@ if (!isDevelopment()) {
 // So if (window) checks don't throw
 global.window = global.window || undefined;
 
-contextMenu();
+// setup right click menu
+app.on('web-contents-created', (_, contents) => {
+  if (contents.getType() === 'webview') {
+    contextMenu({ window: contents });
+  } else {
+    contextMenu();
+  }
+});
 
 // When the app is first launched
 app.on('ready', async () => {
@@ -50,7 +59,7 @@ app.on('ready', async () => {
   if (error) {
     electron.dialog.showErrorBox(error.title, error.message);
     console.log('[config] Insomnia config is invalid, preventing app initialization');
-    exitAppFailure();
+    app.exit(1);
     return;
   }
 
@@ -202,6 +211,53 @@ async function _trackStats() {
   });
 
   trackSegmentEvent(SegmentEvent.appStarted, {}, { queueable: true });
+
+  ipcMain.handle('showOpenDialog', async (_, options: Electron.OpenDialogOptions) => {
+    const { filePaths, canceled } = await electron.dialog.showOpenDialog(options);
+    return { filePaths, canceled };
+  });
+
+  ipcMain.handle('showSaveDialog', async (_, options: Electron.SaveDialogOptions) => {
+    const { filePath, canceled } = await electron.dialog.showSaveDialog(options);
+    return { filePath, canceled };
+  });
+
+  ipcMain.handle('installPlugin', async (_, options) => {
+    return installPlugin(options);
+  });
+
+  ipcMain.on('showItemInFolder', (_, name) => {
+    electron.shell.showItemInFolder(name);
+  });
+
+  ipcMain.on('restart', () => {
+    app.relaunch();
+    app.exit();
+  });
+
+  ipcMain.handle('setMenuBarVisibility', (_, visible) => {
+    electron.BrowserWindow.getAllWindows()
+      .forEach(window => {
+        // the `setMenuBarVisibility` signature uses `visible` semantics
+        window.setMenuBarVisibility(visible);
+        // the `setAutoHideMenu` signature uses `hide` semantics
+        const hide = !visible;
+        window.setAutoHideMenuBar(hide);
+      });
+  });
+
+  ipcMain.on('getPath', (event, name) => {
+    event.returnValue = electron.app.getPath(name);
+  });
+
+  ipcMain.on('getAppPath', event => {
+    event.returnValue = electron.app.getAppPath();
+  });
+
+  ipcMain.handle('authorizeUserInWindow', (_, options) => {
+    const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
+    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+  });
 
   ipcMain.once('window-ready', () => {
     const { currentVersion, launches, lastVersion } = stats;

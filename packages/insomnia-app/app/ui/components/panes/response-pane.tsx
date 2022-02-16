@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { clipboard, remote } from 'electron';
+import { clipboard } from 'electron';
 import fs from 'fs';
 import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
@@ -85,7 +85,7 @@ export class ResponsePane extends PureComponent<Props> {
 
     const { contentType } = response;
     const extension = mime.extension(contentType) || 'unknown';
-    const { canceled, filePath: outputPath } = await remote.dialog.showSaveDialog({
+    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
@@ -140,7 +140,7 @@ export class ResponsePane extends PureComponent<Props> {
       .map(v => v.value)
       .join('');
 
-    const { canceled, filePath } = await remote.dialog.showSaveDialog({
+    const { canceled, filePath } = await window.dialog.showSaveDialog({
       title: 'Save Full Response',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
@@ -192,7 +192,7 @@ export class ResponsePane extends PureComponent<Props> {
     const data = await exportHarCurrentRequest(request, response);
     const har = JSON.stringify(data, null, '\t');
 
-    const { filePath } = await remote.dialog.showSaveDialog({
+    const { filePath } = await window.dialog.showSaveDialog({
       title: 'Export As HAR',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,

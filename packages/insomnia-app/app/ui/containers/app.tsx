@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
+import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
 import * as mime from 'mime-types';
@@ -681,7 +681,7 @@ class App extends PureComponent<AppProps, State> {
       options.defaultPath = defaultPath;
     }
 
-    const { filePath } = await remote.dialog.showSaveDialog(options);
+    const { filePath } = await window.dialog.showSaveDialog(options);
     // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
     return filePath || null;
