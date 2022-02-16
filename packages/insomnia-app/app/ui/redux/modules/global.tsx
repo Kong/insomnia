@@ -29,7 +29,6 @@ import { Request } from '../../../models/request';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
-import install from '../../../plugins/install';
 import { setTheme } from '../../../plugins/misc';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
@@ -239,7 +238,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
           }
 
           try {
-            await install(args.name);
+            await window.main.installPlugin(args.name);
             showModal(SettingsModal, TAB_INDEX_PLUGINS);
           } catch (err) {
             showError({

@@ -1,4 +1,3 @@
-import { AxiosRequestConfig } from 'axios';
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
@@ -18,8 +17,8 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
-import { axiosRequest } from './network/axios-request';
 import { authorizeUserInWindow } from './network/o-auth-2/misc';
+import installPlugin from './plugins/install';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -223,11 +222,8 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
-  ipcMain.handle('request', async (_, options) => {
-    const request = electron.net.request(options);
-    request.on('error', err => {
-      return Promise.reject(new Error(`Failed to make plugin request ${options}: ${err.message}`));
-    });
+  ipcMain.handle('installPlugin', async (_, options) => {
+    return installPlugin(options);
   });
 
   ipcMain.on('showItemInFolder', (_, name) => {

@@ -26,6 +26,7 @@ interface Window {
     restart: () => void;
     authorizeUserInWindow: (options: { url: string; urlSuccessRegex?: RegExp; urlFailureRegex?: RegExp; sessionId: string }) => Promise<string>;
     setMenuBarVisibility: (visible: boolean) => void;
+    installPlugin: (url: string) => void;
   };
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;
@@ -37,9 +38,6 @@ interface Window {
   };
   shell: {
     showItemInFolder: (fullPath: string) => void;
-  };
-  net: {
-    request: (options: AxiosRequestConfig) => AxiosResponse;
   };
 }
 

@@ -17,7 +17,6 @@ import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
-import installPlugin from '../../../plugins/install';
 import { reload } from '../../../templating/index';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -75,7 +74,7 @@ export class Plugins extends PureComponent<Props, State> {
     };
 
     try {
-      await installPlugin(this.state.npmPluginValue.trim());
+      await window.main.installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
