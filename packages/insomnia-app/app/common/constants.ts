@@ -126,7 +126,7 @@ export enum UpdateURL {
 }
 
 // API
-export const API_BASE_URL = 'https://api.insomnia.rest';
+export const getApiBaseURL = () => process.env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 
 // SYNC
 export const DEFAULT_BRANCH_NAME = 'master';
