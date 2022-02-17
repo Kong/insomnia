@@ -1,3 +1,4 @@
+# TODO - Deprecate, old release workflow
 name: Release Core
 
 on:
