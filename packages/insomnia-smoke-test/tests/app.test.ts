@@ -21,7 +21,6 @@ test('can send requests', async ({ app, page }) => {
   await page.click('text=http://127.0.0.1:4010/pets/1Send >> button');
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"id": "1"');
-  // Check Raw data option
   await page.click('button:has-text("Preview")');
   await page.click('button:has-text("Raw Data")');
   await expect(responseBody).toContainText('{"id":"1"}');
@@ -29,8 +28,9 @@ test('can send requests', async ({ app, page }) => {
   await page.click('button:has-text("GETsends dummy.csv request and shows rich response")');
   await page.click('text=http://127.0.0.1:4010/file/dummy.csvSend >> button');
   await expect(statusTag).toContainText('200 OK');
-  const csvTable = page.locator('table.selectable');
-  await expect(csvTable).toBeVisible();
+  await page.click('button:has-text("Preview")');
+  await page.click('button:has-text("Raw Data")');
+  await expect(responseBody).toContainText('a,b,c');
 
   await page.click('button:has-text("GETsends dummy.xml request and shows raw response")');
   await page.click('text=http://127.0.0.1:4010/file/dummy.xmlSend >> button');
@@ -41,7 +41,6 @@ test('can send requests', async ({ app, page }) => {
   await page.click('button:has-text("GETsends dummy.pdf request and shows rich response")');
   await page.click('text=http://127.0.0.1:4010/file/dummy.pdfSend >> button');
   await expect(statusTag).toContainText('200 OK');
-  // Check Raw data option for PDF
   await page.click('button:has-text("Preview")');
   await page.click('button:has-text("Raw Data")');
   await expect(responseBody).toContainText('PDF-1.4');
@@ -51,7 +50,6 @@ test('can send requests', async ({ app, page }) => {
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('basic auth received');
 
-  // Send request, check if no cookie was sent (server will reply with received cookies + a new cookie as response)
   await page.click('button:has-text("GETsends request with cookie and get cookie in response")');
   await page.click('text=http://127.0.0.1:4010/cookiesSend >> button');
   await expect(statusTag).toContainText('200 OK');
