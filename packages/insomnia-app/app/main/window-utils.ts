@@ -27,7 +27,7 @@ const { app, Menu, shell, dialog, clipboard } = electron;
 app.allowRendererProcessReuse = false;
 
 const DEFAULT_WIDTH = 1280;
-const DEFAULT_HEIGHT = 700;
+const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
@@ -275,21 +275,27 @@ export function createWindow() {
         type: 'separator',
       },
       {
-        label: `Resize to Defaul${MNEMONIC_SYM}t`,
+        label: `Resize to ${MNEMONIC_SYM}Small (qHD 540)`,
         click: () =>
           mainWindow?.setBounds({
-            x: 100,
-            y: 100,
+            width: 960,
+            height: 540,
+          }),
+      },
+      {
+        label: `Resize to Defaul${MNEMONIC_SYM}t (HD 720)`,
+        click: () =>
+          mainWindow?.setBounds({
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
           }),
       },
       {
-        label: `Resize to ${MNEMONIC_SYM}Small`,
+        label: `Resize to ${MNEMONIC_SYM}Large (FHD 1080)`,
         click: () =>
           mainWindow?.setBounds({
-            width: 1024,
-            height: 512,
+            width: 1920,
+            height: 1080,
           }),
       },
       {
