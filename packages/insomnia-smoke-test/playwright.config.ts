@@ -19,6 +19,5 @@ const config: PlaywrightTestConfig = {
   forbidOnly: !!process.env.CI,
   outputDir: 'screenshots',
   testDir: 'tests',
-  workers: process.env.CI ? 1 : 4,
 };
 export default config;
