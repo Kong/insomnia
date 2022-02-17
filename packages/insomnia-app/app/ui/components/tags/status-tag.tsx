@@ -54,6 +54,7 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
       className={classnames('tag', colorClass, {
         'tag--small': small,
       })}
+      data-testid="response-status-tag"
     >
       <Tooltip message={description} position="bottom" delay={tooltipDelay}>
         <strong>{statusCodeToDisplay}</strong>{' '}
