@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { usePrevious } from 'react-use';
 
-import { restartApp, setMenuBarVisibility } from '../../common/electron-helpers';
 import { Settings } from '../../models/settings';
 import { selectSettings } from '../redux/selectors';
 
@@ -22,7 +21,7 @@ const useRestartSetting = (setting: keyof Settings) => {
       return;
     }
 
-    restartApp();
+    window.main.restart();
   }, [nextValue, previousValue]);
 };
 
@@ -49,7 +48,7 @@ export const useSettingsSideEffects = () => {
   }, [settings.fontSize]);
 
   useEffect(() => {
-    setMenuBarVisibility(!settings.autoHideMenuBar);
+    window.main.setMenuBarVisibility(!settings.autoHideMenuBar);
   }, [settings.autoHideMenuBar]);
 
   useRestartSetting('nunjucksPowerUserMode');

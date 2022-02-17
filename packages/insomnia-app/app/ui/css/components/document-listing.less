@@ -17,8 +17,16 @@
 
   &__footer {
     height: var(--line-height-xs);
-    border-top: 1px solid var(--hl-md);
-    width: 100%;
+    padding: 0 var(--padding-md);
+    justify-content: flex-end;
+    box-sizing: border-box;
+
+    .made-with-love {
+      color: unset;
+      font-weight: 400 !important; // unfortunately, need to fight against anchor tag important set at root
+      display: flex;
+      font-size: var(--font-size-xs);
+    }
   }
 
   &__header {
