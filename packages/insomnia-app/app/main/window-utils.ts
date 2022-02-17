@@ -466,6 +466,16 @@ export function createWindow() {
         label: `R${MNEMONIC_SYM}estart`,
         click: window?.main.restart,
       },
+      {
+        label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
+        click: () => {
+          mainWindow?.setBounds({
+            width: 1920,
+            height: 1080,
+          });
+          setZoom(() => 4)();
+        },
+      },
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {
