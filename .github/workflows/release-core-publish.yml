@@ -1,0 +1,19 @@
+name: Release Publish
+
+on:
+  workflow_dispatch:
+    # TODO
+
+concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: TODO REPLACE ME
+        uses: TODO REPLACE ME
+        run: echo "TODO REPLACE ME"
