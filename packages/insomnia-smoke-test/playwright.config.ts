@@ -19,5 +19,8 @@ const config: PlaywrightTestConfig = {
   forbidOnly: !!process.env.CI,
   outputDir: 'screenshots',
   testDir: 'tests',
+  expect: {
+    timeout: process.env.CI ? 25 * 1000 : 10 * 1000,
+  },
 };
 export default config;
