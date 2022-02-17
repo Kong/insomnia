@@ -240,22 +240,15 @@ export function getTimeline(response: Response, showBody?: boolean) {
 
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
-    const timeline = JSON.parse(rawBuffer.toString());
-    let body: ResponseTimelineEntry[] = [];
-    if (showBody) {
-      const name = LIBCURL_DEBUG_MIGRATION_MAP.DataOut;
-      body = [
-        {
-          name,
-          timestamp: Date.now(),
-          value: fs.readFileSync(bodyPath).toString(),
-        },
-      ];
-    }
-    const output = [
-      ...timeline,
-      ...body,
-    ] as ResponseTimelineEntry[];
+    const timeline = JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
+    const body: ResponseTimelineEntry[] = showBody ? [
+      {
+        name: LIBCURL_DEBUG_MIGRATION_MAP.DataOut,
+        timestamp: Date.now(),
+        value: fs.readFileSync(bodyPath).toString(),
+      },
+    ] : [];
+    const output = [...timeline, ...body];
     return output;
   } catch (err) {
     console.warn('Failed to read response body', err.message);
