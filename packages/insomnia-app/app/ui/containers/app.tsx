@@ -129,7 +129,6 @@ import {
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceMetas,
-  selectWorkspaceRequestsAndRequestGroups,
   selectWorkspacesForActiveProject,
 } from '../redux/selectors';
 import { selectPaneHeight, selectPaneWidth, selectSidebarChildren, selectSidebarFilter, selectSidebarHidden, selectSidebarWidth } from '../redux/sidebar-selectors';
@@ -1567,7 +1566,6 @@ const mapStateToProps = (state: RootState) => ({
   stats: selectStats(state),
   syncItems: selectSyncItems(state),
   unseenWorkspaces: selectUnseenWorkspaces(state),
-  workspaceChildren: selectWorkspaceRequestsAndRequestGroups(state),
   workspacesForActiveProject: selectWorkspacesForActiveProject(state),
   workspaceMetas: selectWorkspaceMetas(state),
 });
