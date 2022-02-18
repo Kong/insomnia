@@ -35,7 +35,7 @@ import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global'
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
-import { selectActiveProject, selectAllApiSpecs, selectAllWorkspaces, selectDashboardSortOrder, selectIsLoggedIn, selectWorkspaceMetas } from '../redux/selectors';
+import { selectActiveProject, selectApiSpecs, selectDashboardSortOrder, selectIsLoggedIn, selectWorkspaceMetas, selectWorkspaces } from '../redux/selectors';
 import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
@@ -393,9 +393,9 @@ const mapStateToProps = (state: RootState) => ({
   activeProject: selectActiveProject(state),
   isLoggedIn: selectIsLoggedIn(state),
   isLoading: selectIsLoading(state),
-  apiSpecs: selectAllApiSpecs(state),
+  apiSpecs: selectApiSpecs(state),
   workspaceMetas: selectWorkspaceMetas(state),
-  workspaces: selectAllWorkspaces(state),
+  workspaces: selectWorkspaces(state),
 });
 
 const mapDispatchToProps = dispatch => {

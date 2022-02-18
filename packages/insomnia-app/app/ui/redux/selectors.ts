@@ -106,13 +106,13 @@ export const selectDashboardSortOrder = createSelector(
   global => global.dashboardSortOrder
 );
 
-export const selectAllWorkspaces = createSelector(
+export const selectWorkspaces = createSelector(
   selectEntitiesLists,
   entities => entities.workspaces,
 );
 
 export const selectWorkspacesForActiveProject = createSelector(
-  selectAllWorkspaces,
+  selectWorkspaces,
   selectActiveProject,
   (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject._id),
 );
@@ -146,14 +146,14 @@ export const selectActiveWorkspaceMeta = createSelector(
   },
 );
 
-export const selectAllApiSpecs = createSelector(
+export const selectApiSpecs = createSelector(
   selectEntitiesLists,
   entities => entities.apiSpecs,
 );
 
 export const selectWorkspacesWithResolvedNameForActiveProject = createSelector(
   selectWorkspacesForActiveProject,
-  selectAllApiSpecs,
+  selectApiSpecs,
   (workspaces, apiSpecs) => {
     return workspaces.map(workspace => {
       if (isCollection(workspace)) {
@@ -173,7 +173,7 @@ export const selectWorkspacesWithResolvedNameForActiveProject = createSelector(
 );
 
 export const selectActiveApiSpec = createSelector(
-  selectAllApiSpecs,
+  selectApiSpecs,
   selectActiveWorkspace,
   (apiSpecs, activeWorkspace) => {
     if (!activeWorkspace) {

@@ -110,7 +110,7 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectActiveWorkspaceName,
-  selectAllApiSpecs,
+  selectApiSpecs,
   selectEnvironments,
   selectGitRepositories,
   selectIsFinishedBooting,
@@ -1531,7 +1531,7 @@ function mapStateToProps(state: RootState) {
   const isFinishedBooting = selectIsFinishedBooting(state);
 
   // Entities
-  const apiSpecs = selectAllApiSpecs(state);
+  const apiSpecs = selectApiSpecs(state);
   const environments = selectEnvironments(state);
   const gitRepositories = selectGitRepositories(state);
   const requestGroups = selectRequestGroups(state);
