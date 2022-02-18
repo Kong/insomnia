@@ -132,6 +132,11 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
+export const selectWorkspaceMetas = createSelector(
+  selectEntitiesLists,
+  entities => entities.workspaceMetas,
+);
+
 export const selectActiveWorkspaceMeta = createSelector(
   selectActiveWorkspace,
   selectEntitiesLists,
