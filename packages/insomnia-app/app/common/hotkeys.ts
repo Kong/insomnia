@@ -108,11 +108,6 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE: defineHotKey('environment_showVariableSourceAndValue', 'Show variable source and value'),
   BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Active Code Editors'),
   GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
-  // Designer-specific
-  SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
-  SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
-  SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),
-  SHOW_HOME: defineHotKey('activity_home', 'Show Home Activity'),
   FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
 };
 
@@ -259,22 +254,6 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.BEAUTIFY_REQUEST_BODY.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.i.keyCode),
     keyComb(true, false, true, false, keyboardKeys.i.keyCode),
-  ),
-  [hotKeyRefs.SHOW_SPEC_EDITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.s.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.s.keyCode),
-  ),
-  [hotKeyRefs.SHOW_TEST.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.t.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.t.keyCode),
-  ),
-  [hotKeyRefs.SHOW_MONITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.m.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.m.keyCode),
-  ),
-  [hotKeyRefs.SHOW_HOME.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.h.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.h.keyCode),
   ),
   [hotKeyRefs.FILTER_DOCUMENTS.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.f.keyCode),
