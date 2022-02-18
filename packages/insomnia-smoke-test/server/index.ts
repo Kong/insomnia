@@ -5,11 +5,6 @@ import { basicAuthRouter } from './basic-auth';
 const app = express();
 const port = 4010;
 
-// Artificially slow each request down
-app.use((_req, _res, next) => {
-  setTimeout(next, 500);
-});
-
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
