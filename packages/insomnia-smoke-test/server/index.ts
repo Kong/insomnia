@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { basicAuthRouter } from './basic-auth';
+import { oauthRoutes } from './oauth';
 
 const app = express();
 const port = 4010;
@@ -23,7 +24,6 @@ app.get('/cookies', (_req, res) => {
 
 app.use('/file', express.static('fixtures/files'));
 
-
 app.use('/auth/basic', basicAuthRouter);
 
 app.get('/delay/seconds/:duration', (req, res) => {
@@ -32,6 +32,8 @@ app.get('/delay/seconds/:duration', (req, res) => {
     res.send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
 });
+
+app.use(oauthRoutes(port));
 
 app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`);
