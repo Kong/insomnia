@@ -26,7 +26,7 @@
     "inso-start": "npm start --prefix packages/insomnia-inso",
     "inso-package": "npm run build:sr --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --prefix packages/insomnia-inso",
-    "app-start-playwright": "npm run build:main.min.js --prefix packages/insomnia-app && npm run start:dev-server --prefix packages/insomnia-app",
+    "watch:app": "npm run build:main.min.js --prefix packages/insomnia-app && npm run start:dev-server --prefix packages/insomnia-app",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
     "app-package": "npm run package --prefix packages/insomnia-app",
