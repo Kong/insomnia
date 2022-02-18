@@ -71,7 +71,7 @@ export class ResponsePDFViewer extends PureComponent<Props, State> {
       }
 
       window.performance.mark('pdf-loaded');
-      console.log(window.performance.measure('pdf-load-time', 'pdfs-loading', 'pdf-loaded'));
+      console.log(JSON.stringify(window.performance.measure('pdf-load-time', 'pdfs-loading', 'pdf-loaded')));
     }, 100);
   }
 
