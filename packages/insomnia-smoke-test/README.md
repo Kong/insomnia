@@ -29,8 +29,10 @@ In a second terminal run/debug/step through smoke tests
 ```shell
 # Run tests
 npm run test:smoke:dev
-# Debug tests with verbose output
-DEBUG=pw:browser,pw:api npm run test:smoke:dev
+# Debug tests with playwright logs
+DEBUG=pw:api npm run test:smoke:dev
+# Debug tests with insomnia console logs
+DEBUG=pw:browser npm run test:smoke:dev
 # Step through tests with playwright inspector
 PWDEBUG=1 npm run test:smoke:dev
 ```
@@ -38,21 +40,35 @@ PWDEBUG=1 npm run test:smoke:dev
 ### Build and package methods
 
 It's possible to run the smoke tests for:
-- A `build`, the JS bundle that is loaded into an electron client;
-- A `package`, the executable binary (e.g. `.dmg` or `.exe`);
+
+- A `build`, the JS bundle that is loaded into an electron client
+- A `package`, the executable binary (e.g. `.dmg` or `.exe`)
+  
 For `build`:
+
 ```shell
 npm run app-build:smoke             # Transpile js bundle
-npm run test:smoke:build          # Run tests
+npm run test:smoke:build            # Run tests
 ```
 
 For `package`:
+
 ```shell
 npm run app-package:smoke           # Build executable in /packages/insomnia-app/dist
 npm run test:smoke:package          # Run tests
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
+
+### Show trace viewer
+
+Each time you run a playwright test a trace.zip will be generated, this is useful for debugging CI. [docs](https://playwright.dev/docs/trace-viewer)
+
+```shell
+# Open a trace viewer for a given test output
+npx playwright show-trace packages/insomnia-smoke-test/screenshots/app-can-send-requests/trace.zip
+# Alternatively you can upload this trace to https://trace.playwright.dev/
+```
 
 ## Run Inso CLI smoke tests
 
