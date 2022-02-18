@@ -219,7 +219,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
-    const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
+    const { activeActivity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
     if (workspaceId && nextActivity !== ACTIVITY_HOME) {
@@ -228,7 +228,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       });
     }
 
-    const editingASpec = activity === ACTIVITY_SPEC;
+    const editingASpec = activeActivity === ACTIVITY_SPEC;
 
     if (!editingASpec) {
       handleSetActiveActivity(nextActivity);
@@ -445,7 +445,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       activeProject,
       activeApiSpec,
       activeWorkspaceClientCertificates,
-      activity,
+      activeActivity,
       gitVCS,
       handleActivateRequest,
       handleExportRequestsToFile,
@@ -636,13 +636,13 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
           </ErrorBoundary>
         </div>
         <Fragment key={`views::${this.state.activeGitBranch}`}>
-          {(activity === ACTIVITY_HOME || !activeWorkspace) && (
+          {(activeActivity === ACTIVITY_HOME || !activeWorkspace) && (
             <WrapperHome
               wrapperProps={this.props}
             />
           )}
 
-          {activity === ACTIVITY_SPEC && (
+          {activeActivity === ACTIVITY_SPEC && (
             <WrapperDesign
               gitSyncDropdown={gitSyncDropdown}
               handleActivityChange={this._handleWorkspaceActivityChange}
@@ -650,7 +650,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             />
           )}
 
-          {activity === ACTIVITY_UNIT_TEST && (
+          {activeActivity === ACTIVITY_UNIT_TEST && (
             <WrapperUnitTest
               gitSyncDropdown={gitSyncDropdown}
               wrapperProps={this.props}
@@ -660,7 +660,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             </WrapperUnitTest>
           )}
 
-          {activity === ACTIVITY_DEBUG && (
+          {activeActivity === ACTIVITY_DEBUG && (
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}

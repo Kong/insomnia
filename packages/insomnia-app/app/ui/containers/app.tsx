@@ -1050,11 +1050,11 @@ class App extends PureComponent<AppProps, State> {
       activeWorkspaceName,
       activeEnvironment,
       activeRequest,
-      activity,
+      activeActivity,
     } = this.props;
     let title;
 
-    if (activity === ACTIVITY_HOME) {
+    if (activeActivity === ACTIVITY_HOME) {
       title = getAppName();
     } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
@@ -1595,7 +1595,7 @@ function mapStateToProps(state: RootState) {
   const activeUnitTestResult = selectActiveUnitTestResult(state);
 
   return {
-    activity: activeActivity,
+    activeActivity,
     activeProject,
     activeApiSpec,
     activeWorkspaceName,
