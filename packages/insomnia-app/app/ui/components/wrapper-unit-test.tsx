@@ -12,6 +12,7 @@ import {
 import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
 import React, { PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { AUTOBIND_CFG } from '../../common/constants';
@@ -22,6 +23,8 @@ import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
+import { RootState } from '../redux/modules';
+import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
@@ -34,7 +37,7 @@ import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
 
-interface Props {
+interface Props extends ReturnType<typeof mapStateToProps> {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
@@ -47,7 +50,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WrapperUnitTest extends PureComponent<Props, State> {
+class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
   state: State = {
     testsRunning: null,
     resultsError: null,
@@ -130,7 +133,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleCreateTestSuite() {
-    const { activeWorkspace } = this.props.wrapperProps;
+    const { activeWorkspace } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -154,7 +157,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleCreateTest() {
-    const { activeUnitTestSuite } = this.props.wrapperProps;
+    const { activeUnitTestSuite } = this.props;
     showPrompt({
       title: 'New Test',
       defaultValue: 'Returns 200',
@@ -179,7 +182,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleRunTests() {
-    const { activeUnitTests } = this.props.wrapperProps;
+    const { activeUnitTests } = this.props;
     await this._runTests(activeUnitTests);
     trackSegmentEvent(SegmentEvent.unitTestRunAll);
   }
@@ -232,7 +235,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
-    const { activeWorkspace } = this.props.wrapperProps;
+    const { activeWorkspace } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -250,15 +253,18 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleChangeActiveSuiteName(name: string) {
-    const { activeUnitTestSuite } = this.props.wrapperProps;
-    // @ts-expect-error -- TSCONVERSION
+    const { activeUnitTestSuite } = this.props;
+    if (!activeUnitTestSuite) {
+      return;
+    }
+
     await models.unitTestSuite.update(activeUnitTestSuite, {
       name,
     });
   }
 
   async _runTests(unitTests: UnitTest[]) {
-    const { activeWorkspace, activeEnvironment } = this.props.wrapperProps;
+    const { activeWorkspace, activeEnvironment } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -334,7 +340,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderResults() {
-    const { activeUnitTestResult } = this.props.wrapperProps;
+    const { activeUnitTestResult } = this.props;
     const { testsRunning, resultsError } = this.state;
 
     if (resultsError) {
@@ -442,7 +448,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderTestSuite() {
-    const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
+    const { activeUnitTests, activeUnitTestSuite } = this.props;
     const { testsRunning } = this.state;
 
     const emptyStatePane = (
@@ -495,7 +501,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderPageSidebar() {
-    const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
+    const { activeUnitTestSuites, activeUnitTestSuite } = this.props;
     const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
     return (
@@ -566,3 +572,14 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspace: selectActiveWorkspace(state),
+  activeUnitTestSuite: selectActiveWorkspace(state),
+  activeUnitTestSuites: selectActiveUnitTestSuites(state),
+  activeUnitTests: selectActiveUnitTests(state),
+  activeEnvironment: selectActiveEnvironment(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+});
+
+export const WrapperUnitTest = connect(mapStateToProps)(UnconnectedWrapperUnitTest);
