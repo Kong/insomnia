@@ -320,14 +320,14 @@ class WrapperHome extends PureComponent<Props, State> {
       sortOrder,
       wrapperProps,
       apiSpecs,
-      workspaces,
+      workspacesForActiveProject,
       handleActivateWorkspace,
       workspaceMetas,
     } = this.props;
     const { vcs } = wrapperProps;
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces
+    const cards = workspacesForActiveProject
       .map(
         mapWorkspaceToWorkspaceCard({
           workspaceMetas,
@@ -395,7 +395,7 @@ const mapStateToProps = (state: RootState) => ({
   isLoading: selectIsLoading(state),
   apiSpecs: selectApiSpecs(state),
   workspaceMetas: selectWorkspaceMetas(state),
-  workspaces: selectWorkspacesForActiveProject(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
 });
 
 const mapDispatchToProps = dispatch => {

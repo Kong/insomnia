@@ -1545,7 +1545,7 @@ function mapStateToProps(state: RootState) {
 
   // Workspace stuff
   const activeProject = selectActiveProject(state);
-  const workspaces = selectWorkspacesForActiveProject(state);
+  const workspacesForActiveProject = selectWorkspacesForActiveProject(state);
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
   const activeWorkspace = selectActiveWorkspace(state);
   const activeWorkspaceName = selectActiveWorkspaceName(state);
@@ -1638,7 +1638,7 @@ function mapStateToProps(state: RootState) {
     syncItems,
     unseenWorkspaces,
     workspaceChildren,
-    workspaces,
+    workspacesForActiveProject,
     workspaceMetas,
   };
 }

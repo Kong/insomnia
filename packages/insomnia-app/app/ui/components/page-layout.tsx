@@ -40,7 +40,7 @@ export const PageLayout: FC<Props> = ({
   const isLoading = useSelector(selectIsLoading);
   const settings = useSelector(selectSettings);
   const unseenWorkspaces = useSelector(selectUnseenWorkspaces);
-  const workspaces = useSelector(selectWorkspacesForActiveProject);
+  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
 
   const {
     gitVCS,
@@ -130,7 +130,7 @@ export const PageLayout: FC<Props> = ({
             unseenWorkspaces={unseenWorkspaces}
             gitVCS={gitVCS}
             width={sidebarWidth}
-            workspaces={workspaces}
+            workspacesForActiveProject={workspacesForActiveProject}
           >
             {renderPageSidebar()}
           </Sidebar>

@@ -329,7 +329,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleRemoveActiveWorkspace() {
-    const { workspaces, activeWorkspace, handleSetActiveActivity } = this.props;
+    const { workspacesForActiveProject, activeWorkspace, handleSetActiveActivity } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -338,7 +338,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
     await models.workspace.remove(activeWorkspace);
 
-    if (workspaces.length <= 1) {
+    if (workspacesForActiveProject.length <= 1) {
       handleSetActiveActivity(ACTIVITY_HOME);
     }
   }
@@ -455,7 +455,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       sidebarChildren,
       syncItems,
       vcs,
-      workspaces,
+      workspacesForActiveProject,
     } = this.props;
 
     // Setup git sync dropdown for use in Design/Debug pages
@@ -506,12 +506,12 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <RequestSettingsModal
               ref={registerModal}
-              workspaces={workspaces}
+              workspacesForActiveProject={workspacesForActiveProject}
             />
 
             <RequestGroupSettingsModal
               ref={registerModal}
-              workspaces={workspaces}
+              workspacesForActiveProject={workspacesForActiveProject}
             />
 
             {activeWorkspace ? <>
