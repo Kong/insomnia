@@ -23,6 +23,7 @@ export class ResponsePDFViewer extends PureComponent<Props, State> {
   }
 
   loadPDF() {
+    window.performance.mark('pdfs-loading');
     if (this.debounceTimeout !== null) {
       clearTimeout(this.debounceTimeout);
     }
@@ -68,6 +69,9 @@ export class ResponsePDFViewer extends PureComponent<Props, State> {
         };
         await page.render(renderContext).promise;
       }
+
+      window.performance.mark('pdf-loaded');
+      console.log(window.performance.measure('pdf-load-time', 'pdfs-loading', 'pdf-loaded'));
     }, 100);
   }
 
