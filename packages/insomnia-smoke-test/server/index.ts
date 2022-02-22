@@ -33,7 +33,7 @@ app.get('/delay/seconds/:duration', (req, res) => {
   }, delaySec * 1000);
 });
 
-app.use(oauthRoutes(port));
+app.use('/oidc', oauthRoutes(port));
 
 app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`);
