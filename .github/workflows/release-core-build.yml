@@ -16,21 +16,20 @@ on:
         description: version of the release (e.g. 2022.1.0)
       iteration:
         required: false
-        description: iteration of the release (version-channel.iteration) (e.g. 0, 1, 2, 3 ...)
+        description: iteration of the release, used for non-stable releases (version-channel.iteration) (e.g. 0, 1, 2, 3 ...)
+        default: '0'
 
 concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
 
 env:
-  RELEASE_BRANCH: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) | '' }}
 
 jobs:
   setup-release-branch:
     runs-on: ubuntu-latest
     steps:
-      # TODO - check if iteration is set in case we have alpha and beta
-
       - name: Create Branch # Create a branch if it doesn't exist
         uses: peterjgrainger/action-create-branch@v2.0.1
         env:
@@ -83,26 +82,62 @@ jobs:
           author_name: ${{ steps.configure_git_user.outputs.name }}
           author_email: ${{ steps.configure_git_user.outputs.email }}
 
-  # build-and-upload-artifacts:
-  #   needs: setup-release-branch
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ macos-latest, windows-latest, ubuntu-latest ]
-  #   steps:
-  #     - name: Checkout branch
-  #       uses: actions/checkout@v2
-  #       with:
-  #         ref: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v2
-  #       with:
-  #         node-version-file: '.nvmrc'
+  build-and-upload-artifacts:
+    needs: setup-release-branch
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
 
-  #     - name: Bootstrap packages
-  #       run: npm run bootstrap
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: '.nvmrc'
 
-  #     - name: Package
-  #       shell: bash
-  #       run: BUILD_REF="$(git rev-parse --short HEAD)" npm run app-package
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      # TODO: Set CSC_LINK et-al for electron-builder codesigning
+
+      - name: Package app
+        shell: bash
+        run: npm run app-package
+
+      - name: Package inso
+        run: npm run inso-package
+
+      # TODO: Code-signing for inso
+
+      - name: Create inso artifacts
+        run: npm run inso-package:artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
+          path: |
+            packages/insomnia-app/dist/*.exe
+            packages/insomnia-app/dist/squirrel-windows/*
+            packages/insomnia-app/dist/*.zip
+            packages/insomnia-app/dist/*.dmg
+            packages/insomnia-app/dist/*.snap
+            packages/insomnia-app/dist/*.rpm
+            packages/insomnia-app/dist/*.deb
+            packages/insomnia-app/dist/*.AppImage
+            packages/insomnia-app/dist/*.tar.gz
+            packages/insomnia-inso/artifacts/*
+
+      # TODO: Create a PR automatically
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v3
+
+      # TODO Link artifacts from this workflow on the PR
+
+      # TODO Nice-to-have - run changelog-generator script and edit description of PR (OR, add a comment with the changelog)
