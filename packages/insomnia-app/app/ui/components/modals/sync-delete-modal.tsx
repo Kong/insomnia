@@ -1,18 +1,21 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Button } from 'insomnia-components';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
-import type { Workspace } from '../../../models/workspace';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectActiveWorkspace } from '../../redux/selectors';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
-interface Props {
-  workspace: Workspace;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
 }
 
@@ -27,7 +30,7 @@ const INITIAL_STATE: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SyncDeleteModal extends PureComponent<Props, State> {
+export class UnconnectedSyncDeleteModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
 
@@ -89,14 +92,14 @@ export class SyncDeleteModal extends PureComponent<Props, State> {
 
   render() {
     const { error, workspaceName } = this.state;
-    const { workspace } = this.props;
+    const { activeWorkspace } = this.props;
     const workspaceNameElement = (
       <strong
         style={{
           whiteSpace: 'pre-wrap',
         }}
       >
-        {workspace.name}
+        {activeWorkspace?.name}
       </strong>
     );
     return (
@@ -118,7 +121,7 @@ export class SyncDeleteModal extends PureComponent<Props, State> {
                 onChange={this._updateWorkspaceName}
                 value={workspaceName}
               />
-              <Button bg="danger" disabled={workspaceName !== workspace.name}>
+              <Button bg="danger" disabled={workspaceName !== activeWorkspace?.name}>
                 Delete {strings.collection.singular}
               </Button>
             </div>
@@ -128,3 +131,14 @@ export class SyncDeleteModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspace: selectActiveWorkspace(state),
+});
+
+export const SyncDeleteModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncDeleteModal);

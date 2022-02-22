@@ -442,7 +442,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       activeEnvironment,
       activeGitRepository,
       activeWorkspace,
-      activeProject,
       activeApiSpec,
       activeWorkspaceClientCertificates,
       activeActivity,
@@ -451,11 +450,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       handleExportRequestsToFile,
       handleInitializeEntities,
       handleSidebarSort,
-      settings,
       sidebarChildren,
-      syncItems,
       vcs,
-      workspacesForActiveProject,
     } = this.props;
 
     // Setup git sync dropdown for use in Design/Debug pages
@@ -487,7 +483,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <AlertModal ref={registerModal} />
             <ErrorModal ref={registerModal} />
             <PromptModal ref={registerModal} />
-
             <WrapperModal ref={registerModal} />
             <LoginModal ref={registerModal} />
             <AskModal ref={registerModal} />
@@ -499,20 +494,9 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <GenerateConfigModal ref={registerModal} />
             <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
-
-            <CodePromptModal
-              ref={registerModal}
-            />
-
-            <RequestSettingsModal
-              ref={registerModal}
-              workspacesForActiveProject={workspacesForActiveProject}
-            />
-
-            <RequestGroupSettingsModal
-              ref={registerModal}
-              workspacesForActiveProject={workspacesForActiveProject}
-            />
+            <CodePromptModal ref={registerModal} />
+            <RequestSettingsModal ref={registerModal} />
+            <RequestGroupSettingsModal ref={registerModal} />
 
             {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
@@ -520,14 +504,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                 <CookiesModalFC
                   ref={registerModal}
                   handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-                  workspace={activeWorkspace}
-                  cookieJar={activeCookieJar}
                 />
-                <CookieModifyModal
-                  ref={registerModal}
-                  cookieJar={activeCookieJar}
-                  workspace={activeWorkspace}
-                />
+                <CookieModifyModal ref={registerModal} />
               </> : null}
 
               <NunjucksModal
@@ -551,11 +529,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
             />
 
-            <SettingsModal
-              ref={registerModal}
-              settings={settings}
-            />
-
+            <SettingsModal ref={registerModal} />
             <ResponseDebugModal ref={registerModal} />
 
             <RequestSwitcherModal
@@ -588,27 +562,11 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             {activeWorkspace && vcs ? (
               <Fragment>
-                <SyncStagingModal
-                  ref={registerModal}
-                  workspace={activeWorkspace}
-                  vcs={vcs}
-                  syncItems={syncItems}
-                />
-                <SyncMergeModal
-                  ref={registerModal}
-                  workspace={activeWorkspace}
-                  syncItems={syncItems}
-                  vcs={vcs}
-                />
-                <SyncBranchesModal
-                  ref={registerModal}
-                  workspace={activeWorkspace}
-                  vcs={vcs}
-                  project={activeProject}
-                  syncItems={syncItems}
-                />
-                <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-                <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
+                <SyncStagingModal ref={registerModal} vcs={vcs} />
+                <SyncMergeModal ref={registerModal} vcs={vcs} />
+                <SyncBranchesModal ref={registerModal} vcs={vcs} />
+                <SyncDeleteModal ref={registerModal} vcs={vcs} />
+                <SyncHistoryModal ref={registerModal} vcs={vcs} />
               </Fragment>
             ) : null}
 
@@ -673,9 +631,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleImport={this._handleImport}
               handleRequestCreate={this._handleCreateRequestInWorkspace}
               handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-              handleSendAndDownloadRequestWithActiveEnvironment={
-                this._handleSendAndDownloadRequestWithActiveEnvironment
-              }
+              handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
               handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
               handleSetActiveResponse={this._handleSetActiveResponse}
               handleSetPreviewMode={this._handleSetPreviewMode}
@@ -688,12 +644,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
               handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
               handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-              handleUpdateSettingsUseBulkHeaderEditor={
-                this._handleUpdateSettingsUseBulkHeaderEditor
-              }
-              handleUpdateSettingsUseBulkParametersEditor={
-                this._handleUpdateSettingsUseBulkParametersEditor
-              }
+              handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+              handleUpdateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
               wrapperProps={this.props}
             />
           )}

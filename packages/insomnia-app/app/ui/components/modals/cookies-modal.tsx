@@ -1,14 +1,15 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import deepEqual from 'deep-equal';
 import React, { ChangeEvent, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
+import { useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { fuzzyMatch } from '../../../common/misc';
 import { HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
-import type { Workspace } from '../../../models/workspace';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import { selectActiveCookieJar } from '../../redux/selectors';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -19,8 +20,7 @@ import { showModal } from '.';
 interface Props extends ModalProps {
   handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];
   handleRender: HandleRender;
-  cookieJar: CookieJar;
-  workspace: Workspace;
+  activeCookieJar: CookieJar | null;
 }
 
 interface State {
@@ -47,28 +47,40 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   async _saveChanges() {
-    const { cookieJar } = this.props;
-    await models.cookieJar.update(cookieJar);
+    const { activeCookieJar } = this.props;
+    if (!activeCookieJar) {
+      return;
+    }
+    await models.cookieJar.update(activeCookieJar);
   }
 
   async _handleCookieAdd(cookie: Cookie) {
-    const { cookieJar } = this.props;
-    const { cookies } = cookieJar;
-    cookieJar.cookies = [cookie, ...cookies];
+    const { activeCookieJar } = this.props;
+    if (!activeCookieJar) {
+      return;
+    }
+    const { cookies } = activeCookieJar;
+    activeCookieJar.cookies = [cookie, ...cookies];
     await this._saveChanges();
   }
 
   async _handleDeleteAllCookies() {
-    const { cookieJar } = this.props;
-    cookieJar.cookies = [];
+    const { activeCookieJar } = this.props;
+    if (!activeCookieJar) {
+      return;
+    }
+    activeCookieJar.cookies = [];
     await this._saveChanges();
   }
 
   async _handleCookieDelete(cookie: Cookie) {
-    const { cookieJar } = this.props;
-    const { cookies } = cookieJar;
+    const { activeCookieJar } = this.props;
+    if (!activeCookieJar) {
+      return;
+    }
+    const { cookies } = activeCookieJar;
     // NOTE: This is sketchy because it relies on the same reference
-    cookieJar.cookies = cookies.filter(c => c.id !== cookie.id);
+    activeCookieJar.cookies = cookies.filter(c => c.id !== cookie.id);
     await this._saveChanges();
   }
 
@@ -76,20 +88,28 @@ class CookiesModal extends PureComponent<Props, State> {
     if (!(e.target instanceof HTMLInputElement)) {
       return;
     }
+    const { activeCookieJar } = this.props;
+    if (!activeCookieJar) {
+      return;
+    }
 
     const filter = e.target.value;
 
-    this._applyFilter(filter, this.props.cookieJar.cookies);
+    this._applyFilter(filter, activeCookieJar.cookies);
   }
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
+    const { activeCookieJar } = this.props;
+    if (!activeCookieJar || !nextProps.activeCookieJar) {
+      return;
+    }
     // Re-filter if we received new cookies
     // Compare cookies with Dates cast to strings
-    const sameCookies = deepEqual(this.props.cookieJar.cookies, nextProps.cookieJar.cookies);
+    const sameCookies = deepEqual(activeCookieJar.cookies, nextProps.activeCookieJar.cookies);
 
     if (!sameCookies) {
-      this._applyFilter(this.state.filter, nextProps.cookieJar.cookies);
+      this._applyFilter(this.state.filter, nextProps.activeCookieJar.cookies);
     }
   }
 
@@ -132,22 +152,29 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   _getVisibleCookies(): Cookie[] {
-    const { cookieJar } = this.props;
+    const { activeCookieJar } = this.props;
     const { visibleCookieIndexes } = this.state;
 
-    if (visibleCookieIndexes === null) {
-      return cookieJar.cookies;
+    if (!activeCookieJar) {
+      return [];
     }
 
-    return cookieJar.cookies.filter((_, i) => visibleCookieIndexes.includes(i));
+    if (visibleCookieIndexes === null) {
+      return activeCookieJar.cookies;
+    }
+
+    return activeCookieJar.cookies.filter((_, i) => visibleCookieIndexes.includes(i));
   }
 
   async show() {
+    const { activeCookieJar } = this.props;
+
     setTimeout(() => {
       this.filterInput?.focus();
     }, 100);
+
     // make sure the filter is up to date
-    await this._applyFilter(this.state.filter, this.props.cookieJar.cookies);
+    await this._applyFilter(this.state.filter, activeCookieJar?.cookies || []);
     this.modal?.show();
   }
 
@@ -156,7 +183,7 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleShowModifyCookieModal, cookieJar } = this.props;
+    const { handleShowModifyCookieModal, activeCookieJar } = this.props;
     const { filter } = this.state;
 
     const cookies = this._getVisibleCookies();
@@ -165,7 +192,7 @@ class CookiesModal extends PureComponent<Props, State> {
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody noScroll>
-          {cookieJar && (
+          {activeCookieJar && (
             <div className="cookie-list">
               <div className="pad">
                 <div className="form-control form-control--outlined">
@@ -207,9 +234,18 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 }
 
-const CookiesModalFCRF: ForwardRefRenderFunction<CookiesModal, Omit<Props, 'handleRender'>> = (props, ref) => {
+const CookiesModalFCRF: ForwardRefRenderFunction<CookiesModal, Omit<Props, 'handleRender' | 'activeCookieJar'>> = (props, ref) => {
   const { handleRender } = useNunjucks();
-  return <CookiesModal ref={ref} {...props} handleRender={handleRender} />;
+  const activeCookieJar = useSelector(selectActiveCookieJar);
+
+  return (
+    <CookiesModal
+      ref={ref}
+      activeCookieJar={activeCookieJar}
+      {...props}
+      handleRender={handleRender}
+    />
+  );
 
 };
 

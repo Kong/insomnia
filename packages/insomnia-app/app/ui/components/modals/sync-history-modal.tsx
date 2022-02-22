@@ -3,7 +3,6 @@ import React, { Fragment, PureComponent } from 'react';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
 import { Modal } from '../base/modal';
@@ -15,7 +14,6 @@ import { TimeFromNow } from '../time-from-now';
 import { Tooltip } from '../tooltip';
 
 interface Props {
-  workspace: Workspace;
   vcs: VCS;
 }
 

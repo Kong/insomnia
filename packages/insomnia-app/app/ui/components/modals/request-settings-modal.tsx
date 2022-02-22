@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -8,6 +9,8 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import type { BaseRequest, Request } from '../../../models/request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -15,8 +18,9 @@ import { ModalHeader } from '../base/modal-header';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
-interface Props {
-  workspacesForActiveProject: Workspace[];
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -36,7 +40,7 @@ interface RequestSettingsModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestSettingsModal extends PureComponent<Props, State> {
+export class UnconnectedRequestSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: MarkdownEditor | null = null;
 
@@ -463,3 +467,14 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+});
+
+export const RequestSettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedRequestSettingsModal);

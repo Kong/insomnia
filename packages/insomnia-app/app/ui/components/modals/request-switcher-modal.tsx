@@ -29,18 +29,14 @@ import { MethodTag } from '../tags/method-tag';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
-const mapStateToProps = (state: RootState) => {
-  const activeRequest = selectActiveRequest(state);
-
-  return {
-    activeRequest,
-    workspace: selectActiveWorkspace(state),
-    workspacesForActiveProject: selectWorkspacesForActiveProject(state),
-    requestMetas: selectRequestMetas(state),
-    grpcRequestMetas: selectGrpcRequestMetas(state),
-    workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
-  };
-};
+const mapStateToProps = (state: RootState) => ({
+  activeRequest: selectActiveRequest(state),
+  workspace: selectActiveWorkspace(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+  requestMetas: selectRequestMetas(state),
+  grpcRequestMetas: selectGrpcRequestMetas(state),
+  workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
+});
 
 const mapDispatchToProps = dispatch => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
