@@ -75,6 +75,7 @@ jobs:
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
+          branch: ${{ env.RELEASE_BRANCH }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           message: "Bump packages and config versions"
           tags: true
