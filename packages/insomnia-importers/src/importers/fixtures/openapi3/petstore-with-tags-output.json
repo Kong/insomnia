@@ -27,6 +27,8 @@
         "apiKey": "apiKey",
         "base_path": "/v2",
         "host": "petstore.swagger.io",
+        "oauth2ClientId": "clientId",
+        "oauth2RedirectUrl": "http://localhost/",
         "scheme": "http"
       },
       "name": "OpenAPI env",
@@ -59,7 +61,14 @@
     {
       "_id": "req___WORKSPACE_ID__23acbe44",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
@@ -74,7 +83,14 @@
     {
       "_id": "req___WORKSPACE_ID__74a7a059",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
@@ -89,7 +105,14 @@
     {
       "_id": "req___WORKSPACE_ID__80ab0d08",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {},
       "headers": [],
       "method": "GET",
@@ -107,7 +130,14 @@
     {
       "_id": "req___WORKSPACE_ID__42a17980",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {},
       "headers": [],
       "method": "GET",
@@ -143,7 +173,14 @@
     {
       "_id": "req___WORKSPACE_ID__a4608701",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {
         "mimeType": "application/x-www-form-urlencoded"
       },
@@ -157,7 +194,14 @@
     {
       "_id": "req___WORKSPACE_ID__e804bd05",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {},
       "headers": [
         {
@@ -175,7 +219,14 @@
     {
       "_id": "req___WORKSPACE_ID__8081fb6f",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ oauth2ClientId }}",
+        "grantType": "implicit",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
       "body": {
         "mimeType": "multipart/form-data"
       },
