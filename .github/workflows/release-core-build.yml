@@ -24,7 +24,7 @@ concurrency:
       cancel-in-progress: true
 
 env:
-  RELEASE_BRANCH: release/${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) | '' }}
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) || '' }}
 
 jobs:
   setup-release-branch:
