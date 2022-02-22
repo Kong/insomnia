@@ -6,8 +6,10 @@ info:
 
 servers:
   - url: https://httpbin.org
+    x-kong-upstream-target-weight: 60
   #- url: http://httpbin.org
   - url: https://eu.httpbin.org
+    x-kong-upstream-target-weight: 40
   #- url: http://eu.httpbin.org
 
 tags:

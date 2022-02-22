@@ -47,6 +47,7 @@
       "targets": [
         {
           "target": "backend.com:80",
+          "weight": 100,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"]
         }
       ]

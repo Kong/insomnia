@@ -25,6 +25,11 @@ export interface XKongServiceDefaults {
   [xKongServiceDefaults]?: Partial<DCService>;
 }
 
+export const xKongUpstreamTargetWeight: XKongProperty<'upstream-target-weight'> = 'x-kong-upstream-target-weight';
+export interface XKongUpstreamTargetWeight {
+  [xKongUpstreamTargetWeight]?: number;
+}
+
 export type XKongPluginProperty<Name extends string = string> = XKongProperty<`plugin-${Name}`>;
 
 // Note: it's important that `Name` doesn't have a default argument.  We want to force the consumer of this type to specify the name as specifically as possible because this value is instrumental to how the plugins are used and discriminated.

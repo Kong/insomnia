@@ -7,6 +7,7 @@ import {
   XKongRouteDefaults,
   XKongServiceDefaults,
   XKongUpstreamDefaults,
+  XKongUpstreamTargetWeight,
 } from './kong';
 import { K8sIngressTLS } from './kubernetes-config';
 import { Taggable } from './outputs';
@@ -106,7 +107,8 @@ export type OA3Server = {
   variables?: Record<string, OA3ServerVariable>;
 } & OA3ServerKubernetesTLS
   & OA3ServerKubernetesBackend
-  & OA3ServerKubernetesService;
+  & OA3ServerKubernetesService
+  & XKongUpstreamTargetWeight;
 
 export interface OA3ResponsesObject {
   $ref?: string;
