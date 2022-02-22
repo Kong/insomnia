@@ -250,10 +250,12 @@
       "targets": [
         {
           "target": "httpbin.org:443",
+          "weight": 60,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
         },
         {
           "target": "eu.httpbin.org:443",
+          "weight": 40,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
         }
       ]

@@ -7,8 +7,10 @@ info:
 servers:
   - url: https://httpbin.org
   #- url: http://httpbin.org
+    x-kong-upstream-target-weight: 60
   - url: https://eu.httpbin.org
   #- url: http://eu.httpbin.org
+    x-kong-upstream-target-weight: 40
 
 tags:
   - name: auth
