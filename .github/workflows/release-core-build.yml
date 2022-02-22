@@ -19,10 +19,6 @@ on:
         description: iteration of the release, used for non-stable releases (version-channel.iteration) (e.g. 0, 1, 2, 3 ...)
         default: '0'
 
-concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-
 env:
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) || '' }}
 
