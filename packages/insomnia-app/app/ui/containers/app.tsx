@@ -134,6 +134,19 @@ import {
 import { selectPaneHeight, selectPaneWidth, selectSidebarChildren, selectSidebarFilter, selectSidebarHidden, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
 
+const updateRequestMetaByParentId = async (
+  requestId: string,
+  patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>
+) => {
+  const isGrpc = isGrpcRequestId(requestId);
+
+  if (isGrpc) {
+    return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
+  } else {
+    return models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  }
+};
+
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
@@ -528,16 +541,6 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  static async _updateRequestMetaByParentId(requestId, patch) {
-    const isGrpc = isGrpcRequestId(requestId);
-
-    if (isGrpc) {
-      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
-    } else {
-      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
-    }
-  }
-
   async _updateShowVariableSourceAndValue() {
     const { settings } = this.props;
     await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
@@ -563,7 +566,7 @@ class App extends PureComponent<AppProps, State> {
     await this._updateActiveWorkspaceMeta({
       activeRequestId,
     });
-    await App._updateRequestMetaByParentId(activeRequestId, {
+    await updateRequestMetaByParentId(activeRequestId, {
       lastActive: Date.now(),
     });
   }
@@ -605,25 +608,25 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async _handleSetRequestPinned(request, pinned) {
-    App._updateRequestMetaByParentId(request._id, {
+    updateRequestMetaByParentId(request._id, {
       pinned,
     });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
-    App._updateRequestMetaByParentId(requestId, {
+    updateRequestMetaByParentId(requestId, {
       previewMode,
     });
   }
 
   _handleUpdateDownloadPath(requestId, downloadPath) {
-    App._updateRequestMetaByParentId(requestId, {
+    updateRequestMetaByParentId(requestId, {
       downloadPath,
     });
   }
 
   async _handleSetResponseFilter(requestId, responseFilter) {
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       responseFilter,
     });
 
@@ -646,7 +649,7 @@ class App extends PureComponent<AppProps, State> {
       }
 
       responseFilterHistory.unshift(responseFilter);
-      await App._updateRequestMetaByParentId(requestId, {
+      await updateRequestMetaByParentId(requestId, {
         responseFilterHistory,
       });
     }, 2000);
@@ -779,7 +782,7 @@ class App extends PureComponent<AppProps, State> {
       });
     } finally {
       // Unset active response because we just made a new one
-      await App._updateRequestMetaByParentId(requestId, {
+      await updateRequestMetaByParentId(requestId, {
         activeResponseId: null,
       });
       // Stop loading
@@ -825,7 +828,7 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
     // Stop loading
@@ -835,7 +838,7 @@ class App extends PureComponent<AppProps, State> {
   async _handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
     const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       activeResponseId,
     });
 
