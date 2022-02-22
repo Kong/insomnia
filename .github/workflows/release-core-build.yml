@@ -49,6 +49,7 @@ jobs:
           node-version-file: '.nvmrc'
 
       - name: Configure Git user
+        id: configure_git_user
         uses: Homebrew/actions/git-user-config@master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
@@ -77,8 +78,10 @@ jobs:
         with:
           branch: ${{ env.RELEASE_BRANCH }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: "Bump packages and config versions"
+          message: "Bump app config version"
           tags: true
+          author_name: ${{ steps.configure_git_user.outputs.name }}
+          author_email: ${{ steps.configure_git_user.outputs.email }}
 
   # build-and-upload-artifacts:
   #   needs: setup-release-branch
