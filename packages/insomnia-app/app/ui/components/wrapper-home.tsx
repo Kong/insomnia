@@ -29,12 +29,13 @@ import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace'
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
+import { RootState } from '../redux/modules';
 import { cloneGitRepository } from '../redux/modules/git';
-import { setDashboardSortOrder } from '../redux/modules/global';
+import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
-import { selectDashboardSortOrder } from '../redux/selectors';
+import { selectActiveProject, selectApiSpecs, selectDashboardSortOrder, selectIsLoggedIn, selectWorkspaceMetas, selectWorkspacesForActiveProject } from '../redux/selectors';
 import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
@@ -176,8 +177,10 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _handleCollectionCreate() {
     const {
+      activeProject,
+      isLoggedIn,
       handleCreateWorkspace,
-      wrapperProps: { activeProject, vcs, isLoggedIn },
+      wrapperProps: { vcs },
     } = this.props;
 
     handleCreateWorkspace({
@@ -283,8 +286,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { wrapperProps, handleSetDashboardSortOrder, sortOrder } = this.props;
-    const { vcs } = wrapperProps;
+    const { wrapperProps: { vcs }, handleSetDashboardSortOrder, sortOrder } = this.props;
     return (
       <div className="row row--right pad-left wide">
         <div
@@ -312,18 +314,20 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   render() {
-    const { sortOrder, wrapperProps, handleActivateWorkspace } = this.props;
     const {
-      workspaces,
-      isLoading,
-      vcs,
       activeProject,
-      workspaceMetas,
+      isLoading,
+      sortOrder,
+      wrapperProps,
       apiSpecs,
-    } = wrapperProps;
+      workspacesForActiveProject,
+      handleActivateWorkspace,
+      workspaceMetas,
+    } = this.props;
+    const { vcs } = wrapperProps;
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces
+    const cards = workspacesForActiveProject
       .map(
         mapWorkspaceToWorkspaceCard({
           workspaceMetas,
@@ -344,7 +348,7 @@ class WrapperHome extends PureComponent<Props, State> {
 
     return (
       <PageLayout
-        wrapperProps={this.props.wrapperProps}
+        wrapperProps={wrapperProps}
         renderPageHeader={() => (
           <AppHeader
             breadcrumbProps={{
@@ -384,8 +388,14 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state: RootState) => ({
   sortOrder: selectDashboardSortOrder(state),
+  activeProject: selectActiveProject(state),
+  isLoggedIn: selectIsLoggedIn(state),
+  isLoading: selectIsLoading(state),
+  apiSpecs: selectApiSpecs(state),
+  workspaceMetas: selectWorkspaceMetas(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
 });
 
 const mapDispatchToProps = dispatch => {

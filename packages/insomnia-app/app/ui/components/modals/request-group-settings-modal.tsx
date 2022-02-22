@@ -14,7 +14,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
 }
 
 interface State {
@@ -23,7 +23,7 @@ interface State {
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
 }
@@ -44,7 +44,7 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
-    workspaces: [],
+    workspacesForActiveProject: [],
     justCopied: false,
     justMoved: false,
   };
@@ -154,7 +154,7 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
     requestGroup,
     forceEditMode,
   }: RequestGroupSettingsModalOptions) {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
 
     const hasDescription = !!requestGroup.description;
 
@@ -162,7 +162,7 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
     const ancestors = await db.withAncestors(requestGroup);
     const doc = ancestors.find(doc => doc.type === models.workspace.type);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find(w => w._id === workspaceId);
+    const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
 
     this.setState(
       {
@@ -218,7 +218,7 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
   }
 
   _renderMoveCopy() {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
 
     const {
       activeWorkspaceIdToCopyTo,
@@ -246,7 +246,7 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
               onChange={this._handleUpdateMoveCopyWorkspace}
             >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map(w => {
+              {workspacesForActiveProject.map(w => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }

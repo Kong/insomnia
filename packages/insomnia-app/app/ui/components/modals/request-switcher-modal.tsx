@@ -35,10 +35,10 @@ const mapStateToProps = (state: RootState) => {
   return {
     activeRequest,
     workspace: selectActiveWorkspace(state),
-    workspaces: selectWorkspacesForActiveProject(state),
+    workspacesForActiveProject: selectWorkspacesForActiveProject(state),
     requestMetas: selectRequestMetas(state),
     grpcRequestMetas: selectGrpcRequestMetas(state),
-    workspaceChildren: selectWorkspaceRequestsAndRequestGroups(state),
+    workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
   };
 };
 
@@ -55,7 +55,7 @@ interface Props extends ReduxProps {
 
 interface State {
   searchString: string;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
   matchedRequests: (Request | GrpcRequest)[];
   matchedWorkspaces: Workspace[];
   activeIndex: number;
@@ -76,7 +76,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   state: State = {
     searchString: '',
-    workspaces: [],
+    workspacesForActiveProject: [],
     matchedRequests: [],
     matchedWorkspaces: [],
     activeIndex: -1,
@@ -194,8 +194,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   /** Return array of path segments for given request or folder */
   _groupOf(requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] {
-    const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(isRequestGroup);
+    const { workspaceRequestsAndRequestGroups } = this.props;
+    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
     const currentGroupName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
 
@@ -250,7 +250,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   _handleChangeValue(searchString: string) {
-    const { workspace, workspaceChildren, workspaces, requestMetas, grpcRequestMetas, activeRequest } = this.props;
+    const { workspace, workspaceRequestsAndRequestGroups, workspacesForActiveProject, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
     const lastActiveMap = {};
 
@@ -262,7 +262,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = (workspaceChildren
+    let matchedRequests = (workspaceRequestsAndRequestGroups
       .filter(child => isRequest(child) || isGrpcRequest(child)) as (Request | GrpcRequest)[])
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
@@ -291,7 +291,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
         .map(v => v.request);
     }
 
-    const matchedWorkspaces = workspaces
+    const matchedWorkspaces = workspacesForActiveProject
       .filter(w => w._id !== workspace?._id)
       .filter(w => {
         const name = w.name.toLowerCase();
@@ -415,8 +415,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       title,
       isModalVisible,
     } = this.state;
-    const { workspaceChildren, workspace } = this.props;
-    const requestGroups = workspaceChildren.filter(isRequestGroup);
+    const { workspaceRequestsAndRequestGroups, workspace } = this.props;
+    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal

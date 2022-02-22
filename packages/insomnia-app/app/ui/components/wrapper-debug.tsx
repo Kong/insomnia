@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG, SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
@@ -7,6 +8,9 @@ import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
+import { RootState } from '../redux/modules';
+import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
+import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -21,7 +25,7 @@ import { SidebarFilter } from './sidebar/sidebar-filter';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
 
-interface Props {
+interface Props extends ReturnType<typeof mapStateToProps> {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
@@ -52,7 +56,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WrapperDebug extends PureComponent<Props> {
+class UnconnectedWrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { gitSyncDropdown, handleActivityChange, wrapperProps: {
       vcs,
@@ -93,15 +97,18 @@ export class WrapperDebug extends PureComponent<Props> {
 
   _renderPageSidebar() {
     const {
+      activeEnvironment,
+      activeWorkspace,
+      environments,
       handleChangeEnvironment,
       handleRequestCreate,
       handleRequestGroupCreate,
       handleSidebarSort,
+      settings,
+      sidebarChildren,
+      sidebarFilter,
     } = this.props;
     const {
-      activeEnvironment,
-      activeWorkspace,
-      environments,
       handleActivateRequest,
       handleCopyAsCurl,
       handleCreateRequest,
@@ -112,9 +119,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
       handleSetSidebarFilter,
-      settings,
-      sidebarChildren,
-      sidebarFilter,
     } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
@@ -169,6 +173,9 @@ export class WrapperDebug extends PureComponent<Props> {
 
   _renderRequestPane() {
     const {
+      activeEnvironment,
+      activeRequest,
+      activeWorkspace,
       forceRefreshKey,
       handleForceUpdateRequest,
       handleForceUpdateRequestHeaders,
@@ -183,18 +190,15 @@ export class WrapperDebug extends PureComponent<Props> {
       handleUpdateRequestUrl,
       handleUpdateSettingsUseBulkHeaderEditor,
       handleUpdateSettingsUseBulkParametersEditor,
+      responseDownloadPath,
+      settings,
     } = this.props;
     const {
-      activeEnvironment,
-      activeRequest,
-      activeWorkspace,
       handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
-      responseDownloadPath,
-      settings,
     } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
@@ -258,8 +262,6 @@ export class WrapperDebug extends PureComponent<Props> {
       handleSetPreviewMode,
       handleSetResponseFilter,
       handleShowRequestSettingsModal,
-    } = this.props;
-    const {
       activeEnvironment,
       activeRequest,
       activeRequestResponses,
@@ -271,7 +273,7 @@ export class WrapperDebug extends PureComponent<Props> {
       responseFilterHistory,
       responsePreviewMode,
       settings,
-    } = this.props.wrapperProps;
+    } = this.props;
 
     // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
     // The RequestPane and ResponsePane components already handle the case where activeRequest is null
@@ -326,3 +328,24 @@ export class WrapperDebug extends PureComponent<Props> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeEnvironment: selectActiveEnvironment(state),
+  activeRequest: selectActiveRequest(state),
+  activeRequestResponses: selectActiveRequestResponses(state),
+  activeResponse: selectActiveResponse(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  environments: selectEnvironments(state),
+  loadStartTime: selectLoadStartTime(state),
+  requestVersions: selectRequestVersions(state),
+  responseDownloadPath: selectResponseDownloadPath(state),
+  responseFilter: selectResponseFilter(state),
+  responseFilterHistory: selectResponseFilterHistory(state),
+  responsePreviewMode: selectResponsePreviewMode(state),
+  settings: selectSettings(state),
+  sidebarChildren: selectSidebarChildren(state),
+  sidebarFilter: selectSidebarFilter(state),
+});
+
+export const WrapperDebug = connect(mapStateToProps)(UnconnectedWrapperDebug);
