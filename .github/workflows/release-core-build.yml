@@ -101,6 +101,8 @@ jobs:
 
       # TODO: Set CSC_LINK et-al for electron-builder codesigning
 
+      # TODO: Ensure auto-updater files are created, onTagOrDraft electron builder https://www.electron.build/configuration/publish.html#how-to-publish
+
       - name: Package app
         shell: bash
         run: npm run app-package
