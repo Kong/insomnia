@@ -7,7 +7,7 @@ import * as models from '../../models/index';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { getOAuthSession, responseToObject } from './misc';
+import { responseToObject } from './misc';
 export default async function(
   requestId: string,
   authorizeUrl: string,
@@ -148,9 +148,7 @@ async function _authorize(
   const finalUrl = joinUrlAndQueryString(url, qs);
   const urlSuccessRegex = new RegExp(`${escapeRegex(redirectUri)}.*(code=)`, 'i');
   const urlFailureRegex = new RegExp(`${escapeRegex(redirectUri)}.*(error=)`, 'i');
-  const sessionId = getOAuthSession();
-
-  const redirectedTo = await window.main.authorizeUserInWindow({ url: finalUrl, urlSuccessRegex, urlFailureRegex, sessionId });
+  const redirectedTo = await window.main.authorizeUserInWindow({ url: finalUrl, urlSuccessRegex, urlFailureRegex });
   console.log('[oauth2] Detected redirect ' + redirectedTo);
   const { query } = urlParse(redirectedTo);
   return responseToObject(query, [

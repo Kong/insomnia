@@ -1,7 +1,7 @@
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 
 import * as c from './constants';
-import { getOAuthSession, responseToObject } from './misc';
+import { responseToObject } from './misc';
 
 export default async function(
   _requestId: string,
@@ -62,8 +62,7 @@ export default async function(
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
   const urlSuccessRegex = /(access_token=|id_token=)/;
   const urlFailureRegex = /(error=)/;
-  const sessionId = getOAuthSession();
-  const redirectedTo = await window.main.authorizeUserInWindow({ url: finalUrl, urlSuccessRegex, urlFailureRegex, sessionId });
+  const redirectedTo = await window.main.authorizeUserInWindow({ url: finalUrl, urlSuccessRegex, urlFailureRegex });
 
   const fragment = redirectedTo.split('#')[1];
 

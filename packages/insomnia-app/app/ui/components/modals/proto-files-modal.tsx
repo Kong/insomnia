@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import { GrpcRequestEventEnum } from '../../../common/ipc-events';
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import type { ProtoFile } from '../../../models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';

@@ -1,7 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { ipcRenderer } from 'electron';
 
-import { GrpcRequestEventEnum, GrpcResponseEventEnum } from '../../../../common/grpc-events';
+import { GrpcRequestEventEnum, GrpcResponseEventEnum } from '../../../../common/ipc-events';
 import { grpcStatusObjectSchema } from '../__schemas__';
 import { grpcActions } from '../grpc-actions';
 import { grpcIpcRenderer, sendGrpcIpcMultiple } from '../grpc-ipc-renderer';

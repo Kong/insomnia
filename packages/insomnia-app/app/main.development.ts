@@ -10,6 +10,7 @@ import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
+import * as curlIpcMain from './main/curl-ipc-main';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -85,6 +86,7 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  curlIpcMain.init();
   grpcIpcMain.init();
 });
 
@@ -255,8 +257,8 @@ async function _trackStats() {
   });
 
   ipcMain.handle('authorizeUserInWindow', (_, options) => {
-    const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
-    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+    const { url, urlSuccessRegex, urlFailureRegex } = options;
+    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex });
   });
 
   ipcMain.once('window-ready', () => {

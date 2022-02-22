@@ -9,17 +9,14 @@ export enum ChromiumVerificationResult {
   USE_CHROMIUM_RESULT = -3
 }
 
-export const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-export function getOAuthSession(): string {
-  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-  return token || initNewOAuthSession();
-}
+const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
-  const authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
-  return authWindowSessionId;
+  const token = `persist:oauth2_${uuid.v4()}`;
+  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, token);
+  return token;
 }
 
 export function responseToObject(body, keys, defaults = {}) {
@@ -61,7 +58,6 @@ export function authorizeUserInWindow({
   url,
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
-  sessionId,
 }) {
   return new Promise<string>(async (resolve, reject) => {
     let finalUrl: string | null = null;
@@ -71,11 +67,14 @@ export function authorizeUserInWindow({
       validateAuthSSL,
     } = await models.settings.getOrCreate();
 
+    // get or create token
+    const partition = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID) || initNewOAuthSession();
+
     // Create a child window
     const child = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
-        partition: sessionId,
+        partition,
       },
       show: false,
     });
