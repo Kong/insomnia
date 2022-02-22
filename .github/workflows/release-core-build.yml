@@ -22,22 +22,24 @@ concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
 
+env:
+  RELEASE_BRANCH: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
+
 jobs:
   setup-release-branch:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Create Branch
+      - name: Create Branch # Create a branch if it doesn't exist
         uses: peterjgrainger/action-create-branch@v2.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
+          branch: ${{ env.RELEASE_BRANCH }}
 
-      - name: Checkout branch
+      - name: Checkout branch # Check out the new branch
         uses: actions/checkout@v2
         with:
-          ref: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
+          ref: ${{ env.RELEASE_BRANCH }}
 
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -50,58 +52,47 @@ jobs:
           npm install
           npm run version -- --preid "${{ github.event.inputs.channel}}" prepatch --yes --no-push
 
-      - name: Config version (alpha/beta)
-        if: github.event.inputs.channel != 'stable'
-        run: APP_VERSION="${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}" npm run app-release
-
       - name: Lerna version (stable)
         if: github.event.inputs.channel == 'stable'
         run: |
           npm install
           npm run version -- patch --yes --no-push
 
+      - name: Config version (alpha/beta)
+        if: github.event.inputs.channel != 'stable'
+        run: APP_VERSION="${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}" npm run app-bump-version
+
       - name: Config version (stable)
         if: github.event.inputs.channel == 'stable'
-        run: APP_VERSION="${{ github.event.inputs.version }}" npm run app-release
+        run: APP_VERSION="${{ github.event.inputs.version }}" npm run app-bump-version
 
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: "Bump packages and config versions for ${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
+          message: "Bump packages and config versions"
           tags: true
 
-  build-and-upload-artifacts:
-    needs: setup-release-branch
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v2
-        with:
-          ref: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          node-version-file: '.nvmrc'
+  # build-and-upload-artifacts:
+  #   needs: setup-release-branch
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ macos-latest, windows-latest, ubuntu-latest ]
+  #   steps:
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v2
+  #       with:
+  #         ref: "release/${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version-file: '.nvmrc'
 
-      - name: Bootstrap packages
-        run: npm run bootstrap
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
 
-      - name: Package
-        shell: bash
-        run: BUILD_REF="$(git rev-parse --short HEAD)" npm run app-package
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          if-no-files-found: ignore
-          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
-          # TODO ADD Missing packages to path
-          path: |
-            packages/insomnia-app/dist/*.exe
-            packages/insomnia-app/dist/*.tar.gz
-            packages/insomnia-app/dist/*.zip
+  #     - name: Package
+  #       shell: bash
+  #       run: BUILD_REF="$(git rev-parse --short HEAD)" npm run app-package

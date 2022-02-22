@@ -31,7 +31,7 @@
     "build:app": "ts-node ./scripts/build.ts --noErrorTruncation",
     "build:sr": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack/webpack.config.sr.ts",
     "package": "ts-node scripts/package.ts",
-    "release": "ts-node scripts/release.ts",
+    "bump-version": "ts-node scripts/bumpVersion.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
     "bootstrap": "npm run build:sr"

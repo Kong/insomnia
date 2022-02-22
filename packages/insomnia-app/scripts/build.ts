@@ -17,7 +17,7 @@ const { readFile, writeFile } = promises;
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await module.exports.start({ releaseBuild: false });
+      await module.exports.start();
     } catch (err) {
       console.log('[build] ERROR:', err);
       process.exit(1);
@@ -189,37 +189,8 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   await writeFile(outPath, outputFile);
 };
 
-export const start = async ({ releaseBuild }: { releaseBuild: boolean }) => {
+export const start = async () => {
   console.log('[build] Starting build');
-
-  let appVersionOverride = '';
-  // Used to overwrite the app version entirely for release builds
-  const appVersion = process.env.APP_VERSION;
-  // Used to append a build ref to the end of an existing app version for non-release builds
-  const buildRef = process.env.BUILD_REF;
-  if (releaseBuild) {
-    if (!appVersion) {
-      console.log('[build] Missing app version for release build, please ensure the environment variable APP_VERSION is set correctly.');
-      process.exit(1);
-    }
-
-    appVersionOverride = appVersion;
-  } else if (buildRef) {
-    // Ignore any existing semver prerelease/build tags
-    const cleanedVersion = appConfig.version.match(/^(\d{4}\.\d+\.\d)/);
-    if (!cleanedVersion) {
-      console.log('[build] Invalid version found in app config');
-      process.exit(1);
-    }
-
-    appVersionOverride = `${cleanedVersion[1]}-dev+${buildRef}`;
-  }
-
-  if (appVersionOverride) {
-    console.log('Overwriting app config version:', appVersionOverride);
-    appConfig.version = appVersionOverride;
-    writeFileSync(path.resolve(__dirname, '../config/config.json'), JSON.stringify(appConfig, null, 2) + '\n');
-  }
 
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());

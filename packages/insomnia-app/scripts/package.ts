@@ -20,7 +20,7 @@ const isSupportedPlatform = (platform: NodeJS.Platform): platform is keyof typeo
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await build({ releaseBuild: false });
+      await build();
       await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
