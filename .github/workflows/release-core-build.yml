@@ -29,6 +29,8 @@ jobs:
   setup-release-branch:
     runs-on: ubuntu-latest
     steps:
+      # TODO - check if iteration is set in case we have alpha and beta
+
       - name: Create Branch # Create a branch if it doesn't exist
         uses: peterjgrainger/action-create-branch@v2.0.1
         env:
@@ -45,6 +47,11 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version-file: '.nvmrc'
+
+      - name: Configure Git user
+        uses: Homebrew/actions/git-user-config@master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
       - name: Lerna version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
