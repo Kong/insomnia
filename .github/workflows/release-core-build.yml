@@ -74,73 +74,73 @@ jobs:
           author_name: ${{ steps.configure_git_user.outputs.name }}
           author_email: ${{ steps.configure_git_user.outputs.email }}
 
-  build-and-upload-artifacts:
-    needs: setup-release-branch
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            csc_link_secret: DESIGNER_MAC_CSC_LINK
-            csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
-          - os: windows-latest
-            csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
-            csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
-          - os: ubuntu-latest
-            csc_link_secret: ''
-            csc_key_password_secret: ''
-    env:
-      NPM_CONFIG_TARGET: 12.2.3
-      NPM_CONFIG_DISTURL: https://electronjs.org/headers
-      NPM_CONFIG_RUNTIME: electron
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
+  # build-and-upload-artifacts:
+  #   needs: setup-release-branch
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - os: macos-latest
+  #           csc_link_secret: DESIGNER_MAC_CSC_LINK
+  #           csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
+  #         - os: windows-latest
+  #           csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
+  #           csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
+  #         - os: ubuntu-latest
+  #           csc_link_secret: ''
+  #           csc_key_password_secret: ''
+  #   env:
+  #     NPM_CONFIG_TARGET: 12.2.3
+  #     NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  #     NPM_CONFIG_RUNTIME: electron
+  #   steps:
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v2
+  #       with:
+  #         ref: ${{ env.RELEASE_BRANCH }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          node-version-file: '.nvmrc'
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version-file: '.nvmrc'
 
-      - name: Bootstrap packages
-        run: npm run bootstrap
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
 
-      - name: Package app
-        shell: bash
-        run: npm run app-package
-        env:
-          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
-          APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
-          CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
-          CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
+  #     - name: Package app
+  #       shell: bash
+  #       run: npm run app-package
+  #       env:
+  #         APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
+  #         APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+  #         CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
+  #         CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
-      - name: Package inso
-        run: npm run inso-package
+  #     - name: Package inso
+  #       run: npm run inso-package
 
-      # TODO: Code-signing for inso
+  #     # TODO: Code-signing for inso
 
-      - name: Create inso artifacts
-        run: npm run inso-package:artifacts
+  #     - name: Create inso artifacts
+  #       run: npm run inso-package:artifacts
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          if-no-files-found: ignore
-          name: ${{ matrix.os }}-artifacts
-          path: |
-            packages/insomnia-app/dist/*.exe
-            packages/insomnia-app/dist/squirrel-windows/*
-            packages/insomnia-app/dist/*.zip
-            packages/insomnia-app/dist/*.dmg
-            packages/insomnia-app/dist/*.snap
-            packages/insomnia-app/dist/*.rpm
-            packages/insomnia-app/dist/*.deb
-            packages/insomnia-app/dist/*.AppImage
-            packages/insomnia-app/dist/*.tar.gz
-            packages/insomnia-inso/artifacts/*
+  #     - name: Upload artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         if-no-files-found: ignore
+  #         name: ${{ matrix.os }}-artifacts
+  #         path: |
+  #           packages/insomnia-app/dist/*.exe
+  #           packages/insomnia-app/dist/squirrel-windows/*
+  #           packages/insomnia-app/dist/*.zip
+  #           packages/insomnia-app/dist/*.dmg
+  #           packages/insomnia-app/dist/*.snap
+  #           packages/insomnia-app/dist/*.rpm
+  #           packages/insomnia-app/dist/*.deb
+  #           packages/insomnia-app/dist/*.AppImage
+  #           packages/insomnia-app/dist/*.tar.gz
+  #           packages/insomnia-inso/artifacts/*
 
   create-pull-request:
     needs: build-and-upload-artifacts
@@ -149,12 +149,19 @@ jobs:
       - name: Checkout branch # Check out the new branch
         uses: actions/checkout@v2
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+      - name: Run the Action
+        uses: devops-infra/action-pull-request@v0.4.2
         with:
-          branch: ${{ env.RELEASE_BRANCH }}
-          base: develop
-          title: ":rocket: ${{ env.RELEASE_VERSION }}"
-          body: |
-            Download artifacts [here](https://github.com/Kong/insomnia/actions/runs/${{ github.run_id }})
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: ${{ env.RELEASE_BRANCH}}
+          target_branch: development
+          title: ":rocket: ${{ env.RELEASE_VERSION}}"
+          # template: .github/PULL_REQUEST_TEMPLATE.md
+          body: "**Automated pull request**"
+          # label: enhancement
+          # milestone: My milestone
           draft: true
+          # old_string: "<!-- Add your description here -->"
+          # new_string: "** Automatic pull request**"
+          # get_diff: true
+          ignore_users: "dependabot"
