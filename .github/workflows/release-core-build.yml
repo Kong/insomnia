@@ -80,7 +80,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
+        include:
+          - os: macos-latest
+            csc_link: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+            csc_key_password: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+            apple_id: ${{ secrets.DESIGNER_APPLE_ID }}
+            apple_id_password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+          - os: windows-latest
+            csc_link: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
+            csc_key_password: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
+          - os: ubuntu-latest
+    env:
+      NPM_CONFIG_TARGET: 12.2.3
+      NPM_CONFIG_DISTURL: https://electronjs.org/headers
+      NPM_CONFIG_RUNTIME: electron
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
@@ -95,13 +108,14 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
-      # TODO: Set CSC_LINK et-al for electron-builder codesigning
-
-      # TODO: Ensure auto-updater files are created, onTagOrDraft electron builder https://www.electron.build/configuration/publish.html#how-to-publish
-
       - name: Package app
         shell: bash
         run: npm run app-package
+        env:
+          APPLE_ID: ${{ matrix.apple_id }}
+          APPLE_ID_PASSWORD: ${{ matrix.apple_id_password }}
+          CSC_LINK: ${{ matrix.csc_link }}
+          CSC_KEY_PASSWORD: ${{ matrix.csc_key_password }}
 
       - name: Package inso
         run: npm run inso-package
