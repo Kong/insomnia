@@ -149,6 +149,8 @@ jobs:
     steps:
       - name: Checkout branch # Check out the new branch
         uses: actions/checkout@v2
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
 
       - name: Run the Action
         uses: devops-infra/action-pull-request@v0.4.2
