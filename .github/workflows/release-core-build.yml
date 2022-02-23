@@ -60,13 +60,8 @@ jobs:
         if: github.event.inputs.channel == 'stable'
         run: npm run version -- patch --yes --no-push
 
-      - name: Config version (alpha/beta)
-        if: github.event.inputs.channel != 'stable'
-        run: APP_VERSION="${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.${{ github.event.inputs.iteration }}" npm run app-bump-version
-
-      - name: Config version (stable)
-        if: github.event.inputs.channel == 'stable'
-        run: APP_VERSION="${{ github.event.inputs.version }}" npm run app-bump-version
+      - name: Config version
+        run: APP_VERSION="${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) || '' }}" npm run app-bump-version
 
       - name: Commit & Push changes
         uses: actions-js/push@master
