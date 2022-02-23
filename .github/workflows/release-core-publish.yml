@@ -1,0 +1,12 @@
+name: Release Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  todo-replace-me:
+    runs-on: ubuntu-latest
+    steps:
+      - name: todo-replace-me
+        run: echo "TODO replace me"
+

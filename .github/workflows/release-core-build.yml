@@ -120,6 +120,8 @@ jobs:
       - name: Package inso
         run: npm run inso-package
 
+      # TODO: Code-signing for inso
+
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
 
@@ -146,14 +148,11 @@ jobs:
     steps:
       - name: Checkout branch # Check out the new branch
         uses: actions/checkout@v2
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ env.RELEASE_BRANCH }}
-          # delete-branch: true
           title: ":rocket: ${{ env.RELEASE_VERSION }}"
           body: |
             Download artifacts [here](https://github.com/Kong/insomnia/actions/runs/${{ github.run_id }})
