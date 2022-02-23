@@ -153,6 +153,7 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           branch: ${{ env.RELEASE_BRANCH }}
+          base: develop
           title: ":rocket: ${{ env.RELEASE_VERSION }}"
           body: |
             Download artifacts [here](https://github.com/Kong/insomnia/actions/runs/${{ github.run_id }})
