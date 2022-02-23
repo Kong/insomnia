@@ -151,6 +151,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
 
       - name: Run the Action
         uses: devops-infra/action-pull-request@v0.4.2
