@@ -82,14 +82,14 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            csc_link: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
-            csc_key_password: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
-            apple_id: ${{ secrets.DESIGNER_APPLE_ID }}
-            apple_id_password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+            csc_link_secret: DESIGNER_MAC_CSC_LINK
+            csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
-            csc_link: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
-            csc_key_password: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
+            csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
+            csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
           - os: ubuntu-latest
+            csc_link_secret: ''
+            csc_key_password_secret: ''
     env:
       NPM_CONFIG_TARGET: 12.2.3
       NPM_CONFIG_DISTURL: https://electronjs.org/headers
@@ -112,10 +112,10 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
-          APPLE_ID: ${{ matrix.apple_id }}
-          APPLE_ID_PASSWORD: ${{ matrix.apple_id_password }}
-          CSC_LINK: ${{ matrix.csc_link }}
-          CSC_KEY_PASSWORD: ${{ matrix.csc_key_password }}
+          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
+          APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+          CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
       - name: Package inso
         run: npm run inso-package
