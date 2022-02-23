@@ -120,8 +120,6 @@ jobs:
       - name: Package inso
         run: npm run inso-package
 
-      # TODO: Code-signing for inso
-
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
 
@@ -158,5 +156,5 @@ jobs:
           # delete-branch: true
           title: ":rocket: ${{ env.RELEASE_VERSION }}"
           body: |
-            Download artifacts [here](https://github.com/filfreire/insomnia/runs/${{ github.run_id }})
+            Download artifacts [here](https://github.com/Kong/insomnia/actions/runs/${{ github.run_id }})
           draft: true
