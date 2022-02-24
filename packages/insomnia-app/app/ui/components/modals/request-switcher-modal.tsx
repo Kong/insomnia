@@ -115,14 +115,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   _setActiveIndex(activeIndex: number) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
 
-    if (activeIndex < 0) {
-      activeIndex = this.state.matchedRequests.length - 1;
-    } else if (activeIndex >= maxIndex) {
-      activeIndex = 0;
-    }
-
     this.setState({
-      activeIndex,
+      activeIndex: (activeIndex + maxIndex) % maxIndex,
     });
   }
 
