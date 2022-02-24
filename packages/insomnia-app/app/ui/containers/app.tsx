@@ -25,7 +25,6 @@ import {
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
-  PREVIEW_MODE_SOURCE,
   SortOrder,
 } from '../../common/constants';
 import { database as db } from '../../common/database';
@@ -88,18 +87,19 @@ import {
   loadRequestStart,
   loadRequestStop,
   newCommand,
+  selectIsLoading,
   setActiveActivity,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
 import { activateWorkspace } from '../redux/modules/workspace';
 import {
+  selectActiveActivity,
   selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
   selectActiveProject,
   selectActiveRequest,
-  selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
   selectActiveUnitTestResult,
@@ -110,15 +110,28 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectActiveWorkspaceName,
-  selectEntitiesLists,
+  selectApiSpecs,
+  selectEnvironments,
+  selectGitRepositories,
+  selectIsFinishedBooting,
+  selectIsLoggedIn,
+  selectLoadStartTime,
+  selectRequestGroups,
+  selectRequestMetas,
+  selectRequests,
+  selectRequestVersions,
+  selectResponseDownloadPath,
+  selectResponseFilter,
+  selectResponseFilterHistory,
+  selectResponsePreviewMode,
   selectSettings,
   selectStats,
   selectSyncItems,
   selectUnseenWorkspaces,
-  selectWorkspaceRequestsAndRequestGroups,
+  selectWorkspaceMetas,
   selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { selectPaneHeight, selectPaneWidth, selectSidebarChildren, selectSidebarFilter, selectSidebarHidden, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
@@ -1036,11 +1049,11 @@ class App extends PureComponent<AppProps, State> {
       activeWorkspaceName,
       activeEnvironment,
       activeRequest,
-      activity,
+      activeActivity,
     } = this.props;
     let title;
 
-    if (activity === ACTIVITY_HOME) {
+    if (activeActivity === ACTIVITY_HOME) {
       title = getAppName();
     } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
@@ -1510,131 +1523,52 @@ class App extends PureComponent<AppProps, State> {
   }
 }
 
-function mapStateToProps(state: RootState) {
-  const {
-    activeActivity,
-    isLoading,
-    loadingRequestIds,
-    isLoggedIn,
-    isFinishedBooting,
-  } = state.global;
-
-  // Entities
-  const entitiesLists = selectEntitiesLists(state);
-  const {
-    apiSpecs,
-    environments,
-    gitRepositories,
-    requestGroups,
-    requestMetas,
-    requestVersions,
-    requests,
-    workspaceMetas,
-  } = entitiesLists;
-
-  const stats = selectStats(state);
-  const settings = selectSettings(state);
-
-  // Workspace stuff
-  const activeProject = selectActiveProject(state);
-  const workspaces = selectWorkspacesForActiveProject(state);
-  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
-  const activeWorkspace = selectActiveWorkspace(state);
-  const activeWorkspaceName = selectActiveWorkspaceName(state);
-  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state);
-  const activeGitRepository = selectActiveGitRepository(state);
-
-  const sidebarHidden = activeWorkspaceMeta?.sidebarHidden || false;
-  const sidebarFilter = activeWorkspaceMeta?.sidebarFilter || '';
-  const sidebarWidth = activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT;
-
-  // Request stuff
-  const requestMeta = selectActiveRequestMeta(state);
-  const activeRequest = selectActiveRequest(state);
-
-  const responsePreviewMode = requestMeta?.previewMode || PREVIEW_MODE_SOURCE;
-  const responseFilter = requestMeta?.responseFilter || '';
-  const responseFilterHistory = requestMeta?.responseFilterHistory || [];
-  const responseDownloadPath = requestMeta?.downloadPath || null;
-
-  // Cookie Jar
-  const activeCookieJar = selectActiveCookieJar(state);
-
-  // Response stuff
-  const activeRequestResponses = selectActiveRequestResponses(state);
-  const activeResponse = selectActiveResponse(state);
-
-  // Environment stuff
-  const activeEnvironment = selectActiveEnvironment(state);
-
-  // Find other meta things
-  const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
-  const sidebarChildren = selectSidebarChildren(state);
-  const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state);
-  const unseenWorkspaces = selectUnseenWorkspaces(state);
-
-  // Sync stuff
-  const syncItems = selectSyncItems(state);
-
-  // Api spec stuff
-  const activeApiSpec = selectActiveApiSpec(state);
-
-  // Test stuff
-  const activeUnitTests = selectActiveUnitTests(state);
-  const activeUnitTestSuite = selectActiveUnitTestSuite(state);
-  const activeUnitTestSuites = selectActiveUnitTestSuites(state);
-  const activeUnitTestResult = selectActiveUnitTestResult(state);
-
-  return {
-    activity: activeActivity,
-    activeProject,
-    activeApiSpec,
-    activeWorkspaceName,
-    activeCookieJar,
-    activeEnvironment,
-    activeGitRepository,
-    activeRequest,
-    activeRequestResponses,
-    activeResponse,
-    activeUnitTestResult,
-    activeUnitTestSuite,
-    activeUnitTestSuites,
-    activeUnitTests,
-    activeWorkspace,
-    activeWorkspaceClientCertificates,
-    activeWorkspaceMeta,
-    apiSpecs,
-    environments,
-    gitRepositories,
-    isLoading,
-    isLoggedIn,
-    isFinishedBooting,
-    loadStartTime,
-    paneHeight,
-    paneWidth,
-    requestGroups,
-    requestMetas,
-    requestVersions,
-    requests,
-    responseDownloadPath,
-    responseFilter,
-    responseFilterHistory,
-    responsePreviewMode,
-    settings,
-    sidebarChildren,
-    sidebarFilter,
-    sidebarHidden,
-    sidebarWidth,
-    stats,
-    syncItems,
-    unseenWorkspaces,
-    workspaceChildren,
-    workspaces,
-    workspaceMetas,
-  };
-}
+const mapStateToProps = (state: RootState) => ({
+  activeActivity: selectActiveActivity(state),
+  activeProject: selectActiveProject(state),
+  activeApiSpec: selectActiveApiSpec(state),
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+  activeCookieJar: selectActiveCookieJar(state),
+  activeEnvironment: selectActiveEnvironment(state),
+  activeGitRepository: selectActiveGitRepository(state),
+  activeRequest: selectActiveRequest(state),
+  activeRequestResponses: selectActiveRequestResponses(state),
+  activeResponse: selectActiveResponse(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+  activeUnitTestSuite: selectActiveUnitTestSuite(state),
+  activeUnitTestSuites: selectActiveUnitTestSuites(state),
+  activeUnitTests: selectActiveUnitTests(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  activeWorkspaceClientCertificates: selectActiveWorkspaceClientCertificates(state),
+  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
+  apiSpecs: selectApiSpecs(state),
+  environments: selectEnvironments(state),
+  gitRepositories: selectGitRepositories(state),
+  isLoading: selectIsLoading(state),
+  isLoggedIn: selectIsLoggedIn(state),
+  isFinishedBooting: selectIsFinishedBooting(state),
+  loadStartTime: selectLoadStartTime(state),
+  paneHeight: selectPaneHeight(state),
+  paneWidth: selectPaneWidth(state),
+  requestGroups: selectRequestGroups(state),
+  requestMetas: selectRequestMetas(state),
+  requestVersions: selectRequestVersions(state),
+  requests: selectRequests(state),
+  responseDownloadPath: selectResponseDownloadPath(state),
+  responseFilter: selectResponseFilter(state),
+  responseFilterHistory: selectResponseFilterHistory(state),
+  responsePreviewMode: selectResponsePreviewMode(state),
+  settings: selectSettings(state),
+  sidebarChildren: selectSidebarChildren(state),
+  sidebarFilter: selectSidebarFilter(state),
+  sidebarHidden: selectSidebarHidden(state),
+  sidebarWidth: selectSidebarWidth(state),
+  stats: selectStats(state),
+  syncItems: selectSyncItems(state),
+  unseenWorkspaces: selectUnseenWorkspaces(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+  workspaceMetas: selectWorkspaceMetas(state),
+});
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {

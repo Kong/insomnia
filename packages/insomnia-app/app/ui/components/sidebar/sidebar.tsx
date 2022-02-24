@@ -19,7 +19,7 @@ interface Props {
   isLoading: boolean;
   unseenWorkspaces: Workspace[];
   width: number;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
 }
 
 export const Sidebar = memo(

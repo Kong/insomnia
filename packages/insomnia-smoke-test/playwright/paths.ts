@@ -32,7 +32,7 @@ const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 // NOTE: guard against missing build artifacts
 if (process.env.BUNDLE === 'dev' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-  Have you run "npm run app-start-playwright"?`);
+  Have you run "npm run watch:app"?`);
   exit(1);
 }
 if (process.env.BUNDLE === 'build' && !hasMainBeenBuilt) {

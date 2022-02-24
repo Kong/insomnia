@@ -7,7 +7,7 @@ import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showPrompt } from '../../components/modals';
-import { selectActiveActivity, selectActiveProject, selectAllWorkspaces } from '../selectors';
+import { selectActiveActivity, selectActiveProject, selectWorkspaces } from '../selectors';
 import { RootState } from '.';
 import { setActiveActivity, setActiveProject, setActiveWorkspace } from './global';
 
@@ -77,7 +77,7 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
   return async (dispatch: Dispatch, getState: () => RootState) => {
     // If we have no workspace but we do have an id, search for it
     if (!workspace && workspaceId) {
-      workspace = selectAllWorkspaces(getState()).find(({ _id }) => _id === workspaceId);
+      workspace = selectWorkspaces(getState()).find(({ _id }) => _id === workspaceId);
     }
 
     // If we still have no workspace, exit

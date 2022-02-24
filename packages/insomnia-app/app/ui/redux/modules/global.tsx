@@ -434,9 +434,9 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   const state = getState();
   const activeProjectName = selectActiveProjectName(state);
-  const workspaces = selectWorkspacesForActiveProject(state);
+  const workspacesForActiveProject = selectWorkspacesForActiveProject(state);
 
-  if (!workspaces.length) {
+  if (!workspacesForActiveProject.length) {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
@@ -475,15 +475,15 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(workspaces, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'json');
             break;
 
           default:

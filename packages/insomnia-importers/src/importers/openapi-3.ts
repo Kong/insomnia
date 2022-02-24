@@ -339,7 +339,7 @@ const parseSecurity = (
     const authScheme = supportedSchemes.find(
       scheme =>
         [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
-        SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
+        (scheme.type === SECURITY_TYPE.OAUTH || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme)),
     );
 
     if (!authScheme) {
@@ -402,9 +402,16 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
   }
 
   const oauth2Variables = securitySchemes.reduce((accumulator, scheme) => {
-    if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
+    if (scheme.type === SECURITY_TYPE.OAUTH) {
       accumulator.oauth2ClientId = 'clientId';
       const flows = scheme.flows || {};
+
+      if (
+        flows.authorizationCode ||
+        flows.implicit
+      ) {
+        accumulator.oauth2RedirectUrl = 'http://localhost/';
+      }
 
       if (
         flows.authorizationCode ||
@@ -657,6 +664,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme) => {
       return {
         ...base,
         clientSecret: '{{ oauth2ClientSecret }}',
+        redirectUrl: '{{ oauth2RedirectUrl }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.tokenUrl,
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.authorizationUrl,
       };
@@ -671,6 +679,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme) => {
     case OAUTH_FLOWS.IMPLICIT:
       return {
         ...base,
+        redirectUrl: '{{ oauth2RedirectUrl }}',
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])?.authorizationUrl,
       };
 
