@@ -11,7 +11,7 @@ export const oauthRoutes = (port: number) => {
 
   const clientSecret = 'secret';
 
-  const clientRedirectUri = `http://localhost:${port}/callback`;
+  const clientRedirectUri = `http://127.0.0.1:${port}/callback`;
 
   /* eslint-disable camelcase */
   const oidcConfig: Configuration = {
@@ -88,7 +88,7 @@ export const oauthRoutes = (port: number) => {
   };
   /* eslint-enable camelcase */
 
-  const oidc = new Provider(`http://localhost:${port}`, oidcConfig);
+  const oidc = new Provider(`http://127.0.0.1:${port}`, oidcConfig);
 
   allowLocalhostImplicit(oidc);
   registerROPC(oidc);
