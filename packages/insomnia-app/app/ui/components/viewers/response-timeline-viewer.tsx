@@ -1,16 +1,18 @@
 import React, { PureComponent } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
+import { LIBCURL_DEBUG_MIGRATION_MAP } from '../../../common/misc';
 import * as models from '../../../models';
-import { Response } from '../../../models/response';
+import { Response, ResponseTimelineEntry } from '../../../models/response';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
+  showBody?: boolean;
   response: Response;
 }
 
 interface State {
-  timeline: any[];
+  timeline: ResponseTimelineEntry[];
   timelineKey: string;
 }
 
@@ -33,45 +35,46 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   }
 
   async refreshTimeline() {
-    const { response } = this.props;
-    const timeline = await models.response.getTimeline(response);
+    const { response, showBody } = this.props;
+    const timeline = models.response.getTimeline(response, showBody);
+
     this.setState({
       timeline,
       timelineKey: response._id,
     });
   }
 
-  renderRow(row, i, all) {
+  renderRow(row: ResponseTimelineEntry, i: number, all: ResponseTimelineEntry[]) {
     const { name, value } = row;
     const previousName = i > 0 ? all[i - 1].name : '';
     let prefix: string | null = null;
 
     switch (name) {
-      case 'HEADER_IN':
+      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderIn:
         prefix = '< ';
         break;
 
-      case 'DATA_IN':
+      case LIBCURL_DEBUG_MIGRATION_MAP.DataIn:
         prefix = '| ';
         break;
 
-      case 'SSL_DATA_IN':
+      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataIn:
         prefix = '<< ';
         break;
 
-      case 'HEADER_OUT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderOut:
         prefix = '> ';
         break;
 
-      case 'DATA_OUT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.DataOut:
         prefix = '| ';
         break;
 
-      case 'SSL_DATA_OUT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataOut:
         prefix = '>> ';
         break;
 
-      case 'TEXT':
+      case LIBCURL_DEBUG_MIGRATION_MAP.Text:
         prefix = '* ';
         break;
 
@@ -99,6 +102,7 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
       .filter(r => r !== null)
       .join('\n')
       .trim();
+
     return (
       <CodeEditor
         key={timelineKey}
