@@ -89,14 +89,13 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   _handleInputKeydown(e: React.KeyboardEvent<HTMLDivElement>) {
     const keyCode = e.keyCode;
 
-    if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
-      // Up or Shift+Tab
+    const isKey = (key: keyof typeof keyboardKeys) => keyCode === keyboardKeys[key].keyCode;
+
+    if (isKey('uparrow') || (isKey('tab') && e.shiftKey)) {
       this._setActiveIndex(this.state.activeIndex - 1);
-    } else if (keyCode === 40 || keyCode === 9) {
-      // Down or Tab
+    } else if (isKey('downarrow') || isKey('tab')) {
       this._setActiveIndex(this.state.activeIndex + 1);
-    } else if (keyCode === 13) {
-      // Enter
+    } else if (isKey('enter')) {
       this._activateCurrentIndex();
     } else {
       return;
