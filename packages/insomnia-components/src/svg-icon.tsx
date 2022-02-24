@@ -28,6 +28,7 @@ import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
 import { SvgIcnGitlabLogo } from './assets/svgr/IcnGitlabLogo';
 import { SvgIcnGlobe } from './assets/svgr/IcnGlobe';
 import { SvgIcnGui } from './assets/svgr/IcnGui';
+import { SvgIcnHeart } from './assets/svgr/IcnHeart';
 import { SvgIcnHome } from './assets/svgr/IcnHome';
 import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';
 import { SvgIcnInfo } from './assets/svgr/IcnInfo';
@@ -98,6 +99,7 @@ export const IconEnum = {
   indentation: 'indentation',
   info: 'info',
   jump: 'jump',
+  heart: 'heart',
   home: 'home',
   key: 'key',
   laptop: 'laptop',
@@ -196,6 +198,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.gitlabLogo]: [ThemeEnum.default, SvgIcnGitlabLogo],
     [IconEnum.globe]: [ThemeEnum.default, SvgIcnGlobe],
     [IconEnum.gui]: [ThemeEnum.default, SvgIcnGui],
+    [IconEnum.heart]: [ThemeEnum.surprise, SvgIcnHeart],
     [IconEnum.home]: [ThemeEnum.default, SvgIcnHome],
     [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
     [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],

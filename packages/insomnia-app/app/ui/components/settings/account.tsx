@@ -149,24 +149,17 @@ class UnconnectedAccount extends PureComponent<Props, State> {
         <div className="notice pad surprise">
           <h1 className="no-margin-top">Try Insomnia Plus!</h1>
           <p>
-            &#128640; Sync your data across devices or with a team
+            Sync your data across devices or with a team
             <br />
-            &#128640; Keep synced data safe with end-to-end encryption
+            Keep synced data safe with end-to-end encryption
             <br />
-            &#128640; Prioritized email support
+            Prioritized email support
             <br />
           </p>
           <br />
           <div className="pad">
             <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing">
-              Plus for Individuals <i className="fa fa-external-link" />
-            </Link>
-            <Link
-              button
-              className="margin-left-sm btn btn--clicky"
-              href="https://insomnia.rest/pricing"
-            >
-              Plus for Teams <i className="fa fa-external-link" />
+              View plans <i className="fa fa-external-link" />
             </Link>
           </div>
         </div>

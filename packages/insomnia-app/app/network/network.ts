@@ -48,6 +48,7 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
   hasUserAgentHeader,
+  LIBCURL_DEBUG_MIGRATION_MAP,
   waitForStreamToFinish,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
@@ -95,18 +96,6 @@ const MAX_DELAY_TIME = 1000;
 
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
-
-// Because node-libcurl changed some names that we used in the timeline
-const LIBCURL_DEBUG_MIGRATION_MAP = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-  '': '',
-};
 
 const cancelRequestFunctionMap = {};
 
@@ -163,17 +152,15 @@ export async function _actuallySend(
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
 
-    function addTimeline(name, value) {
+    const addTimelineItem = (name: ResponseTimelineEntry['name']) => (value: string) => {
       timeline.push({
         name,
         value,
         timestamp: Date.now(),
       });
-    }
+    };
 
-    function addTimelineText(value) {
-      addTimeline('TEXT', value);
-    }
+    const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
 
     // Initialize the curl handle
     const curl = new Curl();
@@ -310,6 +297,7 @@ export async function _actuallySend(
         const content = contentBuffer.toString('utf8');
         const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
         const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
+        const addToTimeline = addTimelineItem(name);
 
         if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
           return 0;
@@ -320,9 +308,9 @@ export async function _actuallySend(
           if (contentBuffer.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
           } else if (contentBuffer.length / 1024 < settings.maxTimelineDataSizeKB) {
-            addTimeline(name, content);
+            addToTimeline(content);
           } else {
-            addTimeline(name, `(${describeByteSize(contentBuffer.length)} hidden)`);
+            addToTimeline(`(${describeByteSize(contentBuffer.length)} hidden)`);
           }
 
           return 0;
@@ -338,9 +326,10 @@ export async function _actuallySend(
           return 0;
         }
 
-        addTimeline(name, content);
+        addToTimeline(content);
         return 0; // Must be here
       });
+
       // Set the headers (to be modified as we go)
       const headers = clone(renderedRequest.headers);
       // Set the URL, including the query parameters

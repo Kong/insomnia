@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { EditorFromTextArea, LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import electron, { OpenDialogOptions } from 'electron';
+import { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
 import { parse, typeFromAST } from 'graphql';
@@ -362,7 +362,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       ],
     };
 
-    const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
 
     if (canceled) {
       return;

@@ -1,3 +1,4 @@
+import { Button } from 'insomnia-components';
 import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -378,17 +379,18 @@ const OAuth2Error: FC = () => {
 
     showModal(ResponseDebugModal, {
       responseId: token.xResponseId,
+      showBody: true,
     });
   };
 
   const debugButton = token?.xResponseId ? (
-    <button
+    <Button
       onClick={debug}
-      className="icon icon--success space-left"
+      className="margin-top-sm"
       title="View response timeline"
     >
-      <i className="fa fa-bug" />
-    </button>
+      <i className="fa fa-bug space-right" /> Response Timeline
+    </Button>
   ) : null;
 
   const errorUriButton = token?.errorUri ? (
@@ -407,8 +409,8 @@ const OAuth2Error: FC = () => {
         <p>
           {errorDescription || 'no description provided'}
           {errorUriButton}
-          {debugButton}
         </p>
+        {debugButton}
       </div>
     );
   }

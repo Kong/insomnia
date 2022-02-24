@@ -1,4 +1,3 @@
-import electron from 'electron';
 import fs, { NoParamCallback } from 'fs';
 import moment from 'moment';
 import path from 'path';
@@ -30,7 +29,6 @@ import { Request } from '../../../models/request';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
-import install from '../../../plugins/install';
 import { setTheme } from '../../../plugins/misc';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
@@ -240,7 +238,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
           }
 
           try {
-            await install(args.name);
+            await window.main.installPlugin(args.name);
             showModal(SettingsModal, TAB_INDEX_PLUGINS);
           } catch (err) {
             showError({
@@ -416,13 +414,13 @@ const showSaveExportedFileDialog = async ({
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-  const dir = lastDir || electron.remote.app.getPath('desktop');
+  const dir = lastDir || window.app.getPath('desktop');
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
-  const { filePath } = await electron.remote.dialog.showSaveDialog(options);
+  const { filePath } = await window.dialog.showSaveDialog(options);
   return filePath || null;
 };
 
@@ -436,9 +434,9 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   const state = getState();
   const activeProjectName = selectActiveProjectName(state);
-  const workspaces = selectWorkspacesForActiveProject(state);
+  const workspacesForActiveProject = selectWorkspacesForActiveProject(state);
 
-  if (!workspaces.length) {
+  if (!workspacesForActiveProject.length) {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
@@ -477,15 +475,15 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(workspaces, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'json');
             break;
 
           default:

@@ -146,7 +146,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       getPath(name: string) {
         switch (name.toLowerCase()) {
           case 'desktop':
-            return electron.remote.app.getPath('desktop');
+            return window.app.getPath('desktop');
 
           default:
             throw new Error(`Unknown path name ${name}`);
@@ -172,7 +172,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           buttonLabel: 'Save',
           defaultPath: options.defaultPath,
         };
-        const { filePath } = await electron.remote.dialog.showSaveDialog(
+        const { filePath } = await window.dialog.showSaveDialog(
           saveOptions
         );
         return filePath || null;

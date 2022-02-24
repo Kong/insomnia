@@ -1,4 +1,4 @@
-import electron from 'electron';
+import { BrowserWindow } from 'electron';
 import querystring from 'querystring';
 import * as uuid from 'uuid';
 
@@ -9,20 +9,17 @@ export enum ChromiumVerificationResult {
   USE_CHROMIUM_RESULT = -3
 }
 
-const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-let authWindowSessionId;
-
-if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
-  authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-} else {
-  initNewOAuthSession();
+export const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+export function getOAuthSession(): string {
+  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  return token || initNewOAuthSession();
 }
-
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
-  authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
+  const authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  return authWindowSessionId;
 }
 
 export function responseToObject(body, keys, defaults = {}) {
@@ -60,11 +57,12 @@ export function responseToObject(body, keys, defaults = {}) {
   return results;
 }
 
-export function authorizeUserInWindow(
+export function authorizeUserInWindow({
   url,
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
-) {
+  sessionId,
+}) {
   return new Promise<string>(async (resolve, reject) => {
     let finalUrl: string | null = null;
 
@@ -74,10 +72,10 @@ export function authorizeUserInWindow(
     } = await models.settings.getOrCreate();
 
     // Create a child window
-    const child = new electron.remote.BrowserWindow({
+    const child = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
-        partition: authWindowSessionId,
+        partition: sessionId,
       },
       show: false,
     });

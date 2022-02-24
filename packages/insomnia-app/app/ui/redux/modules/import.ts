@@ -89,7 +89,7 @@ export const importFile = (
       },
     ],
   };
-  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(openDialogOptions);
+  const { canceled, filePaths } = await window.dialog.showOpenDialog(openDialogOptions);
 
   if (canceled) {
     // It was cancelled, so let's bail out

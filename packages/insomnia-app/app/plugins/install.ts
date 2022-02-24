@@ -56,10 +56,11 @@ export default async function(lookupName: string) {
       mkdirp.sync(pluginDir);
 
       // Download the module
-      const request = electron.remote.net.request(info.dist.tarball);
+      const request = electron.net.request(info.dist.tarball);
       request.on('error', err => {
         reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
       });
+
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
@@ -247,7 +248,7 @@ export function isDeprecatedDependencies(str: string) {
 }
 
 function _getYarnPath() {
-  const { app } = electron.remote || electron;
+  const { app } = process.type === 'renderer' ? window : electron;
 
   // TODO: This is brittle. Make finding this more robust.
   if (isDevelopment()) {
