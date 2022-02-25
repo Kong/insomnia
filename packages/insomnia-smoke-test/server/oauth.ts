@@ -83,7 +83,7 @@ export const oauthRoutes = (port: number) => {
       'none',
     ],
     issueRefreshToken: () => {
-      return true; // Always issue refresh tokens
+      return false;
     },
   };
   /* eslint-enable camelcase */

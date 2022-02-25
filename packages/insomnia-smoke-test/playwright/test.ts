@@ -1,9 +1,9 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
 import path from 'path';
-import { bundleType } from './paths';
 
 import {
+  bundleType,
   cwd,
   executablePath,
   mainPath,
