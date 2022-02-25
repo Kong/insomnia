@@ -4,6 +4,8 @@ import { loadFixture } from '../playwright/paths';
 import { test } from '../playwright/test';
 
 test('can make oauth2 requests', async ({ app, page }) => {
+  test.slow();
+
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
