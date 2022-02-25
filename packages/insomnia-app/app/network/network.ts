@@ -1,9 +1,6 @@
-import {
-  Curl,
-  CurlAuth,
-  CurlHttpVersion,
-  CurlNetrc,
-} from '@getinsomnia/node-libcurl';
+import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
 import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
@@ -62,10 +59,54 @@ import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import caCerts from './ca-certs';
-import { cancelLibCurlPromise, libCurlPromise } from './libcurl-promise';
 import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
+// TODO: make this better
+class Curl {
+  static option = {
+    ACCEPT_ENCODING: 'ACCEPT_ENCODING',
+    CAINFO: 'CAINFO',
+    COOKIE: 'COOKIE',
+    COOKIEFILE: 'COOKIEFILE',
+    COOKIELIST: 'COOKIELIST',
+    CUSTOMREQUEST: 'CUSTOMREQUEST',
+    DEBUGFUNCTION: 'DEBUGFUNCTION',
+    FOLLOWLOCATION: 'FOLLOWLOCATION',
+    HTTPAUTH: 'HTTPAUTH',
+    HTTPGET: 'HTTPGET',
+    HTTPHEADER: 'HTTPHEADER',
+    HTTPPOST: 'HTTPPOST',
+    HTTP_VERSION: 'HTTP_VERSION',
+    INFILESIZE_LARGE: 'INFILESIZE_LARGE',
+    KEYPASSWD: 'KEYPASSWD',
+    MAXREDIRS: 'MAXREDIRS',
+    NETRC: 'NETRC',
+    NOBODY: 'NOBODY',
+    NOPROGRESS: 'NOPROGRESS',
+    NOPROXY: 'NOPROXY',
+    PASSWORD: 'PASSWORD',
+    POST: 'POST',
+    POSTFIELDS: 'POSTFIELDS',
+    PROXY: 'PROXY',
+    PROXYAUTH: 'PROXYAUTH',
+    READDATA: 'READDATA',
+    READFUNCTION: 'READFUNCTION',
+    SSLCERT: 'SSLCERT',
+    SSLCERTTYPE: 'SSLCERTTYPE',
+    SSLKEY: 'SSLKEY',
+    SSL_VERIFYHOST: 'SSL_VERIFYHOST',
+    SSL_VERIFYPEER: 'SSL_VERIFYPEER',
+    TIMEOUT_MS: 'TIMEOUT_MS',
+    UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
+    UPLOAD: 'UPLOAD',
+    URL: 'URL',
+    USERAGENT: 'USERAGENT',
+    USERNAME: 'USERNAME',
+    VERBOSE: 'VERBOSE',
+    WRITEFUNCTION: 'WRITEFUNCTION',
+  };
+}
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
@@ -199,11 +240,11 @@ export async function _actuallySend(
         null,
       );
     }
-    const options: Record<any, any> = {};
-    /** Helper function to set Curl options */
-    const setOpt = (opt: any, val: any) => {
-      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-      if (name)options[name] = val;
+    const curlOptions: Record<any, any> = {};
+    /** Helper function to set Curl options*/
+    const setOpt = (name: any, val: any) => {
+      // const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+      curlOptions[name] = val;
     };
 
     try {
@@ -221,7 +262,7 @@ export async function _actuallySend(
           null,
         );
         // Kill it!
-        cancelLibCurlPromise(renderedRequest._id);
+        window.main.cancelCurlRequest(renderedRequest._id);
       };
 
       // Set all the basic options
@@ -301,7 +342,6 @@ export async function _actuallySend(
 
       addTimelineText('Preparing request to ' + finalUrl);
       addTimelineText('Current time is ' + new Date().toISOString());
-      addTimelineText(`Using ${Curl.getVersion()}`);
 
       const httpVersion = getHttpVersion(settings.preferredHttpVersion);
       addTimelineText(httpVersion.log);
@@ -643,9 +683,19 @@ export async function _actuallySend(
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
-      // const libCurlPromise = process.type === 'renderer' ? () => ipcRenderer.invoke('blah', {}) : require('./libcurl-promise').libCurlPromise;
-
-      const { patch, debugTimeline, headerArray } = await libCurlPromise(options, responseBodyPath, settings.maxTimelineDataSizeKB, renderedRequest._id);
+      // this function is also called by inso unit tests
+      // fallback to require in that case
+      const nodejsCurlRequest = process.type === 'renderer'
+        ? window.main.curlRequest
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        : require('./libcurl-promise').curlRequest;
+      const requestOptions = {
+        curlOptions,
+        bodyPath: responseBodyPath,
+        maxTimelineDataSizeKB:settings.maxTimelineDataSizeKB,
+        cancelId: renderedRequest._id,
+      };
+      const { patch, debugTimeline, headerArray } = await nodejsCurlRequest(requestOptions);
 
       // TODO: consider making libcurl responsible for reading files to post
       closePostEventEmitter();

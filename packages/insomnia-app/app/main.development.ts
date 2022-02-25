@@ -17,6 +17,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import { cancelCurlRequest, curlRequest } from './network/libcurl-promise';
 import { authorizeUserInWindow } from './network/o-auth-2/misc';
 import installPlugin from './plugins/install';
 import type { ToastNotification } from './ui/components/toast';
@@ -257,6 +258,14 @@ async function _trackStats() {
   ipcMain.handle('authorizeUserInWindow', (_, options) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+  });
+
+  ipcMain.handle('curlRequest', (_, options) => {
+    return curlRequest(options);
+  });
+
+  ipcMain.on('cancelCurlRequest', (_, requestId: string): void => {
+    cancelCurlRequest(requestId);
   });
 
   ipcMain.once('window-ready', () => {

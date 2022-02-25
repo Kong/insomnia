@@ -1,5 +1,5 @@
+if (process.type === 'renderer') throw new Error('node-libcurl unavailable in renderer');
 // assertion: ipc bridge cannot serialise functions so write and debug callbacks need to be simplified
-// assertion: if logic like cancellation doesn't work we won't build it in this scope
 
 // assumption: options are typechecked and don't need run time feedback.
 // therefore we can build a list of options and apply them at once.
@@ -33,13 +33,16 @@ interface CurlOutput {
 type CurlSetOptParameters = Parameters<Curl['setOpt']>;
 type CurlSetOptName = CurlSetOptParameters[0];
 type CurlSetOptValue = CurlSetOptParameters[1];
+// TODO: cancel should also clean up any open fs or fd instances
 const functionmap = {};
-export const cancelLibCurlPromise = id => functionmap[id]();
-export const libCurlPromise = (options: Record<CurlSetOptName, CurlSetOptValue>, bodyPath, maxTimelineDataSizeKB, cancelId) => new Promise<CurlOutput>(async resolve => {
+export const cancelCurlRequest = id => functionmap[id]();
+export const curlRequest = (options: { curlOptions: Record<CurlSetOptName, CurlSetOptValue>; bodyPath; maxTimelineDataSizeKB; cancelId}) => new Promise<CurlOutput>(async resolve => {
   // Create instance, poke value options in, set up write and debug callbacks, listen for events
+  const { curlOptions, bodyPath, maxTimelineDataSizeKB, cancelId } = options;
   const curl = new Curl();
+  // TODO: close open file handlers
   functionmap[cancelId] = () => curl.close();
-  Object.entries(options).forEach(([k, v]: [CurlSetOptName, CurlSetOptValue]) => curl.setOpt(k, v));
+  Object.entries(curlOptions).forEach(([k, v]: [CurlSetOptName, CurlSetOptValue]) => curl.setOpt(k, v));
 
   let responseBodyBytes = 0;
   const responseBodyWriteStream = fs.createWriteStream(bodyPath);

@@ -27,6 +27,8 @@ interface Window {
     authorizeUserInWindow: (options: { url: string; urlSuccessRegex?: RegExp; urlFailureRegex?: RegExp; sessionId: string }) => Promise<string>;
     setMenuBarVisibility: (visible: boolean) => void;
     installPlugin: (url: string) => void;
+    curlRequest: (options: { curlOptions; bodyPath; maxTimelineDataSizeKB; cancelId }) => Promise<{ patch: ResponsePatch; debugTimeline: ResponseTimelineEntry[]; headerArray: HeaderResult[] }>;
+    cancelCurlRequest: (requestId: string) => void;
   };
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;
