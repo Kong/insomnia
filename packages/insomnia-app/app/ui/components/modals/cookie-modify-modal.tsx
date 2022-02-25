@@ -46,16 +46,14 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     // Dunno why this is sent as an array
     cookie = cookie[0] || cookie;
     const { activeCookeJar } = this.props;
-    const oldCookie = activeCookeJar?.cookies.find(c => c.id === cookie.id);
+    const prevCookie = activeCookeJar?.cookies.find(c => c.id === cookie.id);
 
-    if (!oldCookie) {
+    if (!prevCookie) {
       // Cookie not found in jar
       return;
     }
 
-    this.setState({
-      cookie,
-    });
+    this.setState({ cookie });
     this.modal?.show();
   }
 
@@ -67,13 +65,13 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     await models.cookieJar.update(cookieJar);
   }
 
-  _handleChangeRawValue(e: React.SyntheticEvent<HTMLInputElement>) {
-    const value = e.currentTarget.value;
+  _handleChangeRawValue(event: React.SyntheticEvent<HTMLInputElement>) {
+    const value = event.currentTarget.value;
     if (this._rawTimeout !== null) {
       clearTimeout(this._rawTimeout);
     }
     this._rawTimeout = setTimeout(async () => {
-      const oldCookie = this.state.cookie;
+      const prevCookie = this.state.cookie;
       let cookie;
 
       try {
@@ -85,26 +83,26 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
         return;
       }
 
-      if (!this.state.cookie || !oldCookie) {
+      if (!this.state.cookie || !prevCookie) {
         return;
       }
 
       // Make sure cookie has an id
-      cookie.id = oldCookie.id;
+      cookie.id = prevCookie.id;
       await this._handleCookieUpdate(cookie);
     }, DEBOUNCE_MILLIS * 2);
   }
 
-  async _handleCookieUpdate(newCookie: Cookie) {
-    const oldCookie = this.state.cookie;
-    const { activeCookeJar: oldCookieJar } = this.props;
+  async _handleCookieUpdate(nextCookie: Cookie) {
+    const prevCookie = this.state.cookie;
+    const { activeCookeJar: prevCookieJar } = this.props;
 
-    if (!oldCookie || !oldCookieJar) {
+    if (!prevCookie || !prevCookieJar) {
       // We don't have a cookie to edit
       return;
     }
 
-    const cookie = clone(newCookie);
+    const cookie = clone(nextCookie);
     // Sanitize expires field
     const expires = new Date(cookie.expires || '').getTime();
 
@@ -115,7 +113,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
 
     // Clone so we don't modify the original
-    const cookieJar = clone(oldCookieJar);
+    const cookieJar = clone(prevCookieJar);
     const { cookies } = cookieJar;
     const index = cookies.findIndex(c => c.id === cookie.id);
 
@@ -125,9 +123,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
 
     cookieJar.cookies = [...cookies.slice(0, index), cookie, ...cookies.slice(index + 1)];
-    this.setState({
-      cookie,
-    });
+    this.setState({ cookie });
     await CookieModifyModal._saveChanges(cookieJar);
     return cookie;
   }
@@ -156,9 +152,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
     this._cookieUpdateTimeout = setTimeout(async () => {
       await this._handleCookieUpdate(newCookie);
-      this.setState({
-        cookie: newCookie,
-      });
+      this.setState({ cookie: newCookie });
     }, DEBOUNCE_MILLIS * 2);
   }
 
