@@ -1,6 +1,7 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
 import path from 'path';
+import { bundleType } from './paths';
 
 import {
   cwd,
@@ -24,7 +25,7 @@ export const test = baseTest.extend<{
     const electronApp = await playwright._electron.launch({
       cwd,
       executablePath,
-      args: process.env.BUNDLE === 'package' ? [] : [mainPath],
+      args: bundleType() === 'package' ? [] : [mainPath],
       env: {
         ...process.env,
         ...options,
