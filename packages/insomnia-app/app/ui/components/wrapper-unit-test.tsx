@@ -24,7 +24,7 @@ import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { RootState } from '../redux/modules';
-import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
+import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
@@ -575,7 +575,7 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
 
 const mapStateToProps = (state: RootState) => ({
   activeWorkspace: selectActiveWorkspace(state),
-  activeUnitTestSuite: selectActiveWorkspace(state),
+  activeUnitTestSuite: selectActiveUnitTestSuite(state),
   activeUnitTestSuites: selectActiveUnitTestSuites(state),
   activeUnitTests: selectActiveUnitTests(state),
   activeEnvironment: selectActiveEnvironment(state),
