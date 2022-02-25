@@ -1,10 +1,7 @@
 import {
   Curl,
   CurlAuth,
-  CurlCode,
-  CurlFeature,
   CurlHttpVersion,
-  CurlInfoDebug,
   CurlNetrc,
 } from '@getinsomnia/node-libcurl';
 import aws4 from 'aws4';
@@ -22,7 +19,7 @@ import {
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import * as uuid from 'uuid';
+import uuid from 'uuid';
 
 import {
   AUTH_AWS_IAM,
@@ -38,7 +35,6 @@ import { database as db } from '../common/database';
 import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
   delay,
-  describeByteSize,
   getContentTypeHeader,
   getHostHeader,
   getLocationHeader,
@@ -49,7 +45,6 @@ import {
   hasContentTypeHeader,
   hasUserAgentHeader,
   LIBCURL_DEBUG_MIGRATION_MAP,
-  waitForStreamToFinish,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
 import {
@@ -67,6 +62,7 @@ import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import caCerts from './ca-certs';
+import { cancelLibCurlPromise, libCurlPromise } from './libcurl-promise';
 import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
@@ -162,15 +158,14 @@ export async function _actuallySend(
 
     const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
 
-    // Initialize the curl handle
-    const curl = new Curl();
-
     /** Helper function to respond with a success */
     async function respond(
       patch: ResponsePatch,
       bodyPath: string | null,
+      debugTimeline: any[] = []
     ) {
-      const timelinePath = await storeTimeline(timeline);
+
+      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
       clearCancelFunctionForId(renderedRequest._id);
       const environmentId = environment ? environment._id : null;
@@ -204,34 +199,29 @@ export async function _actuallySend(
         null,
       );
     }
-
+    const options: Record<any, any> = {};
     /** Helper function to set Curl options */
-    const setOpt: typeof curl.setOpt = (opt: any, val: any) => {
-      try {
-        return curl.setOpt(opt, val);
-      } catch (err) {
-        const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-        throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
-      }
+    const setOpt = (opt: any, val: any) => {
+      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+      if (name)options[name] = val;
     };
 
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
+
         await respond(
           {
-            elapsedTime: (curl.getInfo(Curl.info.TOTAL_TIME) as number || 0) * 1000,
-            // @ts-expect-error -- needs generic
-            bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-            // @ts-expect-error -- needs generic
-            url: curl.getInfo(Curl.info.EFFECTIVE_URL),
+            elapsedTime: 0,
+            bytesRead: 0,
+            url: renderedRequest.url,
             statusMessage: 'Cancelled',
             error: 'Request was cancelled',
           },
           null,
         );
         // Kill it!
-        curl.close();
+        cancelLibCurlPromise(renderedRequest._id);
       };
 
       // Set all the basic options
@@ -242,9 +232,6 @@ export async function _actuallySend(
 
       // True so curl doesn't print progress
       setOpt(Curl.option.ACCEPT_ENCODING, '');
-
-      // Auto decode everything
-      curl.enable(CurlFeature.Raw);
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
@@ -291,44 +278,6 @@ export async function _actuallySend(
           setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
           break;
       }
-
-      // Setup debug handler
-      setOpt(Curl.option.DEBUGFUNCTION, (infoType, contentBuffer) => {
-        const content = contentBuffer.toString('utf8');
-        const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
-        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
-        const addToTimeline = addTimelineItem(name);
-
-        if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
-          return 0;
-        }
-
-        // Ignore the possibly large data messages
-        if (infoType === CurlInfoDebug.DataOut) {
-          if (contentBuffer.length === 0) {
-            // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (contentBuffer.length / 1024 < settings.maxTimelineDataSizeKB) {
-            addToTimeline(content);
-          } else {
-            addToTimeline(`(${describeByteSize(contentBuffer.length)} hidden)`);
-          }
-
-          return 0;
-        }
-
-        if (infoType === CurlInfoDebug.DataIn) {
-          addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
-          return 0;
-        }
-
-        // Don't show cookie setting because this will display every domain in the jar
-        if (infoType === CurlInfoDebug.Text && content.indexOf('Added cookie') === 0) {
-          return 0;
-        }
-
-        addToTimeline(content);
-        return 0; // Must be here
-      });
 
       // Set the headers (to be modified as we go)
       const headers = clone(renderedRequest.headers);
@@ -523,7 +472,8 @@ export async function _actuallySend(
       let noBody = false;
       let requestBody: string | null = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-
+      let closePostEventEmitter = () => {};
+      let closePostMultipartEventEmitter = () => {};
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
@@ -550,15 +500,12 @@ export async function _actuallySend(
         // We need this, otherwise curl will send it as a PUT
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
 
-        const fn = () => {
+        closePostMultipartEventEmitter = () => {
           fs.closeSync(fd);
           fs.unlink(multipartBodyPath, () => {
             // Pass
           });
         };
-
-        curl.on('end', fn);
-        curl.on('error', fn);
       } else if (renderedRequest.body.fileName) {
         const { size } = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
@@ -568,11 +515,7 @@ export async function _actuallySend(
         setOpt(Curl.option.READDATA, fd);
         // We need this, otherwise curl will send it as a POST
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-
-        const fn = () => fs.closeSync(fd);
-
-        curl.on('end', fn);
-        curl.on('error', fn);
+        closePostEventEmitter = () => fs.closeSync(fd);
       } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
         requestBody = renderedRequest.body.text || '';
       } else {
@@ -697,118 +640,78 @@ export async function _actuallySend(
           }
         });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
-      let responseBodyBytes = 0;
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
-      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-      curl.on('end', () => responseBodyWriteStream.end());
-      curl.on('error', () => responseBodyWriteStream.end());
-      setOpt(Curl.option.WRITEFUNCTION, buff => {
-        responseBodyBytes += buff.length;
-        responseBodyWriteStream.write(buff);
-        return buff.length;
-      });
-      // Handle the response ending
-      curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
-        const allCurlHeadersObjects = _parseHeaders(rawHeaders);
+      // const libCurlPromise = process.type === 'renderer' ? () => ipcRenderer.invoke('blah', {}) : require('./libcurl-promise').libCurlPromise;
 
-        // Headers are an array (one for each redirect)
-        const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
-        // Collect various things
-        const httpVersion = lastCurlHeadersObject.version || '';
-        const statusCode = lastCurlHeadersObject.code || -1;
-        const statusMessage = lastCurlHeadersObject.reason || '';
-        // Collect the headers
-        const headers = lastCurlHeadersObject.headers;
-        // Calculate the content type
-        const contentTypeHeader = getContentTypeHeader(headers);
-        const contentType = contentTypeHeader ? contentTypeHeader.value : '';
-        // Update Cookie Jar
-        let currentUrl = finalUrl;
-        let setCookieStrings: string[] = [];
-        const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
+      const { patch, debugTimeline, headerArray } = await libCurlPromise(options, responseBodyPath, settings.maxTimelineDataSizeKB, renderedRequest._id);
 
-        for (const { headers } of allCurlHeadersObjects) {
-          // Collect Set-Cookie headers
-          const setCookieHeaders = getSetCookieHeaders(headers);
-          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
-          // Pull out new URL if there is a redirect
-          const newLocation = getLocationHeader(headers);
+      // TODO: consider making libcurl responsible for reading files to post
+      closePostEventEmitter();
+      closePostMultipartEventEmitter();
 
-          if (newLocation !== null) {
-            currentUrl = urlResolve(currentUrl, newLocation.value);
-          }
+      // Headers are an array (one for each redirect)
+      const lastCurlHeadersObject = headerArray[headerArray.length - 1];
+
+      // Calculate the content type
+      const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
+      // Update Cookie Jar
+      let currentUrl = finalUrl;
+      let setCookieStrings: string[] = [];
+      const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
+
+      for (const { headers } of headerArray) {
+        // Collect Set-Cookie headers
+        const setCookieHeaders = getSetCookieHeaders(headers);
+        setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
+        // Pull out new URL if there is a redirect
+        const newLocation = getLocationHeader(headers);
+
+        if (newLocation !== null) {
+          currentUrl = urlResolve(currentUrl, newLocation.value);
         }
+      }
 
-        // Update jar with Set-Cookie headers
-        for (const setCookieStr of setCookieStrings) {
-          try {
-            jar.setCookieSync(setCookieStr, currentUrl);
-          } catch (err) {
-            addTimelineText(`Rejected cookie: ${err.message}`);
-          }
+      // Update jar with Set-Cookie headers
+      for (const setCookieStr of setCookieStrings) {
+        try {
+          jar.setCookieSync(setCookieStr, currentUrl);
+        } catch (err) {
+          addTimelineText(`Rejected cookie: ${err.message}`);
         }
+      }
 
-        // Update cookie jar if we need to and if we found any cookies
-        if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
-          const cookies = await cookiesFromJar(jar);
-          await models.cookieJar.update(renderedRequest.cookieJar, {
-            cookies,
-          });
+      // Update cookie jar if we need to and if we found any cookies
+      if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
+        const cookies = await cookiesFromJar(jar);
+        await models.cookieJar.update(renderedRequest.cookieJar, {
+          cookies,
+        });
+      }
+
+      // Print informational message
+      if (setCookieStrings.length > 0) {
+        const n = setCookieStrings.length;
+
+        if (renderedRequest.settingStoreCookies) {
+          addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
+        } else {
+          addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
         }
+      }
 
-        // Print informational message
-        if (setCookieStrings.length > 0) {
-          const n = setCookieStrings.length;
+      const responsePatch: ResponsePatch = {
+        contentType: contentTypeHeader ? contentTypeHeader.value : '',
+        headers: lastCurlHeadersObject.headers,
+        httpVersion: lastCurlHeadersObject.version,
+        statusCode: lastCurlHeadersObject.code,
+        statusMessage: lastCurlHeadersObject.reason,
+        ...patch,
+      };
 
-          if (renderedRequest.settingStoreCookies) {
-            addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
-          } else {
-            addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
-          }
-        }
+      respond(responsePatch, responseBodyPath, debugTimeline);
 
-        // Return the response data
-        const responsePatch: ResponsePatch = {
-          contentType,
-          headers,
-          httpVersion,
-          statusCode,
-          statusMessage,
-          bytesContent: responseBodyBytes,
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
-        };
-        // Close the request
-        curl.close();
-        // Make sure the response body has been fully written first
-        await waitForStreamToFinish(responseBodyWriteStream);
-        // Send response
-        await respond(responsePatch, responseBodyPath);
-      });
-      curl.on('error', async function(err, code) {
-        let error = err + '';
-        let statusMessage = 'Error';
-
-        if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-          error = 'Request aborted';
-          statusMessage = 'Abort';
-        }
-
-        await respond(
-          {
-            statusMessage,
-            error: error || 'Something went wrong',
-            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
-          },
-          null,
-        );
-      });
-      curl.perform();
     } catch (err) {
       console.log('[network] Error', err);
       await handleError(err);
@@ -1036,51 +939,6 @@ async function _applyResponsePluginHooks(
     };
   }
 
-}
-
-interface HeaderResult {
-  headers: ResponseHeader[];
-  version: string;
-  code: number;
-  reason: string;
-}
-
-export function _parseHeaders(
-  buffer: Buffer,
-) {
-  const results: HeaderResult[] = [];
-  const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
-
-  for (let i = 0, currentResult: HeaderResult | null = null; i < lines.length; i++) {
-    const line = lines[i];
-    const isEmptyLine = line.trim() === '';
-
-    // If we hit an empty line, start parsing the next response
-    if (isEmptyLine && currentResult) {
-      results.push(currentResult);
-      currentResult = null;
-      continue;
-    }
-
-    if (!currentResult) {
-      const [version, code, ...other] = line.split(/ +/g);
-      currentResult = {
-        version,
-        code: parseInt(code, 10),
-        reason: other.join(' '),
-        headers: [],
-      };
-    } else {
-      const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = {
-        name,
-        value: value || '',
-      };
-      currentResult.headers.push(header);
-    }
-  }
-
-  return results;
 }
 
 // exported for unit tests only
