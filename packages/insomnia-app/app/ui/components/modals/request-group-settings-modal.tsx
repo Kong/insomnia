@@ -1,11 +1,14 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as React from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -13,8 +16,9 @@ import { ModalHeader } from '../base/modal-header';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
-interface Props {
-  workspacesForActiveProject: Workspace[];
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -34,7 +38,7 @@ interface RequestGroupSettingsModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
+export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: MarkdownEditor | null = null;
 
@@ -326,3 +330,14 @@ export class RequestGroupSettingsModal extends React.PureComponent<Props, State>
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+});
+
+export const RequestGroupSettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedRequestGroupSettingsModal);

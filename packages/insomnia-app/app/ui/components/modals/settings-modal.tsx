@@ -2,12 +2,14 @@ import { Curl } from '@getinsomnia/node-libcurl';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import * as models from '../../../models/index';
-import { Settings } from '../../../models/settings';
+import { RootState } from '../../redux/modules';
+import { selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -26,8 +28,9 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-interface Props {
-  settings: Settings;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -35,7 +38,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SettingsModal extends PureComponent<Props, State> {
+export class UnconnectedSettingsModal extends PureComponent<Props, State> {
   state: State = {
     currentTabIndex: null,
   };
@@ -136,3 +139,14 @@ export class SettingsModal extends PureComponent<Props, State> {
 }
 
 export const showSettingsModal = () => showModal(SettingsModal);
+
+const mapStateToProps = (state: RootState) => ({
+  settings: selectSettings(state),
+});
+
+export const SettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSettingsModal);

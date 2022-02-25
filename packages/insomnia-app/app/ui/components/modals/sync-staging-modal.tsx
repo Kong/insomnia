@@ -1,14 +1,16 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
-import type { Workspace } from '../../../models/workspace';
-import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
+import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectSyncItems } from '../../redux/selectors';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -16,9 +18,9 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { Tooltip } from '../tooltip';
 
-interface Props {
-  workspace: Workspace;
-  syncItems: StatusCandidate[];
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
 }
 
@@ -51,7 +53,7 @@ const _initialState: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SyncStagingModal extends PureComponent<Props, State> {
+export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _onSnapshot: (() => void) | null = null;
   _handlePush: (() => Promise<void>) | null = null;
@@ -398,3 +400,14 @@ export class SyncStagingModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  syncItems: selectSyncItems(state),
+});
+
+export const SyncStagingModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncStagingModal);

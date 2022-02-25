@@ -142,7 +142,7 @@ export const selectActiveWorkspaceMeta = createSelector(
   selectEntitiesLists,
   (activeWorkspace, entities) => {
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    return entities.workspaceMetas.find(m => m.parentId === id);
+    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === id);
   },
 );
 
