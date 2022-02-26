@@ -31,6 +31,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
     page.click('[data-testid="request-pane"] button:has-text("Send")'),
   ]);
 
+  await authorizationCodePage.waitForLoadState();
   await authorizationCodePage.type('[name="login"]', 'admin');
   await authorizationCodePage.type('[name="password"]', 'admin');
   await authorizationCodePage.click('button:has-text("Sign-in")');
@@ -58,6 +59,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
     page.locator('button:has-text("Fetch Tokens")').click(),
   ]);
 
+  await refreshPage.waitForLoadState();
   await refreshPage.type('[name="login"]', 'admin');
   await refreshPage.type('[name="password"]', 'admin');
   await refreshPage.click('button:has-text("Sign-in")');
@@ -72,6 +74,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
     app.context().waitForEvent('page'),
     page.click('[data-testid="request-pane"] button:has-text("Send")'),
   ]);
+  await pkcePage.waitForLoadState();
   await pkcePage.click('text=Continue');
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
@@ -101,7 +104,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
     app.context().waitForEvent('page'),
     page.click('[data-testid="request-pane"] button:has-text("Send")'),
   ]);
-
+  await implicitPage.waitForLoadState();
   await implicitPage.type('[name="login"]', 'admin');
   await implicitPage.type('[name="password"]', 'admin');
   await implicitPage.click('button:has-text("Sign-in")');
