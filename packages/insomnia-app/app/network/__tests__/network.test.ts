@@ -1,4 +1,3 @@
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
@@ -17,9 +16,12 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
+import { _parseHeaders } from '../libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../multipart';
+import { CurlHttpVersion } from '../network';
 import * as networkUtils from '../network';
 window.app = electron.app;
+window.main = { cancelCurlRequest:() => {} };
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
@@ -604,7 +606,7 @@ describe('actuallySend()', () => {
         NOPROGRESS: true,
         PROXY: '',
         TIMEOUT_MS: 0,
-        NETRC: 'Required',
+        NETRC: 2,
         URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
@@ -736,7 +738,7 @@ describe('actuallySend()', () => {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
-    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(1);
     expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(networkUtils.getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
@@ -888,7 +890,7 @@ describe('_parseHeaders', () => {
   const minimalHeaders = ['HTTP/1.1 301', ''];
 
   it('Parses single response headers', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
+    expect(_parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -936,7 +938,7 @@ describe('_parseHeaders', () => {
   });
 
   it('Parses Windows newlines', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
+    expect(_parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -985,7 +987,7 @@ describe('_parseHeaders', () => {
 
   it('Parses multiple responses', () => {
     const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
-    expect(networkUtils._parseHeaders(Buffer.from(blobs))).toEqual([
+    expect(_parseHeaders(Buffer.from(blobs))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',

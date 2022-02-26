@@ -1,6 +1,3 @@
-import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
 import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
@@ -63,6 +60,28 @@ import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // TODO: make this better
+enum CurlAuth {
+  Basic = 1 << 0,
+  Digest = 1 << 1,
+  Ntlm = 1 << 3,
+  DigestIe = 1 << 4,
+  Any = ~DigestIe,
+}
+
+export enum CurlHttpVersion {
+  None,
+  V1_0,
+  V1_1,
+  V2_0,
+  V2Tls,
+  V2PriorKnowledge,
+  v3,
+}
+enum CurlNetrc {
+  Ignored,
+  Optional,
+  Required,
+}
 class Curl {
   static option = {
     ACCEPT_ENCODING: 'ACCEPT_ENCODING',
@@ -88,6 +107,7 @@ class Curl {
     PASSWORD: 'PASSWORD',
     POST: 'POST',
     POSTFIELDS: 'POSTFIELDS',
+    PATH_AS_IS: 'PATH_AS_IS',
     PROXY: 'PROXY',
     PROXYAUTH: 'PROXYAUTH',
     READDATA: 'READDATA',
@@ -240,11 +260,12 @@ export async function _actuallySend(
         null,
       );
     }
-    const curlOptions: Record<any, any> = {};
+    // NOTE: can have duplicate cookie options
+    const curlOptions: { key: string; value: any }[] = [];
     /** Helper function to set Curl options*/
-    const setOpt = (name: any, val: any) => {
-      // const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-      curlOptions[name] = val;
+    const setOpt = (key: string, value: any) => {
+      // const key = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+      curlOptions.push({ key, value });
     };
 
     try {
