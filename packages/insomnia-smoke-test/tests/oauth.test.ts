@@ -11,31 +11,31 @@ test('can make oauth2 requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.click('[data-testid="project"]');
-  await page.click('text=Create');
+  await page.locator('[data-testid="project"]').click();
+  await page.locator('text=Create').click();
 
   const text = await loadFixture('oauth.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.click('button:has-text("Clipboard")');
-  await page.click('text=CollectionOauth Testingjust now');
+  await page.locator('button:has-text("Clipboard")').click();
+  await page.locator('text=CollectionOauth Testingjust now').click();
 
   // Authorization code
-  await page.click('button:has-text("Authorization Code")');
+  await page.locator('button:has-text("Authorization Code")').click();
 
   // No PKCE
-  await page.click('button:has-text("No PKCE")');
+  await page.locator('button:has-text("No PKCE")').click();
 
   const [authorizationCodePage] = await Promise.all([
     app.context().waitForEvent('page'),
-    page.click('[data-testid="request-pane"] button:has-text("Send")'),
+    page.locator('[data-testid="request-pane"] button:has-text("Send")').click(),
   ]);
 
   await authorizationCodePage.waitForLoadState();
-  await authorizationCodePage.type('[name="login"]', 'admin');
-  await authorizationCodePage.type('[name="password"]', 'admin');
-  await authorizationCodePage.click('button:has-text("Sign-in")');
-  await authorizationCodePage.click('text=Continue');
+  await authorizationCodePage.locator('[name="login"]').type('admin');
+  await authorizationCodePage.locator('[name="password"]').type('admin');
+  await authorizationCodePage.locator('button:has-text("Sign-in")').click();
+  await authorizationCodePage.locator('button:has-text("Continue")').click();
 
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
@@ -60,28 +60,28 @@ test('can make oauth2 requests', async ({ app, page }) => {
   ]);
 
   await refreshPage.waitForLoadState();
-  await refreshPage.type('[name="login"]', 'admin');
-  await refreshPage.type('[name="password"]', 'admin');
-  await refreshPage.click('button:has-text("Sign-in")');
-  await refreshPage.click('text=Continue');
+  await refreshPage.locator('[name="login"]').type('admin');
+  await refreshPage.locator('[name="password"]').type('admin');
+  await refreshPage.locator('button:has-text("Sign-in")').click();
+  await refreshPage.locator('text=Continue').click();
 
   await expect(token).not.toHaveValue('');
 
   // PKCE SHA256
-  await page.click('button:has-text("GETPKCE SHA256")');
+  await page.locator('button:has-text("PKCE SHA256")').click();
 
   const [pkcePage] = await Promise.all([
     app.context().waitForEvent('page'),
-    page.click('[data-testid="request-pane"] button:has-text("Send")'),
+    page.locator('[data-testid="request-pane"] button:has-text("Send")').click(),
   ]);
   await pkcePage.waitForLoadState();
-  await pkcePage.click('text=Continue');
+  await pkcePage.locator('text=Continue').click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // PKCE Plain
-  await page.click('button:has-text("GETPKCE Plain")');
-  await page.click('[data-testid="request-pane"] button:has-text("Send")');
+  await page.locator('button:has-text("PKCE Plain")').click();
+  await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
 
@@ -102,20 +102,20 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   const [implicitPage] = await Promise.all([
     app.context().waitForEvent('page'),
-    page.click('[data-testid="request-pane"] button:has-text("Send")'),
+    page.locator('[data-testid="request-pane"] button:has-text("Send")').click(),
   ]);
   await implicitPage.waitForLoadState();
-  await implicitPage.type('[name="login"]', 'admin');
-  await implicitPage.type('[name="password"]', 'admin');
-  await implicitPage.click('button:has-text("Sign-in")');
-  await implicitPage.click('text=Continue');
+  await implicitPage.locator('[name="login"]').type('admin');
+  await implicitPage.locator('[name="password"]').type('admin');
+  await implicitPage.locator('button:has-text("Sign-in")').click();
+  await implicitPage.locator('text=Continue').click();
 
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // ID and Access Token
   await page.locator('button:has-text("ID and Access Token")').click();
-  await page.click('[data-testid="request-pane"] button:has-text("Send")');
+  await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
 
@@ -130,7 +130,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Client Credentials
   await page.locator('button:has-text("Client Credentials")').click();
-  await page.click('[data-testid="request-pane"] button:has-text("Send")'),
+  await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"clientId": "client_credentials"');
 
@@ -145,7 +145,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Resource Owner Password Credentials
   await page.locator('button:has-text("Resource Owner Password Credentials")').click();
-  await page.click('[data-testid="request-pane"] button:has-text("Send")'),
+  await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "foo"');
 });
