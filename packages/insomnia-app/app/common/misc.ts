@@ -1,6 +1,5 @@
 import fuzzysort from 'fuzzysort';
 import { join as pathJoin } from 'path';
-import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid';
 import zlib from 'zlib';
 

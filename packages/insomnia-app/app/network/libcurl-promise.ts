@@ -16,6 +16,7 @@ if (process.type === 'renderer') throw new Error('node-libcurl unavailable in re
 // on end: close filewriter/s, close curl instance, set cookies, save timeline, return transformed headers, status
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
+import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
 
 import { describeByteSize } from '../common/misc';
