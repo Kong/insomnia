@@ -68,20 +68,20 @@ enum CurlAuth {
   Any = ~DigestIe,
 }
 
-export enum CurlHttpVersion {
-  None,
-  V1_0,
-  V1_1,
-  V2_0,
-  V2Tls,
-  V2PriorKnowledge,
-  v3,
-}
-enum CurlNetrc {
-  Ignored,
-  Optional,
-  Required,
-}
+export const CurlHttpVersion = {
+  None: 'None',
+  V1_0: 'V1_0',
+  V1_1: 'V1_1',
+  V2_0: 'V2_0',
+  V2Tls: 'V2Tls',
+  V2PriorKnowledge: 'V2PriorKnowledge',
+  v3: 'v3',
+};
+const CurlNetrc = {
+  Ignored: 'Ignored',
+  Optional: 'Optional',
+  Required: 'Required',
+};
 class Curl {
   static option = {
     ACCEPT_ENCODING: 'ACCEPT_ENCODING',
@@ -709,7 +709,6 @@ export async function _actuallySend(
         maxTimelineDataSizeKB:settings.maxTimelineDataSizeKB,
         cancelId: renderedRequest._id,
       };
-      console.log(requestOptions);
 
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
 
