@@ -13,7 +13,7 @@ import {
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 
 import {
   AUTH_AWS_IAM,
