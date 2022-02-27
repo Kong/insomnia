@@ -196,8 +196,8 @@ interface HeaderResult {
   code: number;
   reason: string;
 }
-// NOTE: legacy, could be simplified
-function _parseHeaders(buffer: Buffer) {
+// NOTE: legacy, has tests, could be simplified
+export function _parseHeaders(buffer: Buffer) {
   const results: HeaderResult[] = [];
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
 
