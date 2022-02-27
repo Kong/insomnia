@@ -533,8 +533,8 @@ export async function _actuallySend(
       let noBody = false;
       let requestBody: string | null = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-      let closePostEventEmitter = () => {};
-      let closePostMultipartEventEmitter = () => {};
+      let requestBodyPath;
+      let isMultipart = false;
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
@@ -542,6 +542,8 @@ export async function _actuallySend(
         const { filePath: multipartBodyPath, boundary, contentLength } = await buildMultipart(
           params,
         );
+        requestBodyPath = multipartBodyPath;
+        isMultipart = true;
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);
 
@@ -554,29 +556,18 @@ export async function _actuallySend(
           });
         }
 
-        const fd = fs.openSync(multipartBodyPath, 'r');
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
-        setOpt(Curl.option.READDATA, fd);
         // We need this, otherwise curl will send it as a PUT
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-
-        closePostMultipartEventEmitter = () => {
-          fs.closeSync(fd);
-          fs.unlink(multipartBodyPath, () => {
-            // Pass
-          });
-        };
       } else if (renderedRequest.body.fileName) {
         const { size } = fs.statSync(renderedRequest.body.fileName);
-        const fileName = renderedRequest.body.fileName || '';
-        const fd = fs.openSync(fileName, 'r');
+        requestBodyPath = renderedRequest.body.fileName || '';
+
         setOpt(Curl.option.INFILESIZE_LARGE, size);
         setOpt(Curl.option.UPLOAD, 1);
-        setOpt(Curl.option.READDATA, fd);
         // We need this, otherwise curl will send it as a POST
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-        closePostEventEmitter = () => fs.closeSync(fd);
       } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
         requestBody = renderedRequest.body.text || '';
       } else {
@@ -712,18 +703,18 @@ export async function _actuallySend(
         : require('./libcurl-promise').curlRequest;
       const requestOptions = {
         curlOptions,
-        bodyPath: responseBodyPath,
+        responseBodyPath,
+        requestBodyPath,
+        isMultipart,
         maxTimelineDataSizeKB:settings.maxTimelineDataSizeKB,
         cancelId: renderedRequest._id,
       };
-      const { patch, debugTimeline, headerArray } = await nodejsCurlRequest(requestOptions);
+      console.log(requestOptions);
 
-      // TODO: consider making libcurl responsible for reading files to post
-      closePostEventEmitter();
-      closePostMultipartEventEmitter();
+      const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
 
       // Headers are an array (one for each redirect)
-      const lastCurlHeadersObject = headerArray[headerArray.length - 1];
+      const lastCurlHeadersObject = headerResults[headerResults.length - 1];
 
       // Calculate the content type
       const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
@@ -732,7 +723,7 @@ export async function _actuallySend(
       let setCookieStrings: string[] = [];
       const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
-      for (const { headers } of headerArray) {
+      for (const { headers } of headerResults) {
         // Collect Set-Cookie headers
         const setCookieHeaders = getSetCookieHeaders(headers);
         setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];

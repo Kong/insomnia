@@ -1,19 +1,29 @@
+// NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
+// Related issue https://github.com/JCMais/node-libcurl/issues/155
 if (process.type === 'renderer') throw new Error('node-libcurl unavailable in renderer');
-// assertion: ipc bridge cannot serialise functions so write and debug callbacks need to be simplified
 
-// assumption: options are typechecked and don't need run time feedback.
+// Design
+// constrant: ipc bridge cannot serialise functions so read, write and debug callbacks need to be simplified
+// and handled in nodejs here
+
+// assertion: network.ts is coupled with database, plugins, and auth logic.
+
+// assertion: options are typechecked and don't need run time feedback.
 // therefore we can build a list of options and apply them at once.
+// excluding READDATA, WRITEFUNCTION and DEBUGFUNCTION which expect non-primitive inputs
 
-// assumption: settings timeline object can split into setup and debug timelines
-// therefore I can just pass back what happened during debug to the respond function above
+// assertion: settings timeline objects can split into setup and debug timelines and contains timestamps
+// therefore they can be merged easily
 
 // overview: behaviours tightly coupled to node-libcurl implementation
 // write response to file return path to file
 // write debug output to timeline array
+// read file and file descriptor teardown
 // getInfo time taken size and url
 // expose a fire and forget close instance for cancel
 // on error: close filewriter/s, close curl instance, save timeline return error message
 // on end: close filewriter/s, close curl instance, set cookies, save timeline, return transformed headers, status
+// most of above now happens outside of the end call back
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
 import { Readable, Writable } from 'stream';
@@ -25,10 +35,10 @@ import { ResponsePatch } from './network';
 
 // wraps libcurl with a promise taking options, path to response file, and max timeline size
 // returning a response patch, debug timeline and headerArray
-interface CurlOutput {
+interface CurlRequestOutput {
   patch: ResponsePatch;
   debugTimeline: ResponseTimelineEntry[];
-  headerArray: HeaderResult[];
+  headerResults: HeaderResult[];
 }
 
 interface CurlOpt {
@@ -36,70 +46,87 @@ interface CurlOpt {
   value: CurlSetOptValue;
 }
 
+interface CurlRequestOptions {
+  curlOptions: CurlOpt[];
+  responseBodyPath: string;
+  maxTimelineDataSizeKB: number;
+  cancelId: string;
+  requestBodyPath?: string;
+  isMultipart: boolean;
+}
+
 type CurlSetOptParameters = Parameters<Curl['setOpt']>;
 type CurlSetOptName = CurlSetOptParameters[0];
 type CurlSetOptValue = CurlSetOptParameters[1];
-// TODO: cancel should also clean up any open fs or fd instances
-const functionmap = {};
-export const cancelCurlRequest = id => functionmap[id]();
-export const curlRequest = (options: { curlOptions: CurlOpt[]; bodyPath; maxTimelineDataSizeKB; cancelId}) => new Promise<CurlOutput>(async resolve => {
-  // Create instance, poke value options in, set up write and debug callbacks, listen for events
-  const { curlOptions, bodyPath, maxTimelineDataSizeKB, cancelId } = options;
+// NOTE: this is a dictionary of functions to close open listeners
+const cancelCurlRequestHandlers = {};
+export const cancelCurlRequest = id => cancelCurlRequestHandlers[id]();
+export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
+  // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
+  const { curlOptions, responseBodyPath, requestBodyPath, maxTimelineDataSizeKB, cancelId, isMultipart } = options;
   const curl = new Curl();
-  // TODO: close open file handlers
-  functionmap[cancelId] = () => curl.close();
+  let requestFileDescriptor;
+  const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
+  // cancel request by id map
+  cancelCurlRequestHandlers[cancelId] = () => {
+    if (requestFileDescriptor && responseBodyPath) {
+      closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath);
+    }
+    curl.close();
+  };
+  // set the string and number options from network.ts
   curlOptions.forEach(opt => curl.setOpt(opt.key, opt.value));
+  // read file into request and close file desriptor
+  if (requestBodyPath) {
+    requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
+    curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
+    curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
+    curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
+  }
 
+  // set up response writer
   let responseBodyBytes = 0;
-  const responseBodyWriteStream = fs.createWriteStream(bodyPath);
-  curl.setOpt(Curl.option.WRITEFUNCTION, buff => {
-    responseBodyBytes += buff.length;
-    responseBodyWriteStream.write(buff);
-    return buff.length;
+  curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
+    responseBodyBytes += buffer.length;
+    responseBodyWriteStream.write(buffer);
+    return buffer.length;
   });
-
+  // set up response logger
   const debugTimeline: any = [];
-  curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, contentBuffer) => {
+  curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+    // TODO: replace curl.infodebug with a simple type check and lookup as with curl.info
     const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
-    const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
+    const infoTypeName = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
     const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
-    const isEmpty = contentBuffer.length === 0;
+    const isEmpty = buffer.length === 0;
     // Don't show cookie setting because this will display every domain in the jar
-    const isAddCookie = infoType === CurlInfoDebug.Text && contentBuffer.toString('utf8').indexOf('Added cookie') === 0;
+    const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
     if (isSSLData || isEmpty || isAddCookie) {
       return 0;
     }
 
-    // Ignore the possibly large data messages
+    let value;
     if (infoType === CurlInfoDebug.DataOut) {
-      const lessThan10KB = contentBuffer.length / 1024 < maxTimelineDataSizeKB || 10;
-      debugTimeline.push({
-        name,
-        value: lessThan10KB ? contentBuffer.toString('utf8') : `(${describeByteSize(contentBuffer.length)} hidden)`,
-        timestamp: Date.now(),
-      });
-      return 0;
+      // Ignore the possibly large data messages
+      const lessThan10KB = buffer.length / 1024 < maxTimelineDataSizeKB || 10;
+      value = lessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
     }
-
     if (infoType === CurlInfoDebug.DataIn) {
-      debugTimeline.push({
-        name: 'TEXT',
-        value: `Received ${describeByteSize(contentBuffer.length)} chunk`,
-        timestamp: Date.now(),
-      });
-      return 0;
+      value = `Received ${describeByteSize(buffer.length)} chunk`;
     }
 
     debugTimeline.push({
-      name,
-      value: contentBuffer.toString('utf8'),
+      name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : infoTypeName,
+      value: value || buffer.toString('utf8'),
       timestamp: Date.now(),
     });
     return 0; // Must be here
   });
 
-  curl.enable(CurlFeature.Raw); // makes rawHeaders a buffer, rather than HeaderInfo[]
+  // makes rawHeaders a buffer, rather than HeaderInfo[]
+  curl.enable(CurlFeature.Raw);
+  // NOTE: legacy write end callback
   curl.on('end', () => responseBodyWriteStream.end());
   curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
     const patch = {
@@ -109,12 +136,12 @@ export const curlRequest = (options: { curlOptions: CurlOpt[]; bodyPath; maxTime
       url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
     };
     curl.close();
-    responseBodyWriteStream.end();
     await waitForStreamToFinish(responseBodyWriteStream);
 
-    const headerArray = _parseHeaders(rawHeaders);
-    resolve({ patch, debugTimeline, headerArray });
+    const headerResults = _parseHeaders(rawHeaders);
+    resolve({ patch, debugTimeline, headerResults });
   });
+  // NOTE: legacy write end callback
   curl.on('error', () => responseBodyWriteStream.end());
   curl.on('error', async function(err, code) {
     const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
@@ -134,10 +161,17 @@ export const curlRequest = (options: { curlOptions: CurlOpt[]; bodyPath; maxTime
       elapsedTime,
     };
 
-    resolve({ patch, debugTimeline, headerArray: [{ version:'', code:-1, reason:'', headers:[] }] });
+    resolve({ patch, debugTimeline, headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
   });
   curl.perform();
 });
+
+const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
+  fs.closeSync(fd);
+  // NOTE: multipart files are combined before sending, so this file is deleted after
+  // alt implemention to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
+  if (isMultipart && path) fs.unlink(path, () => { });
+};
 
 // Because node-libcurl changed some names that we used in the timeline
 const LIBCURL_DEBUG_MIGRATION_MAP = {
@@ -162,10 +196,8 @@ interface HeaderResult {
   code: number;
   reason: string;
 }
-
-export function _parseHeaders(
-  buffer: Buffer,
-) {
+// NOTE: legacy, could be simplified
+function _parseHeaders(buffer: Buffer) {
   const results: HeaderResult[] = [];
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
 
@@ -200,8 +232,8 @@ export function _parseHeaders(
 
   return results;
 }
-
-export async function waitForStreamToFinish(stream: Readable | Writable) {
+// NOTE: legacy, suspicious, could be simplified
+async function waitForStreamToFinish(stream: Readable | Writable) {
   return new Promise<void>(resolve => {
     // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
     if (stream._readableState?.finished) {
