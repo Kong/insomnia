@@ -260,11 +260,9 @@ export async function _actuallySend(
         null,
       );
     }
-    // NOTE: can have duplicate cookie options
-    const curlOptions: { key: string; value: any }[] = [];
-    /** Helper function to set Curl options*/
-    const setOpt = (key: string, value: any) => {
-      // const key = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+    // NOTE: can have duplicate keys because of cookie options
+    const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
+    const setOpt = (key: string, value: string | string[] | number | boolean) => {
       curlOptions.push({ key, value });
     };
 
@@ -709,8 +707,8 @@ export async function _actuallySend(
         responseBodyPath,
         requestBodyPath,
         isMultipart,
-        maxTimelineDataSizeKB:settings.maxTimelineDataSizeKB,
-        cancelId: renderedRequest._id,
+        maxTimelineDataSizeKB: settings.maxTimelineDataSizeKB,
+        requestId: renderedRequest._id,
       };
 
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);

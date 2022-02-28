@@ -27,8 +27,19 @@ interface Window {
     authorizeUserInWindow: (options: { url: string; urlSuccessRegex?: RegExp; urlFailureRegex?: RegExp; sessionId: string }) => Promise<string>;
     setMenuBarVisibility: (visible: boolean) => void;
     installPlugin: (url: string) => void;
-    curlRequest: (options: { curlOptions; bodyPath; maxTimelineDataSizeKB; cancelId }) => Promise<{ patch: ResponsePatch; debugTimeline: ResponseTimelineEntry[]; headerArray: HeaderResult[] }>;
     cancelCurlRequest: (requestId: string) => void;
+    curlRequest: (options: {
+      curlOptions: CurlOpt[];
+      responseBodyPath: string;
+      maxTimelineDataSizeKB: number;
+      requestId: string;
+      requestBodyPath?: string;
+      isMultipart: boolean;
+    }) => Promise<{
+      patch: ResponsePatch;
+      debugTimeline: ResponseTimelineEntry[];
+      headerResults: HeaderResult[];
+    }>;
   };
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;

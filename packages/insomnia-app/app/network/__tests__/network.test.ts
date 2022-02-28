@@ -21,7 +21,6 @@ import { DEFAULT_BOUNDARY } from '../multipart';
 import { CurlHttpVersion } from '../network';
 import * as networkUtils from '../network';
 window.app = electron.app;
-window.main = { cancelCurlRequest:() => {} };
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 

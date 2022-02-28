@@ -23,7 +23,13 @@ if (process.type === 'renderer') throw new Error('node-libcurl unavailable in re
 // expose a fire and forget close instance for cancel
 // on error: close filewriter/s, close curl instance, save timeline return error message
 // on end: close filewriter/s, close curl instance, set cookies, save timeline, return transformed headers, status
-// most of above now happens outside of the end call back
+// most of end callback now happens after this promise resolves at the callsite
+
+// future work: scoped out in order to avoid creating new code paths
+// reject promise on error rather than resolve
+// simplify _parseHeaders
+// get renderer side curl types from node-libcurl somehow
+// simplify clean up callbacks
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
 import { Readable, Writable } from 'stream';
@@ -33,42 +39,46 @@ import { describeByteSize } from '../common/misc';
 import { ResponseHeader } from '../models/response';
 import { ResponsePatch } from './network';
 
-// wraps libcurl with a promise taking options, path to response file, and max timeline size
-// returning a response patch, debug timeline and headerArray
-interface CurlRequestOutput {
-  patch: ResponsePatch;
-  debugTimeline: ResponseTimelineEntry[];
-  headerResults: HeaderResult[];
-}
+// wraps libcurl with a promise taking curl options and others required by read, write and debug callbacks
+// returning a response patch, debug timeline and list of headers for each redirect
 
 interface CurlOpt {
-  key: CurlSetOptName;
-  value: CurlSetOptValue;
+  key: Parameters<Curl['setOpt']>[0];
+  value: Parameters<Curl['setOpt']>[1];
 }
 
 interface CurlRequestOptions {
   curlOptions: CurlOpt[];
   responseBodyPath: string;
   maxTimelineDataSizeKB: number;
-  cancelId: string;
-  requestBodyPath?: string;
-  isMultipart: boolean;
+  requestId: string; // for cancellation
+  requestBodyPath?: string; // only used for POST file path
+  isMultipart: boolean; // for clean up after implemention side effect
 }
 
-type CurlSetOptParameters = Parameters<Curl['setOpt']>;
-type CurlSetOptName = CurlSetOptParameters[0];
-type CurlSetOptValue = CurlSetOptParameters[1];
+interface ResponseTimelineEntry {
+  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
+  timestamp: number;
+  value: string;
+}
+
+interface CurlRequestOutput {
+  patch: ResponsePatch;
+  debugTimeline: ResponseTimelineEntry[];
+  headerResults: HeaderResult[];
+}
+
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers = {};
 export const cancelCurlRequest = id => cancelCurlRequestHandlers[id]();
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-  const { curlOptions, responseBodyPath, requestBodyPath, maxTimelineDataSizeKB, cancelId, isMultipart } = options;
+  const { curlOptions, responseBodyPath, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart } = options;
   const curl = new Curl();
   let requestFileDescriptor;
   const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
   // cancel request by id map
-  cancelCurlRequestHandlers[cancelId] = () => {
+  cancelCurlRequestHandlers[requestId] = () => {
     if (requestFileDescriptor && responseBodyPath) {
       closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath);
     }
@@ -92,9 +102,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     return buffer.length;
   });
   // set up response logger
-  const debugTimeline: any = [];
+  const debugTimeline: ResponseTimelineEntry[] = [];
   curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
-    // TODO: replace curl.infodebug with a simple type check and lookup as with curl.info
     const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
     const infoTypeName = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
@@ -186,11 +195,6 @@ const LIBCURL_DEBUG_MIGRATION_MAP = {
   '': '',
 };
 
-interface ResponseTimelineEntry {
-  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
-  timestamp: number;
-  value: string;
-}
 interface HeaderResult {
   headers: ResponseHeader[];
   version: string;
