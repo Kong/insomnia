@@ -282,8 +282,12 @@ export async function _actuallySend(
           },
           null,
         );
-        // Kill it!
-        window.main.cancelCurlRequest(renderedRequest._id);
+        // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
+        const nodejsCancelCurlRequest = process.type === 'renderer'
+          ? window.main.cancelCurlRequest
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          : require('./libcurl-promise').cancelCurlRequest;
+        nodejsCancelCurlRequest(renderedRequest._id);
       };
 
       // Set all the basic options
@@ -695,8 +699,7 @@ export async function _actuallySend(
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
-      // this function is also called by inso unit tests
-      // fallback to require in that case
+      // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
         // eslint-disable-next-line @typescript-eslint/no-var-requires

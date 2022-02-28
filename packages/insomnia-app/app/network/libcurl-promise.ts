@@ -161,6 +161,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       elapsedTime,
     };
 
+    // NOTE: legacy, default headerResults
     resolve({ patch, debugTimeline, headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
   });
   curl.perform();
