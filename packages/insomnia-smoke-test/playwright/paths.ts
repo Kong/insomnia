@@ -4,6 +4,9 @@ import path from 'path';
 import { exit } from 'process';
 import * as uuid from 'uuid';
 
+// Default to dev so that the playwright vscode extension works
+export const bundleType = () => process.env.BUNDLE || 'dev';
+
 export const loadFixture = async (fixturePath: string) => {
   const buffer = await fs.promises.readFile(path.join(__dirname, '..', 'fixtures', fixturePath));
   return buffer.toString('utf-8');
@@ -20,28 +23,28 @@ const pathLookup = {
 const insomniaBinary = path.join('dist', pathLookup[process.platform]);
 const electronBinary = path.join('node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
 
-export const executablePath = process.env.BUNDLE === 'package' ? insomniaBinary : electronBinary;
+export const executablePath = bundleType() === 'package' ? insomniaBinary : electronBinary;
 
 // NOTE: main.min.js is built by app-build:smoke in /build and also by the watcher in /app
-export const mainPath = path.join(process.env.BUNDLE === 'dev' ? 'app' : 'build', 'main.min.js');
+export const mainPath = path.join(bundleType() === 'dev' ? 'app' : 'build', 'main.min.js');
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia-app');
 
 const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
 const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 
 // NOTE: guard against missing build artifacts
-if (process.env.BUNDLE === 'dev' && !hasMainBeenBuilt) {
+if (bundleType() === 'dev' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
   Have you run "npm run watch:app"?`);
   exit(1);
 }
-if (process.env.BUNDLE === 'build' && !hasMainBeenBuilt) {
+if (bundleType() === 'build' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
   Have you run "npm run app-build:smoke"?`);
   exit(1);
 }
-if (process.env.BUNDLE === 'package' && !hasBinaryBeenBuilt) {
-  console.error(`ERROR: ${insomniaBinary} not found at ${path.resolve(cwd, insomniaBinary)} 
+if (bundleType() === 'package' && !hasBinaryBeenBuilt) {
+  console.error(`ERROR: ${insomniaBinary} not found at ${path.resolve(cwd, insomniaBinary)}
   Have you run "npm run app-package:smoke"?`);
   exit(1);
 }

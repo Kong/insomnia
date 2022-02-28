@@ -3,6 +3,7 @@ import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/te
 import path from 'path';
 
 import {
+  bundleType,
   cwd,
   executablePath,
   mainPath,
@@ -24,7 +25,7 @@ export const test = baseTest.extend<{
     const electronApp = await playwright._electron.launch({
       cwd,
       executablePath,
-      args: process.env.BUNDLE === 'package' ? [] : [mainPath],
+      args: bundleType() === 'package' ? [] : [mainPath],
       env: {
         ...process.env,
         ...options,
