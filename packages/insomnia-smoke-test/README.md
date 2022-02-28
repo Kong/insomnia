@@ -75,6 +75,7 @@ npx playwright show-trace packages/insomnia-smoke-test/screenshots/app-can-send-
 You can also use the [playwright extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) to run and debug tests directly from VS Code.
 
 With the extension installed, in a terminal, run the watcher
+
 ```shell
 npm run watch:app
 ```
