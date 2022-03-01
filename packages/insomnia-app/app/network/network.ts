@@ -155,25 +155,13 @@ export const getHttpVersion = preferredHttpVersion => {
 };
 
 export async function cancelRequestById(requestId) {
-  if (hasCancelFunctionForId(requestId)) {
-    const cancelRequestFunction = cancelRequestFunctionMap[requestId];
-
-    if (typeof cancelRequestFunction === 'function') {
-      return cancelRequestFunction();
-    }
+  const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
+  if (hasCancelFunction) {
+    return cancelRequestFunctionMap[requestId]();
   }
-
   console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
-}
-
-function clearCancelFunctionForId(requestId) {
-  if (hasCancelFunctionForId(requestId)) {
-    delete cancelRequestFunctionMap[requestId];
-  }
-}
-
-export function hasCancelFunctionForId(requestId) {
-  return cancelRequestFunctionMap.hasOwnProperty(requestId);
+  // Tidy up race condition, where cancel doesn't work and keeps spinning becuase requestId is unset or has been removed
+  return cancelRequestFunctionMap['fallback']();
 }
 
 export async function _actuallySend(
@@ -205,7 +193,9 @@ export async function _actuallySend(
 
       const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
-      clearCancelFunctionForId(renderedRequest._id);
+      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+        delete cancelRequestFunctionMap[renderedRequest._id];
+      }
       const environmentId = environment ? environment._id : null;
       return resolve(Object.assign(
         {
@@ -245,6 +235,13 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
+      cancelRequestFunctionMap['fallback'] = () => respond({
+        elapsedTime: 0,
+        bytesRead: 0,
+        url: renderedRequest.url,
+        statusMessage: 'Cancelled',
+        error: 'Request was cancelled',
+      }, null);
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
 
         await respond(
