@@ -31,6 +31,7 @@ import {
 import { database as db } from '../common/database';
 import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
+  delay,
   getContentTypeHeader,
   getHostHeader,
   getLocationHeader,
@@ -124,10 +125,15 @@ export interface ResponsePatch {
   url?: string;
 }
 
+// Time since user's last keypress to wait before making the request
+const MAX_DELAY_TIME = 1000;
+
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
 const cancelRequestFunctionMap = {};
+
+let lastUserInteraction = Date.now();
 
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
@@ -820,6 +826,21 @@ export async function send(
   extraInfo?: ExtraRenderInfo,
 ) {
   console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
+  // HACK: wait for all debounces to finish
+
+  /*
+   * TODO: Do this in a more robust way
+   * The following block adds a "long" delay to let potential debounces and
+   * database updates finish before making the request. This is done by tracking
+   * the time of the user's last keypress and making sure the request is sent a
+   * significant time after the last press.
+   */
+  const timeSinceLastInteraction = Date.now() - lastUserInteraction;
+  const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
+
+  if (delayMillis > 0) {
+    await delay(delayMillis);
+  }
 
   // Fetch some things
   const request = await models.request.getById(requestId);
@@ -1025,5 +1046,18 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
         resolve(timelinePath);
       }
     });
+  });
+}
+
+if (global.document) {
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      return;
+    }
+
+    lastUserInteraction = Date.now();
+  });
+  document.addEventListener('paste', () => {
+    lastUserInteraction = Date.now();
   });
 }
