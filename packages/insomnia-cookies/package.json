@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-cookies",
-  "version": "2.5.0-beta.1",
+  "version": "2.5.0",
   "author": "Kong <office@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",
