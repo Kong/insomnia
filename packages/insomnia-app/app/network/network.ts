@@ -59,7 +59,6 @@ import caCerts from './ca-certs';
 import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// TODO: make this better
 enum CurlAuth {
   Basic = 1 << 0,
   Digest = 1 << 1,
@@ -68,29 +67,19 @@ enum CurlAuth {
   Any = ~DigestIe,
 }
 
-export const CurlHttpVersion = {
-  None: 'None',
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2_0: 'V2_0',
-  V2Tls: 'V2Tls',
-  V2PriorKnowledge: 'V2PriorKnowledge',
-  v3: 'v3',
-};
 const CurlNetrc = {
-  Ignored: 'Ignored',
-  Optional: 'Optional',
   Required: 'Required',
 };
-class Curl {
-  static option = {
+// Based on list of option properties but with callback options removed
+// Avoids importing from native module node-libcurl
+const Curl = {
+  option: {
     ACCEPT_ENCODING: 'ACCEPT_ENCODING',
     CAINFO: 'CAINFO',
     COOKIE: 'COOKIE',
     COOKIEFILE: 'COOKIEFILE',
     COOKIELIST: 'COOKIELIST',
     CUSTOMREQUEST: 'CUSTOMREQUEST',
-    DEBUGFUNCTION: 'DEBUGFUNCTION',
     FOLLOWLOCATION: 'FOLLOWLOCATION',
     HTTPAUTH: 'HTTPAUTH',
     HTTPGET: 'HTTPGET',
@@ -110,8 +99,6 @@ class Curl {
     PATH_AS_IS: 'PATH_AS_IS',
     PROXY: 'PROXY',
     PROXYAUTH: 'PROXYAUTH',
-    READDATA: 'READDATA',
-    READFUNCTION: 'READFUNCTION',
     SSLCERT: 'SSLCERT',
     SSLCERTTYPE: 'SSLCERTTYPE',
     SSLKEY: 'SSLKEY',
@@ -124,9 +111,8 @@ class Curl {
     USERAGENT: 'USERAGENT',
     USERNAME: 'USERNAME',
     VERBOSE: 'VERBOSE',
-    WRITEFUNCTION: 'WRITEFUNCTION',
-  };
-}
+  },
+};
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
@@ -157,6 +143,16 @@ const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 const cancelRequestFunctionMap = {};
 
 let lastUserInteraction = Date.now();
+
+export const CurlHttpVersion = {
+  None: 'None',
+  V1_0: 'V1_0',
+  V1_1: 'V1_1',
+  V2_0: 'V2_0',
+  V2Tls: 'V2Tls',
+  V2PriorKnowledge: 'V2PriorKnowledge',
+  v3: 'v3',
+};
 
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
