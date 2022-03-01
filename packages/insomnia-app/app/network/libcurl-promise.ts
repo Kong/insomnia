@@ -32,7 +32,6 @@ if (process.type === 'renderer') throw new Error('node-libcurl unavailable in re
 // simplify clean up callbacks
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
-import { reject } from 'ramda';
 import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
 
@@ -154,7 +153,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
     // NOTE: legacy write end callback
     curl.on('error', () => responseBodyWriteStream.end());
-    curl.on('error', async function (err, code) {
+    curl.on('error', async function(err, code) {
       const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
       curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);

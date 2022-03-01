@@ -668,6 +668,7 @@ export async function _actuallySend(
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
+      console.log('[network] Sending request over ipc');
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
@@ -683,6 +684,7 @@ export async function _actuallySend(
       };
 
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
+      console.log('[network] Handling response');
 
       // Headers are an array (one for each redirect)
       const lastCurlHeadersObject = headerResults[headerResults.length - 1];
@@ -756,12 +758,12 @@ export async function sendWithSettings(
   requestId: string,
   requestPatch: Record<string, any>,
 ) {
+  console.log(`[network] Sending with settings req=${requestId}`);
   const request = await models.request.getById(requestId);
 
   if (!request) {
     throw new Error(`Failed to find request: ${requestId}`);
   }
-
   const settings = await models.settings.getOrCreate();
   const ancestors = await db.withAncestors(request, [
     models.request.type,
@@ -787,7 +789,7 @@ export async function sendWithSettings(
     request: RenderedRequest;
     context: Record<string, any>;
   };
-
+  console.log('[network] Request rendering started');
   try {
     renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
   } catch (err) {
@@ -804,6 +806,7 @@ export async function sendWithSettings(
   if (response.error){
     return response;
   }
+  console.log('[network] Apply send with settings plugin post hooks');
   return _applyResponsePluginHooks(
     response,
     renderResult.request,
@@ -832,6 +835,7 @@ export async function send(
   }
 
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  console.log('[network] Request rendering started');
   const renderResult = await getRenderedRequestAndContext(
     {
       request,
@@ -852,6 +856,7 @@ export async function send(
   let renderedRequest: RenderedRequest;
 
   try {
+    console.log('[network] Apply plugin pre hooks');
     renderedRequest = await _applyRequestPluginHooks(
       renderedRequestBeforePlugins,
       renderedContextBeforePlugins,
@@ -884,6 +889,7 @@ export async function send(
   if (response.error){
     return response;
   }
+  console.log('[network] Apply plugin post hooks');
   return _applyResponsePluginHooks(
     response,
     renderedRequest,
