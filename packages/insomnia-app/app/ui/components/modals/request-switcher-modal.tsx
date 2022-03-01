@@ -26,6 +26,7 @@ import { ModalHeader } from '../base/modal-header';
 import { KeydownBinder } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
+import { wrapToIndex } from './utils';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -114,9 +115,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   _setActiveIndex(activeIndex: number) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
-
     this.setState({
-      activeIndex: (activeIndex + maxIndex) % maxIndex,
+      activeIndex: wrapToIndex(activeIndex, maxIndex),
     });
   }
 
