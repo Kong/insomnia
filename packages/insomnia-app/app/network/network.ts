@@ -1,3 +1,6 @@
+import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
 import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
@@ -59,19 +62,7 @@ import caCerts from './ca-certs';
 import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-enum CurlAuth {
-  Basic = 1 << 0,
-  Digest = 1 << 1,
-  Ntlm = 1 << 3,
-  DigestIe = 1 << 4,
-  Any = ~DigestIe,
-}
-
-const CurlNetrc = {
-  Required: 'Required',
-};
 // Based on list of option properties but with callback options removed
-// Avoids importing from native module node-libcurl
 const Curl = {
   option: {
     ACCEPT_ENCODING: 'ACCEPT_ENCODING',
@@ -143,16 +134,6 @@ const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 const cancelRequestFunctionMap = {};
 
 let lastUserInteraction = Date.now();
-
-export const CurlHttpVersion = {
-  None: 'None',
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2_0: 'V2_0',
-  V2Tls: 'V2Tls',
-  V2PriorKnowledge: 'V2PriorKnowledge',
-  v3: 'v3',
-};
 
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
