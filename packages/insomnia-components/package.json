@@ -17,8 +17,7 @@
   "scripts": {
     "prebuild": "npm run convert-svg",
     "build": "webpack --config webpack/webpack.prod.js --display errors-only",
-    "build-storybook": "build-storybook --quiet",
-    "clean": "rimraf dist storybook-static && npm run clean:svg",
+    "clean": "rimraf dist && npm run clean:svg",
     "clean:svg": "rimraf src/assets/svgr",
     "clean:svg:index": "rimraf src/assets/svgr/index.tsx",
     "convert-svg": "npm run clean:svg && svgr --config-file svgr.config.js --out-dir src/assets/svgr src/assets && npm run clean:svg:index",
@@ -26,7 +25,6 @@
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "npm run build",
-    "storybook": "start-storybook --port 3223",
     "test": "jest",
     "watch": "webpack --config webpack/webpack.dev.js --watch"
   },
@@ -35,9 +33,7 @@
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@babel/plugin-proposal-optional-chaining": "^7.12.7",
     "@babel/plugin-transform-runtime": "^7.12.10",
-    "@storybook/addon-contexts": "^5.3.21",
-    "@storybook/addon-knobs": "^6.2.9",
-    "@storybook/react": "^6.2.9",
+
     "@svgr/cli": "^5.5.0",
     "@testing-library/dom": "^7.30.4",
     "@testing-library/jest-dom": "^5.12.0",
@@ -61,7 +57,6 @@
     "react-docgen-typescript": "^1.22.0",
     "react-dom": "^16.8.3",
     "react-use": "^17.2.4",
-    "storybook-addon-designs": "^5.4.1",
     "styled-components": "^4.4.1",
     "ts-loader": "^8.2.0",
     "type-fest": "^1.0.2",
