@@ -61,7 +61,7 @@ test('can send requests', async ({ app, page }) => {
 
 // This feature is unsafe to place beside other tests, cancelling a request causes node-libcurl to block
 // related to https://linear.app/insomnia/issue/INS-973
-test('can cancel requests', async ({ app, page }) => {
+test.skip('can cancel requests', async ({ app, page }) => {
   await page.click('[data-testid="project"]');
   await page.click('text=Create');
 
@@ -77,7 +77,7 @@ test('can cancel requests', async ({ app, page }) => {
   await page.click('text=Request was cancelled');
 });
 
-test('url field is focused for first time users', async ({ page }) => {
+test.skip('url field is focused for first time users', async ({ page }) => {
   const urlInput = ':nth-match(textarea, 2)';
   const locator = page.locator(urlInput);
   await expect(locator).toBeFocused();

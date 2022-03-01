@@ -3,39 +3,14 @@ name: Test
 on:
   workflow_dispatch:
   push:
-    branches:
-      - develop
-  pull_request:
-    types:
-      - opened
-      - synchronize
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  get_version:
-    name: Get version
-    runs-on: ubuntu-latest
-    outputs:
-      inso-version: ${{ steps.get-package-version.outputs.current-version }}
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v2
-      - name: Get version
-        id: get-package-version
-        uses: martinbeentjes/npm-get-version-action@master
-        with:
-          path: packages/insomnia-inso
-
   OS:
-    needs: [get_version]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [windows-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
@@ -48,58 +23,11 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
-      - name: Lint
-        if: matrix.os == 'ubuntu-latest'
-        run: npm run lint
-
-      - name: Lint markdown
-        if: matrix.os == 'ubuntu-latest'
-        run: npm run lint:markdown
-
-      - name: Type checks
-        if: matrix.os == 'ubuntu-latest'
-        run: npm run type-check
-
-      - name: Run tests
-        run: npm test
-
       - name: Build app for smoke tests
         run: npm run app-build:smoke
 
       - name: Run app smoke tests
         run: npm run test:smoke:build
-
-      - name: Set Inso CLI variables
-        id: inso-variables
-        shell: bash
-        run: |
-          INSO_VERSION="${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}"
-          PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
-          BUNDLE_ID="com.insomnia.inso"
-
-          echo ::set-output name=pkg-name::$PKG_NAME
-          echo ::set-output name=bundle-id::$BUNDLE_ID
-          echo ::set-output name=inso-version::$INSO_VERSION
-
-      - name: Package Inso CLI binary
-        run: npm run inso-package
-        env:
-          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
-
-      - name: Create Inso CLI artifacts
-        run: npm run inso-package:artifacts
-        env:
-          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
-
-      - name: Upload Inso CLI artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          if-no-files-found: ignore
-          name: ${{ steps.inso-variables.outputs.pkg-name }}
-          path: packages/insomnia-inso/artifacts
-
-      - name: Run Inso CLI smoke tests
-        run: npm run test:smoke:cli
 
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v2
@@ -107,4 +35,7 @@ jobs:
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/screenshots
+          path: |
+            packages/insomnia-smoke-test/screenshots
+            %APPDATA%/Insomnia/logs/*
+            %APPDATA%/insomnia-app/logs/*

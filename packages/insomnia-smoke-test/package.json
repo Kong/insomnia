@@ -20,7 +20,7 @@
     "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
-    "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
+    "test:build": "xvfb-maybe cross-env DEBUG=pw:browser*,pw:webserver,pw:api BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "ts-node server/index.ts",
