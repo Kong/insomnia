@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "name": "insomnia-common",
   "version": "2.5.1-beta.0",
   "homepage": "https://insomnia.rest",
