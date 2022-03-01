@@ -26,7 +26,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // No PKCE
   await page.locator('button:has-text("No PKCE")').click();
-  
+
   // Wait for environment interpolation to be rendered
   await expect(page.locator('[data-testid="request-pane"]')).toContainText('_.oidc_base_path');
 
