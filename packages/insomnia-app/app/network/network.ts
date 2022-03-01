@@ -160,8 +160,6 @@ export async function cancelRequestById(requestId) {
     return cancelRequestFunctionMap[requestId]();
   }
   console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
-  // Tidy up race condition, where cancel doesn't work and keeps spinning becuase requestId is unset or has been removed
-  return cancelRequestFunctionMap['fallback']();
 }
 
 export async function _actuallySend(
@@ -235,15 +233,7 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
-      cancelRequestFunctionMap['fallback'] = () => respond({
-        elapsedTime: 0,
-        bytesRead: 0,
-        url: renderedRequest.url,
-        statusMessage: 'Cancelled',
-        error: 'Request was cancelled',
-      }, null);
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
-
         await respond(
           {
             elapsedTime: 0,

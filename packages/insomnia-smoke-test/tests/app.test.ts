@@ -61,7 +61,7 @@ test('can send requests', async ({ app, page }) => {
 
 // This feature is unsafe to place beside other tests, cancelling a request causes node-libcurl to block
 // related to https://linear.app/insomnia/issue/INS-973
-test.skip('can cancel requests', async ({ app, page }) => {
+test('can cancel requests', async ({ app, page }) => {
   await page.click('[data-testid="project"]');
   await page.click('text=Create');
 
@@ -73,6 +73,7 @@ test.skip('can cancel requests', async ({ app, page }) => {
 
   await page.click('button:has-text("GETdelayed request")');
   await page.click('text=http://127.0.0.1:4010/delay/seconds/20Send >> button');
+  await page.click('text=seconds...'); // Theory: cancel request could hang if its pressed too quickly, because the function map isn't initialised?
   await page.click('text=Loading...Cancel Request >> button');
   await page.click('text=Request was cancelled');
 });
