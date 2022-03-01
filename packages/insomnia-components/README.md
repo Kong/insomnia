@@ -1,6 +1,7 @@
 # insomnia-components
 
 `insomnia-components` is a React component library of UI elements needed to build [Insomnia](https://insomnia.rest).
+
 ## SVGs
 
 We use [SVGR](https://react-svgr.com) on the source SVGs to minify and convert them to React components. This conversion happens during `npm run bootstrap`.
