@@ -32,6 +32,11 @@ jobs:
       - name: Add "Versions" Tap
         run: brew tap homebrew/homebrew-cask-versions
 
+      - name: Configure Git user
+        uses: Homebrew/actions/git-user-config@master
+        with:
+          username: 'insomnia-infra'
+
       # Update Homebrew's Inso(mnia) formulae
       # https://github.com/Homebrew/actions/tree/master/bump-formulae
       - name: Bump Inso (Beta) Formula
