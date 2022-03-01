@@ -32,6 +32,7 @@ if (process.type === 'renderer') throw new Error('node-libcurl unavailable in re
 // simplify clean up callbacks
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
+import { reject } from 'ramda';
 import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
 
@@ -72,108 +73,117 @@ interface CurlRequestOutput {
 const cancelCurlRequestHandlers = {};
 export const cancelCurlRequest = id => cancelCurlRequestHandlers[id]();
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
-  // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-  const { curlOptions, responseBodyPath, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart } = options;
-  const curl = new Curl();
-  let requestFileDescriptor;
-  const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-  // cancel request by id map
-  cancelCurlRequestHandlers[requestId] = () => {
-    if (requestFileDescriptor && responseBodyPath) {
-      closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath);
-    }
-    curl.close();
-  };
-  // set the string and number options from network.ts
-  curlOptions.forEach(opt => curl.setOpt(opt.key, opt.value));
-  // read file into request and close file desriptor
-  if (requestBodyPath) {
-    requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
-    curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
-    curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
-    curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
-  }
-
-  // set up response writer
-  let responseBodyBytes = 0;
-  curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
-    responseBodyBytes += buffer.length;
-    responseBodyWriteStream.write(buffer);
-    return buffer.length;
-  });
-  // set up response logger
-  const debugTimeline: ResponseTimelineEntry[] = [];
-  curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
-    const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
-    const infoTypeName = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
-
-    const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
-    const isEmpty = buffer.length === 0;
-    // Don't show cookie setting because this will display every domain in the jar
-    const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
-    if (isSSLData || isEmpty || isAddCookie) {
-      return 0;
+  try {
+    // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
+    const { curlOptions, responseBodyPath, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart } = options;
+    const curl = new Curl();
+    let requestFileDescriptor;
+    const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
+    // cancel request by id map
+    cancelCurlRequestHandlers[requestId] = () => {
+      if (requestFileDescriptor && responseBodyPath) {
+        closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath);
+      }
+      curl.close();
+    };
+    // set the string and number options from network.ts
+    curlOptions.forEach(opt => curl.setOpt(opt.key, opt.value));
+    // read file into request and close file desriptor
+    if (requestBodyPath) {
+      requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
+      curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
+      curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
+      curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
     }
 
-    let value;
-    if (infoType === CurlInfoDebug.DataOut) {
-      // Ignore the possibly large data messages
-      const lessThan10KB = buffer.length / 1024 < maxTimelineDataSizeKB || 10;
-      value = lessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
-    }
-    if (infoType === CurlInfoDebug.DataIn) {
-      value = `Received ${describeByteSize(buffer.length)} chunk`;
-    }
-
-    debugTimeline.push({
-      name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : infoTypeName,
-      value: value || buffer.toString('utf8'),
-      timestamp: Date.now(),
+    // set up response writer
+    let responseBodyBytes = 0;
+    curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
+      responseBodyBytes += buffer.length;
+      responseBodyWriteStream.write(buffer);
+      return buffer.length;
     });
-    return 0; // Must be here
-  });
+    // set up response logger
+    const debugTimeline: ResponseTimelineEntry[] = [];
+    curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+      const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
+      const infoTypeName = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
-  // makes rawHeaders a buffer, rather than HeaderInfo[]
-  curl.enable(CurlFeature.Raw);
-  // NOTE: legacy write end callback
-  curl.on('end', () => responseBodyWriteStream.end());
-  curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
+      const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
+      const isEmpty = buffer.length === 0;
+      // Don't show cookie setting because this will display every domain in the jar
+      const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
+      if (isSSLData || isEmpty || isAddCookie) {
+        return 0;
+      }
+
+      let value;
+      if (infoType === CurlInfoDebug.DataOut) {
+        // Ignore the possibly large data messages
+        const lessThan10KB = buffer.length / 1024 < maxTimelineDataSizeKB || 10;
+        value = lessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+      }
+      if (infoType === CurlInfoDebug.DataIn) {
+        value = `Received ${describeByteSize(buffer.length)} chunk`;
+      }
+
+      debugTimeline.push({
+        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : infoTypeName,
+        value: value || buffer.toString('utf8'),
+        timestamp: Date.now(),
+      });
+      return 0; // Must be here
+    });
+
+    // makes rawHeaders a buffer, rather than HeaderInfo[]
+    curl.enable(CurlFeature.Raw);
+    // NOTE: legacy write end callback
+    curl.on('end', () => responseBodyWriteStream.end());
+    curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
+      const patch = {
+        bytesContent: responseBodyBytes,
+        bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
+        elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
+        url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
+      };
+      curl.close();
+      await waitForStreamToFinish(responseBodyWriteStream);
+
+      const headerResults = _parseHeaders(rawHeaders);
+      resolve({ patch, debugTimeline, headerResults });
+    });
+    // NOTE: legacy write end callback
+    curl.on('error', () => responseBodyWriteStream.end());
+    curl.on('error', async function (err, code) {
+      const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
+      curl.close();
+      await waitForStreamToFinish(responseBodyWriteStream);
+
+      let error = err + '';
+      let statusMessage = 'Error';
+
+      if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
+        error = 'Request aborted';
+        statusMessage = 'Abort';
+      }
+      const patch = {
+        statusMessage,
+        error: error || 'Something went wrong',
+        elapsedTime,
+      };
+
+      // NOTE: legacy, default headerResults
+      resolve({ patch, debugTimeline, headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
+    });
+    curl.perform();
+  } catch (e) {
     const patch = {
-      bytesContent: responseBodyBytes,
-      bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
-      elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
-      url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
+      statusMessage: 'Error',
+      error: e.message || 'Something went wrong',
+      elapsedTime: 0,
     };
-    curl.close();
-    await waitForStreamToFinish(responseBodyWriteStream);
-
-    const headerResults = _parseHeaders(rawHeaders);
-    resolve({ patch, debugTimeline, headerResults });
-  });
-  // NOTE: legacy write end callback
-  curl.on('error', () => responseBodyWriteStream.end());
-  curl.on('error', async function(err, code) {
-    const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
-    curl.close();
-    await waitForStreamToFinish(responseBodyWriteStream);
-
-    let error = err + '';
-    let statusMessage = 'Error';
-
-    if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-      error = 'Request aborted';
-      statusMessage = 'Abort';
-    }
-    const patch = {
-      statusMessage,
-      error: error || 'Something went wrong',
-      elapsedTime,
-    };
-
-    // NOTE: legacy, default headerResults
-    resolve({ patch, debugTimeline, headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
-  });
-  curl.perform();
+    resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
+  }
 });
 
 const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {

@@ -746,48 +746,6 @@ describe('actuallySend()', () => {
     expect(networkUtils.getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
     expect(networkUtils.getHttpVersion('blah').curlHttpVersion).toBe(undefined);
   });
-
-  it('requests can be cancelled by requestId', async () => {
-    // GIVEN
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
-    const request1 = Object.assign(models.request.init(), {
-      _id: 'req_15',
-      parentId: workspace._id,
-      url: 'http://unix:3000/requestA',
-      method: 'GET',
-    });
-    const request2 = Object.assign(models.request.init(), {
-      _id: 'req_10',
-      parentId: workspace._id,
-      url: 'http://unix:3000/requestB',
-      method: 'GET',
-    });
-    const renderedRequest1 = await getRenderedRequest({ request: request1 });
-    const renderedRequest2 = await getRenderedRequest({ request: request2 });
-
-    // WHEN
-    const response1Promise = networkUtils._actuallySend(
-      renderedRequest1,
-      workspace,
-      settings,
-    );
-
-    const response2Promise = networkUtils._actuallySend(
-      renderedRequest2,
-      workspace,
-      settings,
-    );
-
-    await networkUtils.cancelRequestById(renderedRequest1._id);
-    const response1 = await response1Promise;
-    const response2 = await response2Promise;
-    // THEN
-    expect(response1.statusMessage).toBe('Cancelled');
-    expect(response2.statusMessage).toBe('OK');
-    expect(networkUtils.hasCancelFunctionForId(request1._id)).toBe(false);
-    expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
-  });
 });
 
 describe('_getAwsAuthHeaders', () => {
