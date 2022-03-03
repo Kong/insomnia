@@ -1,5 +1,6 @@
 /* eslint-disable filenames/match-exported */
 import { PlaywrightTestConfig } from '@playwright/test';
+
 const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npm run serve',
@@ -24,4 +25,5 @@ const config: PlaywrightTestConfig = {
   },
   workers: process.env.CI ? 1 : undefined,
 };
+
 export default config;
