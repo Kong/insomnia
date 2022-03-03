@@ -163,5 +163,13 @@ jobs:
             **Automated pull request**
 
             Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ## Steps for Publish:
+
+            When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-core-publish.yml) workflow with these variables:
+            - Release branch (`release_branch`): `${{ env.RELEASE_BRANCH}}`
+            - Run id (`run_id`): `${{ github.run_id }}`
           draft: true
           ignore_users: "dependabot"
+
+        # TODO - add to PR description GH CLI run workflow example + check if URL with pre-filled info is possible
