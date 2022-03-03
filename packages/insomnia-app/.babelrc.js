@@ -1,7 +1,7 @@
 /** @type { import('@babel/core').TransformOptions } */
 module.exports = {
   presets: [
-    ['@babel/preset-env',{targets: {electron: '12.2.3'}}],
+    ['@babel/preset-env',{targets: {electron: '15.3.7'}}],
     '@babel/preset-typescript',
     '@babel/preset-react',
   ],

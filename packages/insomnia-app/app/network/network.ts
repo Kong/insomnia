@@ -860,7 +860,6 @@ export async function send(
   let renderedRequest: RenderedRequest;
 
   try {
-    console.log('[network] Apply plugin pre hooks');
     renderedRequest = await _applyRequestPluginHooks(
       renderedRequestBeforePlugins,
       renderedContextBeforePlugins,
