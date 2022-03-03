@@ -44,6 +44,7 @@ export function render(
     renderMode?: string;
   } = {},
 ) {
+  if (!text.includes('{{')) return text;
   const context = config.context || {};
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}

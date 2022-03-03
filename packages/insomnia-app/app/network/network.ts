@@ -3,7 +3,6 @@ import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVer
 import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
 import aws4 from 'aws4';
 import clone from 'clone';
-import crypto from 'crypto';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
@@ -1022,17 +1021,16 @@ export function _getAwsAuthHeaders(
 function storeTimeline(timeline: ResponseTimelineEntry[]) {
   return new Promise<string>((resolve, reject) => {
     const timelineStr = JSON.stringify(timeline, null, '\t');
-    const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
+    const timelineHash = uuid.v4();
     const responsesDir = pathJoin(getDataDirectory(), 'responses');
     mkdirp.sync(responsesDir);
     const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
     fs.writeFile(timelinePath, timelineStr, err => {
       if (err != null) {
         reject(err);
-      } else {
-        resolve(timelinePath);
       }
     });
+    resolve(timelinePath);
   });
 }
 

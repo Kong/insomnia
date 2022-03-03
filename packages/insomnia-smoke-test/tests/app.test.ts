@@ -59,8 +59,24 @@ test('can send requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
 });
 
-// TODO: write a cancel request test which doesn't hang on windows
-// hitting cancel function not found error
+// This feature is unsafe to place beside other tests, cancelling a request can cause network code to block
+// related to https://linear.app/insomnia/issue/INS-973
+test('can cancel requests', async ({ app, page }) => {
+  await page.click('[data-testid="project"]');
+  await page.click('text=Create');
+
+  const text = await loadFixture('smoke-test-collection.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+
+  await page.click('button:has-text("Clipboard")');
+  await page.click('text=CollectionSmoke testsjust now');
+
+  await page.click('button:has-text("GETdelayed request")');
+  await page.click('text=http://127.0.0.1:4010/delay/seconds/20Send >> button');
+
+  await page.click('[data-testid="response-pane"] button:has-text("Cancel Request")');
+  await page.click('text=Request was cancelled');
+});
 
 test('url field is focused for first time users', async ({ page }) => {
   const urlInput = ':nth-match(textarea, 2)';
