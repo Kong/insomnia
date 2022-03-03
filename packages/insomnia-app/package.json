@@ -131,7 +131,7 @@
     "js-yaml": "^3.14.1",
     "jshint": "^2.11.1",
     "json-order": "^1.1.0",
-    "jsonlint": "^1.6.3",
+    "jsonlint-mod-fixed": "1.7.7",
     "jsonpath-plus": "^6.0.1",
     "jwt-authentication": "^0.4.0",
     "marked": "^4.0.10",

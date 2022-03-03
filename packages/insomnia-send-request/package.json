@@ -26,7 +26,7 @@
     "insomnia-testing": "2.5.1",
     "isomorphic-git": "^1.5.0",
     "jshint": "^2.11.1",
-    "jsonlint": "^1.6.3",
+    "jsonlint-mod-fixed": "1.7.7",
     "jsonpath-plus": "^6.0.1",
     "marked": "^4.0.10",
     "mime-types": "^2.1.27",
