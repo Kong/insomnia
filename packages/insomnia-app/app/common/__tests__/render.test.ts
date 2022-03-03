@@ -49,15 +49,11 @@ describe('render tests', () => {
       expect(rendered).toBe('Hello FooBar!');
     });
 
-    it('fails on invalid template', async () => {
-      try {
-        await renderUtils.render('Hello {{ msg }!', {
-          msg: 'World',
-        });
-        fail('Render should have failed');
-      } catch (err) {
-        expect(err.message).toContain('expected variable end');
-      }
+    it('returns invalid template', async () => {
+      const rendered = await renderUtils.render('Hello {{ msg }!', {
+        msg: 'World',
+      });
+      expect(rendered).toBe('Hello {{ msg }!');
     });
 
     it('handles variables using tag before tag is defined as expected (incorrect order)', async () => {
@@ -570,7 +566,7 @@ describe('render tests', () => {
         );
         fail('Render should have failed');
       } catch (err) {
-        expect(err.message).toContain('expected variable end');
+        expect(err.message).toContain('attempted to output null or undefined value');
       }
     });
 

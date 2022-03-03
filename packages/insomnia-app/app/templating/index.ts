@@ -44,7 +44,9 @@ export function render(
     renderMode?: string;
   } = {},
 ) {
-  if (!text.includes('{{')) return text;
+  const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
+  const hasNunjucksCustomTagSymbols = text.includes('{%') && text.includes('%}');
+  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols) return text;
   const context = config.context || {};
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}
@@ -56,6 +58,7 @@ export function render(
     const nj = await getNunjucks(renderMode);
     nj?.renderString(text, templatingContext, (err, result) => {
       if (err) {
+        console.log(err);
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
           .replace(/\[Line \d+, Column \d*]/, '')
