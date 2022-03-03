@@ -6,9 +6,14 @@ on:
       release_branch:
         required: true
         description: Branch of the release (e.g. release/2022.1.0 or  release/2022.1.0-beta.0)
+      run_id:
+        required: true
+        description: Run id of the release-core-build workflow
+
 
 env:
   RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
+  RUN_ID: ${{ github.event.inputs.run_id }}
 
 jobs:
   publish:
@@ -25,7 +30,8 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: release-core-build.yml
           workflow_conclusion: success
-          branch: ${{ env.RELEASE_BRANCH }}
+          # branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
+          run_id: ${{ env.RUN_ID }}
           path: ./artifacts/
 
       - name: (DEBUG) Check artifacts
