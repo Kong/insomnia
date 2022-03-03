@@ -16,6 +16,7 @@ env:
   RELEASE_CORE_TAG: core/${{ github.event.inputs.version }}
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   RUN_ID: ${{ github.event.inputs.run_id }}
+  IS_PRERELEASE: ${{ contains('alpha', github.event.inputs.version) || contains('beta', github.event.inputs.version) }}
 
 jobs:
   publish:
@@ -42,7 +43,7 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           release_name: Insomnia ${{ env.RELEASE_VERSION }}
-          prerelease: ${{ contains('alpha', github.event.inputs.version) || contains('beta', github.event.inputs.version) }}
+          prerelease: ${{ env.IS_PRERELEASE }}
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,8 +54,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
-          file: "./artifacts/**"
-          draft: ${{ contains('alpha', github.event.inputs.version) || contains('beta', github.event.inputs.version) }}
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          file: "./artifacts/*-latest-artifacts/insomnia-app/**"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: true
 
       # - name: Create github release for Inso lib@ tag
       # - name: Upload Inso artifacts to release
