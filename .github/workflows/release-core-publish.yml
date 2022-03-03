@@ -2,11 +2,42 @@ name: Release Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      release_branch:
+        required: true
+        description: Branch of the release (e.g. release/2022.1.0 or  release/2022.1.0-beta.0)
+
+env:
+  RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
 
 jobs:
-  todo-replace-me:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: todo-replace-me
-        run: echo "TODO replace me"
+      - name: Checkout branch # Check out the release branch
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: release-core-build.yml
+          workflow_conclusion: success
+          branch: ${{ env.RELEASE_BRANCH }}
+          path: ./artifacts/
+
+      - name: (DEBUG) Check artifacts
+        run: ls -lah ./artifacts/
+
+      # - name: Create core@tag/github release
+      # - name: Upload artifacts to release
+      # - name: Publish npm packages
+      # - name: Publish to pulp if stable
+      # - name: If stable, upload to snapcraft
+      # - name: Publish beta/stable to Insomnia API
+      # - name: Check if branch is mergeable
+      # - name: Merge Git branch
+
 
