@@ -265,7 +265,7 @@ async function _trackStats() {
     return new Promise<string>((resolve, reject) => {
       writeFile(options.path, options.content, err => {
         if (err != null) {
-          reject(err);
+          return reject(err);
         }
         resolve(options.path);
       });

@@ -2,34 +2,6 @@
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
 if (process.type === 'renderer') throw new Error('node-libcurl unavailable in renderer');
 
-// Design
-// constrant: ipc bridge cannot serialise functions so read, write and debug callbacks need to be simplified
-// and handled in nodejs here
-
-// assertion: network.ts is coupled with database, plugins, and auth logic.
-
-// assertion: options are typechecked and don't need run time feedback.
-// therefore we can build a list of options and apply them at once.
-// excluding READDATA, WRITEFUNCTION and DEBUGFUNCTION which expect non-primitive inputs
-
-// assertion: settings timeline objects can split into setup and debug timelines and contains timestamps
-// therefore they can be merged easily
-
-// overview: behaviours tightly coupled to node-libcurl implementation
-// write response to file return path to file
-// write debug output to timeline array
-// read file and file descriptor teardown
-// getInfo time taken size and url
-// expose a fire and forget close instance for cancel
-// on error: close filewriter/s, close curl instance, save timeline return error message
-// on end: close filewriter/s, close curl instance, set cookies, save timeline, return transformed headers, status
-// most of end callback now happens after this promise resolves at the callsite
-
-// future work: scoped out in order to avoid creating new code paths
-// reject promise on error rather than resolve
-// simplify _parseHeaders
-// get renderer side curl types from node-libcurl somehow
-// simplify clean up callbacks
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
 import { Readable, Writable } from 'stream';

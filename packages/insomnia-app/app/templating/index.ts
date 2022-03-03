@@ -46,7 +46,8 @@ export function render(
 ) {
   const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
   const hasNunjucksCustomTagSymbols = text.includes('{%') && text.includes('%}');
-  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols) return text;
+  const hasNunjucksCommentSymbols = text.includes('{#') && text.includes('#}');
+  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) return text;
   const context = config.context || {};
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}
@@ -55,7 +56,8 @@ export function render(
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
   return new Promise<string | null>(async (resolve, reject) => {
-    const id = setTimeout(() => reject(new Error('Nunjucks did not respond in 5 seconds')), 5000);
+    // NOTE: this is added as a breadcrumb because renderString sometimes hangs
+    const id = setTimeout(() => console.log('Warning: nunjucks failed to respond within 5 seconds'), 5000);
     const nj = await getNunjucks(renderMode);
     nj?.renderString(text, templatingContext, (err, result) => {
       clearTimeout(id);
