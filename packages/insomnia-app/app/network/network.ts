@@ -1019,18 +1019,21 @@ export function _getAwsAuthHeaders(
 }
 
 function storeTimeline(timeline: ResponseTimelineEntry[]) {
+  const timelineStr = JSON.stringify(timeline, null, '\t');
+  const timelineHash = uuid.v4();
+  const responsesDir = pathJoin(getDataDirectory(), 'responses');
+  mkdirp.sync(responsesDir);
+  const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
+  if (process.type === 'renderer'){
+    return window.main.writeFile({ path: timelinePath, content: timelineStr });
+  }
   return new Promise<string>((resolve, reject) => {
-    const timelineStr = JSON.stringify(timeline, null, '\t');
-    const timelineHash = uuid.v4();
-    const responsesDir = pathJoin(getDataDirectory(), 'responses');
-    mkdirp.sync(responsesDir);
-    const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
     fs.writeFile(timelinePath, timelineStr, err => {
       if (err != null) {
         reject(err);
       }
+      resolve(timelinePath);
     });
-    resolve(timelinePath);
   });
 }
 

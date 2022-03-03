@@ -7,6 +7,7 @@ const main = {
   installPlugin: options => ipcRenderer.invoke('installPlugin', options),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
+  writeFile: options => ipcRenderer.invoke('writeFile', options),
 };
 const dialog = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

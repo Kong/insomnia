@@ -1,6 +1,7 @@
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import { writeFile } from 'fs';
 import path from 'path';
 
 import appConfig from '../config/config.json';
@@ -258,6 +259,17 @@ async function _trackStats() {
   ipcMain.handle('authorizeUserInWindow', (_, options) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+  });
+
+  ipcMain.handle('writeFile', (_, options) => {
+    return new Promise<string>((resolve, reject) => {
+      writeFile(options.path, options.content, err => {
+        if (err != null) {
+          reject(err);
+        }
+        resolve(options.path);
+      });
+    });
   });
 
   ipcMain.handle('curlRequest', (_, options) => {
