@@ -3,16 +3,18 @@ name: Release Publish
 on:
   workflow_dispatch:
     inputs:
-      release_branch:
+      version:
         required: true
-        description: Branch of the release (e.g. release/2022.1.0 or  release/2022.1.0-beta.0)
+        description: Version of the release (e.g. 2022.1.0 or 2022.1.0-beta.0)
       run_id:
         required: true
         description: Run id of the release-core-build workflow
 
 
 env:
-  RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_CORE_TAG: core/${{ github.event.inputs.version }}
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   RUN_ID: ${{ github.event.inputs.run_id }}
 
 jobs:
@@ -34,11 +36,28 @@ jobs:
           run_id: ${{ env.RUN_ID }}
           path: ./artifacts/
 
-      - name: (DEBUG) Check artifacts
-        run: ls -lah ./artifacts/
+      - name: Create Tag and Release
+        uses: avakar/tag-and-release@v1
+        id: core_tag_and_release
+        with:
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          release_name: Insomnia ${{ env.RELEASE_VERSION }}
+          prerelease: ${{ contains('alpha', github.event.inputs.version) || contains('beta', github.event.inputs.version) }}
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Create core@tag/github release
-      # - name: Upload artifacts to release
+      - name: Upload artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.core_tag_and_release.outputs.id }}
+          file: "./artifacts/**"
+          draft: ${{ contains('alpha', github.event.inputs.version) || contains('beta', github.event.inputs.version) }}
+
+      # - name: Create github release for Inso lib@ tag
+      # - name: Upload Inso artifacts to release
       # - name: Publish npm packages
       # - name: Publish to pulp if stable
       # - name: If stable, upload to snapcraft

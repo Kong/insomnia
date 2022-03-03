@@ -167,7 +167,7 @@ jobs:
             ## Steps for Publish:
 
             When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-core-publish.yml) workflow with these variables:
-            - Release branch (`release_branch`): `${{ env.RELEASE_BRANCH}}`
+            - Release version (`version`): `${{ env.RELEASE_VERSION }}`
             - Run id (`run_id`): `${{ github.run_id }}`
           draft: true
           ignore_users: "dependabot"
