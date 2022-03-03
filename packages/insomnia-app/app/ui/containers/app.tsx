@@ -804,8 +804,12 @@ class App extends PureComponent<AppProps, State> {
     handleStartLoading(requestId);
 
     try {
+      console.log('[debug] start loading', { requestId });
       const responsePatch = await network.send(requestId, environmentId);
+      console.log('[debug] got network.send', { responsePatch });
       await models.response.create(responsePatch, settings.maxHistoryResponses);
+      console.log('[debug] save that to db');
+
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -831,6 +835,8 @@ class App extends PureComponent<AppProps, State> {
     await updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
+    console.log('[debug] grpc janky await complete', { requestId });
+
     // Stop loading
     handleStopLoading(requestId);
   }

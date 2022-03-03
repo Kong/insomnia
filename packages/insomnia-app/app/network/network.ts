@@ -168,7 +168,7 @@ export async function _actuallySend(
   environment?: Environment | null,
   validateSSL = true,
 ) {
-  return new Promise<ResponsePatch>(async resolve => {
+  return new Promise<ResponsePatch>(async (resolve, reject) => {
     const timeline: ResponseTimelineEntry[] = [];
 
     const addTimelineItem = (name: ResponseTimelineEntry['name']) => (value: string) => {
@@ -180,6 +180,7 @@ export async function _actuallySend(
     };
 
     const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
+    console.log('[debug] init curl');
 
     /** Helper function to respond with a success */
     async function respond(
@@ -187,7 +188,7 @@ export async function _actuallySend(
       bodyPath: string | null,
       debugTimeline: any[] = []
     ) {
-
+      console.log('[debug] respond', { patch });
       const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
       if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
@@ -211,6 +212,8 @@ export async function _actuallySend(
 
     /** Helper function to respond with an error */
     async function handleError(err: Error) {
+      console.log('[debug] handle error', { err });
+
       await respond(
         {
           url: renderedRequest.url,
@@ -233,6 +236,8 @@ export async function _actuallySend(
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
+        console.log('[debug] create cancel function');
+
         await respond(
           {
             elapsedTime: 0,
@@ -657,10 +662,12 @@ export async function _actuallySend(
           }
         });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
+      console.log('[debug] setOpts done');
+
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
-      console.log('[network] Sending request over ipc');
+      console.log('[debug] get body path', { responseBodyPath });
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
@@ -674,9 +681,10 @@ export async function _actuallySend(
         maxTimelineDataSizeKB: settings.maxTimelineDataSizeKB,
         requestId: renderedRequest._id,
       };
-
+      const id = setTimeout(() => reject(new Error('Curl did not respond in 5 seconds')), 5000);
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
-      console.log('[network] Handling response');
+      clearTimeout(id);
+      console.log('[debug] response complete', { patch, debugTimeline });
 
       // Headers are an array (one for each redirect)
       const lastCurlHeadersObject = headerResults[headerResults.length - 1];
@@ -823,12 +831,13 @@ export async function send(
    */
   const timeSinceLastInteraction = Date.now() - lastUserInteraction;
   const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
-
   if (delayMillis > 0) {
     await delay(delayMillis);
+    console.log('[debug] Added delay', delayMillis);
   }
 
   // Fetch some things
+
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
   const ancestors = await db.withAncestors(request, [
@@ -851,10 +860,13 @@ export async function send(
       extraInfo,
     },
   );
+  console.log('[debug] resolve render result', { renderResult });
+
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
   const workspaceDoc = ancestors.find(isWorkspace);
   const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
+  console.log('[debug] fetch workspace', { workspace });
 
   if (!workspace) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
@@ -880,6 +892,7 @@ export async function send(
       url: renderedRequestBeforePlugins.url,
     } as ResponsePatch;
   }
+  console.log('[debug] pre hooks', { renderedRequest });
 
   const response = await _actuallySend(
     renderedRequest,
@@ -888,6 +901,8 @@ export async function send(
     environment,
     settings.validateSSL,
   );
+  console.log('[debug] _actuallySend', { response });
+
   console.log(
     response.error
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
@@ -1028,12 +1043,18 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
     return window.main.writeFile({ path: timelinePath, content: timelineStr });
   }
   return new Promise<string>((resolve, reject) => {
+    const timelineStr = JSON.stringify(timeline, null, '\t');
+    const timelineHash = uuid.v4();
+    const responsesDir = pathJoin(getDataDirectory(), 'responses');
+    mkdirp.sync(responsesDir);
+    const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
     fs.writeFile(timelinePath, timelineStr, err => {
       if (err != null) {
         reject(err);
       }
       resolve(timelinePath);
     });
+    resolve(timelinePath);
   });
 }
 
