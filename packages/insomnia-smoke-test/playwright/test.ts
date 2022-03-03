@@ -57,7 +57,7 @@ export const test = baseTest.extend<{
   page: async ({ app }, use) => {
     const page = await app.firstWindow();
 
-    if (process.platform === 'win32') await page.reload();
+    await page.waitForLoadState();
 
     await page.click("text=Don't share usage analytics");
 

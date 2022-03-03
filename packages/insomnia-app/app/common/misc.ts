@@ -1,6 +1,5 @@
 import fuzzysort from 'fuzzysort';
 import { join as pathJoin } from 'path';
-import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid';
 import zlib from 'zlib';
 
@@ -339,27 +338,6 @@ export function fuzzyMatchAll(
     indexes,
     target: allText.join(' '),
   };
-}
-
-export async function waitForStreamToFinish(stream: Readable | Writable) {
-  return new Promise<void>(resolve => {
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._readableState?.finished) {
-      return resolve();
-    }
-
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._writableState?.finished) {
-      return resolve();
-    }
-
-    stream.on('close', () => {
-      resolve();
-    });
-    stream.on('error', () => {
-      resolve();
-    });
-  });
 }
 
 export function chunkArray<T>(arr: T[], chunkSize: number) {

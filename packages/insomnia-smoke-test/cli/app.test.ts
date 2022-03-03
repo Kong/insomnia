@@ -34,6 +34,7 @@ describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath
         srcInsoNedb,
         ['--env', 'Dev'],
         'Echo Test Suite',
+        '--verbose',
       );
 
       expect(failed).toBe(false);

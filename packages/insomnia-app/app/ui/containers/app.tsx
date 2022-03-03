@@ -806,6 +806,7 @@ class App extends PureComponent<AppProps, State> {
     try {
       const responsePatch = await network.send(requestId, environmentId);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
+
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -831,6 +832,7 @@ class App extends PureComponent<AppProps, State> {
     await updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
+
     // Stop loading
     handleStopLoading(requestId);
   }
