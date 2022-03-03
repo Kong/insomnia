@@ -7,7 +7,7 @@ resources:
     parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
     modified: 1645664215605
     created: 1645544268127
-    url: "{{ _.oidc_base_path }}/me"
+    url: "http://127.0.0.1:4010/oidc/me"
     name: No PKCE
     description: ""
     method: GET
@@ -15,13 +15,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_authorization_code }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "authorization_code"
+      clientSecret: "secret"
       disabled: false
       grantType: authorization_code
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
       scope: openid offline_access
       state: ""
@@ -60,7 +60,7 @@ resources:
     parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
     modified: 1645664217727
     created: 1645220819802
-    url: "{{ _.oidc_base_path }}/me"
+    url: "http://127.0.0.1:4010/oidc/me"
     name: PKCE SHA256
     description: ""
     method: GET
@@ -68,13 +68,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_authorization_code_pkce }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "authorization_code_pkce"
+      clientSecret: "secret"
       disabled: false
       grantType: authorization_code
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
       scope: openid offline_access
       state: ""
@@ -93,7 +93,7 @@ resources:
     parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
     modified: 1645664218264
     created: 1645543526615
-    url: "{{ _.oidc_base_path }}/me"
+    url: "http://127.0.0.1:4010/oidc/me"
     name: PKCE Plain
     description: ""
     method: GET
@@ -101,13 +101,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_authorization_code_pkce }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "authorization_code_pkce"
+      clientSecret: "secret"
       disabled: false
       grantType: authorization_code
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
       scope: openid offline_access
       state: ""
@@ -128,7 +128,7 @@ resources:
     parentId: fld_d34790add1584643b6688c3add5bbe85
     modified: 1645664218947
     created: 1645545802379
-    url: "{{ _.oidc_base_path }}/id-token"
+    url: "http://127.0.0.1:4010/oidc/id-token"
     name: ID Token
     description: ""
     method: GET
@@ -136,13 +136,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_implicit }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "implicit"
+      clientSecret: "secret"
       disabled: false
       grantType: implicit
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
       scope: openid
       state: ""
@@ -173,7 +173,7 @@ resources:
     parentId: fld_d34790add1584643b6688c3add5bbe85
     modified: 1645664219446
     created: 1645567186775
-    url: "{{ _.oidc_base_path }}/me"
+    url: "http://127.0.0.1:4010/oidc/me"
     name: ID and Access Token
     description: ""
     method: GET
@@ -181,13 +181,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_implicit }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "implicit"
+      clientSecret: "secret"
       disabled: false
       grantType: implicit
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token token
       scope: openid
       state: ""
@@ -208,7 +208,7 @@ resources:
     parentId: wrk_392055e2aa29457b9d2904396cd7631f
     modified: 1645664219861
     created: 1645637343873
-    url: "{{ _.oidc_base_path }}/client-credential"
+    url: "http://127.0.0.1:4010/oidc/client-credential"
     name: Client Credentials
     description: ""
     method: GET
@@ -216,13 +216,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_client_creds }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "client_credentials"
+      clientSecret: "secret"
       disabled: false
       grantType: client_credentials
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
       scope: openid
       state: ""
@@ -245,7 +245,7 @@ resources:
     parentId: wrk_392055e2aa29457b9d2904396cd7631f
     modified: 1645664220407
     created: 1645636233910
-    url: "{{ _.oidc_base_path }}/me"
+    url: "http://127.0.0.1:4010/oidc/me"
     name: Resource Owner Password Credentials
     description: ""
     method: GET
@@ -253,13 +253,13 @@ resources:
     parameters: []
     headers: []
     authentication:
-      accessTokenUrl: "{{ _.oidc_base_path }}/token"
-      authorizationUrl: "{{ _.oidc_base_path }}/auth"
-      clientId: "{{ _.client_id_resource_owner }}"
-      clientSecret: "{{ _.client_secret }}"
+      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
+      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
+      clientId: "resource_owner"
+      clientSecret: "secret"
       disabled: false
       grantType: password
-      redirectUrl: "{{ _.oidc_callback }}"
+      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
       scope: openid
       state: ""
@@ -283,27 +283,8 @@ resources:
     modified: 1645661876119
     created: 1645220798237
     name: Base Environment
-    data:
-      base_url: http://127.0.0.1:4010
-      oidc_base_path: "{{ _.base_url }}/oidc"
-      oidc_callback: "{{ _.base_url }}/callback"
-      client_id_authorization_code: authorization_code
-      client_id_authorization_code_pkce: authorization_code_pkce
-      client_id_implicit: implicit
-      client_id_client_creds: client_credentials
-      client_id_resource_owner: resource_owner
-      client_secret: secret
-    dataPropertyOrder:
-      "&":
-        - base_url
-        - oidc_base_path
-        - oidc_callback
-        - client_id_authorization_code
-        - client_id_authorization_code_pkce
-        - client_id_implicit
-        - client_id_client_creds
-        - client_id_resource_owner
-        - client_secret
+    data: {}
+    dataPropertyOrder: null
     color: null
     isPrivate: false
     metaSortKey: 1639556944617

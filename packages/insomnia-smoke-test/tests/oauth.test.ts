@@ -27,11 +27,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
   // No PKCE
   await page.locator('button:has-text("No PKCE")').click();
 
-  // Wait for environment interpolation to be rendered
-  await page.locator('text=_.oidc_base_path/me').click();
-  await page.locator('textarea:has-text("http://127.0.0.1:4010/oidc")').click();
-  await page.locator('text=Done').click();
-
   const [authorizationCodePage] = await Promise.all([
     app.context().waitForEvent('page'),
     sendButton.click(),
