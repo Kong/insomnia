@@ -49,7 +49,7 @@
     "@types/lodash.flattendeep": "^4.4.6",
     "@types/mkdirp": "^1.0.1",
     "@types/nedb": "^1.8.11",
-    "@types/node": "^14.14.32",
+    "@types/node": "^17.0.21",
     "@types/ramda": "^0.27.44",
     "@types/rimraf": "^3.0.0",
     "@types/webpack-node-externals": "^2.5.0",
