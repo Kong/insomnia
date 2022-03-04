@@ -44,6 +44,7 @@ jobs:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           release_name: Insomnia ${{ env.RELEASE_VERSION }}
           prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -56,6 +57,7 @@ jobs:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           file: "./artifacts/*-latest-artifacts/insomnia-app/**"
           prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
 
       # - name: Create github release for Inso lib@ tag  # TODO
       # - name: Upload Inso artifacts to release  # TODO
