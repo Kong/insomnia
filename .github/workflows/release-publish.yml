@@ -2,20 +2,15 @@ name: Release Publish
 
 on:
   workflow_dispatch:
-    inputs:
+    branch:
       version:
         required: true
-        description: Version of the release (e.g. 2022.1.0 or 2022.1.0-beta.0)
-      run_id:
-        required: true
-        description: Run id of the release-core-build workflow
-
+        description: Release branch (e.g. release/2022.1.0 or release/2022.1.0-beta.0)
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
   RELEASE_CORE_TAG: core@${{ github.event.inputs.version }}
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
-  RUN_ID: ${{ github.event.inputs.run_id }}
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
 
 jobs:
@@ -33,8 +28,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: release-core-build.yml
           workflow_conclusion: success
-          # branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
-          run_id: ${{ env.RUN_ID }}
+          branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
           path: ./artifacts/
 
       - name: Create Tag and Release
@@ -61,9 +55,10 @@ jobs:
 
       # - name: Create github release for Inso lib@ tag  # TODO
       # - name: Upload Inso artifacts to release  # TODO
+
       # - name: Publish npm packages
 
-      - name: Upload .deb to pulp if stable
+      - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == false }}
         uses: docker://kong/release-script:latest
         env:
@@ -75,9 +70,12 @@ jobs:
           entrypoint: python3
           args: '/usr/src/code/main.py release --file ${{ env.DEB_FILE }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
-      # - name: If stable, upload to snapcraft
+      - name: Upload to snapcraft (stable only)
+        if: ${{ env.IS_PRERELEASE == false }}
+        run: echo "TODO WIP"
+
       # - name: Publish beta/stable to Insomnia API
       # - name: Check if branch is mergeable
       # - name: Merge Git branch
 
-
+      # - name: Trigger homebrew workflow
