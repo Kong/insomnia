@@ -2,10 +2,10 @@ name: Release Publish
 
 on:
   workflow_dispatch:
-    branch:
+    version:
       version:
         required: true
-        description: Release branch (e.g. release/2022.1.0 or release/2022.1.0-beta.0)
+        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
@@ -56,6 +56,12 @@ jobs:
       # - name: Create github release for Inso lib@ tag  # TODO
       # - name: Upload Inso artifacts to release  # TODO
 
+      # - name: Publish beta/stable to Insomnia API
+
+      - name: Upload to snapcraft (stable only)
+        if: ${{ env.IS_PRERELEASE == false }}
+        run: echo "TODO WIP"
+
       # - name: Publish npm packages
 
       - name: Upload .deb to pulp (stable only)
@@ -70,12 +76,8 @@ jobs:
           entrypoint: python3
           args: '/usr/src/code/main.py release --file ${{ env.DEB_FILE }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
-      - name: Upload to snapcraft (stable only)
-        if: ${{ env.IS_PRERELEASE == false }}
-        run: echo "TODO WIP"
-
-      # - name: Publish beta/stable to Insomnia API
       # - name: Check if branch is mergeable
+
       # - name: Merge Git branch
 
       # - name: Trigger homebrew workflow
