@@ -68,7 +68,7 @@ jobs:
         run: npm run version -- patch --yes --no-push
 
       - name: Push changes
-        run: git push HEAD:${{ env.RELEASE_BRANCH }} --tags
+        run: git push --follow-tags
 
   create-pull-request:
     needs: setup-release-branch
