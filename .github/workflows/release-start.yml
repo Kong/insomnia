@@ -35,9 +35,10 @@ jobs:
           branch: ${{ env.RELEASE_BRANCH }}
 
       - name: Checkout branch # Check out the new branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ env.RELEASE_BRANCH }}
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -79,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch # Check out the new branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
