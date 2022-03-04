@@ -35,6 +35,3 @@ export const gitCallbacks = (credentials?: GitCredentials | null) => ({
   onAuthSuccess,
   onAuth: onAuth(credentials || undefined),
 });
-
-// unfortunately, as of @types/node:v14.14.32 this type is not exported so we have to hackily grab it from here.
-export type BufferEncoding = NonNullable<Parameters<typeof Buffer.from>[1]>;
