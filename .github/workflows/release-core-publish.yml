@@ -62,7 +62,19 @@ jobs:
       # - name: Create github release for Inso lib@ tag  # TODO
       # - name: Upload Inso artifacts to release  # TODO
       # - name: Publish npm packages
-      # - name: Publish to pulp if stable
+
+      - name: Upload .deb to pulp if stable
+        if: ${{ env.IS_PRERELEASE == false }}
+        uses: docker://kong/release-script:latest
+        env:
+          PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
+          PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
+          PULP_HOST: ${{ secrets.PULP_HOST }}
+          DEB_FILE: artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.deb
+        with:
+          entrypoint: python3
+          args: '/usr/src/code/main.py release --file ${{ env.DEB_FILE }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
+
       # - name: If stable, upload to snapcraft
       # - name: Publish beta/stable to Insomnia API
       # - name: Check if branch is mergeable
