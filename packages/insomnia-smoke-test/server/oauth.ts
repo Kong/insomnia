@@ -21,7 +21,7 @@ export const oauthRoutes = (port: number) => {
       },
       short: {
         httpOnly: false,
-      }
+      },
     },
     features: {
       devInteractions: {
