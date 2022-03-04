@@ -69,7 +69,7 @@ jobs:
 
       - name: Push changes
         run: |
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${REPOSITORY}.git"
+          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote_repo}" --follow-tags
         env:
           GITHUB_TOKEN: ${{ secrets.PUSH_TOKEN }}

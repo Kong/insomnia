@@ -53,7 +53,7 @@ jobs:
       - name: Package inso
         run: npm run inso-package
 
-      # TODO: Code-signing for inso
+      # TODO: Code-signing for inso TODO-filipe
 
       - name: Create inso artifacts
         run: npm run inso-package:artifacts

@@ -53,8 +53,8 @@ jobs:
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
-      # - name: Create github release for Inso lib@ tag  # TODO
-      # - name: Upload Inso artifacts to release  # TODO
+      # - name: Create github release for Inso lib@ tag  # TODO-filipe
+      # - name: Upload Inso artifacts to release  # TODO-filipe
 
       # - name: Publish beta/stable to Insomnia API
 
