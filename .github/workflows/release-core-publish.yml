@@ -44,7 +44,6 @@ jobs:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           release_name: Insomnia ${{ env.RELEASE_VERSION }}
           prerelease: ${{ env.IS_PRERELEASE }}
-          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -57,10 +56,9 @@ jobs:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           file: "./artifacts/*-latest-artifacts/insomnia-app/**"
           prerelease: ${{ env.IS_PRERELEASE }}
-          draft: true
 
-      # - name: Create github release for Inso lib@ tag
-      # - name: Upload Inso artifacts to release
+      # - name: Create github release for Inso lib@ tag  # TODO
+      # - name: Upload Inso artifacts to release  # TODO
       # - name: Publish npm packages
       # - name: Publish to pulp if stable
       # - name: If stable, upload to snapcraft
