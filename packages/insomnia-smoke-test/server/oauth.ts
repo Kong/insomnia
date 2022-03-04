@@ -15,6 +15,14 @@ export const oauthRoutes = (port: number) => {
 
   /* eslint-disable camelcase */
   const oidcConfig: Configuration = {
+    cookies: {
+      long: {
+        httpOnly: false,
+      },
+      short: {
+        httpOnly: false,
+      }
+    },
     features: {
       devInteractions: {
         enabled: true,

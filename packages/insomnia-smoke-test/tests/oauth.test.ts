@@ -33,6 +33,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   ]);
 
   await authorizationCodePage.waitForLoadState();
+  await authorizationCodePage.waitForFunction("document.cookie !== ''");
   await authorizationCodePage.locator('[name="login"]').fill('admin');
   await authorizationCodePage.locator('[name="password"]').fill('admin');
   await authorizationCodePage.locator('button:has-text("Sign-in")').click();
@@ -60,6 +61,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   ]);
 
   await refreshPage.waitForLoadState();
+  await refreshPage.waitForFunction("document.cookie !== ''");
   await refreshPage.locator('[name="login"]').fill('admin');
   await refreshPage.locator('[name="password"]').fill('admin');
   await refreshPage.locator('button:has-text("Sign-in")').click();
@@ -98,6 +100,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
     sendButton.click(),
   ]);
   await implicitPage.waitForLoadState();
+  await implicitPage.waitForFunction("document.cookie !== ''");
   await implicitPage.locator('[name="login"]').fill('admin');
   await implicitPage.locator('[name="password"]').fill('admin');
   await implicitPage.locator('button:has-text("Sign-in")').click();
