@@ -85,6 +85,33 @@ export const oauthRoutes = (port: number) => {
     issueRefreshToken: () => {
       return false;
     },
+    // https://github.com/panva/node-oidc-provider/blob/main/recipes/skip_consent.md
+    loadExistingGrant: async ctx => {
+      const grantId = (ctx.oidc.result?.consent?.grantId) || (ctx.oidc.session!.grantIdFor(ctx.oidc.client!.clientId));
+
+      if (grantId) {
+        const grant = await ctx.oidc.provider.Grant.find(grantId);
+        if (grant) {
+          if (ctx.oidc.account && grant.exp! < ctx.session?.exp) {
+            grant.exp = ctx.session?.exp;
+            await grant!.save();
+          }
+
+          return grant;
+        }
+      }
+
+      const grant = new ctx.oidc.provider.Grant({
+        clientId: ctx.oidc.client!.clientId,
+        accountId: ctx.oidc.session!.accountId,
+      });
+
+      grant.addOIDCScope('openid email profile');
+
+      await grant.save();
+
+      return grant;
+    },
   };
   /* eslint-enable camelcase */
 
