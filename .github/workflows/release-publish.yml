@@ -2,7 +2,7 @@ name: Release Publish
 
 on:
   workflow_dispatch:
-    version:
+    inputs:
       version:
         required: true
         description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
