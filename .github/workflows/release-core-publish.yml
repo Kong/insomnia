@@ -13,7 +13,7 @@ on:
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
-  RELEASE_CORE_TAG: core/${{ github.event.inputs.version }}
+  RELEASE_CORE_TAG: core@${{ github.event.inputs.version }}
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   RUN_ID: ${{ github.event.inputs.run_id }}
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
