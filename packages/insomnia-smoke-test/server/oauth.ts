@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { urlencoded } from 'express';
 import { Configuration, Provider } from 'oidc-provider';
 import { InvalidGrant } from 'oidc-provider/lib/helpers/errors';
 
@@ -15,6 +15,11 @@ export const oauthRoutes = (port: number) => {
 
   /* eslint-disable camelcase */
   const oidcConfig: Configuration = {
+    interactions: {
+      url: (_, interaction) => {
+        return `/oidc/interaction/${interaction.uid}`;
+      },
+    },
     cookies: {
       long: {
         httpOnly: false,
@@ -25,7 +30,7 @@ export const oauthRoutes = (port: number) => {
     },
     features: {
       devInteractions: {
-        enabled: true,
+        enabled: false,
       },
       registration: {
         enabled: false,
@@ -186,6 +191,58 @@ export const oauthRoutes = (port: number) => {
     res
       .status(200)
       .json(clientCredentials);
+  });
+
+  oauthRouter.get('/interaction/:uid', async (req, res, next) => {
+    try {
+      const {
+        uid, prompt,
+      } = await oidc.interactionDetails(req, res);
+
+      switch (prompt.name) {
+        case 'login': {
+          return res.send(`
+            <html>
+            <body>
+              <form autocomplete="off" action="/oidc/interaction/${uid}/login" method="post">
+                <input required type="text" name="login" placeholder="Enter any login" autofocus="on">
+                <input required type="password" name="password" placeholder="and password">
+
+                <button type="submit">Sign-in</button>
+              </form>
+            </body>
+            </html>
+          `);
+        }
+        default:
+          return next(new Error('Invalid prompt'));
+      }
+    } catch (err) {
+      return next(err);
+    }
+  });
+
+  const body = urlencoded({ extended: false });
+
+  oauthRouter.post('/interaction/:uid/login', body, async (req, res, next) => {
+    try {
+      await oidc.interactionDetails(req, res);
+
+      const account = await (oidc.Account as any).findAccount(
+        null,
+        req.body.login,
+      );
+
+      const result = {
+        login: {
+          accountId: account!.accountId,
+        },
+      };
+
+      await oidc.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+    } catch (err) {
+      next(err);
+    }
   });
 
   oauthRouter.use(oidc.callback());
