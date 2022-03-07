@@ -62,7 +62,6 @@ jobs:
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
         run: |
-          chmod +x ./src/scripts/macos-pkg.sh
           ./src/scripts/macos-pkg.sh
         shell: bash
         working-directory: packages/insomnia-inso
