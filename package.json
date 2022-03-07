@@ -17,7 +17,7 @@
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "bootstrap:electron-builder": "lerna bootstrap --no-ci -- --production --no-optional",
-    "version": "lerna version --exact",
+    "version": "lerna version --exact --force-publish",
     "release": "lerna publish from-git --pre-dist-tag beta --no-verify-access --yes",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
