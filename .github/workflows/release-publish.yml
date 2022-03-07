@@ -37,6 +37,7 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           release_name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
         env:
@@ -63,6 +64,7 @@ jobs:
         with:
           tag_name: lib@${{ env.INSO_VERSION }}
           release_name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
         env:
