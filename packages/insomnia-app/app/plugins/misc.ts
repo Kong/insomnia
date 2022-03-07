@@ -60,14 +60,14 @@ type ThemeInner = ThemeBlock & {
 };
 
 export interface PluginTheme {
-  /** this name is used to generate CSS classes, and must be lower case and must not contain spaces */
+  /** this name is used to generate CSS classes, and must be lower case and must not contain whitespace */
   name: string;
   displayName: string;
   theme: ThemeInner;
 }
 
 export const validateThemeName = (name: string) => {
-  const validName = name.replace(' ', '-').toLowerCase();
+  const validName = name.replace(/\s/gm, '-').toLowerCase();
   const isValid = name === validName;
 
   if (!isValid) {
