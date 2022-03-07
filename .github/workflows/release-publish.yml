@@ -87,7 +87,13 @@ jobs:
         if: ${{ env.IS_PRERELEASE == false }}
         run: echo "TODO WIP"
 
-      # - name: Publish npm packages
+      # - name: Publish npm packages (alpha/beta)
+      #   if: ${{ env.IS_PRERELEASE == true }}
+      #   run: npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
+
+      # - name: Publish npm packages (stable)
+      #   if: ${{ env.IS_PRERELEASE == false }}
+      #   run: npm run publish -- --yes
 
       - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == false }}
