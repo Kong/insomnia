@@ -33,10 +33,10 @@ test('can make oauth2 requests', async ({ app, page }) => {
   ]);
 
   await authorizationCodePage.waitForLoadState();
+  await authorizationCodePage.waitForFunction("document.cookie !== ''");
   await authorizationCodePage.locator('[name="login"]').fill('admin');
   await authorizationCodePage.locator('[name="password"]').fill('admin');
   await authorizationCodePage.locator('button:has-text("Sign-in")').click();
-  await authorizationCodePage.locator('button:has-text("Continue")').click();
 
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
@@ -61,22 +61,17 @@ test('can make oauth2 requests', async ({ app, page }) => {
   ]);
 
   await refreshPage.waitForLoadState();
+  // expect an _interaction cookie to be set with the sign in form
+  await refreshPage.waitForFunction("document.cookie !== ''");
   await refreshPage.locator('[name="login"]').fill('admin');
   await refreshPage.locator('[name="password"]').fill('admin');
   await refreshPage.locator('button:has-text("Sign-in")').click();
-  await refreshPage.locator('text=Continue').click();
 
   await expect(tokenInput).not.toHaveValue('');
 
   // PKCE SHA256
   await page.locator('button:has-text("PKCE SHA256")').click();
-
-  const [pkcePage] = await Promise.all([
-    app.context().waitForEvent('page'),
-    sendButton.click(),
-  ]);
-  await pkcePage.waitForLoadState();
-  await pkcePage.locator('text=Continue').click();
+  await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
 
@@ -106,10 +101,10 @@ test('can make oauth2 requests', async ({ app, page }) => {
     sendButton.click(),
   ]);
   await implicitPage.waitForLoadState();
+  await implicitPage.waitForFunction("document.cookie !== ''");
   await implicitPage.locator('[name="login"]').fill('admin');
   await implicitPage.locator('[name="password"]').fill('admin');
   await implicitPage.locator('button:has-text("Sign-in")').click();
-  await implicitPage.locator('text=Continue').click();
 
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');

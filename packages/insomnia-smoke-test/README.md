@@ -33,6 +33,8 @@ npm run test:smoke:dev
 DEBUG=pw:api npm run test:smoke:dev
 # Debug tests with insomnia console logs
 DEBUG=pw:browser npm run test:smoke:dev
+# Debug tests with webserver console logs
+DEBUG=pw:WebServer npm run test:smoke:dev
 # Step through tests with playwright inspector
 PWDEBUG=1 npm run test:smoke:dev
 ```

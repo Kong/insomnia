@@ -120,8 +120,6 @@ function _addUrlToOpen(e, url) {
 }
 
 app.on('open-url', _addUrlToOpen);
-// Enable this for CSS grid layout :)
-app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!isMac()) {

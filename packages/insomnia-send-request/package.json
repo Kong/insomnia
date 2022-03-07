@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/send-request/index.d.ts",
   "dependencies": {
-    "@getinsomnia/node-libcurl": "2.3.4-1",
+    "@getinsomnia/node-libcurl": "2.3.4-3",
     "@hapi/hawk": "^8.0.0",
     "@stoplight/spectral": "^5.9.0",
     "analytics-node": "^6.0.0",
@@ -26,7 +26,7 @@
     "insomnia-testing": "2.5.1",
     "isomorphic-git": "^1.5.0",
     "jshint": "^2.11.1",
-    "jsonlint": "^1.6.3",
+    "jsonlint-mod-fixed": "1.7.7",
     "jsonpath-plus": "^6.0.1",
     "marked": "^4.0.10",
     "mime-types": "^2.1.27",

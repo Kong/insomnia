@@ -62,7 +62,6 @@ export function render(
     nj?.renderString(text, templatingContext, (err, result) => {
       clearTimeout(id);
       if (err) {
-        console.log(err);
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
           .replace(/\[Line \d+, Column \d*]/, '')

@@ -45,7 +45,7 @@ import 'codemirror/addon/lint/lint';
  */
 /**/
 // for the code that uses this json parser, see https://github.com/codemirror/CodeMirror/blob/master/addon/lint/json-lint.js
-import * as jsonlint from 'jsonlint';
+import * as jsonlint from 'jsonlint-mod-fixed';
 global.jsonlint = jsonlint;
 import 'codemirror/addon/lint/json-lint';
 
