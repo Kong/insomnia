@@ -36,7 +36,7 @@ jobs:
         id: core_tag_and_release
         with:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          release_name: Insomnia ${{ env.RELEASE_VERSION }}
+          release_name: "Insomnia ${{ env.RELEASE_VERSION }} :package:"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
         env:
@@ -53,8 +53,33 @@ jobs:
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
-      # - name: Create github release for Inso lib@ tag  # TODO-filipe
-      # - name: Upload Inso artifacts to release  # TODO-filipe
+      - name: Get Inso CLI version
+        id: get_inso_cli_info
+        uses: sergeysova/jq-action@v2
+        with:
+          cmd: 'jq .version packages/insomnia-inso/package.json -r'
+
+      - name: Create Release for Inso CLI
+        uses: avakar/tag-and-release@v1
+        id: release_inso_cli
+        with:
+          tag_name: lib@${{ steps.get_inso_cli_info.outputs.value }}
+          release_name: "Inso CLI ${{ steps.get_inso_cli_info.outputs.value }} :package:"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Inso CLI artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.release_inso_cli.outputs.id }}
+          tag_name: lib@${{ steps.get_inso_cli_info.outputs.value }}
+          file: ".artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
 
       # - name: Publish beta/stable to Insomnia API
 
