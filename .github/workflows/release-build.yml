@@ -57,8 +57,6 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -r)" >> $GITHUB_ENV
-          echo "INSO_PKG_NAME=inso-${{ matrix.os }}-${{ env.INSO_VERSION }}" >> $GITHUB_ENV
-          echo "INSO_PKG_PATH=packages/insomnia-inso/artifacts/${{ env.INSO_PKG_NAME }}.pkg" >> $GITHUB_ENV
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
@@ -71,14 +69,14 @@ jobs:
         env:
           MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
-          PKG_NAME: ${{ env.INSO_PKG_NAME }}
+          PKG_NAME: inso-${{ matrix.os }}-${{ env.INSO_VERSION }}
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
         uses: devbotsxyz/xcode-notarize@v1
         with:
-          product-path: ${{ env.INSO_PKG_PATH }}
+          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
           primary-bundle-id: com.insomnia.inso
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
@@ -87,7 +85,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         uses: devbotsxyz/xcode-staple@v1
         with:
-          product-path: ${{ env.INSO_PKG_PATH }}
+          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
         if: matrix.os == 'macos-latest'
