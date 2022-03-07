@@ -68,7 +68,7 @@
   "dependencies": {
     "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.3.1",
-    "framer-motion": "^1.10.3",
+    "framer-motion": "4.1.17",
     "fuzzysort": "^1.1.4",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",

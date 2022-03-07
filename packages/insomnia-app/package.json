@@ -92,7 +92,7 @@
     "dompurify": "^2.3.6",
     "electron-context-menu": "^3.1.1",
     "electron-log": "^4.4.3",
-    "framer-motion": "^1.11.1",
+    "framer-motion": "4.1.17",
     "fs-extra": "^5.0.0",
     "fuzzysort": "^1.1.1",
     "graphql": "^16.3.0",
