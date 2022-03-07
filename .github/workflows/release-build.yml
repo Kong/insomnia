@@ -50,13 +50,14 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
+      - name: Setup Inso CLI version env var
+        run:
+          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -r)" >> $GITHUB_ENV
+
       - name: Package inso
         run: npm run inso-package
-
-      - name: Setup Inso CLI Code-sign env vars (macOS only)
-        if: matrix.os == 'macos-latest'
-        run: |
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -r)" >> $GITHUB_ENV
+        env:
+          VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
@@ -70,6 +71,7 @@ jobs:
           MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
           PKG_NAME: inso-${{ matrix.os }}-${{ env.INSO_VERSION }}
+          BUNDLE_ID: com.insomnia.inso
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
