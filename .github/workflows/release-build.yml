@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
 
@@ -59,7 +59,7 @@ jobs:
         run: npm run inso-package:artifacts
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts
