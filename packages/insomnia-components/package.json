@@ -72,7 +72,7 @@
     "fuzzysort": "^1.1.4",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",
-    "react-switch": "^5.0.1"
+    "react-switch": "^6.0.0"
   },
   "peerDependencies": {
     "react": "^17.0.2",
