@@ -55,10 +55,10 @@ jobs:
 
       - name: Setup Inso CLI Code-sign env vars (macOS only)
         if: matrix.os == 'macos-latest'
-        run:
+        run: |
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -r)" >> $GITHUB_ENV
           echo "INSO_PKG_NAME=inso-${{ matrix.os }}-${{ env.INSO_VERSION }}" >> $GITHUB_ENV
-          echo "INSO_PKG_PATH"=packages/insomnia-inso/artifacts/${{ env.INSO_PKG_NAME }}.pkg" >> $GITHUB_ENV
+          echo "INSO_PKG_PATH=packages/insomnia-inso/artifacts/${{ env.INSO_PKG_NAME }}.pkg" >> $GITHUB_ENV
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
