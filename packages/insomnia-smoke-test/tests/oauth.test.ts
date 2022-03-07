@@ -61,6 +61,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   ]);
 
   await refreshPage.waitForLoadState();
+  // expect an _interaction cookie to be set with the sign in form
   await refreshPage.waitForFunction("document.cookie !== ''");
   await refreshPage.locator('[name="login"]').fill('admin');
   await refreshPage.locator('[name="password"]').fill('admin');
