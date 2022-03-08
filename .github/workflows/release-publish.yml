@@ -128,7 +128,11 @@ jobs:
         run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.snap
 
       # - name: Publish npm packages
-      #   run: npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
+      #   run: |
+      #     npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+      #     npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
+      #   env:
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == 'false' }}
