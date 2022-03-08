@@ -69,9 +69,6 @@ const RenderPageHeader: FC<Pick<Props,
 };
 
 interface LintMessage extends Notice {
-  message: string;
-  line: number;
-  type: 'error' | 'warning';
   range: IRuleResult['range'];
 }
 
