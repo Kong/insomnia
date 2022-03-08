@@ -15,7 +15,7 @@ import {
   updatesSupported,
 } from '../../common/constants';
 import * as models from '../../models/index';
-import imgSrcCore from '../images/insomnia-core-logo.png';
+import imgSrcCore from '../images/insomnia-logo.svg';
 import { Link } from './base/link';
 
 const INSOMNIA_NOTIFICATIONS_SEEN = 'insomnia::notifications::seen';

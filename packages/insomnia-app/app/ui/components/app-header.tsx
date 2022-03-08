@@ -2,7 +2,7 @@ import { Breadcrumb, BreadcrumbProps, Header as _Header } from 'insomnia-compone
 import React, { FC, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
-import coreLogo from '../images/insomnia-core-logo.png';
+import coreLogo from '../images/insomnia-logo.svg';
 import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown';
 

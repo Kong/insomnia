@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getAppLongName, getAppSynopsis } from '../../../common/constants';
 import * as models from '../../../models';
 import chartSrc from '../../images/chart.svg';
-import coreLogo from '../../images/insomnia-core-logo.png';
+import coreLogo from '../../images/insomnia-logo.svg';
 import { selectSettings } from '../../redux/selectors';
 import { Modal } from '../base/modal';
 
