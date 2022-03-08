@@ -50,6 +50,20 @@ declare module 'apiconnect-wsdl' {
     definitions: {
       Security?: UNKNOWN;
     };
+    consumes: string[];
+    produces: string[];
+    info: {
+      title: string;
+    };
+    ['x-ibm-configuration']: {
+      assembly: {
+        execute: {
+          proxy: {
+            ['target-url']: string;
+          };
+        }[];
+      };
+    };
     paths: UNKNOWN_OBJ;
   }
 
