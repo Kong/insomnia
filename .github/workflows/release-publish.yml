@@ -21,6 +21,14 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install and login to snapcraft
+        if: ${{ env.IS_PRERELEASE == false }}
+        run: |
+          sudo snap install snapcraft --classic
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
 
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
@@ -81,19 +89,44 @@ jobs:
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
-      # - name: Publish beta/stable to Insomnia API
+      - name: Publish beta/stable of Insomnia to Insomnia API
+        if: "!contains(github.event.inputs.version, 'alpha')"
+        run: |
+          curl \
+            --request POST \
+            --url $INSOMNIA_API_URL/v1/releases \
+            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+        env:
+          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+          RELEASE_APP: com.insomnia.app
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+
+      - name: Publish beta/stable of inso to Insomnia API
+        if: "!contains(github.event.inputs.version, 'alpha')"
+        run: |
+          curl \
+            --request POST \
+            --url $INSOMNIA_API_URL/v1/releases \
+            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+        env:
+          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+          RELEASE_APP: com.insomnia.inso
+          RELEASE_VERSION: ${{ env.INSO_VERSION }}
+          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload to snapcraft (stable only)
         if: ${{ env.IS_PRERELEASE == false }}
-        run: echo "TODO WIP"
+        run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.snap
 
-      # - name: Publish npm packages (alpha/beta)
-      #   if: ${{ env.IS_PRERELEASE == true }}
+      # - name: Publish npm packages
       #   run: npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
-
-      # - name: Publish npm packages (stable)
-      #   if: ${{ env.IS_PRERELEASE == false }}
-      #   run: npm run publish -- --yes
 
       - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == false }}
@@ -107,8 +140,12 @@ jobs:
           entrypoint: python3
           args: '/usr/src/code/main.py release --file ${{ env.DEB_FILE }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
-      # - name: Check if branch is mergeable
-
-      # - name: Merge Git branch
-
-      # - name: Trigger homebrew workflow
+      - name: Merge git branch into develop
+        run: |
+          remote_repo="https://${GITHUB_ACTOR}:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git checkout develop
+          git merge --no-ff ${{ env.RELEASE_BRANCH }}
+          git status
+          git push "${remote_repo}"
+        env:
+          PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}
