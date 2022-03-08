@@ -13,7 +13,7 @@ export interface Notice {
 
 export interface NoticeTableProps<T extends Notice> {
   notices: T[];
-  onClick?: (n: T, e: React.SyntheticEvent<HTMLElement>) => any;
+  onClick?: (notice: T, event: React.SyntheticEvent<HTMLElement>) => any;
   onVisibilityToggle?: (expanded: boolean) => any;
   compact?: boolean;
   className?: string;
@@ -113,14 +113,9 @@ export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProp
     );
   }
 
-  onClick(notice: T, e: React.SyntheticEvent<HTMLButtonElement>) {
+  onClick(notice: T, event: React.SyntheticEvent<HTMLButtonElement>) {
     const { onClick } = this.props;
-
-    if (!onClick) {
-      return;
-    }
-
-    onClick(notice, e);
+    onClick?.(notice, event);
   }
 
   render() {
@@ -178,18 +173,18 @@ export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProp
                 </TableRow>
               </TableHead>
               <TableBody>
-                {notices.map(n => (
-                  <TableRow key={`${n.line}:${n.type}:${n.message}`}>
+                {notices.map(notice => (
+                  <TableRow key={`${notice.line}:${notice.type}:${notice.message}`}>
                     <TableData align="center">
-                      <SvgIcon icon={n.type} />
+                      <SvgIcon icon={notice.type} />
                     </TableData>
                     <TableData align="center">
-                      {n.line}
-                      <JumpButton onClick={this.onClick.bind(this, n)}>
+                      {notice.line}
+                      <JumpButton onClick={this.onClick.bind(this, notice)}>
                         <SvgIcon icon={IconEnum.arrowRight} />
                       </JumpButton>
                     </TableData>
-                    <TableData align="left">{n.message}</TableData>
+                    <TableData align="left">{notice.message}</TableData>
                   </TableRow>
                 ))}
               </TableBody>
