@@ -68,7 +68,7 @@ const RenderPageHeader: FC<Pick<Props,
   );
 };
 
-interface LintMessage {
+interface LintMessage extends Notice {
   message: string;
   line: number;
   type: 'error' | 'warning';
@@ -153,7 +153,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
     }
   }, [contents]);
 
-  const handleScrollToSelection = useCallback((notice: Notice<Pick<LintMessage, 'range'>>) => {
+  const handleScrollToSelection = useCallback((notice: LintMessage) => {
     if (!editor.current) {
       return;
     }
@@ -183,7 +183,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
         {emptyStateNode}
       </div>
       {lintMessages.length > 0 && (
-        <NoticeTable<Pick<LintMessage, 'range'>>
+        <NoticeTable
           notices={lintMessages}
           onClick={handleScrollToSelection}
         />
