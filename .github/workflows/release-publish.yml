@@ -137,10 +137,9 @@ jobs:
           PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
           PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
           PULP_HOST: ${{ secrets.PULP_HOST }}
-          DEB_FILE: artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.deb
         with:
           entrypoint: python3
-          args: '/usr/src/code/main.py release --file ${{ env.DEB_FILE }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
+          args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia-app/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
       - name: Merge git branch into develop
         run: |
