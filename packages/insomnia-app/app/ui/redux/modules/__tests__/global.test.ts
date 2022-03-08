@@ -183,11 +183,11 @@ describe('global', () => {
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
-    it.each(
+    it.each([
       'something',
       null,
       undefined,
-    )('should go to home if initialized with an unsupported value: %s', async activity => {
+    ])('should go to home if initialized with an unsupported value: %s', async activity => {
       const settings = createSettings(true);
       const store = mockStore({
         global: {},
