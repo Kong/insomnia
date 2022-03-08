@@ -39,29 +39,6 @@ jobs:
           branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
           path: ./artifacts/
 
-      - name: Create Tag and Release
-        uses: avakar/tag-and-release@v1
-        id: core_tag_and_release
-        with:
-          tag_name: ${{ env.RELEASE_CORE_TAG }}
-          release_name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
-          body: "Full changelog ⇒ https://insomnia.rest/changelog"
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts to release
-        uses: xresloader/upload-to-github-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ steps.core_tag_and_release.outputs.id }}
-          tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-latest-artifacts/insomnia-app/**"
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
-
       - name: Set Inso CLI version on Github Env
         run:
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
@@ -86,6 +63,29 @@ jobs:
           release_id: ${{ steps.release_inso_cli.outputs.id }}
           tag_name: lib@${{ env.INSO_VERSION }}
           file: "./artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+
+      - name: Create Tag and Release
+        uses: avakar/tag-and-release@v1
+        id: core_tag_and_release
+        with:
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          release_name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.core_tag_and_release.outputs.id }}
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          file: "./artifacts/*-latest-artifacts/insomnia-app/**"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
