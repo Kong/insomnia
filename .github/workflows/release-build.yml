@@ -26,7 +26,7 @@ jobs:
             csc_link_secret: ''
             csc_key_password_secret: ''
     env:
-      NPM_CONFIG_TARGET: 12.2.3
+      NPM_CONFIG_TARGET: 17.1.0
       NPM_CONFIG_DISTURL: https://electronjs.org/headers
       NPM_CONFIG_RUNTIME: electron
     steps:
