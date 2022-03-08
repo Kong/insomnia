@@ -33,7 +33,7 @@ KEYCHAIN_PASSWORD="inso"
 
 # Create temporary keychain
 security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-security default-keychain -s "$KEYCHAIN"
+security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
 
 # Unlock the keychain
 security set-keychain-settings "$KEYCHAIN"
@@ -48,7 +48,7 @@ security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k 
 
 # Sign the binary
 plutil -lint "$ENTITLEMENTS_PATH"
-/usr/bin/codesign --force --options=runtime --entitlements "$ENTITLEMENTS_PATH" --timestamp --sign "$APP_IDENTITY" "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME"
+/usr/bin/codesign --force --options=runtime --entitlements "$ENTITLEMENTS_PATH" --keychain "$KEYCHAIN" --timestamp --sign "$APP_IDENTITY" "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME"
 
 # Create a staging area for the installer package.
 mkdir -p "$STAGING_AREA"
@@ -57,5 +57,5 @@ mkdir -p "$STAGING_AREA"
 cp "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME" "$STAGING_AREA"
 
 # Build and sign the package
-mkdir $ARTIFACT_LOCATION
+mkdir -p $ARTIFACT_LOCATION
 /usr/bin/pkgbuild --identifier "$BUNDLE_ID" --version "$VERSION" --sign "$INSTALL_IDENTITY" --keychain "$KEYCHAIN" --timestamp --root "$STAGING_AREA" --install-location "$INSTALL_LOCATION" "$ARTIFACT_LOCATION/$PKG_NAME.pkg"
