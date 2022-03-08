@@ -2,7 +2,6 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { hot } from 'react-hot-loader';
 import { Provider } from 'react-redux';
 import * as styledComponents from 'styled-components';
 
@@ -39,10 +38,9 @@ document.title = getAppLongName();
   const store = await initStore();
 
   const render = App => {
-    const TheHottestApp = hot(module)(App);
     ReactDOM.render(
       <Provider store={store}>
-        <TheHottestApp />
+        <App />
       </Provider>,
       document.getElementById('root'),
     );
