@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Link } from '../base/link';
@@ -8,13 +8,68 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
 interface State {
-  isJson: boolean;
+  isJSON: boolean;
 }
+
+interface HelpExample {
+  code: string;
+  description: string;
+}
+
+const HelpExamples: FC<{ helpExamples: HelpExample[] }> = ({ helpExamples }) => (
+  <table className="table--fancy pad-top-sm">
+    <tbody>
+      {helpExamples.map(({ code, description }) => (
+        <tr key={code}>
+          <td><code className="selectable">{code}</code></td>
+          {description}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+const JSONPathHelp: FC = () => (
+  <ModalBody className="pad">
+    <p>
+      Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some examples that you might use on a book store API:
+    </p>
+    <HelpExamples
+      helpExamples={[
+        { code: '$.store.books[*].title', description: 'Get titles of all books in the store' },
+        { code: '$.store.books[?(`@.price < 10)].title', description: 'Get books costing less than $10' },
+        { code: '$.store.books[-1:]', description: 'Get the last book in the store' },
+        { code: '$.store.books.length', description: 'Get the number of books in the store' },
+        { code: '$.store.books[?(`@.title.match(/lord.*rings/i))]', description: 'Get book by title regular expression' },
+      ]}
+    />
+    <p className="notice info">
+      Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath. Insomnia uses <Link href="https://www.npmjs.com/package/jsonpath-plus">jsonpath-plus</Link>.
+    </p>
+  </ModalBody>
+);
+
+const XPathHelp: FC = () => (
+  <ModalBody className="pad">
+    <p>
+      Use <Link href="https://www.w3.org/TR/xpath/">XPath</Link> to filter the response body. Here are some examples that you might use on a
+      book store API:
+    </p>
+    <HelpExamples
+      helpExamples={[
+        { code: '/store/books/title', description: 'Get titles of all books in the store' },
+        { code: '/store/books[price < 10]', description: 'Get books costing less than $10' },
+        { code: '/store/books[last()]', description: 'Get the last book in the store' },
+        { code: 'count(/store/books)', description: 'Get the number of books in the store' },
+      ]}
+    />
+  </ModalBody>
+);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class FilterHelpModal extends PureComponent<{}, State> {
   state: State = {
-    isJson: true,
+    isJSON: true,
   };
 
   modal: Modal | null = null;
@@ -23,8 +78,8 @@ export class FilterHelpModal extends PureComponent<{}, State> {
     this.modal = n;
   }
 
-  show(isJson: boolean) {
-    this.setState({ isJson });
+  show(isJSON: boolean) {
+    this.setState({ isJSON });
     this.modal?.show();
   }
 
@@ -33,68 +88,13 @@ export class FilterHelpModal extends PureComponent<{}, State> {
   }
 
   render() {
-    const { isJson } = this.state;
-    const link = isJson ? (
-      <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link>
-    ) : (
-      <Link href="https://www.w3.org/TR/xpath/">XPath</Link>
-    );
+    const { isJSON } = this.state;
+    const isXPath = !isJSON;
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>Response Filtering Help</ModalHeader>
-        <ModalBody className="pad">
-          <p>
-            Use {link} to filter the response body. Here are some examples that you might use on a
-            book store API.
-          </p>
-          <table className="table--fancy pad-top-sm">
-            <tbody>
-              <tr>
-                <td>
-                  <code className="selectable">
-                    {isJson ? '$.store.books[*].title' : '/store/books/title'}
-                  </code>
-                </td>
-                <td>Get titles of all books in the store</td>
-              </tr>
-              <tr>
-                <td>
-                  <code className="selectable">
-                    {isJson ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
-                  </code>
-                </td>
-                <td>Get books costing less than $10</td>
-              </tr>
-              <tr>
-                <td>
-                  <code className="selectable">
-                    {isJson ? '$.store.books[-1:]' : '/store/books[last()]'}
-                  </code>
-                </td>
-                <td>Get the last book in the store</td>
-              </tr>
-              <tr>
-                <td>
-                  <code className="selectable">
-                    {isJson ? '$.store.books.length' : 'count(/store/books)'}
-                  </code>
-                </td>
-                <td>Get the number of books in the store</td>
-              </tr>
-
-              {isJson && (
-                <tr>
-                  <td>
-                    <code className="selectable">
-                      $.store.books[?(@.title.match(/lord.*rings/i))]
-                    </code>
-                  </td>
-                  <td>Get book by title regular expression</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </ModalBody>
+        {isJSON ? <JSONPathHelp /> : null}
+        {isXPath ? <XPathHelp /> : null}
       </Modal>
     );
   }

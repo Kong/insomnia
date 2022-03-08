@@ -88,7 +88,6 @@
     "insomnia-plugin-uuid": "2.5.1",
     "insomnia-send-request": "2.5.1",
     "insomnia-testing": "2.5.1",
-    "lodash.flattendeep": "^4.4.0",
     "mkdirp": "^1.0.4",
     "nedb": "^1.8.0",
     "openapi-2-kong": "2.5.1",

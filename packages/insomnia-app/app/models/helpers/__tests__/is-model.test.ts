@@ -1,4 +1,4 @@
-import { difference } from 'lodash';
+import { difference } from 'ramda';
 
 import { generateId } from '../../../common/misc';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
