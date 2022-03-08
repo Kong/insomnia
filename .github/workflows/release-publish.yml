@@ -93,6 +93,7 @@ jobs:
         if: "!contains(github.event.inputs.version, 'alpha')"
         run: |
           curl \
+            --fail \
             --request POST \
             --url $INSOMNIA_API_URL/v1/releases \
             --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
@@ -109,6 +110,7 @@ jobs:
         if: "!contains(github.event.inputs.version, 'alpha')"
         run: |
           curl \
+            --fail \
             --request POST \
             --url $INSOMNIA_API_URL/v1/releases \
             --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
