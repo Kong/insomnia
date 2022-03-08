@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Install and login to snapcraft
-        if: ${{ env.IS_PRERELEASE == false }}
+        if: ${{ env.IS_PRERELEASE == 'false' }}
         run: |
           sudo snap install snapcraft --classic
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
@@ -124,14 +124,14 @@ jobs:
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload to snapcraft (stable only)
-        if: ${{ env.IS_PRERELEASE == false }}
+        if: ${{ env.IS_PRERELEASE == 'false' }}
         run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.snap
 
       # - name: Publish npm packages
       #   run: npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
 
       - name: Upload .deb to pulp (stable only)
-        if: ${{ env.IS_PRERELEASE == false }}
+        if: ${{ env.IS_PRERELEASE == 'false' }}
         uses: docker://kong/release-script:latest
         env:
           PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
