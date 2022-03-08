@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+
+set -e
 # Useful resources for the creation of this script
 # https://developer.apple.com/forums/thread/128166
 # https://developer.apple.com/forums/thread/669188
