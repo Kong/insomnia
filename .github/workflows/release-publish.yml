@@ -145,6 +145,11 @@ jobs:
           entrypoint: python3
           args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia-app/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
+      - name: Configure Git user
+        uses: Homebrew/actions/git-user-config@master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+
       - name: Merge git branch into develop
         run: |
           remote_repo="https://${GITHUB_ACTOR}:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
