@@ -1,8 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import highlight from 'highlight.js';
 import React, { FC, PureComponent } from 'react';
-import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
@@ -71,26 +69,6 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
     clickLink(e.target.getAttribute('href'));
   }
 
-  _highlightCodeBlocks() {
-    if (!this._preview) {
-      return;
-    }
-
-    const el = ReactDOM.findDOMNode(this._preview);
-
-    // @ts-expect-error -- TSCONVERSION
-    for (const block of el.querySelectorAll('pre > code')) {
-      highlight.highlightBlock(block);
-    }
-
-    // @ts-expect-error -- TSCONVERSION
-    for (const a of el.querySelectorAll('a')) {
-      a.title = `Open ${a.getAttribute('href')} in browser`;
-      a.removeEventListener('click', this._handleClickLink);
-      a.addEventListener('click', this._handleClickLink);
-    }
-  }
-
   componentWillUnmount() {
     if (this._compileTimeout !== null) {
       clearTimeout(this._compileTimeout);
@@ -105,14 +83,6 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
     this._compileMarkdown(nextProps.markdown);
-  }
-
-  componentDidUpdate() {
-    this._highlightCodeBlocks();
-  }
-
-  componentDidMount() {
-    this._highlightCodeBlocks();
   }
 
   render() {
