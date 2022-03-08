@@ -52,7 +52,7 @@ jobs:
 
       - name: Setup Inso CLI version env var
         run:
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -r)" >> $GITHUB_ENV
+          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
       - name: Package inso
         run: npm run inso-package

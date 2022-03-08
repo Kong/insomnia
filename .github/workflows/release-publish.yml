@@ -56,7 +56,7 @@ jobs:
 
       - name: Set Inso CLI version on Github Env
         run:
-          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -r)" >> $GITHUB_ENV
+          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
       - name: Create Release for Inso CLI
         uses: avakar/tag-and-release@v1
