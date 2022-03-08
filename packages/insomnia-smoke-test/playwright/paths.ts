@@ -1,4 +1,5 @@
 import fs from 'fs';
+import got from 'got';
 import os from 'os';
 import path from 'path';
 import { exit } from 'process';
@@ -33,10 +34,17 @@ const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
 const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 
 // NOTE: guard against missing build artifacts
-if (bundleType() === 'dev' && !hasMainBeenBuilt) {
-  console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-  Have you run "npm run watch:app"?`);
-  exit(1);
+if (bundleType() === 'dev') {
+  got('http://localhost:3334').catch(err => {
+    console.error(`ERROR: ${err.code} app is not running at http://localhost:3334
+    Have you run "npm run watch:app"?`);
+    exit(1);
+  });
+  if (!hasMainBeenBuilt){
+    console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
+Have you run "npm run watch:app"?`);
+    exit(1);
+  }
 }
 if (bundleType() === 'build' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
