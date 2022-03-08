@@ -62,11 +62,11 @@ jobs:
 
       - name: Lerna version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
-        run: npm run version -- --preid "${{ github.event.inputs.channel}}" prepatch --yes --no-push
+        run: npm run version -- --preid "${{ github.event.inputs.channel}}" preminor --yes --no-push
 
       - name: Lerna version (stable)
         if: github.event.inputs.channel == 'stable'
-        run: npm run version -- patch --yes --no-push
+        run: npm run version -- minor --yes --no-push
 
       - name: Push changes
         run: |
