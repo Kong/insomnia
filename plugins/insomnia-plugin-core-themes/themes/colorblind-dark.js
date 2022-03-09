@@ -1,5 +1,5 @@
 module.exports = {
-	name: 'Dark Colorblind',
+	name: 'colorblind-dark',
 	displayName: 'Dark Colorblind',
 	theme: {
 		background: {
