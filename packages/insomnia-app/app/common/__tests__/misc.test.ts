@@ -16,6 +16,8 @@ import {
   xmlDecode,
 } from '../misc';
 
+jest.spyOn(global, 'setTimeout');
+
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
 
@@ -150,7 +152,7 @@ describe('keyedDebounce()', () => {
     fn('foo', 'bar2');
     fn('foo', 'bar3');
     fn('multi', 'foo', 'bar', 'baz');
-    expect(setTimeout.mock.calls.length).toBe(5);
+    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultsList).toEqual([]);
     jest.runAllTimers();
     expect(resultsList).toEqual([
@@ -179,7 +181,7 @@ describe('debounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     fn('baz', 'bar');
     fn('foo', 'bar3');
-    expect(setTimeout.mock.calls.length).toBe(5);
+    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultList).toEqual([]);
     jest.runAllTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);

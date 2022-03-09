@@ -33,7 +33,6 @@
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@babel/plugin-proposal-optional-chaining": "^7.12.7",
     "@babel/plugin-transform-runtime": "^7.12.10",
-
     "@svgr/cli": "^5.5.0",
     "@testing-library/dom": "^7.30.4",
     "@testing-library/jest-dom": "^5.12.0",
@@ -59,7 +58,7 @@
     "react-use": "^17.2.4",
     "styled-components": "^4.4.1",
     "ts-loader": "^8.2.0",
-    "type-fest": "^1.0.2",
+    "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
     "typescript-plugin-styled-components": "^1.5.0",
     "webpack": "^4.44.1",
@@ -80,7 +79,7 @@
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
     "react-use": "^17.2.4",
-    "styled-components": "^5.1.1"
+    "styled-components": "^4.4.1"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }
