@@ -1,4 +1,4 @@
-name: Release recurring
+name: Release Recurring
 # This workflow bakes executables of the major platforms for Testing purposes
 on:
   workflow_dispatch:
