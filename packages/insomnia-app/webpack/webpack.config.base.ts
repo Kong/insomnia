@@ -55,12 +55,8 @@ const configuration: Configuration = {
   },
   resolve: {
     alias: {
-      // Create aliases for react-hot-loader
-      // https://github.com/gaearon/react-hot-loader/tree/92961be0b44260d3d3f1b8864aa699766572a67c#linking
-      'react-hot-loader': path.resolve(path.join(__dirname, '../node_modules/react-hot-loader')),
       react: path.resolve(path.join(__dirname, '../node_modules/react')),
       'styled-components': path.resolve(path.join(__dirname, '../node_modules/styled-components')),
-      'react-dom': path.resolve(path.join(__dirname, '../node_modules/@hot-loader/react-dom')),
     },
     extensions: ['.js', '.json', '.ts', '.tsx'],
     mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main'],
