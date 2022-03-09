@@ -22,7 +22,7 @@ jobs:
       inso-version: ${{ steps.get-package-version.outputs.current-version }}
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Get version
         id: get-package-version
         uses: martinbeentjes/npm-get-version-action@master
@@ -38,10 +38,10 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
 
@@ -92,7 +92,7 @@ jobs:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Upload Inso CLI artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
@@ -102,7 +102,7 @@ jobs:
         run: npm run test:smoke:cli
 
       - name: Upload smoke test screenshots
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           if-no-files-found: ignore

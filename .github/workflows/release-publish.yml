@@ -1,0 +1,162 @@
+name: Release Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_CORE_TAG: core@${{ github.event.inputs.version }}
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}
+  IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch # Check out the release branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install and login to snapcraft
+        if: ${{ env.IS_PRERELEASE == 'false' }}
+        run: |
+          sudo snap install snapcraft --classic
+          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
+
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: release-build.yml
+          workflow_conclusion: success
+          branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
+          path: ./artifacts/
+
+      - name: Set Inso CLI version on Github Env
+        run:
+          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
+
+      - name: Create Release for Inso CLI
+        uses: avakar/tag-and-release@v1
+        id: release_inso_cli
+        with:
+          tag_name: lib@${{ env.INSO_VERSION }}
+          release_name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Inso CLI artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.release_inso_cli.outputs.id }}
+          tag_name: lib@${{ env.INSO_VERSION }}
+          file: "./artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+
+      - name: Create Tag and Release
+        uses: avakar/tag-and-release@v1
+        id: core_tag_and_release
+        with:
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          release_name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
+          body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          commit: ${{ env.RELEASE_BRANCH }}
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.core_tag_and_release.outputs.id }}
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          file: "./artifacts/*-latest-artifacts/insomnia-app/**"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+
+      - name: Publish beta/stable of Insomnia to Insomnia API
+        if: "!contains(github.event.inputs.version, 'alpha')"
+        run: |
+          curl \
+            --fail \
+            --request POST \
+            --url $INSOMNIA_API_URL/v1/releases \
+            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+        env:
+          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+          RELEASE_APP: com.insomnia.app
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+
+      - name: Publish beta/stable of inso to Insomnia API
+        if: "!contains(github.event.inputs.version, 'alpha')"
+        run: |
+          curl \
+            --fail \
+            --request POST \
+            --url $INSOMNIA_API_URL/v1/releases \
+            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+        env:
+          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+          RELEASE_APP: com.insomnia.inso
+          RELEASE_VERSION: ${{ env.INSO_VERSION }}
+          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+
+      - name: Upload to snapcraft (stable only)
+        if: ${{ env.IS_PRERELEASE == 'false' }}
+        run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.snap
+
+      - name: Publish npm packages
+        run: |
+          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+          npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Upload .deb to pulp (stable only)
+        if: ${{ env.IS_PRERELEASE == 'false' }}
+        uses: docker://kong/release-script:latest
+        env:
+          PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
+          PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
+          PULP_HOST: ${{ secrets.PULP_HOST }}
+        with:
+          entrypoint: python3
+          args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia-app/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
+
+      - name: Configure Git user
+        uses: Homebrew/actions/git-user-config@master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+
+      - name: Merge git branch into develop
+        run: |
+          remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git checkout develop
+          git merge --no-ff ${{ env.RELEASE_BRANCH }}
+          git status
+          git push "${remote_repo}"
+        env:
+          RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
