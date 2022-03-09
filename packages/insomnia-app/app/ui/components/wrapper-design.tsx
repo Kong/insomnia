@@ -68,10 +68,7 @@ const RenderPageHeader: FC<Pick<Props,
   );
 };
 
-interface LintMessage {
-  message: string;
-  line: number;
-  type: 'error' | 'warning';
+interface LintMessage extends Notice {
   range: IRuleResult['range'];
 }
 
@@ -153,15 +150,13 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
     }
   }, [contents]);
 
-  const handleScrollToSelection = useCallback((notice: Notice) => {
+  const handleScrollToSelection = useCallback((notice: LintMessage) => {
     if (!editor.current) {
       return;
     }
-    // @ts-expect-error Notice is not generic, and thus cannot be provided more data like we are doing elsewhere in this file
     if (!notice.range) {
       return;
     }
-    // @ts-expect-error Notice is not generic, and thus cannot be provided more data like we are doing elsewhere in this file
     const { start, end } = notice.range;
     editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
   }, [editor]);
