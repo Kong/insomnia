@@ -73,6 +73,7 @@ jobs:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           release_name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
         env:
