@@ -127,12 +127,12 @@ jobs:
         if: ${{ env.IS_PRERELEASE == 'false' }}
         run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.snap
 
-      # - name: Publish npm packages
-      #   run: |
-      #     npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-      #     npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish npm packages
+        run: |
+          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+          npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == 'false' }}
@@ -152,10 +152,10 @@ jobs:
 
       - name: Merge git branch into develop
         run: |
-          remote_repo="https://${GITHUB_ACTOR}:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git checkout develop
           git merge --no-ff ${{ env.RELEASE_BRANCH }}
           git status
           git push "${remote_repo}"
         env:
-          PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}
+          RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}

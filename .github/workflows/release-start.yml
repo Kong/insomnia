@@ -70,10 +70,10 @@ jobs:
 
       - name: Push changes
         run: |
-          remote_repo="https://${GITHUB_ACTOR}:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote_repo}" --follow-tags
         env:
-          PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}
+          RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
 
   create-pull-request:
     needs: setup-release-branch
@@ -88,7 +88,7 @@ jobs:
       - name: Run the Action
         uses: devops-infra/action-pull-request@v0.4.2
         with:
-          github_token: ${{ secrets.PUSH_TOKEN }}
+          github_token: ${{ secrets.RELEASE_GH_TOKEN }}
           source_branch: ${{ env.RELEASE_BRANCH}}
           target_branch: develop
           title: ":rocket: ${{ env.RELEASE_VERSION}}"
@@ -96,4 +96,3 @@ jobs:
             **Automated pull request**
             Artifacts build in progress...
           draft: false
-          ignore_users: "dependabot"
