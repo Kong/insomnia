@@ -54,8 +54,3 @@ interface Window {
     showItemInFolder: (fullPath: string) => void;
   };
 }
-
-// needed for @hot-loader/react-dom in order for TypeScript to build
-declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: undefined | {
-  checkDCE: Function;
-};

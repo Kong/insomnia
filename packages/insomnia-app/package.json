@@ -40,7 +40,6 @@
     "dev-server-port": 3334
   },
   "packedDependencies": [
-    "@hot-loader/react-dom",
     "class-autobind-decorator",
     "classnames",
     "codemirror",
@@ -80,7 +79,6 @@
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.4-3",
     "@hapi/hawk": "^8.0.0",
-    "@hot-loader/react-dom": "^16.8.6",
     "@stoplight/spectral": "^5.9.0",
     "analytics-node": "^6.0.0",
     "aws4": "^1.9.0",
@@ -247,13 +245,12 @@
     "license-checker": "^25.0.1",
     "ncp": "^2.0.0",
     "prompt-run": "^1.4.5",
-    "react-hot-loader": "^4.13.0",
     "redux-mock-store": "^1.5.4",
     "source-map-loader": "^1.0.0",
     "style-loader": "^0.23.1",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0",
-    "type-fest": "^1.0.2",
+    "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
     "url-loader": "^1.1.2",
     "val-loader": "^2.1.2",
