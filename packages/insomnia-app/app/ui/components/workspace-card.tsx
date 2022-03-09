@@ -33,9 +33,18 @@ export interface WorkspaceCardProps {
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
 }
 
-export const getVersionDisplayment = (version?: string | null) => {
-  if (!version) {
+/** note: numbers are not technically valid (and, indeed, we throw a lint error), but we need to handle this case otherwise a user will not be able to import a spec with a malformed version and even _see_ that it's got the error. */
+export const getVersionDisplayment = (version?: string | number | null) => {
+  if (version === null || version === undefined || version === '') {
     return version;
+  }
+
+  if (typeof version === 'number') {
+    console.warn(`OpenAPI documents must not use number data types for $.info.version, found ${version}`);
+    version = String(version);
+  } else if (typeof version !== 'string') {
+    console.error('unable to parse spec version');
+    return '';
   }
 
   if (!version.startsWith('v')) {
