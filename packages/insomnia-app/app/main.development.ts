@@ -114,7 +114,7 @@ if (defaultProtocolSuccessful) {
   }
 }
 
-function _addUrlToOpen(e, url) {
+function _addUrlToOpen(e: Electron.Event, url: string) {
   e.preventDefault();
   commandLineArgs.push(url);
 }
@@ -170,9 +170,8 @@ const _launchApp = async () => {
     }
   });
   // Handle URLs when app already open
-  app.addListener('open-url', (_error, url) => {
-    // @ts-expect-error -- TSCONVERSION
-    window.send('run-command', url);
+  app.addListener('open-url', (_event, url) => {
+    window.webContents.send('run-command', url);
     // Apparently a timeout is needed because Chrome steals back focus immediately
     // after opening the URL.
     setTimeout(() => {

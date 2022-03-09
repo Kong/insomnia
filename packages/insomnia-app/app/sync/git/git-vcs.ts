@@ -15,17 +15,27 @@ export interface GitRemoteConfig {
   url: string;
 }
 
-interface GitCredentialsPassword {
+interface GitCredentialsBase {
   username: string;
   password: string;
 }
 
-interface GitCredentialsToken {
+interface GitCredentialsOAuth {
+  /**
+   * Supported OAuth formats.
+   * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
+   * https://isomorphic-git.org/docs/en/authentication.html
+  */
+  oauth2format?: 'github';
   username: string;
   token: string;
 }
 
-export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
+export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
+
+export const isGitCredentialsOAuth = (credentials: GitCredentials): credentials is GitCredentialsOAuth => {
+  return 'oauth2format' in credentials;
+};
 
 export type GitHash = string;
 
@@ -81,9 +91,9 @@ interface BaseOpts {
   fs: git.CallbackFsClient | git.PromiseFsClient;
   http: git.HttpClient;
   onMessage: (message: string) => void;
-  onAuthFailure: (message: string) => void;
-  onAuthSuccess: (message: string) => void;
-  onAuth: () => void;
+  onAuthFailure: git.AuthFailureCallback;
+  onAuthSuccess: git.AuthSuccessCallback;
+  onAuth: git.AuthCallback;
 }
 
 export class GitVCS {

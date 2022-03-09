@@ -128,6 +128,12 @@ export enum UpdateURL {
 // API
 export const getApiBaseURL = () => process.env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 
+// App website
+export const getAppWebsiteBaseURL = () => process.env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
+
+// GitHub API
+export const getGitHubGraphQLApiURL = () => process.env.INSOMNIA_GITHUB_API_URL || 'https://api.github.com/graphql';
+
 // SYNC
 export const DEFAULT_BRANCH_NAME = 'master';
 
