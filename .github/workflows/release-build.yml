@@ -141,7 +141,7 @@ jobs:
 
             Alternatively, you can trigger the workflow from [Github CLI](https://cli.github.com/):
             ```bash
-            gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }}
+            gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
             ```
           destination_branch: develop
           github_token: ${{ secrets.GITHUB_TOKEN }}
