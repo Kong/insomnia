@@ -58,7 +58,7 @@
     "react-use": "^17.2.4",
     "styled-components": "^4.4.1",
     "ts-loader": "^8.2.0",
-    "type-fest": "^1.0.2",
+    "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
     "typescript-plugin-styled-components": "^1.5.0",
     "webpack": "^4.44.1",
