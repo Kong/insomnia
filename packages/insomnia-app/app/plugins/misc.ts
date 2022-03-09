@@ -60,10 +60,22 @@ type ThemeInner = ThemeBlock & {
 };
 
 export interface PluginTheme {
+  /** this name is used to generate CSS classes, and must be lower case and must not contain whitespace */
   name: string;
   displayName: string;
   theme: ThemeInner;
 }
+
+export const validateThemeName = (name: string) => {
+  const validName = name.replace(/\s/gm, '-').toLowerCase();
+  const isValid = name === validName;
+
+  if (!isValid) {
+    // `console.error`ing instead of throwing because this is a check that we had relatively late in the game and we don't want to break existing themes that might work (albeit, by accident)
+    console.error(`[theme] found an invalid theme name "${name}".  Try using ${validName}`);
+  }
+  return validName;
+};
 
 export async function generateThemeCSS(theme: PluginTheme) {
   const renderedTheme: ThemeInner = await render(
@@ -74,6 +86,8 @@ export async function generateThemeCSS(theme: PluginTheme) {
     theme.name,
   );
   const n = theme.name;
+  validateThemeName(theme.name);
+
   let css = '';
   // For the top-level variables, merge with the base theme to ensure that
   // we have everything we need.
