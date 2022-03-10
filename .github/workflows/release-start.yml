@@ -57,16 +57,12 @@ jobs:
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
 
-      - name: Commit app version bump
-        run: git commit -am "Bump app config version to ${{ env.RELEASE_VERSION }}"
-
-      - name: Lerna version (alpha/beta)
+      - name: Lerna version
         if: github.event.inputs.channel != 'stable'
-        run: npm run version -- --preid "${{ github.event.inputs.channel}}" --yes --no-push preminor
+        run: npm run version -- --preid "${{ github.event.inputs.channel }}" --yes ${{ github.event.inputs.channel != 'stable' && 'preminor' || 'minor' }}
 
-      - name: Lerna version (stable)
-        if: github.event.inputs.channel == 'stable'
-        run: npm run version -- --yes --no-push minor
+      - name: Commit
+        run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }} and lerna package versions"
 
       - name: Push changes
         run: |

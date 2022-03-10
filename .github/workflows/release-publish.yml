@@ -24,6 +24,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
       - name: Install and login to snapcraft
         if: ${{ env.IS_PRERELEASE == 'false' }}
         run: |
@@ -50,6 +58,7 @@ jobs:
           tag_name: lib@${{ env.INSO_VERSION }}
           release_name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
         env:
