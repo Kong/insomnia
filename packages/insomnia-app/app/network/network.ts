@@ -983,7 +983,7 @@ export function _getAwsAuthHeaders(
   service?: string,
 ): {
   name: string;
-  value?: string | number | string[];
+  value: string;
 }[] {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
@@ -1007,7 +1007,7 @@ export function _getAwsAuthHeaders(
     .filter(name => name !== 'content-type') // Don't add this because we already have it
     .map(name => ({
       name,
-      value: signature.headers?.[name],
+      value: String(signature.headers?.[name]),
     }));
 }
 
