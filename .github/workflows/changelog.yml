@@ -4,15 +4,22 @@ on:
   push:
     branches:
       - 'release/**'
+# TODO add workflow-dispatch
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# TODO env version and env branch
+
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
     steps:
+      # TODO:
+      # if env.VERSION not set, set it from branch name
+      # if env.version set (via workflow_dispatch) - setup branch name
+
       - name: Checkout branch
         uses: actions/checkout@v3
 
@@ -35,18 +42,25 @@ jobs:
             --owner ${OWNER} \
             --repo insomnia \
             --base ${{ steps.latest_release.outputs.release }} \
-            --head ${COMMIT} \
+            --head ${HEAD} \
             --releaseName "${RELEASE_NAME}" > ./temp_changelog.out
-          echo "::set-output name=CHANGELOG_TEXT::$(cat ./temp_changelog.out)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER: ${{ env.GITHUB_REPOSITORY_OWNER }}
-          HEAD: ${{ env.GITHUB_SHA }}
-          RELEASE_NAME: ${{ env.GITHUB_REF_NAME }}
+          OWNER: filfreire
+          HEAD: ${{ github.sha }}
+          RELEASE_NAME: ${{ github.ref_name }}
+          # TODO
+          # replace release name with env.Version
+          # that can come from push or workflow dispatch
+
+          # TODO edit OWNER to use Kong
 
       - name: Debug Changelog text
         shell: bash
         run: |
-          echo ${{ steps.changelog.outputs.CHANGELOG_TEXT }}
+          cat ./temp_changelog.out
 
-      # TODO create/update comment with CHANGELOG_TEXT on PR that has ${{ env.GITHUB_REF_NAME }}
+      # TODO Find the PR of the release branch
+
+      # TODO create/update comment with
+      # CHANGELOG_TEXT on PR that has env.BRANCH
