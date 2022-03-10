@@ -1,4 +1,4 @@
-name: Release recurring
+name: Release Recurring
 # This workflow bakes executables of the major platforms for Testing purposes
 on:
   workflow_dispatch:
@@ -9,6 +9,8 @@ on:
     types:
       - opened
       - synchronize
+    branches-ignore:
+      - 'release/**'
 concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -29,22 +31,26 @@ jobs:
            build-targets: "tar.gz"
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
 
       - name: Bootstrap packages
         run: npm run bootstrap
 
+      - name: Bump version
+        shell: bash
+        run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
+
       - name: Package
         shell: bash
-        run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+        run: BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
