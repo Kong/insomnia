@@ -101,7 +101,7 @@ const Avatar = ({ src }: { src: string }) => {
     }
 
     img.addEventListener('load', onLoad);
-    img.addEventListener('error', onLoad);
+    img.addEventListener('error', onError);
 
     return () => {
       img.removeEventListener('load', onLoad);
@@ -140,14 +140,17 @@ const GitHubAccountView = (props: {
 }) => {
   const { user, onSignOut, token } = props;
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [authUrl] = useState(() => generateAuthorizationUrl());
+  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
 
   const dispatch = useDispatch();
+
+  // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
   useEffect(() => {
-    if (user) {
+    if (token) {
       setIsAuthenticating(false);
+      setAuthUrl(generateAuthorizationUrl());
     }
-  }, [user]);
+  }, [token]);
 
   if (!token) {
     return (
