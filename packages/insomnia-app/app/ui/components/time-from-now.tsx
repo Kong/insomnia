@@ -35,7 +35,7 @@ export class TimeFromNow extends PureComponent<Props, State> {
     // Capitalize if needed
     if (capitalize) {
       text = text.replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
       });
     }
 
