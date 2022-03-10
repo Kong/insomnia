@@ -32,14 +32,17 @@ jobs:
         shell: bash
         run: |
           npx @kong/changelog-generator generate \
-            --owner ${{ env.GITHUB_REPOSITORY_OWNER }} \
+            --owner ${OWNER} \
             --repo insomnia \
             --base ${{ steps.latest_release.outputs.release }} \
-            --head ${{ env.GITHUB_SHA }} \
-            --releaseName "${{ env.GITHUB_REF_NAME }}" > ./temp_changelog.out
+            --head ${COMMIT} \
+            --releaseName "${RELEASE_NAME}" > ./temp_changelog.out
           echo "::set-output name=CHANGELOG_TEXT::$(cat ./temp_changelog.out)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ env.GITHUB_REPOSITORY_OWNER }}
+          HEAD: ${{ env.GITHUB_SHA }}
+          RELEASE_NAME: ${{ env.GITHUB_REF_NAME }}
 
       - name: Debug Changelog text
         shell: bash
