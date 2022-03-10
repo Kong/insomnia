@@ -38,7 +38,6 @@
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1",
   "devDependencies": {
-    "@types/lodash": "^4.14.168",
     "@types/ramda": "^0.27.44",
     "@types/shell-quote": "^1.7.0",
     "@types/yaml": "^1.9.7",
