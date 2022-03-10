@@ -46,6 +46,7 @@
     "codemirror-graphql",
     "fuzzysort",
     "graphql",
+    "graphql-language-service",
     "highlight.js",
     "insomnia-components",
     "insomnia-cookies",
