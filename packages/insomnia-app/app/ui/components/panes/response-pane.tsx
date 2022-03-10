@@ -4,7 +4,7 @@ import { clipboard } from 'electron';
 import fs from 'fs';
 import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
-import mime from 'mime-types';
+import { extension as mimeExtension } from 'mime-types';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -84,7 +84,7 @@ export class ResponsePane extends PureComponent<Props> {
     }
 
     const { contentType } = response;
-    const extension = mime.extension(contentType) || 'unknown';
+    const extension = mimeExtension(contentType) || 'unknown';
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
