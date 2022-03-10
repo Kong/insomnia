@@ -9,6 +9,8 @@ on:
     types:
       - opened
       - synchronize
+    branches-ignore:
+      - 'release/**'
 concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
