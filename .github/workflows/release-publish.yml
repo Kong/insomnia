@@ -50,6 +50,7 @@ jobs:
           tag_name: lib@${{ env.INSO_VERSION }}
           release_name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
+          commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
         env:
