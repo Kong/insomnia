@@ -9,8 +9,6 @@ on:
     types:
       - opened
       - synchronize
-    branches-ignore:
-      - 'release/**'
 concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -18,6 +16,8 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
+    # Skip jobs for release PRs
+    if: "!startsWith(github.head_ref, 'release/')"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
