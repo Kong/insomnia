@@ -1,0 +1,49 @@
+name: Generate Changelog
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Get latest release for Changelog
+        id: latest_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Run Changelog-generator script
+        id: changelog
+        shell: bash
+        run: |
+          npx @kong/changelog-generator generate \
+            --owner ${{ env.GITHUB_REPOSITORY_OWNER }} \
+            --repo insomnia \
+            --base ${{ steps.latest_release.outputs.release }} \
+            --head ${{ env.GITHUB_SHA }} \
+            --releaseName "${{ env.GITHUB_REF_NAME }}" > ./temp_changelog.out
+          echo "::set-output name=CHANGELOG_TEXT::$(cat ./temp_changelog.out)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug Changelog text
+        shell: bash
+        run: |
+          echo ${{ steps.changelog.outputs.CHANGELOG_TEXT }}
+
+      # TODO create/update comment with CHANGELOG_TEXT on PR that has ${{ env.GITHUB_REF_NAME }}
