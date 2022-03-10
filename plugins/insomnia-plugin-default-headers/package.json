@@ -16,6 +16,5 @@
   "insomnia": {
     "name": "default-headers",
     "description": "Add default headers to requests"
-  },
-  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+  }
 }
