@@ -75,7 +75,7 @@ const configuration: Configuration = {
   plugins: [
     new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new DefinePlugin({
-      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
+      'process.env.BUILD_DATE': JSON.stringify(new Date()),
     }),
     // see: https://github.com/Kong/insomnia/pull/3469 for why this transform is needed
     new NormalModuleReplacementPlugin(
