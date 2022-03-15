@@ -8,7 +8,7 @@ import {
   changelogUrl,
   getAppLongName,
   getAppName,
-  getAppReleaseDate,
+  getAppBuildDate,
   getAppVersion,
   isDevelopment,
   isLinux,
@@ -378,7 +378,7 @@ export function createWindow() {
     const buttons = isLinux() ? [copy, ok] : [ok, copy];
     const detail = [
       `Version: ${getAppLongName()} ${getAppVersion()}`,
-      `Release date: ${getAppReleaseDate()}`,
+      `Build date: ${getAppBuildDate()}`,
       `OS: ${os.type()} ${os.arch()} ${os.release()}`,
       `Electron: ${process.versions.electron}`,
       `Node: ${process.versions.node}`,
