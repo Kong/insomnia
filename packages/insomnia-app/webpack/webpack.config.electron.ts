@@ -21,7 +21,7 @@ if (process.env.NODE_ENV === 'development') {
       'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/renderer.html`),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
-      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
+      'process.env.BUILD_DATE': JSON.stringify(new Date()),
     }),
   ];
 } else {
