@@ -6,9 +6,9 @@ import url from 'url';
 
 import {
   changelogUrl,
+  getAppBuildDate,
   getAppLongName,
   getAppName,
-  getAppBuildDate,
   getAppVersion,
   isDevelopment,
   isLinux,
