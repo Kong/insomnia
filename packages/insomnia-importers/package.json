@@ -36,7 +36,6 @@
     "shell-quote": "^1.7.2",
     "yaml": "^1.10.0"
   },
-  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1",
   "devDependencies": {
     "@types/ramda": "^0.27.44",
     "@types/shell-quote": "^1.7.0",
