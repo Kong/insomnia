@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-plugin-base64",
-  "version": "2.5.2",
+  "version": "2.7.0-alpha.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia base64 template tag",
   "license": "MIT",
@@ -21,6 +21,5 @@
   },
   "scripts": {
     "test": "jest --silent"
-  },
-  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+  }
 }

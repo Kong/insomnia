@@ -1,7 +1,7 @@
 {
   "name": "openapi-2-kong",
   "license": "Apache-2.0",
-  "version": "2.5.2",
+  "version": "2.7.0-alpha.0",
   "author": "Kong <office@konghq.com>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -35,6 +35,5 @@
   },
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
-  },
-  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
+  }
 }

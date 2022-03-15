@@ -1,15 +1,20 @@
 {
-  "tagVersionPrefix": "lib@",
-  "version": "2.5.2",
+  "version": "2.7.0-alpha.0",
   "includeMergedTags": true,
-  "command": {
-    "version": {
-      "message": "version packages %s"
-    }
-  },
   "packages": [
     "packages/*",
     "plugins/*",
     "packages/insomnia-app/build"
-  ]
+  ],
+  "command": {
+    "version": {
+      "exact": true,
+      "forcePublish": true,
+      "gitTagVersion": false,
+      "push": false
+    },
+    "publish": {
+      "verifyAccess": false
+    }
+  }
 }

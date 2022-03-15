@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-cookies",
-  "version": "2.5.2",
+  "version": "2.7.0-alpha.0",
   "author": "Kong <office@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",
@@ -31,6 +31,5 @@
   },
   "dependencies": {
     "tough-cookie": "^2.3.3"
-  },
-  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+  }
 }

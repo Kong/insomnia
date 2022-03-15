@@ -1,4 +1,4 @@
-name: Release recurring
+name: Release Recurring
 # This workflow bakes executables of the major platforms for Testing purposes
 on:
   workflow_dispatch:
@@ -16,6 +16,8 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
+    # Skip jobs for release PRs
+    if: "!startsWith(github.head_ref, 'release/')"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

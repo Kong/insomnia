@@ -1,6 +1,6 @@
 {
   "name": "insomnia-components",
-  "version": "2.5.2",
+  "version": "2.7.0-alpha.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
@@ -70,7 +70,6 @@
     "classnames": "^2.3.1",
     "framer-motion": "^1.10.3",
     "fuzzysort": "^1.1.4",
-    "md5": "^2.2.1",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",
     "react-switch": "^5.0.1"
@@ -80,6 +79,5 @@
     "react-dom": "^16.8.3",
     "react-use": "^17.2.4",
     "styled-components": "^4.4.1"
-  },
-  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
+  }
 }

@@ -16,6 +16,8 @@ jobs:
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
+        with:
+          test-bot: false
 
       - name: Cache Homebrew Bundler RubyGems
         id: cache
@@ -36,6 +38,9 @@ jobs:
         uses: Homebrew/actions/git-user-config@master
         with:
           username: 'insomnia-infra'
+
+      - name: Update brew
+        run: brew update
 
       # Update Homebrew's Inso(mnia) formulae
       # https://github.com/Homebrew/actions/tree/master/bump-formulae
