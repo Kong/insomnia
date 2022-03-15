@@ -144,7 +144,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       };
 
       // NOTE: legacy, default headerResults
-      resolve({ patch, debugTimeline, headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
+      resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
     });
     curl.perform();
   } catch (e) {
@@ -153,7 +153,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       error: e.message || 'Something went wrong',
       elapsedTime: 0,
     };
-    resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
+    resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
   }
 });
 

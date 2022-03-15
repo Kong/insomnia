@@ -1,3 +1,4 @@
+import { sanitize } from 'dompurify';
 import { marked } from 'marked';
 
 marked.setOptions({
@@ -5,9 +6,8 @@ marked.setOptions({
   gfm: true,
   breaks: false,
   pedantic: false,
-  sanitize: true,
   smartLists: true,
   smartypants: false,
 });
 
-export const markdownToHTML = marked.parse;
+export const markdownToHTML = (input: string) => sanitize(marked.parse(input));

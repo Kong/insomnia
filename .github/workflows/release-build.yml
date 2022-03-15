@@ -1,0 +1,143 @@
+name: Release Build
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload-release-artifacts:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            csc_link_secret: DESIGNER_MAC_CSC_LINK
+            csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
+          - os: windows-latest
+            csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
+            csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
+          - os: ubuntu-latest
+            csc_link_secret: ''
+            csc_key_password_secret: ''
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      - name: Package app
+        shell: bash
+        run: npm run app-package
+        env:
+          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
+          APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+          CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
+
+      - name: Setup Inso CLI version env var
+        run:
+          echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
+
+      - name: Package inso
+        run: npm run inso-package
+        env:
+          VERSION: ${{ env.INSO_VERSION }}
+
+      - name: Code-sign & create Inso CLI installer (macOS only)
+        if: matrix.os == 'macos-latest'
+        run: ./src/scripts/macos-pkg.sh
+        shell: bash
+        working-directory: packages/insomnia-inso
+        continue-on-error: false
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+          PKG_NAME: inso-${{ matrix.os }}-${{ env.INSO_VERSION }}
+          BUNDLE_ID: com.insomnia.inso
+          VERSION: ${{ env.INSO_VERSION }}
+
+      - name: Notarize Inso CLI installer (macOS only)
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-notarize@v1
+        with:
+          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+          primary-bundle-id: com.insomnia.inso
+          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      - name: Staple Inso CLI installer (macOS only)
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-staple@v1
+        with:
+          product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
+
+      - name: Notarize Inso CLI binary (macOS only)
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-notarize@v1
+        with:
+          product-path: packages/insomnia-inso/binaries/inso
+          primary-bundle-id: com.insomnia.inso-binary
+          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      - name: Create inso artifacts
+        run: npm run inso-package:artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts
+          path: |
+            packages/insomnia-app/dist/*.exe
+            packages/insomnia-app/dist/squirrel-windows/*
+            packages/insomnia-app/dist/*.zip
+            packages/insomnia-app/dist/*.dmg
+            packages/insomnia-app/dist/*.snap
+            packages/insomnia-app/dist/*.rpm
+            packages/insomnia-app/dist/*.deb
+            packages/insomnia-app/dist/*.AppImage
+            packages/insomnia-app/dist/*.tar.gz
+            packages/insomnia-inso/artifacts/*
+
+  update-pull-request:
+    needs: build-and-upload-release-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release version
+        id: release_version
+        shell: bash
+        run: |
+           echo ::set-output name=version::${BRANCH/release\//}
+        env:
+          BRANCH: ${{ github.ref_name }}
+
+      - name: update-pull-request
+        uses: kt3k/update-pr-description@v1.0.1
+        with:
+          pr_body: |
+            Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ## Steps for Publish:
+
+            When ready to publish, trigger [Publish](https://github.com/${{ github.repository }}/actions/workflows/release-publish.yml) workflow with these variables:
+            - Release version (`version`): `${{ steps.release_version.outputs.version }}`
+
+            Alternatively, you can trigger the workflow from [Github CLI](https://cli.github.com/):
+            ```bash
+            gh workflow run release-publish.yml -f version=${{ steps.release_version.outputs.version }} --repo ${{ github.repository }}
+            ```
+          destination_branch: develop
+          github_token: ${{ secrets.GITHUB_TOKEN }}
