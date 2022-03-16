@@ -31,12 +31,13 @@ export function generateAuthorizationUrl() {
   return url.toString();
 }
 
-export async function exchangeCodeForToken(input: {
+export async function exchangeCodeForToken({
+  code,
+  state,
+}: {
   code: string;
   state: string;
 }) {
-  const { code, state } = input;
-
   if (!statesCache.has(state)) {
     throw new Error(
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
