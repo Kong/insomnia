@@ -25,7 +25,7 @@ const electronBinary = path.join('node_modules', '.bin', process.platform === 'w
 
 export const executablePath = bundleType() === 'package' ? insomniaBinary : electronBinary;
 
-// NOTE: main.min.js is built by app-build:smoke in /build and also by the watcher in /app
+// NOTE: main.min.js is built by app-build in /build and also by the watcher in /app
 export const mainPath = path.join(bundleType() === 'dev' ? 'app' : 'build', 'main.min.js');
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia-app');
 
@@ -40,12 +40,12 @@ if (bundleType() === 'dev' && !hasMainBeenBuilt) {
 }
 if (bundleType() === 'build' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-  Have you run "npm run app-build:smoke"?`);
+  Have you run "npm run app-build"?`);
   exit(1);
 }
 if (bundleType() === 'package' && !hasBinaryBeenBuilt) {
   console.error(`ERROR: ${insomniaBinary} not found at ${path.resolve(cwd, insomniaBinary)}
-  Have you run "npm run app-package:smoke"?`);
+  Have you run "npm run app-package"?`);
   exit(1);
 }
 if (process.env.DEBUG) {
