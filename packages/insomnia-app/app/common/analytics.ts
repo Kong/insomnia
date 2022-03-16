@@ -1,6 +1,6 @@
 import Analytics from 'analytics-node';
 import { AxiosRequestConfig } from 'axios';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId } from '../account/session';
 import { database as db } from '../common/database';
@@ -29,7 +29,7 @@ const segmentClient = new Analytics(getSegmentWriteKey(), {
 
 const getDeviceId = async () => {
   const settings = await models.settings.getOrCreate();
-  return settings.deviceId || (await models.settings.update(settings, { deviceId: uuid.v4() })).deviceId;
+  return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
 
 const sendSegment = async (segmentType: 'track' | 'page', options) => {

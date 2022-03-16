@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { exit } from 'process';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 // Default to dev so that the playwright vscode extension works
 export const bundleType = () => process.env.BUNDLE || 'dev';
@@ -12,7 +12,7 @@ export const loadFixture = async (fixturePath: string) => {
   return buffer.toString('utf-8');
 };
 
-export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuid.v4()}`);
+export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuidv4()}`);
 export const INSOMNIA_DATA_PATH = randomDataPath();
 
 const pathLookup = {
