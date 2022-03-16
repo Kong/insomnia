@@ -21,7 +21,7 @@ export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
-export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
+export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)

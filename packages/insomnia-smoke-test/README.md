@@ -49,14 +49,14 @@ It's possible to run the smoke tests for:
 For `build`:
 
 ```shell
-npm run app-build:smoke             # Transpile js bundle
+npm run app-build                   # Transpile js bundle
 npm run test:smoke:build            # Run tests
 ```
 
 For `package`:
 
 ```shell
-npm run app-package:smoke           # Build executable in /packages/insomnia-app/dist
+npm run app-package                 # Build executable in /packages/insomnia-app/dist
 npm run test:smoke:package          # Run tests
 ```
 
@@ -105,6 +105,23 @@ npm run cli                         # Run CLI tests
 ```
 
 This will allow you to write and monitor the server separately from each test, speeding up the development cycle.
+
+### Debug Inso CLI api test in watch mode
+
+This is helpful for debugging failing api tests and changing the send-request abstraction
+
+From project root, in seperate terminals:
+
+```sh
+# start smoke test api
+npx lerna --scope insomnia-smoke-test exec 'npm run serve'
+# watch send-request
+npx lerna --scope insomnia-app exec 'npm run build:sr -- --watch'
+# watch inso
+npx lerna --scope insomnia-inso exec 'npm run start'
+# run api test
+$PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+```
 
 ## General guidelines
 
