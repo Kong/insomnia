@@ -18,11 +18,11 @@ interface Props {
 
 export const GraphQLExplorerFieldsList: FC<Props> = ({ fields, onNavigateType, onNavigateField }) => {
   const fieldsList = fields.map(field => {
-    const argLinks = <GraphQLExplorerArgLinks onNavigate={onNavigateType} args={field.args || []} />;
+    const argLinks = <GraphQLExplorerArgLinks onNavigate={onNavigateType} args={field.args} />;
     const fieldLink = <GraphQLExplorerFieldLink onNavigate={onNavigateField} field={field} />;
     const typeLink = <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={field.type} />;
 
-    const isDeprecated = field.isDeprecated;
+    const isDeprecated = Boolean(field.deprecationReason);
     const description = field.description;
 
     return (
