@@ -4,4 +4,6 @@ module.exports = {
     setItem: () => {},
   },
   performance:{ now:() => 0 },
+  requestAnimationFrame: () => {},
+  cancelAnimationFrame: () => {},
 };
