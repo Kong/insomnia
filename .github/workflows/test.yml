@@ -64,7 +64,7 @@ jobs:
         run: npm test
 
       - name: Build app for smoke tests
-        run: npm run app-build:smoke
+        run: npm run app-build
 
       - name: Run app smoke tests
         run: npm run test:smoke:build
