@@ -22,7 +22,7 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "iconv-lite": "^0.4.19",
+    "iconv-lite": "^0.6.3",
     "insomnia-xpath": "2.7.0-alpha.0",
     "jsonpath-plus": "^6.0.1"
   }
