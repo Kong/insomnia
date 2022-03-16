@@ -29,7 +29,7 @@
     "jsonlint-mod-fixed": "1.7.7",
     "jsonpath-plus": "^6.0.1",
     "marked": "^4.0.12",
-    "mime-types": "^2.1.27",
+    "mime-types": "^2.1.35",
     "mkdirp": "^1.0.4",
     "multiparty": "^4.2.1",
     "nedb": "^1.8.0",
