@@ -1,4 +1,4 @@
-import nunjucks from 'nunjucks';
+import nunjucks from 'nunjucks/browser/nunjucks';
 
 import type { TemplateTag } from '../plugins/index';
 import * as plugins from '../plugins/index';
@@ -104,9 +104,7 @@ export function reload() {
  */
 export async function getTagDefinitions() {
   const env = await getNunjucks(RENDER_ALL);
-  // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
   return Object.keys(env.extensions)
-    // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
     .map(k => env.extensions[k])
     .filter(ext => !ext.isDeprecated())
     .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
@@ -186,7 +184,6 @@ async function getNunjucks(renderMode: string) {
     templateTag.priority = templateTag.priority || i * 100;
     // @ts-expect-error -- TSCONVERSION
     const instance = new BaseExtension(templateTag, plugin);
-    // @ts-expect-error -- TSCONVERSION
     nj.addExtension(instance.getTag(), instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
