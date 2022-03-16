@@ -174,7 +174,7 @@
     "whatwg-fetch": "^2.0.1",
     "yaml": "^1.5.0",
     "yaml-source-map": "^2.1.1",
-    "zprint-clj": "0.2.0"
+    "zprint-clj": "0.8.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.8",
