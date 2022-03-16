@@ -20,3 +20,20 @@
 ## Documentation
 
 See the [open-source Inso CLI documentation](https://docs.insomnia.rest/inso-cli/introduction).
+
+## Run api test in watch mode
+
+This is helpful for debugging failing api tests and altering the send-request abstraction
+
+From project root, in seperate terminals:
+
+```sh
+# start smoke test api
+npx lerna --scope insomnia-smoke-test exec 'npm run serve'
+# watch send-request
+npx lerna --scope insomnia-app exec 'npm run build:sr -- --watch'
+# watch inso
+npx lerna --scope insomnia-inso exec 'npm run start'
+# run api test
+$PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+```
