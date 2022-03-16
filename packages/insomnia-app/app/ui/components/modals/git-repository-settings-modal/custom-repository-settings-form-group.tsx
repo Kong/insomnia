@@ -13,7 +13,6 @@ export interface Props {
     authorEmail?: string;
     username?: string;
     token?: string;
-    oauth2format?: 'github';
   };
 }
 
