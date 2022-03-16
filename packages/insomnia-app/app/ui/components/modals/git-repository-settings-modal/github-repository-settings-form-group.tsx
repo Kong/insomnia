@@ -1,4 +1,5 @@
 import { AxiosResponse } from 'axios';
+import type { GraphQLError } from 'graphql';
 import { Button } from 'insomnia-components';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -26,18 +27,19 @@ interface FetchGraphQLInput {
 
 async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
   const { headers, query, variables, url } = input;
-  const response: AxiosResponse<QueryResult> = await axiosRequest({
-    url,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    data: {
-      query,
-      variables,
-    },
-  });
+  const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
+    await axiosRequest({
+      url,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      data: {
+        query,
+        variables,
+      },
+    });
 
   return response.data;
 }
@@ -288,21 +290,27 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     let isMounted = true;
 
     if (githubToken && !user) {
-      fetchGraphQL<{ data: GitHubUserInfoQueryResult }>({
+      fetchGraphQL<GitHubUserInfoQueryResult>({
         query: GitHubUserInfoQuery,
         headers: {
           Authorization: `Bearer ${githubToken}`,
         },
         url: GITHUB_GRAPHQL_API_URL,
       })
-        .then(({ data }) => {
+        .then(({ data, errors }) => {
           if (isMounted) {
-            setUser(data.viewer);
+            if (errors) {
+              setError('Something went wrong when trying to fetch info from GitHub.');
+            } else if (data) {
+              setUser(data.viewer);
+            }
           }
         })
         .catch((e: unknown) => {
           if (e instanceof Error) {
-            setError('Something went wrong when trying to fetch info from GitHub.');
+            setError(
+              'Something went wrong when trying to fetch info from GitHub.'
+            );
           }
         });
     }
