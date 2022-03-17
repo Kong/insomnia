@@ -102,7 +102,7 @@
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
     "httpsnippet": "^1.23.0",
-    "iconv-lite": "^0.4.15",
+    "iconv-lite": "^0.6.3",
     "insomnia-common": "2.7.0-alpha.0",
     "insomnia-components": "2.7.0-alpha.0",
     "insomnia-config": "2.7.0-alpha.0",
