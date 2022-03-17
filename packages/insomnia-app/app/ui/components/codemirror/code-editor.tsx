@@ -678,14 +678,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     return mode.indexOf('xml') !== -1;
   }
 
-  static _isEDN(mode?: string) {
-    if (!mode) {
-      return false;
-    }
-
-    return mode === 'application/edn' || mode.indexOf('clojure') !== -1;
-  }
-
   _indentChars() {
     return this.codeMirror?.getOption('indentWithTabs')
       ? '\t'
@@ -956,7 +948,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       return 'graphql';
     } else if (UnconnectedCodeEditor._isJSON(mimeType)) {
       return 'application/json';
-    } else if (UnconnectedCodeEditor._isEDN(mimeType)) {
+    } else if (mimeType.includes('clojure')) {
       return 'application/edn';
     } else if (UnconnectedCodeEditor._isXML(mimeType)) {
       return 'application/xml';
