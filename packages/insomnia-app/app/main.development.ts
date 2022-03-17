@@ -33,13 +33,18 @@ const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
 log.info(`Running version ${getAppVersion()}`);
 
-// Explicitly set userData folder from config because it's sketchy to
-// rely on electron-builder to use productName, which could be changed
-// by accident.
-if (!isDevelopment()) {
+// Override the Electron userData path
+// This makes Chromium use this folder for eg localStorage
+const envDataPath = process.env.INSOMNIA_DATA_PATH
+if (envDataPath) {
+  app.setPath('userData', envDataPath)
+} else if (!isDevelopment()) {
+  // Explicitly set userData folder from config because it's sketchy to
+  // rely on electron-builder to use productName, which could be changed
+  // by accident.
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
-  app.setPath('userData', process.env.INSOMNIA_DATA_PATH ?? newPath);
+  app.setPath('userData', newPath);
 }
 
 // So if (window) checks don't throw
