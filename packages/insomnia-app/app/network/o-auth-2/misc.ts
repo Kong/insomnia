@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 import querystring from 'querystring';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
 
@@ -17,7 +17,7 @@ export function getOAuthSession(): string {
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
-  const authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
+  const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
