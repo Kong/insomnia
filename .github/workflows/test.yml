@@ -15,22 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  get_version:
-    name: Get version
-    runs-on: ubuntu-latest
-    outputs:
-      inso-version: ${{ steps.get-package-version.outputs.current-version }}
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v3
-      - name: Get version
-        id: get-package-version
-        uses: martinbeentjes/npm-get-version-action@master
-        with:
-          path: packages/insomnia-inso
-
   OS:
-    needs: [get_version]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -73,12 +58,10 @@ jobs:
         id: inso-variables
         shell: bash
         run: |
-          INSO_VERSION="${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}"
+          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
           PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
-          BUNDLE_ID="com.insomnia.inso"
 
           echo ::set-output name=pkg-name::$PKG_NAME
-          echo ::set-output name=bundle-id::$BUNDLE_ID
           echo ::set-output name=inso-version::$INSO_VERSION
 
       - name: Package Inso CLI binary
