@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
 import React, { PureComponent } from 'react';
 import * as toughCookie from 'tough-cookie';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 import type { Cookie } from '../../models/cookie-jar';
@@ -29,7 +29,7 @@ const MAX_TIME = 2147483647000;
 export class CookieList extends PureComponent<CookieListProps> {
   _handleCookieAdd() {
     const newCookie: Cookie = {
-      id: uuid.v4(),
+      id: uuidv4(),
       key: 'foo',
       value: 'bar',
       domain: this.props.newCookieDomainName,

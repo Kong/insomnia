@@ -1,6 +1,6 @@
 import fuzzysort from 'fuzzysort';
 import { join as pathJoin } from 'path';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import zlib from 'zlib';
 
 import { DEBOUNCE_MILLIS, METHOD_DELETE, METHOD_OPTIONS } from './constants';
@@ -107,7 +107,7 @@ export function getContentLengthHeader<T extends Header>(headers: T[]): T | null
  * @returns {string}
  */
 export function generateId(prefix?: string) {
-  const id = uuid.v4().replace(/-/g, '');
+  const id = uuidv4().replace(/-/g, '');
 
   if (prefix) {
     return `${prefix}_${id}`;
