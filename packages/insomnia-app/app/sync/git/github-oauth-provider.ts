@@ -1,4 +1,4 @@
-import uuid from 'uuid';
+import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
 import { axiosRequest } from '../../network/axios-request';
@@ -15,7 +15,7 @@ const getOauthPageURL = () => getAppWebsiteBaseURL() + '/oauth/github';
 const statesCache = new Set<string>();
 
 export function generateAuthorizationUrl() {
-  const state = uuid.v4();
+  const state = v4();
   const scopes = ['repo', 'read:user', 'user:email'];
   const scope = scopes.join(' ');
 

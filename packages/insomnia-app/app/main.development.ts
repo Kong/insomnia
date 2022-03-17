@@ -35,9 +35,9 @@ log.info(`Running version ${getAppVersion()}`);
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
-const envDataPath = process.env.INSOMNIA_DATA_PATH
+const envDataPath = process.env.INSOMNIA_DATA_PATH;
 if (envDataPath) {
-  app.setPath('userData', envDataPath)
+  app.setPath('userData', envDataPath);
 } else if (!isDevelopment()) {
   // Explicitly set userData folder from config because it's sketchy to
   // rely on electron-builder to use productName, which could be changed
