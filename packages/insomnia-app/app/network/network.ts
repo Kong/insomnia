@@ -984,33 +984,30 @@ export function _getAwsAuthHeaders(
 ): {
   name: string;
   value: string;
-  description?: string;
-  disabled?: boolean;
 }[] {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
   // AWS uses host header for signing so prioritize that if the user set it manually
   const hostHeader = getHostHeader(headers);
   const host = hostHeader ? hostHeader.value : parsedUrl.host;
-  const awsSignOptions = {
+  const awsSignOptions: aws4.Request = {
     service,
     region,
-    host,
+    ...(host ? { host } : {}),
     body,
     method,
-    path: parsedUrl.path,
-    headers: contentTypeHeader
-      ? {
-        'content-type': contentTypeHeader.value,
-      }
-      : {},
+    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
+    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
   };
   const signature = aws4.sign(awsSignOptions, credentials);
+  if (!signature.headers) {
+    return [];
+  }
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
     .map(name => ({
       name,
-      value: signature.headers[name],
+      value: String(signature.headers?.[name]),
     }));
 }
 
