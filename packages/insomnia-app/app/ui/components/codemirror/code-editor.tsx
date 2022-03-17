@@ -14,7 +14,6 @@ import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, 
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
-import zprint from 'zprint-clj';
 
 import {
   AUTOBIND_CFG,
@@ -725,14 +724,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  static _prettifyEDN(code: string) {
-    try {
-      return zprint(code, null);
-    } catch (e) {
-      return code;
-    }
-  }
-
   _prettifyXML(code: string) {
     if (this.props.updateFilter && this.state.filter) {
       try {
@@ -1143,8 +1134,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     if (shouldPrettify && this._canPrettify()) {
       if (UnconnectedCodeEditor._isXML(mode)) {
         code = this._prettifyXML(code);
-      } else if (UnconnectedCodeEditor._isEDN(mode)) {
-        code = UnconnectedCodeEditor._prettifyEDN(code);
       } else if (UnconnectedCodeEditor._isJSON(mode)) {
         code = this._prettifyJSON(code);
       } else {
@@ -1190,7 +1179,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
   _canPrettify() {
     const { mode } = this.props;
-    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode) || UnconnectedCodeEditor._isEDN(mode);
+    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode);
   }
 
   _showFilterHelp() {
@@ -1266,8 +1255,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         contentTypeName = 'JSON';
       } else if (UnconnectedCodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (UnconnectedCodeEditor._isEDN(mode)) {
-        contentTypeName = 'EDN';
       }
 
       toolbarChildren.push(
