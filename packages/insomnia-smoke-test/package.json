@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "2.7.0-alpha.0",
+  "version": "2.7.0",
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -35,6 +35,7 @@
     "@types/mkdirp": "^1.0.1",
     "@types/oidc-provider": "^7.8.1",
     "@types/ramda": "^0.27.45",
+    "@types/uuid": "^8.3.4",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.2",
     "execa": "^5.0.0",
@@ -48,7 +49,7 @@
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.34.0",
     "ts-node": "^9.1.1",
-    "uuid": "^8.3.0",
+    "uuid": "^8.3.2",
     "xvfb-maybe": "^0.2.1"
   }
 }

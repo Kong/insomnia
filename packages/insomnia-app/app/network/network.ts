@@ -15,7 +15,7 @@ import {
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { parse as urlParse, resolve as urlResolve } from 'url';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   AUTH_AWS_IAM,
@@ -661,7 +661,7 @@ export async function _actuallySend(
 
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
+      const responseBodyPath = pathJoin(responsesDir, uuidv4() + '.response');
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
@@ -984,39 +984,36 @@ export function _getAwsAuthHeaders(
 ): {
   name: string;
   value: string;
-  description?: string;
-  disabled?: boolean;
 }[] {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
   // AWS uses host header for signing so prioritize that if the user set it manually
   const hostHeader = getHostHeader(headers);
   const host = hostHeader ? hostHeader.value : parsedUrl.host;
-  const awsSignOptions = {
+  const awsSignOptions: aws4.Request = {
     service,
     region,
-    host,
+    ...(host ? { host } : {}),
     body,
     method,
-    path: parsedUrl.path,
-    headers: contentTypeHeader
-      ? {
-        'content-type': contentTypeHeader.value,
-      }
-      : {},
+    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
+    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
   };
   const signature = aws4.sign(awsSignOptions, credentials);
+  if (!signature.headers) {
+    return [];
+  }
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
     .map(name => ({
       name,
-      value: signature.headers[name],
+      value: String(signature.headers?.[name]),
     }));
 }
 
 function storeTimeline(timeline: ResponseTimelineEntry[]) {
   const timelineStr = JSON.stringify(timeline, null, '\t');
-  const timelineHash = uuid.v4();
+  const timelineHash = uuidv4();
   const responsesDir = pathJoin(getDataDirectory(), 'responses');
   mkdirp.sync(responsesDir);
   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');

@@ -90,9 +90,9 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
 
       let value;
       if (infoType === CurlInfoDebug.DataOut) {
-        // Ignore the possibly large data messages
-        const lessThan10KB = buffer.length / 1024 < maxTimelineDataSizeKB || 10;
-        value = lessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+        // Ignore large post data messages
+        const isLessThan10KB = buffer.length / 1024 < (maxTimelineDataSizeKB || 1);
+        value = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
       if (infoType === CurlInfoDebug.DataIn) {
         value = `Received ${describeByteSize(buffer.length)} chunk`;
@@ -144,7 +144,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       };
 
       // NOTE: legacy, default headerResults
-      resolve({ patch, debugTimeline, headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
+      resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
     });
     curl.perform();
   } catch (e) {
@@ -153,7 +153,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       error: e.message || 'Something went wrong',
       elapsedTime: 0,
     };
-    resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: -1, reason: '', headers: [] }] });
+    resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
   }
 });
 

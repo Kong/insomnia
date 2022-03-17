@@ -709,7 +709,11 @@ export const convert: Converter = async rawData => {
   }
 
   try {
-    apiDocument = await SwaggerParser.validate(apiDocument) as OpenAPIV3.Document;
+    apiDocument = await SwaggerParser.validate(apiDocument, {
+      dereference: {
+        circular: 'ignore',
+      },
+    }) as OpenAPIV3.Document;
   } catch (err) {
     console.log('[openapi-3] Import file validation failed', err);
   }
