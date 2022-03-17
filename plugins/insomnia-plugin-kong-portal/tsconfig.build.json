@@ -4,11 +4,9 @@
     "outDir": "dist",
     "rootDir": ".",
     "resolveJsonModule": true,
-    "strict": false,
-    "strictNullChecks": true,
+    "strict": true,
     "jsx": "react",
     "types": ["node"],
-    "experimentalDecorators": true,
     "skipLibCheck": true
   },
   "include": [

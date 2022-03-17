@@ -3,8 +3,10 @@ import { Button } from 'insomnia-components';
 import React, { Component, SyntheticEvent } from 'react';
 import urlJoin from 'url-join';
 
+import { Context, Spec } from './document-actions';
+
 const isAxiosError = (error?: Error | AxiosError): error is AxiosError => (
-  error && Object.prototype.hasOwnProperty.call(error, 'isAxiosError')
+  Boolean(error) && Object.prototype.hasOwnProperty.call(error, 'isAxiosError')
 );
 
 interface Props {
@@ -18,26 +20,21 @@ interface Props {
     };
     status: number;
   }>;
-  trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
-  store: {
-    hasItem: (key: string) => Promise<boolean>;
-    setItem: (key: string, value: string) => Promise<void>;
-    getItem: (key: string) => Promise<string | null>;
-  };
-  spec: {
-    contents: Object;
-    rawContents: string;
-    format: string;
-    formatVersion: string;
-  };
+  trackSegmentEvent: Context['__private']['analytics']['trackSegmentEvent'];
+  store: Context['store'];
+  spec: Spec;
 }
 
-interface State {
-  workspaceId: string;
+interface PersistedState {
   kongPortalRbacToken: string;
   kongPortalApiUrl: string;
   kongPortalUrl: string;
   kongPortalUserWorkspace: string;
+}
+
+interface State extends PersistedState {
+  workspaceId: string;
+
   isLoading: boolean;
   connectionError: AxiosError | Error | null;
   showUploadError: boolean;
@@ -48,20 +45,24 @@ interface State {
   kongPortalDeployError: string;
 }
 
-const STATE_KEYS_TO_PERSIST = [
+const STATE_KEYS_TO_PERSIST: (keyof PersistedState)[] = [
   'kongPortalRbacToken',
   'kongPortalApiUrl',
   'kongPortalUrl',
   'kongPortalUserWorkspace',
 ];
 
+const defaultPersistedState: PersistedState = {
+  kongPortalRbacToken: '',
+  kongPortalApiUrl: '',
+  kongPortalUrl: '',
+  kongPortalUserWorkspace: '',
+};
+
 export class DeployToPortal extends Component<Props, State> {
   state: State = {
+    ...defaultPersistedState,
     workspaceId: '',
-    kongPortalRbacToken: '',
-    kongPortalApiUrl: '',
-    kongPortalUrl: '',
-    kongPortalUserWorkspace: '',
     kongSpecFileName: '',
     isLoading: false,
     connectionError: null,
@@ -211,16 +212,11 @@ export class DeployToPortal extends Component<Props, State> {
   }
 
   async componentDidMount() {
-    const newState = {};
+    const newState = defaultPersistedState;
     for (const key of STATE_KEYS_TO_PERSIST) {
       const value = await this.props.store.getItem(key);
-
-      // Extra check to make Flow happy
-      if (typeof value === 'string') {
-        newState[key] = value;
-      }
+      newState[key] = String(value);
     }
-
     this.setState(newState);
   }
 
