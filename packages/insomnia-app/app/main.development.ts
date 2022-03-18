@@ -235,7 +235,7 @@ async function _trackStats() {
     app.exit();
   });
 
-  ipcMain.handle('setMenuBarVisibility', (_, visible) => {
+  ipcMain.on('setMenuBarVisibility', (_, visible) => {
     electron.BrowserWindow.getAllWindows()
       .forEach(window => {
         // the `setMenuBarVisibility` signature uses `visible` semantics
