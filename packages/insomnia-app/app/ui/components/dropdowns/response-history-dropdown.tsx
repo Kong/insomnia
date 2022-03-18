@@ -111,7 +111,6 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
 
     responses.forEach(response => {
       const responseTime = new Date(response.created);
-      console.log({ responseTime, created: response.created });
 
       if (differenceInMinutes(now, responseTime) < 5) {
         categories.minutes.push(response);
