@@ -74,8 +74,7 @@
     "srp-js",
     "styled-components",
     "swagger-ui-react",
-    "vkbeautify",
-    "zprint-clj"
+    "vkbeautify"
   ],
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.4-3",
@@ -173,8 +172,7 @@
     "vkbeautify": "^0.99.1",
     "whatwg-fetch": "^2.0.1",
     "yaml": "^1.5.0",
-    "yaml-source-map": "^2.1.1",
-    "zprint-clj": "0.2.0"
+    "yaml-source-map": "^2.1.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.8",
