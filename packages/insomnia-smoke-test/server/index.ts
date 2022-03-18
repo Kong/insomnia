@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { basicAuthRouter } from './basic-auth';
+import githubApi from './github-api';
 import { oauthRoutes } from './oauth';
 
 const app = express();
@@ -26,6 +27,8 @@ app.use('/file', express.static('fixtures/files'));
 
 app.use('/auth/basic', basicAuthRouter);
 
+githubApi(app);
+
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
   setTimeout(function() {
@@ -34,6 +37,10 @@ app.get('/delay/seconds/:duration', (req, res) => {
 });
 
 app.use('/oidc', oauthRoutes(port));
+
+app.get('/', (_req, res) => {
+  res.status(200).send();
+});
 
 app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`);
