@@ -127,7 +127,7 @@
     "insomnia-testing": "2.7.0",
     "insomnia-url": "2.7.0",
     "insomnia-xpath": "2.7.0",
-    "isomorphic-git": "^1.8.1",
+    "isomorphic-git": "^1.10.4",
     "js-yaml": "^3.14.1",
     "jshint": "^2.11.1",
     "json-order": "^1.1.0",
