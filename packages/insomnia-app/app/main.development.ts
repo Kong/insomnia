@@ -33,13 +33,18 @@ const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
 log.info(`Running version ${getAppVersion()}`);
 
-// Explicitly set userData folder from config because it's sketchy to
-// rely on electron-builder to use productName, which could be changed
-// by accident.
-if (!isDevelopment()) {
+// Override the Electron userData path
+// This makes Chromium use this folder for eg localStorage
+const envDataPath = process.env.INSOMNIA_DATA_PATH;
+if (envDataPath) {
+  app.setPath('userData', envDataPath);
+} else if (!isDevelopment()) {
+  // Explicitly set userData folder from config because it's sketchy to
+  // rely on electron-builder to use productName, which could be changed
+  // by accident.
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
-  app.setPath('userData', process.env.INSOMNIA_DATA_PATH ?? newPath);
+  app.setPath('userData', newPath);
 }
 
 // So if (window) checks don't throw
@@ -114,7 +119,7 @@ if (defaultProtocolSuccessful) {
   }
 }
 
-function _addUrlToOpen(e, url) {
+function _addUrlToOpen(e: Electron.Event, url: string) {
   e.preventDefault();
   commandLineArgs.push(url);
 }
@@ -170,9 +175,8 @@ const _launchApp = async () => {
     }
   });
   // Handle URLs when app already open
-  app.addListener('open-url', (_error, url) => {
-    // @ts-expect-error -- TSCONVERSION
-    window.send('run-command', url);
+  app.addListener('open-url', (_event, url) => {
+    window.webContents.send('run-command', url);
     // Apparently a timeout is needed because Chrome steals back focus immediately
     // after opening the URL.
     setTimeout(() => {
@@ -235,7 +239,7 @@ async function _trackStats() {
     app.exit();
   });
 
-  ipcMain.handle('setMenuBarVisibility', (_, visible) => {
+  ipcMain.on('setMenuBarVisibility', (_, visible) => {
     electron.BrowserWindow.getAllWindows()
       .forEach(window => {
         // the `setMenuBarVisibility` signature uses `visible` semantics

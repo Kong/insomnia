@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
-import { GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
-import { GraphQLEnumType } from 'graphql';
+import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
 import React, { PureComponent } from 'react';
 import { createRef } from 'react';
 
@@ -23,7 +22,7 @@ function getReferenceInfo(reference: SchemaReference) {
     field = reference.field;
   }
 
-  let type: GraphQLType | undefined;
+  let type: GraphQLType | undefined | null;
   if ('type' in reference) {
     type = reference.type;
   }
@@ -32,8 +31,8 @@ function getReferenceInfo(reference: SchemaReference) {
 }
 
 function isSameFieldAndType(
-  currentType?: GraphQLType,
-  type?: GraphQLType,
+  currentType?: GraphQLType | null,
+  type?: GraphQLType | null,
   currentField?: GraphQLFieldWithParentName,
   field?: GraphQLField<any, any, { [key: string]: any }>
 ) {
@@ -65,7 +64,7 @@ interface Props {
 }
 
 interface HistoryItem {
-  currentType?: GraphQLType;
+  currentType?: GraphQLType | null;
   currentField?: GraphQLFieldWithParentName;
 }
 

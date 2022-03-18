@@ -246,11 +246,11 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     const match = contentType.match(/charset=([\w-]+)/);
     const charset = match && match.length >= 2 ? match[1] : 'utf-8';
 
+    // Sometimes iconv conversion fails so fallback to regular buffer
     try {
       return iconv.decode(bodyBuffer, charset);
     } catch (err) {
       console.warn('[response] Failed to decode body', err);
-      // Sometimes iconv conversion fails so fallback to regular buffer
       return bodyBuffer.toString();
     }
   }

@@ -206,8 +206,8 @@ module.exports.templateTags = [
           try {
             body = iconv.decode(bodyBuffer, charset);
           } catch (err) {
-            body = bodyBuffer.toString();
             console.warn('[response] Failed to decode body', err);
+            body = bodyBuffer.toString();
           }
     
           if (sanitizedFilter.indexOf('$') === 0) {

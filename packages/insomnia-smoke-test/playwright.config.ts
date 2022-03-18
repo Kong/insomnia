@@ -3,7 +3,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npm run serve',
-    url: 'http://127.0.0.1:4010/oidc/.well-known/openid-configuration',
+    url: 'http://127.0.0.1:4010',
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
