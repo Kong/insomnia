@@ -229,6 +229,7 @@
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "css-loader": "^2.1.1",
+    "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
     "electron": "17.1.0",
     "electron-builder": "22.14.13",
