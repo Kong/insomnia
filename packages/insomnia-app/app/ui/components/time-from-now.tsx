@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import moment from 'moment';
+import { differenceInMinutes, formatDistanceToNowStrict } from 'date-fns';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../common/constants';
@@ -25,11 +25,13 @@ export class TimeFromNow extends PureComponent<Props, State> {
   };
 
   _update() {
-    const { timestamp, capitalize } = this.props;
-    let text = moment(timestamp).fromNow();
+    const { timestamp, titleCase } = this.props;
+    const date = new Date(timestamp);
 
-    // Shorten default case
-    if (text === 'a few seconds ago') {
+    let text = formatDistanceToNowStrict(date, { addSuffix: true });
+
+    const lessThanOneMinuteAgo = differenceInMinutes(Date.now(), date) < 1;
+    if (lessThanOneMinuteAgo) {
       text = 'just now';
     }
 
@@ -37,9 +39,7 @@ export class TimeFromNow extends PureComponent<Props, State> {
       text = toTitleCase(text);
     }
 
-    this.setState({
-      text,
-    });
+    this.setState({ text });
   }
 
   componentDidMount() {
@@ -59,7 +59,7 @@ export class TimeFromNow extends PureComponent<Props, State> {
     const { className, timestamp } = this.props;
     const { text } = this.state;
     return (
-      <span title={moment(timestamp).toString()} className={className}>
+      <span title={new Date(timestamp).toLocaleString()} className={className}>
         {text}
       </span>
     );
