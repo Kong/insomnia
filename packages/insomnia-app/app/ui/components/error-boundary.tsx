@@ -52,7 +52,6 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     let componentName = 'component';
 
     try {
-      // @ts-expect-error -- TSCONVERSION
       componentName = firstChild.type.name;
     } catch (err) {
       // It's okay
