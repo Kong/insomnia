@@ -729,8 +729,8 @@ class App extends PureComponent<AppProps, State> {
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
-        const fallback = 'unknown';
-        const extension = responsePatch.contentType ? mimeExtension(responsePatch.contentType) || fallback : fallback;
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename;
