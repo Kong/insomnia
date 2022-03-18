@@ -3,12 +3,13 @@ import moment from 'moment';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../common/constants';
+import { toTitleCase } from '../../common/misc';
 
 interface Props {
   timestamp: number | Date | string;
   intervalSeconds?: number;
   className?: string;
-  capitalize?: boolean;
+  titleCase?: boolean;
 }
 
 interface State {
@@ -32,11 +33,8 @@ export class TimeFromNow extends PureComponent<Props, State> {
       text = 'just now';
     }
 
-    // Capitalize if needed
-    if (capitalize) {
-      text = text.replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
-      });
+    if (titleCase) {
+      text = toTitleCase(text);
     }
 
     this.setState({

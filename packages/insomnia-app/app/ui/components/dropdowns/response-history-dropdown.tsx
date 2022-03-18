@@ -170,7 +170,7 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
           {...extraProps}
         >
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
-            {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
+            {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
             {!isLatestResponseActive ? (
               <i className="fa fa-thumb-tack space-left" />
             ) : (

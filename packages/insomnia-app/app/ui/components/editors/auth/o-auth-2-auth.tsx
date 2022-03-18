@@ -2,7 +2,7 @@ import { Button } from 'insomnia-components';
 import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { convertEpochToMilliseconds, kebabCase } from '../../../../common/misc';
+import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
@@ -353,7 +353,7 @@ const OAuth2TokenInput: FC<{label: string; property: keyof Pick<OAuth2Token, 'ac
     }
   }, [property, token]);
 
-  const id = kebabCase(label);
+  const id = toKebabCase(label);
 
   return (
     <div className='form-control form-control--outlined'>

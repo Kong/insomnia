@@ -7,6 +7,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as toughCookie from 'tough-cookie';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
+import { capitalize } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { RootState } from '../../redux/modules';
@@ -156,10 +157,6 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }, DEBOUNCE_MILLIS * 2);
   }
 
-  static _capitalize(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
   _getRawCookieString() {
     const { cookie } = this.state;
 
@@ -188,7 +185,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     return (
       <div className="form-control form-control--outlined">
         <label>
-          {CookieModifyModal._capitalize(field)} <span className="danger">{error}</span>
+          {capitalize(field)} <span className="danger">{error}</span>
           <OneLineEditor
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}
@@ -236,7 +233,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
                     const checked = !!cookie[field];
                     return (
                       <label key={i}>
-                        {CookieModifyModal._capitalize(field)}
+                        {capitalize(field)}
                         <input
                           className="space-left"
                           type="checkbox"
