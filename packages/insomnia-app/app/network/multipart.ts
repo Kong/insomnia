@@ -1,5 +1,5 @@
 import fs from 'fs';
-import mimes from 'mime-types';
+import { lookup } from 'mime-types';
 import path from 'path';
 
 import type { RequestBodyParameter } from '../models/request';
@@ -63,7 +63,7 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
       if (param.type === 'file' && param.fileName) {
         const name = param.name || '';
         const fileName = param.fileName;
-        const contentType = mimes.lookup(fileName) || 'application/octet-stream';
+        const contentType = lookup(fileName) || 'application/octet-stream';
         addString(
           'Content-Disposition: form-data; ' +
             `name="${name.replace(/"/g, '\\"')}"; ` +

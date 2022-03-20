@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { SaveDialogOptions } from 'electron';
 import fs from 'fs';
-import mimes from 'mime-types';
+import { extension as mimeExtension } from 'mime-types';
 import moment from 'moment';
 import multiparty from 'multiparty';
 import path from 'path';
@@ -130,7 +130,7 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
     }
 
     const contentType = getContentTypeFromHeaders(part.headers, 'text/plain');
-    const extension = mimes.extension(contentType) || '.txt';
+    const extension = mimeExtension(contentType) || '.txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
     const dir = lastDir || window.app.getPath('desktop');
     const date = moment().format('YYYY-MM-DD');

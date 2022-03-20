@@ -14,7 +14,6 @@ import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, 
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
-import zprint from 'zprint-clj';
 
 import {
   AUTOBIND_CFG,
@@ -679,14 +678,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     return mode.indexOf('xml') !== -1;
   }
 
-  static _isEDN(mode?: string) {
-    if (!mode) {
-      return false;
-    }
-
-    return mode === 'application/edn' || mode.indexOf('clojure') !== -1;
-  }
-
   _indentChars() {
     return this.codeMirror?.getOption('indentWithTabs')
       ? '\t'
@@ -721,14 +712,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       return jsonPrettify(jsonString, this._indentChars(), this.props.autoPrettify);
     } catch (e) {
       // That's Ok, just leave it
-      return code;
-    }
-  }
-
-  static _prettifyEDN(code: string) {
-    try {
-      return zprint(code, null);
-    } catch (e) {
       return code;
     }
   }
@@ -965,7 +948,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       return 'graphql';
     } else if (UnconnectedCodeEditor._isJSON(mimeType)) {
       return 'application/json';
-    } else if (UnconnectedCodeEditor._isEDN(mimeType)) {
+    } else if (mimeType.includes('clojure')) {
       return 'application/edn';
     } else if (UnconnectedCodeEditor._isXML(mimeType)) {
       return 'application/xml';
@@ -1143,8 +1126,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     if (shouldPrettify && this._canPrettify()) {
       if (UnconnectedCodeEditor._isXML(mode)) {
         code = this._prettifyXML(code);
-      } else if (UnconnectedCodeEditor._isEDN(mode)) {
-        code = UnconnectedCodeEditor._prettifyEDN(code);
       } else if (UnconnectedCodeEditor._isJSON(mode)) {
         code = this._prettifyJSON(code);
       } else {
@@ -1190,7 +1171,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
   _canPrettify() {
     const { mode } = this.props;
-    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode) || UnconnectedCodeEditor._isEDN(mode);
+    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode);
   }
 
   _showFilterHelp() {
@@ -1266,8 +1247,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         contentTypeName = 'JSON';
       } else if (UnconnectedCodeEditor._isXML(mode)) {
         contentTypeName = 'XML';
-      } else if (UnconnectedCodeEditor._isEDN(mode)) {
-        contentTypeName = 'EDN';
       }
 
       toolbarChildren.push(

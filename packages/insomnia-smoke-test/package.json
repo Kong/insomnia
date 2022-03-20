@@ -37,7 +37,7 @@
     "@types/ramda": "^0.27.45",
     "@types/uuid": "^8.3.4",
     "concurrently": "^7.0.0",
-    "cross-env": "^7.0.2",
+    "cross-env": "^7.0.3",
     "execa": "^5.0.0",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
