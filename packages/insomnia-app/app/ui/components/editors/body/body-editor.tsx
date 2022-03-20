@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import clone from 'clone';
 import { SvgIcon } from 'insomnia-components';
-import * as mimes from 'mime-types';
+import { lookup } from 'mime-types';
 import React, { PureComponent } from 'react';
 
 import {
@@ -92,7 +92,7 @@ export class BodyEditor extends PureComponent<Props> {
 
     // Update Content-Type header if the user wants
     const contentType = contentTypeHeader.value;
-    const newContentType = mimes.lookup(path) || CONTENT_TYPE_FILE;
+    const newContentType = lookup(path) || CONTENT_TYPE_FILE;
 
     if (contentType !== newContentType && path) {
       contentTypeHeader.value = newContentType;
