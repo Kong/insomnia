@@ -112,7 +112,6 @@ export function generateSecurityPlugin(
 
   if (kongSecurity.config) {
     plugin.config = Object.assign(plugin.config, kongSecurity.config);
-    plugin.enabled = kongSecurity.enabled;
   }
 
   // Add global tags
