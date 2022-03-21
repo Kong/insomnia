@@ -492,55 +492,10 @@ export async function _actuallySend(
           }
         }
       }
-
-      // Build the body
-      let noBody = false;
-      let requestBody: string | null = null;
-      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-      let requestBodyPath;
-      let isMultipart = false;
-      if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
-      } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-        const params = renderedRequest.body.params || [];
-        const { filePath: multipartBodyPath, boundary, contentLength } = await buildMultipart(
-          params,
-        );
-        requestBodyPath = multipartBodyPath;
-        isMultipart = true;
-        // Extend the Content-Type header
-        const contentTypeHeader = getContentTypeHeader(headers);
-
-        if (contentTypeHeader) {
-          contentTypeHeader.value = `multipart/form-data; boundary=${boundary}`;
-        } else {
-          headers.push({
-            name: 'Content-Type',
-            value: `multipart/form-data; boundary=${boundary}`,
-          });
-        }
-
-        setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-        setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a PUT
-        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      } else if (renderedRequest.body.fileName) {
-        const { size } = fs.statSync(renderedRequest.body.fileName);
-        requestBodyPath = renderedRequest.body.fileName || '';
-
-        setOpt(Curl.option.INFILESIZE_LARGE, size);
-        setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a POST
-        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
-        requestBody = renderedRequest.body.text || '';
-      } else {
+      const { requestBody, requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBody(renderedRequest);
+      const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
+      if (!hasRequestBodyOrFilePath){
         // No body
-        noBody = true;
-      }
-
-      if (!noBody) {
-        // Don't chunk uploads
         headers.push({
           name: 'Expect',
           value: DISABLE_HEADER_VALUE,
@@ -550,12 +505,21 @@ export async function _actuallySend(
           value: DISABLE_HEADER_VALUE,
         });
       }
-
-      // If we calculated the body within Insomnia (ie. not computed by Curl)
-      if (requestBody !== null) {
+      if (requestBody){
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
-
+      if (requestBodyPath && contentLength){
+        if (!getContentTypeHeader(headers) && isMultipart && boundary) {
+          headers.push({
+            name: 'Content-Type',
+            value: `multipart/form-data; boundary=${boundary}`,
+          });
+        }
+        setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
+        setOpt(Curl.option.UPLOAD, 1);
+        // We need this, otherwise curl will send it as a POST
+        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      }
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_DIGEST) {
@@ -569,7 +533,7 @@ export async function _actuallySend(
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          if (!noBody && !requestBody) {
+          if (hasRequestBodyOrFilePath && !requestBody) {
             return handleError(
               new Error('AWS authentication not supported for provided body type'),
             );
@@ -698,6 +662,39 @@ export async function _actuallySend(
     }
   });
 }
+
+const parseRequestBody = async renderedRequest => {
+  const hasFileName = renderedRequest.body.fileName;
+  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
+  const isUrlEncodedForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
+  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  const hasMimetypeAndUpdateMethod = typeof renderedRequest.body.mimeType === 'string' || expectsBody;
+
+  if (isUrlEncodedForm) {
+    return { requestBody: buildQueryStringFromParams(renderedRequest.body.params || [], false) };
+  }
+  if (isMultipartForm) {
+    const { filePath, boundary, contentLength } = await buildMultipart(renderedRequest.body.params || [],);
+    return {
+      contentLength,
+      requestBodyPath: filePath,
+      isMultipart: true,
+      boundary,
+    };
+  }
+  if (hasFileName) {
+    const requestBodyPath = renderedRequest.body.fileName || '';
+    const { size: contentLength } = fs.statSync(renderedRequest.body.fileName);
+    return {
+      contentLength,
+      requestBodyPath,
+    };
+  }
+  if (hasMimetypeAndUpdateMethod) {
+    return { requestBody: renderedRequest.body.text || '' };
+  }
+  return { requestBody: null };
+};
 
 const transformResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
   const headerTimeline: ResponseTimelineEntry[] = [];
