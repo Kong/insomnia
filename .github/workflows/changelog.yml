@@ -59,7 +59,7 @@ jobs:
             --head ${HEAD} \
             --releaseName "${RELEASE_NAME}" ${SHOW_MISSING} > ./temp_changelog.out
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CHANGELOG_TOKEN }}
           OWNER: filfreire
           HEAD: ${{ github.sha }}
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
