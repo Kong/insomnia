@@ -1,27 +1,36 @@
 name: Generate Changelog
 
 on:
-  push:
-    branches:
-      - 'release/**'
-# TODO add workflow-dispatch
+  # TODO - edit workflow to support from push
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# TODO env version and env branch
+env:
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
 
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
     steps:
-      # TODO:
-      # if env.VERSION not set, set it from branch name
-      # if env.version set (via workflow_dispatch) - setup branch name
-
       - name: Checkout branch
         uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          persist-credentials: false
+
+      - name: Find Pull Request
+        uses: juliangruber/find-pull-request-action@v1
+        id: find-pull-request
+        with:
+          branch: ${{ env.RELEASE_BRANCH }}
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -48,19 +57,34 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: filfreire
           HEAD: ${{ github.sha }}
-          RELEASE_NAME: ${{ github.ref_name }}
-          # TODO
-          # replace release name with env.Version
-          # that can come from push or workflow dispatch
-
+          RELEASE_NAME: ${{ env.RELEASE_VERSION }}
           # TODO edit OWNER to use Kong
 
-      - name: Debug Changelog text
-        shell: bash
-        run: |
-          cat ./temp_changelog.out
+      - name: Read package.json
+        id: read-changelog
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./temp_changelog.out
 
-      # TODO Find the PR of the release branch
+      - name: Set timestamp
+        id: timestamp
+        run: echo "::set-output name=timestamp::$(date --iso-8601=seconds)"
 
-      # TODO create/update comment with
-      # CHANGELOG_TEXT on PR that has env.BRANCH
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        id: find-comment
+        with:
+          issue-number: ${{ steps.find-pull-request.outputs.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Build output
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ steps.find-pull-request.outputs.number }}
+          body: |
+            ${{ steps.read-changelog.outputs.content }}
+
+            Last Updated: ${{ steps.timestamp.outputs.timestamp }}
+          edit-mode: replace
