@@ -99,7 +99,7 @@ jobs:
             - Via UI, run [Generate Changelog workflow](https://github.com/${{ github.repository }}/actions/workflows/changelog.yml) (`version`): `${{ env.RELEASE_VERSION }}`
             - Via CLI, run [Github CLI](https://cli.github.com/):
             ```bash
-            gh workflow run changelog.yml -f version=${{ env.RELEASE_VERSION }} --repo ${{ github.repository }}
+            gh workflow run changelog.yml -f version=${{ env.RELEASE_VERSION }} -f onlyShowMissing=false --repo ${{ github.repository }}
             ```
             - Show pull requests missing a changelog entry, add `-f onlyShowMissing=true` to the above command.
           edit-mode: replace
