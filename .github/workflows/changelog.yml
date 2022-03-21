@@ -61,7 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: filfreire
-          HEAD: ${{ github.sha }}
+          HEAD: ${{ env.RELEASE_BRANCH }}
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
           SHOW_MISSING: ${{ env.SHOW_MISSING }}
           # TODO edit OWNER to use Kong
