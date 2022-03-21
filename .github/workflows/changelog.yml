@@ -75,8 +75,7 @@ jobs:
         id: find-comment
         with:
           issue-number: ${{ steps.find-pull-request.outputs.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Build output
+          body-includes: Auto-generated changelog
 
       - name: Create or update comment
         uses: peter-evans/create-or-update-comment@v1
@@ -84,9 +83,16 @@ jobs:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ steps.find-pull-request.outputs.number }}
           body: |
-            Changelog:
+            Auto-generated changelog:
             ```
             ${{ steps.read-changelog.outputs.content }}
             ```
             Last Updated: ${{ steps.timestamp.outputs.timestamp }}
+
+            To re-trigger:
+            - Via UI, run [Generate Changelog workflow](https://github.com/${{ github.repository }}/actions/workflows/generate-changelog.yml) (`version`): `${{ env.RELEASE_VERSION }}`
+            - Via CLI, run [Github CLI](https://cli.github.com/):
+            ```bash
+            gh workflow run generate-changelog.yml -f version=${{ env.RELEASE_VERSION }} --repo ${{ github.repository }}
+            ```
           edit-mode: replace
