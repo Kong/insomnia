@@ -60,7 +60,7 @@ jobs:
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
           # TODO edit OWNER to use Kong
 
-      - name: Read package.json
+      - name: Read changelog
         id: read-changelog
         uses: juliangruber/read-file-action@v1
         with:
