@@ -60,11 +60,10 @@ jobs:
             --releaseName "${RELEASE_NAME}" ${SHOW_MISSING} > ./temp_changelog.out
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER: filfreire
+          OWNER: Kong
           HEAD: ${{ env.RELEASE_BRANCH }}
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
           SHOW_MISSING: ${{ env.SHOW_MISSING }}
-          # TODO edit OWNER to use Kong
 
       - name: Read changelog
         id: read-changelog
