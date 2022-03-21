@@ -49,11 +49,12 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../common/render';
 import * as models from '../models';
+import { ClientCertificate } from '../models/client-certificate';
 import type { Environment } from '../models/environment';
 import type { Request, RequestHeader } from '../models/request';
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
@@ -163,7 +164,7 @@ export async function cancelRequestById(requestId) {
 
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
-  workspace: Workspace,
+  clientCertificates: ClientCertificate[],
   settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
   environment?: Environment | null,
   validateSSL = true,
@@ -440,9 +441,6 @@ export async function _actuallySend(
       } else {
         setOpt(Curl.option.PROXY, '');
       }
-
-      // Set client certs if needed
-      const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
 
       for (const certificate of (clientCertificates || [])) {
         if (certificate.disabled) {
@@ -785,10 +783,10 @@ export async function sendWithSettings(
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
-
+  const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderResult.request,
-    workspace,
+    clientCertificates,
     settings,
     environment,
     settings.validateAuthSSL,
@@ -876,10 +874,10 @@ export async function send(
       url: renderedRequestBeforePlugins.url,
     } as ResponsePatch;
   }
-
+  const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderedRequest,
-    workspace,
+    clientCertificates,
     settings,
     environment,
     settings.validateSSL,
