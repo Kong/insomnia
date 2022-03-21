@@ -193,7 +193,6 @@
     "@types/color": "^3.0.1",
     "@types/concurrently": "^6.0.1",
     "@types/deep-equal": "^1.0.1",
-    "@types/events": "^1.2.0",
     "@types/file-loader": "^5.0.0",
     "@types/fs-extra": "^5.1.0",
     "@types/hapi__hawk": "^8.0.2",
