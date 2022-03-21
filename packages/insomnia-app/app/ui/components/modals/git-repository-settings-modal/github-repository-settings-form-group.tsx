@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
+import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
   generateAuthorizationUrl,
@@ -253,16 +254,12 @@ const GitHubAccountView = (props: {
 };
 
 interface Props {
-  uri: string;
-  onChange: (args: {
-    uri: string;
-    author: { name: string; email: string };
-    token: string;
-  }) => void;
+  uri?: string;
+  onSubmit: (args: GitRepository) => void;
 }
 
 export const GitHubRepositorySetupFormGroup = (props: Props) => {
-  const { onChange, uri } = props;
+  const { onSubmit, uri } = props;
 
   const [user, setUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
     'github-user-info',
@@ -318,10 +315,26 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     return () => {
       isMounted = false;
     };
-  }, [githubToken, onChange, setUser, user]);
+  }, [githubToken, onSubmit, setUser, user]);
 
   return (
-    <div className="form-group" style={{ height: '100%' }}>
+    <form
+      id="github"
+      className="form-group"
+      style={{ height: '100%' }}
+      onSubmit={e => onSubmit({
+        uri: new FormData(e.currentTarget).get('uri') ?? '',
+        author: {
+          name: user?.login ?? '',
+          email: user?.email ?? '',
+        },
+        credentials: {
+          username: githubToken,
+          token: githubToken,
+          oauth2format: 'github',
+        },
+      })}
+    >
       {githubToken && (
         <div className="form-control form-control--outlined">
           <label>
@@ -333,16 +346,6 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
               name="uri"
               autoFocus
               placeholder="https://github.com/org/repo.git"
-              onChange={e => {
-                onChange({
-                  uri: e.target.value,
-                  author: {
-                    name: user?.login ?? '',
-                    email: user?.email ?? '',
-                  },
-                  token: githubToken,
-                });
-              }}
             />
           </label>
         </div>
@@ -363,6 +366,6 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
           {error}
         </p>
       )}
-    </div>
+    </form>
   );
 };
