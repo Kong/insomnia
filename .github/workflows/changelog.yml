@@ -7,6 +7,10 @@ on:
       version:
         required: true
         description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+      onlyShowMissing:
+        type: boolean
+        required: false
+        description: Enable --onlyShowMissing flag of Kong/changelog-generator
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,6 +19,7 @@ concurrency:
 env:
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   RELEASE_VERSION: ${{ github.event.inputs.version }}
+  SHOW_MISSING: ${{ github.event.inputs.onlyShowMissing == true && '--onlyShowMissing' || '' }}
 
 jobs:
   generate-changelog:
@@ -52,12 +57,13 @@ jobs:
             --repo insomnia \
             --base ${{ steps.latest_release.outputs.release }} \
             --head ${HEAD} \
-            --releaseName "${RELEASE_NAME}" > ./temp_changelog.out
+            --releaseName "${RELEASE_NAME}" ${SHOW_MISSING} > ./temp_changelog.out
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: filfreire
           HEAD: ${{ github.sha }}
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
+          SHOW_MISSING: ${{ env.SHOW_MISSING }}
           # TODO edit OWNER to use Kong
 
       - name: Read changelog
@@ -90,9 +96,10 @@ jobs:
             Last Updated: ${{ steps.timestamp.outputs.timestamp }}
 
             To re-trigger:
-            - Via UI, run [Generate Changelog workflow](https://github.com/${{ github.repository }}/actions/workflows/generate-changelog.yml) (`version`): `${{ env.RELEASE_VERSION }}`
+            - Via UI, run [Generate Changelog workflow](https://github.com/${{ github.repository }}/actions/workflows/changelog.yml) (`version`): `${{ env.RELEASE_VERSION }}`
             - Via CLI, run [Github CLI](https://cli.github.com/):
             ```bash
-            gh workflow run generate-changelog.yml -f version=${{ env.RELEASE_VERSION }} --repo ${{ github.repository }}
+            gh workflow run changelog.yml -f version=${{ env.RELEASE_VERSION }} --repo ${{ github.repository }}
             ```
+            - Show pull requests missing a changelog entry, add `-f onlyShowMissing=true` to the above command.
           edit-mode: replace
