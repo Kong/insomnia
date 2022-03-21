@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
-import * as mime from 'mime-types';
+import { extension as mimeExtension } from 'mime-types';
 import * as path from 'path';
 import React, { createRef, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -729,8 +729,8 @@ class App extends PureComponent<AppProps, State> {
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
-        // @ts-expect-error -- TSCONVERSION contentType can be undefined
-        const extension = mime.extension(responsePatch.contentType) || 'unknown';
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename;
