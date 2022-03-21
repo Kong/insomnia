@@ -84,7 +84,9 @@ jobs:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ steps.find-pull-request.outputs.number }}
           body: |
+            Changelog:
+            ```
             ${{ steps.read-changelog.outputs.content }}
-
+            ```
             Last Updated: ${{ steps.timestamp.outputs.timestamp }}
           edit-mode: replace
