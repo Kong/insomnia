@@ -1,5 +1,3 @@
-import 'whatwg-fetch';
-
 const localStorageMock: Storage = (function() {
   let store: Record<string, string> = {};
   return {
