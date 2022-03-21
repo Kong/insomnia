@@ -674,74 +674,101 @@ export async function _actuallySend(
         requestId: renderedRequest._id,
       };
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
-
-      // Headers are an array (one for each redirect)
-      const lastCurlHeadersObject = headerResults[headerResults.length - 1];
-
-      // Calculate the content type
-      const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
-      // Update Cookie Jar
-      let currentUrl = finalUrl;
-      let setCookieStrings: string[] = [];
-      const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-
-      for (const { headers } of headerResults) {
-        // Collect Set-Cookie headers
-        const setCookieHeaders = getSetCookieHeaders(headers);
-        setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
-        // Pull out new URL if there is a redirect
-        const newLocation = getLocationHeader(headers);
-
-        if (newLocation !== null) {
-          currentUrl = urlResolve(currentUrl, newLocation.value);
-        }
-      }
-
-      // Update jar with Set-Cookie headers
-      for (const setCookieStr of setCookieStrings) {
-        try {
-          jar.setCookieSync(setCookieStr, currentUrl);
-        } catch (err) {
-          addTimelineText(`Rejected cookie: ${err.message}`);
-        }
-      }
-
-      // Update cookie jar if we need to and if we found any cookies
-      if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
-        const cookies = await cookiesFromJar(jar);
-        await models.cookieJar.update(renderedRequest.cookieJar, {
-          cookies,
-        });
-      }
-
-      // Print informational message
-      if (setCookieStrings.length > 0) {
-        const n = setCookieStrings.length;
-
-        if (renderedRequest.settingStoreCookies) {
-          addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
-        } else {
-          addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
-        }
-      }
+      const { cookieJar, settingStoreCookies } = renderedRequest;
+      const { lastRedirect, contentType, headerTimeline } = await transformResponseHeaders({
+        headerResults,
+        finalUrl,
+        cookieJar,
+        settingStoreCookies,
+      });
 
       const responsePatch: ResponsePatch = {
-        contentType: contentTypeHeader ? contentTypeHeader.value : '',
-        headers: lastCurlHeadersObject.headers,
-        httpVersion: lastCurlHeadersObject.version,
-        statusCode: lastCurlHeadersObject.code,
-        statusMessage: lastCurlHeadersObject.reason,
+        contentType,
+        headers: lastRedirect.headers,
+        httpVersion: lastRedirect.version,
+        statusCode: lastRedirect.code,
+        statusMessage: lastRedirect.reason,
         ...patch,
       };
 
-      respond(responsePatch, responseBodyPath, debugTimeline);
-
+      respond(responsePatch, responseBodyPath, [...debugTimeline, ...headerTimeline]);
     } catch (err) {
       console.log('[network] Error', err);
       await handleError(err);
     }
   });
 }
+
+const transformResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
+  const headerTimeline: ResponseTimelineEntry[] = [];
+  // Headers are an array (one for each redirect)
+  const lastCurlHeadersObject = headerResults[headerResults.length - 1];
+
+  // Calculate the content type
+  const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
+  // Update Cookie Jar
+  let currentUrl = finalUrl;
+  let setCookieStrings: string[] = [];
+  const jar = jarFromCookies(cookieJar.cookies);
+
+  for (const { headers } of headerResults) {
+    // Collect Set-Cookie headers
+    const setCookieHeaders = getSetCookieHeaders(headers);
+    setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
+    // Pull out new URL if there is a redirect
+    const newLocation = getLocationHeader(headers);
+
+    if (newLocation !== null) {
+      currentUrl = urlResolve(currentUrl, newLocation.value);
+    }
+  }
+
+  // Update jar with Set-Cookie headers
+  for (const setCookieStr of setCookieStrings) {
+    try {
+      jar.setCookieSync(setCookieStr, currentUrl);
+    } catch (err) {
+      headerTimeline.push({
+        name: 'TEXT',
+        value:`Rejected cookie: ${err.message}`,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  // Update cookie jar if we need to and if we found any cookies
+  if (settingStoreCookies && setCookieStrings.length) {
+    const cookies = await cookiesFromJar(jar);
+    await models.cookieJar.update(cookieJar, {
+      cookies,
+    });
+  }
+
+  // Print informational message
+  if (setCookieStrings.length > 0) {
+    const n = setCookieStrings.length;
+
+    if (settingStoreCookies) {
+      headerTimeline.push({
+        name: 'TEXT',
+        value:`Saved ${n} cookie${n === 1 ? '' : 's'}`,
+        timestamp: Date.now(),
+      });
+    } else {
+      headerTimeline.push({
+        name: 'TEXT',
+        value:`Ignored ${n} cookie${n === 1 ? '' : 's'}`,
+        timestamp: Date.now(),
+      });
+    }
+  }
+  return {
+    lastRedirect: lastCurlHeadersObject,
+    contentType: contentTypeHeader ? contentTypeHeader.value : '',
+    headerTimeline,
+  };
+
+};
 
 export async function sendWithSettings(
   requestId: string,
