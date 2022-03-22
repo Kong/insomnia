@@ -297,8 +297,10 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       break;
     }
 
+    case null:
+      break;
+
     default: {
-      // Nothing
       console.log(`Unknown command: ${command}`);
     }
   }
