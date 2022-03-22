@@ -262,6 +262,7 @@ const GitHubRepositoryForm = ({
               type="url"
               name="uri"
               autoFocus
+              required
               placeholder="https://github.com/org/repo.git"
             />
           </label>
