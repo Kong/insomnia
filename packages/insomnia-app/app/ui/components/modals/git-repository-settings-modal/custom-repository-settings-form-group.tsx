@@ -29,14 +29,14 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         onSubmit({
-          uri: formData.get('uri') || '',
+          uri: formData.get('uri') as string || '',
           credentials: {
-            username: formData.get('username') || '',
-            token: formData.get('token') || '',
+            username: formData.get('username') as string || '',
+            token: formData.get('token') as string || '',
           },
           author: {
-            name: formData.get('authorName') || '',
-            email: formData.get('authorEmail') || '',
+            name: formData.get('authorName') as string || '',
+            email: formData.get('authorEmail') as string || '',
           },
         });
       }}
@@ -113,7 +113,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               required
               type="password"
               name="token"
-              defaultValue={credentials?.token}
+              defaultValue={'token' in credentials ? credentials?.token : ''}
               placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
             />
           </label>

@@ -23,7 +23,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GitRepositorySettingsModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
-  _onSubmitEdits?: ((arg0: GitRepository) => any) | null;
+  _onSubmitEdits?: ((repo: Partial<GitRepository>) => any) | null;
 
   state: State = {
     gitRepository: null,
@@ -35,7 +35,7 @@ export class GitRepositorySettingsModal extends PureComponent<{}, State> {
 
   show(options: {
     gitRepository: GitRepository | null;
-    onSubmitEdits: (arg0: GitRepository) => any;
+    onSubmitEdits: (repo: Partial<GitRepository>) => any;
   }) {
     this._onSubmitEdits = options.onSubmitEdits;
     const { gitRepository } = options;
