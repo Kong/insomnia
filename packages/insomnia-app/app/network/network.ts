@@ -492,7 +492,7 @@ export async function _actuallySend(
           }
         }
       }
-      const { requestBody, requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBody(renderedRequest);
+      const { requestBody, requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBodyOptions(renderedRequest);
       const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
       if (!hasRequestBodyOrFilePath){
         // No body
@@ -639,7 +639,7 @@ export async function _actuallySend(
       };
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
-      const { lastRedirect, contentType, headerTimeline } = await transformResponseHeaders({
+      const { lastRedirect, contentType, headerTimeline } = await setCookiesFromResponseHeaders({
         headerResults,
         finalUrl,
         cookieJar,
@@ -663,7 +663,9 @@ export async function _actuallySend(
   });
 }
 
-const parseRequestBody = async renderedRequest => {
+// design: given a request,
+// return options useful for curl options and logging
+const parseRequestBodyOptions = async renderedRequest => {
   const hasFileName = renderedRequest.body.fileName;
   const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
   const isUrlEncodedForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
@@ -696,34 +698,23 @@ const parseRequestBody = async renderedRequest => {
   return { requestBody: null };
 };
 
-const transformResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
+// design: given a libcurl response
+// add set-cookie headers to file(jar) and database
+const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
   const headerTimeline: ResponseTimelineEntry[] = [];
   // Headers are an array (one for each redirect)
-  const lastCurlHeadersObject = headerResults[headerResults.length - 1];
+  const lastRedirect = headerResults[headerResults.length - 1];
 
-  // Calculate the content type
-  const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
   // Update Cookie Jar
-  let currentUrl = finalUrl;
-  let setCookieStrings: string[] = [];
-  const jar = jarFromCookies(cookieJar.cookies);
-
-  for (const { headers } of headerResults) {
-    // Collect Set-Cookie headers
-    const setCookieHeaders = getSetCookieHeaders(headers);
-    setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
-    // Pull out new URL if there is a redirect
-    const newLocation = getLocationHeader(headers);
-
-    if (newLocation !== null) {
-      currentUrl = urlResolve(currentUrl, newLocation.value);
-    }
-  }
+  const setCookieStrings: string[] = headerResults.map(({ headers }) =>
+    getSetCookieHeaders(headers).map(h => h.value));
 
   // Update jar with Set-Cookie headers
-  for (const setCookieStr of setCookieStrings) {
+  const jar = jarFromCookies(cookieJar.cookies);
+  for (const setCookie of setCookieStrings) {
     try {
-      jar.setCookieSync(setCookieStr, currentUrl);
+      const locationHeader = headerResults.find(({ headers }) => getLocationHeader(headers));
+      jar.setCookieSync(setCookie, locationHeader?.value || finalUrl);
     } catch (err) {
       headerTimeline.push({
         name: 'TEXT',
@@ -736,32 +727,23 @@ const transformResponseHeaders = async ({ headerResults, finalUrl, cookieJar, se
   // Update cookie jar if we need to and if we found any cookies
   if (settingStoreCookies && setCookieStrings.length) {
     const cookies = await cookiesFromJar(jar);
-    await models.cookieJar.update(cookieJar, {
-      cookies,
-    });
+    await models.cookieJar.update(cookieJar, { cookies });
   }
 
   // Print informational message
   if (setCookieStrings.length > 0) {
     const n = setCookieStrings.length;
-
-    if (settingStoreCookies) {
-      headerTimeline.push({
-        name: 'TEXT',
-        value:`Saved ${n} cookie${n === 1 ? '' : 's'}`,
-        timestamp: Date.now(),
-      });
-    } else {
-      headerTimeline.push({
-        name: 'TEXT',
-        value:`Ignored ${n} cookie${n === 1 ? '' : 's'}`,
-        timestamp: Date.now(),
-      });
-    }
+    const intent = settingStoreCookies ? 'Saved' : 'Ignored';
+    const plural = `cookie${n === 1 ? '' : 's'}`;
+    headerTimeline.push({
+      name: 'TEXT',
+      value: `${intent} ${n} ${plural}`,
+      timestamp: Date.now(),
+    });
   }
   return {
-    lastRedirect: lastCurlHeadersObject,
-    contentType: contentTypeHeader ? contentTypeHeader.value : '',
+    lastRedirect,
+    contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
     headerTimeline,
   };
 
