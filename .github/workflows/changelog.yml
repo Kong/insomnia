@@ -7,40 +7,43 @@ on:
       version:
         required: true
         description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
-      onlyShowMissing:
-        type: boolean
-        required: false
-        description: Enable --onlyShowMissing flag of Kong/changelog-generator
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  RELEASE_BRANCH: release/${{ github.event.inputs.version }}
-  RELEASE_VERSION: ${{ github.event.inputs.version }}
-  SHOW_MISSING: ${{ github.event.inputs.onlyShowMissing == true && '--onlyShowMissing' || '' }}
-
 jobs:
   generate-changelog:
+    if: "startsWith(github.head_ref, 'release/') || ${{ github.event.inputs.version }} != ''"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
-          persist-credentials: false
+
+      - name: Set release version Env (workflow_dispatch)
+        if: ${{ github.event.inputs.version }} != ''
+        shell: bash
+        run: |
+           echo "RELEASE_VERSION=${{ github.event.inputs.version }} " >> $GITHUB_ENV
+
+      - name: Set release version Env (pull_request)
+        if: "startsWith(github.head_ref, 'release/')"
+        shell: bash
+        run: |
+           echo "RELEASE_VERSION=${BRANCH/release\//} " >> $GITHUB_ENV
+        env:
+          BRANCH: ${{ github.ref_name }}
 
       - name: Find Pull Request
         uses: juliangruber/find-pull-request-action@v1
         id: find-pull-request
         with:
-          branch: ${{ env.RELEASE_BRANCH }}
+          branch: release/${{ env.RELEASE_VERSION }}
 
       - name: Setup Node
         uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
 
       - name: Get latest release for Changelog
         id: latest_release
@@ -57,11 +60,18 @@ jobs:
             --repo insomnia \
             --base ${{ steps.latest_release.outputs.release }} \
             --head ${HEAD} \
-            --releaseName "${RELEASE_NAME}" ${SHOW_MISSING} > ./temp_changelog.out
+            --releaseName "${RELEASE_NAME}" > ./temp_changelog.out
+
+          npx @kong/changelog-generator generate \
+            --owner ${OWNER} \
+            --repo insomnia \
+            --base ${{ steps.latest_release.outputs.release }} \
+            --head ${HEAD} \
+            --releaseName "${RELEASE_NAME}" --onlyShowMissing > ./temp_changelog_missing.out
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
-          HEAD: ${{ env.RELEASE_BRANCH }}
+          HEAD: release/${{ env.RELEASE_VERSION }}
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
           SHOW_MISSING: ${{ env.SHOW_MISSING }}
 
@@ -70,6 +80,12 @@ jobs:
         uses: juliangruber/read-file-action@v1
         with:
           path: ./temp_changelog.out
+
+      - name: Read changelog (missing)
+        id: read-changelog-missing
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./temp_changelog_missing.out
 
       - name: Set timestamp
         id: timestamp
@@ -91,6 +107,11 @@ jobs:
             Auto-generated changelog:
             ```
             ${{ steps.read-changelog.outputs.content }}
+            ```
+
+            PRs missing a `changelog(<type>): <description>`:
+            ```
+            ${{ steps.read-changelog-missing.outputs.content }}
             ```
             Last Updated: ${{ steps.timestamp.outputs.timestamp }}
 
