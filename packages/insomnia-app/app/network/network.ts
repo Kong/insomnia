@@ -658,7 +658,9 @@ const parseRequestBodyOptions = async renderedRequest => {
   const hasMimetypeAndUpdateMethod = typeof renderedRequest.body.mimeType === 'string' || expectsBody;
 
   if (isUrlEncodedForm) {
-    return { requestBody: buildQueryStringFromParams(renderedRequest.body.params || [], false) };
+    const urlSearchParams = new URLSearchParams();
+    renderedRequest.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    return { requestBody: urlSearchParams.toString() };
   }
   if (isMultipartForm) {
     const { filePath, boundary, contentLength } = await buildMultipart(renderedRequest.body.params || [],);
