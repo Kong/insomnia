@@ -34,7 +34,7 @@ jobs:
         run: |
            echo "RELEASE_VERSION=${BRANCH/release\//} " >> $GITHUB_ENV
         env:
-          BRANCH: ${{ github.ref_name }}
+          BRANCH: ${{ github.head_ref }}
 
       - name: Find Pull Request
         uses: juliangruber/find-pull-request-action@v1
