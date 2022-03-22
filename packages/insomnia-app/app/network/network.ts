@@ -183,48 +183,7 @@ export async function _actuallySend(
     const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
 
     /** Helper function to respond with a success */
-    async function respond(
-      patch: ResponsePatch,
-      bodyPath: string | null,
-      debugTimeline: any[] = []
-    ) {
-      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
-      // Tear Down the cancellation logic
-      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-        delete cancelRequestFunctionMap[renderedRequest._id];
-      }
-      const environmentId = environment ? environment._id : null;
-      return resolve(Object.assign(
-        {
-          timelinePath,
-          environmentId,
-          parentId: renderedRequest._id,
-          bodyCompression: null,
-          // Will default to .zip otherwise
-          bodyPath: bodyPath || '',
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies,
-        } as ResponsePatch,
-        patch,
-      ));
-    }
 
-    /** Helper function to respond with an error */
-    async function handleError(err: Error) {
-
-      await respond(
-        {
-          url: renderedRequest.url,
-          parentId: renderedRequest._id,
-          error: err.message || 'Something went wrong',
-          elapsedTime: 0, // 0 because this path is hit during plugin calls
-          statusMessage: 'Error',
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies,
-        },
-        null,
-      );
-    }
     // NOTE: can have duplicate keys because of cookie options
     const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
     const setOpt = (key: string, value: string | string[] | number | boolean) => {
@@ -234,49 +193,27 @@ export async function _actuallySend(
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
-
-        await respond(
-          {
-            elapsedTime: 0,
-            bytesRead: 0,
-            url: renderedRequest.url,
-            statusMessage: 'Cancelled',
-            error: 'Request was cancelled',
-          },
-          null,
-        );
-        // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-        const nodejsCancelCurlRequest = process.type === 'renderer'
-          ? window.main.cancelCurlRequest
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          : require('./libcurl-promise').cancelCurlRequest;
-        nodejsCancelCurlRequest(renderedRequest._id);
+        const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
+        // Tear Down the cancellation logic
+        if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+          delete cancelRequestFunctionMap[renderedRequest._id];
+        }
+        const environmentId = environment ? environment._id : null;
+        return resolve({
+          elapsedTime: 0,
+          bytesRead: 0,
+          url: renderedRequest.url,
+          statusMessage: 'Cancelled',
+          error: 'Request was cancelled',
+          timelinePath,
+          environmentId,
+          parentId: renderedRequest._id,
+          bodyCompression: null,
+          bodyPath: '',
+          settingSendCookies: renderedRequest.settingSendCookies,
+          settingStoreCookies: renderedRequest.settingStoreCookies,
+        });
       };
-
-      // Set all the basic options
-      setOpt(Curl.option.VERBOSE, true);
-
-      // True so debug function works\
-      setOpt(Curl.option.NOPROGRESS, true);
-
-      // True so curl doesn't print progress
-      setOpt(Curl.option.ACCEPT_ENCODING, '');
-
-      // Set follow redirects setting
-      switch (renderedRequest.settingFollowRedirects) {
-        case 'off':
-          setOpt(Curl.option.FOLLOWLOCATION, false);
-          break;
-
-        case 'on':
-          setOpt(Curl.option.FOLLOWLOCATION, true);
-          break;
-
-        default:
-          // Set to global setting
-          setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-          break;
-      }
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -534,9 +471,25 @@ export async function _actuallySend(
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
           if (hasRequestBodyOrFilePath && !requestBody) {
-            return handleError(
-              new Error('AWS authentication not supported for provided body type'),
-            );
+            const timelinePath = await storeTimeline(timeline);
+            // Tear Down the cancellation logic
+            if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+              delete cancelRequestFunctionMap[renderedRequest._id];
+            }
+            const environmentId = environment ? environment._id : null;
+            return resolve({
+              url: renderedRequest.url,
+              error: 'AWS authentication not supported for provided body type',
+              elapsedTime: 0, // 0 because this path is hit during plugin calls
+              statusMessage: 'Error',
+              timelinePath,
+              environmentId,
+              parentId: renderedRequest._id,
+              bodyCompression: null,
+              bodyPath: '',
+              settingSendCookies: renderedRequest.settingSendCookies,
+              settingStoreCookies: renderedRequest.settingStoreCookies,
+            });
           }
 
           const { authentication } = renderedRequest;
@@ -654,11 +607,43 @@ export async function _actuallySend(
         statusMessage: lastRedirect.reason,
         ...patch,
       };
-
-      respond(responsePatch, responseBodyPath, [...debugTimeline, ...headerTimeline]);
+      const timelinePath = await storeTimeline([...timeline, ...debugTimeline, ...headerTimeline]);
+      // Tear Down the cancellation logic
+      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+        delete cancelRequestFunctionMap[renderedRequest._id];
+      }
+      const environmentId = environment ? environment._id : null;
+      return resolve({
+        timelinePath,
+        environmentId,
+        parentId: renderedRequest._id,
+        bodyCompression: null,
+        bodyPath: responseBodyPath || '',
+        settingSendCookies: renderedRequest.settingSendCookies,
+        settingStoreCookies: renderedRequest.settingStoreCookies,
+        ...responsePatch,
+      });
     } catch (err) {
       console.log('[network] Error', err);
-      await handleError(err);
+      const timelinePath = await storeTimeline(timeline);
+      // Tear Down the cancellation logic
+      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+        delete cancelRequestFunctionMap[renderedRequest._id];
+      }
+      const environmentId = environment ? environment._id : null;
+      return resolve({
+        url: renderedRequest.url,
+        error: err.message || 'Something went wrong',
+        elapsedTime: 0, // 0 because this path is hit during plugin calls
+        statusMessage: 'Error',
+        timelinePath,
+        environmentId,
+        parentId: renderedRequest._id,
+        bodyCompression: null,
+        bodyPath: '',
+        settingSendCookies: renderedRequest.settingSendCookies,
+        settingStoreCookies: renderedRequest.settingStoreCookies,
+      });
     }
   });
 }
