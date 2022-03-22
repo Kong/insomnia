@@ -13,7 +13,7 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-interface BaseOAuth2Token {
+export interface BaseOAuth2Token {
   refreshToken: string;
   accessToken: string;
   identityToken: string;

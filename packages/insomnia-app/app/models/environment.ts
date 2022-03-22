@@ -9,7 +9,7 @@ export const prefix = 'env';
 export const canDuplicate = true;
 export const canSync = true;
 
-interface BaseEnvironment {
+export interface BaseEnvironment {
   name: string;
   data: Record<string, any>;
   dataPropertyOrder: Record<string, any> | null;
