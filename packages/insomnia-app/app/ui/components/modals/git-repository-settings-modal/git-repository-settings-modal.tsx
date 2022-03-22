@@ -71,7 +71,11 @@ export class GitRepositorySettingsModal extends PureComponent<{}, State> {
 
     return (
       <Modal ref={this._setModalRef} {...this.props}>
-        <ModalForm onSubmit={patch => _handleSubmitEdit(patch)} onReset={_handleReset} gitRepository={this.state.gitRepository} />
+        <ModalForm
+          onSubmit={patch => _handleSubmitEdit(patch)}
+          onReset={_handleReset}
+          gitRepository={this.state.gitRepository}
+        />
       </Modal>
     );
   }
@@ -85,11 +89,17 @@ interface Props {
 
 const ModalForm = (props: Props) => {
   const { gitRepository, onSubmit, onReset } = props;
-  const defaultTab = gitRepository
-    && gitRepository.credentials
-    && ('oauth2format' in gitRepository.credentials) ? 'github' : 'custom';
 
-  const [selectedTab, setTab] = useState(defaultTab);
+  const oauth2format =
+    (gitRepository &&
+      gitRepository.credentials &&
+      'oauth2format' in gitRepository.credentials &&
+      gitRepository.credentials.oauth2format) ||
+    'custom';
+
+  const initialTab = !gitRepository ? 'github' : oauth2format;
+
+  const [selectedTab, setTab] = useState(initialTab);
 
   return (
     <>
@@ -105,31 +115,21 @@ const ModalForm = (props: Props) => {
         <ErrorBoundary>
           <Tabs
             className="react-tabs"
-            onSelect={(index: number) => setTab(index ? 'github' : 'custom')}
-            selectedIndex={selectedTab === 'github' ? 1 : 0}
+            onSelect={(index: number) => setTab(index ? 'custom' : 'github')}
+            selectedIndex={selectedTab === 'github' ? 0 : 1}
           >
             <TabList>
-              <Tab>
-                <button>
-                  <i className="fa fa-code-fork" /> Git
-                </button>
-              </Tab>
               <Tab>
                 <button>
                   <i className="fa fa-github" /> GitHub
                 </button>
               </Tab>
+              <Tab>
+                <button>
+                  <i className="fa fa-code-fork" /> Git
+                </button>
+              </Tab>
             </TabList>
-            <TabPanel
-              className="tabs__tab-panel scrollable"
-              selectedClassName="pad pad-top-sm"
-            >
-              <CustomRepositorySettingsFormGroup
-                gitRepository={gitRepository}
-                onSubmit={onSubmit}
-              />
-            </TabPanel>
-
             <TabPanel
               className="tabs__tab-panel"
               selectedClassName="pad pad-top-sm"
@@ -139,6 +139,15 @@ const ModalForm = (props: Props) => {
             >
               <GitHubRepositorySetupFormGroup
                 uri={gitRepository?.uri}
+                onSubmit={onSubmit}
+              />
+            </TabPanel>
+            <TabPanel
+              className="tabs__tab-panel scrollable"
+              selectedClassName="pad pad-top-sm"
+            >
+              <CustomRepositorySettingsFormGroup
+                gitRepository={gitRepository}
                 onSubmit={onSubmit}
               />
             </TabPanel>
@@ -162,5 +171,6 @@ const ModalForm = (props: Props) => {
           </button>
         </div>
       </ModalFooter>
-    </>);
+    </>
+  );
 };
