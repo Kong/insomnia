@@ -63,14 +63,14 @@ jobs:
           npx @kong/changelog-generator generate \
             --owner ${OWNER} \
             --repo insomnia \
-            --base ${{ steps.latest_release..outputs.tag_name }} \
+            --base ${{ steps.latest_release.outputs.tag_name }} \
             --head ${HEAD} \
             --releaseName "${RELEASE_NAME}" > ./temp_changelog.out
 
           npx @kong/changelog-generator generate \
             --owner ${OWNER} \
             --repo insomnia \
-            --base ${{ steps.latest_release..outputs.tag_name }} \
+            --base ${{ steps.latest_release.outputs.tag_name }} \
             --head ${HEAD} \
             --releaseName "${RELEASE_NAME}" --onlyShowMissing > ./temp_changelog_missing.out
         env:
