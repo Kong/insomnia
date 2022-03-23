@@ -10,7 +10,7 @@ export const canSync = false;
 
 export type RequestAccordionKeys = 'OAuth2AdvancedOptions';
 
-interface BaseRequestMeta {
+export interface BaseRequestMeta {
   parentId: string;
   previewMode: string;
   responseFilter: string;
