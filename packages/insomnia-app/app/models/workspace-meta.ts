@@ -12,7 +12,7 @@ export const prefix = 'wrkm';
 export const canDuplicate = false;
 export const canSync = false;
 
-interface BaseWorkspaceMeta {
+export interface BaseWorkspaceMeta {
   activeActivity: string | null;
   activeEnvironmentId: string | null;
   activeRequestId: string | null;

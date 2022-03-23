@@ -16,7 +16,7 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-interface BaseStats {
+export interface BaseStats {
   currentLaunch: number | null;
   lastLaunch: number | null;
   currentVersion: string | null;
