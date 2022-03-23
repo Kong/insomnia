@@ -27,7 +27,7 @@ export function init(): BaseGitRepository {
   };
 }
 
-interface BaseGitRepository {
+export interface BaseGitRepository {
   needsFullClone: boolean;
   uri: string;
   credentials: GitCredentials | null;

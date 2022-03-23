@@ -30,7 +30,7 @@ export interface Cookie {
   lastAccessed?: Date;
 }
 
-interface BaseCookieJar {
+export interface BaseCookieJar {
   name: string;
   cookies: Cookie[];
 }

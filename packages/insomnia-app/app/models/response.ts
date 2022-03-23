@@ -35,7 +35,7 @@ export interface ResponseTimelineEntry {
 
 type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
-interface BaseResponse {
+export interface BaseResponse {
   environmentId: string | null;
   statusCode: number;
   statusMessage: string;
