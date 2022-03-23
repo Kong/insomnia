@@ -1,7 +1,6 @@
 name: Generate Changelog
 
 on:
-  # TODO - edit workflow to support from push
   workflow_dispatch:
     inputs:
       version:
