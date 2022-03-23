@@ -1,6 +1,6 @@
 import fuzzysort from 'fuzzysort';
 import { join as pathJoin } from 'path';
-import { head, join, map, pipe, split, tail, toLower } from 'ramda';
+import { head, tail } from 'ramda';
 import { v4 as uuidv4 } from 'uuid';
 import zlib from 'zlib';
 
@@ -450,11 +450,12 @@ export const capitalize = (value: string) => (
   `${head(value).toUpperCase()}${tail(value).toLowerCase()}`
 );
 
-export const toTitleCase = pipe(
-  toLower,
-  split(' '),
-  map(capitalize),
-  join(' '),
+export const toTitleCase = (value: string) => (
+  value
+    .toLowerCase()
+    .split(' ')
+    .map(capitalize)
+    .join(' ')
 );
 
 // Because node-libcurl changed some names that we used in the timeline
