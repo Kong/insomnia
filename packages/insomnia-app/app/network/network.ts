@@ -1,6 +1,6 @@
-import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import type { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
+import type { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import type { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
 import aws4 from 'aws4';
 import clone from 'clone';
 import fs from 'fs';
@@ -57,7 +57,7 @@ import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
-import caCerts from './ca-certs';
+import caCerts from './ca_certs';
 import { buildMultipart, DEFAULT_BOUNDARY } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 

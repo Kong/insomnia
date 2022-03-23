@@ -1,22 +1,27 @@
 {
-  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "outDir": ".",
+    "rootDir": ".",
+
+    "strict": false,
+
+    "target": "esnext",
+    "module": "esnext",
+    "isolatedModules": true,
+    "moduleResolution": "node",
+    "esModuleInterop": false,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx"
+  },
   "include": [
-    ".eslintrc.js",
-    "app",
-    "config",
-    "jest.config.js",
-    "**/insomnia.config.json",
     "package.json",
-    "scripts",
-    "send-request",
     "webpack"
   ],
-  "exclude": [
-    "**/@types/mocha",
-    "**/main.min.js",
-    "bin",
-    "build",
-    "config",
-    "node_modules"
-  ]
+  "exclude": []
 }

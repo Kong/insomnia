@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as PDF from 'pdfjs-dist/webpack';
+import * as PDF from 'pdfjs-dist';
 import React, { CSSProperties, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';

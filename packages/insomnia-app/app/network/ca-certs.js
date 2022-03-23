@@ -2,7 +2,7 @@
 // Do not convert it to TypeScript.  It's a native node module by design.
 const tls = require('tls');
 
-module.exports = () => {
+exports.default = () => {
   return {
     code: 'module.exports = `' + tls.rootCertificates.join('\n') + '`',
   };
