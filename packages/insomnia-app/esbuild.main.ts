@@ -43,12 +43,6 @@ async function main() {
       "system",
       "electron"
     ]
-    // external: commonjsPackages,
-    // plugins: [
-    //   '@babel/plugin-proposal-class-properties',
-    //   '@babel/plugin-proposal-object-rest-spread',
-    //   '@babel/plugin-proposal-optional-chaining',
-    // ]
   });
 
   process.exit(0);
