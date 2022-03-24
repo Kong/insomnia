@@ -1,15 +1,17 @@
 import childProcess from 'child_process';
+import { build } from 'esbuild'
 import { promises, readFileSync, writeFileSync } from 'fs';
 import licenseChecker from 'license-checker';
 import mkdirp from 'mkdirp';
 import { ncp } from 'ncp';
-import path from 'path';
 import rimraf from 'rimraf';
-import webpack from 'webpack';
-
+import { builtinModules } from "module";
+import path from "path";
+import * as vite from "vite";
+import react from "@vitejs/plugin-react";
+import commonjsExt from "vite-plugin-commonjs-externals";
+import packageJSON from "../package.json";
 import appConfig from '../config/config.json';
-import electronWebpackConfig from '../webpack/webpack.config.electron';
-import productionWebpackConfig from '../webpack/webpack.config.production';
 
 const { readFile, writeFile } = promises;
 
@@ -24,23 +26,6 @@ if (require.main === module) {
     }
   });
 }
-
-const buildWebpack = (config: webpack.Configuration) => new Promise<void>((resolve, reject) => {
-  webpack(config).run((err, stats) => {
-    if (err) {
-      reject(err);
-      return;
-    }
-
-    if (stats?.hasErrors()) {
-      reject(new Error('Failed to build webpack'));
-      console.log(stats.toJson().errors);
-      return;
-    }
-
-    resolve();
-  });
-});
 
 const emptyDir = (relPath: string) => new Promise<void>((resolve, reject) => {
   const dir = path.resolve(__dirname, relPath);
@@ -210,11 +195,115 @@ export const start = async () => {
   console.log('[build] Building license list');
   await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
 
-  console.log('[build] Building Webpack renderer');
-  await buildWebpack(productionWebpackConfig as webpack.Configuration);
 
   console.log('[build] Building Webpack main');
-  await buildWebpack(electronWebpackConfig as webpack.Configuration);
+  build({
+    entryPoints: [path.join(__dirname, "../app/main.development.ts")],
+    outfile: path.join(__dirname, "../build/main.min.js"),
+    bundle: true,
+    platform: "node",
+    target: "esnext",
+    sourcemap: true,
+    watch: true,
+    format: "cjs",
+    define: {
+      __DEV__: "false",
+      "process.env.NODE_ENV": JSON.stringify("production")
+    },
+    external: ["@getinsomnia/node-libcurl"]
+  });
+
+  console.log('[build] Building Webpack renderer');
+
+
+  const commonjsPackages = [
+    "electron",
+    "electron/main",
+    "electron/common",
+    "electron/renderer",
+    "original-fs",
+    "fs",
+    "@grpc/grpc-js",
+    "insomnia-url",
+    "insomnia-config",
+    "insomnia-common",
+    "insomnia-cookies",
+    "insomnia-importers",
+    "nunjucks/browser/nunjucks",
+    "insomnia-xpath",
+    "insomnia-prettify",
+    "insomnia-url",
+    "styled-components",
+    "node-libcurl",
+    "@getinsomnia/node-libcurl",
+    "insomnia-plugin-kong-portal",
+    "nimma",
+    "path",
+    "system",
+    "file",
+    "url",
+    ...Object.keys(packageJSON.dependencies).filter(
+      (name) => !packageJSON.packedDependencies.includes(name)
+    ),
+    "network/ca-certs.js",
+    ...builtinModules
+  ];
+
+  vite.build({
+    mode: "production",
+    root: path.join(__dirname, "../app"),
+    base: "/",
+    resolve: {
+      alias: {
+        "react": path.resolve(__dirname, "../node_modules/react"),
+        "react-dom": path.resolve(__dirname, "../node_modules/react-dom"),
+        "crypto": "crypto-browserify"
+      },
+      dedupe: ["react", "react-dom", "react-dom/server"],
+    },
+    define: {
+      __DEV__: true,
+      "process.env.NODE_ENV": JSON.stringify("development"),
+      "process.env.INSOMNIA_ENV": JSON.stringify("development")
+    },
+    server: {
+      port: packageJSON.dev["dev-server-port"],
+      fs: {
+        strict: true
+      }
+    },
+    optimizeDeps: {
+      exclude: commonjsPackages
+    },
+    build: {
+      sourcemap: true,
+      outDir: "dist",
+      assetsDir: ".",
+      terserOptions: {
+        ecma: 2020,
+        compress: {
+          passes: 2
+        },
+        safari10: false
+      },
+      emptyOutDir: true,
+      brotliSize: false
+    },
+    plugins: [
+      commonjsExt({ externals: commonjsPackages }),
+      react({
+        fastRefresh: true,
+        jsxRuntime: "classic",
+        babel: {
+          plugins: [
+            ["@babel/plugin-proposal-decorators", { legacy: true }],
+            ["@babel/plugin-proposal-class-properties", { loose: true }]
+          ]
+        }
+      })
+    ]
+  });
+
 
   // Copy necessary files
   console.log('[build] Copying files');

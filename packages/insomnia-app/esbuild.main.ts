@@ -1,40 +1,7 @@
 import { build } from "esbuild";
 import path from "path";
-import { builtinModules } from "module";
 import packageJSON from "./package.json";
 
-const commonjsPackages = [
-  "electron",
-  "electron/main",
-  "electron/common",
-  "electron/renderer",
-  "original-fs",
-  "crypto",
-  "fs",
-  "@grpc/grpc-js",
-  "insomnia-url",
-  "insomnia-config",
-  "insomnia-common",
-  "insomnia-cookies",
-  "insomnia-importers",
-  "insomnia-components",
-  "insomnia-xpath",
-  "insomnia-prettify",
-  "insomnia-url",
-  "styled-components",
-  "node-libcurl",
-  "insomnia-plugin-kong-portal",
-  "nimma",
-  "path",
-  "system",
-  "file",
-  "url",
-  ...Object.keys(packageJSON.dependencies).filter(
-    (name) => !packageJSON.packedDependencies.includes(name)
-  ),
-  "network/ca-certs.js",
-  ...builtinModules
-];
 
 const _DEV_ = process.env.NODE_ENV === "development";
 const PORT = packageJSON.dev["dev-server-port"];
