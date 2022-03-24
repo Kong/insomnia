@@ -18,7 +18,7 @@
     "build": "webpack --config webpack.config.js --display errors-only",
     "clean": "rimraf dist",
     "watch": "webpack --config webpack.config.js --watch",
-    "prepare-nope": "npm run build"
+    "prepare": "npm run build"
   },
   "insomnia": {
     "name": "kong-portal",
@@ -30,6 +30,7 @@
     "@types/react-dom": "^16.9.12",
     "@types/url-join": "^4.0.1",
     "autobind-decorator": "^2.4.0",
+    "axios": "^0.21.2",
     "insomnia-components": "2.11.0-beta.0",
     "rimraf": "^3.0.2",
     "react": "^17.0.2",

@@ -1,11 +1,21 @@
+import { AxiosError, AxiosRequestConfig } from 'axios';
 import { Button } from 'insomnia-components';
 import React, { Component, SyntheticEvent } from 'react';
 import urlJoin from 'url-join';
 
+const isAxiosError = (error?: Error | AxiosError): error is AxiosError => (
+  error && Object.prototype.hasOwnProperty.call(error, 'isAxiosError')
+);
+
 interface Props {
-  axios: (config: Object) => Promise<{
+  axios: (config: AxiosRequestConfig) => Promise<{
     statusText: string;
-    data: Object;
+    data: {
+      configuration: {
+        portal_gui_host: string;
+        portal_is_legacy: boolean;
+      };
+    };
     status: number;
   }>;
   trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
@@ -21,8 +31,6 @@ interface Props {
     formatVersion: string;
   };
 }
-
-type AxiosError = Object;
 
 interface State {
   workspaceId: string;
@@ -96,7 +104,7 @@ export class DeployToPortal extends Component<Props, State> {
     } = this.state;
 
     let newSpec;
-    let method = 'post';
+    let method: AxiosRequestConfig['method'] = 'post';
     let urlFilePath = urlJoin(kongPortalApiUrl, kongPortalUserWorkspace + '/files');
     let headers = {};
 
@@ -133,10 +141,10 @@ export class DeployToPortal extends Component<Props, State> {
 
     try {
       const response = await axios({
-        method: method,
+        method,
         url: urlFilePath,
         data: newSpec,
-        headers: headers,
+        headers,
       });
       if (response.statusText === 'Created' || response.statusText === 'OK') {
         this.setState({ kongPortalDeployView: 'success' });
@@ -158,8 +166,8 @@ export class DeployToPortal extends Component<Props, State> {
     }
   }
 
-  async _handleConnectKong(e: SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleConnectKong(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
 
     const { axios, trackSegmentEvent } = this.props;
 
@@ -182,10 +190,8 @@ export class DeployToPortal extends Component<Props, State> {
         trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy' });
 
         // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
-        // @ts-expect-error -- TSCONVERSION
         const guiHost = response.data.configuration.portal_gui_host;
         this.setState({
-          // @ts-expect-error -- TSCONVERSION
           kongPortalLegacyMode: response.data.configuration.portal_is_legacy,
           connectionError: null,
           kongPortalDeployView: 'upload',
@@ -194,12 +200,13 @@ export class DeployToPortal extends Component<Props, State> {
 
         this._handleLoadingToggle(false);
       }
-    } catch (error) {
-      trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy', error: error.message });
-
-      console.log('Connection error', error);
-      this._handleLoadingToggle(false);
-      this.setState({ connectionError: error });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy', error: error.message });
+        console.log('Connection error', error);
+        this._handleLoadingToggle(false);
+        this.setState({ connectionError: error });
+      }
     }
   }
 
@@ -256,26 +263,20 @@ export class DeployToPortal extends Component<Props, State> {
 
     // Check view
     if (kongPortalDeployView === 'edit') {
-      let connectionErrorElement = null;
+      let connectionErrorElement: JSX.Element | null = null;
 
       if (connectionError) {
-        // @ts-expect-error -- TSCONVERSION
         const stack = connectionError.stack;
         let messageToShow = stack;
-        // @ts-expect-error -- TSCONVERSION
-        if (connectionError?.isAxiosError && connectionError.response) {
-          // @ts-expect-error -- TSCONVERSION
-          const response: Object = connectionError.response;
-          // @ts-expect-error -- TSCONVERSION
+        if (isAxiosError(connectionError) && connectionError.response) {
+          const response = connectionError.response;
           messageToShow = `${response.status} ${response.statusText}`;
-          // @ts-expect-error -- TSCONVERSION
           const responseMessage = response.data?.message;
           if (responseMessage) {
             messageToShow += `: ${responseMessage}`;
           }
         }
 
-        // @ts-expect-error -- TSCONVERSION
         connectionErrorElement = (
           <p className="notice error margin-top-sm text-left">
             Error. Please check your settings and try again.
