@@ -28,7 +28,6 @@ async function main() {
   await build({
     entryPoints: ["./app/main.development.ts"],
     outfile: path.join(outdir, "main.min.js"),
-    // minify: !_DEV_,
     bundle: true,
     platform: "node",
     target: "esnext",
@@ -36,11 +35,7 @@ async function main() {
     format: "cjs",
     define: env,
     external: [
-      ...Object.keys(packageJSON.dependencies).filter(
-        (name) => !packageJSON.packedDependencies.includes(name)
-      ),
-      "file",
-      "system",
+      "@getinsomnia/node-libcurl",
       "electron"
     ]
   });
