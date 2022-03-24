@@ -1,30 +1,46 @@
 import React, { FunctionComponent } from 'react';
 
 import { docsGitAccessToken } from '../../../../common/documentation';
+import { GitRepository } from '../../../../models/git-repository';
 import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface Props {
-  onInputChange: (e: React.SyntheticEvent<HTMLInputElement>) => void;
-  isGitRepository: boolean;
-  inputs: {
-    uri?: string;
-    authorName?: string;
-    authorEmail?: string;
-    username?: string;
-    token?: string;
-  };
+  gitRepository: GitRepository | null;
+  onSubmit: (args: Partial<GitRepository>) => void;
 }
 
 export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
-  onInputChange,
-  isGitRepository,
-  inputs,
+  gitRepository,
+  onSubmit,
 }) => {
   const linkIcon = <i className="fa fa-external-link-square" />;
+  const defaultValues = gitRepository || { uri: '', credentials: { username: '', token: '' }, author: { name: '', email: '' } };
+
+  const uri = defaultValues.uri;
+  const author = defaultValues.author;
+  const credentials = defaultValues?.credentials || { username: '', token: '' };
 
   return (
-    <div className='form-group'>
+    <form
+      id="custom"
+      className='form-group'
+      onSubmit={e => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        onSubmit({
+          uri: formData.get('uri') as string || '',
+          credentials: {
+            username: formData.get('username') as string || '',
+            token: formData.get('token') as string || '',
+          },
+          author: {
+            name: formData.get('authorName') as string || '',
+            email: formData.get('authorEmail') as string || '',
+          },
+        });
+      }}
+    >
       <div className="form-control form-control--outlined">
         <label>
           Git URI (https)
@@ -32,9 +48,8 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             required
             autoFocus
             name="uri"
-            defaultValue={inputs.uri}
-            disabled={!!isGitRepository}
-            onChange={onInputChange}
+            defaultValue={uri}
+            disabled={!!uri}
             placeholder="https://github.com/org/repo.git"
           />
         </label>
@@ -48,8 +63,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               type="text"
               name="authorName"
               placeholder="Name"
-              defaultValue={inputs.authorName}
-              onChange={onInputChange}
+              defaultValue={author.name}
             />
           </label>
         </div>
@@ -58,11 +72,10 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             Author Email
             <input
               required
-              type="email"
+              type="text"
               name="authorEmail"
               placeholder="Email"
-              defaultValue={inputs.authorEmail}
-              onChange={onInputChange}
+              defaultValue={author.email}
             />
           </label>
         </div>
@@ -76,8 +89,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               type="text"
               name="username"
               placeholder="MyUser"
-              defaultValue={inputs.username}
-              onChange={onInputChange}
+              defaultValue={credentials?.username}
             />
           </label>
         </div>
@@ -101,13 +113,12 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               required
               type="password"
               name="token"
-              defaultValue={inputs.token}
-              onChange={onInputChange}
+              defaultValue={'token' in credentials ? credentials?.token : ''}
               placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
             />
           </label>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
