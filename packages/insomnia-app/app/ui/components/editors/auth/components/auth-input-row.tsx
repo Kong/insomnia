@@ -2,7 +2,7 @@ import React, { ComponentProps, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
-import { kebabCase } from '../../../../../common/misc';
+import { toKebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { selectSettings } from '../../../../redux/selectors';
 import { Button } from '../../../base/button';
@@ -26,7 +26,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
 
   const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
 
-  const id = kebabCase(label);
+  const id = toKebabCase(label);
 
   return (
     <AuthRow labelFor={id} label={label} help={help}>

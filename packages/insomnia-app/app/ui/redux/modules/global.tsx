@@ -1,5 +1,5 @@
+import { format } from 'date-fns';
 import fs, { NoParamCallback } from 'fs';
-import moment from 'moment';
 import path from 'path';
 import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
@@ -429,7 +429,7 @@ const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix: string;
   selectedFormat: SelectedFormat;
 }) => {
-  const date = moment().format('YYYY-MM-DD');
+  const date = format(Date.now(), 'yyyy-MM-dd');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');
