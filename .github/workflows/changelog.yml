@@ -77,7 +77,6 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           HEAD: release/${{ env.RELEASE_VERSION }}
           RELEASE_NAME: ${{ env.RELEASE_VERSION }}
-          SHOW_MISSING: ${{ env.SHOW_MISSING }}
 
       - name: Read changelog
         id: read-changelog
