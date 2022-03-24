@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import moment from 'moment';
+import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -99,35 +99,40 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
   }
 
   renderPastResponses(responses: Response[]) {
-    const now = moment();
-    // Four arrays for four time groups
-    const categories = {
-      minutes: [] as Response[],
-      hours: [] as Response[],
-      today: [] as Response[],
-      week: [] as Response[],
-      other: [] as Response[],
+    const now = new Date();
+
+    const categories: Record<string, Response[]> = {
+      minutes: [],
+      hours: [],
+      today: [],
+      week: [],
+      other: [],
     };
 
     responses.forEach(response => {
-      const resTime = moment(response.created);
+      const responseTime = new Date(response.created);
 
-      if (now.diff(resTime, 'minutes') < 5) {
-        // Five minutes ago
+      if (differenceInMinutes(now, responseTime) < 5) {
         categories.minutes.push(response);
-      } else if (now.diff(resTime, 'hours') < 2) {
-        // Two hours ago
-        categories.hours.push(response);
-      } else if (now.isSame(resTime, 'day')) {
-        // Today
-        categories.today.push(response);
-      } else if (now.isSame(resTime, 'week')) {
-        // This week
-        categories.week.push(response);
-      } else {
-        // Older
-        categories.other.push(response);
+        return;
       }
+
+      if (differenceInHours(now, responseTime) < 2) {
+        categories.hours.push(response);
+        return;
+      }
+
+      if (isToday(responseTime)) {
+        categories.today.push(response);
+        return;
+      }
+
+      if (isThisWeek(responseTime)) {
+        categories.week.push(response);
+        return;
+      }
+
+      categories.other.push(response);
     });
 
     return (
@@ -170,7 +175,7 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
           {...extraProps}
         >
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
-            {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
+            {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
             {!isLatestResponseActive ? (
               <i className="fa fa-thumb-tack space-left" />
             ) : (
