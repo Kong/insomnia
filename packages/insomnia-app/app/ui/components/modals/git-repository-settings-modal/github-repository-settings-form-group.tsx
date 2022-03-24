@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
+import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
   generateAuthorizationUrl,
@@ -17,6 +18,46 @@ import {
   newCommand,
 } from '../../../redux/modules/global';
 import { showAlert } from '..';
+
+interface Props {
+  uri?: string;
+  onSubmit: (args: Partial<GitRepository>) => void;
+}
+
+export const GitHubRepositorySetupFormGroup = (props: Props) => {
+  const { onSubmit, uri } = props;
+
+  const [githubToken, setGitHubToken] = useState(
+    localStorage.getItem('github-oauth-token') || ''
+  );
+
+  useInterval(
+    () => {
+      const token = localStorage.getItem('github-oauth-token');
+
+      if (token) {
+        setGitHubToken(token);
+      }
+    },
+    githubToken ? null : 500
+  );
+
+  if (!githubToken) {
+    return <GitHubSignInForm />;
+  }
+
+  return (
+    <GitHubRepositoryForm
+      uri={uri}
+      onSubmit={onSubmit}
+      token={githubToken}
+      onSignOut={() => {
+        setGitHubToken('');
+        signOut();
+      }}
+    />
+  );
+};
 
 interface FetchGraphQLInput {
   query: string;
@@ -135,172 +176,43 @@ const AuthorizationFormContainer = styled.div({
   boxSizing: 'border-box',
 });
 
-const GitHubAccountView = (props: {
-  user?: GitHubUserInfoQueryResult['viewer'];
+interface GitHubRepositoryFormProps {
+  uri?: string;
+  onSubmit: (args: Partial<GitRepository>) => void;
   onSignOut: () => void;
   token?: string;
-}) => {
-  const { user, onSignOut, token } = props;
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
-
-  const dispatch = useDispatch();
-
-  // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
-  useEffect(() => {
-    if (token) {
-      setIsAuthenticating(false);
-      setAuthUrl(generateAuthorizationUrl());
-    }
-  }, [token]);
-
-  if (!token) {
-    return (
-      <AuthorizationFormContainer>
-        <a
-          href={authUrl}
-          onClick={() => {
-            setIsAuthenticating(true);
-          }}
-        >
-          <i className="fa fa-github" />
-          {isAuthenticating ? 'Authenticating' : 'Authenticate'} with GitHub
-        </a>
-
-        {isAuthenticating && (
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              const formData = new FormData(e.currentTarget);
-              const link = formData.get('link');
-              if (typeof link === 'string') {
-                const parsedURL = new URL(link);
-                const code = parsedURL.searchParams.get('code');
-                const state = parsedURL.searchParams.get('state');
-
-                if (typeof code === 'string' && typeof state === 'string') {
-                  const command = newCommand(
-                    COMMAND_GITHUB_OAUTH_AUTHENTICATE,
-                    {
-                      code,
-                      state,
-                    }
-                  );
-
-                  command(dispatch);
-                }
-              }
-            }}
-          >
-            <label className="form-control form-control--outlined">
-              <div>
-                If you aren't redirected to the app you can manually paste your
-                code here:
-              </div>
-              <div className="form-row">
-                <input name="link" />
-                <Button name="add-token">Add</Button>
-              </div>
-            </label>
-          </form>
-        )}
-      </AuthorizationFormContainer>
-    );
-  }
-
-  return (
-    <AccountViewContainer>
-      <AccountDetails>
-        <Avatar src={user?.avatarUrl ?? ''} />
-        <Details>
-          <span
-            style={{
-              fontSize: 'var(--font-size-lg)',
-            }}
-          >
-            {user?.login}
-          </span>
-          <span
-            style={{
-              fontSize: 'var(--font-size-md)',
-            }}
-          >
-            {user?.email}
-          </span>
-        </Details>
-      </AccountDetails>
-      <Button
-        onClick={e => {
-          e.preventDefault();
-          e.stopPropagation();
-          showAlert({
-            title: 'Sign out of GitHub',
-            message:
-              'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
-            okLabel: 'Sign out',
-            onConfirm: () => {
-              onSignOut();
-              signOut();
-            },
-          });
-        }}
-      >
-        Sign out
-      </Button>
-    </AccountViewContainer>
-  );
-};
-
-interface Props {
-  uri: string;
-  onChange: (args: {
-    uri: string;
-    author: { name: string; email: string };
-    token: string;
-  }) => void;
 }
 
-export const GitHubRepositorySetupFormGroup = (props: Props) => {
-  const { onChange, uri } = props;
+const GitHubRepositoryForm = ({
+  uri,
+  token,
+  onSubmit,
+  onSignOut,
+}: GitHubRepositoryFormProps) => {
+  const [error, setError] = useState('');
 
   const [user, setUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
     'github-user-info',
     undefined
   );
 
-  const [githubToken, setGitHubToken] = useState(
-    localStorage.getItem('github-oauth-token') || ''
-  );
-
-  const [error, setError] = useState('');
-
-  useInterval(
-    () => {
-      const token = localStorage.getItem('github-oauth-token');
-
-      if (token) {
-        setGitHubToken(token);
-      }
-    },
-    githubToken ? null : 500
-  );
-
   useEffect(() => {
     let isMounted = true;
 
-    if (githubToken && !user) {
+    if (token && !user) {
       fetchGraphQL<GitHubUserInfoQueryResult>({
         query: GitHubUserInfoQuery,
         headers: {
-          Authorization: `Bearer ${githubToken}`,
+          Authorization: `Bearer ${token}`,
         },
         url: GITHUB_GRAPHQL_API_URL,
       })
         .then(({ data, errors }) => {
           if (isMounted) {
             if (errors) {
-              setError('Something went wrong when trying to fetch info from GitHub.');
+              setError(
+                'Something went wrong when trying to fetch info from GitHub.'
+              );
             } else if (data) {
               setUser(data.viewer);
             }
@@ -318,11 +230,29 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
     return () => {
       isMounted = false;
     };
-  }, [githubToken, onChange, setUser, user]);
+  }, [token, onSubmit, setUser, user]);
 
   return (
-    <div className="form-group" style={{ height: '100%' }}>
-      {githubToken && (
+    <form
+      id="github"
+      className="form-group"
+      style={{ height: '100%' }}
+      onSubmit={e =>
+        onSubmit({
+          uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
+          author: {
+            name: user?.login ?? '',
+            email: user?.email ?? '',
+          },
+          credentials: {
+            username: token ?? '',
+            token: token ?? '',
+            oauth2format: 'github',
+          },
+        })
+      }
+    >
+      {token && (
         <div className="form-control form-control--outlined">
           <label>
             GitHub URI
@@ -332,29 +262,52 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
               type="url"
               name="uri"
               autoFocus
+              required
               placeholder="https://github.com/org/repo.git"
-              onChange={e => {
-                onChange({
-                  uri: e.target.value,
-                  author: {
-                    name: user?.login ?? '',
-                    email: user?.email ?? '',
-                  },
-                  token: githubToken,
-                });
-              }}
             />
           </label>
         </div>
       )}
-      <GitHubAccountView
-        user={user}
-        token={githubToken}
-        onSignOut={() => {
-          setGitHubToken('');
-          setUser(undefined);
-        }}
-      />
+      <AccountViewContainer>
+        <AccountDetails>
+          <Avatar src={user?.avatarUrl ?? ''} />
+          <Details>
+            <span
+              style={{
+                fontSize: 'var(--font-size-lg)',
+              }}
+            >
+              {user?.login}
+            </span>
+            <span
+              style={{
+                fontSize: 'var(--font-size-md)',
+              }}
+            >
+              {user?.email}
+            </span>
+          </Details>
+        </AccountDetails>
+        <Button
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            showAlert({
+              title: 'Sign out of GitHub',
+              message:
+                'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
+              okLabel: 'Sign out',
+              onConfirm: () => {
+                setUser(undefined);
+                onSignOut();
+              },
+            });
+          }}
+        >
+          Sign out
+        </Button>
+      </AccountViewContainer>
+
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>
@@ -363,6 +316,74 @@ export const GitHubRepositorySetupFormGroup = (props: Props) => {
           {error}
         </p>
       )}
-    </div>
+    </form>
+  );
+};
+
+interface GitHubSignInFormProps {
+  token?: string;
+}
+
+const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
+  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const dispatch = useDispatch();
+
+  // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
+  useEffect(() => {
+    if (token) {
+      setIsAuthenticating(false);
+      setAuthUrl(generateAuthorizationUrl());
+    }
+  }, [token]);
+
+  return (
+    <AuthorizationFormContainer>
+      <a
+        href={authUrl}
+        onClick={() => {
+          setIsAuthenticating(true);
+        }}
+      >
+        <i className="fa fa-github" />
+        {isAuthenticating ? 'Authenticating' : 'Authenticate'} with GitHub
+      </a>
+
+      {isAuthenticating && (
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const formData = new FormData(e.currentTarget);
+            const link = formData.get('link');
+            if (typeof link === 'string') {
+              const parsedURL = new URL(link);
+              const code = parsedURL.searchParams.get('code');
+              const state = parsedURL.searchParams.get('state');
+
+              if (typeof code === 'string' && typeof state === 'string') {
+                const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
+                  code,
+                  state,
+                });
+
+                command(dispatch);
+              }
+            }
+          }}
+        >
+          <label className="form-control form-control--outlined">
+            <div>
+              If you aren't redirected to the app you can manually paste your
+              code here:
+            </div>
+            <div className="form-row">
+              <input name="link" />
+              <Button name="add-token">Add</Button>
+            </div>
+          </label>
+        </form>
+      )}
+    </AuthorizationFormContainer>
   );
 };

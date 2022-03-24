@@ -31,7 +31,7 @@
     "marked": "^4.0.12",
     "mime-types": "^2.1.35",
     "mkdirp": "^1.0.4",
-    "multiparty": "^4.2.1",
+    "multiparty": "^4.2.3",
     "nedb": "^1.8.0",
     "node-forge": "^1.0.0",
     "nunjucks": "^3.2.1",
