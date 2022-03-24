@@ -2,7 +2,7 @@
  * Get an OAuth1Token object and also handle storing/saving/refreshing
  * @returns {Promise.<void>}
  */
-import crypto from 'crypto';
+import { createHmac, createSign } from 'crypto-browserify';
 import OAuth1 from 'oauth-1.0a';
 
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
@@ -18,19 +18,19 @@ import {
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
     return function(baseString: string, key: string) {
-      return crypto.createHmac('sha1', key).update(baseString).digest('base64');
+      return createHmac('sha1', key).update(baseString).digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA256) {
     return function(baseString: string, key: string) {
-      return crypto.createHmac('sha256', key).update(baseString).digest('base64');
+      return createHmac('sha256', key).update(baseString).digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
     return function(baseString: string, privatekey: string) {
-      return crypto.createSign('RSA-SHA1').update(baseString).sign(privatekey, 'base64');
+      return createSign('RSA-SHA1').update(baseString).sign(privatekey, 'base64');
     };
   }
 

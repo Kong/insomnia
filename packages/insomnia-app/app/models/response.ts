@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { createHash } from 'crypto-browserify';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -312,8 +312,7 @@ async function migrateBodyToFileSystem(doc: Response) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
-    const hash = crypto
-      .createHash('md5')
+    const hash = createHash('md5')
       .update(bodyBuffer || '')
       .digest('hex');
     const bodyPath = path.join(dir, `${hash}.zip`);

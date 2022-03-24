@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { createHash, randomBytes } from 'crypto-browserify';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { parse as urlParse } from 'url';
 
@@ -36,12 +36,10 @@ export default async function(
   let codeChallenge = '';
 
   if (usePkce) {
-    // @ts-expect-error -- TSCONVERSION
-    codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
+    codeVerifier = _base64UrlEncode(randomBytes(32));
 
     if (pkceMethod === c.PKCE_CHALLENGE_S256) {
-      // @ts-expect-error -- TSCONVERSION
-      codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
+      codeChallenge = _base64UrlEncode(createHash('sha256').update(codeVerifier).digest());
     } else {
       codeChallenge = codeVerifier;
     }

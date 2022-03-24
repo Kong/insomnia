@@ -1,5 +1,5 @@
 import clone from 'clone';
-import crypto from 'crypto';
+import { createHash } from 'crypto-browserify';
 
 import { strings } from '../../common/strings';
 import { BaseModel } from '../../models';
@@ -463,7 +463,7 @@ export function hash(obj?: any): {
   }
 
   const content = deterministicStringify(obj);
-  const hash = crypto.createHash('sha1').update(content).digest('hex');
+  const hash = createHash('sha1').update(content).digest('hex');
   return {
     hash,
     content,

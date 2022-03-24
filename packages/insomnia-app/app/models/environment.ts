@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import { createHash } from 'crypto-browserify';
 
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
@@ -75,7 +75,7 @@ export async function getOrCreateForParentId(parentId: string) {
       name: 'Base Environment',
       // Deterministic base env ID. It helps reduce sync complexity since we won't have to
       // de-duplicate environments.
-      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
+      _id: `${prefix}_${createHash('sha1').update(parentId).digest('hex')}`,
     });
   }
 

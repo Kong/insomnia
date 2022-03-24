@@ -1,5 +1,5 @@
 import clone from 'clone';
-import crypto from 'crypto';
+import { createHash } from 'crypto-browserify';
 import path from 'path';
 
 import * as crypt from '../../account/crypt';
@@ -39,7 +39,7 @@ import {
   updateStateWithConflictResolutions,
 } from './util';
 
-const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
+const EMPTY_HASH = createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
 
@@ -1626,7 +1626,7 @@ export class VCS {
 
 /** Generate snapshot ID from hashing parent, backendProject, and state together */
 function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
-  const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
+  const hash = createHash('sha1').update(backendProjectId).update(parentId);
   const newState = [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1));
 
   for (const entry of newState) {
