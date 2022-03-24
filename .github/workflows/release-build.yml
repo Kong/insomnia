@@ -142,12 +142,14 @@ jobs:
 
             <details>
             <summary>Conflicts? Merge branch step failed on the publish workflow? Try this...</summary>
+
             Run locally:
+
             ```bash
             # Make sure git remote is Kong/insomnia...
 
             git checkout develop
-            git merge --no-ff release/${{ steps.release_version.outputs.version }}
+            git merge --no-ff release/<replaced with version>
 
             # Solve merge conflicts ...
             # If there's package-lock conflicts, run `npm run bootstrap` and commit the package-lock changes
