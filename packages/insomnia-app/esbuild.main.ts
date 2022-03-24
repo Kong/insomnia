@@ -33,7 +33,6 @@ async function main() {
     platform: "node",
     target: "esnext",
     sourcemap: true,
-    watch: true,
     format: "cjs",
     define: env,
     external: [
