@@ -217,7 +217,7 @@
     "@types/testing-library__jest-dom": "^5.9.5",
     "@types/testing-library__react-hooks": "^4.0.0",
     "@types/tough-cookie": "^2.3.7",
-    "@types/url-join": "^4.0.0",
+    "@types/url-join": "^4.0.1",
     "@types/uuid": "^8.3.4",
     "@types/vkbeautify": "^0.99.2",
     "@types/webpack": "^5.28.0",

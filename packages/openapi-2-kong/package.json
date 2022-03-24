@@ -23,7 +23,7 @@
     "yaml": "2.0.0-5"
   },
   "devDependencies": {
-    "@types/url-join": "^4.0.0",
+    "@types/url-join": "^4.0.1",
     "@types/yaml": "^1.9.7",
     "jest": "^26.6.3",
     "type-fest": "^2.12.0"

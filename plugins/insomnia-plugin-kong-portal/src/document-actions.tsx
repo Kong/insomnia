@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import DeployToPortal from './src/deploy-to-portal';
+
+import { DeployToPortal } from './deploy-to-portal';
 
 export const documentActions = [
   {

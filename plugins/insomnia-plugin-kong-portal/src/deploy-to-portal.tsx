@@ -1,48 +1,44 @@
-// @flow
-import * as React from 'react';
-import urlJoin from 'url-join';
-import autobind from 'autobind-decorator';
 import { Button } from 'insomnia-components';
+import React, { Component, SyntheticEvent } from 'react';
+import urlJoin from 'url-join';
 
-type Props = {
-  axios: (
-    config: Object,
-  ) => Promise<{
-    statusText: string,
-    data: Object,
-    status: number,
-  }>,
-  trackSegmentEvent: (event: string, properties?: Record<string, any>) => any,
+interface Props {
+  axios: (config: Object) => Promise<{
+    statusText: string;
+    data: Object;
+    status: number;
+  }>;
+  trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
   store: {
-    hasItem: (key: string) => Promise<boolean>,
-    setItem: (key: string, value: string) => Promise<void>,
-    getItem: (key: string) => Promise<string | null>,
-  },
+    hasItem: (key: string) => Promise<boolean>;
+    setItem: (key: string, value: string) => Promise<void>;
+    getItem: (key: string) => Promise<string | null>;
+  };
   spec: {
-    contents: Object,
-    rawContents: string,
-    format: string,
-    formatVersion: string,
-  },
-};
+    contents: Object;
+    rawContents: string;
+    format: string;
+    formatVersion: string;
+  };
+}
 
 type AxiosError = Object;
 
-type State = {|
-  workspaceId: string,
-  kongPortalRbacToken: string,
-  kongPortalApiUrl: string,
-  kongPortalUrl: string,
-  kongPortalUserWorkspace: string,
-  isLoading: boolean,
-  connectionError: AxiosError | Error | null,
-  showUploadError: boolean,
-  forceSpecOverwrite: boolean,
-  kongSpecFileName: string,
-  kongPortalLegacyMode: boolean,
-  kongPortalDeployView: 'edit' | 'upload' | 'error' | 'overwrite' | 'success',
-  kongPortalDeployError: string,
-|};
+interface State {
+  workspaceId: string;
+  kongPortalRbacToken: string;
+  kongPortalApiUrl: string;
+  kongPortalUrl: string;
+  kongPortalUserWorkspace: string;
+  isLoading: boolean;
+  connectionError: AxiosError | Error | null;
+  showUploadError: boolean;
+  forceSpecOverwrite: boolean;
+  kongSpecFileName: string;
+  kongPortalLegacyMode: boolean;
+  kongPortalDeployView: 'edit' | 'upload' | 'error' | 'overwrite' | 'success';
+  kongPortalDeployError: string;
+}
 
 const STATE_KEYS_TO_PERSIST = [
   'kongPortalRbacToken',
@@ -51,9 +47,8 @@ const STATE_KEYS_TO_PERSIST = [
   'kongPortalUserWorkspace',
 ];
 
-@autobind
-class DeployToPortal extends React.Component<Props, State> {
-  state = {
+export class DeployToPortal extends Component<Props, State> {
+  state: State = {
     workspaceId: '',
     kongPortalRbacToken: '',
     kongPortalApiUrl: '',
@@ -85,9 +80,9 @@ class DeployToPortal extends React.Component<Props, State> {
     this.setState({ kongPortalDeployView: 'upload' });
   }
 
-  async _handleUploadSpec(overwrite: boolean, e?: SyntheticEvent<HTMLFormElement>) {
-    if (e) {
-      e.preventDefault();
+  async _handleUploadSpec(overwrite: boolean, event?: SyntheticEvent<HTMLFormElement>) {
+    if (event) {
+      event.preventDefault();
     }
 
     const { spec, axios, trackSegmentEvent } = this.props;
@@ -145,14 +140,14 @@ class DeployToPortal extends React.Component<Props, State> {
       });
       if (response.statusText === 'Created' || response.statusText === 'OK') {
         this.setState({ kongPortalDeployView: 'success' });
-        const action = overwrite ? 'replace_portal' : 'create_portal'
-        trackSegmentEvent('Kong Synced', { type: 'deploy', action })
+        const action = overwrite ? 'replace_portal' : 'create_portal';
+        trackSegmentEvent('Kong Synced', { type: 'deploy', action });
       }
     } catch (err) {
       if (err.response && err.response.status === 409) {
         this.setState({ kongPortalDeployView: 'overwrite' });
-        const action = overwrite ? 'replace_portal' : 'create_portal'
-        trackSegmentEvent('Kong Synced', { type: 'deploy', action, error: err.response.status + ': ' + err.response.statusText })
+        const action = overwrite ? 'replace_portal' : 'create_portal';
+        trackSegmentEvent('Kong Synced', { type: 'deploy', action, error: err.response.status + ': ' + err.response.statusText });
       } else {
         console.log('Failed to upload to dev portal', err.response);
         if (err.response && err.response.data && err.response.data.message) {
@@ -184,11 +179,13 @@ class DeployToPortal extends React.Component<Props, State> {
         },
       });
       if (response.status === 200 || response.status === 201) {
-        trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy' })
+        trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy' });
 
         // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
+        // @ts-expect-error -- TSCONVERSION
         const guiHost = response.data.configuration.portal_gui_host;
         this.setState({
+          // @ts-expect-error -- TSCONVERSION
           kongPortalLegacyMode: response.data.configuration.portal_is_legacy,
           connectionError: null,
           kongPortalDeployView: 'upload',
@@ -198,7 +195,7 @@ class DeployToPortal extends React.Component<Props, State> {
         this._handleLoadingToggle(false);
       }
     } catch (error) {
-      trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy', error: error.message })
+      trackSegmentEvent('Kong Connected', { type: 'token', action: 'portal_deploy', error: error.message });
 
       console.log('Connection error', error);
       this._handleLoadingToggle(false);
@@ -262,17 +259,23 @@ class DeployToPortal extends React.Component<Props, State> {
       let connectionErrorElement = null;
 
       if (connectionError) {
+        // @ts-expect-error -- TSCONVERSION
         const stack = connectionError.stack;
         let messageToShow = stack;
+        // @ts-expect-error -- TSCONVERSION
         if (connectionError?.isAxiosError && connectionError.response) {
+          // @ts-expect-error -- TSCONVERSION
           const response: Object = connectionError.response;
+          // @ts-expect-error -- TSCONVERSION
           messageToShow = `${response.status} ${response.statusText}`;
+          // @ts-expect-error -- TSCONVERSION
           const responseMessage = response.data?.message;
           if (responseMessage) {
             messageToShow += `: ${responseMessage}`;
           }
         }
 
+        // @ts-expect-error -- TSCONVERSION
         connectionErrorElement = (
           <p className="notice error margin-top-sm text-left">
             Error. Please check your settings and try again.
@@ -325,7 +328,8 @@ class DeployToPortal extends React.Component<Props, State> {
               bg="surprise"
               type="submit"
               disabled={!connectIsEnabled}
-              className="margin-right-sm">
+              className="margin-right-sm"
+            >
               {isLoading ? 'Connecting...' : 'Connect to Kong'}
             </Button>
             <Button data-close-modal="true" type="button">
@@ -346,11 +350,13 @@ class DeployToPortal extends React.Component<Props, State> {
               borderColor: '#B5E3C8',
               border: '1px solid green',
               textAlign: 'left',
-            }}>
+            }}
+          >
             <i className="fa fa-check" /> Connected to Kong
             <a
               className="success pull-right faint underline pointer"
-              onClick={this._handleEditKongConnection}>
+              onClick={this._handleEditKongConnection}
+            >
               Edit Connection
             </a>
           </p>
@@ -375,7 +381,8 @@ class DeployToPortal extends React.Component<Props, State> {
               bg="surprise"
               type="submit"
               className="margin-right-sm"
-              disabled={!uploadIsEnabled}>
+              disabled={!uploadIsEnabled}
+            >
               {isLoading ? 'Uploading...' : 'Upload To Dev Portal'}
             </Button>
             <Button onClick={this._handleEditKongConnection} type="button">
@@ -410,7 +417,8 @@ class DeployToPortal extends React.Component<Props, State> {
               bg="surprise"
               onClick={() => this._handleUploadSpec(false)}
               className="margin-right-sm"
-              disabled={!uploadIsEnabled}>
+              disabled={!uploadIsEnabled}
+            >
               Try Again
             </Button>
             <button onClick={this._handleReturnToUpload}>Go Back</button>
@@ -431,7 +439,8 @@ class DeployToPortal extends React.Component<Props, State> {
               bg="surprise"
               onClick={() => this._handleUploadSpec(true)}
               className="margin-right-sm"
-              disabled={!uploadIsEnabled}>
+              disabled={!uploadIsEnabled}
+            >
               Overwrite Existing Spec
             </Button>
             <Button onClick={this._handleReturnToUpload}>Go Back</Button>
@@ -443,5 +452,3 @@ class DeployToPortal extends React.Component<Props, State> {
     }
   }
 }
-
-export default DeployToPortal;

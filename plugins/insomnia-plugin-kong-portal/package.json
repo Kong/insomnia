@@ -3,6 +3,7 @@
   "name": "insomnia-plugin-kong-portal",
   "version": "2.11.0-beta.0",
   "main": "dist/index.js",
+  "types": "dist/src/index.d.ts",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "repository": {
@@ -15,8 +16,9 @@
   },
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",
+    "clean": "rimraf dist",
     "watch": "webpack --config webpack.config.js --watch",
-    "prepare": "npm run build"
+    "prepare-nope": "npm run build"
   },
   "insomnia": {
     "name": "kong-portal",
@@ -24,19 +26,17 @@
     "unlisted": true
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
-    "@babel/preset-env": "^7.9.0",
-    "@babel/preset-flow": "^7.9.0",
-    "@babel/preset-react": "^7.9.4",
+    "@types/react": "^16.14.5",
+    "@types/react-dom": "^16.9.12",
+    "@types/url-join": "^4.0.1",
     "autobind-decorator": "^2.4.0",
     "insomnia-components": "2.11.0-beta.0",
+    "rimraf": "^3.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "styled-components": "^4.4.1",
     "url-join": "^4.0.1",
+    "ts-loader": "^8.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   }

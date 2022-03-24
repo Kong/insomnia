@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "strict": false,
+    "strictNullChecks": true,
+    "jsx": "react",
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src"
+  ],
+}
