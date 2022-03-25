@@ -27,7 +27,6 @@
   "dependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "insomnia-components": "2.9.0-beta.0",
     "styled-components": "^4.4.1",
     "url-join": "^4.0.1"
   },
