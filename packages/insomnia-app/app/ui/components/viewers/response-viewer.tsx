@@ -379,7 +379,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
           contentType={contentType}
           key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
           url={url}
-          webpreferences={disableHtmlPreviewJs ? 'javascript=no' : 'javascript=yes'}
+          webpreferences={`disableDialogs=true, javascript=${disableHtmlPreviewJs ? 'no' : 'yes'}`}
         />
       );
     }
