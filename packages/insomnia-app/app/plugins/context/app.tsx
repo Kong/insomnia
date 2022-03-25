@@ -1,4 +1,5 @@
 import * as electron from 'electron';
+import * as insomniaComponents from 'insomnia-components';
 import React from 'react';
 
 import * as analytics from '../../../app/common/analytics';
@@ -64,6 +65,7 @@ export interface AppContext {
 export interface PrivateProperties {
   axios: typeof axios;
   analytics: typeof analytics;
+  insomniaComponents: typeof insomniaComponents;
 }
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
@@ -215,6 +217,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
     __private: {
       axios,
       analytics,
+      insomniaComponents,
     },
   };
 }

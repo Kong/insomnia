@@ -24,6 +24,7 @@ export interface Context {
     analytics: {
       trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
     };
+    insomniaComponents: any;
   };
   app: {
     dialog: (message: string, root: HTMLElement, config: any) => void;
@@ -41,6 +42,7 @@ export const documentActions = [
           spec={spec}
           store={context.store}
           axios={context.__private.axios}
+          insomniaComponents={context.__private.insomniaComponents}
           trackSegmentEvent={context.__private.analytics.trackSegmentEvent}
         />,
         root,

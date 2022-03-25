@@ -1,5 +1,4 @@
 import { AxiosError, AxiosRequestConfig } from 'axios';
-import { Button } from 'insomnia-components';
 import React, { Component, SyntheticEvent } from 'react';
 import urlJoin from 'url-join';
 
@@ -20,6 +19,7 @@ interface Props {
     };
     status: number;
   }>;
+  insomniaComponents: any;
   trackSegmentEvent: Context['__private']['analytics']['trackSegmentEvent'];
   store: Context['store'];
   spec: Spec;
@@ -239,6 +239,7 @@ export class DeployToPortal extends Component<Props, State> {
   }
 
   render() {
+    const { insomniaComponents: { Button } } = this.props;
     const {
       kongPortalApiUrl,
       kongSpecFileName,
