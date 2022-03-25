@@ -21,7 +21,7 @@
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist",
     "test": "jest",
-    "build": "webpack --config webpack.config.js --display errors-only",
+    "build": "tsc --build tsconfig.build.json",
     "watch": "npm run build -- --watch",
     "prepublish": "npm run build"
   },
@@ -29,10 +29,7 @@
     "@types/chai": "^4.2.15",
     "@types/mkdirp": "^1.0.1",
     "@types/mocha": "^8.2.1",
-    "@types/webpack": "^4.41.26",
-    "ts-loader": "^8.2.0",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "typescript": "^4.5.5"
   },
   "dependencies": {
     "chai": "^4.3.4",
