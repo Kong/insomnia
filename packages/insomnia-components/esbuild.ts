@@ -1,9 +1,9 @@
-import { build } from "esbuild"
+import { build } from 'esbuild';
 
 build({
-  entryPoints: ["./src/index.ts"],
-  format: "esm",
-  outfile: "./dist/index.js",
+  entryPoints: ['./src/index.ts'],
+  format: 'esm',
+  outfile: './dist/index.js',
   bundle: true,
-  external: ["react", "react-dom", "styled-components"],
-})
+  external: ['react', 'react-dom', 'styled-components'],
+});

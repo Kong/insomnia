@@ -8,6 +8,7 @@
     "webpack",
     "jest.config.js",
     ".eslintrc.js",
+    "esbuild.ts",
     "svgr.config.js"
   ],
   "exclude": [
