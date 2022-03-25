@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
+import { noop } from 'ramda-adjunct';
 import React, { PureComponent } from 'react';
 import { PropsWithChildren } from 'react';
 import { createRef } from 'react';
@@ -8,7 +9,6 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSp
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import * as misc from '../../../common/misc';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveRequest } from '../../redux/selectors';
@@ -165,11 +165,11 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
             children
           ) : (
             <SidebarRequestRow
-              handleActivateRequest={misc.nullFn}
-              handleDuplicateRequest={misc.nullFn}
-              handleGenerateCode={misc.nullFn}
-              handleCopyAsCurl={misc.nullFn}
-              handleSetRequestPinned={misc.nullFn}
+              handleActivateRequest={noop}
+              handleDuplicateRequest={noop}
+              handleGenerateCode={noop}
+              handleCopyAsCurl={noop}
+              handleSetRequestPinned={noop}
               isActive={false}
               requestGroup={requestGroup}
               requestCreate={handleCreateRequest}

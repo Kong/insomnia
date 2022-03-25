@@ -192,10 +192,6 @@ export function describeByteSize(bytes: number, long = false) {
   return `${rounded} ${unit}`;
 }
 
-export function nullFn() {
-  // Do nothing
-}
-
 export function xmlDecode(input: string) {
   const ESCAPED_CHARACTERS_MAP = {
     '&amp;': '&',

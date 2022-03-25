@@ -1,9 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { noop } from 'ramda-adjunct';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
-import { generateId, nullFn } from '../../../common/misc';
+import { generateId } from '../../../common/misc';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -477,8 +478,8 @@ export class KeyValueEditor extends PureComponent<Props, State> {
               readOnly
               forceInput
               index={-1}
-              onChange={nullFn}
-              onDelete={nullFn}
+              onChange={noop}
+              onDelete={noop}
               renderLeftIcon={() => (
                 <Dropdown>
                   <DropdownButton>

@@ -1,11 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
+import { noop } from 'ramda-adjunct';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import * as misc from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
@@ -73,7 +73,7 @@ export class RequestActionsDropdown extends PureComponent<Props, State> {
   }
 
   _canPin() {
-    return this.props.handleSetRequestPinned !== misc.nullFn;
+    return this.props.handleSetRequestPinned !== noop;
   }
 
   _handleSetRequestPinned() {
