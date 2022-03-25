@@ -97,11 +97,6 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
   return matches.length ? matches[0] : null;
 }
 
-export function getContentLengthHeader<T extends Header>(headers: T[]): T | null {
-  const matches = filterHeaders(headers, 'content-length');
-  return matches.length ? matches[0] : null;
-}
-
 /**
  * Generate an ID of the format "<MODEL_NAME>_<TIMESTAMP><RANDOM>"
  * @param prefix
