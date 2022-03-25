@@ -196,10 +196,6 @@ export function nullFn() {
   // Do nothing
 }
 
-export function preventDefault(e: Event) {
-  e.preventDefault();
-}
-
 export function xmlDecode(input: string) {
   const ESCAPED_CHARACTERS_MAP = {
     '&amp;': '&',
