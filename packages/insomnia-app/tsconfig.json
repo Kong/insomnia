@@ -20,8 +20,7 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "package.json",
-    "webpack"
+    "package.json"
   ],
   "exclude": []
 }

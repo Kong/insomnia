@@ -1,9 +1,10 @@
 import { build } from 'esbuild';
 
 build({
+  bundle: true,
   entryPoints: ['./src/index.ts'],
+  external: ['react', 'react-dom', 'styled-components'],
   format: 'esm',
   outfile: './dist/index.js',
-  bundle: true,
-  external: ['react', 'react-dom', 'styled-components'],
+  watch: Boolean(process.env.ESBUILD_WATCH),
 });

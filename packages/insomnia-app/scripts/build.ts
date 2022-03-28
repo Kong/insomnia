@@ -196,7 +196,7 @@ export const start = async () => {
   await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
 
 
-  console.log('[build] Building Webpack main');
+  console.log('[build] Building main.min.js');
   build({
     entryPoints: [path.join(__dirname, "../app/main.development.ts")],
     outfile: path.join(__dirname, "../build/main.min.js"),
@@ -213,8 +213,7 @@ export const start = async () => {
     external: ["@getinsomnia/node-libcurl"]
   });
 
-  console.log('[build] Building Webpack renderer');
-
+  console.log('[build] Building renderer');
 
   const commonjsPackages = [
     "electron",

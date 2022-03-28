@@ -5,7 +5,6 @@
   },
   "include": [
     "src",
-    "webpack",
     "jest.config.js",
     ".eslintrc.js",
     "esbuild.ts",

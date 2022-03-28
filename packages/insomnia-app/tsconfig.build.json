@@ -33,7 +33,6 @@
     "config",
     "jest.config.js",
     "node_modules",
-    "scripts",
-    "webpack"
+    "scripts"
   ]
 }

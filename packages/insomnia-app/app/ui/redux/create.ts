@@ -1,4 +1,3 @@
-/// <reference types="webpack-env" />
 import { applyMiddleware, compose, createStore, Store } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 

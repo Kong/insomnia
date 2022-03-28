@@ -172,8 +172,7 @@ async function _traversePluginPath(
           }
         }
 
-        // Use global.require() instead of require() because Webpack wraps require()
-        const pluginJson = global.require(packageJSONPath);
+        const pluginJson = require(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!pluginJson.hasOwnProperty('insomnia')) {

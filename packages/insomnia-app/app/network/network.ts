@@ -326,8 +326,8 @@ export async function _actuallySend(
       } catch (err) {
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
-        // TODO: Should mock cacerts module for testing. This is literally
-        // coercing a function to string in tests due to lack of val-loader.
+        // TODO: Should mock cacerts module for testing.
+        // This is literally coercing a function to string in tests due to lack of val-loader.
         fs.writeFileSync(fullCAPath, String(caCerts));
         console.log('[net] Set CA to', fullCAPath);
       }

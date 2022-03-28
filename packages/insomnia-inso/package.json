@@ -32,7 +32,6 @@
     "prebuild:production": "npm run clean",
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "start": "npm run build -- --watch",
-    "prepare": "npm run build:production",
     "prepackage": "npm run build:production",
     "package": "ts-node src/scripts/pkg.ts",
     "pkg": "pkg .",
