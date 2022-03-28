@@ -45,13 +45,6 @@ interface State extends PersistedState {
   kongPortalDeployError: string;
 }
 
-const STATE_KEYS_TO_PERSIST: (keyof PersistedState)[] = [
-  'kongPortalRbacToken',
-  'kongPortalApiUrl',
-  'kongPortalUrl',
-  'kongPortalUserWorkspace',
-];
-
 const defaultPersistedState: PersistedState = {
   kongPortalRbacToken: '',
   kongPortalApiUrl: '',
@@ -212,17 +205,17 @@ export class DeployToPortal extends Component<Props, State> {
   }
 
   async componentDidMount() {
-    const newState = defaultPersistedState;
-    for (const key of STATE_KEYS_TO_PERSIST) {
+    const newState = { ...defaultPersistedState };
+    for (const key in newState) {
       const value = await this.props.store.getItem(key);
-      newState[key] = String(value);
+      newState[key as keyof PersistedState] = String(value);
     }
     this.setState(newState);
   }
 
   async componentDidUpdate() {
-    for (const key of STATE_KEYS_TO_PERSIST) {
-      await this.props.store.setItem(key, this.state[key]);
+    for (const key in defaultPersistedState) {
+      await this.props.store.setItem(key, this.state[key as keyof PersistedState]);
     }
   }
 
