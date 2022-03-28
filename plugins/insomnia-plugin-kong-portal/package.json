@@ -35,8 +35,8 @@
     "@types/react-dom": "^16.9.12",
     "@types/url-join": "^4.0.1",
     "axios": "^0.21.2",
-    "insomnia-components": "2.11.0-beta.0",
     "rimraf": "^3.0.2",
+    "insomnia-components": "2.11.0-beta.0",
     "typescript": "^4.5.5"
   }
 }
