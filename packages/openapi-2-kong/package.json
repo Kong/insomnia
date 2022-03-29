@@ -18,7 +18,7 @@
   "dependencies": {
     "openapi-types": "^8.0.0",
     "slugify": "^1.3.6",
-    "swagger-parser": "^8.0.3",
+    "swagger-parser": "^10.0.3",
     "url-join": "^4.0.1",
     "yaml": "2.0.0-5"
   },
