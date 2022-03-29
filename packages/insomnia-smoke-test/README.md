@@ -29,12 +29,16 @@ In a second terminal run/debug/step through smoke tests
 ```shell
 # Run tests
 npm run test:smoke:dev
+
 # Debug tests with playwright logs
 DEBUG=pw:api npm run test:smoke:dev
+
 # Debug tests with insomnia console logs
 DEBUG=pw:browser npm run test:smoke:dev
+
 # Debug tests with webserver console logs
 DEBUG=pw:WebServer npm run test:smoke:dev
+
 # Step through tests with playwright inspector
 PWDEBUG=1 npm run test:smoke:dev
 ```
@@ -49,15 +53,21 @@ It's possible to run the smoke tests for:
 For `build`:
 
 ```shell
-npm run app-build                   # Transpile js bundle
-npm run test:smoke:build            # Run tests
+# Transpile js bundle
+npm run app-build
+
+# Run tests
+npm run test:smoke:build
 ```
 
 For `package`:
 
 ```shell
-npm run app-package                 # Build executable in /packages/insomnia-app/dist
-npm run test:smoke:package          # Run tests
+# Build executable in /packages/insomnia-app/dist
+npm run app-package
+
+# Run tests
+npm run test:smoke:package
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
@@ -88,8 +98,11 @@ If no tests appear, you may need to run "Refresh playwright tests". This can be 
 ## Run Inso CLI smoke tests
 
 ```shell
-npm run inso-package                # Package the Inso CLI binaries
-npm run test:smoke:cli              # Run CLI tests
+# Package the Inso CLI binaries
+npm run inso-package
+
+# Run CLI tests
+npm run test:smoke:cli
 ```
 
 ### Write Inso CLI smoke tests
@@ -100,8 +113,8 @@ In order to run CLI tests for development, open two terminal tabs in `packages/i
 # In the first tab, serve the Express API
 npm run serve
 
-# In the second tab, run your tests
-npm run cli                         # Run CLI tests
+# In the second tab, run the Inso CLI tests
+npm run cli
 ```
 
 This will allow you to write and monitor the server separately from each test, speeding up the development cycle.
@@ -115,10 +128,13 @@ From project root, in seperate terminals:
 ```sh
 # start smoke test api
 npx lerna --scope insomnia-smoke-test exec 'npm run serve'
+
 # watch send-request
 npx lerna --scope insomnia-app exec 'npm run build:sr -- --watch'
+
 # watch inso
 npx lerna --scope insomnia-inso exec 'npm run start'
+
 # run api test
 $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 ```
@@ -162,8 +178,10 @@ Set the `--src packages/insomnia-smoke-test/fixtures/inso-nedb` flag
 ```bash
 # if installed globally
 inso --src ...
+
 # using the package bin
 ./packages/insomnia-inso/bin/inso --src ...
+
 # using a binary
 ./packages/insomnia-inso/binaries/insomnia-inso --src ...
 ```
