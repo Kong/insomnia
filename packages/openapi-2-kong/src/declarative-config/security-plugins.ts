@@ -111,7 +111,10 @@ export function generateSecurityPlugin(
   const kongSecurity = (scheme as Record<string, any>)[`x-kong-security-${plugin.name}`] ?? {};
 
   if (kongSecurity.config) {
-    plugin.config = kongSecurity.config;
+    plugin.config = {
+      ...plugin.config,
+      ...kongSecurity.config,
+    };
   }
 
   // Add global tags
