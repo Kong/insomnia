@@ -10,7 +10,7 @@ export const prefix = 'uts';
 export const canDuplicate = true;
 
 export const canSync = true;
-interface BaseUnitTestSuite {
+export interface BaseUnitTestSuite {
   name: string;
 }
 

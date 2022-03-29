@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useCallback } from 'react';
 
-import { kebabCase } from '../../../../../common/misc';
+import { toKebabCase } from '../../../../../common/misc';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { showModal } from '../../../modals';
@@ -46,7 +46,7 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
     });
   };
 
-  const id = kebabCase(label);
+  const id = toKebabCase(label);
 
   return (
     <AuthRow labelFor={id} label={label} help={help}>

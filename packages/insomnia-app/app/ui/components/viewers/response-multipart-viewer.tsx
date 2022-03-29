@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { format } from 'date-fns';
 import { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
-import moment from 'moment';
 import multiparty from 'multiparty';
 import path from 'path';
 import React, { PureComponent } from 'react';
@@ -133,7 +133,7 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
     const extension = mimeExtension(contentType) || '.txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
     const dir = lastDir || window.app.getPath('desktop');
-    const date = moment().format('YYYY-MM-DD');
+    const date = format(Date.now(), 'yyyy-MM-dd');
     const filename = part.filename || `${part.name}_${date}`;
     const options: SaveDialogOptions = {
       title: 'Save as File',

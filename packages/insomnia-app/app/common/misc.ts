@@ -1,5 +1,6 @@
 import fuzzysort from 'fuzzysort';
 import { join as pathJoin } from 'path';
+import { head, tail } from 'ramda';
 import { v4 as uuidv4 } from 'uuid';
 import zlib from 'zlib';
 
@@ -443,7 +444,19 @@ export function isNotNullOrUndefined<ValueType>(
   return true;
 }
 
-export const kebabCase = (value: string) => value.replace(/ /g, '-');
+export const toKebabCase = (value: string) => value.replace(/ /g, '-');
+
+export const capitalize = (value: string) => (
+  `${head(value).toUpperCase()}${tail(value).toLowerCase()}`
+);
+
+export const toTitleCase = (value: string) => (
+  value
+    .toLowerCase()
+    .split(' ')
+    .map(capitalize)
+    .join(' ')
+);
 
 // Because node-libcurl changed some names that we used in the timeline
 export const LIBCURL_DEBUG_MIGRATION_MAP = {

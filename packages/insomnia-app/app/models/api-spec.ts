@@ -12,7 +12,7 @@ export const canDuplicate = true;
 
 export const canSync = false;
 
-interface BaseApiSpec {
+export interface BaseApiSpec {
   fileName: string;
   contentType: 'json' | 'yaml';
   contents: string;
