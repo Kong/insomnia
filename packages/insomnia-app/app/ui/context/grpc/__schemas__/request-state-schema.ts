@@ -1,4 +1,5 @@
 import type { Schema } from '@develohpanda/fluent-builder';
+
 import type { GrpcRequestState } from '../grpc-reducer';
 
 export const requestStateSchema: Schema<GrpcRequestState> = {

@@ -54,7 +54,7 @@ module.exports.templateTags = [
     name: 'timestamp',
     displayName: 'Timestamp',
     description: 'generate timestamp in milliseconds',
-    run(context) {
+    run() {
       return Date.now();
     },
   },

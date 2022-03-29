@@ -1,0 +1,60 @@
+name: Release Recurring
+# This workflow bakes executables of the major platforms for Testing purposes
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+env:
+  PR_NUMBER: ${{ github.event.number }}
+jobs:
+  build-and-upload-artifacts:
+    # Skip jobs for release PRs
+    if: "!startsWith(github.head_ref, 'release/')"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+         - os: "macos-latest"
+           build-targets: "zip"
+         - os: "windows-latest"
+           build-targets: "portable"
+         - os: "ubuntu-latest"
+           build-targets: "tar.gz"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      - name: Bump version
+        shell: bash
+        run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
+
+      - name: Package
+        shell: bash
+        run: BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
+          path: |
+            packages/insomnia-app/dist/*.exe
+            packages/insomnia-app/dist/*.tar.gz
+            packages/insomnia-app/dist/*.zip

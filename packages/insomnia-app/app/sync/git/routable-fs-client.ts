@@ -1,5 +1,5 @@
-import path from 'path';
 import * as git from 'isomorphic-git';
+import path from 'path';
 
 /**
  * An isometric-git FS client that can route to various client depending on what the filePath is.

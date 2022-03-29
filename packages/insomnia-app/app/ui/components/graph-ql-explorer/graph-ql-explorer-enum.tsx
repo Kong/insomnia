@@ -1,16 +1,16 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { GraphQLEnumType, GraphQLEnumValue } from 'graphql';
+import React, { Fragment, PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import MarkdownPreview from '../markdown-preview';
-import type { GraphQLEnumValue } from 'graphql';
-import { GraphQLEnumType } from 'graphql';
+import { MarkdownPreview } from '../markdown-preview';
 
 interface Props {
   type: GraphQLEnumType;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerEnum extends PureComponent<Props> {
+export class GraphQLExplorerEnum extends PureComponent<Props> {
   renderDescription() {
     const { type } = this.props;
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
@@ -52,5 +52,3 @@ class GraphQLExplorerEnum extends PureComponent<Props> {
     );
   }
 }
-
-export default GraphQLExplorerEnum;

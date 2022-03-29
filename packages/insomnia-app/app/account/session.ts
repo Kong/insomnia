@@ -1,4 +1,5 @@
 import * as srp from 'srp-js';
+
 import * as crypt from './crypt';
 import * as fetch from './fetch';
 
@@ -111,7 +112,7 @@ export async function changePasswordWithToken(rawNewPassphrase, confirmationCode
   // Fetch some things
   const { saltEnc, encSymmetricKey } = await _whoami();
   const { saltKey, saltAuth } = await _getAuthSalts(newEmail);
-  // Generate some secrets for the user base'd on password
+  // Generate some secrets for the user based on password
   const newSecret = await crypt.deriveKey(newPassphrase, newEmail, saltEnc);
   const newAuthSecret = await crypt.deriveKey(newPassphrase, newEmail, saltKey);
   const newVerifier = srp
@@ -257,7 +258,7 @@ function _getAuthSalts(email) {
   );
 }
 
-function _getSessionData() {
+const _getSessionData = () => {
   const sessionId = getCurrentSessionId();
 
   if (!sessionId || !window) {
@@ -269,7 +270,7 @@ function _getSessionData() {
     return null;
   }
   return JSON.parse(dataStr);
-}
+};
 
 function _unsetSessionData() {
   const sessionId = getCurrentSessionId();

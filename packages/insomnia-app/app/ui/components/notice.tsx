@@ -1,7 +1,8 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 const DISMISSED_VALUE = 'dismissed';
 
 interface Props {
@@ -17,7 +18,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Notice extends PureComponent<Props, State> {
+export class Notice extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     const { dismissKey } = props;
@@ -66,5 +67,3 @@ class Notice extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Notice;

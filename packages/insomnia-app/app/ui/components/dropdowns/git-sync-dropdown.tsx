@@ -1,32 +1,35 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
-import type { Workspace } from '../../../models/workspace';
-import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
-import { showAlert, showError, showModal } from '../modals';
-import GitStagingModal from '../modals/git-staging-modal';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
-import type { GitRepository } from '../../../models/git-repository';
-import GitLogModal from '../modals/git-log-modal';
-import GitBranchesModal from '../modals/git-branches-modal';
-import HelpTooltip from '../help-tooltip';
-import Link from '../base/link';
-import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
+import * as models from '../../../models';
+import type { GitRepository } from '../../../models/git-repository';
+import type { Workspace } from '../../../models/workspace';
+import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import * as gitActions from '../../redux/modules/git';
+import { initialize as initializeEntities } from '../../redux/modules/entities';
 import type {
   SetupGitRepositoryCallback,
   UpdateGitRepositoryCallback,
 } from '../../redux/modules/git';
-import { initialize as initializeEntities } from '../../redux/modules/entities';
+import * as gitActions from '../../redux/modules/git';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Link } from '../base/link';
+import { HelpTooltip } from '../help-tooltip';
+import { showAlert, showError, showModal } from '../modals';
+import { GitBranchesModal } from '../modals/git-branches-modal';
+import { GitLogModal } from '../modals/git-log-modal';
+import { GitStagingModal } from '../modals/git-staging-modal';
 
 interface Props {
   handleInitializeEntities: typeof initializeEntities;
@@ -60,7 +63,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     log: [],
     branch: '',
     branches: [],
-  }
+  };
 
   _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
@@ -108,7 +111,6 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleOpen() {
-    trackEvent('Git Dropdown', 'Open');
     await this._refreshState();
   }
 
@@ -127,11 +129,13 @@ class GitSyncDropdown extends PureComponent<Props, State> {
 
     try {
       await vcs.pull(gitRepository.credentials);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull'));
     } catch (err) {
       showError({
         title: 'Error Pulling Repository',
         error: err,
       });
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', err.message));
     }
 
     await db.flushChanges(bufferId);
@@ -183,9 +187,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
 
     try {
       await vcs.push(gitRepository.credentials, force);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push'));
     } catch (err) {
       if (err.code === 'PushRejectedError') {
-        this._dropdown && this._dropdown.hide();
+        this._dropdown?.hide();
         showAlert({
           title: 'Push Rejected',
           message: 'Do you want to force push?',
@@ -200,6 +205,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
           title: 'Error Pushing Repository',
           error: err,
         });
+        trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message));
       }
     }
 
@@ -305,7 +311,8 @@ class GitSyncDropdown extends PureComponent<Props, State> {
         className={classnames({
           bold: isCurrentBranch,
         })}
-        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}
+      >
         {icon}
         {branch}
       </DropdownItem>

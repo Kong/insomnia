@@ -10,7 +10,7 @@ export interface Insomnia2Data extends Omit<Insomnia1Data, '__export_format'> {
   resources: ImportRequest[];
 }
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   let data: Insomnia2Data | null = null;
 
   try {

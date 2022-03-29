@@ -1,24 +1,16 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import EnvironmentEditor from '../editors/environment-editor';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
 import { RequestGroup } from '../../../models/request-group';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  render: HandleRender;
-  getRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  lineWrapping: boolean;
 }
 
 interface State {
@@ -27,11 +19,11 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentEditModal extends PureComponent<Props, State> {
+export class EnvironmentEditModal extends PureComponent<Props, State> {
   state: State = {
     requestGroup: null,
     isValid: true,
-  }
+  };
 
   modal: Modal | null = null;
   _envEditor: EnvironmentEditor | null = null;
@@ -88,14 +80,6 @@ class EnvironmentEditModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      editorKeyMap,
-      editorFontSize,
-      editorIndentSize,
-      lineWrapping,
-      render,
-      getRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
       ...extraProps
     } = this.props;
     const { requestGroup, isValid } = this.state;
@@ -108,18 +92,10 @@ class EnvironmentEditModal extends PureComponent<Props, State> {
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll className="pad-top-sm">
           <EnvironmentEditor
-            editorFontSize={editorFontSize}
-            editorIndentSize={editorIndentSize}
-            editorKeyMap={editorKeyMap}
             ref={this._setEditorRef}
             key={requestGroup ? requestGroup._id : 'n/a'}
-            lineWrapping={lineWrapping}
             environmentInfo={environmentInfo}
             didChange={this._didChange}
-            render={render}
-            getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
           />
         </ModalBody>
         <ModalFooter>
@@ -134,5 +110,3 @@ class EnvironmentEditModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default EnvironmentEditModal;

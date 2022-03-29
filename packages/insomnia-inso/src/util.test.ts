@@ -1,8 +1,8 @@
-import { exit, logErrorExit1, getDefaultAppName, getVersion, isDevelopment, noop } from './util';
 import * as packageJson from '../package.json';
+import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { InsoError } from './errors';
+import { exit, getDefaultAppName, getVersion, logErrorExit1, noop } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -15,13 +15,13 @@ describe('exit()', () => {
 
   it('should exit 0 if successful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    await exit(new Promise((resolve) => resolve(true)));
+    await exit(new Promise(resolve => resolve(true)));
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
   it('should exit 1 if unsuccessful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    await exit(new Promise((resolve) => resolve(false)));
+    await exit(new Promise(resolve => resolve(false)));
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
@@ -126,27 +126,11 @@ describe('getVersion()', () => {
     expect(getVersion()).toBe(packageJson.version);
   });
 
-  it('should return dev if running in development', () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    expect(getVersion()).toBe('dev');
-    process.env.NODE_ENV = oldNodeEnv;
-  });
-});
-
-describe('isDevelopment()', () => {
-  it('should return true if NODE_ENV is development', () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    expect(isDevelopment()).toBe(true);
-    process.env.NODE_ENV = oldNodeEnv;
-  });
-
-  it('should return false if NODE_ENV is not development', () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
-    expect(isDevelopment()).toBe(false);
-    process.env.NODE_ENV = oldNodeEnv;
+  it('should get version from env variable', () => {
+    const oldVersion = process.env.VERSION;
+    process.env.VERSION = '2.3.3-canary.1234';
+    expect(getVersion()).toBe('2.3.3-canary.1234');
+    process.env.VERSION = oldVersion;
   });
 });
 

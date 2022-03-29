@@ -1,6 +1,7 @@
-import React, { PureComponent } from 'react';
-import Papa from 'papaparse';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import Papa from 'papaparse';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props {
@@ -14,10 +15,10 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseCSVViewer extends PureComponent<Props, State> {
+export class ResponseCSVViewer extends PureComponent<Props, State> {
   state: State = {
     result: null,
-  }
+  };
 
   currentHash = '';
 
@@ -70,5 +71,3 @@ class ResponseCSVViewer extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponseCSVViewer;

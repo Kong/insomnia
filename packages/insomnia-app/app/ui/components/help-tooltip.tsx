@@ -1,8 +1,9 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import Tooltip from './tooltip';
-import { AUTOBIND_CFG } from '../../common/constants';
+import React, { PureComponent, ReactNode } from 'react';
 import { CSSProperties } from 'styled-components';
+
+import { AUTOBIND_CFG } from '../../common/constants';
+import { Tooltip } from './tooltip';
 
 interface Props {
   children: ReactNode;
@@ -13,7 +14,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class HelpTooltip extends PureComponent<Props> {
+export class HelpTooltip extends PureComponent<Props> {
   render() {
     const { children, className, style, info } = this.props;
     return (
@@ -29,5 +30,3 @@ class HelpTooltip extends PureComponent<Props> {
     );
   }
 }
-
-export default HelpTooltip;

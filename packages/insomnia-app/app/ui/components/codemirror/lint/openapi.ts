@@ -1,5 +1,6 @@
 import CodeMirror from 'codemirror';
-import { isLintError, initializeSpectral } from '../../../../common/spectral';
+
+import { initializeSpectral, isLintError } from '../../../../common/spectral';
 
 const spectral = initializeSpectral();
 

@@ -1,13 +1,15 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { differenceInMinutes, formatDistanceToNowStrict } from 'date-fns';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../common/constants';
-import moment from 'moment';
+import { toTitleCase } from '../../common/misc';
 
 interface Props {
   timestamp: number | Date | string;
   intervalSeconds?: number;
   className?: string;
-  capitalize?: boolean;
+  titleCase?: boolean;
 }
 
 interface State {
@@ -15,32 +17,29 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class TimeFromNow extends PureComponent<Props, State> {
+export class TimeFromNow extends PureComponent<Props, State> {
   _interval: NodeJS.Timeout | null = null;
 
   state: State = {
     text: '',
-  }
+  };
 
   _update() {
-    const { timestamp, capitalize } = this.props;
-    let text = moment(timestamp).fromNow();
+    const { timestamp, titleCase } = this.props;
+    const date = new Date(timestamp);
 
-    // Shorten default case
-    if (text === 'a few seconds ago') {
+    let text = formatDistanceToNowStrict(date, { addSuffix: true });
+
+    const lessThanOneMinuteAgo = differenceInMinutes(Date.now(), date) < 1;
+    if (lessThanOneMinuteAgo) {
       text = 'just now';
     }
 
-    // Capitalize if needed
-    if (capitalize) {
-      text = text.replace(/\w\S*/g, function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      });
+    if (titleCase) {
+      text = toTitleCase(text);
     }
 
-    this.setState({
-      text,
-    });
+    this.setState({ text });
   }
 
   componentDidMount() {
@@ -60,11 +59,9 @@ class TimeFromNow extends PureComponent<Props, State> {
     const { className, timestamp } = this.props;
     const { text } = this.state;
     return (
-      <span title={moment(timestamp).toString()} className={className}>
+      <span title={new Date(timestamp).toLocaleString()} className={className}>
         {text}
       </span>
     );
   }
 }
-
-export default TimeFromNow;

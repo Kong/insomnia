@@ -1,15 +1,16 @@
 import CodeMirror, { Token } from 'codemirror';
+
 import * as misc from '../../../../common/misc';
-import NunjucksVariableModal from '../../modals/nunjucks-modal';
-import { showModal } from '../../modals/index';
-import { tokenizeTag } from '../../../../templating/utils';
-import { getTagDefinitions } from '../../../../templating/index';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { getTagDefinitions } from '../../../../templating/index';
+import { tokenizeTag } from '../../../../templating/utils';
+import { showModal } from '../../modals/index';
+import { NunjucksModal } from '../../modals/nunjucks-modal';
 
 CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
-  isVariableUncovered = false,
+  showVariableSourceAndValue = false,
 ) {
   if (!handleRender) {
     console.warn("enableNunjucksTags wasn't passed a render function");
@@ -20,7 +21,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
     this,
     handleRender,
     handleGetRenderContext,
-    isVariableUncovered,
+    showVariableSourceAndValue,
   );
 
   const debouncedRefreshFn = misc.debounce(refreshFn);
@@ -43,7 +44,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
+async function _highlightNunjucksTags(render, renderContext, showVariableSourceAndValue: boolean) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = text => render(text, renderCacheKey);
@@ -56,7 +57,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({ type }) => type && type.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(({ type }) => type?.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
     const newTokens: Token[] = [];
@@ -139,7 +140,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
           mark,
           tok.string,
           renderContext,
-          isVariableUncovered,
+          showVariableSourceAndValue,
         );
       })();
 
@@ -150,13 +151,13 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
           mark,
           tok.string,
           renderContext,
-          isVariableUncovered,
+          showVariableSourceAndValue,
         );
       });
       activeMarks.push(mark);
       el.addEventListener('click', async () => {
         // Define the dialog HTML
-        showModal(NunjucksVariableModal, {
+        showModal(NunjucksModal, {
           template: mark.__template,
           onDone: template => {
             const pos = mark.find();
@@ -254,7 +255,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
   }
 }
 
-async function _updateElementText(render, mark, text, renderContext, isVariableUncovered) {
+async function _updateElementText(render, mark, text, renderContext, showVariableSourceAndValue: boolean) {
   const el = mark.replacedWith;
   let innerHTML = '';
   let title = '';
@@ -308,8 +309,11 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
       // Only prefix the title with context, if context is found
-      title = contextForKey ? `{${contextForKey}}: ${title}` : title;
-      innerHTML = isVariableUncovered ? title : cleanedStr;
+      const valueAndContext = contextForKey ? `{${contextForKey}}: ${title}` : title;
+
+      // Swap what's shown in the tooltip vs the innerHTML
+      innerHTML = showVariableSourceAndValue ? valueAndContext : cleanedStr;
+      title = showVariableSourceAndValue ? cleanedStr : valueAndContext;
     }
 
     dataError = 'off';

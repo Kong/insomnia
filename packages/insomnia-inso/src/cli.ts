@@ -1,17 +1,24 @@
-import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
-import { getVersion, logErrorExit1, exit } from './util';
-import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
-import { lintSpecification } from './commands/lint-specification';
-import { exportSpecification } from './commands/export-specification';
-import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
-import { logger, configureLogger } from './logger';
-import type { GenerateConfigOptions } from './commands/generate-config';
-import type { RunTestsOptions } from './commands/run-tests';
-import type { LintSpecificationOptions } from './commands/lint-specification';
+import { parseArgsStringToArgv } from 'string-argv';
+
 import type { ExportSpecificationOptions } from './commands/export-specification';
+import { exportSpecification } from './commands/export-specification';
+import {
+  ConversionOption,
+  conversionOptions,
+  FormatOption,
+  formatOptions,
+  generateConfig,
+  GenerateConfigOptions,
+} from './commands/generate-config';
+import type { LintSpecificationOptions } from './commands/lint-specification';
+import { lintSpecification } from './commands/lint-specification';
+import type { RunTestsOptions } from './commands/run-tests';
+import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions } from './get-options';
+import { configureLogger, logger } from './logger';
 import { UNKNOWN_OBJ } from './types';
+import { exit, getVersion, logErrorExit1 } from './util';
 
 const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
   configureLogger(options.verbose, options.ci);
@@ -19,12 +26,13 @@ const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
   return options;
 };
 
-type CreateCommand = (command: string) => commander.Command
+type CreateCommand = (command: string) => commander.Command;
 
 const makeGenerateCommand = (commandCreator: CreateCommand) => {
   // inso generate
   const command = commandCreator('generate').description('Code generation utilities');
   const defaultType: ConversionOption = 'declarative';
+  const defaultFormat: FormatOption = 'yaml';
 
   // inso generate config -t kubernetes config.yaml
   command
@@ -34,11 +42,16 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
       '-t, --type <value>',
       `type of configuration to generate, options are [${conversionOptions.join(', ')}] (default: ${defaultType})`,
     )
+    .option(
+      '-f, --format <value>',
+      `format of configuration to generate, options are [${formatOptions.join(', ')}] (default: ${defaultFormat})`,
+    )
     .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
     .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) => {
       let options = getOptions<GenerateConfigOptions>(cmd, {
         type: defaultType,
+        format: defaultFormat,
       });
       options = prepareCommand(options);
       return exit(generateConfig(identifier, options));
@@ -63,6 +76,7 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action((identifier, cmd) => {
       let options = getOptions<RunTestsOptions>(cmd, {
         reporter: defaultReporter,
@@ -128,12 +142,12 @@ const addScriptCommand = (originalCommand: commander.Command) => {
 
       if (!scriptTask) {
         logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
-        return exit(new Promise((resolve) => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       if (!scriptTask.startsWith('inso')) {
         logger.fatal('Tasks in a script should start with `inso`.');
-        return exit(new Promise((resolve) => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       // Collect args
@@ -172,9 +186,10 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   // Global options
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('-a, --appDataDir <dir>', 'set the app data directory')
+    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
     .option('--config <path>', 'path to configuration file')
     .option('--verbose', 'show additional logs while running the command')
+    .option('--src <file|dir>', 'set the app data source')
     .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');
 

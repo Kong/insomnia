@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
-import ModalFooter from '../base/modal-footer';
-import Tooltip from '../tooltip';
-import TimeFromNow from '../time-from-now';
+import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { TimeFromNow } from '../time-from-now';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   vcs: GitVCS;
@@ -19,13 +20,13 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitLogModal extends PureComponent<Props, State> {
+export class GitLogModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
     logs: [],
     branch: '??',
-  }
+  };
 
   _setModalRef(ref: Modal) {
     this.modal = ref;
@@ -39,11 +40,11 @@ class GitLogModal extends PureComponent<Props, State> {
       logs,
       branch,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderLogEntryRow(entry: GitLogEntry) {
@@ -88,7 +89,7 @@ class GitLogModal extends PureComponent<Props, State> {
           </table>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             <i className="fa fa-code-fork" /> {branch}
           </div>
           <div>
@@ -101,5 +102,3 @@ class GitLogModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GitLogModal;

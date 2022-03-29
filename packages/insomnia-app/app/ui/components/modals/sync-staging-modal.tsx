@@ -1,23 +1,26 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
-import * as models from '../../../models';
-import Tooltip from '../tooltip';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
-import { describeChanges } from '../../../sync/vcs/util';
-import { strings } from '../../../common/strings';
-import { BaseModel } from '../../../models';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
-interface Props {
-  workspace: Workspace;
-  syncItems: StatusCandidate[];
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import * as models from '../../../models';
+import { BaseModel } from '../../../models';
+import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
+import { describeChanges } from '../../../sync/vcs/util';
+import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectSyncItems } from '../../redux/selectors';
+import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { Tooltip } from '../tooltip';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
 }
 
@@ -50,7 +53,7 @@ const _initialState: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncStagingModal extends PureComponent<Props, State> {
+export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _onSnapshot: (() => void) | null = null;
   _handlePush: (() => Promise<void>) | null = null;
@@ -118,7 +121,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     const success = await this._handleTakeSnapshot();
 
     if (success) {
-      this._handlePush && this._handlePush();
+      this._handlePush?.();
     }
   }
 
@@ -138,7 +141,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
       return false;
     }
 
-    this._onSnapshot && this._onSnapshot();
+    this._onSnapshot?.();
     await this.refreshMainAttributes({
       message: '',
       error: '',
@@ -189,12 +192,12 @@ class SyncStagingModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { onSnapshot?: () => any; handlePush: () => Promise<void> }) {
     const { vcs, syncItems } = this.props;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // @ts-expect-error -- TSCONVERSION
     this._onSnapshot = options.onSnapshot;
     this._handlePush = options.handlePush;
@@ -216,7 +219,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
     const stage = await vcs.stage(status.stage, toStage);
     await this.refreshMainAttributes({}, stage);
-    this.textarea && this.textarea.focus();
+    this.textarea?.focus();
   }
 
   static renderOperation(entry: StageEntry, type: string, changes: string[]) {
@@ -381,7 +384,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
           {this.renderTable(addedKeys, 'Unversioned Objects')}
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             <i className="fa fa-code-fork" /> {branch}
           </div>
           <div>
@@ -398,4 +401,13 @@ class SyncStagingModal extends PureComponent<Props, State> {
   }
 }
 
-export default SyncStagingModal;
+const mapStateToProps = (state: RootState) => ({
+  syncItems: selectSyncItems(state),
+});
+
+export const SyncStagingModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncStagingModal);

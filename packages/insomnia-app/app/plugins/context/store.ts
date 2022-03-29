@@ -1,5 +1,5 @@
-import type { Plugin } from '../index';
 import * as models from '../../models';
+import type { Plugin } from '../index';
 
 export interface PluginStore {
   hasItem(arg0: string): Promise<boolean>;

@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
 
@@ -9,10 +10,12 @@ interface Props {
   onBlur?: Function;
   textarea?: boolean;
   delay?: number;
+  placeholder?: string;
+  initialValue?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DebouncedInput extends PureComponent<Props> {
+export class DebouncedInput extends PureComponent<Props> {
   _hasFocus = false;
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
   _handleValueChange: Props['onChange'] | null = null;
@@ -27,18 +30,24 @@ class DebouncedInput extends PureComponent<Props> {
     }
   }
 
+  componentDidMount() {
+    if (this._input && this.props.initialValue) {
+      this._input.value = this.props.initialValue;
+    }
+  }
+
   _handleChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._handleValueChange?.(e.target.value);
   }
 
   _handleFocus(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = true;
-    this.props.onFocus && this.props.onFocus(e);
+    this.props.onFocus?.(e);
   }
 
   _handleBlur(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = false;
-    this.props.onBlur && this.props.onBlur(e);
+    this.props.onBlur?.(e);
   }
 
   _setRef(n: HTMLTextAreaElement | HTMLInputElement) {
@@ -112,6 +121,12 @@ class DebouncedInput extends PureComponent<Props> {
     }
   }
 
+  setValue(value: string) {
+    if (this._input) {
+      this._input.value = value;
+    }
+  }
+
   render() {
     const {
       onChange,
@@ -149,5 +164,3 @@ class DebouncedInput extends PureComponent<Props> {
     }
   }
 }
-
-export default DebouncedInput;

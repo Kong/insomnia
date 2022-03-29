@@ -1,23 +1,55 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
-import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
+
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
-export const ensureKeyIsValid = (key: string): string | null => {
+
+export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null => {
   if (key.match(INVALID_NEDB_KEY_REGEX)) {
     return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 
-  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME) {
-    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`; // verbiage WIP
+  if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME && isRoot) {
+    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`;
   }
 
   return null;
 };
+
+/**
+ * Recursively check nested keys in and immediately return when an invalid key found
+ */
+export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string | null {
+  for (const key in obj) {
+    let result: string | null = null;
+
+    // Check current key
+    result = ensureKeyIsValid(key, isRoot);
+
+    // Exit if necessary
+    if (result) {
+      return result;
+    }
+
+    // Check nested keys
+    if (typeof obj[key] === 'object') {
+      result = checkNestedKeys(obj[key], false);
+    }
+
+    // Exit if necessary
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
+}
 
 export interface EnvironmentInfo {
   object: Record<string, any>;
@@ -27,14 +59,6 @@ export interface EnvironmentInfo {
 interface Props {
   environmentInfo: EnvironmentInfo;
   didChange: (...args: any[]) => any;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  render: (...args: any[]) => any;
-  getRenderContext: (...args: any[]) => any;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  lineWrapping: boolean;
 }
 
 // There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
@@ -44,12 +68,12 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentEditor extends PureComponent<Props, State> {
-  _editor: CodeEditor | null = null;
+export class EnvironmentEditor extends PureComponent<Props, State> {
+  _editor: UnconnectedCodeEditor | null = null;
 
   state: State = {
     error: null,
-  }
+  };
 
   _handleChange() {
     let error: string | null = null;
@@ -63,14 +87,11 @@ class EnvironmentEditor extends PureComponent<Props, State> {
     }
 
     // Check for invalid key names
-    // TODO: these only check root properties, not nested properties
     if (value && value.object) {
-      for (const key of Object.keys(value.object)) {
-        error = ensureKeyIsValid(key);
-
-        if (error) {
-          break;
-        }
+      // Check root and nested properties
+      const err = checkNestedKeys(value.object);
+      if (err) {
+        error = err;
       }
     }
 
@@ -89,7 +110,7 @@ class EnvironmentEditor extends PureComponent<Props, State> {
     }
   }
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this._editor = n;
   }
 
@@ -116,14 +137,6 @@ class EnvironmentEditor extends PureComponent<Props, State> {
   render() {
     const {
       environmentInfo,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      render,
-      getRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-      lineWrapping,
       ...props
     } = this.props;
     const { error } = this.state;
@@ -137,16 +150,9 @@ class EnvironmentEditor extends PureComponent<Props, State> {
         <CodeEditor
           ref={this._setEditorRef}
           autoPrettify
-          fontSize={editorFontSize}
-          indentSize={editorIndentSize}
-          lineWrapping={lineWrapping}
-          keyMap={editorKeyMap}
+          enableNunjucks
           onChange={this._handleChange}
           defaultValue={defaultValue}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
-          render={render}
-          getRenderContext={getRenderContext}
           mode="application/json"
           {...props}
         />
@@ -155,5 +161,3 @@ class EnvironmentEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default EnvironmentEditor;

@@ -1,22 +1,23 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import { database as db } from '../../../common/database';
-import type { StatusCandidate } from '../../../sync/types';
-import PromptButton from '../base/prompt-button';
-import SyncPullButton from '../sync-pull-button';
-import { Space } from '../../../models/space';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
-interface Props {
-  workspace: Workspace;
-  space?: Space;
-  syncItems: StatusCandidate[];
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { interceptAccessError } from '../../../sync/vcs/util';
+import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectSyncItems } from '../../redux/selectors';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { PromptButton } from '../base/prompt-button';
+import { SyncPullButton } from '../sync-pull-button';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
 }
 
@@ -29,7 +30,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncBranchesModal extends PureComponent<Props, State> {
+export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -38,7 +39,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     branches: [],
     remoteBranches: [],
     currentBranch: '',
-  }
+  };
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -148,9 +149,13 @@ class SyncBranchesModal extends PureComponent<Props, State> {
         error: '',
         ...newState,
       });
-      const remoteBranches = (await vcs.getRemoteBranches())
-        .filter(b => !branches.includes(b))
-        .sort();
+
+      const remoteBranches = await interceptAccessError({
+        callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
+        action: 'get',
+        resourceName: 'remote',
+        resourceType: 'branches',
+      });
       this.setState({
         remoteBranches,
       });
@@ -163,7 +168,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { onHide: (...args: any[]) => any }) {
@@ -175,7 +180,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { vcs, space } = this.props;
+    const { vcs } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -225,7 +230,8 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                       <span
                         className={classnames({
                           bold: name === currentBranch,
-                        })}>
+                        })}
+                      >
                         {name}
                       </span>
                       {name === currentBranch ? (
@@ -238,20 +244,23 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Merged"
                         disabled={name === currentBranch}
-                        onClick={() => this._handleMerge(name)}>
+                        onClick={() => this._handleMerge(name)}
+                      >
                         Merge
                       </PromptButton>
                       <PromptButton
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Deleted"
                         disabled={name === currentBranch || name === 'master'}
-                        onClick={() => this._handleDelete(name)}>
+                        onClick={() => this._handleDelete(name)}
+                      >
                         Delete
                       </PromptButton>
                       <button
                         className="btn btn--micro btn--outlined space-left"
                         disabled={name === currentBranch}
-                        onClick={() => this._handleCheckout(name)}>
+                        onClick={() => this._handleCheckout(name)}
+                      >
                         Checkout
                       </button>
                     </td>
@@ -283,17 +292,18 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
                             disabled={name === currentBranch}
-                            onClick={() => this._handleRemoteDelete(name)}>
+                            onClick={() => this._handleRemoteDelete(name)}
+                          >
                             Delete
                           </PromptButton>
                         )}
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
-                          space={space}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
-                          vcs={vcs}>
+                          vcs={vcs}
+                        >
                           Fetch
                         </SyncPullButton>
                       </td>
@@ -309,4 +319,13 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 }
 
-export default SyncBranchesModal;
+const mapStateToProps = (state: RootState) => ({
+  syncItems: selectSyncItems(state),
+});
+
+export const SyncBranchesModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncBranchesModal);

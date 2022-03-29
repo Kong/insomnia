@@ -46,7 +46,8 @@ export const UnitTestRequestSelector: FunctionComponent<UnitTestRequestSelectorP
         name="request"
         id="request"
         onChange={onSetActiveRequest}
-        defaultValue={selectedRequestId || '__NULL__'}>
+        defaultValue={selectedRequestId || '__NULL__'}
+      >
         <option value="__NULL__">
           {selectableRequests.length ? '-- Select Request --' : '-- No Requests --'}
         </option>

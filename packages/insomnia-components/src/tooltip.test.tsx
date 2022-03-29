@@ -1,5 +1,6 @@
+import { ByRoleMatcher, ByRoleOptions, fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import { fireEvent, render, ByRoleOptions, ByRoleMatcher } from '@testing-library/react';
+
 import { Tooltip } from './tooltip';
 
 const pause = (time: number) => new Promise(resolve => setTimeout(resolve, time));

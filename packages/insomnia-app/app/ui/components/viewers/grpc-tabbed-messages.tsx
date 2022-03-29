@@ -1,10 +1,10 @@
+import classnames from 'classnames';
 import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import classnames from 'classnames';
-import GRPCEditor from '../editors/grpc-editor';
-import Button from '../base/button';
+
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { Settings } from '../../../models/settings';
+import { Button } from '../base/button';
+import { GRPCEditor } from '../editors/grpc-editor';
 
 interface Message {
   id: string;
@@ -13,7 +13,6 @@ interface Message {
 }
 
 interface Props {
-  settings: Settings;
   messages?: Message[];
   tabNamePrefix: 'Stream' | 'Response';
   bodyText?: string;
@@ -23,12 +22,10 @@ interface Props {
   handleCommit?: () => void;
   showActions?: boolean;
   handleRender?: HandleRender;
-  isVariableUncovered?: boolean;
   handleGetRenderContext?: HandleGetRenderContext;
 }
 
-const GrpcTabbedMessages: FunctionComponent<Props> = ({
-  settings,
+export const GrpcTabbedMessages: FunctionComponent<Props> = ({
   showActions,
   bodyText,
   messages,
@@ -37,9 +34,6 @@ const GrpcTabbedMessages: FunctionComponent<Props> = ({
   handleCommit,
   handleStream,
   uniquenessKey,
-  handleRender,
-  isVariableUncovered,
-  handleGetRenderContext,
 }) => {
   const shouldShowBody = !!handleBodyChange;
   const orderedMessages = messages?.sort((a, b) => a.created - b.created) || [];
@@ -67,14 +61,16 @@ const GrpcTabbedMessages: FunctionComponent<Props> = ({
             {handleStream && (
               <Button
                 className="btn btn--compact btn--clicky margin-sm bg-default"
-                onClick={handleStream}>
+                onClick={handleStream}
+              >
                 Stream <i className="fa fa-plus" />
               </Button>
             )}
             {handleCommit && (
               <Button
                 className="btn btn--compact btn--clicky margin-sm bg-surprise"
-                onClick={handleCommit}>
+                onClick={handleCommit}
+              >
                 Commit <i className="fa fa-arrow-right" />
               </Button>
             )}
@@ -85,21 +81,15 @@ const GrpcTabbedMessages: FunctionComponent<Props> = ({
         <TabPanel className="react-tabs__tab-panel editor-wrapper">
           <GRPCEditor
             content={bodyText}
-            settings={settings}
             handleChange={handleBodyChange}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            isVariableUncovered={isVariableUncovered}
           />
         </TabPanel>
       )}
       {orderedMessages.map(m => (
         <TabPanel key={m.id} className="react-tabs__tab-panel editor-wrapper">
-          <GRPCEditor content={m.text} settings={settings} readOnly />
+          <GRPCEditor content={m.text} readOnly />
         </TabPanel>
       ))}
     </Tabs>
   );
 };
-
-export default GrpcTabbedMessages;

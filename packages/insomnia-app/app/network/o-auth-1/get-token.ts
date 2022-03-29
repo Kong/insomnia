@@ -4,15 +4,16 @@
  */
 import crypto from 'crypto';
 import OAuth1 from 'oauth-1.0a';
+
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import type { RequestAuthentication, RequestBody } from '../../models/request';
+import type { OAuth1SignatureMethod } from './constants';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,
-  SIGNATURE_METHOD_RSA_SHA1,
-  SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_HMAC_SHA256,
+  SIGNATURE_METHOD_PLAINTEXT,
+  SIGNATURE_METHOD_RSA_SHA1,
 } from './constants';
-import type { OAuth1SignatureMethod } from './constants';
-import type { RequestAuthentication, RequestBody } from '../../models/request';
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {

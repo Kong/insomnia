@@ -1,27 +1,26 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { ApiSpec } from '../../../models/api-spec';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import CodeEditor from '../codemirror/code-editor';
-import type { Settings } from '../../../models/settings';
-import Notice from '../notice';
-import CopyButton from '../base/copy-button';
-import ModalFooter from '../base/modal-footer';
+
+import { parseApiSpec } from '../../../common/api-specs';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import type { ApiSpec } from '../../../models/api-spec';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
-import { parseApiSpec } from '../../../common/api-specs';
+import { CopyButton } from '../base/copy-button';
+import { Link } from '../base/link';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { CodeEditor } from '../codemirror/code-editor';
+import { HelpTooltip } from '../help-tooltip';
+import { Notice } from '../notice';
 import { showModal } from './index';
-
-interface Props {
-  settings: Settings;
-}
 
 interface Config {
   label: string;
+  docsLink?: string;
   content: string;
   mimeType: string;
   error: string | null;
@@ -38,13 +37,13 @@ interface ShowOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GenerateConfigModal extends PureComponent<Props, State> {
+export class GenerateConfigModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
 
   state: State = {
     configs: [],
     activeTab: 0,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -55,21 +54,20 @@ class GenerateConfigModal extends PureComponent<Props, State> {
       content: '',
       mimeType: 'text/yaml',
       label: generatePlugin.label,
+      docsLink: generatePlugin.docsLink,
       error: null,
     };
-    let result;
-
     try {
-      // @ts-expect-error -- TSCONVERSION
-      result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
+      const result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
+      if (result.document) {
+        config.content = result.document;
+      }
+      config.error = result.error || null;
+      return config;
     } catch (err) {
       config.error = err.message;
       return config;
     }
-
-    config.content = result.document || null;
-    config.error = result.error || null;
-    return config;
   }
 
   async show({ activeTabLabel, apiSpec }: ShowOptions) {
@@ -84,17 +82,17 @@ class GenerateConfigModal extends PureComponent<Props, State> {
       configs,
       activeTab: foundIndex < 0 ? 0 : foundIndex,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   renderConfigTabPanel(config: Config) {
-    const { settings } = this.props;
-
+    const linkIcon = <i className="fa fa-external-link-square" />;
     if (config.error) {
       return (
         <TabPanel key={config.label}>
           <Notice color="error" className="margin-md">
             {config.error}
+            {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {linkIcon}</Link></> : null}
           </Notice>
         </TabPanel>
       );
@@ -105,14 +103,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
         <CodeEditor
           className="tall pad-top-sm"
           defaultValue={config.content}
-          fontSize={settings.editorFontSize}
-          indentSize={settings.editorIndentSize}
-          keyMap={settings.editorKeyMap}
-          lineWrapping={settings.editorLineWrapping}
           mode={config.mimeType}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          // @ts-expect-error -- TSCONVERSION appears to be genuine
-          onChange={this._handleChange}
           readOnly
         />
       </TabPanel>
@@ -126,9 +117,21 @@ class GenerateConfigModal extends PureComponent<Props, State> {
   }
 
   renderConfigTab(config: Config) {
+    const linkIcon = <i className="fa fa-external-link-square" />;
     return (
       <Tab key={config.label} tabIndex="-1">
-        <button>{config.label}</button>
+        <button>
+          {config.label}
+          {config.docsLink ?
+            <>
+              {' '}
+              <HelpTooltip>
+                To learn more about {config.label}
+                <br />
+                <Link href={config.docsLink}>Documentation {linkIcon}</Link>
+              </HelpTooltip>
+            </> : null}
+        </button>
       </Tab>
     );
   }
@@ -158,4 +161,3 @@ class GenerateConfigModal extends PureComponent<Props, State> {
 }
 
 export const showGenerateConfigModal = (opts: ShowOptions) => showModal(GenerateConfigModal, opts);
-export default GenerateConfigModal;

@@ -1,6 +1,6 @@
+import { logger } from '../../logger';
 import type { Database } from '../index';
 import { ensureSingleOrNone, matchIdIsh } from './util';
-import { logger } from '../../logger';
 
 export const loadWorkspace = (db: Database, identifier: string) => {
   logger.trace(

@@ -1,8 +1,9 @@
-import nunjucks from 'nunjucks';
+import nunjucks from 'nunjucks/browser/nunjucks';
+
+import type { TemplateTag } from '../plugins/index';
+import * as plugins from '../plugins/index';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
-import * as plugins from '../plugins/index';
-import type { TemplateTag } from '../plugins/index';
 
 export class RenderError extends Error {
   message: string;
@@ -43,6 +44,10 @@ export function render(
     renderMode?: string;
   } = {},
 ) {
+  const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
+  const hasNunjucksCustomTagSymbols = text.includes('{%') && text.includes('%}');
+  const hasNunjucksCommentSymbols = text.includes('{#') && text.includes('#}');
+  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) return text;
   const context = config.context || {};
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}
@@ -51,8 +56,11 @@ export function render(
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
   return new Promise<string | null>(async (resolve, reject) => {
+    // NOTE: this is added as a breadcrumb because renderString sometimes hangs
+    const id = setTimeout(() => console.log('Warning: nunjucks failed to respond within 5 seconds'), 5000);
     const nj = await getNunjucks(renderMode);
     nj?.renderString(text, templatingContext, (err, result) => {
+      clearTimeout(id);
       if (err) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
@@ -96,9 +104,7 @@ export function reload() {
  */
 export async function getTagDefinitions() {
   const env = await getNunjucks(RENDER_ALL);
-  // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
   return Object.keys(env.extensions)
-    // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
     .map(k => env.extensions[k])
     .filter(ext => !ext.isDeprecated())
     .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
@@ -163,7 +169,9 @@ async function getNunjucks(renderMode: string) {
   let allTemplateTagPlugins: TemplateTag[];
 
   try {
-    plugins.ignorePlugin('insomnia-plugin-kong-bundle');
+    plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
+    plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
+    plugins.ignorePlugin('insomnia-plugin-kong-portal');
     allTemplateTagPlugins = await plugins.getTemplateTags();
   } finally {
     plugins.clearIgnores();
@@ -176,7 +184,6 @@ async function getNunjucks(renderMode: string) {
     templateTag.priority = templateTag.priority || i * 100;
     // @ts-expect-error -- TSCONVERSION
     const instance = new BaseExtension(templateTag, plugin);
-    // @ts-expect-error -- TSCONVERSION
     nj.addExtension(instance.getTag(), instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`

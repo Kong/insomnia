@@ -1,15 +1,16 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { GraphQLField } from 'graphql';
+import { GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
-  onNavigate: (type: Record<string, any>) => void;
-  field: GraphQLField<any, any>;
+  onNavigate: (type: GraphQLFieldWithParentName) => void;
+  field: GraphQLFieldWithParentName;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerFieldLink extends PureComponent<Props> {
+export class GraphQLExplorerFieldLink extends PureComponent<Props> {
   _handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
     const { onNavigate, field } = this.props;
@@ -17,13 +18,14 @@ class GraphQLExplorerFieldLink extends PureComponent<Props> {
   }
 
   render() {
-    const { field } = this.props;
+    const { field: { name, parentName } } = this.props;
     return (
-      <a href="#" onClick={this._handleClick} className="success">
-        {field.name}
-      </a>
+      <>
+        {parentName && <span>{parentName}.</span>}
+        <a href="#" onClick={this._handleClick} className="success">
+          {name}
+        </a>
+      </>
     );
   }
 }
-
-export default GraphQLExplorerFieldLink;

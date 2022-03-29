@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Component } from 'react';
+
 import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
  * and the Insomnia application.
  */
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class HtmlElementWrapper extends Component<Props> {
+export class HtmlElementWrapper extends Component<Props> {
   _setRef(n: HTMLDivElement | null | undefined) {
     if (!n) {
       return;
@@ -36,5 +37,3 @@ class HtmlElementWrapper extends Component<Props> {
     return <div ref={this._setRef} />;
   }
 }
-
-export default HtmlElementWrapper;

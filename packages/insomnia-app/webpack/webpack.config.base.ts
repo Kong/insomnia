@@ -1,13 +1,15 @@
-import { Configuration, DefinePlugin, optimize } from 'webpack';
-import path from 'path';
-import pkg from '../package.json';
-
 // recommended by the docs: https://webpack.js.org/configuration/configuration-languages/
 // just in case you run into any typescript error when configuring `devServer`
 import 'webpack-dev-server';
 
+import path from 'path';
+import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, optimize } from 'webpack';
+
+import pkg from '../package.json';
+
 const configuration: Configuration = {
   devtool: 'source-map',
+  stats: 'minimal',
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.ts', './renderer.html'],
   output: {
@@ -19,11 +21,8 @@ const configuration: Configuration = {
     rules: [
       {
         test: /\.tsx?$/,
-        loader: 'ts-loader',
-        exclude: [/node_modules/],
-        options: {
-          configFile: 'tsconfig.build.json',
-        },
+        exclude: /node_modules/,
+        loader: 'babel-loader',
       },
       {
         test: /\.(less|css)$/,
@@ -56,12 +55,8 @@ const configuration: Configuration = {
   },
   resolve: {
     alias: {
-      // Create aliases for react-hot-loader
-      // https://github.com/gaearon/react-hot-loader/tree/92961be0b44260d3d3f1b8864aa699766572a67c#linking
-      'react-hot-loader': path.resolve(path.join(__dirname, '../node_modules/react-hot-loader')),
       react: path.resolve(path.join(__dirname, '../node_modules/react')),
       'styled-components': path.resolve(path.join(__dirname, '../node_modules/styled-components')),
-      'react-dom': path.resolve(path.join(__dirname, '../node_modules/@hot-loader/react-dom')),
     },
     extensions: ['.js', '.json', '.ts', '.tsx'],
     mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main'],
@@ -80,8 +75,13 @@ const configuration: Configuration = {
   plugins: [
     new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new DefinePlugin({
-      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
+      'process.env.BUILD_DATE': JSON.stringify(new Date()),
     }),
+    // see: https://github.com/Kong/insomnia/pull/3469 for why this transform is needed
+    new NormalModuleReplacementPlugin(
+      /node_modules\/vscode-languageserver-types\/lib\/umd\/main\.js/,
+      '../esm/main.js',
+    ),
   ],
   target: 'electron-renderer',
 };

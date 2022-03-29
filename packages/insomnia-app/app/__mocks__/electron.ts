@@ -1,5 +1,5 @@
-import mkdirp from 'mkdirp';
 import { EventEmitter } from 'events';
+import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 
@@ -16,6 +16,8 @@ const remote = {
     getLocale() {
       return 'en-US';
     },
+
+    exit: jest.fn(),
   },
   net: {
     request() {
@@ -55,9 +57,14 @@ const remote = {
   },
 };
 
+const dialog = {
+  showErrorBox: jest.fn(),
+};
+
 const electron = {
   ...remote,
   remote,
+  dialog,
   ipcMain: {
     on: jest.fn(),
 
@@ -73,6 +80,11 @@ const electron = {
   },
   shell: {
     openExternal: jest.fn(),
+  },
+  clipboard: {
+    writeText: jest.fn(),
+    readText: jest.fn(),
+    clear: jest.fn(),
   },
 };
 

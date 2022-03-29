@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -29,7 +30,7 @@ export interface Cookie {
   lastAccessed?: Date;
 }
 
-interface BaseCookieJar {
+export interface BaseCookieJar {
   name: string;
   cookies: Cookie[];
 }

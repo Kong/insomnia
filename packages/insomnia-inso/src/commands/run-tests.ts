@@ -1,10 +1,11 @@
 import { generate, runTestsCli, TestSuite } from 'insomnia-testing';
-import type { GlobalOptions } from '../get-options';
+
 import { loadDb } from '../db';
-import type { UnitTest, UnitTestSuite } from '../db/models/types';
-import { logger, noConsoleLog } from '../logger';
-import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
+import type { UnitTest, UnitTestSuite } from '../db/models/types';
+import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
+import type { GlobalOptions } from '../get-options';
+import { logger, noConsoleLog } from '../logger';
 
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
 
@@ -24,6 +25,7 @@ export type RunTestsOptions = GlobalOptions & {
   bail?: boolean;
   keepFile?: boolean;
   testNamePattern?: string;
+  disableCertValidation?: boolean;
 };
 
 function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
@@ -54,10 +56,12 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, disableCertValidation, src } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
+    filterTypes: [],
+    src,
   });
 
   // Find suites
@@ -92,14 +96,14 @@ export async function runInsomniaTests(
   // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
 
-  const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
-  return await noConsoleLog(() =>
-    runTestsCli(testFileContents, {
-      reporter,
-      bail,
-      keepFile,
-      sendRequest,
-      testFilter: testNamePattern,
-    }),
-  );
+  const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !disableCertValidation });
+  const res = runTestsCli(testFileContents, {
+    reporter,
+    bail,
+    keepFile,
+    sendRequest,
+    testFilter: testNamePattern,
+  });
+
+  return options.verbose ? res : noConsoleLog(() => res);
 }

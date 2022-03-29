@@ -1,6 +1,7 @@
-import React, { FunctionComponent } from 'react';
-import type { GrpcMethodType } from '../../../network/grpc/method';
 import { Button, ButtonProps } from 'insomnia-components';
+import React, { FunctionComponent } from 'react';
+
+import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 
 interface Props {
@@ -18,7 +19,7 @@ const buttonProps: ButtonProps = {
   radius: '0',
 };
 
-const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
+export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
   if (running) {
     return (
       <Button {...buttonProps} onClick={handleCancel}>
@@ -41,5 +42,3 @@ const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleS
     </Button>
   );
 };
-
-export default GrpcSendButton;

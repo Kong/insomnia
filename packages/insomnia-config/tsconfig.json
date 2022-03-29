@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": ".",
+  },
+  "include": [
+    "src",
+    "jest.config.js",
+    ".eslintrc.js",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "dist",
+  ],
+}

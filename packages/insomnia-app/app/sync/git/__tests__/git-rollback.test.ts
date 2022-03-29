@@ -1,9 +1,10 @@
 import path from 'path';
-import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
-import { setupDateMocks } from './util';
-import { MemClient } from '../mem-client';
+
 import type { FileWithStatus } from '../git-rollback';
 import { gitRollback } from '../git-rollback';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GitVCS } from '../git-vcs';
+import { MemClient } from '../mem-client';
+import { setupDateMocks } from './util';
 
 describe('git rollback', () => {
   describe('mocked', () => {

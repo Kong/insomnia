@@ -1,6 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
+
+import { Mailto } from './base/mailto';
 import { showError } from './modals/index';
-import Mailto from './base/mailto';
 
 interface Props {
   children: ReactNode;
@@ -22,7 +23,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   state: State = {
     error: null,
     info: null,
-  }
+  };
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
@@ -51,7 +52,6 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     let componentName = 'component';
 
     try {
-      // @ts-expect-error -- TSCONVERSION
       componentName = firstChild.type.name;
     } catch (err) {
       // It's okay
@@ -92,7 +92,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   }
 }
 
-class ErrorBoundary extends PureComponent<Props> {
+export class ErrorBoundary extends PureComponent<Props> {
   render() {
     const { children, ...extraProps } = this.props;
 
@@ -109,5 +109,3 @@ class ErrorBoundary extends PureComponent<Props> {
     ));
   }
 }
-
-export default ErrorBoundary;

@@ -1,13 +1,16 @@
-import type { BaseModel } from './index';
-import * as models from './index';
-import { Readable } from 'stream';
-import fs from 'fs';
 import crypto from 'crypto';
-import path from 'path';
-import zlib from 'zlib';
+import fs from 'fs';
 import mkdirp from 'mkdirp';
+import path from 'path';
+import { Readable } from 'stream';
+import { ValueOf } from 'type-fest';
+import zlib from 'zlib';
+
 import { database as db, Query } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
+import { LIBCURL_DEBUG_MIGRATION_MAP } from '../common/misc';
+import type { BaseModel } from './index';
+import * as models from './index';
 
 export const name = 'Response';
 
@@ -25,14 +28,14 @@ export interface ResponseHeader {
 }
 
 export interface ResponseTimelineEntry {
-  name: string;
+  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
   timestamp: number;
   value: string;
 }
 
 type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
-interface BaseResponse {
+export interface BaseResponse {
   environmentId: string | null;
   statusCode: number;
   statusMessage: string;
@@ -219,7 +222,7 @@ export function getBodyStream<T extends Response, TFail extends Readable>(
 }
 
 export const getBodyBuffer = <TFail = null>(
-  response?: { bodyPath?: string, bodyCompression?: Compression },
+  response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: TFail | null,
 ) => getBodyBufferFromPath(
     response?.bodyPath || '',
@@ -227,8 +230,30 @@ export const getBodyBuffer = <TFail = null>(
     readFailureValue,
   );
 
-export function getTimeline(response: Response) {
-  return getTimelineFromPath(response.timelinePath || '');
+export function getTimeline(response: Response, showBody?: boolean) {
+  const { timelinePath, bodyPath } = response;
+
+  // No body, so return empty Buffer
+  if (!timelinePath) {
+    return [];
+  }
+
+  try {
+    const rawBuffer = fs.readFileSync(timelinePath);
+    const timeline = JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
+    const body: ResponseTimelineEntry[] = showBody ? [
+      {
+        name: LIBCURL_DEBUG_MIGRATION_MAP.DataOut,
+        timestamp: Date.now(),
+        value: fs.readFileSync(bodyPath).toString(),
+      },
+    ] : [];
+    const output = [...timeline, ...body];
+    return output;
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return [];
+  }
 }
 
 function getBodyStreamFromPath<TFail extends Readable>(
@@ -278,21 +303,6 @@ function getBodyBufferFromPath<T>(
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return readFailureValue === undefined ? null : readFailureValue;
-  }
-}
-
-function getTimelineFromPath(timelinePath: string) {
-  // No body, so return empty Buffer
-  if (!timelinePath) {
-    return [];
-  }
-
-  try {
-    const rawBuffer = fs.readFileSync(timelinePath);
-    return JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return [];
   }
 }
 

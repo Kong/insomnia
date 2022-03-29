@@ -1,7 +1,7 @@
 import { DCUpstream } from '../types';
 import { xKongUpstreamDefaults } from '../types/kong';
-import { generateUpstreams } from './upstreams';
-import { tags, getSpec } from './jest/test-helpers';
+import { getSpec, tags } from './jest/test-helpers';
+import { appendUpstreamToName, generateUpstreams } from './upstreams';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCUpstream =>
@@ -43,5 +43,9 @@ describe('upstreams', () => {
     });
     const specResult = getSpecResult();
     expect(generateUpstreams(spec, tags)).toEqual<DCUpstream[]>([specResult]);
+  });
+
+  it('generates upstream name by appending .upstream', () => {
+    expect(appendUpstreamToName('abc')).toBe('abc.upstream');
   });
 });

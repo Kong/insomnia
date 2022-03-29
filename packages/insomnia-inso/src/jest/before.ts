@@ -1,4 +1,5 @@
 import { logType } from 'consola';
+
 import { logger, LogsByType } from '../logger';
 
 // Taken from https://github.com/unjs/consola/blob/master/types/consola.d.ts#L16

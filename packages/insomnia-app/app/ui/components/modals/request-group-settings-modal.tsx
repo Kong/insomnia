@@ -1,28 +1,24 @@
-import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
-import MarkdownEditor from '../markdown-editor';
-import { database as db } from '../../../common/database';
-import type { Workspace } from '../../../models/workspace';
-import type { RequestGroup } from '../../../models/request-group';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as React from 'react';
+import { connect } from 'react-redux';
 
-interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  workspaces: Workspace[];
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import * as models from '../../../models';
+import type { RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { DebouncedInput } from '../base/debounced-input';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { HelpTooltip } from '../help-tooltip';
+import { MarkdownEditor } from '../markdown-editor';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -31,7 +27,7 @@ interface State {
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
 }
@@ -42,7 +38,7 @@ interface RequestGroupSettingsModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
+export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: MarkdownEditor | null = null;
 
@@ -52,7 +48,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
-    workspaces: [],
+    workspacesForActiveProject: [],
     justCopied: false,
     justMoved: false,
   };
@@ -162,15 +158,15 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     requestGroup,
     forceEditMode,
   }: RequestGroupSettingsModalOptions) {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
 
     const hasDescription = !!requestGroup.description;
 
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(requestGroup);
-    const doc = ancestors.find((doc) => doc.type === models.workspace.type);
+    const doc = ancestors.find(doc => doc.type === models.workspace.type);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find((w) => w._id === workspaceId);
+    const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
 
     this.setState(
       {
@@ -181,11 +177,11 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
         defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
-        this.modal && this.modal.show();
+        this.modal?.show();
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor && this._editor.focus();
+            this._editor?.focus();
           }, 400);
         }
       },
@@ -193,19 +189,11 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _renderDescription() {
     const {
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
 
     const { showDescription, defaultPreviewMode, requestGroup } = this.state;
@@ -219,15 +207,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
         ref={this._setEditorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
         placeholder="Write a description"
-        lineWrapping={editorLineWrapping}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
-        isVariableUncovered={isVariableUncovered}
         defaultValue={requestGroup.description}
         onChange={this._handleDescriptionChange}
       />
@@ -242,7 +222,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
   }
 
   _renderMoveCopy() {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
 
     const {
       activeWorkspaceIdToCopyTo,
@@ -270,7 +250,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
               onChange={this._handleUpdateMoveCopyWorkspace}
             >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map((w) => {
+              {workspacesForActiveProject.map(w => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }
@@ -351,4 +331,13 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
   }
 }
 
-export default RequestGroupSettingsModal;
+const mapStateToProps = (state: RootState) => ({
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+});
+
+export const RequestGroupSettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedRequestGroupSettingsModal);

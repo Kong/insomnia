@@ -1,25 +1,29 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent, ReactNode } from 'react';
+
 import {
-  AUTOBIND_CFG,
+  AUTH_ASAP,
+  AUTH_AWS_IAM,
   AUTH_BASIC,
-  AUTH_DIGEST,
   AUTH_BEARER,
+  AUTH_DIGEST,
+  AUTH_HAWK,
+  AUTH_NETRC,
   AUTH_NONE,
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-  AUTH_HAWK,
-  AUTH_AWS_IAM,
-  AUTH_NETRC,
-  AUTH_ASAP,
+  AUTOBIND_CFG,
   getAuthTypeName,
 } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showModal } from '../modals';
-import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
 import type { Request, RequestAuthentication } from '../../../models/request';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 
 interface Props {
   onChange: (r: Request, arg1: RequestAuthentication) => Promise<Request>;
@@ -29,7 +33,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AuthDropdown extends PureComponent<Props> {
+export class AuthDropdown extends PureComponent<Props> {
   async _handleTypeChange(type: string) {
     const { request, onChange } = this.props;
     const { authentication } = request;
@@ -102,5 +106,3 @@ class AuthDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default AuthDropdown;

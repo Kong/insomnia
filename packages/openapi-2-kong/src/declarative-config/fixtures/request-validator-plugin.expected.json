@@ -3,7 +3,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Example",
+      "host": "backend.com",
       "port": 80,
       "path": "/path",
       "name": "Example",
@@ -60,7 +60,7 @@
         {
           "methods": ["GET"],
           "name": "Example-params_pathid-get",
-          "paths": ["/params/(?<pathid>[^\\/\\s]+)/$"],
+          "paths": ["/params/(?<pathid>[^\\/]+)/$"],
           "plugins": [
             {
               "config": {
@@ -110,18 +110,6 @@
         }
       ],
       "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
-    }
-  ],
-  "upstreams": [
-    {
-      "name": "Example",
-      "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
-      "targets": [
-        {
-          "target": "backend.com:80",
-          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
-        }
-      ]
     }
   ]
 }

@@ -10,7 +10,7 @@
   ],
   "exclude": [
     "**/fixtures",
-    "**/__mocks__",
+    "**/test-helpers",
     "**/*.test.ts"
   ]
 }

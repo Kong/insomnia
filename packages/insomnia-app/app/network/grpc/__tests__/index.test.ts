@@ -1,14 +1,15 @@
-import * as grpc from '../index';
-import * as protoLoader from '../proto-loader';
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { grpcIpcRequestParamsSchema } from '../__schemas__/grpc-ipc-request-params-schema';
-import { grpcIpcMessageParamsSchema } from '../__schemas__/grpc-ipc-message-params-schema';
-import { ResponseCallbacks as ResponseCallbacksMock } from '../response-callbacks';
-import { grpcMethodDefinitionSchema } from '../../../ui/context/grpc/__schemas__';
+import * as grpcJs from '@grpc/grpc-js';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { grpcMocks } from '../../../__mocks__/@grpc/grpc-js';
+import { grpcMethodDefinitionSchema } from '../../../ui/context/grpc/__schemas__';
+import { grpcIpcMessageParamsSchema } from '../__schemas__/grpc-ipc-message-params-schema';
+import { grpcIpcRequestParamsSchema } from '../__schemas__/grpc-ipc-request-params-schema';
 import callCache from '../call-cache';
-import * as grpcJs from '@grpc/grpc-js';
+import * as grpc from '../index';
+import * as protoLoader from '../proto-loader';
+import { ResponseCallbacks as ResponseCallbacksMock } from '../response-callbacks';
 
 jest.mock('../response-callbacks');
 jest.mock('../proto-loader');
@@ -40,6 +41,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           protoMethodName: 'SayHi',
+          metadata: [],
         })
         .build();
       protoLoader.getSelectedMethod.mockResolvedValue(null);
@@ -59,6 +61,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: '',
+          metadata: [],
         })
         .build();
       protoLoader.getSelectedMethod.mockResolvedValue(methodBuilder.build());
@@ -78,6 +81,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -99,6 +103,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcs://grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -120,6 +125,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -172,6 +178,7 @@ describe('grpc', () => {
             body: {
               text: '{}',
             },
+            metadata: [],
           })
           .build();
         const unaryMethod = methodBuilder.requestStream(false).responseStream(false).build();
@@ -186,13 +193,14 @@ describe('grpc', () => {
           unaryMethod.responseDeserialize,
           {},
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = {
           code: grpcJs.status.DATA_LOSS,
         };
         const val = undefined;
-        grpcMocks.mockMakeUnaryRequest.mock.calls[0][4](err, val);
+        grpcMocks.mockMakeUnaryRequest.mock.calls[0][5](err, val);
         // Assert
         expect(respond.sendData).not.toHaveBeenCalled();
         expect(respond.sendError).toHaveBeenCalledWith(params.request._id, err);
@@ -208,6 +216,7 @@ describe('grpc', () => {
             body: {
               text: '{}',
             },
+            metadata: [],
           })
           .build();
         const unaryMethod = methodBuilder.requestStream(false).responseStream(false).build();
@@ -222,13 +231,14 @@ describe('grpc', () => {
           unaryMethod.responseDeserialize,
           {},
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = undefined;
         const val = {
           foo: 'bar',
         };
-        grpcMocks.mockMakeUnaryRequest.mock.calls[0][4](err, val);
+        grpcMocks.mockMakeUnaryRequest.mock.calls[0][5](err, val);
         // Assert
         expect(respond.sendError).not.toHaveBeenCalled();
         expect(respond.sendData).toHaveBeenCalledWith(params.request._id, val);
@@ -246,6 +256,7 @@ describe('grpc', () => {
             body: {
               text: undefined,
             },
+            metadata: [],
           })
           .build();
         const serverMethod = methodBuilder.requestStream(false).responseStream(true).build();
@@ -270,6 +281,7 @@ describe('grpc', () => {
             body: {
               text: '{}',
             },
+            metadata: [],
           })
           .build();
         const serverMethod = methodBuilder.requestStream(false).responseStream(true).build();
@@ -283,6 +295,7 @@ describe('grpc', () => {
           serverMethod.requestSerialize,
           serverMethod.responseDeserialize,
           {},
+          expect.anything(),
         );
         // Trigger valid response
         const val = {
@@ -311,6 +324,7 @@ describe('grpc', () => {
           .request({
             _id: 'id',
             url: 'grpcb.in:9000',
+            metadata: [],
           })
           .build();
         const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -324,13 +338,14 @@ describe('grpc', () => {
           clientMethod.requestSerialize,
           clientMethod.responseDeserialize,
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = {
           code: grpcJs.status.DATA_LOSS,
         };
         const val = undefined;
-        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][3](err, val);
+        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][4](err, val);
         // Assert
         expect(respond.sendData).not.toHaveBeenCalled();
         expect(respond.sendError).toHaveBeenCalledWith(params.request._id, err);
@@ -343,6 +358,7 @@ describe('grpc', () => {
           .request({
             _id: 'id',
             url: 'grpcb.in:9000',
+            metadata: [],
           })
           .build();
         const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -356,13 +372,14 @@ describe('grpc', () => {
           clientMethod.requestSerialize,
           clientMethod.responseDeserialize,
           expect.anything(),
+          expect.anything(),
         );
         // Trigger response
         const err = undefined;
         const val = {
           foo: 'bar',
         };
-        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][3](err, val);
+        grpcMocks.mockMakeClientStreamRequest.mock.calls[0][4](err, val);
         // Assert
         expect(respond.sendError).not.toHaveBeenCalled();
         expect(respond.sendData).toHaveBeenCalledWith(params.request._id, val);
@@ -377,6 +394,7 @@ describe('grpc', () => {
           .request({
             _id: 'id',
             url: 'grpcb.in:9000',
+            metadata: [],
           })
           .build();
         const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
@@ -389,6 +407,7 @@ describe('grpc', () => {
           bidiMethod.path,
           bidiMethod.requestSerialize,
           bidiMethod.responseDeserialize,
+          expect.anything()
         );
         // Trigger valid response
         const val = {
@@ -417,6 +436,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -478,6 +498,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();
@@ -509,6 +530,7 @@ describe('grpc', () => {
         .request({
           _id: 'id',
           url: 'grpcb.in:9000',
+          metadata: [],
         })
         .build();
       const clientMethod = methodBuilder.requestStream(true).responseStream(false).build();

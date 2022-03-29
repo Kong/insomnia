@@ -1,11 +1,12 @@
-import { conversionTypeMap, generateConfig, GenerateConfigOptions } from './generate-config';
-import { generate as _generate, generateFromString as _generateFromString, KongForKubernetesResult } from 'openapi-2-kong';
+import { DeclarativeConfigResult, generate as _generate, generateFromString as _generateFromString, KongForKubernetesResult } from 'openapi-2-kong';
+import os from 'os';
 import path from 'path';
-import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
+
+import { InsoError } from '../errors';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
-import { InsoError } from '../errors';
-import os from 'os';
+import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
+import { conversionTypeMap, generateConfig, GenerateConfigOptions } from './generate-config';
 
 jest.mock('openapi-2-kong');
 jest.mock('../write-file');
@@ -18,6 +19,19 @@ const mockConversionResult: KongForKubernetesResult = {
   // @ts-expect-error -- TSCONVERSION the tests seem to suggest that this is valid, yet it is not allowed by the types.
   documents: ['a', 'b'],
   type: 'kong-for-kubernetes',
+  label: '',
+  warnings: [],
+};
+
+const mockDeclarativeConversionResult: DeclarativeConfigResult = {
+  documents: [
+    {
+      '_format_version': '1.1',
+      services: [],
+      upstreams: [],
+    },
+  ],
+  type: 'kong-declarative-config',
   label: '',
   warnings: [],
 };
@@ -119,9 +133,11 @@ describe('generateConfig()', () => {
     expect(generate).toHaveBeenCalledWith(
       path.normalize('test/dir/file.yaml'),
       conversionTypeMap.kubernetes,
-      undefined,
+      undefined
     );
-    expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
+    expect(logger.__getLogs().log).toEqual([
+      `Configuration generated to "${outputPath}".`,
+    ]);
   });
 
   it('should generate documents using absolute path', async () => {
@@ -137,8 +153,14 @@ describe('generateConfig()', () => {
     expect(result).toBe(true);
 
     // Read from workingDir
-    expect(generate).toHaveBeenCalledWith(absolutePath, conversionTypeMap.kubernetes, undefined);
-    expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
+    expect(generate).toHaveBeenCalledWith(
+      absolutePath,
+      conversionTypeMap.kubernetes,
+      undefined
+    );
+    expect(logger.__getLogs().log).toEqual([
+      `Configuration generated to "${outputPath}".`,
+    ]);
   });
 
   it('should throw InsoError if there is an error thrown by openapi-2-kong', async () => {
@@ -157,6 +179,35 @@ describe('generateConfig()', () => {
     expect(result).toBe(false);
     expect(logger.__getLogs().log).toEqual([
       'Could not find a valid specification to generate configuration.',
+    ]);
+  });
+
+  it('should generate declarative config', async () => {
+    generate.mockResolvedValue(mockDeclarativeConversionResult);
+
+    const result = await generateConfig(
+      filePath,
+      { type: 'declarative' }
+    );
+    expect(result).toBe(true);
+    expect(logger.__getLogs().log).toEqual([
+      `_format_version: \"1.1\"
+services: []
+upstreams: []
+`,
+    ]);
+  });
+
+  it('should generate declarative config as json when format is set to json', async () => {
+    generate.mockResolvedValue(mockDeclarativeConversionResult);
+
+    const result = await generateConfig(
+      filePath,
+      { type: 'declarative', format: 'json' }
+    );
+    expect(result).toBe(true);
+    expect(logger.__getLogs().log).toEqual([
+      '{"_format_version":"1.1","services":[],"upstreams":[]}',
     ]);
   });
 });

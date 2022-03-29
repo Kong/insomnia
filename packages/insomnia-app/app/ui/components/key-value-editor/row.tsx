@@ -1,68 +1,68 @@
 // eslint-disable-next-line filenames/match-exported
-import React, { PureComponent } from 'react';
-import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
-import FileInputButton from '../base/file-input-button';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
-import PromptButton from '../base/prompt-button';
-import CodePromptModal from '../modals/code-prompt-modal';
-import Button from '../base/button';
-import OneLineEditor from '../codemirror/one-line-editor';
-import { showModal } from '../modals/index';
+import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
+import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
+import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
+import { Button } from '../base/button';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { FileInputButton } from '../base/file-input-button';
+import { PromptButton } from '../base/prompt-button';
+import { OneLineEditor } from '../codemirror/one-line-editor';
+import { CodePromptModal } from '../modals/code-prompt-modal';
+import { showModal } from '../modals/index';
 
 interface Props {
-  onChange: Function,
-  onDelete: Function,
-  onFocusName: Function,
-  onFocusValue: Function,
-  onFocusDescription: Function,
-  displayDescription: boolean,
-  index: number,
+  onChange: Function;
+  onDelete: Function;
+  onFocusName: Function;
+  onFocusValue: Function;
+  onFocusDescription: Function;
+  displayDescription: boolean;
+  index: number;
   pair: {
-    id: string,
-    name: string,
-    value: string,
-    description: string,
-    fileName: string,
-    type: string,
-    disabled: boolean,
-  },
-  readOnly?: boolean,
-  onMove?: Function,
-  onKeyDown?: Function,
-  onBlurName?: Function,
-  onBlurValue?: Function,
-  onBlurDescription?: Function,
-  handleRender?: HandleRender,
-  handleGetRenderContext?: HandleGetRenderContext,
-  nunjucksPowerUserMode?: boolean,
-  isVariableUncovered?: boolean,
-  handleGetAutocompleteNameConstants?: Function,
-  handleGetAutocompleteValueConstants?: Function,
-  namePlaceholder?: string,
-  valuePlaceholder?: string,
-  descriptionPlaceholder?: string,
-  valueInputType?: string,
-  forceInput?: boolean,
-  allowMultiline?: boolean,
-  allowFile?: boolean,
-  sortable?: boolean,
-  noDelete?: boolean,
-  noDropZone?: boolean,
-  hideButtons?: boolean,
-  className?: string,
-  renderLeftIcon?: Function,
+    id: string;
+    name: string;
+    value: string;
+    description: string;
+    fileName: string;
+    type: string;
+    disabled: boolean;
+  };
+  readOnly?: boolean;
+  onMove?: Function;
+  onKeyDown?: Function;
+  onBlurName?: Function;
+  onBlurValue?: Function;
+  onBlurDescription?: Function;
+  enableNunjucks?: boolean;
+  handleGetAutocompleteNameConstants?: Function;
+  handleGetAutocompleteValueConstants?: Function;
+  namePlaceholder?: string;
+  valuePlaceholder?: string;
+  descriptionPlaceholder?: string;
+  valueInputType?: string;
+  forceInput?: boolean;
+  allowMultiline?: boolean;
+  allowFile?: boolean;
+  sortable?: boolean;
+  noDelete?: boolean;
+  noDropZone?: boolean;
+  hideButtons?: boolean;
+  className?: string;
+  renderLeftIcon?: Function;
   // For drag-n-drop
-  connectDragSource?: ConnectDragSource,
-  connectDragPreview?: ConnectDragPreview,
-  connectDropTarget?: ConnectDropTarget,
-  isDragging?: boolean,
-  isDraggingOver?: boolean,
+  connectDragSource?: ConnectDragSource;
+  connectDragPreview?: ConnectDragPreview;
+  connectDropTarget?: ConnectDropTarget;
+  isDragging?: boolean;
+  isDraggingOver?: boolean;
 }
 
 interface State {
@@ -70,7 +70,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class KeyValueEditorRow extends PureComponent<Props, State> {
+class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   _nameInput: OneLineEditor | null = null;
   _valueInput: OneLineEditor | FileInputButton | null = null;
   _descriptionInput: OneLineEditor | null = null;
@@ -108,7 +108,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _sendChange(patch) {
     const pair = Object.assign({}, this.props.pair, patch);
-    this.props.onChange && this.props.onChange(pair);
+    this.props.onChange?.(pair);
   }
 
   _handleNameChange(name) {
@@ -124,7 +124,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
     const value = e.clipboardData.getData('text/plain');
 
-    if (value && value.includes('\n')) {
+    if (value?.includes('\n')) {
       e.preventDefault();
 
       // Insert the pasted text into the current selection.
@@ -168,6 +168,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _handleTypeChange(def) {
     // Remove newlines if converting to text
+    // WARNING: props should never be overwritten!
     let value = this.props.pair.value || '';
 
     if (def.type === 'text' && !def.multiline && value.includes('\n')) {
@@ -211,7 +212,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     }
   }
 
-  _handleBlurDescription(e) {
+  _handleBlurDescription(e: FocusEvent) {
     if (this.props.onBlurDescription) {
       this.props.onBlurDescription(this.props.pair, e);
     }
@@ -246,13 +247,13 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
   }
 
   _handleEditMultiline() {
-    const { pair, handleRender, handleGetRenderContext } = this.props;
+    const { pair, enableNunjucks } = this.props;
     showModal(CodePromptModal, {
       submitName: 'Done',
       title: `Edit ${pair.name}`,
       defaultValue: pair.value,
       onChange: this._handleValueChange,
-      enableRender: handleRender || handleGetRenderContext,
+      enableRender: enableNunjucks,
       // @ts-expect-error -- TSCONVERSION
       mode: pair.multiline || 'text/plain',
       onModeChange: mode => {
@@ -272,10 +273,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       forceInput,
       descriptionPlaceholder,
       pair,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
     return displayDescription ? (
       <div
@@ -284,10 +281,10 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           {
             'form-control--inactive': pair.disabled,
           },
-        )}>
+        )}
+      >
         <OneLineEditor
           ref={this._setDescriptionInputRef}
-          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
           readOnly={readOnly}
           forceInput={forceInput}
           placeholder={descriptionPlaceholder || 'Description'}
@@ -296,10 +293,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onBlur={this._handleBlurDescription}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleFocusDescription}
-          render={handleRender}
-          getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
         />
       </div>
     ) : null;
@@ -312,10 +305,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       forceInput,
       valueInputType,
       valuePlaceholder,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
 
     if (pair.type === 'file') {
@@ -335,7 +324,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       return (
         <button
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-          onClick={this._handleEditMultiline}>
+          onClick={this._handleEditMultiline}
+        >
           <i className="fa fa-pencil-square-o space-right" />
           {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
         </button>
@@ -344,7 +334,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       return (
         <OneLineEditor
           ref={ref => { this._valueInput = ref; }}
-          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
           readOnly={readOnly}
           forceInput={forceInput}
           type={valueInputType || 'text'}
@@ -355,10 +344,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onBlur={this._handleBlurValue}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleFocusValue}
-          render={handleRender}
-          getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
-          isVariableUncovered={isVariableUncovered}
           getAutocompleteConstants={this._handleAutocompleteValues}
         />
       );
@@ -393,7 +378,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
             value={{
               type: 'text',
               multiline: false,
-            }}>
+            }}
+          >
             Text
           </DropdownItem>
           {allowMultiline && (
@@ -402,7 +388,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               value={{
                 type: 'text',
                 multiline: true,
-              }}>
+              }}
+            >
               Text (Multi-line)
             </DropdownItem>
           )}
@@ -411,7 +398,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               onClick={this._handleTypeChange}
               value={{
                 type: 'file',
-              }}>
+              }}
+            >
               File
             </DropdownItem>
           )}
@@ -426,10 +414,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     const {
       pair,
       namePlaceholder,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
       sortable,
       noDropZone,
       hideButtons,
@@ -474,18 +458,14 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined form-control--wide', {
               'form-control--inactive': pair.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               ref={ref => { this._nameInput = ref; }}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
-              // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
               readOnly={readOnly}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
@@ -496,7 +476,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined form-control--wide', {
               'form-control--inactive': pair.disabled,
-            })}>
+            })}
+          >
             {this.renderPairValue()}
           </div>
           {this.renderPairDescription()}
@@ -507,7 +488,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
             <Button
               onClick={this._handleDisableChange}
               value={!pair.disabled}
-              title={pair.disabled ? 'Enable item' : 'Disable item'}>
+              title={pair.disabled ? 'Enable item' : 'Disable item'}
+            >
               {pair.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -528,7 +510,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
                 confirmMessage=""
                 addIcon
                 onClick={this._handleDelete}
-                title="Delete item">
+                title="Delete item"
+              >
                 <i className="fa fa-trash-o" />
               </PromptButton>
             ) : (
@@ -587,27 +570,37 @@ const dragTarget = {
   },
 };
 
+const KeyValueEditorRowFCWithRef: ForwardRefRenderFunction<KeyValueEditorRowInternal, Omit<Props, 'enableNunjucks'>> = (
+  props,
+  ref
+) => {
+  const { enabled } = useNunjucksEnabled();
+
+  return <KeyValueEditorRowInternal ref={ref} {...props} enableNunjucks={enabled} />;
+
+};
+
+const KeyValueEditorRowFC = forwardRef(KeyValueEditorRowFCWithRef);
+
 const source = DragSource('KEY_VALUE_EDITOR', dragSource, (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
   connectDragPreview: connect.dragPreview(),
   isDragging: monitor.isDragging(),
-}))(KeyValueEditorRow);
+}))(KeyValueEditorRowFC);
 
-const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, (connect, monitor) => ({
+export const Row = DropTarget('KEY_VALUE_EDITOR', dragTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),
   isDraggingOver: monitor.isOver(),
 }))(source);
 
-target.prototype.focusNameEnd = function() {
+Row.prototype.focusNameEnd = function() {
   this.decoratedRef.current.decoratedRef.current.focusNameEnd();
 };
 
-target.prototype.focusValueEnd = function() {
+Row.prototype.focusValueEnd = function() {
   this.decoratedRef.current.decoratedRef.current.focusValueEnd();
 };
 
-target.prototype.focusDescriptionEnd = function() {
+Row.prototype.focusDescriptionEnd = function() {
   this.decoratedRef.current.decoratedRef.current.focusDescriptionEnd();
 };
-
-export default target;

@@ -123,7 +123,7 @@ describe('Response tag', () => {
         await tag.run(context, 'body', 'req_1', '$$');
         fail('JSON should have failed');
       } catch (err) {
-        expect(err.message).toContain('Invalid JSONPath query: $$');
+        expect(err.message).toContain('Returned no results: $$');
       }
     });
 

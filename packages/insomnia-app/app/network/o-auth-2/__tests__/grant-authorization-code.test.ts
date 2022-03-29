@@ -1,10 +1,10 @@
-import getToken from '../grant-authorization-code';
-import { createBWRedirectMock } from './helpers';
-import { globalBeforeEach } from '../../../__jest__/before-each';
-import * as network from '../../network';
 import fs from 'fs';
 import path from 'path';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getTempDir } from '../../../common/electron-helpers';
+import * as network from '../../network';
+import getToken from '../grant-authorization-code';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -21,7 +21,7 @@ describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
 
   it('gets token with JSON and basic auth', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    window.main = { authorizeUserInWindow: () => Promise.resolve(`${REDIRECT_URI}?code=code_123&state=${STATE}`) };
     const bodyPath = path.join(getTempDir(), 'foo.response');
     fs.writeFileSync(
       bodyPath,
@@ -129,7 +129,7 @@ describe('authorization_code', () => {
   });
 
   it('gets token with urlencoded and body auth', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    window.main = { authorizeUserInWindow: () => Promise.resolve(`${REDIRECT_URI}?code=code_123&state=${STATE}`) };
     const bodyPath = path.join(getTempDir(), 'foo.response');
     fs.writeFileSync(
       bodyPath,
@@ -241,7 +241,7 @@ describe('authorization_code', () => {
   });
 
   it('uses PKCE', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    window.main = { authorizeUserInWindow: () => Promise.resolve(`${REDIRECT_URI}?code=code_123&state=${STATE}`) };
     const bodyPath = path.join(getTempDir(), 'foo.response');
     fs.writeFileSync(
       bodyPath,

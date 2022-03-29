@@ -1,20 +1,29 @@
-import React, { FunctionComponent } from 'react';
-import { Pane, PaneBody, PaneHeader } from '../pane';
+import { SvgIcon } from 'insomnia-components';
+import React, { FunctionComponent, useCallback } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown';
-import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import type { Settings } from '../../../../models/settings';
-import type { GrpcRequest } from '../../../../models/grpc-request';
-import GrpcSendButton from '../../buttons/grpc-send-button';
-import { useGrpc } from '../../../context/grpc';
-import useChangeHandlers from './use-change-handlers';
-import useSelectedMethod from './use-selected-method';
-import useProtoFileReload from './use-proto-file-reload';
 import styled from 'styled-components';
+
+import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
+import { documentationLinks } from '../../../../common/documentation';
+import { hotKeyRefs } from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
+import type { GrpcRequest } from '../../../../models/grpc-request';
+import type { Settings } from '../../../../models/settings';
+import { useGrpc } from '../../../context/grpc';
+import { GrpcSendButton } from '../../buttons/grpc-send-button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
+import { ErrorBoundary } from '../../error-boundary';
+import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
+import { KeydownBinder } from '../../keydown-binder';
+import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
+import { EmptyStatePane } from '../empty-state-pane';
+import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
+import useChangeHandlers from './use-change-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import useProtoFileReload from './use-proto-file-reload';
+import useSelectedMethod from './use-selected-method';
 
 interface Props {
   forceRefreshKey: number;
@@ -22,10 +31,6 @@ interface Props {
   environmentId: string;
   workspaceId: string;
   settings: Settings;
-  // For variables
-  handleRender: HandleRender;
-  isVariableUncovered: boolean;
-  handleGetRenderContext: HandleGetRenderContext;
 }
 
 const StyledUrlBar = styled.div`
@@ -46,15 +51,11 @@ const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
 
-const GrpcRequestPane: FunctionComponent<Props> = ({
+export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   environmentId,
   workspaceId,
   forceRefreshKey,
-  settings,
-  handleRender,
-  handleGetRenderContext,
-  isVariableUncovered,
 }) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
@@ -68,95 +69,102 @@ const GrpcRequestPane: FunctionComponent<Props> = ({
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
-  return (
-    <Pane type="request">
-      <PaneHeader>
-        <StyledUrlBar>
-          <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
-          <StyledUrlEditor title={activeRequest.url}>
-            <OneLineEditor
-              key={uniquenessKey}
-              type="text"
-              forceEditor
-              defaultValue={activeRequest.url}
-              placeholder="grpcb.in:9000"
-              onChange={handleChange.url}
-              render={handleRender}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
-              getAutocompleteConstants={getExistingGrpcUrls}
-              getRenderContext={handleGetRenderContext}
-            />
-          </StyledUrlEditor>
-          <StyledDropdown>
-            <GrpcMethodDropdown
-              disabled={running}
-              methods={methods}
-              selectedMethod={method}
-              handleChange={handleChange.method}
-              handleChangeProtoFile={handleChange.protoFile}
-            />
-          </StyledDropdown>
 
-          <GrpcSendButton
-            running={running}
-            methodType={methodType}
-            handleCancel={handleAction.cancel}
-            handleStart={handleAction.start}
-          />
-        </StyledUrlBar>
-      </PaneHeader>
-      <PaneBody>
-        {methodType && (
-          <Tabs className="react-tabs" forceRenderTabPanel>
-            <TabList>
-              <Tab>
-                <button>{methodTypeLabel}</button>
-              </Tab>
-              <Tab>
-                <button>Headers</button>
-              </Tab>
-            </TabList>
-            <TabPanel className="react-tabs__tab-panel">
-              <GrpcTabbedMessages
-                uniquenessKey={uniquenessKey}
-                settings={settings}
-                tabNamePrefix="Stream"
-                messages={requestMessages}
-                bodyText={activeRequest.body.text}
-                handleBodyChange={handleChange.body}
-                showActions={running && enableClientStream}
-                handleStream={handleAction.stream}
-                handleCommit={handleAction.commit}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
-                isVariableUncovered={isVariableUncovered}
+  const { start } = handleAction;
+  const _handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (method && !running) {
+      executeHotKey(event, hotKeyRefs.REQUEST_SEND, start);
+    }
+  }, [method, running, start]);
+
+  return (
+    <KeydownBinder onKeydown={_handleKeyDown}>
+      <Pane type="request">
+        <PaneHeader>
+          <StyledUrlBar>
+            <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
+            <StyledUrlEditor title={activeRequest.url}>
+              <OneLineEditor
+                key={uniquenessKey}
+                type="text"
+                forceEditor
+                defaultValue={activeRequest.url}
+                placeholder="grpcb.in:9000"
+                onChange={handleChange.url}
+                getAutocompleteConstants={getExistingGrpcUrls}
               />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel">
-              <h4 className="pad">Coming soon! 😊</h4>
-            </TabPanel>
-          </Tabs>
-        )}
-        {!methodType && (
-          <div className="overflow-hidden editor vertically-center text-center">
-            <p className="pad super-faint text-sm text-center">
-              <i
-                className="fa fa-hand-peace-o"
-                style={{
-                  fontSize: '8rem',
-                  opacity: 0.3,
-                }}
+            </StyledUrlEditor>
+            <StyledDropdown>
+              <GrpcMethodDropdown
+                disabled={running}
+                methods={methods}
+                selectedMethod={method}
+                handleChange={handleChange.method}
+                handleChangeProtoFile={handleChange.protoFile}
               />
-              <br />
-              <br />
-              Select a gRPC method from above
-            </p>
-          </div>
-        )}
-      </PaneBody>
-    </Pane>
+            </StyledDropdown>
+
+            <GrpcSendButton
+              running={running}
+              methodType={methodType}
+              handleCancel={handleAction.cancel}
+              handleStart={handleAction.start}
+            />
+          </StyledUrlBar>
+        </PaneHeader>
+        <PaneBody>
+          {methodType && (
+            <Tabs className="react-tabs" forceRenderTabPanel>
+              <TabList>
+                <Tab>
+                  <button>{methodTypeLabel}</button>
+                </Tab>
+                <Tab>
+                  <button>Headers</button>
+                </Tab>
+              </TabList>
+              <TabPanel className="react-tabs__tab-panel">
+                <GrpcTabbedMessages
+                  uniquenessKey={uniquenessKey}
+                  tabNamePrefix="Stream"
+                  messages={requestMessages}
+                  bodyText={activeRequest.body.text}
+                  handleBodyChange={handleChange.body}
+                  showActions={running && enableClientStream}
+                  handleStream={handleAction.stream}
+                  handleCommit={handleAction.commit}
+                />
+              </TabPanel>
+              <TabPanel className="react-tabs__tab-panel">
+                <div className="tall wide scrollable-container">
+                  <div className="scrollable">
+                    <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                      <KeyValueEditor
+                        sortable
+                        namePlaceholder="header"
+                        valuePlaceholder="value"
+                        descriptionPlaceholder="description"
+                        pairs={activeRequest.metadata}
+                        handleGetAutocompleteNameConstants={getCommonHeaderNames}
+                        handleGetAutocompleteValueConstants={getCommonHeaderValues}
+                        onChange={handleChange.metadata}
+                      />
+                    </ErrorBoundary>
+                  </div>
+                </div>
+              </TabPanel>
+            </Tabs>
+          )}
+          {!methodType && (
+            <EmptyStatePane
+              icon={<SvgIcon icon="bug" />}
+              documentationLinks={[documentationLinks.introductionToInsomnia]}
+              secondaryAction="Select a body type from above to send data in the body of a request"
+              title="Enter a URL and send to get a response"
+            />
+          )}
+        </PaneBody>
+      </Pane>
+    </KeydownBinder>
   );
 };
-
-export default GrpcRequestPane;

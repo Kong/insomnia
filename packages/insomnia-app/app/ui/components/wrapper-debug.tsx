@@ -1,36 +1,40 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import PageLayout from './page-layout';
-import type { HandleImportFileCallback, WrapperProps } from './wrapper';
-import RequestPane from './panes/request-pane';
-import ErrorBoundary from './error-boundary';
-import ResponsePane from './panes/response-pane';
-import SidebarChildren from './sidebar/sidebar-children';
-import SidebarFilter from './sidebar/sidebar-filter';
-import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
-import GrpcRequestPane from './panes/grpc-request-pane';
-import GrpcResponsePane from './panes/grpc-response-pane';
-import WorkspacePageHeader from './workspace-page-header';
-import SyncDropdown from './dropdowns/sync-dropdown';
-import { Button } from 'insomnia-components';
-import { showSyncShareModal } from './modals/sync-share-modal';
-import { Settings } from '../../models/settings';
-import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
-import { isGrpcRequest } from '../../models/grpc-request';
-import { isCollection, isDesign } from '../../models/workspace';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
-interface Props {
+import { AUTOBIND_CFG, SortOrder } from '../../common/constants';
+import { isGrpcRequest } from '../../models/grpc-request';
+import { isRemoteProject } from '../../models/project';
+import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { Settings } from '../../models/settings';
+import { isCollection, isDesign } from '../../models/workspace';
+import { RootState } from '../redux/modules';
+import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
+import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
+import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
+import { SyncDropdown } from './dropdowns/sync-dropdown';
+import { ErrorBoundary } from './error-boundary';
+import { showCookiesModal } from './modals/cookies-modal';
+import { PageLayout } from './page-layout';
+import { GrpcRequestPane } from './panes/grpc-request-pane';
+import { GrpcResponsePane } from './panes/grpc-response-pane';
+import { RequestPane } from './panes/request-pane';
+import { ResponsePane } from './panes/response-pane';
+import { SidebarChildren } from './sidebar/sidebar-children';
+import { SidebarFilter } from './sidebar/sidebar-filter';
+import { WorkspacePageHeader } from './workspace-page-header';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
+
+interface Props extends ReturnType<typeof mapStateToProps> {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   handleChangeEnvironment: Function;
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleImportFile: HandleImportFileCallback;
   handleRequestCreate: () => void;
   handleRequestGroupCreate: () => void;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
@@ -38,7 +42,6 @@ interface Props {
   handleSetActiveResponse: Function;
   handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleShowCookiesModal: Function;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
@@ -47,71 +50,65 @@ interface Props {
   handleUpdateRequestMethod: (r: Request, method: string) => Promise<Request>;
   handleUpdateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
   handleUpdateRequestUrl: (r: Request, url: string) => Promise<Request>;
-  handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   wrapperProps: WrapperProps;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperDebug extends PureComponent<Props> {
+class UnconnectedWrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+    const { gitSyncDropdown, handleActivityChange, wrapperProps: {
+      vcs,
+      activeWorkspace,
+      activeWorkspaceMeta,
+      activeProject,
+      syncItems,
+      isLoggedIn,
+    } } = this.props;
 
     if (!activeWorkspace) {
       return null;
     }
 
     const collection = isCollection(activeWorkspace);
-    const design = isDesign(activeWorkspace);
 
-    let share: ReactNode = null;
     let insomniaSync: ReactNode = null;
-
-    if (isLoggedIn && collection && activeSpace?.remoteId && vcs) {
-      share = <Button variant="contained" onClick={showSyncShareModal}>
-        <i className="fa fa-globe pad-right-sm" /> Share
-      </Button>;
-
+    if (isLoggedIn && collection && isRemoteProject(activeProject) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
-        space={activeSpace}
+        project={activeProject}
         vcs={vcs}
-        syncItems={syncItems} />;
+        syncItems={syncItems}
+      />;
     }
 
-    const gitSync = design && gitSyncDropdown;
+    const gitSync = isDesign(activeWorkspace) && gitSyncDropdown;
     const sync = insomniaSync || gitSync;
 
     return (
       <WorkspacePageHeader
-        wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
-        gridRight={
-          <>
-            {share}
-            {sync && <span className="margin-left">{sync}</span>}
-          </>
-        }
+        gridRight={sync}
       />
     );
   }
 
   _renderPageSidebar() {
     const {
+      activeEnvironment,
+      activeWorkspace,
+      environments,
       handleChangeEnvironment,
       handleRequestCreate,
       handleRequestGroupCreate,
-      handleShowCookiesModal,
       handleSidebarSort,
+      settings,
+      sidebarChildren,
+      sidebarFilter,
     } = this.props;
     const {
-      activeEnvironment,
-      activeRequest,
-      activeWorkspace,
-      environments,
       handleActivateRequest,
       handleCopyAsCurl,
       handleCreateRequest,
@@ -119,16 +116,9 @@ class WrapperDebug extends PureComponent<Props> {
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleGenerateCode,
-      handleMoveDoc,
-      handleRender,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
       handleSetSidebarFilter,
-      settings,
-      sidebarChildren,
-      sidebarFilter,
-      sidebarHidden,
-      sidebarWidth,
     } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
@@ -146,8 +136,7 @@ class WrapperDebug extends PureComponent<Props> {
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             hotKeyRegistry={settings.hotKeyRegistry}
           />
-          {/* @ts-expect-error -- TSCONVERSION onClick event doesn't matter */}
-          <button className="btn btn--super-compact" onClick={handleShowCookiesModal}>
+          <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -175,16 +164,8 @@ class WrapperDebug extends PureComponent<Props> {
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
-          handleRender={handleRender}
-          moveDoc={handleMoveDoc}
-          // @ts-expect-error -- TSCONVERSION this prop isn't sent
-          hidden={sidebarHidden}
-          width={sidebarWidth}
-          workspace={activeWorkspace}
-          activeRequest={activeRequest}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
-          activeEnvironment={activeEnvironment}
         />
       </Fragment>
     );
@@ -192,11 +173,13 @@ class WrapperDebug extends PureComponent<Props> {
 
   _renderRequestPane() {
     const {
+      activeEnvironment,
+      activeRequest,
+      activeWorkspace,
       forceRefreshKey,
       handleForceUpdateRequest,
       handleForceUpdateRequestHeaders,
       handleImport,
-      handleImportFile,
       handleSendAndDownloadRequestWithActiveEnvironment,
       handleSendRequestWithActiveEnvironment,
       handleUpdateRequestAuthentication,
@@ -205,25 +188,17 @@ class WrapperDebug extends PureComponent<Props> {
       handleUpdateRequestMethod,
       handleUpdateRequestParameters,
       handleUpdateRequestUrl,
-      handleUpdateSettingsShowPasswords,
       handleUpdateSettingsUseBulkHeaderEditor,
       handleUpdateSettingsUseBulkParametersEditor,
+      responseDownloadPath,
+      settings,
     } = this.props;
     const {
-      activeEnvironment,
-      activeRequest,
-      activeWorkspace,
       handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
-      handleGetRenderContext,
-      handleRender,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
       headerEditorKey,
-      isVariableUncovered,
-      oAuth2Token,
-      responseDownloadPath,
-      settings,
     } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
@@ -241,9 +216,6 @@ class WrapperDebug extends PureComponent<Props> {
             workspaceId={activeWorkspace._id}
             forceRefreshKey={forceRefreshKey}
             settings={settings}
-            handleRender={handleRender}
-            isVariableUncovered={isVariableUncovered}
-            handleGetRenderContext={handleGetRenderContext}
           />
         </ErrorBoundary>
       );
@@ -259,16 +231,11 @@ class WrapperDebug extends PureComponent<Props> {
           forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
-          handleGetRenderContext={handleGetRenderContext}
           handleImport={handleImport}
-          handleImportFile={handleImportFile}
-          handleRender={handleRender}
           handleSend={handleSendRequestWithActiveEnvironment}
           handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
           handleUpdateDownloadPath={handleUpdateDownloadPath}
           headerEditorKey={headerEditorKey}
-          isVariableUncovered={isVariableUncovered}
-          oAuth2Token={oAuth2Token}
           request={activeRequest}
           settings={settings}
           updateRequestAuthentication={handleUpdateRequestAuthentication}
@@ -278,7 +245,6 @@ class WrapperDebug extends PureComponent<Props> {
           updateRequestMimeType={handleUpdateRequestMimeType}
           updateRequestParameters={handleUpdateRequestParameters}
           updateRequestUrl={handleUpdateRequestUrl}
-          updateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
           updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
           workspace={activeWorkspace}
@@ -295,10 +261,7 @@ class WrapperDebug extends PureComponent<Props> {
       handleSetActiveResponse,
       handleSetPreviewMode,
       handleSetResponseFilter,
-      handleShowCookiesModal,
       handleShowRequestSettingsModal,
-    } = this.props;
-    const {
       activeEnvironment,
       activeRequest,
       activeRequestResponses,
@@ -310,7 +273,7 @@ class WrapperDebug extends PureComponent<Props> {
       responseFilterHistory,
       responsePreviewMode,
       settings,
-    } = this.props.wrapperProps;
+    } = this.props;
 
     // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
     // The RequestPane and ResponsePane components already handle the case where activeRequest is null
@@ -320,7 +283,6 @@ class WrapperDebug extends PureComponent<Props> {
           <GrpcResponsePane
             activeRequest={activeRequest}
             forceRefreshKey={forceRefreshKey}
-            settings={settings}
           />
         </ErrorBoundary>
       );
@@ -332,9 +294,6 @@ class WrapperDebug extends PureComponent<Props> {
           disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
           disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
           editorFontSize={settings.editorFontSize}
-          editorIndentSize={settings.editorIndentSize}
-          editorKeyMap={settings.editorKeyMap}
-          editorLineWrapping={settings.editorLineWrapping}
           environment={activeEnvironment}
           filter={responseFilter}
           filterHistory={responseFilterHistory}
@@ -344,7 +303,6 @@ class WrapperDebug extends PureComponent<Props> {
           handleSetFilter={handleSetResponseFilter}
           handleSetPreviewMode={handleSetPreviewMode}
           handleShowRequestSettings={handleShowRequestSettingsModal}
-          showCookiesModal={handleShowCookiesModal}
           hotKeyRegistry={settings.hotKeyRegistry}
           loadStartTime={loadStartTime}
           previewMode={responsePreviewMode}
@@ -371,4 +329,23 @@ class WrapperDebug extends PureComponent<Props> {
   }
 }
 
-export default WrapperDebug;
+const mapStateToProps = (state: RootState) => ({
+  activeEnvironment: selectActiveEnvironment(state),
+  activeRequest: selectActiveRequest(state),
+  activeRequestResponses: selectActiveRequestResponses(state),
+  activeResponse: selectActiveResponse(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  environments: selectEnvironments(state),
+  loadStartTime: selectLoadStartTime(state),
+  requestVersions: selectRequestVersions(state),
+  responseDownloadPath: selectResponseDownloadPath(state),
+  responseFilter: selectResponseFilter(state),
+  responseFilterHistory: selectResponseFilterHistory(state),
+  responsePreviewMode: selectResponsePreviewMode(state),
+  settings: selectSettings(state),
+  sidebarChildren: selectSidebarChildren(state),
+  sidebarFilter: selectSidebarFilter(state),
+});
+
+export const WrapperDebug = connect(mapStateToProps)(UnconnectedWrapperDebug);

@@ -1,9 +1,11 @@
 import Color from 'color';
-import { render, THROW_ON_ERROR } from '../common/render';
-import { getThemes } from './index';
-import type { Theme } from './index';
+import { unreachableCase } from 'ts-assert-unreachable';
+
 import { getAppDefaultTheme } from '../common/constants';
-import { Settings } from '../models/settings';
+import { render, THROW_ON_ERROR } from '../common/render';
+import { ThemeSettings } from '../models/settings';
+import type { Theme } from './index';
+import { ColorScheme, getThemes } from './index';
 
 interface ThemeBlock {
   background?: {
@@ -58,10 +60,22 @@ type ThemeInner = ThemeBlock & {
 };
 
 export interface PluginTheme {
+  /** this name is used to generate CSS classes, and must be lower case and must not contain whitespace */
   name: string;
   displayName: string;
   theme: ThemeInner;
 }
+
+export const validateThemeName = (name: string) => {
+  const validName = name.replace(/\s/gm, '-').toLowerCase();
+  const isValid = name === validName;
+
+  if (!isValid) {
+    // `console.error`ing instead of throwing because this is a check that we had relatively late in the game and we don't want to break existing themes that might work (albeit, by accident)
+    console.error(`[theme] found an invalid theme name "${name}".  Try using ${validName}`);
+  }
+  return validName;
+};
 
 export async function generateThemeCSS(theme: PluginTheme) {
   const renderedTheme: ThemeInner = await render(
@@ -72,6 +86,8 @@ export async function generateThemeCSS(theme: PluginTheme) {
     theme.name,
   );
   const n = theme.name;
+  validateThemeName(theme.name);
+
   let css = '';
   // For the top-level variables, merge with the base theme to ensure that
   // we have everything we need.
@@ -222,8 +238,8 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
-export function getColorScheme(settings: Settings) {
-  if (!settings.autoDetectColorScheme) {
+export function getColorScheme({ autoDetectColorScheme }: ThemeSettings): ColorScheme {
+  if (!autoDetectColorScheme) {
     return 'default';
   }
 
@@ -238,15 +254,24 @@ export function getColorScheme(settings: Settings) {
   return 'default';
 }
 
-export async function applyColorScheme(settings: Settings) {
+export async function applyColorScheme(settings: ThemeSettings) {
   const scheme = getColorScheme(settings);
 
-  if (scheme === 'light') {
-    await setTheme(settings.lightTheme);
-  } else if (scheme === 'dark') {
-    await setTheme(settings.darkTheme);
-  } else {
-    await setTheme(settings.theme);
+  switch (scheme) {
+    case 'light':
+      await setTheme(settings.lightTheme);
+      break;
+
+    case 'dark':
+      await setTheme(settings.darkTheme);
+      break;
+
+    case 'default':
+      await setTheme(settings.theme);
+      break;
+
+    default:
+      unreachableCase(scheme);
   }
 }
 
@@ -290,23 +315,6 @@ export async function setTheme(themeName: string) {
 
     s.innerHTML = themeCSS;
   }
-}
-
-export async function setFont(settings: Record<string, any>) {
-  if (!document) {
-    return;
-  }
-
-  const html = document.querySelector('html');
-
-  if (!html) {
-    return;
-  }
-
-  html.style.setProperty('--font-default', settings.fontInterface);
-  html.style.setProperty('--font-monospace', settings.fontMonospace);
-  html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
-  html.style.setProperty('font-size', `${settings.fontSize}px`);
 }
 
 const _baseTheme = {

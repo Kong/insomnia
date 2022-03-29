@@ -1,9 +1,10 @@
 import { setDefaultProtocol } from 'insomnia-url';
-import * as c from './constants';
-import { responseToObject } from './misc';
-import * as network from '../network';
+
 import * as models from '../../models/index';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
+import * as network from '../network';
+import * as c from './constants';
+import { responseToObject } from './misc';
 
 export default async function(
   requestId: string,

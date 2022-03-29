@@ -1,42 +1,40 @@
-import React, { PureComponent, ReactNode } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
-import type { Workspace } from '../../../models/workspace';
-import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
+import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
+import React, { forwardRef, memo, ReactNode } from 'react';
+
 import {
   COLLAPSE_SIDEBAR_REMS,
   SIDEBAR_SKINNY_REMS,
-  AUTOBIND_CFG,
 } from '../../../common/constants';
+import type { Environment } from '../../../models/environment';
+import type { Workspace } from '../../../models/workspace';
 
 interface Props {
   activeEnvironment: Environment | null;
   children: ReactNode;
-  environmentHighlightColorStyle: string;
+  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   handleSetActiveEnvironment: (...args: any[]) => any;
-  handleSetActiveWorkspace: (...args: any[]) => any;
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
-  showEnvironmentsModal: (...args: any[]) => any;
   unseenWorkspaces: Workspace[];
   width: number;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class Sidebar extends PureComponent<Props> {
-  render() {
+export const Sidebar = memo(
+  forwardRef<HTMLElement, Props>((props, ref) => {
     const {
       activeEnvironment,
       children,
       environmentHighlightColorStyle,
       hidden,
       width,
-    } = this.props;
+    } = props;
+
     return (
       <aside
+        ref={ref}
         className={classnames('sidebar', 'theme--sidebar', {
           'sidebar--hidden': hidden,
           'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
@@ -49,11 +47,12 @@ class Sidebar extends PureComponent<Props> {
             environmentHighlightColorStyle === 'sidebar-edge'
               ? '5px solid ' + activeEnvironment.color
               : undefined,
-        }}>
+        }}
+      >
         {children}
       </aside>
     );
-  }
-}
+  })
+);
 
-export default Sidebar;
+Sidebar.displayName = 'Sidebar';

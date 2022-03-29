@@ -1,4 +1,4 @@
-const jq = require('jsonpath');
+const { JSONPath } = require('jsonpath-plus');
 
 module.exports.templateTags = [
   {
@@ -26,7 +26,7 @@ module.exports.templateTags = [
 
       let results;
       try {
-        results = jq.query(body, filter);
+        results = JSONPath({ json: body, path: filter });
       } catch (err) {
         throw new Error(`Invalid JSONPath query: ${filter}`);
       }

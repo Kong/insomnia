@@ -3,20 +3,22 @@ import {
   generateSlug,
   getAllServers,
   getName,
-  pathVariablesToRegex,
+  hasUpstreams,
   HttpMethod,
   parseUrl,
+  pathVariablesToRegex,
 } from '../common';
-import { generateSecurityPlugins } from './security-plugins';
-import {
-  generateOperationPlugins,
-  generateGlobalPlugins,
-  getRequestValidatorPluginDirective,
-  generatePlugins,
-} from './plugins';
-import { DCService, DCRoute } from '../types/declarative-config';
-import { OpenApi3Spec, OA3Server, OA3PathItem } from '../types/openapi3';
+import { DCRoute, DCService } from '../types/declarative-config';
 import { xKongName, xKongServiceDefaults } from '../types/kong';
+import { OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
+import {
+  generateGlobalPlugins,
+  generateOperationPlugins,
+  generatePlugins,
+  getRequestValidatorPluginDirective,
+} from './plugins';
+import { generateSecurityPlugins } from './security-plugins';
+import { appendUpstreamToName } from './upstreams';
 
 export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
@@ -34,6 +36,12 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
+
+  let host = parsedUrl.hostname;
+  if (hasUpstreams(api)) {
+    host =  appendUpstreamToName(name);
+  }
+
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api, tags);
   const serviceDefaults = api[xKongServiceDefaults] || {};
@@ -47,7 +55,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     name,
     // remove semicolon i.e. convert `https:` to `https`
     protocol: parsedUrl?.protocol?.substring(0, parsedUrl.protocol.length - 1),
-    host: name,
+    host,
     // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,

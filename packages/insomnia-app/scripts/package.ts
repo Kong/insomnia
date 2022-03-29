@@ -1,8 +1,9 @@
-import appConfig from '../config/config.json';
-import electronBuilderConfig from '../config/electronbuilder.json';
 import * as electronBuilder from 'electron-builder';
 import path from 'path';
 import rimraf from 'rimraf';
+
+import appConfig from '../config/config.json';
+import electronBuilderConfig from '../config/electronbuilder.json';
 import { start as build } from './build';
 
 const PLATFORM_MAP = {
@@ -11,11 +12,15 @@ const PLATFORM_MAP = {
   win32: 'win',
 } as const;
 
+const isSupportedPlatform = (platform: NodeJS.Platform): platform is keyof typeof PLATFORM_MAP => (
+  PLATFORM_MAP[platform] !== undefined
+);
+
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await build({ forceFromGitRef: false });
+      await build();
       await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
@@ -47,13 +52,19 @@ const pkg = () => {
     .replace(/__SYNOPSIS__/g, synopsis);
 
   const config = JSON.parse(rawConfig);
-  const targetPlatform = PLATFORM_MAP[process.platform];
+  const { platform } = process;
+  if (!isSupportedPlatform(platform)) {
+    console.log(`[package] ERROR: unsupported platform ${platform}`);
+    process.exit(1);
+  }
+  const targetPlatform = PLATFORM_MAP[platform];
 
   const target = BUILD_TARGETS?.split(',') ?? config[targetPlatform].target;
 
   return electronBuilder.build({
     config,
     [targetPlatform]: target,
+    ...targetPlatform === 'mac' ? { universal: true } : {},
   });
 };
 

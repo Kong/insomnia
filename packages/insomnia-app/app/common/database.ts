@@ -1,18 +1,21 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
-import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import { DB_PERSIST_INTERVAL } from './constants';
-import * as uuid from 'uuid';
-import { generateId } from './misc';
-import { getDataDirectory } from './electron-helpers';
+import { v4 as uuidv4 } from 'uuid';
+
 import { mustGetModel } from '../models';
-import type { Workspace } from '../models/workspace';
-import { GitRepository } from '../models/git-repository';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
+import { GitRepository } from '../models/git-repository';
+import { getMonkeyPatchedControlledSettings } from '../models/helpers/settings';
+import type { BaseModel } from '../models/index';
+import * as models from '../models/index';
+import { isSettings } from '../models/settings';
+import type { Workspace } from '../models/workspace';
+import { DB_PERSIST_INTERVAL } from './constants';
+import { getDataDirectory } from './electron-helpers';
+import { generateId } from './misc';
 
 export interface Query {
   _id?: string | SpecificQuery;
@@ -244,12 +247,14 @@ export const database = {
     for (const fn of changeListeners) {
       await fn(changes);
     }
-
     // Notify remote listeners
-    const windows = electron.BrowserWindow.getAllWindows();
+    const isMainContext = process.type === 'browser';
+    if (isMainContext){
+      const windows = electron.BrowserWindow.getAllWindows();
 
-    for (const window of windows) {
-      window.webContents.send('db.changes', changes);
+      for (const window of windows) {
+        window.webContents.send('db.changes', changes);
+      }
     }
   },
 
@@ -548,7 +553,7 @@ export const database = {
 
     let docsToReturn: T[] = doc ? [doc] : [];
 
-    async function next(docs: T[]) {
+    async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
 
       for (const d of docs) {
@@ -656,7 +661,15 @@ type ChangeListener = Function;
 let changeListeners: ChangeListener[] = [];
 
 async function notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSync: boolean) {
-  changeBuffer.push([event, doc, fromSync]);
+  let updatedDoc = doc;
+
+  // NOTE: this monkeypatching is temporary, and was determined to have the smallest blast radius if it exists here (rather than, say, a reducer or an action creator).
+  // see: INS-1059
+  if (isSettings(doc)) {
+    updatedDoc = getMonkeyPatchedControlledSettings(doc);
+  }
+
+  changeBuffer.push([event, updatedDoc, fromSync]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
@@ -675,7 +688,7 @@ type Patch<T> = Partial<T>;
 // ~~~~~~~ //
 async function _send<T>(fnName: string, ...args: any[]) {
   return new Promise<T>((resolve, reject) => {
-    const replyChannel = `db.fn.reply:${uuid.v4()}`;
+    const replyChannel = `db.fn.reply:${uuidv4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
     electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => {
       if (err) {

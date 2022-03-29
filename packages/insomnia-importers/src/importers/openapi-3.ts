@@ -1,11 +1,13 @@
-import crypto from 'crypto';
-import { camelCase } from 'change-case';
 import SwaggerParser from '@apidevtools/swagger-parser';
+import { camelCase } from 'change-case';
+import crypto from 'crypto';
+import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
+import { isPlainObject } from 'ramda-adjunct';
 import { parse as urlParse } from 'url';
+import YAML from 'yaml';
+
 import { Authentication, Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
-import YAML from 'yaml';
-import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 
 export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';
@@ -109,6 +111,15 @@ const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   }
 };
 
+export type SpecExtension = `x-${string}`;
+/**
+ * Checks if the given property name is an open-api extension
+ * @param property The property name
+ */
+const isSpecExtension = (property: string): property is SpecExtension => {
+  return property.indexOf('x-') === 0;
+};
+
 /**
  * Create request definitions based on openapi document.
  */
@@ -122,24 +133,26 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   const defaultParent = WORKSPACE_ID;
 
   const endpointsSchemas: ({
-    path: string,
-    method: string,
-    tags?: string[],
+    path: string;
+    method: string;
+    tags?: string[];
   } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
-    .map((path) => {
+    .map(path => {
       const schemasPerMethod = document.paths[path];
 
       if (!schemasPerMethod) {
         return [];
       }
 
-      return Object.keys(schemasPerMethod)
-        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
-        .map(method => ({
-          ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
-          path,
-          method,
-        }));
+      const methods = Object.entries(schemasPerMethod)
+        // Only keep entries that are plain objects and not spec extensions
+        .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+
+      return methods.map(([method]) => ({
+        ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
+        path,
+        method,
+      }));
     })
     .flat();
 
@@ -275,7 +288,7 @@ const parseSecurity = (
   }
 
   const supportedSchemes = security
-    .map((securityPolicy) => {
+    .map(securityPolicy => {
       const securityName = Object.keys(securityPolicy)[0];
       // @ts-expect-error the base types do not include an index but from what I can tell, they should
       return securitySchemes[securityName];
@@ -287,8 +300,8 @@ const parseSecurity = (
     scheme.type === SECURITY_TYPE.API_KEY
   ));
   const apiKeyHeaders = apiKeySchemes
-    .filter((scheme) => scheme.in === 'header')
-    .map((scheme) => {
+    .filter(scheme => scheme.in === 'header')
+    .map(scheme => {
       const variableName = camelCase(scheme.name);
       return {
         name: scheme.name,
@@ -297,8 +310,8 @@ const parseSecurity = (
       };
     });
   const apiKeyCookies = apiKeySchemes
-    .filter((scheme) => scheme.in === 'cookie')
-    .map((scheme) => {
+    .filter(scheme => scheme.in === 'cookie')
+    .map(scheme => {
       const variableName = camelCase(scheme.name);
       return `${scheme.name}={{ ${variableName} }}`;
     });
@@ -308,8 +321,8 @@ const parseSecurity = (
     value: apiKeyCookies.join('; '),
   };
   const apiKeyParams = apiKeySchemes
-    .filter((scheme) => scheme.in === 'query')
-    .map((scheme) => {
+    .filter(scheme => scheme.in === 'query')
+    .map(scheme => {
       const variableName = camelCase(scheme.name);
       return {
         name: scheme.name,
@@ -324,9 +337,9 @@ const parseSecurity = (
 
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
-      (scheme) =>
+      scheme =>
         [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
-        SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
+        (scheme.type === SECURITY_TYPE.OAUTH || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme)),
     );
 
     if (!authScheme) {
@@ -367,8 +380,8 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
   const securitySchemes = Object.values(securitySchemeObject);
 
   const apiKeyVariableNames = securitySchemes
-    .filter((scheme) => scheme.type === SECURITY_TYPE.API_KEY)
-    .map((scheme) => camelCase(scheme.name));
+    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
+    .map(scheme => camelCase(scheme.name));
   const variables: Record<string, string> = {};
   Array.from(new Set(apiKeyVariableNames)).forEach(name => {
     variables[name] = name;
@@ -389,9 +402,16 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
   }
 
   const oauth2Variables = securitySchemes.reduce((accumulator, scheme) => {
-    if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
+    if (scheme.type === SECURITY_TYPE.OAUTH) {
       accumulator.oauth2ClientId = 'clientId';
       const flows = scheme.flows || {};
+
+      if (
+        flows.authorizationCode ||
+        flows.implicit
+      ) {
+        accumulator.oauth2RedirectUrl = 'http://localhost/';
+      }
 
       if (
         flows.authorizationCode ||
@@ -463,7 +483,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
  * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.map((parameter) => {
+  return parameters.map(parameter => {
     const { required, name, schema } = parameter;
     return {
       name,
@@ -644,6 +664,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme) => {
       return {
         ...base,
         clientSecret: '{{ oauth2ClientSecret }}',
+        redirectUrl: '{{ oauth2RedirectUrl }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.tokenUrl,
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.authorizationUrl,
       };
@@ -658,6 +679,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme) => {
     case OAUTH_FLOWS.IMPLICIT:
       return {
         ...base,
+        redirectUrl: '{{ oauth2RedirectUrl }}',
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])?.authorizationUrl,
       };
 
@@ -687,7 +709,11 @@ export const convert: Converter = async rawData => {
   }
 
   try {
-    apiDocument = await SwaggerParser.validate(apiDocument) as OpenAPIV3.Document;
+    apiDocument = await SwaggerParser.validate(apiDocument, {
+      dereference: {
+        circular: 'ignore',
+      },
+    }) as OpenAPIV3.Document;
   } catch (err) {
     console.log('[openapi-3] Import file validation failed', err);
   }

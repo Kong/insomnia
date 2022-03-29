@@ -1,10 +1,11 @@
+import { parseArgsStringToArgv } from 'string-argv';
+
+import * as packageJson from '../package.json';
 import * as cli from './cli';
+import { exportSpecification as _exportSpecification } from './commands/export-specification';
 import { generateConfig as _generateConfig } from './commands/generate-config';
 import { lintSpecification as _lintSpecification } from './commands/lint-specification';
 import { runInsomniaTests as _runInsomniaTests } from './commands/run-tests';
-import { exportSpecification as _exportSpecification } from './commands/export-specification';
-import { parseArgsStringToArgv } from 'string-argv';
-import * as packageJson from '../package.json';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
 import { exit as _exit } from './util';
@@ -65,22 +66,14 @@ describe('cli', () => {
       logger.restoreAll();
     });
 
-    it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
-      const oldNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-      logger.wrapAll();
-      expect(() => inso(args)).toThrowError('dev');
-      logger.restoreAll();
-      process.env.NODE_ENV = oldNodeEnv;
-    });
-
     it('should print options', () => {
       inso('generate config file.yaml -t declarative --printOptions --verbose');
 
       const logs = logger.__getLogs();
 
-      expect(logs.log[0]).toContainEqual({
+      expect(logs.log?.[0]).toContainEqual({
         type: 'declarative',
+        format: 'yaml',
         printOptions: true,
         verbose: true,
       });
@@ -92,6 +85,7 @@ describe('cli', () => {
       inso('generate config');
       expect(generateConfig).toHaveBeenCalledWith(undefined, {
         type: 'declarative',
+        format: 'yaml',
       });
     });
 
@@ -111,6 +105,7 @@ describe('cli', () => {
       inso('generate config -t declarative file.yaml');
       expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
         type: 'declarative',
+        format: 'yaml',
       });
     });
 
@@ -150,10 +145,11 @@ describe('cli', () => {
     });
 
     it('should call generateConfig with global options', () => {
-      inso('lint spec file.yaml -w dir1 -a dir2 --ci');
+      inso('lint spec file.yaml -w dir1 -a dir2 --src src --ci');
       expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {
         workingDir: 'dir1',
         appDataDir: 'dir2',
+        src: 'src',
         ci: true,
       });
     });
@@ -191,12 +187,13 @@ describe('cli', () => {
     });
 
     it('should call runInsomniaTests with global options', () => {
-      inso('run test uts_123 -w dir1 -a dir2 --ci');
+      inso('run test uts_123 -w dir1 -a dir2 --src src --ci');
       expect(runInsomniaTests).toHaveBeenCalledWith(
         'uts_123',
         expect.objectContaining({
           workingDir: 'dir1',
           appDataDir: 'dir2',
+          src: 'src',
           ci: true,
         }),
       );

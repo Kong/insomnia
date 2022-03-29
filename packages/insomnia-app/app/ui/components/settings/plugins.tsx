@@ -1,30 +1,30 @@
-import * as path from 'path';
-import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
-import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { PluginConfig } from 'insomnia-common';
+import { Button, ToggleSwitch } from 'insomnia-components';
+import * as path from 'path';
+import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
+
 import {
   AUTOBIND_CFG,
   NPM_PACKAGE_BASE,
   PLUGIN_HUB_BASE,
   PLUGIN_PATH,
 } from '../../../common/constants';
-import * as electron from 'electron';
-import CopyButton from '../base/copy-button';
-import { reload } from '../../../templating/index';
-import installPlugin from '../../../plugins/install';
-import HelpTooltip from '../help-tooltip';
-import Link from '../base/link';
-import { delay } from '../../../common/misc';
-import type { PluginConfig, Settings } from '../../../models/settings';
-import { Button, ToggleSwitch } from 'insomnia-components';
-import { createPlugin } from '../../../plugins/create';
-import { showAlert, showPrompt } from '../modals';
 import { docsPlugins } from '../../../common/documentation';
+import { delay } from '../../../common/misc';
+import * as models from '../../../models';
+import type { Settings } from '../../../models/settings';
+import { createPlugin } from '../../../plugins/create';
+import type { Plugin } from '../../../plugins/index';
+import { getPlugins } from '../../../plugins/index';
+import { reload } from '../../../templating/index';
+import { CopyButton } from '../base/copy-button';
+import { Link } from '../base/link';
+import { HelpTooltip } from '../help-tooltip';
+import { showAlert, showPrompt } from '../modals';
 
 interface Props {
   settings: Settings;
-  updateSetting: (...args: any[]) => any;
 }
 
 interface State {
@@ -37,7 +37,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Plugins extends PureComponent<Props, State> {
+export class Plugins extends PureComponent<Props, State> {
   _isMounted: boolean;
 
   state: State = {
@@ -47,7 +47,7 @@ class Plugins extends PureComponent<Props, State> {
     installPluginErrMsg: '',
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
-  }
+  };
 
   _handleClearError() {
     this.setState({ error: null });
@@ -74,7 +74,7 @@ class Plugins extends PureComponent<Props, State> {
     };
 
     try {
-      await installPlugin(this.state.npmPluginValue.trim());
+      await window.main.installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
@@ -86,7 +86,7 @@ class Plugins extends PureComponent<Props, State> {
   }
 
   static _handleOpenDirectory(directory: string) {
-    electron.remote.shell.showItemInFolder(directory);
+    window.shell.showItemInFolder(directory);
   }
 
   async _handleRefreshPlugins() {
@@ -114,7 +114,7 @@ class Plugins extends PureComponent<Props, State> {
   }
 
   static _handleClickShowPluginsFolder() {
-    electron.remote.shell.showItemInFolder(PLUGIN_PATH);
+    window.shell.showItemInFolder(PLUGIN_PATH);
   }
 
   _handleCreatePlugin() {
@@ -165,8 +165,10 @@ class Plugins extends PureComponent<Props, State> {
   }
 
   async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
-    const { updateSetting, settings } = this.props;
-    await updateSetting('pluginConfig', { ...settings.pluginConfig, [pluginName]: config });
+    const { settings } = this.props;
+    await models.settings.update(this.props.settings, {
+      pluginConfig: { ...settings.pluginConfig, [pluginName]: config },
+    });
   }
 
   async _togglePluginEnabled(name: string, enabled: boolean, config: PluginConfig) {
@@ -241,7 +243,8 @@ class Plugins extends PureComponent<Props, State> {
                     <td
                       style={{
                         width: '4rem',
-                      }}>
+                      }}
+                    >
                       {this.renderToggleSwitch(plugin)}
                     </td>
                     <td>
@@ -260,18 +263,21 @@ class Plugins extends PureComponent<Props, State> {
                       className="no-wrap"
                       style={{
                         width: '10rem',
-                      }}>
+                      }}
+                    >
                       <CopyButton
                         size="small"
                         variant="contained"
                         title={plugin.directory}
-                        content={plugin.directory}>
+                        content={plugin.directory}
+                      >
                         Copy Path
                       </CopyButton>{' '}
                       <Button
                         size="small"
                         variant="contained"
-                        onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}>
+                        onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}
+                      >
                         Reveal Folder
                       </Button>
                     </td>
@@ -331,7 +337,8 @@ class Plugins extends PureComponent<Props, State> {
           <Button
             disabled={isRefreshingPlugins}
             className="space-left"
-            onClick={this._handleClickRefreshPlugins}>
+            onClick={this._handleClickRefreshPlugins}
+          >
             Reload Plugins
             {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
           </Button>
@@ -340,5 +347,3 @@ class Plugins extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Plugins;

@@ -1,5 +1,5 @@
-import xpath, { SelectedValue } from 'xpath';
 import { DOMParser } from 'xmldom';
+import xpath, { SelectedValue } from 'xpath';
 
 /**
  * Query an XML blob with XPath
@@ -40,6 +40,13 @@ export const query = (xml: string, query?: string) => {
           output.push({
             outer: (selectedValue as Node).toString().trim(),
             inner: (selectedValue as Node).childNodes.toString(),
+          });
+          break;
+
+        case 'Text':
+          output.push({
+            outer: (selectedValue as Text).toString().trim(),
+            inner: (selectedValue as Text).toString().trim(),
           });
           break;
 

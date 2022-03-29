@@ -1,16 +1,21 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
 import { Button } from 'insomnia-components';
-import { strings } from '../../../common/strings';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
-interface Props {
-  workspace: Workspace;
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import { interceptAccessError } from '../../../sync/vcs/util';
+import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectActiveWorkspace } from '../../redux/selectors';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
 }
 
@@ -25,7 +30,7 @@ const INITIAL_STATE: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncDeleteModal extends PureComponent<Props, State> {
+export class UnconnectedSyncDeleteModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
 
@@ -51,9 +56,15 @@ class SyncDeleteModal extends PureComponent<Props, State> {
   async _handleDelete(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     const { vcs } = this.props;
+    const { workspaceName } = this.state;
 
     try {
-      await vcs.archiveProject();
+      await interceptAccessError({
+        action: 'delete',
+        callback: () => vcs.archiveProject(),
+        resourceName: workspaceName,
+        resourceType: strings.collection.singular.toLowerCase(),
+      });
       this.hide();
     } catch (err) {
       this.setState({
@@ -71,23 +82,24 @@ class SyncDeleteModal extends PureComponent<Props, State> {
     this.setState(INITIAL_STATE);
     // Focus input when modal shows
     setTimeout(() => {
-      this.input && this.input.focus();
+      this.input?.focus();
     }, 100);
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
     const { error, workspaceName } = this.state;
-    const { workspace } = this.props;
+    const { activeWorkspace } = this.props;
     const workspaceNameElement = (
       <strong
         style={{
           whiteSpace: 'pre-wrap',
-        }}>
-        {workspace.name}
+        }}
+      >
+        {activeWorkspace?.name}
       </strong>
     );
     return (
@@ -109,7 +121,7 @@ class SyncDeleteModal extends PureComponent<Props, State> {
                 onChange={this._updateWorkspaceName}
                 value={workspaceName}
               />
-              <Button bg="danger" disabled={workspaceName !== workspace.name}>
+              <Button bg="danger" disabled={workspaceName !== activeWorkspace?.name}>
                 Delete {strings.collection.singular}
               </Button>
             </div>
@@ -120,4 +132,13 @@ class SyncDeleteModal extends PureComponent<Props, State> {
   }
 }
 
-export default SyncDeleteModal;
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspace: selectActiveWorkspace(state),
+});
+
+export const SyncDeleteModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncDeleteModal);

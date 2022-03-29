@@ -1,8 +1,9 @@
 import { Entry } from 'type-fest';
+
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin } from '../types/declarative-config';
-import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, xKongPluginRequestValidator, XKongPluginRequestValidator } from '../types/kong';
-import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
+import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
+import { OA3Operation, OA3Parameter, OA3RequestBody, OpenApi3Spec } from '../types/openapi3';
 
 export const isRequestValidatorPluginKey = (property: string): property is typeof xKongPluginRequestValidator => (
   property.match(/-request-validator$/) != null
@@ -110,9 +111,9 @@ export function generateRequestValidatorPlugin({
   tags,
   operation,
 }: {
-  plugin?: Partial<RequestValidatorPlugin>,
-  tags: string[],
-  operation?: OA3Operation,
+  plugin?: Partial<RequestValidatorPlugin>;
+  tags: string[];
+  operation?: OA3Operation;
 }) {
   const config: Partial<RequestValidatorPlugin['config']> = {
     version: 'draft4',
@@ -182,10 +183,10 @@ export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
 }
 
 export const generateOperationPlugins = ({ operation, pathPlugins, parentValidatorPlugin, tags }: {
-  operation: OA3Operation,
-  pathPlugins: DCPlugin[],
-  parentValidatorPlugin?: RequestValidatorPlugin | null,
-  tags: string[],
+  operation: OA3Operation;
+  pathPlugins: DCPlugin[];
+  parentValidatorPlugin?: RequestValidatorPlugin | null;
+  tags: string[];
 }) => {
   const operationPlugins = generatePlugins(operation, tags);
 

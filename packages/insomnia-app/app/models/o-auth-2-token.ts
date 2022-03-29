@@ -1,5 +1,5 @@
-import type { BaseModel } from './index';
 import { database as db } from '../common/database';
+import type { BaseModel } from './index';
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
 
@@ -13,7 +13,7 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-interface BaseOAuth2Token {
+export interface BaseOAuth2Token {
   refreshToken: string;
   accessToken: string;
   identityToken: string;

@@ -1,10 +1,4 @@
-import {
-  ascendingNumberSort,
-  descendingNumberSort,
-  metaSortKeySort,
-  sortMethodMap,
-} from '../sorting';
-import { request, requestGroup, grpcRequest } from '../../models';
+import { grpcRequest, request, requestGroup } from '../../models';
 import {
   METHOD_DELETE,
   METHOD_GET,
@@ -21,6 +15,12 @@ import {
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
 } from '../constants';
+import {
+  ascendingNumberSort,
+  descendingNumberSort,
+  metaSortKeySort,
+  sortMethodMap,
+} from '../sorting';
 
 describe('Sorting methods', () => {
   it('sorts by name', () => {

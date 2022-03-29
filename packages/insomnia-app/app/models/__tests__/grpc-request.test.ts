@@ -1,5 +1,5 @@
-import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import * as models from '../index';
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);
@@ -12,6 +12,7 @@ describe('init()', () => {
       description: '',
       protoFileId: '',
       protoMethodName: '',
+      metadata: [],
       body: {
         text: '{}',
       },
@@ -40,6 +41,7 @@ describe('create()', () => {
       url: '',
       protoFileId: '',
       protoMethodName: '',
+      metadata: [],
       body: {
         text: '{}',
       },

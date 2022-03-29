@@ -1,6 +1,7 @@
-import React, { Component, Fragment } from 'react';
-import iconv from 'iconv-lite';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import iconv from 'iconv-lite';
+import React, { Component, Fragment } from 'react';
+
 import {
   AUTOBIND_CFG,
   HUGE_RESPONSE_MB,
@@ -8,30 +9,28 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import PDFViewer from './response-pdf-viewer';
-import CSVViewer from './response-csv-viewer';
-import CodeEditor from '../codemirror/code-editor';
-import ResponseWebView from './response-web-view';
-import MultipartViewer from './response-multipart';
-import ResponseRaw from './response-raw';
-import ResponseError from './response-error';
-import KeydownBinder from '../keydown-binder';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import { hotKeyRefs } from '../../../common/hotkeys';
 import { clickLink } from '../../../common/electron-helpers';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import { xmlDecode } from '../../../common/misc';
+import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { KeydownBinder } from '../keydown-binder';
+import { ResponseCSVViewer } from './response-csv-viewer';
+import { ResponseErrorViewer } from './response-error-viewer';
+import { ResponseMultipartViewer } from './response-multipart-viewer';
+import { ResponsePDFViewer } from './response-pdf-viewer';
+import { ResponseRawViewer } from './response-raw-viewer';
+import { ResponseWebView } from './response-web-view';
 
 let alwaysShowLargeResponses = false;
 
-interface Props {
+export interface ResponseViewerProps {
   bytes: number;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   download: (...args: any[]) => any;
   editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   filter: string;
   filterHistory: string[];
   getBody: (...args: any[]) => any;
@@ -46,32 +45,27 @@ interface State {
   blockingBecauseTooLarge: boolean;
   bodyBuffer: Buffer | null;
   error: string;
+  hugeResponse: boolean;
+  largeResponse: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseViewer extends Component<Props, State> {
-  _selectableView: ResponseRaw | CodeEditor | null;
+export class ResponseViewer extends Component<ResponseViewerProps, State> {
+  _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
     blockingBecauseTooLarge: false,
     bodyBuffer: null,
     error: '',
-  }
+    hugeResponse: false,
+    largeResponse: false,
+  };
 
   refresh() {
     // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
     if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
       // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
       this._selectableView.refresh();
-    }
-  }
-
-  _decodeIconv(bodyBuffer: Buffer, charset: string) {
-    try {
-      return iconv.decode(bodyBuffer, charset);
-    } catch (err) {
-      console.warn('[response] Failed to decode body', err);
-      return bodyBuffer.toString();
     }
   }
 
@@ -89,14 +83,16 @@ class ResponseViewer extends Component<Props, State> {
     this._handleDismissBlocker();
   }
 
-  _maybeLoadResponseBody(props: Props, forceShow?: boolean) {
-    // Block the response if it's too large
-    const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+  _maybeLoadResponseBody(props: ResponseViewerProps, forceShow?: boolean) {
+    const { bytes } = props;
+    const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+    const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
 
-    if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
-      this.setState({
-        blockingBecauseTooLarge: true,
-      });
+    this.setState({ largeResponse, hugeResponse });
+
+    // Block the response if it's too large
+    if (!forceShow && !alwaysShowLargeResponses && largeResponse) {
+      this.setState({ blockingBecauseTooLarge: true });
     } else {
       try {
         const bodyBuffer = props.getBody();
@@ -118,11 +114,11 @@ class ResponseViewer extends Component<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps(nextProps: ResponseViewerProps) {
     this._maybeLoadResponseBody(nextProps);
   }
 
-  shouldComponentUpdate(nextProps: Props, nextState: State) {
+  shouldComponentUpdate(nextProps: ResponseViewerProps, nextState: State) {
     for (const k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
@@ -168,7 +164,7 @@ class ResponseViewer extends Component<Props, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends ResponseRaw | CodeEditor | null>(n: T) {
+  _setSelectableViewRef<T extends ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
     this._selectableView = n;
   }
 
@@ -180,32 +176,111 @@ class ResponseViewer extends Component<Props, State> {
     );
   }
 
-  _handleKeyDown(e: KeyboardEvent) {
+  _handleKeyDown(event: KeyboardEvent) {
     if (!this._isViewSelectable()) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.RESPONSE_FOCUS, () => {
+    executeHotKey(event, hotKeyRefs.RESPONSE_FOCUS, () => {
       if (!this._isViewSelectable()) {
         return;
       }
 
       this._selectableView?.focus();
 
-      this._selectableView?.selectAll();
+      if (!this.state.largeResponse) {
+        this._selectableView?.selectAll();
+      }
     });
+  }
+
+  _getContentType() {
+    const { contentType: originalContentType } = this.props;
+    const { bodyBuffer } = this.state;
+
+    const lowercasedOriginalContentType = originalContentType.toLowerCase();
+
+    if (!bodyBuffer || bodyBuffer.length === 0) {
+      return lowercasedOriginalContentType;
+    }
+
+    // Try to detect JSON in all cases (even if a different header is set).
+    // Apparently users often send JSON with weird content-types like text/plain.
+    try {
+      if (bodyBuffer && bodyBuffer.length > 0) {
+        JSON.parse(bodyBuffer.toString('utf8'));
+        return 'application/json';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
+    // Try to detect HTML in all cases (even if header is set).
+    // It is fairly common for webservers to send errors in HTML by default.
+    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
+    try {
+      const isProbablyHTML = bodyBuffer
+        .slice(0, 100)
+        .toString()
+        .trim()
+        .match(/^<!doctype html.*>/i);
+
+      if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
+        return 'text/html';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
+    return lowercasedOriginalContentType;
+  }
+
+  _getBody() {
+    const { bodyBuffer } = this.state;
+    if (!bodyBuffer) {
+      return '';
+    }
+
+    // Show everything else as "source"
+    const contentType = this._getContentType();
+    const match = contentType.match(/charset=([\w-]+)/);
+    const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+
+    // Sometimes iconv conversion fails so fallback to regular buffer
+    try {
+      return iconv.decode(bodyBuffer, charset);
+    } catch (err) {
+      console.warn('[response] Failed to decode body', err);
+      return bodyBuffer.toString();
+    }
+  }
+
+  /** Try to detect content-types if there isn't one */
+  _getMode() {
+    if (this._getBody()?.match(/^\s*<\?xml [^?]*\?>/)) {
+      return 'application/xml';
+    }
+
+    return this._getContentType();
+  }
+
+  _handleClickLink(url: string) {
+    const mode = this._getMode();
+
+    if (mode === 'application/xml') {
+      clickLink(xmlDecode(url));
+      return;
+    }
+
+    clickLink(url);
   }
 
   _renderView() {
     const {
-      bytes,
       disableHtmlPreviewJs,
       disablePreviewLinks,
       download,
       editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       error: responseError,
       filter,
       filterHistory,
@@ -214,25 +289,23 @@ class ResponseViewer extends Component<Props, State> {
       updateFilter,
       url,
     } = this.props;
-    let contentType = this.props.contentType;
     const { bodyBuffer, error: parseError } = this.state;
     const error = responseError || parseError;
 
     if (error) {
       return (
         <div className="scrollable tall">
-          <ResponseError url={url} error={error} fontSize={editorFontSize} />
+          <ResponseErrorViewer url={url} error={error} />
         </div>
       );
     }
 
-    const wayTooLarge = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
-    const { blockingBecauseTooLarge } = this.state;
+    const { blockingBecauseTooLarge, hugeResponse } = this.state;
 
     if (blockingBecauseTooLarge) {
       return (
         <div className="response-pane__notify">
-          {wayTooLarge ? (
+          {hugeResponse ? (
             <Fragment>
               <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
               <button onClick={download} className="inline-block btn btn--clicky">
@@ -250,15 +323,17 @@ class ResponseViewer extends Component<Props, State> {
                 </button>
                 <button
                   onClick={this._handleDismissBlocker}
-                  disabled={wayTooLarge}
-                  className=" inline-block btn btn--clicky margin-xs">
+                  disabled={hugeResponse}
+                  className=" inline-block btn btn--clicky margin-xs"
+                >
                   Show Anyway
                 </button>
               </div>
               <div className="pad-top-sm">
                 <button
                   className="faint inline-block btn btn--super-compact"
-                  onClick={this._handleDisableBlocker}>
+                  onClick={this._handleDisableBlocker}
+                >
                   Always Show
                 </button>
               </div>
@@ -276,35 +351,8 @@ class ResponseViewer extends Component<Props, State> {
       return <div className="pad faint">No body returned for response</div>;
     }
 
-    // Try to detect JSON in all cases (even if header is set). Apparently users
-    // often send JSON with weird content-types like text/plain
-    try {
-      JSON.parse(bodyBuffer.toString('utf8'));
-      contentType = 'application/json';
-    } catch (e) {
-      // Nothing
-    }
-
-    // Try to detect HTML in all cases (even if header is set). It is fairly
-    // common for webservers to send errors in HTML by default.
-    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
-    try {
-      const isProbablyHTML = bodyBuffer
-        .slice(0, 100)
-        .toString()
-        .trim()
-        .match(/^<!doctype html.*>/i);
-
-      if (contentType.indexOf('text/html') !== 0 && isProbablyHTML) {
-        contentType = 'text/html';
-      }
-    } catch (e) {
-      // Nothing
-    }
-
-    const ct = contentType.toLowerCase();
-
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
+    const contentType = this._getContentType();
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -322,42 +370,45 @@ class ResponseViewer extends Component<Props, State> {
           </div>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
-      const match = contentType.match(/charset=([\w-]+)/);
-      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
       return (
         <ResponseWebView
-          body={this._decodeIconv(bodyBuffer, charset)}
+          body={this._getBody()}
           contentType={contentType}
           key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
           url={url}
           webpreferences={disableHtmlPreviewJs ? 'javascript=no' : 'javascript=yes'}
         />
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
-          <PDFViewer body={bodyBuffer} uniqueKey={responseId} />
+          <ResponsePDFViewer body={bodyBuffer} uniqueKey={responseId} />
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
-          <CSVViewer body={bodyBuffer} key={responseId} />
+          <ResponseCSVViewer body={bodyBuffer} key={responseId} />
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('multipart/') === 0) {
       return (
-        <MultipartViewer
+        <ResponseMultipartViewer
           bodyBuffer={bodyBuffer}
           contentType={contentType}
           disableHtmlPreviewJs={disableHtmlPreviewJs}
           disablePreviewLinks={disablePreviewLinks}
           download={download}
           editorFontSize={editorFontSize}
-          editorIndentSize={editorIndentSize}
-          editorKeyMap={editorKeyMap}
-          editorLineWrapping={editorLineWrapping}
           filter={filter}
           filterHistory={filterHistory}
           key={responseId}
@@ -365,7 +416,9 @@ class ResponseViewer extends Component<Props, State> {
           url={url}
         />
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -375,62 +428,40 @@ class ResponseViewer extends Component<Props, State> {
           </audio>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_RAW) {
-      const match = contentType.match(/charset=([\w-]+)/);
-      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    }
+
+    if (previewMode === PREVIEW_MODE_RAW) {
       return (
-        <ResponseRaw
+        <ResponseRawViewer
           key={responseId}
           responseId={responseId}
           ref={this._setSelectableViewRef}
-          value={this._decodeIconv(bodyBuffer, charset)}
-          fontSize={editorFontSize}
-        />
-      );
-    } else {
-      // Show everything else as "source"
-      const match = contentType.match(/charset=([\w-]+)/);
-      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
-
-      // Sometimes iconv conversion fails so fallback to regular buffer
-      const body = this._decodeIconv(bodyBuffer, charset);
-
-      // Try to detect content-types if there isn't one
-      let mode;
-
-      if (!mode && body.match(/^\s*<\?xml [^?]*\?>/)) {
-        mode = 'application/xml';
-      } else {
-        mode = contentType;
-      }
-
-      return (
-        <CodeEditor
-          key={disablePreviewLinks ? 'links-no' : 'links-yes'}
-          ref={this._setSelectableViewRef}
-          autoPrettify
-          defaultValue={body}
-          filter={filter}
-          filterHistory={filterHistory}
-          fontSize={editorFontSize}
-          indentSize={editorIndentSize}
-          keyMap={editorKeyMap}
-          lineWrapping={editorLineWrapping}
-          mode={mode}
-          noMatchBrackets
-          onClickLink={disablePreviewLinks ? undefined : clickLink}
-          placeholder="..."
-          readOnly
-          uniquenessKey={responseId}
-          updateFilter={updateFilter}
+          value={this._getBody()}
         />
       );
     }
+
+    // Show everything else as "source"
+    return (
+      <CodeEditor
+        key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
+        ref={this._setSelectableViewRef}
+        autoPrettify
+        defaultValue={this._getBody()}
+        filter={filter}
+        filterHistory={filterHistory}
+        mode={this._getMode()}
+        noMatchBrackets
+        onClickLink={disablePreviewLinks ? undefined : this._handleClickLink}
+        placeholder="..."
+        readOnly
+        uniquenessKey={responseId}
+        updateFilter={updateFilter}
+      />
+    );
   }
 
   render() {
     return <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
   }
 }
-
-export default ResponseViewer;

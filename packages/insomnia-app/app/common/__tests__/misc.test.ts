@@ -1,18 +1,31 @@
-import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
+  capitalize,
+  chunkArray,
+  convertEpochToMilliseconds,
+  debounce,
   diffPatchObj,
+  filterHeaders,
+  fuzzyMatch,
+  fuzzyMatchAll,
+  generateId,
+  hasAuthHeader,
   isNotNullOrUndefined,
+  keyedDebounce,
   pluralize,
   snapNumberToLimits,
-  convertEpochToMilliseconds,
+  toKebabCase,
+  toTitleCase,
+  xmlDecode,
 } from '../misc';
+
+jest.spyOn(global, 'setTimeout');
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
 
   it('finds valid header', () => {
-    const yes = misc.hasAuthHeader([
+    const yes = hasAuthHeader([
       {
         name: 'foo',
         value: 'bar',
@@ -26,7 +39,7 @@ describe('hasAuthHeader()', () => {
   });
 
   it('finds valid header case insensitive', () => {
-    const yes = misc.hasAuthHeader([
+    const yes = hasAuthHeader([
       {
         name: 'foo',
         value: 'bar',
@@ -44,12 +57,12 @@ describe('generateId()', () => {
   beforeEach(globalBeforeEach);
 
   it('generates a valid ID', () => {
-    const id = misc.generateId('foo');
+    const id = generateId('foo');
     expect(id).toMatch(/^foo_[a-z0-9]{32}$/);
   });
 
   it('generates without prefix', () => {
-    const id = misc.generateId();
+    const id = generateId();
     expect(id).toMatch(/^[a-z0-9]{32}$/);
   });
 });
@@ -58,13 +71,13 @@ describe('filterHeaders()', () => {
   beforeEach(globalBeforeEach);
 
   it('handles bad headers', () => {
-    expect(misc.filterHeaders(null, null)).toEqual([]);
-    expect(misc.filterHeaders([], null)).toEqual([]);
-    expect(misc.filterHeaders(['bad'], null)).toEqual([]);
-    expect(misc.filterHeaders(['bad'], 'good')).toEqual([]);
-    expect(misc.filterHeaders(null, 'good')).toEqual([]);
+    expect(filterHeaders(null, null)).toEqual([]);
+    expect(filterHeaders([], null)).toEqual([]);
+    expect(filterHeaders(['bad'], null)).toEqual([]);
+    expect(filterHeaders(['bad'], 'good')).toEqual([]);
+    expect(filterHeaders(null, 'good')).toEqual([]);
     expect(
-      misc.filterHeaders(
+      filterHeaders(
         [
           {
             name: '',
@@ -75,7 +88,7 @@ describe('filterHeaders()', () => {
       ),
     ).toEqual([]);
     expect(
-      misc.filterHeaders(
+      filterHeaders(
         [
           {
             name: 123,
@@ -86,7 +99,7 @@ describe('filterHeaders()', () => {
       ),
     ).toEqual([]);
     expect(
-      misc.filterHeaders(
+      filterHeaders(
         [
           {
             name: 'good',
@@ -97,7 +110,7 @@ describe('filterHeaders()', () => {
       ),
     ).toEqual([]);
     expect(
-      misc.filterHeaders(
+      filterHeaders(
         [
           {
             name: 'good',
@@ -108,7 +121,7 @@ describe('filterHeaders()', () => {
       ),
     ).toEqual([]);
     expect(
-      misc.filterHeaders(
+      filterHeaders(
         [
           {
             name: 'good',
@@ -134,7 +147,7 @@ describe('keyedDebounce()', () => {
 
   it('debounces correctly', () => {
     const resultsList = [];
-    const fn = misc.keyedDebounce(results => {
+    const fn = keyedDebounce(results => {
       resultsList.push(results);
     }, 100);
     fn('foo', 'bar');
@@ -142,7 +155,7 @@ describe('keyedDebounce()', () => {
     fn('foo', 'bar2');
     fn('foo', 'bar3');
     fn('multi', 'foo', 'bar', 'baz');
-    expect(setTimeout.mock.calls.length).toBe(5);
+    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultsList).toEqual([]);
     jest.runAllTimers();
     expect(resultsList).toEqual([
@@ -163,7 +176,7 @@ describe('debounce()', () => {
 
   it('debounces correctly', () => {
     const resultList = [];
-    const fn = misc.debounce((...args) => {
+    const fn = debounce((...args) => {
       resultList.push(args);
     }, 100);
     fn('foo');
@@ -171,7 +184,7 @@ describe('debounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     fn('baz', 'bar');
     fn('foo', 'bar3');
-    expect(setTimeout.mock.calls.length).toBe(5);
+    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultList).toEqual([]);
     jest.runAllTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);
@@ -182,12 +195,12 @@ describe('fuzzyMatch()', () => {
   beforeEach(globalBeforeEach);
 
   it('can get a positive fuzzy match on a single field', () => {
-    expect(misc.fuzzyMatch('test', 'testing')).toEqual({
+    expect(fuzzyMatch('test', 'testing')).toEqual({
       score: -3,
       indexes: [0, 1, 2, 3],
       target: 'testing',
     });
-    expect(misc.fuzzyMatch('tst', 'testing')).toEqual({
+    expect(fuzzyMatch('tst', 'testing')).toEqual({
       score: -2004,
       indexes: [0, 2, 3],
       target: 'testing',
@@ -195,8 +208,8 @@ describe('fuzzyMatch()', () => {
   });
 
   it('can get a negative fuzzy match on a single field', () => {
-    expect(misc.fuzzyMatch('foo', undefined)).toBeNull();
-    expect(misc.fuzzyMatch('foo', 'bar')).toBeNull();
+    expect(fuzzyMatch('foo', undefined)).toBeNull();
+    expect(fuzzyMatch('foo', 'bar')).toBeNull();
   });
 });
 
@@ -204,16 +217,16 @@ describe('fuzzyMatchAll()', () => {
   beforeEach(globalBeforeEach);
 
   it('can get a positive fuzzy match on multiple fields', () => {
-    expect(misc.fuzzyMatchAll('', [undefined])).toEqual(null);
-    expect(misc.fuzzyMatchAll('', ['testing'])).toEqual(null);
-    expect(misc.fuzzyMatchAll('   ', ['testing'])).toEqual(null);
-    expect(misc.fuzzyMatchAll('test', ['testing', 'foo'])).toEqual({
+    expect(fuzzyMatchAll('', [undefined])).toEqual(null);
+    expect(fuzzyMatchAll('', ['testing'])).toEqual(null);
+    expect(fuzzyMatchAll('   ', ['testing'])).toEqual(null);
+    expect(fuzzyMatchAll('test', ['testing', 'foo'])).toEqual({
       score: -3,
       indexes: [0, 1, 2, 3],
       target: 'testing foo',
     });
     expect(
-      misc.fuzzyMatchAll('test foo', ['testing', 'foo'], {
+      fuzzyMatchAll('test foo', ['testing', 'foo'], {
         splitSpace: true,
       }),
     ).toEqual({
@@ -221,13 +234,13 @@ describe('fuzzyMatchAll()', () => {
       indexes: [0, 1, 2, 3, 0, 1, 2],
       target: 'testing foo',
     });
-    expect(misc.fuzzyMatchAll('tst', ['testing'])).toEqual({
+    expect(fuzzyMatchAll('tst', ['testing'])).toEqual({
       score: -2004,
       indexes: [0, 2, 3],
       target: 'testing',
     });
     expect(
-      misc.fuzzyMatch('tst  this ou', 'testing this out', {
+      fuzzyMatch('tst  this ou', 'testing this out', {
         splitSpace: true,
         loose: true,
       }),
@@ -239,15 +252,15 @@ describe('fuzzyMatchAll()', () => {
   });
 
   it('can get a negative fuzzy match on multiple fields', () => {
-    expect(misc.fuzzyMatchAll('foo', [undefined])).toEqual(null);
-    expect(misc.fuzzyMatchAll('foo', ['bar'])).toEqual(null);
-    expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
+    expect(fuzzyMatchAll('foo', [undefined])).toEqual(null);
+    expect(fuzzyMatchAll('foo', ['bar'])).toEqual(null);
+    expect(fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });
 
 describe('chunkArray()', () => {
   it('works with exact divisor', () => {
-    const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 3);
+    const chunks = chunkArray([1, 2, 3, 4, 5, 6], 3);
     expect(chunks).toEqual([
       [1, 2, 3],
       [4, 5, 6],
@@ -255,7 +268,7 @@ describe('chunkArray()', () => {
   });
 
   it('works with weird divisor', () => {
-    const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 4);
+    const chunks = chunkArray([1, 2, 3, 4, 5, 6], 4);
     expect(chunks).toEqual([
       [1, 2, 3, 4],
       [5, 6],
@@ -263,12 +276,12 @@ describe('chunkArray()', () => {
   });
 
   it('works with empty', () => {
-    const chunks = misc.chunkArray([], 4);
+    const chunks = chunkArray([], 4);
     expect(chunks).toEqual([]);
   });
 
   it('works with less than one chunk', () => {
-    const chunks = misc.chunkArray([1, 2], 4);
+    const chunks = chunkArray([1, 2], 4);
     expect(chunks).toEqual([[1, 2]]);
   });
 });
@@ -395,5 +408,56 @@ describe('isNotNullOrUndefined', () => {
     expect(isNotNullOrUndefined(false)).toBe(true);
     expect(isNotNullOrUndefined(null)).toBe(false);
     expect(isNotNullOrUndefined(undefined)).toBe(false);
+  });
+});
+
+describe('xmlDecode()', () => {
+  it('unescape characters', () => {
+    const input = '&lt;a href=&quot;http://example.com?query1=value1&amp;query2=value2&quot;&gt;a link&lt;/a&gt;';
+    const output = '<a href="http://example.com?query1=value1&query2=value2">a link</a>';
+    expect(xmlDecode(input)).toEqual(output);
+  });
+});
+
+describe('toKebabCase', () => {
+  it('leaves strings without spaces alone', () => {
+    expect(toKebabCase('')).toEqual('');
+    expect(toKebabCase('-')).toEqual('-');
+    expect(toKebabCase('a')).toEqual('a');
+    expect(toKebabCase('A')).toEqual('A');
+    expect(toKebabCase('aBcD')).toEqual('aBcD');
+  });
+
+  it('replease spaces with hyphens', () => {
+    expect(toKebabCase('a A')).toEqual('a-A');
+    expect(toKebabCase('a A b B c')).toEqual('a-A-b-B-c');
+  });
+});
+
+describe('capitalize', () => {
+  it('capitalizes first letter', () => {
+    expect(capitalize('')).toEqual('');
+    expect(capitalize('a')).toEqual('A');
+    expect(capitalize('A')).toEqual('A');
+    expect(capitalize('abcd')).toEqual('Abcd');
+    expect(capitalize('abcd efg')).toEqual('Abcd efg');
+  });
+  it('lowercases all other letters but the first', () => {
+    expect(capitalize('aBcd efg')).toEqual('Abcd efg');
+    expect(capitalize('aBcd Efg')).toEqual('Abcd efg');
+  });
+});
+
+describe('toTitleCase', () => {
+  it('capitalizes first letter of each word', () => {
+    expect(toTitleCase('')).toEqual('');
+    expect(toTitleCase('a')).toEqual('A');
+    expect(toTitleCase('A')).toEqual('A');
+    expect(toTitleCase('abcd')).toEqual('Abcd');
+    expect(toTitleCase('abcd efg')).toEqual('Abcd Efg');
+  });
+  it('lowercases all other letters but the first of each word', () => {
+    expect(toTitleCase('aBcd efg')).toEqual('Abcd Efg');
+    expect(toTitleCase('aBcd Efg')).toEqual('Abcd Efg');
   });
 });

@@ -1,10 +1,11 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import classnames from 'classnames';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import CodeEditor from './code-editor';
-import Input from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
+import { CodeEditor,  CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -15,20 +16,17 @@ interface Props {
   id?: string;
   type?: string;
   mode?: string;
-  onBlur?: Function;
-  onKeyDown?: Function;
-  onFocus?: Function;
-  onChange?: Function;
-  onPaste?: Function;
-  render?: Function;
-  getRenderContext?: Function;
-  nunjucksPowerUserMode?: boolean;
-  getAutocompleteConstants?: Function | null;
+  onBlur?: (e: FocusEvent) => void;
+  onKeyDown?: (e: KeyboardEvent, value?: any) => void;
+  onFocus?: (e: FocusEvent) => void;
+  onChange?: CodeEditorOnChange;
+  onPaste?: (e: ClipboardEvent) => void;
+  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
-  isVariableUncovered?: boolean;
+  readOnly?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
 }
@@ -38,9 +36,9 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OneLineEditor extends PureComponent<Props, State> {
-  _editor: CodeEditor | null = null;
-  _input: Input | null = null;
+export class OneLineEditor extends PureComponent<Props, State> {
+  _editor: UnconnectedCodeEditor | null = null;
+  _input: DebouncedInput | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -122,7 +120,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
   }
 
-  _handleDocumentMousedown(e) {
+  _handleDocumentMousedown(event: KeyboardEvent) {
     if (!this._editor) {
       return;
     }
@@ -132,7 +130,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
     const node = ReactDOM.findDOMNode(this._editor);
     // @ts-expect-error -- TSCONVERSION
-    const clickWasOutsideOfComponent = !node.contains(e.target);
+    const clickWasOutsideOfComponent = !node.contains(event.target);
 
     if (clickWasOutsideOfComponent) {
       this._editor?.clearSelection();
@@ -211,20 +209,20 @@ class OneLineEditor extends PureComponent<Props, State> {
     this.props.onChange?.(value);
   }
 
-  _handleInputKeyDown(e) {
+  _handleInputKeyDown(event) {
     if (this.props.onKeyDown) {
-      this.props.onKeyDown(e, e.target.value);
+      this.props.onKeyDown(event, event.target.value);
     }
   }
 
-  _handleInputBlur() {
+  _handleInputBlur(e: FocusEvent) {
     // Set focused state
     this._input?.removeAttribute('data-focused');
 
-    this.props.onBlur?.();
+    this.props.onBlur?.(e);
   }
 
-  _handleEditorBlur() {
+  _handleEditorBlur(e: FocusEvent) {
     // Editor was already removed from the DOM, so do nothing
     if (!this._editor) {
       return;
@@ -243,19 +241,20 @@ class OneLineEditor extends PureComponent<Props, State> {
       }, 2000);
     }
 
-    this.props.onBlur?.();
+    this.props.onBlur?.(e);
   }
 
-  _handleKeyDown(e) {
+  // @TODO Refactor this event handler. The way we search for a parent form node is not stable.
+  _handleKeyDown(event) {
     // submit form if needed
-    if (e.keyCode === 13) {
-      let node = e.target;
+    if (event.keyCode === 13) {
+      let node = event.target;
 
       for (let i = 0; i < 20 && node; i++) {
         if (node.tagName === 'FORM') {
           node.dispatchEvent(new window.Event('submit'));
-          e.preventDefault();
-          e.stopPropagation();
+          event.preventDefault();
+          event.stopPropagation();
           break;
         }
 
@@ -263,7 +262,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       }
     }
 
-    this.props.onKeyDown?.(e, this.getValue());
+    this.props.onKeyDown?.(event, this.getValue());
   }
 
   _convertToEditorPreserveFocus() {
@@ -320,11 +319,11 @@ class OneLineEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this._editor = n;
   }
 
-  _setInputRef(n: Input) {
+  _setInputRef(n: DebouncedInput) {
     this._input = n;
   }
 
@@ -345,12 +344,8 @@ class OneLineEditor extends PureComponent<Props, State> {
       className,
       onChange,
       placeholder,
-      render,
       onPaste,
-      getRenderContext,
-      nunjucksPowerUserMode,
       getAutocompleteConstants,
-      isVariableUncovered,
       mode: syntaxMode,
       type: originalType,
     } = this.props;
@@ -370,6 +365,8 @@ class OneLineEditor extends PureComponent<Props, State> {
             noStyleActiveLine
             noLint
             singleLine
+            ignoreEditorFontSettings
+            enableNunjucks
             autoCloseBrackets={false}
             tabIndex={0}
             id={id}
@@ -381,24 +378,16 @@ class OneLineEditor extends PureComponent<Props, State> {
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
-            // @ts-expect-error -- TSCONVERSION
             onChange={onChange}
-            // @ts-expect-error -- TSCONVERSION
-            render={render}
-            // @ts-expect-error -- TSCONVERSION
-            getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            // @ts-expect-error -- TSCONVERSION
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}
-            isVariableUncovered={isVariableUncovered}
           />
         </Fragment>
       );
     } else {
       return (
-        <Input
+        <DebouncedInput
           ref={this._setInputRef}
           // @ts-expect-error -- TSCONVERSION
           id={id}
@@ -423,5 +412,3 @@ class OneLineEditor extends PureComponent<Props, State> {
     }
   }
 }
-
-export default OneLineEditor;

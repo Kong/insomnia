@@ -1,10 +1,11 @@
-import type { GrpcMethodDefinition } from '../method';
 import * as protoLoader from '@grpc/proto-loader';
-import { AnyDefinition, EnumTypeDefinition, ServiceDefinition, MessageTypeDefinition } from '@grpc/proto-loader';
+import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, ServiceDefinition } from '@grpc/proto-loader';
+
 import * as models from '../../../models';
-import writeProtoFile from './write-proto-file';
-import { ProtoFile } from '../../../models/proto-file';
 import { GrpcRequest } from '../../../models/grpc-request';
+import { ProtoFile } from '../../../models/proto-file';
+import type { GrpcMethodDefinition } from '../method';
+import writeProtoFile from './write-proto-file';
 
 const GRPC_LOADER_OPTIONS = {
   keepCase: true,

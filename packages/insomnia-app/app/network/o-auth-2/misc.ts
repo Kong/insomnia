@@ -1,21 +1,25 @@
-import electron from 'electron';
-import * as uuid from 'uuid';
+import { BrowserWindow } from 'electron';
 import querystring from 'querystring';
+import { v4 as uuidv4 } from 'uuid';
 
-const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-let authWindowSessionId;
+import * as models from '../../models/index';
 
-if (window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID)) {
-  authWindowSessionId = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-} else {
-  initNewOAuthSession();
+export enum ChromiumVerificationResult {
+  BLIND_TRUST = 0,
+  USE_CHROMIUM_RESULT = -3
 }
 
+export const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+export function getOAuthSession(): string {
+  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  return token || initNewOAuthSession();
+}
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
-  authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
+  const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  return authWindowSessionId;
 }
 
 export function responseToObject(body, keys, defaults = {}) {
@@ -43,7 +47,7 @@ export function responseToObject(body, keys, defaults = {}) {
   for (const key of keys) {
     if (data[key] !== undefined) {
       results[key] = data[key];
-    } else if (defaults && defaults.hasOwnProperty(key)) {
+    } else if (defaults?.hasOwnProperty(key)) {
       results[key] = defaults[key];
     } else {
       results[key] = null;
@@ -53,13 +57,28 @@ export function responseToObject(body, keys, defaults = {}) {
   return results;
 }
 
-export function authorizeUserInWindow(
+export function authorizeUserInWindow({
   url,
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
-) {
-  return new Promise<string>((resolve, reject) => {
+  sessionId,
+}) {
+  return new Promise<string>(async (resolve, reject) => {
     let finalUrl: string | null = null;
+
+    // Fetch user setting to determine whether to validate SSL certificates during auth
+    const {
+      validateAuthSSL,
+    } = await models.settings.getOrCreate();
+
+    // Create a child window
+    const child = new BrowserWindow({
+      webPreferences: {
+        nodeIntegration: false,
+        partition: sessionId,
+      },
+      show: false,
+    });
 
     function _parseUrl(currentUrl: string, source: string) {
       if (currentUrl.match(urlSuccessRegex)) {
@@ -84,14 +103,6 @@ export function authorizeUserInWindow(
       }
     }
 
-    // Create a child window
-    const child = new electron.remote.BrowserWindow({
-      webPreferences: {
-        nodeIntegration: false,
-        partition: authWindowSessionId,
-      },
-      show: false,
-    });
     // Finish on close
     child.on('close', () => {
       if (finalUrl) {
@@ -118,8 +129,26 @@ export function authorizeUserInWindow(
       // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
       _parseUrl(url, 'did-fail-load');
     });
+    child.webContents.session.setCertificateVerifyProc((_request, callback) => {
+      if (validateAuthSSL) {
+        // Use results of Chromium's cert verification
+        callback(ChromiumVerificationResult.USE_CHROMIUM_RESULT);
+      } else {
+        // Don't verify; blindly trust cert
+        callback(ChromiumVerificationResult.BLIND_TRUST);
+      }
+    });
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
-    child.loadURL(url);
+
+    try {
+      await child.loadURL(url);
+    } catch (e) {
+      // Reject with error to show result in OAuth2 tab
+      reject(e);
+      // Need to close child window here since an exception in loadURL precludes normal call in
+      // _parseUrl
+      child.close();
+    }
   });
 }

@@ -1,8 +1,9 @@
-import * as grpc from '../network/grpc';
 import { ipcMain } from 'electron';
+
 import { GrpcRequestEventEnum } from '../common/grpc-events';
-import { ResponseCallbacks } from '../network/grpc/response-callbacks';
+import * as grpc from '../network/grpc';
 import { GrpcIpcRequestParams } from '../network/grpc/prepare';
+import { ResponseCallbacks } from '../network/grpc/response-callbacks';
 
 export function init() {
   ipcMain.on(GrpcRequestEventEnum.start, (e, params: GrpcIpcRequestParams) =>

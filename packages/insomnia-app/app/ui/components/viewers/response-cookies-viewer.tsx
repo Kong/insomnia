@@ -1,10 +1,11 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import React, { PureComponent } from 'react';
 import { Cookie } from 'tough-cookie';
 
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { showCookiesModal } from '../modals/cookies-modal';
+
 interface Props {
-  showCookiesModal: Function;
   cookiesSent?: boolean | null;
   cookiesStored?: boolean | null;
   headers: any[];
@@ -12,7 +13,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseCookiesViewer extends PureComponent<Props> {
+export class ResponseCookiesViewer extends PureComponent<Props> {
   renderRow(h, i) {
     let cookie: Cookie | undefined | null = null;
 
@@ -32,7 +33,7 @@ class ResponseCookiesViewer extends PureComponent<Props> {
   }
 
   render() {
-    const { headers, showCookiesModal, cookiesSent, cookiesStored } = this.props;
+    const { headers, cookiesSent, cookiesStored } = this.props;
     const notifyNotStored = !cookiesStored && headers.length;
     let noticeMessage: string | null = null;
 
@@ -64,7 +65,7 @@ class ResponseCookiesViewer extends PureComponent<Props> {
           <tbody>{!headers.length ? this.renderRow(null, -1) : headers.map(this.renderRow)}</tbody>
         </table>
         <p className="pad-top">
-          <button className="pull-right btn btn--clicky" onClick={() => showCookiesModal()}>
+          <button className="pull-right btn btn--clicky" onClick={showCookiesModal}>
             Manage Cookies
           </button>
         </p>
@@ -72,5 +73,3 @@ class ResponseCookiesViewer extends PureComponent<Props> {
     );
   }
 }
-
-export default ResponseCookiesViewer;

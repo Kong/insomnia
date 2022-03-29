@@ -1,12 +1,12 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { Sidebar } from 'insomnia-components';
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
-import { Sidebar } from 'insomnia-components';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import type { ApiSpec } from '../../../models/api-spec';
-import { trackEvent } from '../../../common/analytics';
 
 interface Props {
   apiSpec: ApiSpec;
@@ -24,11 +24,11 @@ const StyledSpecEditorSidebar = styled.div`
 `;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SpecEditorSidebar extends Component<Props, State> {
+export class SpecEditorSidebar extends Component<Props, State> {
   state: State = {
     error: '',
     specContentJSON: false,
-  }
+  };
 
   _handleScrollEditor(pos: {
     start: {
@@ -40,7 +40,6 @@ class SpecEditorSidebar extends Component<Props, State> {
       col: number;
     };
   }) {
-    trackEvent('Spec Sidebar', 'Navigate');
     const { handleSetSelection } = this.props;
     // NOTE: We're subtracting 1 from everything because YAML CST uses
     //   1-based indexing and we use 0-based.
@@ -120,5 +119,3 @@ class SpecEditorSidebar extends Component<Props, State> {
     );
   }
 }
-
-export default SpecEditorSidebar;

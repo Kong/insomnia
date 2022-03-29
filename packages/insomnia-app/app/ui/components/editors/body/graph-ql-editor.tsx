@@ -1,38 +1,67 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { EditorFromTextArea, LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
+import { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
+import { OpenDialogOptions } from 'electron';
+import { readFileSync } from 'fs';
+import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
+import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
+import { Maybe } from 'graphql-language-service';
+import { json as jsonPrettify } from 'insomnia-prettify';
+import prettier from 'prettier';
+import { complement } from 'ramda';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { markdownToHTML } from '../../../../common/markdown-to-html';
-import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
-import { parse, print, typeFromAST } from 'graphql';
-import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
-import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
-import CodeEditor from '../../codemirror/code-editor';
-import { jsonParseOr } from '../../../../common/misc';
-import HelpTooltip from '../../help-tooltip';
-import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS, AUTOBIND_CFG } from '../../../../common/constants';
-import { json as jsonPrettify } from 'insomnia-prettify';
-import type { ResponsePatch } from '../../../../network/network';
-import * as network from '../../../../network/network';
-import type { Workspace } from '../../../../models/workspace';
-import type { Settings } from '../../../../models/settings';
-import TimeFromNow from '../../time-from-now';
-import * as models from '../../../../models/index';
+import { SetRequired } from 'type-fest';
+
+import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
-import { showModal } from '../../modals';
+import { hotKeyRefs } from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
+import { markdownToHTML } from '../../../../common/markdown-to-html';
+import { jsonParseOr } from '../../../../common/misc';
+import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
-import ResponseDebugModal from '../../modals/response-debug-modal';
-import Tooltip from '../../tooltip';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
-import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
-import { EditorFromTextArea, TextMarker } from 'codemirror';
+import type { Settings } from '../../../../models/settings';
+import type { Workspace } from '../../../../models/workspace';
+import type { ResponsePatch } from '../../../../network/network';
+import * as network from '../../../../network/network';
+import { Dropdown } from '../../base/dropdown/dropdown';
+import { DropdownButton } from '../../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../../base/dropdown/dropdown-item';
+import { CodeEditor } from '../../codemirror/code-editor';
+import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
+import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
+import { HelpTooltip } from '../../help-tooltip';
+import { KeydownBinder } from '../../keydown-binder';
+import { showModal } from '../../modals';
+import { ResponseDebugModal } from '../../modals/response-debug-modal';
+import { TimeFromNow } from '../../time-from-now';
+import { Tooltip } from '../../tooltip';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
   throw new Error('Failed to find #graphql-explorer-container');
 }
+
+function isOperationDefinition(def: DefinitionNode): def is OperationDefinitionNode {
+  return def.kind === 'OperationDefinition';
+}
+
+type HasLocation = SetRequired<OperationDefinitionNode, 'loc'>;
+const hasLocation = (def: OperationDefinitionNode): def is HasLocation => Boolean(def.loc);
+
+/** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
+const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
+  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
+  if (operationName === null && name === undefined) {
+    return true;
+  }
+  return name?.value === operationName;
+};
 
 interface GraphQLBody {
   query: string;
@@ -40,22 +69,13 @@ interface GraphQLBody {
   operationName?: string;
 }
 
-interface ActiveReference {
-  type: GraphQLType | null;
-  argument: GraphQLArgument | null;
-  field: GraphQLField<any, any> | null;
-}
-
 interface Props {
   onChange: Function;
   content: string;
-  render?: HandleRender;
-  getRenderContext?: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
-  isVariableUncovered: boolean;
   className?: string;
   uniquenessKey?: string;
 }
@@ -77,9 +97,9 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLEditor extends PureComponent<Props, State> {
+export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
-  _documentAST: null | Record<string, any> = null;
+  _documentAST: null | DocumentNode = null;
   _isMounted = false;
   _queryEditor: null | EditorFromTextArea = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
@@ -89,13 +109,17 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     const body = GraphQLEditor._stringToGraphQL(props.content);
     this._setDocumentAST(body.query);
-    let automaticFetch;
+    let automaticFetch = true;
 
     try {
-      // @ts-expect-error -- TSCONVERSION don't parse if the read item is not defined
-      automaticFetch = JSON.parse(window.localStorage.getItem('graphql.automaticFetch'));
+      const automaticFetchStringified = window.localStorage.getItem('graphql.automaticFetch');
+      if (automaticFetchStringified) {
+        automaticFetch = JSON.parse(automaticFetchStringified);
+      }
     } catch (err) {
-      automaticFetch = true;
+      if (err instanceof Error) {
+        console.warn('Could not parse value of graphql.automaticFetch from localStorage:', err.message);
+      }
     }
 
     this.state = {
@@ -166,12 +190,20 @@ class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleClickReference(reference: ActiveReference, event: React.MouseEvent) {
+  _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
+  }
+
+  _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
     event.preventDefault();
-    this.setState({
-      explorerVisible: true,
-      activeReference: reference,
-    });
+
+    if (reference) {
+      this.setState({
+        explorerVisible: true,
+        activeReference: reference,
+      });
+    }
+
   }
 
   _handleQueryFocus() {
@@ -192,37 +224,32 @@ class GraphQLEditor extends PureComponent<Props, State> {
     const { _documentAST, _queryEditor } = this;
 
     if (!_documentAST || !_queryEditor) {
-      return null;
+      return;
     }
-
-    const disabledDefinitions = _documentAST.definitions.filter(d => {
-      const name = d.name ? d.name.value : null;
-      return d.kind === 'OperationDefinition' && name !== operationName;
-    });
 
     // Remove current query highlighting
     for (const textMarker of this._disabledOperationMarkers) {
       textMarker.clear();
     }
 
-    // Add "Unhighlight" markers
-    this._disabledOperationMarkers = disabledDefinitions.map(definition => {
-      const { startToken, endToken } = definition.loc;
-      const from = {
-        line: startToken.line - 1,
-        ch: startToken.column - 1,
-      };
-      const to = {
-        line: endToken.line,
-        ch: endToken.column - 1,
-      };
-      // @ts-expect-error - doc doesn't exist, use getDoc()
-      return _queryEditor.doc.markText(from, to, {
-        className: 'cm-gql-disabled',
-      });
-    });
+    this._disabledOperationMarkers = _documentAST.definitions
+      .filter(isOperationDefinition)
+      .filter(complement(matchesOperation(operationName)))
+      .filter(hasLocation)
+      .map(({ loc: { startToken, endToken } }) => {
+        const from = {
+          line: startToken.line - 1,
+          ch: startToken.column - 1,
+        };
+        const to = {
+          line: endToken.line,
+          ch: endToken.column - 1,
+        };
 
-    return null;
+        return _queryEditor.getDoc().markText(from, to, {
+          className: 'cm-gql-disabled',
+        });
+      });
   }
 
   _handleViewResponse() {
@@ -269,7 +296,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     try {
       const bodyJson = JSON.stringify({
-        query: introspectionQuery,
+        query: getIntrospectionQuery(),
         operationName: 'IntrospectionQuery',
       });
       const introspectionRequest = await db.upsert(
@@ -321,28 +348,79 @@ class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
+  async _loadAndSetLocalSchema() {
+    const options: OpenDialogOptions = {
+      title: 'Import GraphQL introspection schema',
+      buttonLabel: 'Import',
+      properties: ['openFile'],
+      filters: [
+        // @ts-expect-error https://github.com/electron/electron/pull/29322
+        {
+          extensions: ['', 'json'],
+        },
+      ],
+    };
+
+    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
+
+    if (canceled) {
+      return;
+    }
+
+    try {
+      const filePath = filePaths[0]; // showOpenDialog is single select
+      const file = readFileSync(filePath);
+
+      const content = JSON.parse(file.toString());
+      if (!content.data) {
+        throw new Error('JSON file should have a data field with the introspection results');
+      }
+
+      if (!this._isMounted) {
+        return;
+      }
+      this.setState({
+        schema: buildClientSchema(content.data),
+        schemaLastFetchTime: Date.now(),
+        schemaFetchError: null,
+        schemaIsFetching: false,
+      });
+    } catch (err) {
+      console.log('[graphql] ERROR: Failed to fetch schema', err);
+      if (!this._isMounted) {
+        return;
+      }
+      this.setState({
+        schemaFetchError: {
+          message: `Failed to fetch schema: ${err.message}`,
+          response: null,
+        },
+        schemaIsFetching: false,
+      });
+    }
+  }
+
   _buildVariableTypes(
-    schema: Record<string, any> | null,
-  ): Record<string, Record<string, any>> | null {
+    schema: GraphQLSchema | null,
+  ): Record<string, GraphQLNonNull<any>> | null {
     if (!schema) {
       return null;
     }
 
     const definitions = this._documentAST ? this._documentAST.definitions : [];
-    const variableToType = {};
+    const variableToType: Record<string, GraphQLNonNull<any>> = {};
 
-    for (const { kind, variableDefinitions } of definitions) {
-      if (kind !== 'OperationDefinition') {
+    for (const definition of definitions) {
+      if (!isOperationDefinition(definition)) {
         continue;
       }
 
-      if (!variableDefinitions) {
+      if (!definition.variableDefinitions) {
         continue;
       }
 
-      for (const { variable, type } of variableDefinitions) {
-        // @ts-expect-error -- TSCONVERSION
-        const inputType = typeFromAST(schema, type);
+      for (const { variable, type } of definition.variableDefinitions) {
+        const inputType = typeFromAST(schema, type as NonNullTypeNode);
 
         if (!inputType) {
           continue;
@@ -374,19 +452,27 @@ class GraphQLEditor extends PureComponent<Props, State> {
     );
   }
 
+  _handleSetLocalSchema() {
+    this.setState({ hideSchemaFetchErrors: false }, this._loadAndSetLocalSchema);
+  }
+
   async _handleToggleAutomaticFetching() {
     const automaticFetch = !this.state.automaticFetch;
     this.setState({
       automaticFetch,
     });
-    // @ts-expect-error -- TSCONVERSION convert boolean to string when setting
-    window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
+
+    window.localStorage.setItem('graphql.automaticFetch', automaticFetch.toString());
   }
 
   _handlePrettify() {
     const { body } = this.state;
     const { variables, query } = body;
-    const prettyQuery = query && print(parse(query));
+    const prettyQuery = prettier.format(query, {
+      parser: 'graphql',
+      useTabs: this.props.settings.editorIndentWithTabs,
+      tabWidth: this.props.settings.editorIndentSize,
+    });
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
@@ -572,12 +658,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
   render() {
     const {
       content,
-      render,
-      getRenderContext,
-      settings,
       className,
       uniquenessKey,
-      isVariableUncovered,
     } = this.props;
     const {
       schema,
@@ -598,69 +680,88 @@ class GraphQLEditor extends PureComponent<Props, State> {
     const variableTypes = this._buildVariableTypes(schema);
 
     // Create portal for GraphQL Explorer
-    const graphQLExplorerPortal = ReactDOM.createPortal(
-      <GraphqlExplorer
-        schema={schema}
-        key={schemaLastFetchTime}
-        visible={explorerVisible}
-        reference={activeReference}
-        handleClose={this._handleCloseExplorer}
-      />,
-      // @ts-expect-error -- TSCONVERSION
-      explorerContainer,
-    );
+    let graphQLExplorerPortal: React.ReactPortal | null = null;
+    if (explorerContainer) {
+      graphQLExplorerPortal = ReactDOM.createPortal(
+        <GraphQLExplorer
+          schema={schema}
+          key={schemaLastFetchTime}
+          visible={explorerVisible}
+          reference={activeReference}
+          handleClose={this._handleCloseExplorer}
+        />,
+        explorerContainer
+      );
+    }
+
+    let graphqlOptions: {
+      hintOptions: ShowHintOptions;
+      infoOptions: GraphQLInfoOptions;
+      jumpOptions: ModifiedGraphQLJumpOptions;
+      lintOptions: LintOptions;
+    } | undefined;
+
+    if (schema) {
+      graphqlOptions = {
+        hintOptions: {
+          schema,
+          completeSingle: false,
+        },
+        infoOptions: {
+          schema,
+          renderDescription: GraphQLEditor.renderMarkdown,
+          onClick: this._handleClickReference,
+        },
+        jumpOptions: {
+          schema,
+          onClick: this._handleClickReference,
+        },
+        lintOptions: {
+          schema,
+        },
+      };
+    }
+
     return (
       <div className="graphql-editor">
+        <KeydownBinder onKeydown={this._handleKeyDown} />
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
+
           <DropdownButton className="space-left btn btn--micro btn--outlined">
             schema <i className="fa fa-wrench" />
           </DropdownButton>
-          <DropdownDivider>GraphQL Schema</DropdownDivider>
+
           <DropdownItem onClick={this._handleShowDocumentation} disabled={!schema}>
             <i className="fa fa-file-code-o" /> Show Documentation
           </DropdownItem>
+
+          <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
+
           <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
-            <i className={'fa fa-refresh ' + (schemaIsFetching ? 'fa-spin' : '')} /> Refresh Schema
+            <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
           </DropdownItem>
           <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
-            <i
-              className={classnames('fa', {
-                'fa-toggle-on': automaticFetch,
-                'fa-toggle-off': !automaticFetch,
-              })}
-            />{' '}
+            <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
             Automatic Fetch
             <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
           </DropdownItem>
+
+          <DropdownDivider>Local GraphQL Schema</DropdownDivider>
+
+          <DropdownItem onClick={this._handleSetLocalSchema}>
+            <i className="fa fa-file-code-o" /> Load schema from JSON
+            <HelpTooltip>
+              Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
+              convert GraphQL DSL to JSON.
+            </HelpTooltip>
+          </DropdownItem>
         </Dropdown>
+
         <div className="graphql-editor__query">
           <CodeEditor
             dynamicHeight
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            hintOptions={{
-              schema: schema || null,
-              completeSingle: false,
-            }}
-            infoOptions={{
-              schema: schema || null,
-              renderDescription: GraphQLEditor.renderMarkdown,
-              onClick: this._handleClickReference,
-            }}
-            jumpOptions={{
-              schema: schema || null,
-              onClick: this._handleClickReference,
-            }}
-            lintOptions={
-              schema
-                ? {
-                  schema,
-                }
-                : undefined
-            }
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
@@ -668,8 +769,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
             onCursorActivity={this._handleQueryUserActivity}
             onFocus={this._handleQueryFocus}
             mode="graphql"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
+            {...graphqlOptions}
           />
         </div>
         <div className="graphql-editor__schema-error">
@@ -707,26 +808,19 @@ class GraphQLEditor extends PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
+            enableNunjucks
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            keyMap={settings.editorKeyMap}
             defaultValue={variables}
             className={className}
-            render={render}
-            getRenderContext={getRenderContext}
             getAutocompleteConstants={() => Object.keys(variableTypes || {})}
             lintOptions={{
               variableToType: variableTypes,
             }}
             noLint={!variableTypes}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
             onChange={this._handleVariablesChange}
             mode="graphql-variables"
-            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>
@@ -741,5 +835,3 @@ class GraphQLEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GraphQLEditor;

@@ -1,7 +1,8 @@
 import path from 'path';
-import { lintSpecification } from './lint-specification';
+
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
+import { lintSpecification } from './lint-specification';
 
 describe('lint specification', () => {
   beforeAll(() => {

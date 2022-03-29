@@ -1,7 +1,8 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import type { RequestGroup } from '../../../models/request-group';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupRow extends PureComponent<Props> {
+export class RequestGroupRow extends PureComponent<Props> {
   checkbox: HTMLInputElement;
 
   setCheckboxRef(checkbox: HTMLInputElement) {
@@ -66,12 +67,11 @@ class RequestGroupRow extends PureComponent<Props> {
         <ul
           className={classnames('tree__list', {
             'tree__list--collapsed': isCollapsed,
-          })}>
+          })}
+        >
           {!isCollapsed ? children : null}
         </ul>
       </li>
     );
   }
 }
-
-export default RequestGroupRow;

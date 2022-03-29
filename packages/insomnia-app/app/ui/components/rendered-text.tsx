@@ -1,19 +1,22 @@
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
+
+import { HandleRender } from '../../common/render';
+import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 
 interface Props {
   children: string;
-  render: (...args: any[]) => any;
+  render: HandleRender;
 }
 interface State {
   renderedText: string;
   error: string;
 }
 
-class RenderedText extends PureComponent<Props, State> {
+class RenderedTextInternal extends PureComponent<Props, State> {
   state: State = {
     renderedText: '',
     error: '',
-  }
+  };
 
   async _render() {
     const { render, children } = this.props;
@@ -51,7 +54,8 @@ class RenderedText extends PureComponent<Props, State> {
           style={{
             fontSize: '0.9em',
             fontStyle: 'italic',
-          }}>
+          }}
+        >
           {this.state.error || 'Unknown Error'}
         </span>
       );
@@ -61,4 +65,8 @@ class RenderedText extends PureComponent<Props, State> {
   }
 }
 
-export default RenderedText;
+export const RenderedText: FC<Omit<Props, 'render'>> = props => {
+  const { handleRender } = useNunjucks();
+
+  return <RenderedTextInternal {...props} render={handleRender}/>;
+};

@@ -1,6 +1,8 @@
-import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
 import 'codemirror/addon/mode/overlay';
+
+import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
 import { AllHtmlEntities } from 'html-entities';
+
 import { FLEXIBLE_URL_REGEX } from '../../../../common/constants';
 const entities = new AllHtmlEntities();
 

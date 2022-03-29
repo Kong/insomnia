@@ -1,20 +1,19 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent } from 'react';
+
+import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import TimeFromNow from '../time-from-now';
-import Tooltip from '../tooltip';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import * as session from '../../../account/session';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { TimeFromNow } from '../time-from-now';
+import { Tooltip } from '../tooltip';
 
 interface Props {
-  workspace: Workspace;
   vcs: VCS;
 }
 
@@ -24,14 +23,14 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncHistoryModal extends PureComponent<Props, State> {
+export class SyncHistoryModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   handleRollback: (arg0: Snapshot) => Promise<void>;
 
   state: State = {
     branch: '',
     history: [],
-  }
+  };
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -54,11 +53,11 @@ class SyncHistoryModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { handleRollback: (arg0: Snapshot) => Promise<void> }) {
-    this.modal && this.modal.show();
+    this.modal?.show();
     this.handleRollback = options.handleRollback;
     await this.refreshState();
   }
@@ -138,7 +137,8 @@ class SyncHistoryModal extends PureComponent<Props, State> {
                   <td className="text-right">
                     <PromptButton
                       className="btn btn--micro btn--outlined"
-                      onClick={() => this._handleClickRollback(snapshot)}>
+                      onClick={() => this._handleClickRollback(snapshot)}
+                    >
                       Restore
                     </PromptButton>
                   </td>
@@ -151,5 +151,3 @@ class SyncHistoryModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncHistoryModal;

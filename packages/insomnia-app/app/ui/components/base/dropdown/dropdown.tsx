@@ -1,42 +1,43 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
 import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import classnames from 'classnames';
-import DropdownButton from './dropdown-button';
-import DropdownItem from './dropdown-item';
-import DropdownDivider from './dropdown-divider';
-import { fuzzyMatch } from '../../../../common/misc';
-import KeydownBinder from '../../keydown-binder';
-import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../../common/hotkeys';
+import { executeHotKey } from '../../../../common/hotkeys-listener';
+import { fuzzyMatch } from '../../../../common/misc';
+import { KeydownBinder } from '../../keydown-binder';
+import { DropdownButton } from './dropdown-button';
+import { DropdownDivider } from './dropdown-divider';
+import { DropdownItem } from './dropdown-item';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
 export interface DropdownProps {
-  children: ReactNode,
-  right?: boolean,
-  outline?: boolean,
-  wide?: boolean,
-  onOpen?: Function,
-  onHide?: Function,
-  className?: string,
-  style?: CSSProperties,
-  beside?: boolean,
+  children: ReactNode;
+  right?: boolean;
+  outline?: boolean;
+  wide?: boolean;
+  onOpen?: Function;
+  onHide?: Function;
+  className?: string;
+  style?: CSSProperties;
+  beside?: boolean;
 }
 
 interface State {
-  open: boolean,
-  dropUp: boolean,
-  filter: string,
-  filterVisible: boolean,
-  filterItems?: number[] | null,
-  filterActiveIndex: number,
-  forcedPosition?: {x: number, y: number} | null,
-  uniquenessKey: number,
+  open: boolean;
+  dropUp: boolean;
+  filter: string;
+  filterVisible: boolean;
+  filterItems?: number[] | null;
+  filterActiveIndex: number;
+  forcedPosition?: {x: number; y: number} | null;
+  uniquenessKey: number;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Dropdown extends PureComponent<DropdownProps, State> {
+export class Dropdown extends PureComponent<DropdownProps, State> {
   private _node: HTMLDivElement | null = null;
   private _dropdownList: HTMLDivElement | null = null;
   private _filter: HTMLInputElement | null = null;
@@ -53,7 +54,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     forcedPosition: null,
     // Use this to force new menu every time dropdown opens
     uniquenessKey: 0,
-  }
+  };
 
   _setRef(n: HTMLDivElement) {
     this._node = n;
@@ -67,7 +68,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
       const button = this._dropdownList?.querySelector(selector);
 
       // @ts-expect-error -- TSCONVERSION
-      button && button.click();
+      button?.click();
     }
   }
 
@@ -104,13 +105,13 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     });
   }
 
-  _handleDropdownNavigation(e) {
-    const { key, shiftKey } = e;
+  _handleDropdownNavigation(event: KeyboardEvent) {
+    const { key, shiftKey } = event;
     // Handle tab and arrows to move up and down dropdown entries
     const { filterItems, filterActiveIndex } = this.state;
 
     if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
-      e.preventDefault();
+      event.preventDefault();
       const items = filterItems || [];
 
       if (!filterItems) {
@@ -140,17 +141,17 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     this._filter?.focus();
   }
 
-  _handleBodyKeyDown(e) {
+  _handleBodyKeyDown(event: KeyboardEvent) {
     if (!this.state.open) {
       return;
     }
 
     // Catch all key presses (like global app hotkeys) if we're open
-    e.stopPropagation();
+    event.stopPropagation();
 
-    this._handleDropdownNavigation(e);
+    this._handleDropdownNavigation(event);
 
-    executeHotKey(e, hotKeyRefs.CLOSE_DROPDOWN, () => {
+    executeHotKey(event, hotKeyRefs.CLOSE_DROPDOWN, () => {
       this.hide();
     });
   }
@@ -237,9 +238,9 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     this.toggle();
   }
 
-  static _handleMouseDown(e) {
+  static _handleMouseDown(event: React.MouseEvent) {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
-    e.preventDefault();
+    event.preventDefault();
   }
 
   _addDropdownListRef(n: HTMLDivElement) {
@@ -287,13 +288,13 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     if (this._node) {
       const button = this._node.querySelector('button');
 
-      button && button.focus();
+      button?.focus();
     }
 
     this.setState({
       open: false,
     });
-    this.props.onHide && this.props.onHide();
+    this.props.onHide?.();
   }
 
   show(filterVisible = false, forcedPosition: { x: number; y: number } | null = null) {
@@ -313,7 +314,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
       filterActiveIndex: -1,
       uniquenessKey: this.state.uniquenessKey + 1,
     });
-    this.props.onOpen && this.props.onOpen();
+    this.props.onOpen?.();
   }
 
   toggle(filterVisible = false) {
@@ -380,7 +381,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
             className={classnames({
               active,
               hide,
-            })}>
+            })}
+          >
             {child}
           </li>,
         );
@@ -411,7 +413,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
           <div
             key="item"
             className={menuClasses}
-            aria-hidden={!open}>
+            aria-hidden={!open}
+          >
             <div className="dropdown__backdrop theme--transparent-overlay" />
             <div
               key={uniquenessKey}
@@ -419,7 +422,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
               tabIndex={-1}
               className={classnames('dropdown__list', {
                 'dropdown__list--filtering': filterVisible,
-              })}>
+              })}
+            >
               <div className="form-control dropdown__filter">
                 <i className="fa fa-search" />
                 <input
@@ -433,7 +437,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
               <ul
                 className={classnames({
                   hide: noResults,
-                })}>
+                })}
+              >
                 {dropdownItems}
               </ul>
             </div>
@@ -452,12 +457,11 @@ class Dropdown extends PureComponent<DropdownProps, State> {
           ref={this._setRef}
           onClick={this._handleClick}
           tabIndex={-1}
-          onMouseDown={Dropdown._handleMouseDown}>
+          onMouseDown={Dropdown._handleMouseDown}
+        >
           {finalChildren}
         </div>
       </KeydownBinder>
     );
   }
 }
-
-export default Dropdown;

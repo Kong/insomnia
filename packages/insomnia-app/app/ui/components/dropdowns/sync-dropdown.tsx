@@ -1,42 +1,66 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import classnames from 'classnames';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import type { Workspace } from '../../../models/workspace';
-import { showAlert, showModal } from '../modals';
-import SyncStagingModal from '../modals/sync-staging-modal';
-import HelpTooltip from '../help-tooltip';
-import Link from '../base/link';
-import SyncHistoryModal from '../modals/sync-history-modal';
-import SyncShareModal from '../modals/sync-share-modal';
-import SyncBranchesModal from '../modals/sync-branches-modal';
-import SyncDeleteModal from '../modals/sync-delete-modal';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
-import ErrorModal from '../modals/error-modal';
-import Tooltip from '../tooltip';
-import LoginModal from '../modals/login-modal';
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
 import * as session from '../../../account/session';
-import PromptButton from '../base/prompt-button';
+import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
-import { pullProject } from '../../../sync/vcs/pull-project';
-import { Space } from '../../../models/space';
+import * as models from '../../../models';
+import { isRemoteProject, Project } from '../../../models/project';
+import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
-import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
+import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
+import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
+import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
+import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
+import { interceptAccessError } from '../../../sync/vcs/util';
+import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { activateWorkspace } from '../../redux/modules/workspace';
+import { selectRemoteProjects } from '../../redux/selectors';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Link } from '../base/link';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { showAlert, showModal } from '../modals';
+import { ErrorModal } from '../modals/error-modal';
+import { LoginModal } from '../modals/login-modal';
+import { SyncBranchesModal } from '../modals/sync-branches-modal';
+import { SyncDeleteModal } from '../modals/sync-delete-modal';
+import { SyncHistoryModal } from '../modals/sync-history-modal';
+import { SyncStagingModal } from '../modals/sync-staging-modal';
+import { Tooltip } from '../tooltip';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+
+const mapStateToProps = (state: RootState) => ({
+  remoteProjects: selectRemoteProjects(state),
+});
+
+const mapDispatchToProps = dispatch => {
+  const bound = bindActionCreators({ activateWorkspace }, dispatch);
+  return {
+    handleActivateWorkspace: bound.activateWorkspace,
+  };
+};
+
+interface Props extends ReduxProps {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Space;
+  project: Project;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;
@@ -55,11 +79,11 @@ interface State {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: Project[];
+  remoteBackendProjects: BackendProjectWithTeam[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncDropdown extends PureComponent<Props, State> {
+class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   checkInterval: NodeJS.Timeout | null = null;
   refreshOnNextSyncItems = false;
   lastUserActivity = Date.now();
@@ -81,17 +105,17 @@ class SyncDropdown extends PureComponent<Props, State> {
       stage: {},
       unstaged: {},
     },
-    remoteProjects: [],
-  }
+    remoteBackendProjects: [],
+  };
 
   async refreshMainAttributes(extraState: Partial<State> = {}) {
-    const { vcs, syncItems, workspace } = this.props;
+    const { vcs, syncItems, workspace, project } = this.props;
 
-    if (!vcs.hasProject()) {
-      const remoteProjects = await vcs.remoteProjects();
-      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
+      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
+      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
-        remoteProjects: matchedProjects,
+        remoteBackendProjects: matchedBackendProjects,
       });
       return;
     }
@@ -125,10 +149,10 @@ class SyncDropdown extends PureComponent<Props, State> {
       initializing: true,
     });
 
-    const { vcs, workspace, workspaceMeta, space } = this.props;
+    const { vcs, workspace, workspaceMeta, project } = this.props;
 
     try {
-      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, space });
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
       await this.refreshMainAttributes();
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
@@ -159,7 +183,7 @@ class SyncDropdown extends PureComponent<Props, State> {
 
     // Update if new sync items
     if (syncItems !== prevProps.syncItems) {
-      if (vcs.hasProject()) {
+      if (vcs.hasBackendProject()) {
         vcs.status(syncItems, {}).then(status => {
           this.setState({
             status,
@@ -195,22 +219,24 @@ class SyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  static _handleShowSharingModal() {
-    showModal(SyncShareModal);
-  }
-
   static _handleShowLoginModal() {
     showModal(LoginModal);
   }
 
   async _handlePushChanges() {
-    const { vcs, space: { remoteId } } = this.props;
+    const { vcs, project: { remoteId } } = this.props;
     this.setState({
       loadingPush: true,
     });
 
     try {
-      await vcs.push(remoteId);
+      const branch = await vcs.getBranch();
+      await interceptAccessError({
+        callback: async () => await vcs.push(remoteId),
+        action: 'push',
+        resourceName: branch,
+        resourceType: 'branch',
+      });
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Push Error',
@@ -224,13 +250,19 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePullChanges() {
-    const { vcs, syncItems, space: { remoteId } } = this.props;
+    const { vcs, syncItems, project: { remoteId } } = this.props;
     this.setState({
       loadingPull: true,
     });
 
     try {
-      const delta = await vcs.pull(syncItems, remoteId);
+      const branch = await vcs.getBranch();
+      const delta = await interceptAccessError({
+        callback: async () => await vcs.pull(syncItems, remoteId),
+        action: 'pull',
+        resourceName: branch,
+        resourceType: 'branch',
+      });
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
@@ -284,7 +316,7 @@ class SyncDropdown extends PureComponent<Props, State> {
       loadingProjectPull: true,
     });
     const { vcs, workspace } = this.props;
-    await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+    await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
     await this.refreshMainAttributes({
       loadingProjectPull: false,
     });
@@ -296,13 +328,18 @@ class SyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSetProject(p: Project) {
-    const { vcs, space } = this.props;
+  async _handleSetProject(backendProject: BackendProjectWithTeam) {
+    const { vcs, remoteProjects, project, workspace, handleActivateWorkspace } = this.props;
     this.setState({
       loadingProjectPull: true,
     });
 
-    await pullProject({ vcs, project: p, space });
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
+    if (pulledIntoProject._id !== project._id) {
+      // If pulled into a different project, reactivate the workspace
+      await handleActivateWorkspace({ workspaceId: workspace._id });
+      logCollectionMovedToProject(workspace, pulledIntoProject);
+    }
 
     await this.refreshMainAttributes({
       loadingProjectPull: false,
@@ -357,7 +394,8 @@ class SyncDropdown extends PureComponent<Props, State> {
         className={classnames({
           bold: isCurrentBranch,
         })}
-        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}
+      >
         {icon}
         {branch}
       </DropdownItem>
@@ -392,14 +430,14 @@ class SyncDropdown extends PureComponent<Props, State> {
 
     return (
       <DropdownButton
-        className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced"
+        className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
         disabled={initializing}
       >
         <div className="ellipsis">
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
         </div>
-        <div className="space-left">
+        <div className="flex space-left">
           <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
             <i
               className={classnames('fa fa-cube fa--fixed-width', {
@@ -455,7 +493,7 @@ class SyncDropdown extends PureComponent<Props, State> {
       loadingPull,
       loadingPush,
       loadingProjectPull,
-      remoteProjects,
+      remoteBackendProjects,
       compare: { ahead, behind },
     } = this.state;
     const canCreateSnapshot =
@@ -486,7 +524,7 @@ class SyncDropdown extends PureComponent<Props, State> {
       );
     }
 
-    if (!vcs.hasProject()) {
+    if (!vcs.hasBackendProject()) {
       return (
         <div className={className}>
           <Dropdown className="wide tall" onOpen={this._handleOpen}>
@@ -494,12 +532,12 @@ class SyncDropdown extends PureComponent<Props, State> {
               <i className="fa fa-code-fork " /> Setup Sync
             </DropdownButton>
             {syncMenuHeader}
-            {remoteProjects.length === 0 && (
+            {remoteBackendProjects.length === 0 && (
               <DropdownItem onClick={this._handleEnableSync}>
-                <i className="fa fa-plus-circle" /> Create Local Project
+                <i className="fa fa-plus-circle" /> Create Locally
               </DropdownItem>
             )}
-            {remoteProjects.map(p => (
+            {remoteBackendProjects.map(p => (
               <DropdownItem key={p.id} onClick={() => this._handleSetProject(p)}>
                 <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
               </DropdownItem>
@@ -521,11 +559,6 @@ class SyncDropdown extends PureComponent<Props, State> {
               <i className="fa fa-sign-in" /> Log In
             </DropdownItem>
           )}
-
-          <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
-            <i className="fa fa-users" />
-            Share Settings
-          </DropdownItem>
 
           <DropdownItem onClick={this._handleShowBranchesModal}>
             <i className="fa fa-code-fork" />
@@ -551,7 +584,8 @@ class SyncDropdown extends PureComponent<Props, State> {
             onClick={this._handleRevert}
             buttonClass={PromptButton}
             stayOpenAfterClick
-            disabled={!canCreateSnapshot || historyCount === 0}>
+            disabled={!canCreateSnapshot || historyCount === 0}
+          >
             <i className="fa fa-undo" />
             Revert Changes
           </DropdownItem>
@@ -568,7 +602,7 @@ class SyncDropdown extends PureComponent<Props, State> {
               </Fragment>
             ) : (
               <Fragment>
-                <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot
+                <i className="fa fa-cloud-download" /> Pull {behind || ''} Snapshot
                 {behind === 1 ? '' : 's'}
               </Fragment>
             )}
@@ -592,4 +626,4 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 }
 
-export default SyncDropdown;
+export const SyncDropdown = connect(mapStateToProps, mapDispatchToProps)(UnconnectedSyncDropdown);

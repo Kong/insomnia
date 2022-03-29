@@ -1,10 +1,11 @@
-import { generate, generateFromSpec, generateFromString, parseSpec } from './generate';
-import YAML from 'yaml';
-import path from 'path';
 import fs from 'fs';
-import { DeclarativeConfigResult, KongForKubernetesResult } from './types/outputs';
+import path from 'path';
+import YAML from 'yaml';
+
+import { generate, generateFromSpec, generateFromString, parseSpec } from './generate';
 import { K8sKongIngress } from './types/kubernetes-config';
 import { OpenApi3Spec } from './types/openapi3';
+import { DeclarativeConfigResult, KongForKubernetesResult } from './types/outputs';
 
 const firstK8sDocument: K8sKongIngress = {
   apiVersion: 'configuration.konghq.com/v1',
@@ -35,7 +36,7 @@ describe('top-level API exports', () => {
       } = await generate(dcFixtureFilepath, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
-      expect(dc.upstreams.length).toBe(1);
+      expect(dc).not.toHaveProperty('upstreams');
     });
 
     it('generates DC from file with extra tags', async () => {
@@ -93,7 +94,7 @@ describe('top-level API exports', () => {
       } = generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
-      expect(dc.upstreams.length).toBe(1);
+      expect(dc).not.toHaveProperty('upstreams');
     });
 
     it('generates kubernetes from spec', async () => {

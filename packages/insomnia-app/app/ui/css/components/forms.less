@@ -5,34 +5,6 @@
   width: 100%;
   box-sizing: border-box;
 
-  &.form-control--btn-right {
-    position: relative;
-
-    input {
-      padding-right: 2em;
-    }
-
-    &:hover .form-control__right {
-      opacity: 0.8;
-    }
-
-    .form-control__right {
-      position: absolute;
-      right: 0;
-      top: 0;
-      padding: 0 var(--padding-sm);
-      height: 100%;
-      display: flex;
-      align-items: center;
-      margin: 0;
-      opacity: 0.5;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
-
   .input,
   input,
   textarea,
@@ -54,7 +26,7 @@
   input[type='checkbox'] {
     height: 1rem;
     float: left;
-    margin-top: var(--padding-xxs);
+    margin-top: 1px;  // This is a magic number, yes, but there's some deeper problems at play with form styling and this is a hold-over until the DOM design is simplified.  Before this fix it looked pretty bad, so this is at least a big improvement in one respect.
     margin-right: var(--padding-xs);
   }
 
@@ -160,6 +132,34 @@
       border-style: dashed;
       opacity: var(--opacity-subtle);
       color: var(--hl-xl);
+    }
+  }
+
+  &.form-control--btn-right {
+    position: relative;
+
+    input {
+      padding-right: 2em;
+    }
+
+    &:hover .form-control__right {
+      opacity: 0.8;
+    }
+
+    .form-control__right {
+      position: absolute;
+      right: 0;
+      top: 0;
+      padding: 0 var(--padding-sm);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      margin: 0;
+      opacity: 0.5;
+
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 }
@@ -379,7 +379,6 @@ label {
       left: var(--padding-xxs);
       right: var(--padding-xxs);
       border-radius: var(--radius-sm);
-      background-color: var(--hl-sm);
     }
   }
 }

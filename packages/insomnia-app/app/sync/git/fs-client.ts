@@ -1,6 +1,6 @@
 import fs from 'fs';
-import path from 'path';
 import mkdirp from 'mkdirp';
+import path from 'path';
 
 type FSWraps =
   | typeof fs.promises.readFile

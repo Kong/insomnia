@@ -1,9 +1,10 @@
-import { useCallback } from 'react';
-import type { GrpcMethodType } from '../../../../network/grpc/method';
-import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
-import { grpcActions, GrpcDispatch } from '../../../context/grpc';
+import { useCallback } from 'react';
+
+import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
+import type { GrpcMethodType } from '../../../../network/grpc/method';
 import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
+import { grpcActions, GrpcDispatch } from '../../../context/grpc';
 
 const _sendStart = async (
   reqId: string,

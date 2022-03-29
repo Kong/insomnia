@@ -1,4 +1,4 @@
-import { translateSSHtoHTTP, addDotGit } from '../utils';
+import { addDotGit, translateSSHtoHTTP } from '../utils';
 const links = {
   scp: {
     bare: 'git@github.com:a/b',

@@ -1,5 +1,5 @@
-import { _buildBearerHeader, getAuthHeader } from '../authentication';
 import { AUTH_OAUTH_1 } from '../../common/constants';
+import { _buildBearerHeader, getAuthHeader } from '../authentication';
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {

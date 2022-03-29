@@ -1,52 +1,47 @@
+import { SvgIcon } from 'insomnia-components';
 import React, { FC, useCallback, useState } from 'react';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showError, showModal, showPrompt } from '../modals';
+
+import { parseApiSpec } from '../../../common/api-specs';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import * as models from '../../../models';
+import type { ApiSpec } from '../../../models/api-spec';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import { Project } from '../../../models/project';
+import type { Workspace } from '../../../models/workspace';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import type { ApiSpec } from '../../../models/api-spec';
-import { parseApiSpec } from '../../../common/api-specs';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import * as models from '../../../models';
-import AskModal from '../modals/ask-modal';
-import type { Workspace } from '../../../models/workspace';
-import getWorkspaceName from '../../../models/helpers/get-workspace-name';
-import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { useDispatch } from 'react-redux';
-import { setActiveWorkspace } from '../../redux/modules/global';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { SvgIcon } from 'insomnia-components';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { showError, showModal, showPrompt } from '../modals';
+import { AskModal } from '../modals/ask-modal';
+import { showWorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 
 interface Props {
   workspace: Workspace;
   apiSpec: ApiSpec;
+  project: Project;
 }
 
 const spinner = <i className="fa fa-refresh fa-spin" />;
 
-const useWorkspaceHandlers = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
-  const dispatch = useDispatch();
-
+const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
   const handleDuplicate = useCallback(() => {
-    showPrompt({
-      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
-      defaultValue: getWorkspaceName(workspace, apiSpec),
-      submitName: 'Create',
-      selectText: true,
-      label: 'New Name',
-      onComplete: async newName => {
-        const newWorkspace = await workspaceOperations.duplicate(workspace, newName);
-        dispatch(setActiveWorkspace(newWorkspace._id));
-      },
-    });
-  }, [apiSpec, workspace, dispatch]);
+    showWorkspaceDuplicateModal({ workspace, apiSpec });
+  }, [workspace, apiSpec]);
+
+  const workspaceName = getWorkspaceName(workspace, apiSpec);
 
   const handleRename = useCallback(() => {
     showPrompt({
       title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-      defaultValue: getWorkspaceName(workspace, apiSpec),
+      defaultValue: workspaceName,
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
@@ -54,13 +49,13 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: { workspace: Workspace; ap
         await workspaceOperations.rename(workspace, apiSpec, name);
       },
     });
-  }, [apiSpec, workspace]);
+  }, [apiSpec, workspace, workspaceName]);
 
   const handleDelete = useCallback(() => {
     const label = getWorkspaceLabel(workspace);
     showModal(AskModal, {
       title: `Delete ${label.singular}`,
-      message: `Do you really want to delete "${getWorkspaceName(workspace, apiSpec)}"?`,
+      message: `Do you really want to delete "${workspaceName}"?`,
       yesText: 'Yes',
       noText: 'Cancel',
       onDone: async (isYes: boolean) => {
@@ -72,12 +67,12 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: { workspace: Workspace; ap
         await models.workspace.remove(workspace);
       },
     });
-  }, [apiSpec, workspace]);
+  }, [workspace, workspaceName]);
 
   return { handleDelete, handleDuplicate, handleRename };
 };
 
-const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
+const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
   const [actionPlugins, setActionPlugins] = useState<DocumentAction[]>([]);
   const { startLoading, stopLoading, isLoading } = useLoadingRecord();
 
@@ -94,10 +89,9 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
     try {
       const context = {
         ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(project._id),
         ...pluginContexts.store.init(p.plugin),
       };
-      // @ts-expect-error -- TSCONVERSION
       await p.action(context, parseApiSpec(apiSpec.contents));
     } catch (err) {
       showError({
@@ -107,14 +101,15 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
     } finally {
       stopLoading(p.label);
     }
-  }, [apiSpec.contents, startLoading, stopLoading]);
+  }, [apiSpec.contents, project._id, startLoading, stopLoading]);
 
   const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
       key={`${p.plugin.name}:${p.label}`}
       value={p}
       onClick={handleClick}
-      stayOpenAfterClick={!p.hideAfterClick}>
+      stayOpenAfterClick={!p.hideAfterClick}
+    >
       {isLoading(p.label) && spinner}
       {p.label}
     </DropdownItem>

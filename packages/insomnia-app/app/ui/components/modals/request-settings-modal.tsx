@@ -1,30 +1,26 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
-import MarkdownEditor from '../markdown-editor';
 import { database as db } from '../../../common/database';
-import { isWorkspace, Workspace } from '../../../models/workspace';
-import type { Request } from '../../../models/request';
+import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import type { BaseRequest, Request } from '../../../models/request';
+import { isWorkspace, Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { DebouncedInput } from '../base/debounced-input';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { HelpTooltip } from '../help-tooltip';
+import { MarkdownEditor } from '../markdown-editor';
 
-interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  workspaces: Workspace[];
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -33,7 +29,7 @@ interface State {
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
 }
@@ -44,7 +40,7 @@ interface RequestSettingsModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestSettingsModal extends PureComponent<Props, State> {
+export class UnconnectedRequestSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: MarkdownEditor | null = null;
 
@@ -54,10 +50,10 @@ class RequestSettingsModal extends PureComponent<Props, State> {
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
-    workspaces: [],
+    workspacesForActiveProject: [],
     justCopied: false,
     justMoved: false,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -200,13 +196,13 @@ class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   async show({ request, forceEditMode }: RequestSettingsModalOptions) {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
     const hasDescription = !!request.description;
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(request);
     const doc = ancestors.find(isWorkspace);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find(w => w._id === workspaceId);
+    const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
     this.setState(
       {
         request,
@@ -216,11 +212,11 @@ class RequestSettingsModal extends PureComponent<Props, State> {
         defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
-        this.modal && this.modal.show();
+        this.modal?.show();
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor && this._editor.focus();
+            this._editor?.focus();
           }, 400);
         }
       },
@@ -228,10 +224,10 @@ class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
-  renderCheckboxInput(setting: string) {
+  renderCheckboxInput(setting: keyof BaseRequest) {
     const { request } = this.state;
 
     if (!request) {
@@ -308,9 +304,10 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
             <select
               // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-              defaultValue={this.state.request && this.state.request.settingFollowRedirects}
+              defaultValue={this.state.request?.settingFollowRedirects}
               name="settingFollowRedirects"
-              onChange={this._updateRequestSettingString}>
+              onChange={this._updateRequestSettingString}
+            >
               <option value={'global'}>Use global setting</option>
               <option value={'off'}>Don't follow redirects</option>
               <option value={'on'}>Follow redirects</option>
@@ -323,14 +320,6 @@ class RequestSettingsModal extends PureComponent<Props, State> {
 
   _renderDescription() {
     const {
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
     const { showDescription, defaultPreviewMode, request } = this.state;
 
@@ -344,22 +333,15 @@ class RequestSettingsModal extends PureComponent<Props, State> {
         ref={this._setEditorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
         placeholder="Write a description"
-        lineWrapping={editorLineWrapping}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
-        isVariableUncovered={isVariableUncovered}
         defaultValue={request.description}
         onChange={this._handleDescriptionChange}
       />
     ) : (
       <button
         onClick={this._handleAddDescription}
-        className="btn btn--outlined btn--super-duper-compact">
+        className="btn btn--outlined btn--super-duper-compact"
+      >
         Add Description
       </button>
     );
@@ -382,7 +364,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   _renderMoveCopy() {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
     const { activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace, request } = this.state;
 
     // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
@@ -401,9 +383,10 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             </HelpTooltip>
             <select
               value={activeWorkspaceIdToCopyTo || '__NULL__'}
-              onChange={this._handleUpdateMoveCopyWorkspace}>
+              onChange={this._handleUpdateMoveCopyWorkspace}
+            >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map(w => {
+              {workspacesForActiveProject.map(w => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }
@@ -421,7 +404,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <button
             disabled={justCopied || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleCopyToWorkspace}>
+            onClick={this._handleCopyToWorkspace}
+          >
             {justCopied ? 'Copied!' : 'Copy'}
           </button>
         </div>
@@ -429,7 +413,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <button
             disabled={justMoved || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleMoveToWorkspace}>
+            onClick={this._handleMoveToWorkspace}
+          >
             {justMoved ? 'Moved!' : 'Move'}
           </button>
         </div>
@@ -483,4 +468,13 @@ class RequestSettingsModal extends PureComponent<Props, State> {
   }
 }
 
-export default RequestSettingsModal;
+const mapStateToProps = (state: RootState) => ({
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+});
+
+export const RequestSettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedRequestSettingsModal);

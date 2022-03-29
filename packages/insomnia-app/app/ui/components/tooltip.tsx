@@ -1,8 +1,9 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
   children: ReactNode;
@@ -15,17 +16,17 @@ interface Props {
 }
 
 interface State {
-  left: number | null,
-  top: number | null,
-  bottom: number | null,
-  right: number | null,
-  maxWidth: number | null,
-  maxHeight: number | null,
+  left: number | null;
+  top: number | null;
+  bottom: number | null;
+  right: number | null;
+  maxWidth: number | null;
+  maxHeight: number | null;
   visible: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Tooltip extends PureComponent<Props, State> {
+export class Tooltip extends PureComponent<Props, State> {
   _showTimeout: NodeJS.Timeout | null = null;
   _hideTimeout: NodeJS.Timeout | null = null;
   _tooltip: HTMLDivElement | null = null;
@@ -40,7 +41,7 @@ class Tooltip extends PureComponent<Props, State> {
     maxWidth: null,
     maxHeight: null,
     visible: false,
-  }
+  };
 
   _setTooltipRef(n: HTMLDivElement) {
     this._tooltip = n;
@@ -189,14 +190,16 @@ class Tooltip extends PureComponent<Props, State> {
         ref={this._setTooltipRef}
         id={this._id}
         onMouseEnter={this._handleMouseEnter}
-        onMouseLeave={this._handleMouseLeave}>
+        onMouseLeave={this._handleMouseLeave}
+      >
         <div
           className={bubbleClasses}
           onClick={this._handleStopClick}
           role="tooltip"
           aria-hidden={!visible}
           aria-describedby={this._id}
-          ref={this._setBubbleRef}>
+          ref={this._setBubbleRef}
+        >
           {message}
         </div>
         {children}
@@ -204,5 +207,3 @@ class Tooltip extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Tooltip;

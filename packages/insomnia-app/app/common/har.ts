@@ -1,21 +1,24 @@
-import fs from 'fs';
 import clone from 'clone';
-import { Cookie as toughCookie } from 'tough-cookie';
-import * as models from '../models';
-import type { RenderedRequest } from './render';
-import { getRenderedRequestAndContext } from './render';
+import fs from 'fs';
 import { jarFromCookies } from 'insomnia-cookies';
-import * as pluginContexts from '../plugins/context/index';
-import { getSetCookieHeaders, filterHeaders, hasAuthHeader } from './misc';
+import { smartEncodeUrl } from 'insomnia-url';
+import { Cookie as toughCookie } from 'tough-cookie';
+
+import * as models from '../models';
 import type { Cookie } from '../models/cookie-jar';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
-import type { Response as ResponseModel } from '../models/response';
+import type { Response } from '../models/response';
+import { isWorkspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
-import { getAppVersion } from './constants';
-import { RenderError } from '../templating/index';
-import { smartEncodeUrl } from 'insomnia-url';
 import * as plugins from '../plugins';
+import * as pluginContexts from '../plugins/context/index';
+import { RenderError } from '../templating/index';
+import { getAppVersion } from './constants';
+import { database } from './database';
+import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
+import type { RenderedRequest } from './render';
+import { getRenderedRequestAndContext } from './render';
 
 export interface HarCookie {
   name: string;
@@ -171,6 +174,33 @@ export interface Har {
 export interface ExportRequest {
   requestId: string;
   environmentId: string | null;
+  responseId?: string;
+}
+
+export async function exportHarCurrentRequest(request: Request, response: Response): Promise<Har> {
+  const ancestors = await database.withAncestors(request, [
+    models.workspace.type,
+    models.requestGroup.type,
+  ]);
+  const workspace = ancestors.find(isWorkspace);
+  if (workspace === null || workspace === undefined) {
+    throw new TypeError('no workspace found for request');
+  }
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+  let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
+  const environment = await models.environment.getById(environmentId || 'n/a');
+  if (!environment || environment.isPrivate) {
+    environmentId = 'n/a';
+  }
+
+  return exportHar([
+    {
+      requestId: request._id,
+      environmentId: environmentId,
+      responseId: response._id,
+    },
+  ]);
 }
 
 export async function exportHar(exportRequests: ExportRequest[]) {
@@ -185,16 +215,22 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    const harRequest = await exportHarWithRequest(request, exportRequest.environmentId);
+    const harRequest = await exportHarWithRequest(request, exportRequest.environmentId || undefined);
 
     if (!harRequest) {
       continue;
     }
 
-    const response: ResponseModel | null = await models.response.getLatestForRequest(
-      exportRequest.requestId,
-      exportRequest.environmentId || null,
-    );
+    let response: Response | null = null;
+    if (exportRequest.responseId) {
+      response = await models.response.getById(exportRequest.responseId);
+    } else {
+      response = await models.response.getLatestForRequest(
+        exportRequest.requestId,
+        exportRequest.environmentId || null,
+      );
+    }
+
     const harResponse = await exportHarResponse(response);
 
     if (!harResponse) {
@@ -234,7 +270,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
   return har;
 }
 
-export async function exportHarResponse(response: ResponseModel | null) {
+export async function exportHarResponse(response: Response | null) {
   if (!response) {
     return {
       status: 0,
@@ -282,11 +318,11 @@ export async function exportHarRequest(
 
 export async function exportHarWithRequest(
   request: Request,
-  environmentId: string | null,
+  environmentId?: string,
   addContentLength = false,
 ) {
   try {
-    const renderResult = await getRenderedRequestAndContext(request, environmentId);
+    const renderResult = await getRenderedRequestAndContext({ request, environmentId });
     const renderedRequest = await _applyRequestPluginHooks(
       renderResult.request,
       renderResult.context,
@@ -304,7 +340,7 @@ export async function exportHarWithRequest(
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-) {
+): Promise<RenderedRequest> {
   let newRenderedRequest = renderedRequest;
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
@@ -380,7 +416,7 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
   return harCookies;
 }
 
-function getResponseCookies(response: ResponseModel) {
+function getResponseCookies(response: Response) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
   const responseCookies = getSetCookieHeaders(headers)
     .reduce((accumulator, harCookie) => {
@@ -444,7 +480,7 @@ function mapCookie(cookie: Cookie) {
   return harCookie;
 }
 
-function getResponseContent(response: ResponseModel) {
+function getResponseContent(response: Response) {
   let body = models.response.getBodyBuffer(response);
 
   if (body === null) {
@@ -459,7 +495,7 @@ function getResponseContent(response: ResponseModel) {
   return harContent;
 }
 
-function getResponseHeaders(response: ResponseModel) {
+function getResponseHeaders(response: Response) {
   return response.headers
     .filter(header => header.name)
     .map<HarHeader>(header => ({

@@ -1,13 +1,13 @@
 import crypto from 'crypto';
-import { parse as urlParse } from 'url';
-import * as c from './constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import { authorizeUserInWindow, responseToObject } from './misc';
+import { parse as urlParse } from 'url';
+
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
-import { sendWithSettings } from '../network';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-
+import { sendWithSettings } from '../network';
+import * as c from './constants';
+import { getOAuthSession, responseToObject } from './misc';
 export default async function(
   requestId: string,
   authorizeUrl: string,
@@ -21,6 +21,8 @@ export default async function(
   audience = '',
   resource = '',
   usePkce = false,
+  pkceMethod = c.PKCE_CHALLENGE_S256,
+  origin = '',
 ): Promise<Record<string, any>> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
@@ -36,8 +38,14 @@ export default async function(
   if (usePkce) {
     // @ts-expect-error -- TSCONVERSION
     codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
-    // @ts-expect-error -- TSCONVERSION
-    codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
+
+    if (pkceMethod === c.PKCE_CHALLENGE_S256) {
+      // @ts-expect-error -- TSCONVERSION
+      codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
+    } else {
+      codeChallenge = codeVerifier;
+    }
+
   }
 
   const authorizeResults = await _authorize(
@@ -49,6 +57,7 @@ export default async function(
     audience,
     resource,
     codeChallenge,
+    pkceMethod
   );
 
   // Handle the error
@@ -71,6 +80,7 @@ export default async function(
     audience,
     resource,
     codeVerifier,
+    origin,
   );
 }
 
@@ -83,6 +93,7 @@ async function _authorize(
   audience = '',
   resource = '',
   codeChallenge = '',
+  pkceMethod = '',
 ) {
   const params = [
     {
@@ -128,16 +139,18 @@ async function _authorize(
     });
     params.push({
       name: c.P_CODE_CHALLENGE_METHOD,
-      value: 'S256',
+      value: pkceMethod,
     });
   }
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(url, qs);
-  const successRegex = new RegExp(`${escapeRegex(redirectUri)}.*(code=)`, 'i');
-  const failureRegex = new RegExp(`${escapeRegex(redirectUri)}.*(error=)`, 'i');
-  const redirectedTo = await authorizeUserInWindow(finalUrl, successRegex, failureRegex);
+  const urlSuccessRegex = new RegExp(`${escapeRegex(redirectUri)}.*(code=)`, 'i');
+  const urlFailureRegex = new RegExp(`${escapeRegex(redirectUri)}.*(error=)`, 'i');
+  const sessionId = getOAuthSession();
+
+  const redirectedTo = await window.main.authorizeUserInWindow({ url: finalUrl, urlSuccessRegex, urlFailureRegex, sessionId });
   console.log('[oauth2] Detected redirect ' + redirectedTo);
   const { query } = urlParse(redirectedTo);
   return responseToObject(query, [
@@ -161,6 +174,7 @@ async function _getToken(
   audience = '',
   resource = '',
   codeVerifier = '',
+  origin = '',
 ): Promise<Record<string, any>> {
   const params = [
     {
@@ -220,6 +234,10 @@ async function _getToken(
     });
   } else {
     headers.push(getBasicAuthHeader(clientId, clientSecret));
+  }
+
+  if (origin) {
+    headers.push({ name: 'Origin', value: origin });
   }
 
   const responsePatch = await sendWithSettings(requestId, {

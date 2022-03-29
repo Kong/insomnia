@@ -8,9 +8,11 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -32,9 +34,11 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -90,11 +94,13 @@ exports[`Snapshot for "inso generate config -h" 1`] = `
 Generate configuration from an api spec.
 
 Options:
-  -t, --type <value>   type of configuration to generate, options are
-                       [declarative, kubernetes] (default: declarative)
-  --tags <tags>        comma separated list of tags to apply to each entity
-  -o, --output <path>  save the generated config to a file
-  -h, --help           display help for command"
+  -t, --type <value>    type of configuration to generate, options are
+                        [declarative, kubernetes] (default: declarative)
+  -f, --format <value>  format of configuration to generate, options are [yaml,
+                        json] (default: yaml)
+  --tags <tags>         comma separated list of tags to apply to each entity
+  -o, --output <path>   save the generated config to a file
+  -h, --help            display help for command"
 `;
 
 exports[`Snapshot for "inso help" 1`] = `
@@ -105,9 +111,11 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -168,5 +176,7 @@ Options:
                                  progress, spec] (default: spec)
   -b, --bail                     abort (\\"bail\\") after first test failure
   --keepFile                     do not delete the generated test file
+  --disableCertValidation        disable certificate validation for requests
+                                 with SSL
   -h, --help                     display help for command"
 `;

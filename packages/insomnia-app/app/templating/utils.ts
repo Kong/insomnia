@@ -1,6 +1,7 @@
-import type { PluginArgumentEnumOption } from './extensions';
 import objectPath from 'objectpath';
+
 import type { PluginStore } from '../plugins/context';
+import type { PluginArgumentEnumOption } from './extensions';
 
 export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
@@ -108,7 +109,7 @@ export function tokenizeTag(tagStr: string) {
     // Adding an "invisible" at the end helps us terminate the last arg
     const c = argsStr.charAt(i) || ',';
 
-    // Do nothing if we're still on a space o comma
+    // Do nothing if we're still on a space or comma
     if (currentArg === null && c.match(/[\s,]/)) {
       continue;
     }
@@ -245,8 +246,12 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   return `${name} ${stringArgs.join(', ')}`;
 }
 
-export function encodeEncoding(value: string, encoding: 'base64') {
+export function encodeEncoding<T>(value: T, encoding?: 'base64') {
   if (typeof value !== 'string') {
+    return value;
+  }
+
+  if (value.length === 0) {
     return value;
   }
 
@@ -258,7 +263,7 @@ export function encodeEncoding(value: string, encoding: 'base64') {
   return value;
 }
 
-export function decodeEncoding(value: string) {
+export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
   }

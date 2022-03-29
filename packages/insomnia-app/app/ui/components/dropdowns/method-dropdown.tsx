@@ -1,23 +1,26 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import React, { PureComponent } from 'react';
+
 import * as constants from '../../../common/constants';
+import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showPrompt } from '../modals/index';
-import { METHOD_GRPC, AUTOBIND_CFG } from '../../../common/constants';
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
 interface Props {
-  onChange: Function,
-  method: string,
-  right?: boolean,
-  showGrpc?: boolean,
-  className?: string,
+  onChange: Function;
+  method: string;
+  right?: boolean;
+  showGrpc?: boolean;
+  className?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MethodDropdown extends PureComponent<Props> {
+export class MethodDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _setDropdownRef(n: Dropdown) {
@@ -100,7 +103,8 @@ class MethodDropdown extends PureComponent<Props> {
             key={method}
             className={`http-method-${method}`}
             onClick={this._handleChange}
-            value={method}>
+            value={method}
+          >
             {method}
           </DropdownItem>
         ))}
@@ -116,12 +120,11 @@ class MethodDropdown extends PureComponent<Props> {
         <DropdownItem
           className="http-method-custom"
           onClick={this._handleSetCustomMethod}
-          value={method}>
+          value={method}
+        >
           Custom Method
         </DropdownItem>
       </Dropdown>
     );
   }
 }
-
-export default MethodDropdown;

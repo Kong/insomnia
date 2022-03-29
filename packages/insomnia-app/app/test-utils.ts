@@ -9,15 +9,9 @@ export const getAndClearShowPromptMockArgs = () => {
 
 export const getAndClearShowAlertMockArgs = () => {
   const mockFn = showAlert as jest.Mock<typeof showAlert, Parameters<typeof showAlert>>;
-  const { title, okLabel, addCancel, message, onConfirm } = mockFn.mock.calls[0][0];
+  const options = mockFn.mock.calls[0][0];
   mockFn.mockClear();
-  return {
-    title,
-    okLabel,
-    addCancel,
-    message,
-    onConfirm,
-  };
+  return options;
 };
 
 export const getAndClearShowErrorMockArgs = () => {

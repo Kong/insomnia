@@ -1,9 +1,9 @@
 import {
-  getJoiner,
-  joinUrlAndQueryString,
   buildQueryParameter,
   buildQueryStringFromParams,
   deconstructQueryStringToParams,
+  getJoiner,
+  joinUrlAndQueryString,
   smartEncodeUrl,
 } from './querystring';
 

@@ -1,9 +1,10 @@
+import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
-import fs from 'fs';
-import * as models from '../../models';
+
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getDataDirectory } from '../../common/electron-helpers';
+import * as models from '../../models';
 
 describe('migrate()', () => {
   beforeEach(async () => {

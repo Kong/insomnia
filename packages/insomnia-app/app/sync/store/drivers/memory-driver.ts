@@ -42,9 +42,9 @@ export default class MemoryDriver implements BaseDriver {
       }
 
       const levels = key.split('/').length;
-      const isOnSameLevel = levels === baseLevels;
+      const isInBaseLevel = levels === baseLevels + 1;
 
-      if (!recursive && !isOnSameLevel) {
+      if (!recursive && !isInBaseLevel) {
         continue;
       }
 

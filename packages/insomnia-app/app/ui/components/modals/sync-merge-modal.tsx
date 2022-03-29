@@ -1,18 +1,21 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
-import ModalFooter from '../base/modal-footer';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
-interface Props {
-  workspace: Workspace;
+import { AUTOBIND_CFG } from '../../../common/constants';
+import type { DocumentKey, MergeConflict } from '../../../sync/types';
+import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectSyncItems } from '../../redux/selectors';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
-  syncItems: StatusCandidate[];
 }
 
 interface State {
@@ -20,13 +23,13 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncMergeModal extends PureComponent<Props, State> {
+export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _handleDone: (arg0: MergeConflict[]) => void;
 
   state: State = {
     conflicts: [],
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -55,7 +58,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
     conflicts: MergeConflict[];
     handleDone: (arg0: MergeConflict[]) => void;
   }) {
-    this.modal && this.modal.show();
+    this.modal?.show();
     this._handleDone = options.handleDone;
     this.setState({
       conflicts: options.conflicts,
@@ -63,7 +66,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -80,7 +83,8 @@ class SyncMergeModal extends PureComponent<Props, State> {
                 <th
                   style={{
                     width: '10rem',
-                  }}>
+                  }}
+                >
                   Choose
                 </th>
               </tr>
@@ -125,4 +129,13 @@ class SyncMergeModal extends PureComponent<Props, State> {
   }
 }
 
-export default SyncMergeModal;
+const mapStateToProps = (state: RootState) => ({
+  syncItems: selectSyncItems(state),
+});
+
+export const SyncMergeModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncMergeModal);

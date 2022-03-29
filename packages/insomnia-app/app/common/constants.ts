@@ -1,7 +1,9 @@
-import appConfig from '../../config/config.json';
+import { KeyCombination } from 'insomnia-common';
 import path from 'path';
-import { ValueOf } from 'type-fest';
-import { getDataDirectory } from './electron-helpers';
+import { unreachableCase } from 'ts-assert-unreachable';
+
+import appConfig from '../../config/config.json';
+import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
 
 // App Stuff
 export const getAppVersion = () => appConfig.version;
@@ -12,16 +14,14 @@ export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getGoogleAnalyticsId = () => appConfig.gaId;
-export const getGoogleAnalyticsLocation = () => appConfig.gaLocation;
 export const getAppPlatform = () => process.platform;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
-export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
-export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
+export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || process.env.PLAYWRIGHT) ? 'development' : 'production'];
+export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
@@ -36,7 +36,7 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR) {
+  if (isWindows() && getPortableExecutableDir()) {
     return false;
   }
 
@@ -76,26 +76,63 @@ export const AUTOBIND_CFG = {
 };
 
 // Available editor key map
-export const EDITOR_KEY_MAP_DEFAULT = 'default';
-export const EDITOR_KEY_MAP_EMACS = 'emacs';
-export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
-export const EDITOR_KEY_MAP_VIM = 'vim';
+export enum EditorKeyMap {
+  default = 'default',
+  emacs = 'emacs',
+  sublime = 'sublime',
+  vim = 'vim',
+}
 
 // Hotkey
+// For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
-export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
-export const ALT_SYM = isMac() ? '⌥' : 'Alt';
-export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
-export const META_SYM = isMac() ? '⌘' : 'Super';
+
+export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
+  const mac = isMac();
+  switch (key) {
+    case 'ctrl':
+      return mac ? '⌃' : 'Ctrl';
+
+    case 'alt':
+      return mac ? '⌥' : 'Alt';
+
+    case 'shift':
+      return mac ? '⇧' : 'Shift';
+
+    case 'meta':
+      if (mac) {
+        return '⌘';
+      }
+
+      if (isWindows()) {
+        // Note: Although this unicode character for the Windows doesn't exist, the the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
+        // see: https://en.wikipedia.org/wiki/Windows_key
+        return 'Win';
+      }
+
+      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
+      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
+      return 'Super';
+
+    default:
+      return unreachableCase(key, 'unrecognized key');
+  }
+};
 
 // Update
-export const UPDATE_CHANNEL_STABLE = 'stable';
-export const UPDATE_CHANNEL_BETA = 'beta';
-export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
-export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
+export enum UpdateURL {
+  mac = 'https://updates.insomnia.rest/builds/check/mac',
+  windows = 'https://updates.insomnia.rest/updates/win',
+}
 
 // API
-export const API_BASE_URL = 'https://api.insomnia.rest';
+export const getApiBaseURL = () => process.env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
+
+// App website
+export const getAppWebsiteBaseURL = () => process.env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
+
+// GitHub API
+export const getGitHubGraphQLApiURL = () => process.env.INSOMNIA_GITHUB_API_URL || 'https://api.github.com/graphql';
 
 // SYNC
 export const DEFAULT_BRANCH_NAME = 'master';
@@ -126,20 +163,16 @@ export type GlobalActivity =
   | 'spec'
   | 'debug'
   | 'unittest'
-  | 'home'
-  | 'migration'
-  | 'onboarding'
-  | 'analytics';
+  | 'home';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
-export const ACTIVITY_ONBOARDING: GlobalActivity = 'onboarding';
-export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
-export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
-export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
-export const isWorkspaceActivity = (activity: string): activity is GlobalActivity => {
+export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
+  isDesignActivity(activity) || isCollectionActivity(activity);
+
+export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:
@@ -147,9 +180,19 @@ export const isWorkspaceActivity = (activity: string): activity is GlobalActivit
       return true;
 
     case ACTIVITY_HOME:
-    case ACTIVITY_ONBOARDING:
-    case ACTIVITY_MIGRATION:
-    case ACTIVITY_ANALYTICS:
+    default:
+      return false;
+  }
+};
+
+export const isCollectionActivity = (activity?: string): activity is GlobalActivity => {
+  switch (activity) {
+    case ACTIVITY_DEBUG:
+      return true;
+
+    case ACTIVITY_SPEC:
+    case ACTIVITY_UNIT_TEST:
+    case ACTIVITY_HOME:
     default:
       return false;
   }
@@ -161,9 +204,6 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
-    case ACTIVITY_ONBOARDING:
-    case ACTIVITY_MIGRATION:
-    case ACTIVITY_ANALYTICS:
       return true;
 
     default:
@@ -205,6 +245,7 @@ export const PREVIEW_MODES = Object.keys(previewModeMap);
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
+export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'text/yaml';
 export const CONTENT_TYPE_EDN = 'application/edn';
@@ -221,6 +262,7 @@ const contentTypesMap = {
   [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other'],
+  [CONTENT_TYPE_PLAINTEXT]: ['Plain', 'Plain'],
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };
@@ -244,16 +286,6 @@ export const HAWK_ALGORITHM_SHA1 = 'sha1';
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
 
-// HTTP version codes
-export const HttpVersions = {
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2_0: 'V2_0',
-  v3: 'v3',
-  default: 'default',
-} as const;
-export type HttpVersion = ValueOf<typeof HttpVersions>;
-
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
@@ -276,13 +308,15 @@ export type SortOrder =
   | 'http-method'
   | 'type-desc'
   | 'type-asc';
-export const SORT_NAME_ASC: SortOrder = 'name-asc';
-export const SORT_NAME_DESC: SortOrder = 'name-desc';
-export const SORT_CREATED_ASC: SortOrder = 'created-asc';
-export const SORT_CREATED_DESC: SortOrder = 'created-desc';
-export const SORT_HTTP_METHOD: SortOrder = 'http-method';
-export const SORT_TYPE_DESC: SortOrder = 'type-desc';
-export const SORT_TYPE_ASC: SortOrder = 'type-asc';
+export const SORT_NAME_ASC = 'name-asc';
+export const SORT_NAME_DESC = 'name-desc';
+export const SORT_CREATED_ASC = 'created-asc';
+export const SORT_CREATED_DESC = 'created-desc';
+export const SORT_MODIFIED_ASC = 'modified-asc';
+export const SORT_MODIFIED_DESC = 'modified-desc';
+export const SORT_HTTP_METHOD = 'http-method';
+export const SORT_TYPE_DESC = 'type-desc';
+export const SORT_TYPE_ASC = 'type-asc';
 export const SORT_ORDERS = [
   SORT_NAME_ASC,
   SORT_NAME_DESC,
@@ -291,15 +325,38 @@ export const SORT_ORDERS = [
   SORT_HTTP_METHOD,
   SORT_TYPE_DESC,
   SORT_TYPE_ASC,
-];
+] as const;
 export const sortOrderName: Record<SortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending',
-  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',
   [SORT_CREATED_DESC]: 'Newest First',
   [SORT_HTTP_METHOD]: 'HTTP Method',
   [SORT_TYPE_DESC]: 'Folders First',
   [SORT_TYPE_ASC]: 'Requests First',
+};
+
+export type DashboardSortOrder =
+  | 'name-asc'
+  | 'name-desc'
+  | 'created-asc'
+  | 'created-desc'
+  | 'modified-desc';
+
+export const DASHBOARD_SORT_ORDERS = [
+  SORT_MODIFIED_DESC,
+  SORT_NAME_ASC,
+  SORT_NAME_DESC,
+  SORT_CREATED_ASC,
+  SORT_CREATED_DESC,
+];
+
+export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
+  [SORT_CREATED_ASC]: 'Oldest First',
+  [SORT_CREATED_DESC]: 'Newest First',
+  [SORT_MODIFIED_DESC]: 'Last Modified',
 };
 
 export function getPreviewModeName(previewMode, useLong = false) {

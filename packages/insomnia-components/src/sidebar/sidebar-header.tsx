@@ -1,7 +1,8 @@
+import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { SvgIcon, IconEnum } from '../svg-icon';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
 
 export interface SidebarHeaderProps {
   headerTitle: string;
@@ -82,7 +83,8 @@ export const SidebarHeader: FunctionComponent<SidebarHeaderProps> = ({
             }}
             animate={{
               opacity: sectionVisible ? 0.6 : 0,
-            }}>
+            }}
+          >
             <SvgIcon icon={IconEnum.search} />
           </motion.span>
         )}

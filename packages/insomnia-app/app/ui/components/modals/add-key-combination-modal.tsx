@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import Modal from '../base/modal';
-import ModalHeader from '../base/modal-header';
-import ModalBody from '../base/modal-body';
-import type { KeyCombination } from '../../../common/hotkeys';
+import { KeyCombination } from 'insomnia-common';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
 
 interface State {
   hotKeyRefId: string | null;
@@ -18,7 +19,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AddKeyCombinationModal extends PureComponent<{}, State> {
+export class AddKeyCombinationModal extends PureComponent<{}, State> {
   _modal: Modal | null = null;
 
   state: State = {
@@ -26,7 +27,7 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
     checkKeyCombinationDuplicate: misc.nullFn,
     onAddKeyCombination: misc.nullFn,
     pressedKeyCombination: null,
-  }
+  };
 
   _setModalRef(modal: Modal) {
     this._modal = modal;
@@ -100,11 +101,11 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
       onAddKeyCombination: onAddKeyCombination,
       pressedKeyCombination: null,
     });
-    this._modal && this._modal.show();
+    this._modal?.show();
   }
 
   hide() {
-    this._modal && this._modal.hide();
+    this._modal?.hide();
   }
 
   render() {
@@ -113,7 +114,7 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
     let isDuplicate = false;
 
     if (pressedKeyCombination != null) {
-      keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true).toLowerCase();
+      keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true);
       isDuplicate = checkKeyCombinationDuplicate(pressedKeyCombination);
     }
 
@@ -124,7 +125,8 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
       <Modal
         ref={this._setModalRef}
         onKeyDown={this._handleKeyDown}
-        className="shortcuts add-key-comb-modal">
+        className="shortcuts add-key-comb-modal"
+      >
         <ModalHeader>Add Keyboard Shortcut</ModalHeader>
         <ModalBody noScroll>
           <div className="pad-left pad-right pad-top pad-bottom-sm">
@@ -141,5 +143,3 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default AddKeyCombinationModal;

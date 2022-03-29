@@ -1,11 +1,23 @@
 import { createBuilder, Schema } from '@develohpanda/fluent-builder';
-import { baseModelSchema } from '../../models/__schemas__/model-schemas';
-import { Branch, MergeConflict, Project, SnapshotStateEntry, StatusCandidate } from '../types';
 
-export const projectSchema: Schema<Project> = {
+import { baseModelSchema } from '../../models/__schemas__/model-schemas';
+import { BackendProject, Branch, MergeConflict, SnapshotStateEntry, StatusCandidate, Team } from '../types';
+import { BackendProjectWithTeam } from '../vcs/normalize-backend-project-team';
+
+export const projectSchema: Schema<BackendProject> = {
   id: () => 'id',
   rootDocumentId: () => 'rootDocumentId',
   name: () => 'name',
+};
+
+export const teamSchema: Schema<Team> = {
+  id: () => 'teamId',
+  name: () => 'teamName',
+};
+
+export const backendProjectWithTeamSchema: Schema<BackendProjectWithTeam> = {
+  ...projectSchema,
+  team: () => createBuilder(teamSchema).build(),
 };
 
 export const branchSchema: Schema<Branch> = {

@@ -1,10 +1,10 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
-import type { Workspace } from './workspace';
-import type { RequestGroup } from './request-group';
-import { Space } from './space';
 import { isGrpcRequest } from './grpc-request';
+import type { BaseModel } from './index';
+import { Project } from './project';
 import { isRequest } from './request';
+import type { RequestGroup } from './request-group';
+import type { Workspace } from './workspace';
 
 export const name = 'Stats';
 
@@ -16,7 +16,7 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-interface BaseStats {
+export interface BaseStats {
   currentLaunch: number | null;
   lastLaunch: number | null;
   currentVersion: string | null;
@@ -69,6 +69,10 @@ export async function get() {
   }
 }
 
+export function all() {
+  return db.all<Stats>(type) || [];
+}
+
 export async function incrementRequestStats({
   createdRequests,
   deletedRequests,
@@ -114,7 +118,7 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
   });
 }
 
-export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Space) {
+export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Project) {
   const docs = await db.withDescendants(doc);
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   await incrementRequestStats({

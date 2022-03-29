@@ -1,12 +1,13 @@
+import { createBuilder } from '@develohpanda/fluent-builder';
+
+import { GrpcMethodTypeEnum } from '../../network/grpc/method';
+import { grpcMethodDefinitionSchema } from '../../ui/context/grpc/__schemas__';
 import {
   getGrpcPathSegments,
   getShortGrpcPath,
   groupGrpcMethodsByPackage,
   NO_PACKAGE_KEY,
 } from '../grpc-paths';
-import { createBuilder } from '@develohpanda/fluent-builder';
-import { grpcMethodDefinitionSchema } from '../../ui/context/grpc/__schemas__';
-import { GrpcMethodTypeEnum } from '../../network/grpc/method';
 
 describe('getGrpcPathSegments', () => {
   it.each([

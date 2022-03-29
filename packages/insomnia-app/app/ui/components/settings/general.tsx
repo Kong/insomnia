@@ -1,626 +1,452 @@
-import React, { Fragment, PureComponent } from 'react';
-import * as fontScanner from 'font-scanner';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
+import { Tooltip } from 'insomnia-components';
+import React, { FC, Fragment, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+
 import {
-  ACTIVITY_MIGRATION,
-  AUTOBIND_CFG,
-  EDITOR_KEY_MAP_DEFAULT,
-  EDITOR_KEY_MAP_EMACS,
-  EDITOR_KEY_MAP_SUBLIME,
-  EDITOR_KEY_MAP_VIM,
-  HttpVersions,
+  EditorKeyMap,
   isDevelopment,
   isMac,
-  updatesSupported,
-  UPDATE_CHANNEL_BETA,
-  UPDATE_CHANNEL_STABLE,
-  MIN_INTERFACE_FONT_SIZE,
+  MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
-  MAX_EDITOR_FONT_SIZE,
+  MIN_INTERFACE_FONT_SIZE,
+  updatesSupported,
 } from '../../../common/constants';
-import HelpTooltip from '../help-tooltip';
-import type { GlobalActivity, HttpVersion } from '../../../common/constants';
-import type { Settings } from '../../../models/settings';
-import { setFont } from '../../../plugins/misc';
-import Tooltip from '../tooltip';
-import CheckForUpdatesButton from '../check-for-updates-button';
-import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { bindActionCreators } from 'redux';
-import * as globalActions from '../../redux/modules/global';
-import { connect } from 'react-redux';
-import { strings } from '../../../common/strings';
-import { snapNumberToLimits } from '../../../common/misc';
-import { restartApp } from '../../../common/electron-helpers';
-import Link from '../base/link';
 import { docsKeyMaps } from '../../../common/documentation';
+import { strings } from '../../../common/strings';
+import * as models from '../../../models';
+import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { selectSettings, selectStats } from '../../redux/selectors';
+import { Link } from '../base/link';
+import { CheckForUpdatesButton } from '../check-for-updates-button';
+import { HelpTooltip } from '../help-tooltip';
+import { BooleanSetting } from './boolean-setting';
+import { EnumSetting } from './enum-setting';
+import { MaskedSetting } from './masked-setting';
+import { NumberSetting } from './number-setting';
+import { TextSetting } from './text-setting';
 
-// Font family regex to match certain monospace fonts that don't get
-// recognized as monospace
+/**
+ * We are attempting to move the app away from needing settings changes to restart the app.
+ * For now, this component is a holdover until such a time as we are able to fix the underlying cases. (INS-1245)
+ */
+const RestartTooltip: FC<{ message: string }> = ({ message }) => (
+  <Fragment>
+    {message}{' '}
+    <Tooltip message="Will restart the app" className="space-left">
+      <i className="fa fa-refresh super-duper-faint" />
+    </Tooltip>
+  </Fragment>
+);
 
-const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
+const DevelopmentOnlySettings: FC = () => {
+  const { launches } = useSelector(selectStats);
 
-interface Props {
-  settings: Settings;
-  hideModal: () => void;
-  updateSetting: (key: string, value: any) => Promise<Settings>;
-  handleSetActiveActivity: (activity?: GlobalActivity) => void;
-}
+  const onChangeLaunches = useCallback(async event => {
+    const launches = parseInt(event.target.value, 10);
+    await models.stats.update({ launches });
+  }, []);
 
-interface State {
-  fonts: {
-    family: string;
-    monospace: boolean;
-  }[] | null;
-  fontsMono: {
-    family: string;
-    monospace: boolean;
-  }[] | null;
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class General extends PureComponent<Props, State> {
-  state: State = {
-    fonts: null,
-    fontsMono: null,
+  if (!isDevelopment()) {
+    return null;
   }
 
-  async componentDidMount() {
-    const allFonts = await fontScanner.getAvailableFonts();
-    // Find regular fonts
-    const fonts = allFonts
-      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
-      .sort((a, b) => (a.family > b.family ? 1 : -1));
-    // Find monospaced fonts
-    // NOTE: Also include some others:
-    //  - https://github.com/Kong/insomnia/issues/1835
-    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
-    this.setState({
-      fonts,
-      fontsMono,
-    });
-  }
+  return (
+    <>
+      <hr className="pad-top" />
+      <h2>Development</h2>
 
-  async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
-    let value = el.type === 'checkbox' ? el.checked : el.value;
-
-    if (el.type === 'number') {
-      // @ts-expect-error -- TSCONVERSION
-      value = snapNumberToLimits(
-        // @ts-expect-error -- TSCONVERSION
-        parseInt(value, 10) || 0,
-        parseInt(el.min, 10),
-        parseInt(el.max, 10),
-      );
-    }
-
-    if (el.value === '__NULL__') {
-      // @ts-expect-error -- TSCONVERSION
-      value = null;
-    }
-
-    return this.props.updateSetting(el.name, value);
-  }
-
-  async _handleUpdateSettingAndRestart(e: React.SyntheticEvent<HTMLInputElement>) {
-    await this._handleUpdateSetting(e);
-    restartApp();
-  }
-
-  async _handleFontSizeChange(el: React.SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
-  }
-
-  async _handleFontChange(el: React.SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
-  }
-
-  _handleStartMigration() {
-    this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
-    this.props.hideModal();
-  }
-
-  renderEnumSetting(
-    label: string,
-    name: string,
-    values: {
-      name: string;
-      value: any;
-    }[],
-    help: string,
-    forceRestart?: boolean,
-  ) {
-    const { settings } = this.props;
-    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
-    return (
-      <div className="form-control form-control--outlined pad-top-sm">
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          <select
-            value={settings[name] || '__NULL__'}
-            name={name}
-            // @ts-expect-error -- TSCONVERSION
-            onChange={onChange}
-          >
-            {values.map(({ name, value }) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="form-row pad-top-sm">
+        <BooleanSetting
+          label="Has seen analytics prompt"
+          setting="hasPromptedAnalytics"
+        />
       </div>
-    );
-  }
 
-  renderBooleanSetting(label: string, name: string, help?: string, forceRestart?: boolean) {
-    const { settings } = this.props;
-
-    if (!settings.hasOwnProperty(name)) {
-      throw new Error(`Invalid boolean setting name ${name}`);
-    }
-
-    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
-    return (
-      <div className="form-control form-control--thin">
-        <label className="inline-block">
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          {forceRestart && (
-            <Tooltip message="Will restart app" className="space-left">
-              <i className="fa fa-refresh super-duper-faint" />
-            </Tooltip>
-          )}
-          <input type="checkbox" name={name} checked={settings[name]} onChange={onChange} />
-        </label>
-      </div>
-    );
-  }
-
-  renderTextSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    const { settings } = this.props;
-
-    if (!settings.hasOwnProperty(name)) {
-      throw new Error(`Invalid number setting name ${name}`);
-    }
-
-    return (
-      <div className="form-control form-control--outlined">
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          <input
-            type={props.type || 'text'}
-            name={name}
-            defaultValue={settings[name]}
-            {...props}
-            onChange={props.onChange || this._handleUpdateSetting}
-          />
-        </label>
-      </div>
-    );
-  }
-
-  renderNumberSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
-  }
-
-  render() {
-    const { settings } = this.props;
-    const { fonts, fontsMono } = this.state;
-    return (
-      <div className="pad-bottom">
-        <div className="row-fill row-fill--top">
-          <div>
-            {this.renderBooleanSetting('Use bulk header editor', 'useBulkHeaderEditor', '')}
-            {this.renderBooleanSetting(
-              'Vertical request/response layout',
-              'forceVerticalLayout',
-              '',
-            )}
-          </div>
-          <div>
-            {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}
-            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '', true)}
-            {this.renderBooleanSetting('Raw template syntax', 'nunjucksPowerUserMode', '', true)}
-          </div>
-        </div>
-        <div className="row-fill row-fill--top pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              Environment Highlight Style{' '}
-              <HelpTooltip>Configures the appearance of environment's color indicator</HelpTooltip>
-              <select
-                defaultValue={settings.environmentHighlightColorStyle}
-                name="environmentHighlightColorStyle"
-                // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}>
-                <option value="sidebar-indicator">Sidebar indicator</option>
-                <option value="sidebar-edge">Sidebar edge</option>
-                <option value="window-top">Window top</option>
-                <option value="window-bottom">Window bottom</option>
-                <option value="window-left">Window left</option>
-                <option value="window-right">Window right</option>
-              </select>
-            </label>
-          </div>
-          {this.renderNumberSetting(
-            'Autocomplete popup delay',
-            'autocompleteDelay',
-            'Configure the autocomplete popup delay in milliseconds (0 to disable)',
-            {
-              min: 0,
-              max: 3000,
-            },
-          )}
-        </div>
-
-        <hr className="pad-top" />
-        <h2>Font</h2>
-
-        <div className="row-fill row-fill--top">
-          <div>
-            {this.renderBooleanSetting('Indent with tabs', 'editorIndentWithTabs', '')}
-            {this.renderBooleanSetting('Wrap text editor lines', 'editorLineWrapping', '')}
-          </div>
-          <div>{this.renderBooleanSetting('Font ligatures', 'fontVariantLigatures', '')}</div>
-        </div>
-
-        <div className="form-row pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              Interface Font
-              {fonts ? (
-                <select
-                  name="fontInterface"
-                  value={settings.fontInterface || '__NULL__'}
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}>
-                  <option value="__NULL__">-- System Default --</option>
-                  {fonts.map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select disabled>
-                  <option value="__NULL__">-- Unsupported Platform --</option>
-                </select>
-              )}
-            </label>
-          </div>
-          {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-            min: MIN_INTERFACE_FONT_SIZE,
-            max: MAX_INTERFACE_FONT_SIZE,
-            onBlur: this._handleFontSizeChange,
-          })}
-        </div>
-
-        <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Font
-              {fontsMono ? (
-                <select
-                  name="fontMonospace"
-                  value={settings.fontMonospace || '__NULL__'}
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}>
-                  <option value="__NULL__">-- System Default --</option>
-                  {fontsMono.map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select disabled>
-                  <option value="__NULL__">-- Unsupported Platform --</option>
-                </select>
-              )}
-            </label>
-          </div>
-          {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
-            min: MIN_EDITOR_FONT_SIZE,
-            max: MAX_EDITOR_FONT_SIZE,
-          })}
-        </div>
-
-        <div className="form-row">
-          {this.renderNumberSetting('Editor Indent Size', 'editorIndentSize', '', {
-            min: 1,
-            max: 16,
-          })}
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Key Map
-              {isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
-                <HelpTooltip className="space-left">
-                  To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
-                    documentation <i className="fa fa-external-link-square" />
-                  </Link>
-                </HelpTooltip>
-              )}
-              <select
-                defaultValue={settings.editorKeyMap}
-                name="editorKeyMap"
-                // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}>
-                <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
-                <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
-                <option value={EDITOR_KEY_MAP_EMACS}>Emacs</option>
-                <option value={EDITOR_KEY_MAP_SUBLIME}>Sublime</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <hr className="pad-top" />
-
-        <h2>Request / Response</h2>
-
-        <div className="row-fill row-fill--top">
-          <div>
-            {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
-            {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
-            {this.renderBooleanSetting(
-              'Filter responses by environment',
-              'filterResponsesByEnv',
-              'Only show responses that were sent under the currently-active environment. This ' +
-              'adds additional separation when working with Development, Staging, Production ' +
-              'environments, for example.',
-            )}
-          </div>
-          <div>
-            {this.renderBooleanSetting('Disable JS in HTML preview', 'disableHtmlPreviewJs', '')}
-            {this.renderBooleanSetting(
-              'Disable Links in response viewer',
-              'disableResponsePreviewLinks',
-              '',
-            )}
-          </div>
-        </div>
-
-        <div className="form-row pad-top-sm">
-          {this.renderEnumSetting(
-            'Preferred HTTP version',
-            'preferredHttpVersion',
-            [
-              {
-                name: 'Default',
-                value: HttpVersions.default,
-              },
-              {
-                name: 'HTTP 1.0',
-                value: HttpVersions.V1_0,
-              },
-              {
-                name: 'HTTP 1.1',
-                value: HttpVersions.V1_1,
-              },
-              {
-                name: 'HTTP/2',
-                value: HttpVersions.V2_0,
-              }, // Enable when our version of libcurl supports HTTP/3
-              // { name: 'HTTP/3', value: HttpVersions.v3 },
-            ] as {
-              name: string;
-              value: HttpVersion;
-            }[],
-            'Preferred HTTP version to use for requests which will fall back if it cannot be' +
-            'negotiated',
-          )}
-        </div>
-
-        <div className="form-row pad-top-sm">
-          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinity', {
-            min: -1,
-          })}
-          {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinity', {
-            min: -1,
-          })}
-        </div>
-
-        <div className="form-row pad-top-sm">
-          {this.renderNumberSetting(
-            'Response History Limit',
-            'maxHistoryResponses',
-            'Number of responses to keep for each request (-1 for infinity)',
-            {
-              min: -1,
-            },
-          )}
-          {this.renderNumberSetting(
-            'Max Timeline Chunk Size (KB)',
-            'maxTimelineDataSizeKB',
-            'Maximum size in kilobytes to show on timeline',
-            {
-              min: 0,
-            },
-          )}
-        </div>
-
-        <hr className="pad-top" />
-
-        <h2>Security</h2>
-        <div className="form-row pad-top-sm">
-          {this.renderBooleanSetting(
-            'Clear OAuth 2 session on start',
-            'clearOAuth2SessionOnRestart',
-            'Clears the session of the OAuth2 popup window every time Insomnia is launched',
-          )}
-          <button
-            className="btn btn--clicky pointer"
-            style={{
-              padding: 0,
-            }}
-            onClick={initNewOAuthSession}>
-            Clear OAuth 2 session
-          </button>
-        </div>
-
-        <hr className="pad-top" />
-
-        <h2>
-          HTTP Network Proxy
-          <HelpTooltip
-            className="space-left txt-md"
-            style={{
-              maxWidth: '20rem',
-              // @ts-expect-error -- TSCONVERSION
-              lineWrap: 'word',
-            }}>
-            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
-          </HelpTooltip>
-        </h2>
-
-        {this.renderBooleanSetting('Enable proxy', 'proxyEnabled', '')}
-
-        <div className="form-row pad-top-sm">
-          {this.renderTextSetting('HTTP Proxy', 'httpProxy', '', {
-            placeholder: 'localhost:8005',
-            disabled: !settings.proxyEnabled,
-          })}
-          {this.renderTextSetting('HTTPS Proxy', 'httpsProxy', '', {
-            placeholder: 'localhost:8005',
-            disabled: !settings.proxyEnabled,
-          })}
-          {this.renderTextSetting(
-            'No Proxy',
-            'noProxy',
-            'Comma-separated list of hostnames that do not require a proxy to be contacted',
-            {
-              placeholder: 'localhost,127.0.0.1',
-              disabled: !settings.proxyEnabled,
-            },
-          )}
-        </div>
-
-        {updatesSupported() && (
-          <Fragment>
-            <hr className="pad-top" />
-            <div>
-              <div className="pull-right">
-                <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
-                  Check Now
-                </CheckForUpdatesButton>
-              </div>
-              <h2>Software Updates</h2>
-            </div>
-            {this.renderBooleanSetting(
-              'Automatically download and install updates',
-              'updateAutomatically',
-              'If disabled, you will receive a notification when a new update is available',
-            )}
-            <div className="form-control form-control--outlined pad-top-sm">
-              <label>
-                Update Channel
-                <select
-                  value={settings.updateChannel}
-                  name="updateChannel"
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleUpdateSetting}>
-                  <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
-                  <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
-                </select>
-              </label>
-            </div>
-          </Fragment>
-        )}
-
-        {!updatesSupported() && (
-          <Fragment>
-            <hr className="pad-top" />
-            <h2>Software Updates</h2>
-            {this.renderBooleanSetting(
-              'Do not notify of new releases',
-              'disableUpdateNotification',
-              '',
-            )}
-          </Fragment>
-        )}
-
-        <hr className="pad-top" />
-        <h2>Plugins</h2>
-
-        {this.renderTextSetting(
-          'Additional Plugin Path',
-          'pluginPath',
-          'Tell Insomnia to look for plugins in a different directory',
-          {
-            placeholder: '~/.insomnia:/other/path',
-          },
-        )}
-
-        <br />
-
-        <hr className="pad-top" />
-        <h2>Data Sharing</h2>
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Send Usage Statistics{' '}
+      <div className="form-row pad-top-sm">
+        <div className="form-control form-control--outlined">
+          <label>
+            Stats.Launches
+            <HelpTooltip className="space-left">If you need this to be a certain value after restarting the app, then just subtract one from your desired value before you restart.  For example, if you want to simulate first launch, set it to 0 and when you reboot it will be 1.  Note that Shift+F5 does not actually restart since it only refreshes the renderer and thus will not increment `Stats.launches`.  This is because Stats.launches is incremented in the main process whereas refreshing the app with Shift+F5 doesn't retrigger that code path.</HelpTooltip>
             <input
-              type="checkbox"
-              name="enableAnalytics"
-              checked={!!settings.enableAnalytics}
-              onChange={this._handleUpdateSetting}
+              value={String(launches)}
+              min={0}
+              name="launches"
+              onChange={onChangeLaunches}
+              type={'number'}
             />
           </label>
-          <p className="txt-sm faint">
-            Help Kong improve its products by sending anonymous data about features and plugins
-            used, hardware and software configuration, statistics on number of requests,{' '}
-            {strings.collection.plural.toLowerCase()}, {strings.document.plural.toLowerCase()}, etc.
-          </p>
-          <p className="txt-sm faint">
-            Please note that this will not include personal data or any sensitive information, such
-            as request data, names, etc.
-          </p>
         </div>
-
-        <hr className="pad-top" />
-
-        <h2>Migrate from Designer</h2>
-        <div className="form-row--start pad-top-sm">
-          <button className="btn btn--clicky pointer" onClick={this._handleStartMigration}>
-            Show migration workflow
-          </button>
-        </div>
-
-        {isDevelopment() && (
-          <>
-            <hr className="pad-top" />
-            <h2>Development</h2>
-            <div className="form-row pad-top-sm">
-              {this.renderBooleanSetting(
-                'Has been prompted to migrate from Insomnia Designer',
-                'hasPromptedToMigrateFromDesigner',
-              )}
-            </div>
-            <div className="form-row pad-top-sm">
-              {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
-            </div>
-            <div className="form-row pad-top-sm">
-              {this.renderBooleanSetting('Has seen analytics prompt', 'hasPromptedAnalytics')}
-            </div>
-          </>
-        )}
       </div>
-    );
-  }
-}
+    </>
+  );
+};
 
-function mapDispatchToProps(dispatch) {
-  // @ts-expect-error -- TSCONVERSION
-  const global = bindActionCreators(globalActions, dispatch);
-  return {
-    // @ts-expect-error -- TSCONVERSION
-    handleSetActiveActivity: global.setActiveActivity,
-  };
-}
+export const General: FC = () => {
+  const settings = useSelector(selectSettings);
+  return (
+    <div className="pad-bottom">
+      <div className="row-fill row-fill--top">
+        <div>
+          <BooleanSetting
+            label="Use bulk header editor"
+            setting="useBulkHeaderEditor"
+          />
+          <BooleanSetting
+            label="Use vertical layout"
+            setting="forceVerticalLayout"
+            help="If checked, stack request and response panels vertically."
+          />
+          <BooleanSetting
+            label={<RestartTooltip message="Show variable source and value" />}
+            help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
+            setting="showVariableSourceAndValue"
+          />
+        </div>
+        <div>
+          <BooleanSetting
+            label="Reveal passwords"
+            setting="showPasswords"
+          />
+          {!isMac() && (
+            <BooleanSetting
+              label="Hide menu bar"
+              setting="autoHideMenuBar"
+            />
+          )}
+          <BooleanSetting
+            label={<RestartTooltip message="Raw template syntax" />}
+            setting="nunjucksPowerUserMode"
+          />
+        </div>
+      </div>
 
-export default connect(null, mapDispatchToProps)(General);
+      <div className="row-fill row-fill--top pad-top-sm">
+        <EnumSetting<EnvironmentHighlightColorStyle>
+          label="Environment highlight style"
+          help="Select the sub-environment highlight area. Configure the highlight color itself in your environment settings."
+          setting="environmentHighlightColorStyle"
+          values={[
+            { value:'sidebar-indicator', name: 'Sidebar indicator' },
+            { value:'sidebar-edge', name: 'Sidebar edge' },
+            { value:'window-top', name: 'Window top' },
+            { value:'window-bottom', name: 'Window bottom' },
+            { value:'window-left', name: 'Window left' },
+            { value:'window-right', name: 'Window right' },
+          ]}
+        />
+
+        <NumberSetting
+          label="Autocomplete popup delay"
+          setting="autocompleteDelay"
+          help="Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay."
+          min={0}
+          max={3000}
+        />
+      </div>
+
+      <hr className="pad-top" />
+      <h2>Font</h2>
+
+      <div className="row-fill row-fill--top">
+        <div>
+          <BooleanSetting
+            label="Indent with tabs"
+            setting="editorIndentWithTabs"
+          />
+          <BooleanSetting
+            label="Wrap text editor lines"
+            setting="editorLineWrapping"
+          />
+        </div>
+        <div>
+          <BooleanSetting
+            label="Font ligatures"
+            setting="fontVariantLigatures"
+          />
+        </div>
+      </div>
+
+      <div className="form-row pad-top-sm">
+        <div className="form-row">
+          <TextSetting
+            label="Interface font"
+            setting="fontInterface"
+            help="Enter a comma-separated list of fonts. If left empty, uses system defaults."
+            placeholder="-- System Default --"
+          />
+          <NumberSetting
+            label="Interface font size (px)"
+            setting="fontSize"
+            min={MIN_INTERFACE_FONT_SIZE}
+            max={MAX_INTERFACE_FONT_SIZE}
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <TextSetting
+          label="Text editor font"
+          setting="fontMonospace"
+          help="Enter a comma-separated list of monospace fonts. If left empty, uses system defaults."
+          placeholder="-- System Default --"
+        />
+        <NumberSetting
+          label="Editor Font Size (px)"
+          setting="editorFontSize"
+          min={MIN_EDITOR_FONT_SIZE}
+          max={MAX_EDITOR_FONT_SIZE}
+        />
+      </div>
+
+      <div className="form-row">
+        <NumberSetting
+          label="Editor Indent Size"
+          setting="editorIndentSize"
+          help=""
+          min={1}
+          max={16}
+        />
+
+        <EnumSetting<EditorKeyMap>
+          label="Text Editor Key Map"
+          setting="editorKeyMap"
+          help={isMac() && settings.editorKeyMap === EditorKeyMap.vim && (
+            <Fragment>
+              To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
+                documentation <i className="fa fa-external-link-square" /></Link>
+            </Fragment>
+          )}
+          values={[
+            { value: EditorKeyMap.default, name: 'Default' },
+            { value: EditorKeyMap.vim, name: 'Vim' },
+            { value: EditorKeyMap.emacs, name: 'Emacs' },
+            { value: EditorKeyMap.sublime, name: 'Sublime' },
+          ]}
+        />
+      </div>
+
+      <hr className="pad-top" />
+
+      <h2>Request / Response</h2>
+
+      <div className="row-fill row-fill--top">
+        <div>
+          <BooleanSetting
+            label="Validate certificates"
+            setting="validateSSL"
+            help="If checked, validate SSL certificates for API requests. This does not affect SSL certificate validation during authentication."
+          />
+          <BooleanSetting
+            label="Follow redirects"
+            setting="followRedirects"
+          />
+          <BooleanSetting
+            label="Filter responses by environment"
+            setting="filterResponsesByEnv"
+            help="If checked, only show responses sent under the active environment. "
+          />
+        </div>
+        <div>
+          <BooleanSetting
+            label="Disable JS in HTML preview"
+            setting="disableHtmlPreviewJs"
+          />
+          <BooleanSetting
+            label="Disable links in response viewer"
+            setting="disableResponsePreviewLinks"
+          />
+        </div>
+      </div>
+
+      <div className="form-row pad-top-sm">
+        <EnumSetting<HttpVersion>
+          label="Preferred HTTP version"
+          setting="preferredHttpVersion"
+          values={[
+            { value: HttpVersions.default, name: 'Default' },
+            { value: HttpVersions.V1_0, name: 'HTTP 1.0' },
+            { value: HttpVersions.V1_1, name: 'HTTP 1.1' },
+            { value: HttpVersions.V2PriorKnowledge, name: 'HTTP/2 PriorKnowledge' },
+            { value: HttpVersions.V2_0, name: 'HTTP/2' },
+            // Enable when our version of libcurl supports HTTP/3
+            // see: https://github.com/JCMais/node-libcurl/issues/233
+            // { value: HttpVersions.v3, name: 'HTTP/3' },
+          ]}
+          help="Select the preferred HTTP version for requests. The version will fall back if it can’t be negotiated."
+        />
+      </div>
+
+      <div className="form-row pad-top-sm">
+        <NumberSetting
+          label="Maximum Redirects"
+          setting="maxRedirects"
+          help="Enter the maximum amount of redirects to follow. Enter -1 for unlimited redirects."
+          min={-1}
+        />
+        <NumberSetting
+          label="Request timeout"
+          setting="timeout"
+          help="Enter the maximum seconds allotted before a request will timeout. Enter -1 to disable timeouts. "
+          min={-1}
+        />
+      </div>
+
+      <div className="form-row pad-top-sm">
+        <NumberSetting
+          label="Response history limit"
+          setting="maxHistoryResponses"
+          help="Enter the number of responses to keep for each request. Enter -1 to keep all response history."
+          min={-1}
+        />
+        <NumberSetting
+          label="Max timeline chunk size (KiB)"
+          setting="maxTimelineDataSizeKB"
+          help="Enter the maximum size in kibibytes to show on the response timeline. Decrease the number for less detailed responses."
+          min={0}
+        />
+      </div>
+
+      <hr className="pad-top" />
+
+      <h2>Security</h2>
+      <div className="form-row pad-top-sm">
+        <BooleanSetting
+          label="Clear OAuth 2 session on start"
+          setting="clearOAuth2SessionOnRestart"
+          help="If checked, clears the OAuth session every time Insomnia is relaunched."
+        />
+        <button
+          className="btn btn--clicky pointer"
+          style={{
+            padding: 0,
+          }}
+          onClick={initNewOAuthSession}
+        >
+          Clear OAuth 2 session
+        </button>
+      </div>
+      <div className="form-row pad-top-sm">
+        <BooleanSetting
+          label="Validate certificates during authentication"
+          setting="validateAuthSSL"
+          help="If checked, validates SSL certificates during authentication flows."
+        />
+      </div>
+
+      <hr className="pad-top" />
+
+      <h2>HTTP Network Proxy</h2>
+
+      <BooleanSetting
+        label="Enable proxy"
+        setting="proxyEnabled"
+        help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
+      />
+
+      <div className="form-row pad-top-sm">
+        <MaskedSetting
+          label='HTTP proxy'
+          setting='httpProxy'
+          placeholder="localhost:8005"
+          disabled={!settings.proxyEnabled}
+        />
+        <MaskedSetting
+          label='HTTPS proxy'
+          setting='httpsProxy'
+          placeholder="localhost:8005"
+          disabled={!settings.proxyEnabled}
+        />
+        <TextSetting
+          label="No proxy"
+          setting="noProxy"
+          help="Enter a comma-separated list of hostnames that don’t require a proxy."
+          placeholder="localhost,127.0.0.1"
+          disabled={!settings.proxyEnabled}
+        />
+      </div>
+
+      {updatesSupported() && (
+        <Fragment>
+          <hr className="pad-top" />
+          <div>
+            <div className="pull-right">
+              <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
+                Check now
+              </CheckForUpdatesButton>
+            </div>
+            <h2>Software Updates</h2>
+          </div>
+          <BooleanSetting
+            label="Automatically download and install updates"
+            setting="updateAutomatically"
+            help="If disabled, receive a notification in-app when a new update is available."
+          />
+
+          <div className="for-row pad-top-sm">
+            <EnumSetting<UpdateChannel>
+              label="Update channel"
+              setting="updateChannel"
+              values={[
+                { value: UpdateChannel.stable, name: 'Release (recommended)' },
+                { value: UpdateChannel.beta, name: 'Early access (beta)' },
+              ]}
+            />
+          </div>
+        </Fragment>
+      )}
+
+      <hr className="pad-top" />
+      <h2>Notifications</h2>
+      {!updatesSupported() && (
+        <BooleanSetting
+          label="Do not notify of new releases"
+          setting="disableUpdateNotification"
+        />
+      )}
+      <BooleanSetting
+        label="Do not tell me about premium features"
+        setting="disablePaidFeatureAds"
+        help="If checked, mute in-app notifications and other messaging about premium features."
+      />
+
+      <hr className="pad-top" />
+      <h2>Plugins</h2>
+      <TextSetting
+        label="Additional Plugin Path"
+        setting="pluginPath"
+        help="Add a custom path to direct Insomnia to a different plugin directory."
+        placeholder="~/.insomnia:/other/path"
+      />
+
+      <hr className="pad-top" />
+      <h2>Network Activity</h2>
+      <BooleanSetting
+        descriptions={[
+          'In incognito mode, Insomnia will not make any network requests other than the requests you ask it to send.  You\'ll still be able to log in and manually sync collections, but any background network requests that are not the direct result of your actions will be disabled.',
+          'Note that, similar to incognito mode in Chrome, Insomnia cannot control the network behavior of any plugins you have installed.',
+        ]}
+        label="Incognito Mode"
+        setting="incognitoMode"
+      />
+
+      <BooleanSetting
+        descriptions={[
+          `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
+          'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
+        ]}
+        label="Send Usage Statistics"
+        setting="enableAnalytics"
+      />
+
+      <BooleanSetting
+        descriptions={['Insomnia periodically makes background requests to api.insomnia.rest/notifications for things like email verification, out-of-date billing information, trial information.']}
+        label="Allow Notification Requests"
+        setting="allowNotificationRequests"
+      />
+
+      <DevelopmentOnlySettings />
+    </div>
+  );
+};

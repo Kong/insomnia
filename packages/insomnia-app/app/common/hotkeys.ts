@@ -1,5 +1,8 @@
+import { HotKeyRegistry, KeyBindings, KeyCombination } from 'insomnia-common';
+import { forEach } from 'ramda';
+
+import { displayModifierKey, isMac } from './constants';
 import { keyboardKeys } from './keyboard-keys';
-import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
 import { strings } from './strings';
 
 /**
@@ -10,32 +13,6 @@ export interface HotKeyDefinition {
   id: string;
   description: string;
 }
-
-/**
- * The combination of key presses that will activate a hotkey if pressed.
- */
-export interface KeyCombination {
-  ctrl: boolean;
-  alt: boolean;
-  shift: boolean;
-  meta: boolean;
-  keyCode: number;
-}
-
-/**
- * The collection of a hotkey's key combinations for each platforms.
- */
-export interface KeyBindings {
-  macKeys: KeyCombination[];
-  // The key combinations for both Windows and Linux.
-  winLinuxKeys: KeyCombination[];
-}
-
-/**
- * The collection of defined hotkeys.
- * The registry maps a hotkey by its reference id to its key bindings.
- */
-export type HotKeyRegistry = Record<string, KeyBindings>;
 
 function defineHotKey(id: string, description: string): HotKeyDefinition {
   return {
@@ -128,12 +105,9 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   REQUEST_TOGGLE_PIN: defineHotKey('request_togglePin', 'Pin/Unpin Request'),
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
-  ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
-  // Designer-specific
-  SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
-  SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
-  SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),
-  SHOW_HOME: defineHotKey('activity_home', 'Show Home Activity'),
+  ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE: defineHotKey('environment_showVariableSourceAndValue', 'Show variable source and value'),
+  BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Active Code Editors'),
+  GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
   FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
 };
 
@@ -269,25 +243,17 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
     keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
   ),
-  [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES.id]: keyBinds(
+  [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE.id]: keyBinds(
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
   ),
-  [hotKeyRefs.SHOW_SPEC_EDITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.s.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.s.keyCode),
+  [hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.f.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.f.keyCode),
   ),
-  [hotKeyRefs.SHOW_TEST.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.t.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.t.keyCode),
-  ),
-  [hotKeyRefs.SHOW_MONITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.m.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.m.keyCode),
-  ),
-  [hotKeyRefs.SHOW_HOME.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.h.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.h.keyCode),
+  [hotKeyRefs.BEAUTIFY_REQUEST_BODY.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.i.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.i.keyCode),
   ),
   [hotKeyRefs.FILTER_DOCUMENTS.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.f.keyCode),
@@ -417,10 +383,10 @@ export function getChar(keyCode: number) {
 
 function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
   if (!mustUsePlus && isMac()) {
-    return keys.join('');
+    return keys.join(' ');
   }
 
-  return keys.join('+');
+  return keys.join(' + ');
 }
 
 /**
@@ -432,7 +398,9 @@ export function isModifierKeyCode(keyCode: number) {
   return (
     keyCode === keyboardKeys.alt.keyCode ||
     keyCode === keyboardKeys.shift.keyCode ||
-    keyCode === keyboardKeys.ctrl.keyCode || // Meta keys.
+    keyCode === keyboardKeys.ctrl.keyCode ||
+
+    // Meta keys.
     keyCode === keyboardKeys.leftwindowkey.keyCode ||
     keyCode === keyboardKeys.rightwindowkey.keyCode ||
     keyCode === keyboardKeys.selectkey.keyCode
@@ -444,21 +412,35 @@ export function isModifierKeyCode(keyCode: number) {
  * For example, the display of alt in Windows or Linux would be "Alt";
  * while in Mac would be "⌥".
  * @param keyComb
- * @param mustUsePlus if true will join the characters with "+" for all platforms;
+ * @param mustUsePlus if true will join the characters with " + " for all platforms;
  * otherwise if the platform is Mac, the characters will be next to each other.
- * @returns the constructed string, if keyCode is null and the characters are joint with "+",
- * it will have a dangling "+" as the last character, e.g., "Alt+Ctrl+".
+ * @returns the constructed string, if keyCode is null and the characters are joined with " + ",
+ * it will have a dangling "+" as the last character, e.g., "Alt + Ctrl +".
  */
 export function constructKeyCombinationDisplay(
   keyComb: KeyCombination,
   mustUsePlus: boolean,
 ) {
-  const { ctrl, alt, shift, meta, keyCode } = keyComb;
+  const { keyCode } = keyComb;
   const chars: string[] = [];
-  alt && chars.push(ALT_SYM);
-  shift && chars.push(SHIFT_SYM);
-  ctrl && chars.push(CTRL_SYM);
-  meta && chars.push(META_SYM);
+
+  const addModifierKeys = (keys: (keyof Omit<KeyCombination, 'keyCode'>)[]) => {
+    forEach(key => {
+      if (keyComb[key]) {
+        chars.push(displayModifierKey(key));
+      }
+    }, keys);
+  };
+
+  if (isMac()) {
+    // Note: on Mac the cannonical order is Control, Option (i.e. Alt), Shift, Command (i.e. Meta)
+    // see: https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/keyboard
+    addModifierKeys(['ctrl', 'alt', 'shift', 'meta']);
+  } else {
+    // Note: on Windows the observed oreder (as in, if you just try to make a shortcut with all modifiers) is Windows (i.e. Super/Meta), Ctrl, Alt, Shift.
+    // No such standard really exists, but at least on Ubunut it follows the Windows ordering.
+    addModifierKeys(['meta', 'ctrl', 'alt', 'shift']);
+  }
 
   if (keyCode != null && !isModifierKeyCode(keyCode)) {
     chars.push(getChar(keyCode));
@@ -467,7 +449,7 @@ export function constructKeyCombinationDisplay(
   let joint = joinHotKeys(mustUsePlus, chars);
 
   if (mustUsePlus && isModifierKeyCode(keyCode)) {
-    joint += '+';
+    joint += ' +';
   }
 
   return joint;

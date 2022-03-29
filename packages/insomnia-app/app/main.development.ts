@@ -1,19 +1,27 @@
-import { checkIfRestartNeeded } from './main/squirrel-startup';
-import appConfig from '../config/config.json';
-import path from 'path';
 import * as electron from 'electron';
+import contextMenu from 'electron-context-menu';
+import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import { writeFile } from 'fs';
+import path from 'path';
+
+import appConfig from '../config/config.json';
+import { SegmentEvent, trackSegmentEvent } from './common/analytics';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { database } from './common/database';
+import { disableSpellcheckerDownload } from './common/electron-helpers';
+import log, { initializeLogging } from './common/log';
+import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
-import * as updates from './main/updates';
 import * as grpcIpcMain from './main/grpc-ipc-main';
+import { checkIfRestartNeeded } from './main/squirrel-startup';
+import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import { database } from './common/database';
-import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
-import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
-import { trackNonInteractiveEventQueueable } from './common/analytics';
-import log, { initializeLogging } from './common/log';
-import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import { cancelCurlRequest, curlRequest } from './network/libcurl-promise';
+import { authorizeUserInWindow } from './network/o-auth-2/misc';
+import installPlugin from './plugins/install';
+import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -25,10 +33,15 @@ const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
 log.info(`Running version ${getAppVersion()}`);
 
-// Explicitly set userData folder from config because it's sketchy to
-// rely on electron-builder to use productName, which could be changed
-// by accident.
-if (!isDevelopment()) {
+// Override the Electron userData path
+// This makes Chromium use this folder for eg localStorage
+const envDataPath = process.env.INSOMNIA_DATA_PATH;
+if (envDataPath) {
+  app.setPath('userData', envDataPath);
+} else if (!isDevelopment()) {
+  // Explicitly set userData folder from config because it's sketchy to
+  // rely on electron-builder to use productName, which could be changed
+  // by accident.
   const defaultPath = app.getPath('userData');
   const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
   app.setPath('userData', newPath);
@@ -36,8 +49,29 @@ if (!isDevelopment()) {
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
+
+// setup right click menu
+app.on('web-contents-created', (_, contents) => {
+  if (contents.getType() === 'webview') {
+    contextMenu({ window: contents });
+  } else {
+    contextMenu();
+  }
+});
+
 // When the app is first launched
 app.on('ready', async () => {
+  const { error } = validateInsomniaConfig();
+
+  if (error) {
+    electron.dialog.showErrorBox(error.title, error.message);
+    console.log('[config] Insomnia config is invalid, preventing app initialization');
+    app.exit(1);
+    return;
+  }
+
+  disableSpellcheckerDownload();
+
   if (isDevelopment()) {
     try {
       const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS];
@@ -52,12 +86,10 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
-  await errorHandling.init();
-  await windowUtils.init();
-  // Init the app
-  const updatedStats = await _trackStats();
-  await _updateFlags(updatedStats);
+  errorHandling.init();
+  windowUtils.init();
   await _launchApp();
+
   // Init the rest
   await updates.init();
   grpcIpcMain.init();
@@ -87,14 +119,12 @@ if (defaultProtocolSuccessful) {
   }
 }
 
-function _addUrlToOpen(e, url) {
+function _addUrlToOpen(e: Electron.Event, url: string) {
   e.preventDefault();
   commandLineArgs.push(url);
 }
 
 app.on('open-url', _addUrlToOpen);
-// Enable this for CSS grid layout :)
-app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!isMac()) {
@@ -115,20 +145,26 @@ app.on('activate', (_error, hasVisibleWindows) => {
   }
 });
 
-function _launchApp() {
+const _launchApp = async () => {
+  await _trackStats();
+
   app.removeListener('open-url', _addUrlToOpen);
   const window = windowUtils.createWindow();
+
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
     // @ts-expect-error -- TSCONVERSION
     commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
-  const gotTheLock = app.requestSingleInstanceLock();
-
-  if (!gotTheLock) {
-    console.error('[app] Failed to get instance lock');
-    return;
+  // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
+  // and find a better solution.
+  if (!process.env.PLAYWRIGHT) {
+    const gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+      console.error('[app] Failed to get instance lock');
+      return;
+    }
   }
 
   app.on('second-instance', () => {
@@ -139,9 +175,8 @@ function _launchApp() {
     }
   });
   // Handle URLs when app already open
-  app.addListener('open-url', (_error, url) => {
-    // @ts-expect-error -- TSCONVERSION
-    window.send('run-command', url);
+  app.addListener('open-url', (_event, url) => {
+    window.webContents.send('run-command', url);
     // Apparently a timeout is needed because Chrome steals back focus immediately
     // after opening the URL.
     setTimeout(() => {
@@ -156,7 +191,7 @@ function _launchApp() {
       requestHeaders: details.requestHeaders,
     });
   });
-}
+};
 
 /*
   Only one instance should exist of these models
@@ -166,18 +201,6 @@ function _launchApp() {
 async function _createModelInstances() {
   await models.stats.get();
   await models.settings.getOrCreate();
-}
-
-async function _updateFlags({ launches }: Stats) {
-  const firstLaunch = launches === 1;
-
-  if (firstLaunch) {
-    await models.settings.patch({
-      hasPromptedOnboarding: false,
-      // Don't show the analytics preferences prompt as it is part of the onboarding flow
-      hasPromptedAnalytics: true,
-    });
-  }
 }
 
 async function _trackStats() {
@@ -190,21 +213,80 @@ async function _trackStats() {
     lastVersion: oldStats.currentVersion,
     launches: oldStats.launches + 1,
   });
-  // Update Stats Object
-  const firstLaunch = stats.launches === 1;
-  const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
 
-  if (firstLaunch) {
-    trackNonInteractiveEventQueueable('General', 'First Launch', stats.currentVersion);
-  } else if (justUpdated) {
-    trackNonInteractiveEventQueueable('General', 'Updated', stats.currentVersion);
-  } else {
-    trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
-  }
+  trackSegmentEvent(SegmentEvent.appStarted, {}, { queueable: true });
+
+  ipcMain.handle('showOpenDialog', async (_, options: Electron.OpenDialogOptions) => {
+    const { filePaths, canceled } = await electron.dialog.showOpenDialog(options);
+    return { filePaths, canceled };
+  });
+
+  ipcMain.handle('showSaveDialog', async (_, options: Electron.SaveDialogOptions) => {
+    const { filePath, canceled } = await electron.dialog.showSaveDialog(options);
+    return { filePath, canceled };
+  });
+
+  ipcMain.handle('installPlugin', async (_, options) => {
+    return installPlugin(options);
+  });
+
+  ipcMain.on('showItemInFolder', (_, name) => {
+    electron.shell.showItemInFolder(name);
+  });
+
+  ipcMain.on('restart', () => {
+    app.relaunch();
+    app.exit();
+  });
+
+  ipcMain.on('setMenuBarVisibility', (_, visible) => {
+    electron.BrowserWindow.getAllWindows()
+      .forEach(window => {
+        // the `setMenuBarVisibility` signature uses `visible` semantics
+        window.setMenuBarVisibility(visible);
+        // the `setAutoHideMenu` signature uses `hide` semantics
+        const hide = !visible;
+        window.setAutoHideMenuBar(hide);
+      });
+  });
+
+  ipcMain.on('getPath', (event, name) => {
+    event.returnValue = electron.app.getPath(name);
+  });
+
+  ipcMain.on('getAppPath', event => {
+    event.returnValue = electron.app.getAppPath();
+  });
+
+  ipcMain.handle('authorizeUserInWindow', (_, options) => {
+    const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
+    return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+  });
+
+  ipcMain.handle('writeFile', (_, options) => {
+    return new Promise<string>((resolve, reject) => {
+      writeFile(options.path, options.content, err => {
+        if (err != null) {
+          return reject(err);
+        }
+        resolve(options.path);
+      });
+    });
+  });
+
+  ipcMain.handle('curlRequest', (_, options) => {
+    return curlRequest(options);
+  });
+
+  ipcMain.on('cancelCurlRequest', (_, requestId: string): void => {
+    cancelCurlRequest(requestId);
+  });
 
   ipcMain.once('window-ready', () => {
-    const { currentVersion } = stats;
+    const { currentVersion, launches, lastVersion } = stats;
 
+    const firstLaunch = launches === 1;
+    const justUpdated = !firstLaunch && currentVersion !== lastVersion;
     if (!justUpdated || !currentVersion) {
       return;
     }
@@ -219,7 +301,7 @@ async function _trackStats() {
     // Wait a bit before showing the user because the app just launched.
     setTimeout(() => {
       for (const window of BrowserWindow.getAllWindows()) {
-        // @ts-expect-error -- TSCONVERSION
+        // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);
       }
     }, 5000);

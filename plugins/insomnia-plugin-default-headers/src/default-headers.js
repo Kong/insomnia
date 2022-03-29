@@ -12,7 +12,12 @@ module.exports = function(context) {
       continue;
     }
 
-    context.request.setHeader(name, value);
-    console.log(`[header] Set default header ${name}: ${value}`);
+    if (value==="null") {
+      context.request.removeHeader(name);
+      console.log(`[header] Remove default header ${name}`)
+    } else {
+      context.request.setHeader(name, value);
+      console.log(`[header] Set default header ${name}: ${value}`);
+    }
   }
 };

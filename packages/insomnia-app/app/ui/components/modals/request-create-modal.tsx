@@ -1,25 +1,27 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
+import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
   AUTOBIND_CFG,
   getContentTypeName,
+  METHOD_DELETE,
   METHOD_GET,
+  METHOD_GRPC,
   METHOD_HEAD,
   METHOD_OPTIONS,
-  METHOD_DELETE,
-  METHOD_GRPC,
 } from '../../../common/constants';
-import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
-import MethodDropdown from '../dropdowns/method-dropdown';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models/index';
-import { trackEvent } from '../../../common/analytics';
+import { Request } from '../../../models/request';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
+import { MethodDropdown } from '../dropdowns/method-dropdown';
 import { showModal } from './index';
 import ProtoFilesModal from './proto-files-modal';
-import { Request } from '../../../models/request';
+
 interface RequestCreateModalOptions {
   parentId: string;
   onComplete: (arg0: string) => void;
@@ -32,12 +34,12 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestCreateModal extends PureComponent<{}, State> {
+export class RequestCreateModal extends PureComponent<{}, State> {
   state: State = {
     selectedContentType: null,
     selectedMethod: METHOD_GET,
     parentId: null,
-  }
+  };
 
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
@@ -95,7 +97,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
     }
 
     this.hide();
-    trackEvent('Request', 'Create');
+    trackSegmentEvent(SegmentEvent.requestCreate);
   }
 
   _handleChangeSelectedContentType(selectedContentType: string | null) {
@@ -162,7 +164,8 @@ class RequestCreateModal extends PureComponent<{}, State> {
                 className="form-control form-control--no-label"
                 style={{
                   width: 'auto',
-                }}>
+                }}
+              >
                 <MethodDropdown
                   right
                   showGrpc
@@ -176,12 +179,14 @@ class RequestCreateModal extends PureComponent<{}, State> {
                   className="form-control form-control--no-label"
                   style={{
                     width: 'auto',
-                  }}>
+                  }}
+                >
                   <ContentTypeDropdown
                     className="btn btn--clicky no-wrap"
                     right
                     contentType={selectedContentType}
-                    onChange={this._handleChangeSelectedContentType}>
+                    onChange={this._handleChangeSelectedContentType}
+                  >
                     {getContentTypeName(selectedContentType) || 'No Body'}{' '}
                     <i className="fa fa-caret-down" />
                   </ContentTypeDropdown>
@@ -192,7 +197,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
         </ModalBody>
         <ModalFooter>
           {!this._isGrpcSelected() && (
-            <div className="margin-left italic txt-sm tall">
+            <div className="margin-left italic txt-sm">
               * Tip: paste Curl command into URL afterwards to import it
             </div>
           )}
@@ -204,5 +209,3 @@ class RequestCreateModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default RequestCreateModal;

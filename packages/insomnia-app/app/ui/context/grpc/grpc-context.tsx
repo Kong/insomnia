@@ -1,8 +1,9 @@
 import React, { createContext, FunctionComponent, ReactNode, useContext, useEffect, useReducer } from 'react';
-import { grpcIpcRenderer } from './grpc-ipc-renderer';
-import { findGrpcRequestState, grpcReducer } from './grpc-reducer';
+
 import type { GrpcDispatch } from './grpc-actions';
+import { grpcIpcRenderer } from './grpc-ipc-renderer';
 import type { GrpcRequestState, GrpcState } from './grpc-reducer';
+import { findGrpcRequestState, grpcReducer } from './grpc-reducer';
 
 interface Props {
   children: ReactNode;

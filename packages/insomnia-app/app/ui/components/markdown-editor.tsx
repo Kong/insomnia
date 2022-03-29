@@ -1,29 +1,21 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import Button from './base/button';
-import CodeEditor from './codemirror/code-editor';
-import MarkdownPreview from './markdown-preview';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
+
+import { AUTOBIND_CFG } from '../../common/constants';
+import { Button } from './base/button';
+import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
-  onChange: Function,
-  defaultValue: string,
-  fontSize: number,
-  indentSize: number,
-  keyMap: string,
-  lineWrapping: boolean,
-  handleRender: HandleRender,
-  handleGetRenderContext: HandleGetRenderContext,
-  nunjucksPowerUserMode: boolean,
-  isVariableUncovered: boolean,
-  placeholder?: string,
-  defaultPreviewMode?: boolean,
-  className?: string,
-  mode?: string,
-  tall?: boolean,
+  onChange: Function;
+  defaultValue: string;
+  placeholder?: string;
+  defaultPreviewMode?: boolean;
+  className?: string;
+  mode?: string;
+  tall?: boolean;
 }
 
 interface State {
@@ -31,8 +23,8 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MarkdownEditor extends PureComponent<Props, State> {
-  _editor: CodeEditor | null = null;
+export class MarkdownEditor extends PureComponent<Props, State> {
+  _editor: UnconnectedCodeEditor | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -48,33 +40,25 @@ class MarkdownEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this._editor = n;
   }
 
   focusEnd() {
-    this._editor && this._editor.focusEnd();
+    this._editor?.focusEnd();
   }
 
   focus() {
-    this._editor && this._editor.focus();
+    this._editor?.focus();
   }
 
   render() {
     const {
-      fontSize,
-      lineWrapping,
-      indentSize,
-      keyMap,
       mode,
       placeholder,
       defaultPreviewMode,
       className,
       tall,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
     const { markdown } = this.state;
     const classes = classnames('react-tabs', 'markdown-editor', 'outlined', className, {
@@ -99,29 +83,20 @@ class MarkdownEditor extends PureComponent<Props, State> {
               dynamicHeight={!tall}
               manualPrettify
               noStyleActiveLine
+              enableNunjucks
               mode={mode || 'text/x-markdown'}
               placeholder={placeholder}
               debounceMillis={300}
-              keyMap={keyMap}
-              fontSize={fontSize}
-              lineWrapping={lineWrapping}
-              indentSize={indentSize}
               defaultValue={markdown}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
               onChange={this._handleChange}
             />
           </div>
           <div className="txt-sm italic faint">Styling with Markdown is supported</div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel markdown-editor__preview">
-          <MarkdownPreview markdown={markdown} handleRender={handleRender} />
+          <MarkdownPreview markdown={markdown} />
         </TabPanel>
       </Tabs>
     );
   }
 }
-
-export default MarkdownEditor;

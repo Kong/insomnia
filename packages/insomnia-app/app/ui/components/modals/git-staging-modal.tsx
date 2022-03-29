@@ -1,24 +1,26 @@
-import YAML from 'yaml';
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import path from 'path';
-import * as models from '../../../models';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { GitVCS, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
-import { database as db } from '../../../common/database';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
-import ModalFooter from '../base/modal-footer';
-import Tooltip from '../tooltip';
-import PromptButton from '../base/prompt-button';
-import { gitRollback } from '../../../sync/git/git-rollback';
 import classnames from 'classnames';
-import parseGitPath from '../../../sync/git/parse-git-path';
+import path from 'path';
+import React, { Fragment, PureComponent } from 'react';
+import YAML from 'yaml';
+
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
+import * as models from '../../../models';
 import { isApiSpec } from '../../../models/api-spec';
+import type { Workspace } from '../../../models/workspace';
+import { gitRollback } from '../../../sync/git/git-rollback';
+import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
+import parseGitPath from '../../../sync/git/parse-git-path';
+import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { PromptButton } from '../base/prompt-button';
+import { Tooltip } from '../tooltip';
 
 interface Item {
   path: string;
@@ -49,7 +51,7 @@ const INITIAL_STATE: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitStagingModal extends PureComponent<Props, State> {
+export class GitStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   statusNames: Record<string, string>;
   textarea: HTMLTextAreaElement | null = null;
@@ -95,7 +97,8 @@ class GitStagingModal extends PureComponent<Props, State> {
     }
 
     await vcs.commit(message);
-    this.modal && this.modal.hide();
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'commit'));
+    this.modal?.hide();
 
     if (typeof this.onCommit === 'function') {
       this.onCommit();
@@ -103,7 +106,7 @@ class GitStagingModal extends PureComponent<Props, State> {
   }
 
   _hideModal() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async _toggleAll(items: Item[], forceAdd = false) {
@@ -119,6 +122,7 @@ class GitStagingModal extends PureComponent<Props, State> {
       newItems[p].staged = doStage || forceAdd;
     }
 
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'));
     this.setState({
       items: newItems,
     });
@@ -133,6 +137,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     }
 
     newItems[gitPath].staged = !newItems[gitPath].staged;
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'));
     this.setState({
       items: newItems,
     });
@@ -165,11 +170,11 @@ class GitStagingModal extends PureComponent<Props, State> {
 
   async show(options: { onCommit?: () => void }) {
     this.onCommit = options.onCommit || null;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // Reset state
     this.setState(INITIAL_STATE);
     await this._refresh(() => {
-      this.textarea && this.textarea.focus();
+      this.textarea?.focus();
     });
   }
 
@@ -305,6 +310,16 @@ class GitStagingModal extends PureComponent<Props, State> {
     await this._refresh();
   }
 
+  async _handleRollbackSingle(item: Item) {
+    await this._handleRollback([item]);
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'rollback'));
+  }
+
+  async _handleRollbackAll(items: Item[]) {
+    await this._handleRollback(items);
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'rollback_all'));
+  }
+
   renderItem(item: Item) {
     const { path: gitPath, staged, editable } = item;
     const docName = this.statusNames[gitPath] || 'n/a';
@@ -327,7 +342,8 @@ class GitStagingModal extends PureComponent<Props, State> {
           {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
             <button
               className="btn btn--micro space-right"
-              onClick={() => this._handleRollback([item])}>
+              onClick={() => this._handleRollbackSingle(item)}
+            >
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </button>
           </Tooltip>}
@@ -349,7 +365,8 @@ class GitStagingModal extends PureComponent<Props, State> {
         <strong>{title}</strong>
         <PromptButton
           className="btn pull-right btn--micro"
-          onClick={() => this._handleRollback(items)}>
+          onClick={() => this._handleRollbackAll(items)}
+        >
           {rollbackLabel}
         </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">
@@ -422,7 +439,7 @@ class GitStagingModal extends PureComponent<Props, State> {
           {hasChanges ? this._renderItems(itemsList) : this._renderEmpty()}
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             <i className="fa fa-code-fork" /> {branch}{' '}
             {loading && <i className="fa fa-refresh fa-spin" />}
           </div>
@@ -439,5 +456,3 @@ class GitStagingModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GitStagingModal;

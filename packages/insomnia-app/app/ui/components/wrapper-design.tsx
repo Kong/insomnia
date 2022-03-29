@@ -1,284 +1,333 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { WrapperProps } from './wrapper';
-import PageLayout from './page-layout';
-import { Button, NoticeTable } from 'insomnia-components';
-import ErrorBoundary from './error-boundary';
-import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
-import CodeEditor from './codemirror/code-editor';
+import { IRuleResult } from '@stoplight/spectral';
+import { Button, Notice, NoticeTable } from 'insomnia-components';
+import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useAsync } from 'react-use';
+import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
-import type { ApiSpec } from '../../models/api-spec';
-import previewIcon from '../images/icn-eye.svg';
-import * as models from '../../models/index';
+
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
-import WorkspacePageHeader from './workspace-page-header';
+import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
+import * as models from '../../models/index';
+import { superFaint } from '../css/css-in-js';
+import previewIcon from '../images/icn-eye.svg';
+import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
+import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { DesignEmptyState } from './design-empty-state';
+import { ErrorBoundary } from './error-boundary';
+import { PageLayout } from './page-layout';
+import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
+import { WorkspacePageHeader } from './workspace-page-header';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
+
+const EmptySpaceHelper = styled.div({
+  ...superFaint,
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  padding: '2em',
+  textAlign: 'center',
+});
 
 const spectral = initializeSpectral();
 
-interface Props {
-  gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
-  handleUpdateApiSpec: (s: ApiSpec) => Promise<void>;
-  wrapperProps: WrapperProps;
-}
+const RenderPageHeader: FC<Pick<Props,
+| 'gitSyncDropdown'
+| 'handleActivityChange'
+>> = ({
+  gitSyncDropdown,
+  handleActivityChange,
+}) => {
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const previewHidden = Boolean(activeWorkspaceMeta?.previewHidden);
 
-interface State {
-  lintMessages: {
-    message: string;
-    line: number;
-    type: 'error' | 'warning';
-  }[];
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperDesign extends PureComponent<Props, State> {
-  editor: CodeEditor | null = null;
-  debounceTimeout: NodeJS.Timeout | null = null;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      lintMessages: [],
-    };
-  }
-
-  // Defining it here instead of in render() so it won't act as a changed prop
-  // when being passed to <CodeEditor> again
-  static lintOptions = {
-    delay: 1000,
-  };
-
-  _setEditorRef(n: CodeEditor) {
-    this.editor = n;
-  }
-
-  async _handleTogglePreview() {
-    const { activeWorkspace } = this.props.wrapperProps;
-
+  const handleTogglePreview = useCallback(async () => {
     if (!activeWorkspace) {
       return;
     }
 
     const workspaceId = activeWorkspace._id;
-    const previewHidden = Boolean(this.props.wrapperProps.activeWorkspaceMeta?.previewHidden);
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
-  }
+  }, [activeWorkspace, previewHidden]);
 
-  _handleOnChange(v: string) {
-    const {
-      wrapperProps: { activeApiSpec },
-      handleUpdateApiSpec,
-    } = this.props;
+  return (
+    <WorkspacePageHeader
+      handleActivityChange={handleActivityChange}
+      gridRight={
+        <Fragment>
+          <Button variant="contained" onClick={handleTogglePreview}>
+            <img src={previewIcon} alt="Preview" width="15" />
+            &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+          </Button>
+          {gitSyncDropdown}
+        </Fragment>
+      }
+    />
+  );
+};
 
+interface LintMessage extends Notice {
+  range: IRuleResult['range'];
+}
+
+const useDesignEmptyState = () => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const contents = activeApiSpec?.contents;
+
+  const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
+  const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
+
+  useEffect(() => {
+    if (contents && shouldIncrementCounter){
+      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
+      setShouldIncrementCounter(false);
+    }
+  }, [contents, shouldIncrementCounter]);
+
+  const onUpdateContents = useCallback((value: string) => {
     if (!activeApiSpec) {
       return;
     }
 
-    // TODO: this seems strange, should the timeout be set and cleared on every change??
-    // Debounce the update because these specs can get pretty large
-    if (this.debounceTimeout !== null) {
-      clearTimeout(this.debounceTimeout);
-    }
+    const fn = async () => {
+      await models.apiSpec.update({ ...activeApiSpec, contents: value });
+    };
+    fn();
 
-    this.debounceTimeout = setTimeout(async () => {
-      await handleUpdateApiSpec({ ...activeApiSpec, contents: v });
-    }, 500);
-  }
+    // Because we can't await activeApiSpec.contents to have propageted to redux, we flip a toggle to decide if we should do something when redux does eventually change
+    setShouldIncrementCounter(true);
+  }, [activeApiSpec]);
 
-  _handleSetSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
-    const editor = this.editor;
+  const emptyStateNode = contents ? null : (
+    <DesignEmptyState
+      onUpdateContents={onUpdateContents}
+    />
+  );
 
-    if (!editor) {
-      return;
-    }
+  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
+  return { uniquenessKey, emptyStateNode };
+};
 
-    editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
-  }
+const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
+  const contents = activeApiSpec?.contents ?? '';
 
-  _handleLintClick(notice) {
-    // TODO: Export Notice from insomnia-components and use here, instead of {}
-    const { start, end } = notice._range;
+  const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
 
-    this._handleSetSelection(start.character, end.character, start.line, end.line);
-  }
-
-  async _reLint() {
-    const { activeApiSpec } = this.props.wrapperProps;
-
-    // Lint only if spec has content
-    if (activeApiSpec && activeApiSpec.contents.length !== 0) {
-      const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
-      this.setState({
-        lintMessages: results.map(r => ({
-          type: r.severity === 0 ? 'error' : 'warning',
-          message: `${r.code} ${r.message}`,
-          line: r.range.start.line,
-          // Attach range that will be returned to our click handler
-          _range: r.range,
-        })),
-      });
-    } else {
-      this.setState({
-        lintMessages: [],
-      });
-    }
-  }
-
-  _handleBreadcrumb() {
-    this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-  }
-
-  async componentDidMount() {
-    await this._reLint();
-  }
-
-  componentDidUpdate(prevProps: Props) {
-    const { activeApiSpec } = this.props.wrapperProps;
-
-    // Re-lint if content changed
-    if (activeApiSpec?.contents !== prevProps.wrapperProps.activeApiSpec?.contents) {
-      this._reLint();
-    }
-  }
-
-  _renderEditor() {
-    const { activeApiSpec, settings } = this.props.wrapperProps;
-    const { lintMessages } = this.state;
-
-    if (!activeApiSpec) {
-      return null;
-    }
-
-    return (
-      <div className="column tall theme--pane__body">
-        <div className="tall">
-          <CodeEditor
-            manualPrettify
-            ref={this._setEditorRef}
-            fontSize={settings.editorFontSize}
-            indentSize={settings.editorIndentSize}
-            lineWrapping={settings.lineWrapping}
-            keyMap={settings.editorKeyMap}
-            lintOptions={WrapperDesign.lintOptions}
-            mode="openapi"
-            defaultValue={activeApiSpec.contents}
-            onChange={this._handleOnChange}
-            uniquenessKey={activeApiSpec._id}
-          />
-        </div>
-        {lintMessages.length > 0 && (
-          <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
-        )}
-      </div>
-    );
-  }
-
-  _renderPreview() {
-    const { activeApiSpec, activeWorkspaceMeta } = this.props.wrapperProps;
-
-    if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
-      return null;
-    }
-
-    let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
-
-    try {
-      swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
-    } catch (err) {}
-
-    if (!swaggerUiSpec) {
-      swaggerUiSpec = {};
-    }
-
-    return (
-      <div id="swagger-ui-wrapper">
-        <ErrorBoundary
-          invalidationKey={activeApiSpec.contents}
-          renderError={() => (
-            <div className="text-left margin pad">
-              <h3>An error occurred while trying to render Swagger UI 😢</h3>
-              <p>
-                This preview will automatically refresh, once you have a valid specification that
-                can be previewed.
-              </p>
-            </div>
-          )}>
-          <SwaggerUI
-            spec={swaggerUiSpec}
-            supportedSubmitMethods={[
-              'get',
-              'put',
-              'post',
-              'delete',
-              'options',
-              'head',
-              'patch',
-              'trace',
-            ]}
-          />
-        </ErrorBoundary>
-      </div>
-    );
-  }
-
-  _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const previewHidden = Boolean(wrapperProps.activeWorkspaceMeta?.previewHidden);
-    return (
-      <WorkspacePageHeader
-        wrapperProps={wrapperProps}
-        handleActivityChange={handleActivityChange}
-        gridRight={
-          <Fragment>
-            <Button variant="contained" onClick={this._handleTogglePreview}>
-              <img src={previewIcon} alt="Preview" width="15" />
-              &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
-            </Button>
-            {gitSyncDropdown}
-          </Fragment>
+  const onCodeEditorChange = useMemo(() => {
+    const handler = (contents: string) => {
+      const fn = async () => {
+        if (!activeApiSpec) {
+          return;
         }
-      />
+
+        await models.apiSpec.update({ ...activeApiSpec, contents });
+      };
+      fn();
+    };
+
+    return debounce(handler, 500);
+  }, [activeApiSpec]);
+
+  useAsync(async () => {
+    // Lint only if spec has content
+    if (contents && contents.length !== 0) {
+      const results: LintMessage[] = (await spectral.run(contents))
+        .filter(isLintError)
+        .map(({ severity, code, message, range }) => ({
+          type: severity === 0 ? 'error' : 'warning',
+          message: `${code} ${message}`,
+          line: range.start.line,
+          // Attach range that will be returned to our click handler
+          range,
+        }));
+      setLintMessages(results);
+    } else {
+      setLintMessages([]);
+    }
+  }, [contents]);
+
+  const handleScrollToSelection = useCallback((notice: LintMessage) => {
+    if (!editor.current) {
+      return;
+    }
+    if (!notice.range) {
+      return;
+    }
+    const { start, end } = notice.range;
+    editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
+  }, [editor]);
+
+  if (!activeApiSpec) {
+    return null;
+  }
+
+  return (
+    <div className="column tall theme--pane__body">
+      <div className="tall relative overflow-hidden">
+        <CodeEditor
+          manualPrettify
+          ref={editor}
+          lintOptions={{ delay: 1000 }}
+          mode="openapi"
+          defaultValue={contents}
+          onChange={onCodeEditorChange}
+          uniquenessKey={uniquenessKey}
+        />
+        {emptyStateNode}
+      </div>
+      {lintMessages.length > 0 && (
+        <NoticeTable
+          notices={lintMessages}
+          onClick={handleScrollToSelection}
+        />
+      )}
+    </div>
+  );
+};
+
+const RenderPreview: FC = () => {
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+
+  if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
+    return null;
+  }
+
+  if (!activeApiSpec.contents) {
+    return (
+      <EmptySpaceHelper>
+        Documentation for your OpenAPI spec will render here
+      </EmptySpaceHelper>
     );
   }
 
-  _renderPageSidebar() {
-    const { activeApiSpec } = this.props.wrapperProps;
+  let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
 
-    if (!activeApiSpec) {
-      return null;
-    }
+  try {
+    swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
+  } catch (err) {}
 
-    return (
+  if (!swaggerUiSpec) {
+    swaggerUiSpec = {};
+  }
+
+  return (
+    <div id="swagger-ui-wrapper">
       <ErrorBoundary
         invalidationKey={activeApiSpec.contents}
         renderError={() => (
           <div className="text-left margin pad">
-            <h4>An error occurred while trying to render your spec's navigation. 😢</h4>
+            <h3>An error occurred while trying to render Swagger UI</h3>
             <p>
-              This navigation will automatically refresh, once you have a valid specification that
-              can be rendered.
+              This preview will automatically refresh, once you have a valid specification that
+              can be previewed.
             </p>
           </div>
-        )}>
-        <SpecEditorSidebar apiSpec={activeApiSpec} handleSetSelection={this._handleSetSelection} />
+        )}
+      >
+        <SwaggerUI
+          spec={swaggerUiSpec}
+          supportedSubmitMethods={[
+            'get',
+            'put',
+            'post',
+            'delete',
+            'options',
+            'head',
+            'patch',
+            'trace',
+          ]}
+        />
       </ErrorBoundary>
+    </div>
+  );
+};
+
+const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor>}> = ({ editor }) => {
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
+    if (!editor.current) {
+      return;
+    }
+    editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
+  }, [editor]);
+
+  if (!activeApiSpec) {
+    return null;
+  }
+
+  if (!activeApiSpec.contents) {
+    return (
+      <EmptySpaceHelper>
+        A spec navigator will render here
+      </EmptySpaceHelper>
     );
   }
 
-  render() {
-    return (
-      <PageLayout
-        wrapperProps={this.props.wrapperProps}
-        renderPageHeader={this._renderPageHeader}
-        renderPaneOne={this._renderEditor}
-        renderPaneTwo={this._renderPreview}
-        renderPageSidebar={this._renderPageSidebar}
+  return (
+    <ErrorBoundary
+      invalidationKey={activeApiSpec.contents}
+      renderError={() => (
+        <div className="text-left margin pad">
+          <h4>An error occurred while trying to render your spec's navigation.</h4>
+          <p>
+            This navigation will automatically refresh, once you have a valid specification that
+            can be rendered.
+          </p>
+        </div>
+      )}
+    >
+      <SpecEditorSidebar
+        apiSpec={activeApiSpec}
+        handleSetSelection={handleScrollToSelection}
       />
-    );
-  }
+    </ErrorBoundary>
+  );
+};
+
+interface Props {
+  gitSyncDropdown: ReactNode;
+  handleActivityChange: HandleActivityChange;
+  wrapperProps: WrapperProps;
 }
 
-export default WrapperDesign;
+export const WrapperDesign: FC<Props> = ({
+  gitSyncDropdown,
+  handleActivityChange,
+  wrapperProps,
+}) => {
+  const editor = createRef<UnconnectedCodeEditor>();
+
+  const renderPageHeader = useCallback(() => (
+    <RenderPageHeader
+      gitSyncDropdown={gitSyncDropdown}
+      handleActivityChange={handleActivityChange}
+    />
+  ), [gitSyncDropdown, handleActivityChange]);
+
+  const renderEditor = useCallback(() => (
+    <RenderEditor editor={editor} />
+  ), [editor]);
+
+  const renderPreview = useCallback(() => (
+    <RenderPreview />
+  ), []);
+
+  const renderPageSidebar = useCallback(() => (
+    <RenderPageSidebar editor={editor} />
+  ), [editor]);
+
+  return (
+    <PageLayout
+      wrapperProps={wrapperProps}
+      renderPageHeader={renderPageHeader}
+      renderPaneOne={renderEditor}
+      renderPaneTwo={renderPreview}
+      renderPageSidebar={renderPageSidebar}
+    />
+  );
+};

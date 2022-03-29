@@ -1,61 +1,107 @@
-import React, { PureComponent, RefObject } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
+import fs from 'fs';
+import HTTPSnippet from 'httpsnippet';
+import { extension as mimeExtension } from 'mime-types';
+import * as path from 'path';
+import React, { createRef, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { Action, bindActionCreators, Dispatch } from 'redux';
+import { parse as urlParse } from 'url';
+
+import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
-  AUTOBIND_CFG,
   ACTIVITY_HOME,
+  AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
   getAppName,
+  isDevelopment,
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
-  PREVIEW_MODE_SOURCE,
-  ACTIVITY_MIGRATION,
   SortOrder,
 } from '../../common/constants';
-import fs from 'fs';
-import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
-import { parse as urlParse } from 'url';
-import HTTPSnippet from 'httpsnippet';
-import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { Action, bindActionCreators, Dispatch } from 'redux';
-import Wrapper from '../components/wrapper';
-import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
-import Toast from '../components/toast';
-import CookiesModal from '../components/modals/cookies-modal';
-import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { database as db } from '../../common/database';
+import { getDataDirectory } from '../../common/electron-helpers';
+import { exportHarRequest } from '../../common/har';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
 import {
-  importUri,
+  debounce,
+  generateId,
+  getContentDispositionHeader,
+} from '../../common/misc';
+import { sortMethodMap } from '../../common/sorting';
+import * as models from '../../models';
+import { isEnvironment } from '../../models/environment';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequestMeta } from '../../models/grpc-request-meta';
+import * as requestOperations from '../../models/helpers/request-operations';
+import { isNotDefaultProject } from '../../models/project';
+import { Request, updateMimeType } from '../../models/request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { RequestMeta } from '../../models/request-meta';
+import { Response } from '../../models/response';
+import { isWorkspace } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
+import * as network from '../../network/network';
+import * as plugins from '../../plugins';
+import * as themes from '../../plugins/misc';
+import { fsClient } from '../../sync/git/fs-client';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
+import { NeDBClient } from '../../sync/git/ne-db-client';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { VCS } from '../../sync/vcs/vcs';
+import * as templating from '../../templating/index';
+import { ErrorBoundary } from '../components/error-boundary';
+import { KeydownBinder } from '../components/keydown-binder';
+import { AskModal } from '../components/modals/ask-modal';
+import { showCookiesModal } from '../components/modals/cookies-modal';
+import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { showAlert, showModal, showPrompt } from '../components/modals/index';
+import { RequestCreateModal } from '../components/modals/request-create-modal';
+import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
+import { RequestSettingsModal } from '../components/modals/request-settings-modal';
+import RequestSwitcherModal from '../components/modals/request-switcher-modal';
+import { showSelectModal } from '../components/modals/select-modal';
+import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
+import { Toast } from '../components/toast';
+import { Wrapper } from '../components/wrapper';
+import withDragDropContext from '../context/app/drag-drop-context';
+import { GrpcProvider } from '../context/grpc';
+import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { RootState } from '../redux/modules';
+import { initialize } from '../redux/modules/entities';
+import {
+  exportRequestsToFile,
   loadRequestStart,
   loadRequestStop,
   newCommand,
-  setActiveWorkspace,
+  selectIsLoading,
   setActiveActivity,
-  goToNextActivity,
-  importFile,
-  importClipBoard,
-  exportRequestsToFile,
 } from '../redux/modules/global';
-import { initialize } from '../redux/modules/entities';
-import { database as db } from '../../common/database';
-import * as models from '../../models';
+import { importUri } from '../redux/modules/import';
+import { activateWorkspace } from '../redux/modules/workspace';
 import {
+  selectActiveActivity,
+  selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
-  selectActiveOAuth2Token,
+  selectActiveProject,
   selectActiveRequest,
-  selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
-  selectActiveSpace,
   selectActiveUnitTestResult,
   selectActiveUnitTests,
   selectActiveUnitTestSuite,
@@ -63,97 +109,71 @@ import {
   selectActiveWorkspace,
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
-  selectEntitiesLists,
+  selectActiveWorkspaceName,
+  selectApiSpecs,
+  selectEnvironments,
+  selectGitRepositories,
+  selectIsFinishedBooting,
+  selectIsLoggedIn,
+  selectLoadStartTime,
+  selectRequestGroups,
+  selectRequestMetas,
+  selectRequests,
+  selectRequestVersions,
+  selectResponseDownloadPath,
+  selectResponseFilter,
+  selectResponseFilterHistory,
+  selectResponsePreviewMode,
   selectSettings,
+  selectStats,
   selectSyncItems,
   selectUnseenWorkspaces,
-  selectWorkspaceRequestsAndRequestGroups,
-  selectWorkspacesForActiveSpace,
+  selectWorkspaceMetas,
+  selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectSidebarChildren } from '../redux/sidebar-selectors';
-import RequestCreateModal from '../components/modals/request-create-modal';
-import GenerateCodeModal from '../components/modals/generate-code-modal';
-import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
-import RequestSettingsModal from '../components/modals/request-settings-modal';
-import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
-import * as network from '../../network/network';
-import {
-  debounce,
-  generateId,
-  getContentDispositionHeader,
-} from '../../common/misc';
-import { getDataDirectory } from '../../common/electron-helpers';
-import * as mime from 'mime-types';
-import * as path from 'path';
-import * as render from '../../common/render';
-import { getKeys } from '../../templating/utils';
-import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { exportHarRequest } from '../../common/har';
-import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
-import KeydownBinder from '../components/keydown-binder';
-import ErrorBoundary from '../components/error-boundary';
-import * as plugins from '../../plugins';
-import * as templating from '../../templating/index';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import AskModal from '../components/modals/ask-modal';
-import { Request, updateMimeType } from '../../models/request';
-import * as themes from '../../plugins/misc';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { VCS } from '../../sync/vcs/vcs';
-import SyncMergeModal from '../components/modals/sync-merge-modal';
-import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
-import { NeDBClient } from '../../sync/git/ne-db-client';
-import { fsClient } from '../../sync/git/fs-client';
-import { routableFSClient } from '../../sync/git/routable-fs-client';
-import { getWorkspaceLabel } from '../../common/get-workspace-label';
-import * as requestOperations from '../../models/helpers/request-operations';
-import { GrpcProvider } from '../context/grpc';
-import { sortMethodMap } from '../../common/sorting';
-import withDragDropContext from '../context/app/drag-drop-context';
-import { trackSegmentEvent } from '../../common/analytics';
-import getWorkspaceName from '../../models/helpers/get-workspace-name';
-import * as workspaceOperations from '../../models/helpers/workspace-operations';
-import { isCollection, isWorkspace } from '../../models/workspace';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
-import { isEnvironment } from '../../models/environment';
-import { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import { RequestMeta } from '../../models/request-meta';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { WorkspaceMeta } from '../../models/workspace-meta';
-import { Response } from '../../models/response';
-import { RenderContextAndKeys } from '../../common/render';
-import { RootState } from '../redux/modules';
+import { selectPaneHeight, selectPaneWidth, selectSidebarChildren, selectSidebarFilter, selectSidebarHidden, selectSidebarWidth } from '../redux/sidebar-selectors';
+import { AppHooks } from './app-hooks';
+
+const updateRequestMetaByParentId = async (
+  requestId: string,
+  patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>
+) => {
+  const isGrpc = isGrpcRequestId(requestId);
+
+  if (isGrpc) {
+    return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
+  } else {
+    return models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  }
+};
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
-  showDragOverlay: boolean,
-  draggingSidebar: boolean,
-  draggingPaneHorizontal: boolean,
-  draggingPaneVertical: boolean,
-  sidebarWidth: number,
-  paneWidth: number,
-  paneHeight: number,
-  isVariableUncovered: boolean,
-  vcs: VCS | null,
-  gitVCS: GitVCS | null,
-  forceRefreshCounter: number,
-  forceRefreshHeaderCounter: number,
-  isMigratingChildren: boolean,
+  showDragOverlay: boolean;
+  draggingSidebar: boolean;
+  draggingPaneHorizontal: boolean;
+  draggingPaneVertical: boolean;
+  sidebarWidth: number;
+  paneWidth: number;
+  paneHeight: number;
+  vcs: VCS | null;
+  gitVCS: GitVCS | null;
+  forceRefreshCounter: number;
+  forceRefreshHeaderCounter: number;
+  isMigratingChildren: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent<AppProps, State> {
-  private _getRenderContextPromiseCache: Object;
   private _savePaneWidth: (paneWidth: number) => void;
   private _savePaneHeight: (paneWidth: number) => void;
   private _saveSidebarWidth: (paneWidth: number) => void;
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _requestPane: RefObject<any>;
-  private _responsePane: RefObject<any>;
-  private _sidebar: RefObject<any>;
+  private _requestPaneRef = createRef<HTMLElement>();
+  private _responsePaneRef = createRef<HTMLElement>();
+  private _sidebarRef = createRef<HTMLElement>();
   private _wrapper: Wrapper | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
@@ -168,7 +188,6 @@ class App extends PureComponent<AppProps, State> {
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
-      isVariableUncovered: false,
       vcs: null,
       gitVCS: null,
       forceRefreshCounter: 0,
@@ -176,7 +195,6 @@ class App extends PureComponent<AppProps, State> {
       isMigratingChildren: false,
     };
 
-    this._getRenderContextPromiseCache = {};
     this._savePaneWidth = debounce(paneWidth =>
       this._updateActiveWorkspaceMeta({
         paneWidth,
@@ -256,13 +274,7 @@ class App extends PureComponent<AppProps, State> {
           showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
         },
       ],
-      [
-        hotKeyRefs.SHOW_COOKIES_EDITOR,
-        () => {
-          const { activeWorkspace } = this.props;
-          showModal(CookiesModal, activeWorkspace);
-        },
-      ],
+      [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
       [
         hotKeyRefs.REQUEST_QUICK_CREATE,
         async () => {
@@ -278,7 +290,7 @@ class App extends PureComponent<AppProps, State> {
           });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
-          trackSegmentEvent('Request Created');
+          trackSegmentEvent(SegmentEvent.requestCreate);
         },
       ],
       [
@@ -358,12 +370,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
-      [
-        hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
-        async () => {
-          await this._updateIsVariableUncovered();
-        },
-      ],
+      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, this._updateShowVariableSourceAndValue],
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
@@ -379,18 +386,6 @@ class App extends PureComponent<AppProps, State> {
       activeRequest ? activeRequest._id : 'n/a',
       activeEnvironment ? activeEnvironment._id : 'n/a',
     );
-  }
-
-  _setRequestPaneRef(n: RefObject<any>) {
-    this._requestPane = n;
-  }
-
-  _setResponsePaneRef(n: RefObject<any>) {
-    this._responsePane = n;
-  }
-
-  _setSidebarRef(n: RefObject<any>) {
-    this._sidebar = n;
   }
 
   _requestGroupCreate(parentId: string) {
@@ -420,7 +415,7 @@ class App extends PureComponent<AppProps, State> {
         this._handleSetActiveRequest(requestId);
 
         models.stats.incrementCreatedRequests();
-        trackSegmentEvent('Request Created');
+        trackSegmentEvent(SegmentEvent.requestCreate);
       },
     });
   }
@@ -500,76 +495,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _workspaceDuplicateById(callback: () => void, workspaceId: string) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
-    showPrompt({
-      // @ts-expect-error -- TSCONVERSION workspace can be null
-      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
-      // @ts-expect-error -- TSCONVERSION workspace can be null
-      defaultValue: getWorkspaceName(workspace, apiSpec),
-      submitName: 'Create',
-      selectText: true,
-      label: 'New Name',
-      onComplete: async name => {
-        // @ts-expect-error -- TSCONVERSION workspace can be null
-        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
-        await this.props.handleSetActiveWorkspace(newWorkspace._id);
-        callback();
-      },
-    });
-  }
-
-  _workspaceDuplicate(callback: () => void) {
-    if (this.props.activeWorkspace) {
-      this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
-    }
-  }
-
-  async _fetchRenderContext() {
-    const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
-    const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    const ancestors = await db.withAncestors(activeRequest || activeWorkspace || null, [
-      models.request.type,
-      models.requestGroup.type,
-      models.workspace.type,
-    ]);
-    return render.getRenderContext(activeRequest, environmentId, ancestors);
-  }
-
-  async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
-    const context = await this._fetchRenderContext();
-    const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
-    return {
-      context,
-      keys,
-    };
-  }
-
-  /**
-   * Heavily optimized render function
-   *
-   * @param text - template to render
-   * @param contextCacheKey - if rendering multiple times in parallel, set this
-   * @returns {Promise}
-   * @private
-   */
-  async _handleRenderText<T>(obj: T, contextCacheKey = null) {
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
-      // NOTE: We're caching promises here to avoid race conditions
-      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-      this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
-    }
-
-    // Set timeout to delete the key eventually
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    const context = await this._getRenderContextPromiseCache[contextCacheKey];
-    return render.render(obj, context);
-  }
-
   _handleGenerateCodeForActiveRequest() {
     // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
     App._handleGenerateCode(this.props.activeRequest);
@@ -585,7 +510,11 @@ class App extends PureComponent<AppProps, State> {
     const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert('shell', 'curl');
-    clipboard.writeText(cmd);
+
+    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
+    if (cmd) {
+      clipboard.writeText(cmd);
+    }
   }
 
   static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
@@ -612,20 +541,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  static async _updateRequestMetaByParentId(requestId, patch) {
-    const isGrpc = isGrpcRequestId(requestId);
-
-    if (isGrpc) {
-      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
-    } else {
-      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
-    }
-  }
-
-  _updateIsVariableUncovered() {
-    this.setState({
-      isVariableUncovered: !this.state.isVariableUncovered,
-    });
+  async _updateShowVariableSourceAndValue() {
+    const { settings } = this.props;
+    await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
   _handleSetPaneWidth(paneWidth: number) {
@@ -648,7 +566,7 @@ class App extends PureComponent<AppProps, State> {
     await this._updateActiveWorkspaceMeta({
       activeRequestId,
     });
-    await App._updateRequestMetaByParentId(activeRequestId, {
+    await updateRequestMetaByParentId(activeRequestId, {
       lastActive: Date.now(),
     });
   }
@@ -659,7 +577,7 @@ class App extends PureComponent<AppProps, State> {
     });
     // Give it time to update and re-render
     setTimeout(() => {
-      this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      this._wrapper?._forceRequestPaneRefresh();
     }, 300);
   }
 
@@ -690,25 +608,25 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async _handleSetRequestPinned(request, pinned) {
-    App._updateRequestMetaByParentId(request._id, {
+    updateRequestMetaByParentId(request._id, {
       pinned,
     });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
-    App._updateRequestMetaByParentId(requestId, {
+    updateRequestMetaByParentId(requestId, {
       previewMode,
     });
   }
 
   _handleUpdateDownloadPath(requestId, downloadPath) {
-    App._updateRequestMetaByParentId(requestId, {
+    updateRequestMetaByParentId(requestId, {
       downloadPath,
     });
   }
 
   async _handleSetResponseFilter(requestId, responseFilter) {
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       responseFilter,
     });
 
@@ -731,7 +649,7 @@ class App extends PureComponent<AppProps, State> {
       }
 
       responseFilterHistory.unshift(responseFilter);
-      await App._updateRequestMetaByParentId(requestId, {
+      await updateRequestMetaByParentId(requestId, {
         responseFilterHistory,
       });
     }, 2000);
@@ -779,7 +697,7 @@ class App extends PureComponent<AppProps, State> {
       options.defaultPath = defaultPath;
     }
 
-    const { filePath } = await remote.dialog.showSaveDialog(options);
+    const { filePath } = await window.dialog.showSaveDialog(options);
     // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
     return filePath || null;
@@ -795,7 +713,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent('Request Executed');
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     // Start loading
     handleStartLoading(requestId);
 
@@ -811,8 +729,8 @@ class App extends PureComponent<AppProps, State> {
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
-        // @ts-expect-error -- TSCONVERSION contentType can be undefined
-        const extension = mime.extension(responsePatch.contentType) || 'unknown';
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename;
@@ -864,7 +782,7 @@ class App extends PureComponent<AppProps, State> {
       });
     } finally {
       // Unset active response because we just made a new one
-      await App._updateRequestMetaByParentId(requestId, {
+      await updateRequestMetaByParentId(requestId, {
         activeResponseId: null,
       });
       // Stop loading
@@ -882,12 +800,13 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent('Request Executed');
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     handleStartLoading(requestId);
 
     try {
       const responsePatch = await network.send(requestId, environmentId);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
+
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -910,9 +829,10 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
+
     // Stop loading
     handleStopLoading(requestId);
   }
@@ -920,7 +840,7 @@ class App extends PureComponent<AppProps, State> {
   async _handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
     const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       activeResponseId,
     });
 
@@ -1002,20 +922,19 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      // @ts-expect-error -- TSCONVERSION
-      const requestPane = ReactDOM.findDOMNode(this._requestPane);
-      // @ts-expect-error -- TSCONVERSION
-      const responsePane = ReactDOM.findDOMNode(this._responsePane);
-      // @ts-expect-error -- TSCONVERSION
-      const requestPaneWidth = requestPane.offsetWidth;
-      // @ts-expect-error -- TSCONVERSION
-      const responsePaneWidth = responsePane.offsetWidth;
-      // @ts-expect-error -- TSCONVERSION
-      const pixelOffset = e.clientX - requestPane.offsetLeft;
-      let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
-      paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
+      const requestPane = this._requestPaneRef.current;
+      const responsePane = this._responsePaneRef.current;
 
-      this._handleSetPaneWidth(paneWidth);
+      if (requestPane && responsePane) {
+        const requestPaneWidth = requestPane.offsetWidth;
+        const responsePaneWidth = responsePane.offsetWidth;
+
+        const pixelOffset = e.clientX - requestPane.offsetLeft;
+        let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
+        paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
+
+        this._handleSetPaneWidth(paneWidth);
+      }
     } else if (this.state.draggingPaneVertical) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.paneHeight - this.state.paneHeight;
@@ -1030,20 +949,18 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      // @ts-expect-error -- TSCONVERSION
-      const requestPane = ReactDOM.findDOMNode(this._requestPane);
-      // @ts-expect-error -- TSCONVERSION
-      const responsePane = ReactDOM.findDOMNode(this._responsePane);
-      // @ts-expect-error -- TSCONVERSION
-      const requestPaneHeight = requestPane.offsetHeight;
-      // @ts-expect-error -- TSCONVERSION
-      const responsePaneHeight = responsePane.offsetHeight;
-      // @ts-expect-error -- TSCONVERSION
-      const pixelOffset = e.clientY - requestPane.offsetTop;
-      let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
-      paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
+      const requestPane = this._requestPaneRef.current;
+      const responsePane = this._responsePaneRef.current;
 
-      this._handleSetPaneHeight(paneHeight);
+      if (requestPane && responsePane) {
+        const requestPaneHeight = requestPane.offsetHeight;
+        const responsePaneHeight = responsePane.offsetHeight;
+        const pixelOffset = e.clientY - requestPane.offsetTop;
+        let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
+        paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
+
+        this._handleSetPaneHeight(paneHeight);
+      }
     } else if (this.state.draggingSidebar) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.sidebarWidth - this.state.sidebarWidth;
@@ -1058,20 +975,21 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      // @ts-expect-error -- TSCONVERSION
-      const sidebar = ReactDOM.findDOMNode(this._sidebar);
-      // @ts-expect-error -- TSCONVERSION
-      const currentPixelWidth = sidebar.offsetWidth;
-      // @ts-expect-error -- TSCONVERSION
-      const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
-      const width = this.state.sidebarWidth * ratio;
-      let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
+      const sidebar = this._sidebarRef.current;
 
-      if (sidebarWidth < COLLAPSE_SIDEBAR_REMS) {
-        sidebarWidth = MIN_SIDEBAR_REMS;
+      if (sidebar) {
+        const currentPixelWidth = sidebar.offsetWidth;
+
+        const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
+        const width = this.state.sidebarWidth * ratio;
+        let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
+
+        if (sidebarWidth < COLLAPSE_SIDEBAR_REMS) {
+          sidebarWidth = MIN_SIDEBAR_REMS;
+        }
+
+        this._handleSetSidebarWidth(sidebarWidth);
       }
-
-      this._handleSetSidebarWidth(sidebarWidth);
     }
   }
 
@@ -1098,9 +1016,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _handleKeyDown(e) {
+  _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(e, definition, callback);
+      executeHotKey(event, definition, callback);
     }
   }
 
@@ -1126,23 +1044,25 @@ class App extends PureComponent<AppProps, State> {
   }
 
   /**
-   * Update document.title to be "Workspace (Environment) – Request" when not home
+   * Update document.title to be "Project - Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {
     const {
       activeWorkspace,
-      activeApiSpec,
+      activeProject,
+      activeWorkspaceName,
       activeEnvironment,
       activeRequest,
-      activity,
+      activeActivity,
     } = this.props;
     let title;
 
-    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
+    if (activeActivity === ACTIVITY_HOME) {
       title = getAppName();
-    } else if (activeWorkspace && activeApiSpec) {
-      title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
+    } else if (activeWorkspace && activeWorkspaceName) {
+      title = activeProject.name;
+      title += ` - ${activeWorkspaceName}`;
 
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
@@ -1169,7 +1089,7 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Check on VCS things
-    const { activeWorkspace, activeGitRepository } = this.props;
+    const { activeWorkspace, activeProject, activeGitRepository } = this.props;
     const changingWorkspace = prevProps.activeWorkspace?._id !== activeWorkspace?._id;
 
     // Update VCS if needed
@@ -1178,16 +1098,16 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Update Git VCS if needed
-    const nextGit = activeGitRepository;
-    const prevGit = prevProps.activeGitRepository;
+    const changingProject = prevProps.activeProject?._id !== activeProject?._id;
+    const changingGit = prevProps.activeGitRepository?._id !== activeGitRepository?._id;
 
-    if (changingWorkspace || prevGit?._id !== nextGit?._id) {
+    if (changingWorkspace || changingProject || changingGit) {
       this._updateGitVCS();
     }
   }
 
   async _updateGitVCS() {
-    const { activeGitRepository, activeWorkspace } = this.props;
+    const { activeGitRepository, activeWorkspace, activeProject } = this.props;
 
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
@@ -1207,7 +1127,7 @@ class App extends PureComponent<AppProps, State> {
       );
 
       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-      const neDbClient = NeDBClient.createClient(activeWorkspace._id);
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeProject._id);
 
       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
       const gitDataClient = fsClient(baseDir);
@@ -1259,10 +1179,6 @@ class App extends PureComponent<AppProps, State> {
   async _updateVCS() {
     const { activeWorkspace } = this.props;
 
-    if (!activeWorkspace) {
-      return;
-    }
-
     const lock = generateId();
     this._updateVCSLock = lock;
 
@@ -1273,10 +1189,7 @@ class App extends PureComponent<AppProps, State> {
     });
 
     if (!vcs) {
-      const directory = path.join(getDataDirectory(), 'version-control');
-      const driver = new FileSystemDriver({
-        directory,
-      });
+      const driver = FileSystemDriver.create(getDataDirectory());
 
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
@@ -1288,7 +1201,11 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    await vcs.switchProject(activeWorkspace._id);
+    if (activeWorkspace) {
+      await vcs.switchProject(activeWorkspace._id);
+    } else {
+      vcs.clearBackendProject();
+    }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
     if (this._updateVCSLock === lock) {
@@ -1321,7 +1238,7 @@ class App extends PureComponent<AppProps, State> {
 
       // Delete VCS project if workspace deleted
       if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
-        await vcs.removeProjectsForRoot(doc._id);
+        await vcs.removeBackendProjectsForRoot(doc._id);
       }
     }
 
@@ -1349,6 +1266,60 @@ class App extends PureComponent<AppProps, State> {
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
+
+    if (isDevelopment()) {
+      ipcRenderer.on('clear-model', () => {
+        const options = models
+          .types()
+          .filter(t => t !== models.settings.type) // don't clear settings
+          .map(t => ({ name: t, value: t }));
+
+        showSelectModal({
+          title: 'Clear a model',
+          message: 'Select a model to clear; this operation cannot be undone.',
+          value: options[0].value,
+          options,
+          onDone: async type => {
+            if (type) {
+              const bufferId = await db.bufferChanges();
+              console.log(`[developer] clearing all "${type}" entities`);
+              const allEntities = await db.all(type);
+              const filteredEntites = allEntities
+                .filter(isNotDefaultProject); // don't clear the default project
+              await db.batchModifyDocs({ remove: filteredEntites });
+              db.flushChanges(bufferId);
+            }
+          },
+        });
+      });
+
+      ipcRenderer.on('clear-all-models', () => {
+        showModal(AskModal, {
+          title: 'Clear all models',
+          message: 'Are you sure you want to clear all models? This operation cannot be undone.',
+          yesText: 'Yes',
+          noText: 'No',
+          onDone: async yes => {
+            if (yes) {
+              const bufferId = await db.bufferChanges();
+              const promises = models
+                .types()
+                .filter(t => t !== models.settings.type) // don't clear settings
+                .reverse().map(async type => {
+                  console.log(`[developer] clearing all "${type}" entities`);
+                  const allEntities = await db.all(type);
+                  const filteredEntites = allEntities
+                    .filter(isNotDefaultProject); // don't clear the default project
+                  await db.batchModifyDocs({ remove: filteredEntites });
+                });
+              await Promise.all(promises);
+              db.flushChanges(bufferId);
+            }
+          },
+        });
+      });
+    }
+
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
@@ -1372,7 +1343,7 @@ class App extends PureComponent<AppProps, State> {
       'drop',
       async e => {
         e.preventDefault();
-        const { activeWorkspace, handleImportUriToWorkspace } = this.props;
+        const { activeWorkspace, handleImportUri } = this.props;
 
         if (!activeWorkspace) {
           return;
@@ -1397,7 +1368,7 @@ class App extends PureComponent<AppProps, State> {
           ),
           addCancel: true,
         });
-        handleImportUriToWorkspace(uri, { workspaceId: activeWorkspace?._id });
+        handleImportUri(uri, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
@@ -1474,12 +1445,16 @@ class App extends PureComponent<AppProps, State> {
       return null;
     }
 
+    if (!this.props.isFinishedBooting) {
+      console.log('[app] Waiting to finish booting');
+      return null;
+    }
+
     const { activeWorkspace } = this.props;
     const {
       paneWidth,
       paneHeight,
       sidebarWidth,
-      isVariableUncovered,
       gitVCS,
       vcs,
       forceRefreshCounter,
@@ -1489,281 +1464,125 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
-          <div className="app" key={uniquenessKey}>
-            <ErrorBoundary showAlert>
-              <Wrapper
-                ref={this._setWrapperRef}
-                {...this.props}
-                paneWidth={paneWidth}
-                paneHeight={paneHeight}
-                sidebarWidth={sidebarWidth}
-                handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-                handleSetRequestPinned={this._handleSetRequestPinned}
-                handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-                handleActivateRequest={this._handleSetActiveRequest}
-                handleSetRequestPaneRef={this._setRequestPaneRef}
-                handleSetResponsePaneRef={this._setResponsePaneRef}
-                handleSetSidebarRef={this._setSidebarRef}
-                handleStartDragSidebar={this._startDragSidebar}
-                handleResetDragSidebar={this._resetDragSidebar}
-                handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-                handleStartDragPaneVertical={this._startDragPaneVertical}
-                handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-                handleResetDragPaneVertical={this._resetDragPaneVertical}
-                handleCreateRequest={this._requestCreate}
-                handleRender={this._handleRenderText}
-                handleGetRenderContext={this._handleGetRenderContext}
-                handleDuplicateRequest={this._requestDuplicate}
-                handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                handleDuplicateWorkspace={this._workspaceDuplicate}
-                handleCreateRequestGroup={this._requestGroupCreate}
-                handleGenerateCode={App._handleGenerateCode}
-                handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-                handleCopyAsCurl={this._handleCopyAsCurl}
-                handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-                handleSetResponseFilter={this._handleSetResponseFilter}
-                handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-                handleSendAndDownloadRequestWithEnvironment={
-                  this._handleSendAndDownloadRequestWithEnvironment
-                }
-                handleSetActiveResponse={this._handleSetActiveResponse}
-                handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                handleSetSidebarFilter={this._handleSetSidebarFilter}
-                handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                handleShowSettingsModal={App._handleShowSettingsModal}
-                handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-                isVariableUncovered={isVariableUncovered}
-                headerEditorKey={forceRefreshHeaderCounter + ''}
-                handleSidebarSort={this._sortSidebar}
-                vcs={vcs}
-                gitVCS={gitVCS}
-              />
-            </ErrorBoundary>
+          <NunjucksEnabledProvider>
+            <AppHooks />
 
-            <ErrorBoundary showAlert>
-              <Toast />
-            </ErrorBoundary>
+            <div className="app" key={uniquenessKey}>
+              <ErrorBoundary showAlert>
+                <Wrapper
+                  ref={this._setWrapperRef}
+                  {...this.props}
+                  paneWidth={paneWidth}
+                  paneHeight={paneHeight}
+                  sidebarWidth={sidebarWidth}
+                  handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                  handleSetRequestPinned={this._handleSetRequestPinned}
+                  handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                  handleActivateRequest={this._handleSetActiveRequest}
+                  requestPaneRef={this._requestPaneRef}
+                  responsePaneRef={this._responsePaneRef}
+                  sidebarRef={this._sidebarRef}
+                  handleStartDragSidebar={this._startDragSidebar}
+                  handleResetDragSidebar={this._resetDragSidebar}
+                  handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                  handleStartDragPaneVertical={this._startDragPaneVertical}
+                  handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                  handleResetDragPaneVertical={this._resetDragPaneVertical}
+                  handleCreateRequest={this._requestCreate}
+                  handleDuplicateRequest={this._requestDuplicate}
+                  handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                  handleCreateRequestGroup={this._requestGroupCreate}
+                  handleGenerateCode={App._handleGenerateCode}
+                  handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                  handleCopyAsCurl={this._handleCopyAsCurl}
+                  handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                  handleSetResponseFilter={this._handleSetResponseFilter}
+                  handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                  handleSendAndDownloadRequestWithEnvironment={
+                    this._handleSendAndDownloadRequestWithEnvironment
+                  }
+                  handleSetActiveResponse={this._handleSetActiveResponse}
+                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                  handleSetSidebarFilter={this._handleSetSidebarFilter}
+                  handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                  handleShowSettingsModal={App._handleShowSettingsModal}
+                  handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                  headerEditorKey={forceRefreshHeaderCounter + ''}
+                  handleSidebarSort={this._sortSidebar}
+                  vcs={vcs}
+                  gitVCS={gitVCS}
+                />
+              </ErrorBoundary>
 
-            {/* Block all mouse activity by showing an overlay while dragging */}
-            {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-          </div>
+              <ErrorBoundary showAlert>
+                <Toast />
+              </ErrorBoundary>
+
+              {/* Block all mouse activity by showing an overlay while dragging */}
+              {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+            </div>
+          </NunjucksEnabledProvider>
         </GrpcProvider>
       </KeydownBinder>
     );
   }
 }
 
-async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
-  // Nothing to do. We are in the same spot as we started
-  if (docToMove._id === targetId) {
-    return;
-  }
-
-  // Don't allow dragging things into itself or children. This will disconnect
-  // the node from the tree and cause the item to no longer show in the UI.
-  const descendents = await db.withDescendants(docToMove);
-
-  for (const doc of descendents) {
-    if (doc._id === parentId) {
-      return;
-    }
-  }
-
-  function __updateDoc(doc, patch) {
-    // @ts-expect-error -- TSCONVERSION
-    return models.getModel(docToMove.type).update(doc, patch);
-  }
-
-  if (targetId === null) {
-    // We are moving to an empty area. No sorting required
-    await __updateDoc(docToMove, {
-      parentId,
-    });
-    return;
-  }
-
-  // NOTE: using requestToTarget's parentId so we can switch parents!
-  const docs = [
-    ...(await models.request.findByParentId(parentId)),
-    ...(await models.grpcRequest.findByParentId(parentId)),
-    ...(await models.requestGroup.findByParentId(parentId)),
-  ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
-
-  // Find the index of doc B so we can re-order and save everything
-  for (let i = 0; i < docs.length; i++) {
-    const doc = docs[i];
-
-    if (doc._id === targetId) {
-      let before, after;
-
-      if (targetOffset < 0) {
-        // We're moving to below
-        before = docs[i];
-        after = docs[i + 1];
-      } else {
-        // We're moving to above
-        before = docs[i - 1];
-        after = docs[i];
-      }
-
-      const beforeKey = before ? before.metaSortKey : docs[0].metaSortKey - 100;
-      const afterKey = after ? after.metaSortKey : docs[docs.length - 1].metaSortKey + 100;
-
-      if (Math.abs(afterKey - beforeKey) < 0.000001) {
-        // If sort keys get too close together, we need to redistribute the list. This is
-        // not performant at all (need to update all siblings in DB), but it is extremely rare
-        // anyway
-        console.log(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
-        await db.bufferChanges(300);
-        docs.map((r, i) =>
-          __updateDoc(r, {
-            metaSortKey: i * 100,
-            parentId,
-          }),
-        );
-      } else {
-        const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-
-        __updateDoc(docToMove, {
-          metaSortKey,
-          parentId,
-        });
-      }
-
-      break;
-    }
-  }
-}
-
-function mapStateToProps(state: RootState) {
-  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = state.global;
-  // Entities
-  const entitiesLists = selectEntitiesLists(state);
-  const {
-    apiSpecs,
-    environments,
-    gitRepositories,
-    requestGroups,
-    requestMetas,
-    requestVersions,
-    requests,
-    workspaceMetas,
-  } = entitiesLists;
-
-  const settings = selectSettings(state);
-
-  // Workspace stuff
-  const activeSpace = selectActiveSpace(state);
-  const workspaces = selectWorkspacesForActiveSpace(state);
-  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
-  const activeWorkspace = selectActiveWorkspace(state);
-  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state);
-  const activeGitRepository = selectActiveGitRepository(state);
-
-  const sidebarHidden = activeWorkspaceMeta?.sidebarHidden || false;
-  const sidebarFilter = activeWorkspaceMeta?.sidebarFilter || '';
-  const sidebarWidth = activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT;
-
-  // Request stuff
-  const requestMeta = selectActiveRequestMeta(state);
-  const activeRequest = selectActiveRequest(state);
-
-  const responsePreviewMode = requestMeta?.previewMode || PREVIEW_MODE_SOURCE;
-  const responseFilter = requestMeta?.responseFilter || '';
-  const responseFilterHistory = requestMeta?.responseFilterHistory || [];
-  const responseDownloadPath = requestMeta?.downloadPath || null;
-
-  // Cookie Jar
-  const activeCookieJar = selectActiveCookieJar(state);
-
-  // Response stuff
-  const activeRequestResponses = selectActiveRequestResponses(state);
-  const activeResponse = selectActiveResponse(state);
-
-  // Environment stuff
-  const activeEnvironment = selectActiveEnvironment(state);
-
-  // OAuth2Token stuff
-  const oAuth2Token = selectActiveOAuth2Token(state);
-
-  // Find other meta things
-  const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
-  const sidebarChildren = selectSidebarChildren(state);
-  const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state);
-  const unseenWorkspaces = selectUnseenWorkspaces(state);
-
-  // Sync stuff
-  const syncItems = selectSyncItems(state);
-
-  // Api spec stuff
-  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace?._id);
-
-  // Test stuff
-  const activeUnitTests = selectActiveUnitTests(state);
-  const activeUnitTestSuite = selectActiveUnitTestSuite(state);
-  const activeUnitTestSuites = selectActiveUnitTestSuites(state);
-  const activeUnitTestResult = selectActiveUnitTestResult(state);
-
-  return {
-    activity: activeActivity,
-    activeSpace,
-    activeApiSpec,
-    activeCookieJar,
-    activeEnvironment,
-    activeGitRepository,
-    activeRequest,
-    activeRequestResponses,
-    activeResponse,
-    activeUnitTestResult,
-    activeUnitTestSuite,
-    activeUnitTestSuites,
-    activeUnitTests,
-    activeWorkspace,
-    activeWorkspaceClientCertificates,
-    activeWorkspaceMeta,
-    apiSpecs,
-    environments,
-    gitRepositories,
-    isLoading,
-    isLoggedIn,
-    loadStartTime,
-    oAuth2Token,
-    paneHeight,
-    paneWidth,
-    requestGroups,
-    requestMetas,
-    requestVersions,
-    requests,
-    responseDownloadPath,
-    responseFilter,
-    responseFilterHistory,
-    responsePreviewMode,
-    settings,
-    sidebarChildren,
-    sidebarFilter,
-    sidebarHidden,
-    sidebarWidth,
-    syncItems,
-    unseenWorkspaces,
-    workspaceChildren,
-    workspaces,
-    workspaceMetas,
-  };
-}
+const mapStateToProps = (state: RootState) => ({
+  activeActivity: selectActiveActivity(state),
+  activeProject: selectActiveProject(state),
+  activeApiSpec: selectActiveApiSpec(state),
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+  activeCookieJar: selectActiveCookieJar(state),
+  activeEnvironment: selectActiveEnvironment(state),
+  activeGitRepository: selectActiveGitRepository(state),
+  activeRequest: selectActiveRequest(state),
+  activeRequestResponses: selectActiveRequestResponses(state),
+  activeResponse: selectActiveResponse(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+  activeUnitTestSuite: selectActiveUnitTestSuite(state),
+  activeUnitTestSuites: selectActiveUnitTestSuites(state),
+  activeUnitTests: selectActiveUnitTests(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  activeWorkspaceClientCertificates: selectActiveWorkspaceClientCertificates(state),
+  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
+  apiSpecs: selectApiSpecs(state),
+  environments: selectEnvironments(state),
+  gitRepositories: selectGitRepositories(state),
+  isLoading: selectIsLoading(state),
+  isLoggedIn: selectIsLoggedIn(state),
+  isFinishedBooting: selectIsFinishedBooting(state),
+  loadStartTime: selectLoadStartTime(state),
+  paneHeight: selectPaneHeight(state),
+  paneWidth: selectPaneWidth(state),
+  requestGroups: selectRequestGroups(state),
+  requestMetas: selectRequestMetas(state),
+  requestVersions: selectRequestVersions(state),
+  requests: selectRequests(state),
+  responseDownloadPath: selectResponseDownloadPath(state),
+  responseFilter: selectResponseFilter(state),
+  responseFilterHistory: selectResponseFilterHistory(state),
+  responsePreviewMode: selectResponsePreviewMode(state),
+  settings: selectSettings(state),
+  sidebarChildren: selectSidebarChildren(state),
+  sidebarFilter: selectSidebarFilter(state),
+  sidebarHidden: selectSidebarHidden(state),
+  sidebarWidth: selectSidebarWidth(state),
+  stats: selectStats(state),
+  syncItems: selectSyncItems(state),
+  unseenWorkspaces: selectUnseenWorkspaces(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+  workspaceMetas: selectWorkspaceMetas(state),
+});
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
-    importUri: handleImportUriToWorkspace,
+    importUri: handleImportUri,
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
-    setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
-    goToNextActivity: handleGoToNextActivity,
-    importFile: handleImportFileToWorkspace,
-    importClipBoard: handleImportClipBoardToWorkspace,
+    activateWorkspace: handleActivateWorkspace,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1771,27 +1590,20 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStart,
     loadRequestStop,
     newCommand,
-    setActiveWorkspace,
     setActiveActivity,
-    goToNextActivity,
-    importFile,
-    importClipBoard,
+    activateWorkspace,
     exportRequestsToFile,
     initialize,
   }, dispatch);
   return {
     handleCommand,
-    handleImportUriToWorkspace,
-    handleSetActiveWorkspace,
+    handleImportUri,
     handleSetActiveActivity,
+    handleActivateWorkspace,
     handleStartLoading,
     handleStopLoading,
-    handleGoToNextActivity,
-    handleImportFileToWorkspace,
-    handleImportClipBoardToWorkspace,
     handleExportRequestsToFile,
     handleInitializeEntities,
-    handleMoveDoc: _moveDoc, // TODO this doesn't use dispatch.. it's unclear why it needs to be here.
   };
 };
 

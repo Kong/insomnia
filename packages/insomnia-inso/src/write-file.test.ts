@@ -1,9 +1,10 @@
-import path from 'path';
-import { writeFileWithCliOptions } from './write-file';
-import mkdirp from 'mkdirp';
 import fs from 'fs';
-import { InsoError } from './errors';
+import mkdirp from 'mkdirp';
 import os from 'os';
+import path from 'path';
+
+import { InsoError } from './errors';
+import { writeFileWithCliOptions } from './write-file';
 
 jest.mock('mkdirp', () => ({
   sync: jest.fn().mockResolvedValue(() => {}),

@@ -1,0 +1,27 @@
+# see https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md for docs
+
+# Default state for all rules
+default: true
+
+# Path to configuration file to extend
+extends: null
+
+# MD004 - Unordered list style
+# We want to use dashes consistently everywhere
+MD004:
+  style: dash
+
+# MD013 - Line length
+# We do not want to artificially limit line lengh in a language like markdown because of the nature of the language's handling of whitespace.  Line wrapping is just a fact of life in markdown and trying to impose the conventions of other languages on markdown is an impedance mismatch that leads to people thinking that whitespace in markdown is more representative of the rendered HTML than it really is.
+MD013: false
+
+# MD033 - Inline HTML
+MD033:
+  allowed_elements:
+    - details # there is no markdown equivalent for accordions
+    - summary # there is no markdown equivalent for accordions
+
+# MD029 - Ordered list item prefix
+# Plain and simple, markdown parsers do not respect the numbering you use for ordered lists.  It only leads to confusion and misconception to allow otherwise.
+MD029:
+  style: one

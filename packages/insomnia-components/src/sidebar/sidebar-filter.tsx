@@ -1,7 +1,6 @@
-import React, { createRef, FunctionComponent, useLayoutEffect } from 'react';
-
-import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import React, { createRef, FunctionComponent, useLayoutEffect } from 'react';
+import styled from 'styled-components';
 
 export interface SidebarFilterProps {
   filter: boolean;
@@ -53,7 +52,8 @@ export const SidebarFilter: FunctionComponent<SidebarFilterProps> = ({ filter, o
       }}
       animate={{
         height: filter ? '100%' : '0px',
-      }}>
+      }}
+    >
       <input type="text" placeholder="Filter..." onChange={onChange} ref={filterField} />
     </StyledFilter>
   );

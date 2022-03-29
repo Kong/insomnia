@@ -1,16 +1,18 @@
-import React, { FunctionComponent } from 'react';
 import { MultiSwitch } from 'insomnia-components';
+import React, { FunctionComponent, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
-import type { Workspace } from '../../models/workspace';
+import { isDesign } from '../../models/workspace';
+import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
+import { HandleActivityChange } from './wrapper';
 
 interface Props {
-  activity: GlobalActivity;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
-  workspace: Workspace;
+  handleActivityChange: HandleActivityChange;
 }
 
-const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChange, workspace }) => {
+export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange }) => {
   const choices = [
     {
       label: 'Design',
@@ -26,14 +28,27 @@ const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChan
     },
   ];
 
+  const activeActivity = useSelector(selectActiveActivity);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+
+  const onChange = useCallback((nextActivity: GlobalActivity) => {
+    handleActivityChange({ workspaceId: activeWorkspace?._id, nextActivity });
+  }, [handleActivityChange, activeWorkspace]);
+
+  if (!activeActivity) {
+    return null;
+  }
+
+  if (!activeWorkspace || !isDesign(activeWorkspace)) {
+    return null;
+  }
+
   return (
     <MultiSwitch
       name="activity-toggle"
-      onChange={(nextActivity: GlobalActivity) => handleActivityChange({ workspaceId: workspace._id, nextActivity })}
+      onChange={onChange}
       choices={choices}
-      selectedValue={activity}
+      selectedValue={activeActivity}
     />
   );
 };
-
-export default ActivityToggle;

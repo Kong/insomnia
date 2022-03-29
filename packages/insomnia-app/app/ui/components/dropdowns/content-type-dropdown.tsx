@@ -1,24 +1,28 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
+import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
   AUTOBIND_CFG,
+  CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
-  CONTENT_TYPE_YAML,
   CONTENT_TYPE_OTHER,
+  CONTENT_TYPE_PLAINTEXT,
   CONTENT_TYPE_XML,
-  CONTENT_TYPE_EDN,
+  CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showModal } from '../modals/index';
-import AlertModal from '../modals/alert-modal';
 import type { Request, RequestBody } from '../../../models/request';
-import { trackEvent } from '../../../common/analytics';
-import { DropdownProps } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { AlertModal } from '../modals/alert-modal';
+import { showModal } from '../modals/index';
 
 interface Props extends DropdownProps {
   onChange: (mimeType: string | null) => void;
@@ -29,7 +33,7 @@ interface Props extends DropdownProps {
 const EMPTY_MIME_TYPE = null;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ContentTypeDropdown extends PureComponent<Props> {
+export class ContentTypeDropdown extends PureComponent<Props> {
   async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
     // Nothing to do
     if (body.mimeType === mimeType) {
@@ -68,7 +72,7 @@ class ContentTypeDropdown extends PureComponent<Props> {
     }
 
     this.props.onChange(mimeType);
-    trackEvent('Request', 'Change MimeType', mimeType);
+    trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type:mimeType });
   }
 
   _renderDropdownItem(mimeType: string | null, forcedName = '') {
@@ -105,6 +109,7 @@ class ContentTypeDropdown extends PureComponent<Props> {
         {this._renderDropdownItem(CONTENT_TYPE_XML)}
         {this._renderDropdownItem(CONTENT_TYPE_YAML)}
         {this._renderDropdownItem(CONTENT_TYPE_EDN)}
+        {this._renderDropdownItem(CONTENT_TYPE_PLAINTEXT)}
         {this._renderDropdownItem(CONTENT_TYPE_OTHER)}
         <DropdownDivider>
           <span>
@@ -117,5 +122,3 @@ class ContentTypeDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default ContentTypeDropdown;

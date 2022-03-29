@@ -20,7 +20,7 @@ type Data = {
   [key in EnvVar['key']]: EnvVar['value'];
 };
 
-export const convert: Converter<Data> = (rawData) => {
+export const convert: Converter<Data> = rawData => {
   try {
     const { _postman_variable_scope, name, values } = JSON.parse(
       rawData,

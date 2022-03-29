@@ -1,0 +1,27 @@
+openapi: '3.0.2'
+info:
+  title: Endpoint Security
+  version: '1.2'
+servers:
+  - url: https://api.server.test/v1
+
+components:
+  securitySchemes:
+    OAuth2-AuthorizationCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.server.test/v1/auth
+          tokenUrl: https://api.server.test/v1/token
+          scopes:
+            read:something: Read all the data
+            write:something: Write all the data
+
+paths:
+  /oauth2/authorization-code:
+    get:
+      security:
+        - OAuth2-AuthorizationCode: []
+      responses:
+        '200':
+          description: OK

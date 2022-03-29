@@ -1,12 +1,20 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Link from '../base/link';
-import LoginModal from '../modals/login-modal';
-import { hideAllModals, showModal } from '../modals/index';
-import PromptButton from '../base/prompt-button';
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+
 import * as session from '../../../account/session';
-import HelpTooltip from '../help-tooltip';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { RootState } from '../../redux/modules';
+import { selectSettings } from '../../redux/selectors';
+import { Link } from '../base/link';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { hideAllModals, showModal } from '../modals/index';
+import { LoginModal } from '../modals/login-modal';
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+type Props = ReduxProps;
 
 interface State {
   code: string;
@@ -19,7 +27,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Account extends PureComponent<{}, State> {
+class UnconnectedAccount extends PureComponent<Props, State> {
   state: State = {
     code: '',
     password: '',
@@ -123,37 +131,40 @@ class Account extends PureComponent<{}, State> {
     await this._sendCode();
   }
 
-  static renderUpgrade() {
+  renderUpgrade() {
+    const { disablePaidFeatureAds } = this.props;
+
+    const logInButton = (
+      <a href="#" onClick={Account._handleLogin} className="theme--link">
+        Log In
+      </a>
+    );
+
+    if (disablePaidFeatureAds) {
+      return logInButton;
+    }
+
     return (
       <Fragment>
         <div className="notice pad surprise">
           <h1 className="no-margin-top">Try Insomnia Plus!</h1>
           <p>
-            &#128640; Sync your data across devices or with a team
+            Sync your data across devices or with a team
             <br />
-            &#128640; Keep synced data safe with end-to-end encryption
+            Keep synced data safe with end-to-end encryption
             <br />
-            &#128640; Prioritized email support
+            Prioritized email support
             <br />
           </p>
           <br />
           <div className="pad">
             <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing">
-              Plus for Individuals <i className="fa fa-external-link" />
-            </Link>
-            <Link
-              button
-              className="margin-left-sm btn btn--clicky"
-              href="https://insomnia.rest/pricing">
-              Plus for Teams <i className="fa fa-external-link" />
+              View plans <i className="fa fa-external-link" />
             </Link>
           </div>
         </div>
         <p>
-          Or{' '}
-          <a href="#" onClick={Account._handleLogin} className="theme--link">
-            Log In
-          </a>
+          Or{' '}{logInButton}
         </p>
       </Fragment>
     );
@@ -186,7 +197,8 @@ class Account extends PureComponent<{}, State> {
           </PromptButton>
           <button
             className="space-left btn btn--clicky"
-            onClick={this._handleShowChangePasswordForm}>
+            onClick={this._handleShowChangePasswordForm}
+          >
             Change Password
           </button>
         </div>
@@ -242,7 +254,8 @@ class Account extends PureComponent<{}, State> {
                 <button
                   type="submit"
                   className="btn btn--clicky"
-                  disabled={!code || !password || password !== password2}>
+                  disabled={!code || !password || password !== password2}
+                >
                   Submit Change
                 </button>
               </div>
@@ -254,8 +267,12 @@ class Account extends PureComponent<{}, State> {
   }
 
   render() {
-    return session.isLoggedIn() ? this.renderAccount() : Account.renderUpgrade();
+    return session.isLoggedIn() ? this.renderAccount() : this.renderUpgrade();
   }
 }
 
-export default Account;
+const mapStateToProps = (state: RootState) => ({
+  disablePaidFeatureAds: selectSettings(state).disablePaidFeatureAds,
+});
+
+export const Account = connect(mapStateToProps)(UnconnectedAccount);

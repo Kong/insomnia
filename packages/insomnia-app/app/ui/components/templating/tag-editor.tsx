@@ -1,30 +1,35 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import clone from 'clone';
+import React, { FC, PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { delay, fnOrString } from '../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { metaSortKeySort } from '../../../common/sorting';
+import * as models from '../../../models';
+import type { BaseModel } from '../../../models/index';
+import { isRequest, Request } from '../../../models/request';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import { getTemplateTags } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
+import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import type {
   NunjucksActionTag,
   NunjucksParsedTag,
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
-import { database as db } from '../../../common/database';
-import * as models from '../../../models';
-import HelpTooltip from '../help-tooltip';
-import { delay, fnOrString } from '../../../common/misc';
-import { metaSortKeySort } from '../../../common/sorting';
-import type { BaseModel } from '../../../models/index';
-import type { Workspace } from '../../../models/workspace';
-import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
-import FileInputButton from '../base/file-input-button';
-import { getTemplateTags } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { FileInputButton } from '../base/file-input-button';
+import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
   handleRender: HandleRender;
@@ -50,7 +55,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class TagEditor extends PureComponent<Props, State> {
+class TagEditorInternal extends PureComponent<Props, State> {
   _select: HTMLSelectElement | null = null;
 
   state: State = {
@@ -63,7 +68,7 @@ class TagEditor extends PureComponent<Props, State> {
     preview: '',
     error: '',
     variables: [],
-  }
+  };
 
   async load() {
     const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);
@@ -74,6 +79,13 @@ class TagEditor extends PureComponent<Props, State> {
     // Edit tags raw that we don't know about
     if (!activeTagDefinition) {
       activeTagData.rawValue = this.props.defaultValue;
+    }
+
+    // Fix strings: arg.value expects an escaped value (based on _updateArg logic)
+    for (const arg of activeTagData.args) {
+      if (typeof arg.value === 'string') {
+        arg.value = this._escapeStringArgs(arg.value);
+      }
     }
 
     await Promise.all([
@@ -177,11 +189,11 @@ class TagEditor extends PureComponent<Props, State> {
 
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = argValue.replace(/\\/g, '\\\\');
+      argValue = this._escapeStringArgs(argValue);
     }
 
     // Ensure all arguments exist
-    const defaultArgs = TagEditor._getDefaultTagData(activeTagDefinition).args;
+    const defaultArgs = TagEditorInternal._getDefaultTagData(activeTagDefinition).args;
 
     for (let i = 0; i < defaultArgs.length; i++) {
       if (activeTagData.args[i]) {
@@ -260,7 +272,7 @@ class TagEditor extends PureComponent<Props, State> {
     let argIndex = -1;
 
     if (parent instanceof HTMLElement) {
-      const index = parent && parent.getAttribute('data-arg-index');
+      const index = parent?.getAttribute('data-arg-index');
       argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
     }
 
@@ -323,6 +335,14 @@ class TagEditor extends PureComponent<Props, State> {
     }, 100);
   }
 
+  _escapeStringArgs(value: string) {
+    return value.replace(/\\/g, '\\\\');
+  }
+
+  _unescapeStringArgs(value: string) {
+    return value.replace(/\\\\/g, '\\');
+  }
+
   static _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
     const defaultFill: string = templateUtils.getDefaultFill(
       tagDefinition.name,
@@ -351,7 +371,7 @@ class TagEditor extends PureComponent<Props, State> {
     let activeTagData: NunjucksParsedTag | null = tagData;
 
     if (!activeTagData && tagDefinition) {
-      activeTagData = TagEditor._getDefaultTagData(tagDefinition);
+      activeTagData = TagEditorInternal._getDefaultTagData(tagDefinition);
     } else if (!activeTagData && !tagDefinition && this.state.activeTagData) {
       activeTagData = {
         name: 'custom',
@@ -424,7 +444,7 @@ class TagEditor extends PureComponent<Props, State> {
     return (
       <input
         type="text"
-        defaultValue={value || ''}
+        defaultValue={this._unescapeStringArgs(value) || ''}
         placeholder={placeholder}
         onChange={this._handleChange}
         data-encoding={encoding || 'utf8'}
@@ -459,7 +479,7 @@ class TagEditor extends PureComponent<Props, State> {
         showFileName
         className="btn btn--clicky btn--super-compact"
         onChange={path => this._handleChangeFile(path, argIndex)}
-        path={value}
+        path={this._unescapeStringArgs(value)}
         itemtypes={itemTypes}
         extensions={extensions}
       />
@@ -575,7 +595,7 @@ class TagEditor extends PureComponent<Props, State> {
     if (argIndex < argDatas.length) {
       argData = argDatas[argIndex];
     } else if (this.state.activeTagDefinition) {
-      const defaultTagData = TagEditor._getDefaultTagData(this.state.activeTagDefinition);
+      const defaultTagData = TagEditorInternal._getDefaultTagData(this.state.activeTagDefinition);
 
       argData = defaultTagData.args[argIndex];
     } else {
@@ -663,7 +683,8 @@ class TagEditor extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--outlined width-auto', {
               'form-control--no-label': argDefinition.type !== 'boolean',
-            })}>
+            })}
+          >
             <Dropdown right>
               <DropdownButton className="btn btn--clicky">
                 <i className="fa fa-gear" />
@@ -674,7 +695,8 @@ class TagEditor extends PureComponent<Props, State> {
                   variable: false,
                   argIndex,
                 }}
-                onClick={this._handleChangeArgVariable}>
+                onClick={this._handleChangeArgVariable}
+              >
                 <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
               </DropdownItem>
               <DropdownItem
@@ -682,7 +704,8 @@ class TagEditor extends PureComponent<Props, State> {
                   variable: true,
                   argIndex,
                 }}
-                onClick={this._handleChangeArgVariable}>
+                onClick={this._handleChangeArgVariable}
+              >
                 <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
               </DropdownItem>
             </Dropdown>
@@ -711,7 +734,8 @@ class TagEditor extends PureComponent<Props, State> {
         key={name}
         className="btn btn--clicky btn--largest"
         type="button"
-        onClick={() => this._handleActionClick(action)}>
+        onClick={() => this._handleActionClick(action)}
+      >
         {icon}
         {name}
       </button>
@@ -727,7 +751,7 @@ class TagEditor extends PureComponent<Props, State> {
 
     let finalPreview = preview;
 
-    if (activeTagDefinition && activeTagDefinition.disablePreview) {
+    if (activeTagDefinition?.disablePreview) {
       finalPreview = activeTagDefinition.disablePreview(activeTagData.args)
         ? preview.replace(/./g, '*')
         : preview;
@@ -751,7 +775,8 @@ class TagEditor extends PureComponent<Props, State> {
             <select
               ref={this._setSelectRef}
               onChange={this._handleChangeTag}
-              value={activeTagDefinition ? activeTagDefinition.name : ''}>
+              value={activeTagDefinition ? activeTagDefinition.name : ''}
+            >
               {this.state.tagDefinitions.map((tagDefinition, i) => (
                 <option key={`${i}::${tagDefinition.name}`} value={tagDefinition.name}>
                   {tagDefinition.displayName} – {tagDefinition.description}
@@ -761,12 +786,13 @@ class TagEditor extends PureComponent<Props, State> {
             </select>
           </label>
         </div>
-        {activeTagDefinition &&
-          activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
-            this.renderArg(argDefinition, activeTagData.args, index),
-          )}
+        {activeTagDefinition?.args.map((argDefinition: NunjucksParsedTagArg, index) =>
+          this.renderArg(argDefinition, activeTagData.args, index),
+        )}
 
-        {activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
+        {activeTagDefinition?.actions && activeTagDefinition?.actions?.length > 0 ? (
+          this.renderActions(activeTagDefinition.actions)
+        ) : null}
 
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
@@ -790,7 +816,8 @@ class TagEditor extends PureComponent<Props, State> {
                 position: 'relative',
               }}
               className="txt-sm pull-right icon inline-block"
-              onClick={this._handleRefresh}>
+              onClick={this._handleRefresh}
+            >
               refresh{' '}
               <i
                 className={classnames('fa fa-refresh', {
@@ -809,4 +836,7 @@ class TagEditor extends PureComponent<Props, State> {
   }
 }
 
-export default TagEditor;
+export const TagEditor: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
+  const { handleRender, handleGetRenderContext } = useNunjucks();
+  return <TagEditorInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+};

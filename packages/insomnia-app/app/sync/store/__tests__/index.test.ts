@@ -1,5 +1,5 @@
-import Store from '../index';
 import MemoryDriver from '../drivers/memory-driver';
+import Store from '../index';
 
 describe('store', () => {
   for (const Driver of [MemoryDriver]) {

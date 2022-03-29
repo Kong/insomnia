@@ -1,7 +1,7 @@
-import type { NunjucksParsedTagArg } from '../utils';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
 import type { PluginStore } from '../../plugins/context';
+import type { NunjucksParsedTagArg } from '../utils';
 
 export type PluginArgumentValue = string | number | boolean;
 

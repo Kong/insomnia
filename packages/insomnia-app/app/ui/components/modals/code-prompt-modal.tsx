@@ -1,18 +1,19 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import CodeEditor from '../codemirror/code-editor';
-import Dropdown from '../base/dropdown/dropdown';
-import DropdownButton from '../base/dropdown/dropdown-button';
-import DropdownItem from '../base/dropdown/dropdown-item';
-import DropdownDivider from '../base/dropdown/dropdown-divider';
-import MarkdownEditor from '../markdown-editor';
-import CopyButton from '../base/copy-button';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
+import { CopyButton } from '../base/copy-button';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { CodeEditor } from '../codemirror/code-editor';
+import { MarkdownEditor } from '../markdown-editor';
 
 const MODES = {
   'text/plain': 'Plain Text',
@@ -23,17 +24,6 @@ const MODES = {
   'text/html': 'HTML',
 };
 
-interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleGetRenderContext?: HandleGetRenderContext;
-  handleRender?: HandleRender;
-}
-
 interface State {
   title: string;
   defaultValue: string;
@@ -41,13 +31,13 @@ interface State {
   placeholder: string;
   hint: string;
   mode: string;
-  hideMode: boolean,
-  enableRender: boolean,
-  showCopyButton: boolean,
+  hideMode: boolean;
+  enableRender: boolean;
+  showCopyButton: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CodePromptModal extends PureComponent<Props, State> {
+export class CodePromptModal extends PureComponent<{}, State> {
   state: State = {
     title: 'Not Set',
     defaultValue: '',
@@ -58,7 +48,7 @@ class CodePromptModal extends PureComponent<Props, State> {
     hideMode: false,
     enableRender: false,
     showCopyButton: false,
-  }
+  };
 
   modal: Modal | null = null;
   _onModeChange: Function = () => {};
@@ -115,14 +105,6 @@ class CodePromptModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-      handleRender,
-      editorKeyMap,
-      editorIndentSize,
-      editorFontSize,
-      editorLineWrapping,
     } = this.props;
     const {
       submitName,
@@ -152,57 +134,41 @@ class CodePromptModal extends PureComponent<Props, State> {
               : {
                 minHeight: '10rem',
               }
-          }>
-          {showCopyButton ? (
-            <div className="pad-top-sm pad-right-sm">
-              <CopyButton content={defaultValue} className="pull-right" />
-            </div>
-          ) : null}
-          {mode === 'text/x-markdown' ? (
-            <div className="pad-sm tall">
-              <MarkdownEditor
-                tall
-                defaultValue={defaultValue}
-                placeholder={placeholder}
-                onChange={this._handleChange}
-                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                handleGetRenderContext={enableRender ? handleGetRenderContext : null}
-                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                handleRender={enableRender ? handleRender : null}
-                mode={mode}
-                keyMap={editorKeyMap}
-                indentSize={editorIndentSize}
-                fontSize={editorFontSize}
-                lineWrapping={editorLineWrapping}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                isVariableUncovered={isVariableUncovered}
-              />
-            </div>
-          ) : (
-            <div className="pad-sm pad-bottom tall">
-              <div className="form-control form-control--outlined form-control--tall tall">
-                <CodeEditor
-                  hideLineNumbers
-                  manualPrettify
-                  className="tall"
+          }
+        >
+          <NunjucksEnabledProvider disable={!enableRender}>
+            {showCopyButton ? (
+              <div className="pad-top-sm pad-right-sm">
+                <CopyButton content={defaultValue} className="pull-right" />
+              </div>
+            ) : null}
+            {mode === 'text/x-markdown' ? (
+              <div className="pad-sm tall">
+                <MarkdownEditor
+                  tall
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={this._handleChange}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
-                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                  getRenderContext={enableRender ? handleGetRenderContext : null}
-                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                  render={enableRender ? handleRender : null}
                   mode={mode}
-                  keyMap={editorKeyMap}
-                  indentSize={editorIndentSize}
-                  fontSize={editorFontSize}
-                  lineWrapping={editorLineWrapping}
                 />
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="pad-sm pad-bottom tall">
+                <div className="form-control form-control--outlined form-control--tall tall">
+                  <CodeEditor
+                    hideLineNumbers
+                    manualPrettify
+                    className="tall"
+                    defaultValue={defaultValue}
+                    placeholder={placeholder}
+                    onChange={this._handleChange}
+                    mode={mode}
+                    enableNunjucks
+                  />
+                </div>
+              </div>
+            )}
+          </NunjucksEnabledProvider>
         </ModalBody>
         <ModalFooter>
           {!hideMode ? (
@@ -220,7 +186,7 @@ class CodePromptModal extends PureComponent<Props, State> {
               ))}
             </Dropdown>
           ) : null}
-          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+          <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this.hide}>
             {submitName || 'Submit'}
           </button>
@@ -229,5 +195,3 @@ class CodePromptModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default CodePromptModal;

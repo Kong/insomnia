@@ -1,38 +1,71 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import DebouncedInput from '../base/debounced-input';
-import FileInputButton from '../base/file-input-button';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
-import PromptButton from '../base/prompt-button';
-import * as models from '../../../models/index';
-import MarkdownEditor from '../markdown-editor';
-import type { Workspace } from '../../../models/workspace';
-import type { ClientCertificate } from '../../../models/client-certificate';
-import type { ApiSpec } from '../../../models/api-spec';
-import getWorkspaceName from '../../../models/helpers/get-workspace-name';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import React, { FC, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import styled from 'styled-components';
 
-interface Props {
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import type { ApiSpec } from '../../../models/api-spec';
+import type { ClientCertificate } from '../../../models/client-certificate';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import * as models from '../../../models/index';
+import type { Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectActiveWorkspaceName } from '../../redux/selectors';
+import { DebouncedInput } from '../base/debounced-input';
+import { FileInputButton } from '../base/file-input-button';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { MarkdownEditor } from '../markdown-editor';
+import { PasswordViewer } from '../viewers/password-viewer';
+import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
+
+const CertificateFields = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  margin: 'var(--padding-sm) 0',
+});
+
+const CertificateField: FC<{
+  title: string;
+  value: string | null;
+  privateText?: boolean;
+  optional?: boolean;
+}> = ({
+  title,
+  value,
+  privateText,
+  optional,
+}) => {
+  if (optional && value === null) {
+    return null;
+  }
+
+  let display: ReactNode = value;
+  if (privateText) {
+    display = <PasswordViewer text={value} />;
+  } else {
+    display = <span className="monospace selectable">{value}</span>;
+  }
+
+  return (
+    <span className="pad-right no-wrap">
+      <strong>{title}:</strong>{' '}{display}
+    </span>
+  );
+};
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   handleRemoveWorkspace: Function;
-  handleDuplicateWorkspace: Function;
   handleClearAllResponses: Function;
 }
 
@@ -49,7 +82,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceSettingsModal extends PureComponent<Props, State> {
+export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -62,7 +95,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
     isPrivate: false,
     showDescription: false,
     defaultPreviewMode: false,
-  }
+  };
 
   _workspaceUpdate(patch: Record<string, any>) {
     models.workspace.update(this.props.workspace, patch);
@@ -89,9 +122,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
   }
 
   _handleDuplicateWorkspace() {
-    this.props.handleDuplicateWorkspace(() => {
-      this.hide();
-    });
+    const { workspace, apiSpec } = this.props;
+    showWorkspaceDuplicateModal({ workspace, apiSpec, onDone: this.hide });
   }
 
   _handleToggleCertificateForm() {
@@ -195,11 +227,11 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
       defaultPreviewMode: hasDescription,
       showAddCertificateForm: false,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderModalHeader() {
@@ -214,53 +246,38 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
 
   renderCertificate(certificate: ClientCertificate) {
     return (
-      <div key={certificate._id}>
-        <div className="row-spaced">
-          <div>
-            <span className="pad-right no-wrap">
-              <strong>PFX:</strong>{' '}
-              {certificate.pfx ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap">
-              <strong>CRT:</strong>{' '}
-              {certificate.cert ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap">
-              <strong>Key:</strong>{' '}
-              {certificate.key ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap" title={certificate.passphrase || undefined}>
-              <strong>Passphrase:</strong>{' '}
-              {certificate.passphrase ? (
-                <i className="fa fa-check" />
-              ) : (
-                <i className="fa fa-remove" />
-              )}
-            </span>
-            <span className="pad-right">
-              <strong>Host:</strong>{' '}
-              <span className="monospace selectable">{certificate.host}</span>
-            </span>
-          </div>
-          <div className="no-wrap">
-            <button
-              className="btn btn--super-compact width-auto"
-              title="Enable or disable certificate"
-              onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}>
-              {certificate.disabled ? (
-                <i className="fa fa-square-o" />
-              ) : (
-                <i className="fa fa-check-square-o" />
-              )}
-            </button>
-            <PromptButton
-              className="btn btn--super-compact width-auto"
-              confirmMessage=""
-              addIcon
-              onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}>
-              <i className="fa fa-trash-o" />
-            </PromptButton>
-          </div>
+      <div className="row-spaced" key={certificate._id}>
+        <CertificateFields>
+          <CertificateField title="Host" value={certificate.host} />
+          {certificate.pfx ? (
+            <CertificateField title="PFX" value={certificate.pfx} />
+          ) : (
+            <CertificateField title="CRT" value={certificate.cert} />
+          )}
+          <CertificateField title="Key" value={certificate.key} optional />
+          <CertificateField title="Passphrase" value={certificate.passphrase} privateText optional />
+        </CertificateFields>
+
+        <div className="no-wrap">
+          <button
+            className="btn btn--super-compact width-auto"
+            title="Enable or disable certificate"
+            onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}
+          >
+            {certificate.disabled ? (
+              <i className="fa fa-square-o" />
+            ) : (
+              <i className="fa fa-check-square-o" />
+            )}
+          </button>
+          <PromptButton
+            className="btn btn--super-compact width-auto"
+            confirmMessage=""
+            addIcon
+            onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}
+          >
+            <i className="fa fa-trash-o" />
+          </PromptButton>
         </div>
       </div>
     );
@@ -270,15 +287,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
     const {
       clientCertificates,
       workspace,
-      apiSpec,
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
+      activeWorkspaceName,
     } = this.props;
     const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
     const privateCertificates = clientCertificates.filter(c => c.isPrivate);
@@ -311,7 +320,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                   type="text"
                   delay={500}
                   placeholder="Awesome API"
-                  defaultValue={getWorkspaceName(workspace, apiSpec)}
+                  defaultValue={activeWorkspaceName}
                   onChange={this._handleRename}
                 />
               </label>
@@ -321,22 +330,15 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                 <MarkdownEditor
                   className="margin-top"
                   defaultPreviewMode={defaultPreviewMode}
-                  fontSize={editorFontSize}
-                  indentSize={editorIndentSize}
-                  keyMap={editorKeyMap}
                   placeholder="Write a description"
-                  lineWrapping={editorLineWrapping}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}
                 />
               ) : (
                 <button
                   onClick={this._handleAddDescription}
-                  className="btn btn--outlined btn--super-duper-compact">
+                  className="btn btn--outlined btn--super-duper-compact"
+                >
                   Add Description
                 </button>
               )}
@@ -346,18 +348,21 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               <PromptButton
                 onClick={this._handleRemoveWorkspace}
                 addIcon
-                className="width-auto btn btn--clicky inline-block">
+                className="width-auto btn btn--clicky inline-block"
+              >
                 <i className="fa fa-trash-o" /> Delete
               </PromptButton>
               <button
                 onClick={this._handleDuplicateWorkspace}
-                className="width-auto btn btn--clicky inline-block space-left">
+                className="width-auto btn btn--clicky inline-block space-left"
+              >
                 <i className="fa fa-copy" /> Duplicate
               </button>
               <PromptButton
                 onClick={this._handleClearAllResponses}
                 addIcon
-                className="width-auto btn btn--clicky inline-block space-left">
+                className="width-auto btn btn--clicky inline-block space-left"
+              >
                 <i className="fa fa-trash-o" /> Clear All Responses
               </PromptButton>
             </div>
@@ -390,7 +395,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                 <div className="text-center">
                   <button
                     className="btn btn--clicky auto"
-                    onClick={this._handleToggleCertificateForm}>
+                    onClick={this._handleToggleCertificateForm}
+                  >
                     New Certificate
                   </button>
                 </div>
@@ -486,7 +492,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                   <button
                     type="button"
                     className="btn btn--super-compact space-right"
-                    onClick={this._handleToggleCertificateForm}>
+                    onClick={this._handleToggleCertificateForm}
+                  >
                     Cancel
                   </button>
                   <button className="btn btn--clicky space-right" type="submit">
@@ -512,4 +519,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
   }
 }
 
-export default WorkspaceSettingsModal;
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+});
+
+export const WorkspaceSettingsModal = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedWorkspaceSettingsModal);

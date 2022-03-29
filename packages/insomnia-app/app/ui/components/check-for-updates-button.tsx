@@ -1,6 +1,7 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
@@ -15,12 +16,12 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CheckForUpdatesButton extends PureComponent<Props, State> {
+export class CheckForUpdatesButton extends PureComponent<Props, State> {
   state: State = {
     status: '',
     checking: false,
     updateAvailable: false,
-  }
+  };
 
   _listenerCheckComplete(_e, updateAvailable: true, status: string) {
     this.setState({
@@ -66,5 +67,3 @@ class CheckForUpdatesButton extends PureComponent<Props, State> {
     );
   }
 }
-
-export default CheckForUpdatesButton;

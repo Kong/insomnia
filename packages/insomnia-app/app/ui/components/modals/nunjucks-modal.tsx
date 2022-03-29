@@ -1,19 +1,17 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import VariableEditor from '../templating/variable-editor';
-import TagEditor from '../templating/tag-editor';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Workspace } from '../../../models/workspace';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import { TagEditor } from '../templating/tag-editor';
+import { VariableEditor } from '../templating/variable-editor';
 
 interface Props {
   uniqueKey: string;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   workspace: Workspace;
 }
 
@@ -22,10 +20,10 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class NunjucksModal extends PureComponent<Props, State> {
+export class NunjucksModal extends PureComponent<Props, State> {
   state: State = {
     defaultTemplate: '',
-  }
+  };
 
   _onDone: Function | null = null;
   _currentTemplate: string | null = null;
@@ -68,32 +66,17 @@ class NunjucksModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleRender, handleGetRenderContext, uniqueKey, workspace } = this.props;
+    const { uniqueKey, workspace } = this.props;
     const { defaultTemplate } = this.state;
     let editor: JSX.Element | null = null;
     let title = '';
 
     if (defaultTemplate.indexOf('{{') === 0) {
       title = 'Variable';
-      editor = (
-        <VariableEditor
-          onChange={this._handleTemplateChange}
-          defaultValue={defaultTemplate}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-        />
-      );
+      editor = <VariableEditor onChange={this._handleTemplateChange} defaultValue={defaultTemplate} />;
     } else if (defaultTemplate.indexOf('{%') === 0) {
       title = 'Tag';
-      editor = (
-        <TagEditor
-          onChange={this._handleTemplateChange}
-          defaultValue={defaultTemplate}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          workspace={workspace}
-        />
-      );
+      editor = <TagEditor onChange={this._handleTemplateChange} defaultValue={defaultTemplate} workspace={workspace} />;
     }
 
     return (
@@ -111,5 +94,3 @@ class NunjucksModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default NunjucksModal;

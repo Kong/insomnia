@@ -6,9 +6,11 @@ export interface StringInfo {
 type StringId =
   | 'collection'
   | 'document'
-  | 'home'
-  | 'space'
+  | 'project'
   | 'workspace'
+  | 'defaultProject'
+  | 'localProject'
+  | 'remoteProject'
   ;
 
 export const strings: Record<StringId, StringInfo> = {
@@ -20,16 +22,24 @@ export const strings: Record<StringId, StringInfo> = {
     singular: 'Document',
     plural: 'Documents',
   },
-  home: {
-    singular: 'Dashboard',
-    plural: 'Dashboards',
-  },
-  space: {
-    singular: 'Space',
-    plural: 'Spaces',
+  project: {
+    singular: 'Project',
+    plural: 'Projects',
   },
   workspace: {
     singular: 'Workspace',
     plural: 'Workspaces',
+  },
+  defaultProject: {
+    singular: 'Default',
+    plural: 'Default',
+  },
+  localProject: {
+    singular: 'Local',
+    plural: 'Local',
+  },
+  remoteProject: {
+    singular: 'Remote',
+    plural: 'Remote',
   },
 };

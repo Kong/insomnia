@@ -1,5 +1,20 @@
+const {
+  ERROR,
+  OFF,
+  SUCCESSOR,
+  TYPESCRIPT_CONVERSION,
+  TYPESCRIPT_EXTENSION,
+  UNKNOWN,
+  WARN,
+} = require('eslint-config-helpers');
+
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
+  settings: {
+    react: {
+      version: '16.8', // note: remember to always keep this in sync with `"react": "^16.8.3",` which is present in any package.json of a project using React.
+    },
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
@@ -15,7 +30,6 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
-    'semistandard',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
   ],
@@ -27,6 +41,8 @@ module.exports = {
     'json',
     'filenames',
     'react-hooks',
+    'import',
+    'simple-import-sort',
   ],
   globals: {
     __DEV__: true,
@@ -49,65 +65,96 @@ module.exports = {
     {
       files: ['*.js'],
       rules: {
-        '@typescript-eslint/no-var-requires': 'off',
+        '@typescript-eslint/no-var-requires': OFF(UNKNOWN),
       },
     },
   ],
   rules: {
-    'comma-dangle': ['error', 'always-multiline'],
-    'object-curly-spacing': ['error', 'always'],
-    'space-in-parens': 'error',
-    'array-bracket-spacing': 'error',
-    'comma-spacing': 'error',
-    indent: ['error', 2, { SwitchCase: 1 }],
-    'no-var': 'error',
-    'no-async-promise-executor': 'off',
-    'no-case-declarations': 'off',
-    'no-prototype-builtins': 'off',
-    'no-duplicate-imports': 'off',
-    'react/jsx-uses-react': 'error',
-    'react/jsx-uses-vars': 'error',
-    'react/prop-types': 'off',
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'error',
-    camelcase: ['error', { allow: ['__export_format', '__export_date', '__export_source'] }],
-    'space-before-function-paren': [
-      'error',
-      {
-        anonymous: 'never',
-        named: 'never',
-        asyncArrow: 'always',
-      },
-    ],
-    'filenames/match-exported': [
-      'error',
-      'kebab',
-    ],
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
-    '@typescript-eslint/ban-types': 'off',
-    '@typescript-eslint/no-empty-function': 'off',
-    '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
-    'spaced-comment': ['error', 'always', {
+    'array-bracket-spacing': ERROR,
+    'brace-style': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'camelcase': [ERROR, { allow: ['__export_format', '__export_date', '__export_source'] }],
+    'comma-dangle': [ERROR, 'always-multiline'],
+    'comma-spacing': ERROR,
+    'consistent-return': OFF('found to be too many false positives'),
+    'default-case': ERROR,
+    'default-case-last': ERROR,
+    'filenames/match-exported': [ERROR, 'kebab'],
+    'indent': [ERROR, 2, { SwitchCase: 1 }],
+    'eol-last': [ERROR, 'always'],
+    'eqeqeq': [ERROR, 'smart'],
+    'arrow-parens': [ERROR, 'as-needed'],
+    'arrow-spacing': ERROR,
+    'keyword-spacing': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'no-async-promise-executor': OFF(UNKNOWN),
+    'no-case-declarations': OFF(UNKNOWN),
+    'no-duplicate-imports': OFF(UNKNOWN),
+    'no-prototype-builtins': OFF(UNKNOWN),
+    'no-redeclare': OFF(UNKNOWN),
+    'no-unused-vars': OFF(UNKNOWN),
+    'no-use-before-define': OFF(UNKNOWN),
+    'no-var': ERROR,
+    'no-trailing-spaces': ERROR,
+    'no-multiple-empty-lines': [ERROR, { 'max': 1, 'maxEOF': 0 }],
+    'object-curly-spacing': [ERROR, 'always'],
+    'quotes': OFF(UNKNOWN),
+    'semi': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'space-before-function-paren': [ERROR, { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
+    'space-infix-ops': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'space-unary-ops': ERROR,
+    'space-in-parens': ERROR,
+    'spaced-comment': [ERROR, 'always', {
       exceptions: ['/', '*', '-', '* '], // for ASCII art :)
       markers: [
         '/', // for TypeScript directives, doxygen, vsdoc, etc. (which use `///`)
         '?', // for Quokka
       ],
     }],
-    '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
-    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-    quotes: 'off',
-    '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
-    'no-use-before-define': 'off',
-    '@typescript-eslint/no-use-before-define': 'error',
-    'no-redeclare': 'off',
-    '@typescript-eslint/no-redeclare': 'error',
-    semi: ['error', 'always'],
-    'react/no-find-dom-node': 'off',
-    'react/no-unescaped-entities': 'off', // TSCONVERSION
-    'react/jsx-first-prop-new-line': ['error', 'multiline'],
-    'react/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
+
+    'filenames/match-exported': [ERROR, 'kebab'],
+
+    'react/no-find-dom-node': OFF(UNKNOWN),
+    'react/no-unescaped-entities': OFF(TYPESCRIPT_CONVERSION),
+    'react/jsx-first-prop-new-line': [ERROR, 'multiline'],
+    'react/jsx-max-props-per-line': [ERROR, { maximum: 1, when: 'multiline' }],
+    'react/jsx-uses-react': ERROR,
+    'react/jsx-uses-vars': ERROR,
+    'react/jsx-indent': [ERROR, 2],
+    'react/jsx-indent-props': [ERROR, 2],
+    'react/prop-types': OFF(UNKNOWN),
+    'react/function-component-definition': [ERROR, {
+      'namedComponents':  'arrow-function',
+      'unnamedComponents': 'arrow-function',
+    }],
+    'react/jsx-max-props-per-line': [ERROR, { 'maximum': 1, 'when': 'multiline' }],
+    'react/jsx-closing-bracket-location': [ERROR, 'line-aligned'],
+    'react/prefer-stateless-function': ERROR,
+    'react/jsx-key': [ERROR, { 'checkFragmentShorthand': true }],
+    'react/no-array-index-key': WARN(UNKNOWN),
+    'react/self-closing-comp': ERROR,
+
+    'react-hooks/exhaustive-deps': [ERROR, {
+      // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+      'additionalHooks': '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+    }],
+    'react-hooks/rules-of-hooks': ERROR,
+
+    '@typescript-eslint/array-type': [ERROR, { default: 'array', readonly: 'array' }],
+    '@typescript-eslint/ban-types': OFF(UNKNOWN),
+    '@typescript-eslint/brace-style': [ERROR, '1tbs', { 'allowSingleLine': true }],
+    '@typescript-eslint/consistent-type-definitions': [ERROR, 'interface'],
+    '@typescript-eslint/explicit-module-boundary-types': OFF(UNKNOWN),
+    '@typescript-eslint/keyword-spacing': ERROR,
+    '@typescript-eslint/member-delimiter-style': ERROR,
+    '@typescript-eslint/no-empty-function': OFF(UNKNOWN),
+    '@typescript-eslint/no-empty-interface': [ERROR, { 'allowSingleExtends': true }],
+    '@typescript-eslint/no-namespace': [ERROR, { allowDeclarations: true }],
+    '@typescript-eslint/no-redeclare': ERROR,
+    '@typescript-eslint/no-unused-vars': [ERROR, { ignoreRestSiblings: true }],
+    '@typescript-eslint/no-use-before-define': ERROR,
+    '@typescript-eslint/space-infix-ops': ERROR,
+    '@typescript-eslint/semi': [ERROR, 'always'],
+    '@typescript-eslint/quotes': [ERROR, 'single', { avoidEscape: true }],
+
+    'simple-import-sort/imports': ERROR,
   },
 };

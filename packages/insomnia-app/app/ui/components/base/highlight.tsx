@@ -1,7 +1,8 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import fuzzySort from 'fuzzysort';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { fuzzyMatch } from '../../../common/misc';
 
 interface Props {
@@ -11,7 +12,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Highlight extends PureComponent<Props> {
+export class Highlight extends PureComponent<Props> {
   render() {
     const { search, text, blankValue, ...otherProps } = this.props;
     // Match loose here to make sure our highlighting always works
@@ -40,5 +41,3 @@ class Highlight extends PureComponent<Props> {
     );
   }
 }
-
-export default Highlight;

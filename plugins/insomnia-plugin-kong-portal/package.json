@@ -1,6 +1,7 @@
 {
+  "private": true,
   "name": "insomnia-plugin-kong-portal",
-  "version": "2.3.0",
+  "version": "2.10.0-beta.0",
   "main": "dist/index.js",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
@@ -19,7 +20,8 @@
   },
   "insomnia": {
     "name": "kong-portal",
-    "description": "Deploy API specifications to Kong Portal"
+    "description": "Deploy API specifications to Kong Portal",
+    "unlisted": true
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -30,13 +32,12 @@
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
     "autobind-decorator": "^2.4.0",
-    "insomnia-components": "2.3.0",
-    "react": "^16.8.3",
-    "react-dom": "^16.8.3",
+    "insomnia-components": "2.10.0-beta.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "styled-components": "^4.4.1",
     "url-join": "^4.0.1",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
-  },
-  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
+  }
 }

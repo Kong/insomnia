@@ -1,9 +1,10 @@
 import { setDefaultProtocol } from 'insomnia-url';
-import * as c from './constants';
-import { responseToObject } from './misc';
-import { sendWithSettings } from '../network';
+
 import * as models from '../../models/index';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
+import { sendWithSettings } from '../network';
+import * as c from './constants';
+import { responseToObject } from './misc';
 
 export default async function(
   requestId: string,
@@ -92,6 +93,7 @@ export default async function(
   const results = responseToObject(bodyBuffer.toString('utf8'), [
     c.P_ACCESS_TOKEN,
     c.P_ID_TOKEN,
+    c.P_REFRESH_TOKEN,
     c.P_TOKEN_TYPE,
     c.P_EXPIRES_IN,
     c.P_SCOPE,

@@ -1,8 +1,9 @@
-import { renderHook } from '@testing-library/react-hooks';
-import useProtoFileReload from '../use-proto-file-reload';
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { requestStateSchema } from '../../../../context/grpc/__schemas__';
+import { renderHook } from '@testing-library/react-hooks';
+
 import { grpcActions } from '../../../../context/grpc';
+import { requestStateSchema } from '../../../../context/grpc/__schemas__';
+import useProtoFileReload from '../use-proto-file-reload';
 
 jest.mock('../../../../context/grpc');
 

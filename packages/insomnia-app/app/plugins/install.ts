@@ -1,22 +1,45 @@
+import childProcess from 'child_process';
 import * as electron from 'electron';
 import fs from 'fs';
 import fsx from 'fs-extra';
-import childProcess from 'child_process';
-import { isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
 import mkdirp from 'mkdirp';
 import path from 'path';
+
+import { isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
 import { getTempDir } from '../common/electron-helpers';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
 interface InsomniaPlugin {
-  insomnia: any;
+  // Insomnia attribute from package.json
+  insomnia: {
+    name: string;
+    displayName: string;
+    description: string;
+
+    // Used by the plugin hub, not currently used by Insomnia app
+    // Each image is relative to package root
+    images?: {
+      icon?: string;
+      cover?: string;
+    };
+
+    unlisted?: boolean;
+
+    publisher?: {
+      name: string;
+      // absolute URL
+      icon: string;
+    };
+  };
+
+  // NPM specific properties
   name: string;
   version: string;
   dist: {
     shasum: string;
     tarball: string;
-  }
+  };
 }
 
 export default async function(lookupName: string) {
@@ -33,10 +56,11 @@ export default async function(lookupName: string) {
       mkdirp.sync(pluginDir);
 
       // Download the module
-      const request = electron.remote.net.request(info.dist.tarball);
+      const request = electron.net.request(info.dist.tarball);
       request.on('error', err => {
         reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
       });
+
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
@@ -224,7 +248,7 @@ export function isDeprecatedDependencies(str: string) {
 }
 
 function _getYarnPath() {
-  const { app } = electron.remote || electron;
+  const { app } = process.type === 'renderer' ? window : electron;
 
   // TODO: This is brittle. Make finding this more robust.
   if (isDevelopment()) {

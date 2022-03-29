@@ -1,12 +1,13 @@
-import path from 'path';
-import NeDB from 'nedb';
-import type { BaseModel } from '../models/types';
-import { Database, DbAdapter, emptyDb } from '../index';
 import fs from 'fs';
+import NeDB from 'nedb';
+import path from 'path';
+
 import { UNKNOWN, UNKNOWN_OBJ } from '../../types';
+import { Database, DbAdapter, emptyDb } from '../index';
+import type { BaseModel } from '../models/types';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
-  // Sanity check - do db files exist?
+  // Confirm if db files exist
   if (!fs.existsSync(path.join(dir, 'insomnia.Workspace.db'))) {
     return null;
   }

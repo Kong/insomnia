@@ -1,21 +1,23 @@
+import { Button, Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { FC } from 'react';
-import { VCS } from '../../../sync/vcs/vcs';
-import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
-import HelpTooltip from '../help-tooltip';
-import { strings } from '../../../common/strings';
-import { isLoggedIn } from '../../../account/session';
-import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { useSelector } from 'react-redux';
-import { selectActiveSpace } from '../../redux/selectors';
+
+import { isLoggedIn } from '../../../account/session';
+import { strings } from '../../../common/strings';
+import { isRemoteProject } from '../../../models/project';
+import { VCS } from '../../../sync/vcs/vcs';
+import { useRemoteWorkspaces } from '../../hooks/workspace';
+import { selectActiveProject } from '../../redux/selectors';
+import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
   className?: string;
   vcs?: VCS | null;
 }
 
-const PullButton: FC<{disabled?: boolean, className?: string}> = ({ disabled, className }) => (
+const PullButton: FC<{disabled?: boolean; className?: string}> = ({ disabled, className }) => (
   <Button className={className} disabled={disabled}>
-      Pull
+    Pull
     <i className="fa fa-caret-down pad-left-sm" />
   </Button>
 );
@@ -24,19 +26,24 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
   const {
     loading,
     refresh,
-    missingProjects,
-    pullingProjects,
+    missingBackendProjects,
+    pullingBackendProjects,
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  const isRemoteSpace = Boolean(useSelector(selectActiveSpace)?.remoteId);
-
-  // Don't show the pull dropdown if we are not in a remote space
-  if (!isRemoteSpace) {
+  const project = useSelector(selectActiveProject);
+  if (!project) {
     return null;
   }
 
-  // Show a disabled button if remote space but not logged in
+  const isRemote = isRemoteProject(project);
+
+  // Don't show the pull dropdown if we are not in a remote project
+  if (!isRemote) {
+    return null;
+  }
+
+  // Show a disabled button if remote project but not logged in
   if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">
@@ -55,22 +62,23 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
         </HelpTooltip>{' '}
         {loading && <i className="fa fa-spin fa-refresh" />}
       </DropdownDivider>
-      {missingProjects.length === 0 && (
+      {missingBackendProjects.length === 0 && (
         <DropdownItem disabled>Nothing to pull</DropdownItem>
       )}
-      {missingProjects.map(p => (
+      {missingBackendProjects.map(p => (
         <DropdownItem
           key={p.id}
           stayOpenAfterClick
           value={p}
           onClick={pull}
           icon={
-            pullingProjects[p.id] ? (
+            pullingBackendProjects[p.id] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (
               <i className="fa fa-cloud-download" />
             )
-          }>
+          }
+        >
           <span>
             Pull <strong>{p.name}</strong>
           </span>

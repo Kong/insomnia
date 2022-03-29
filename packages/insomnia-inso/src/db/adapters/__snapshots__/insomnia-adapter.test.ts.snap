@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`insomniaAdapter() should throw InsoError if malformed yaml content: empty.yaml 1`] = `"Failed to parse empty.yaml."`;
+
+exports[`insomniaAdapter() should throw InsoError if malformed yaml content: malformed.yaml 1`] = `"Failed to parse malformed.yaml."`;
+
+exports[`insomniaAdapter() should throw InsoError if malformed yaml content: no-export-format.yaml 1`] = `"Expected an Insomnia v4 export file; unexpected data found in no-export-format.yaml."`;
+
+exports[`insomniaAdapter() should throw InsoError if malformed yaml content: v3-export-format.yaml 1`] = `"Expected an Insomnia v4 export file; found an Insomnia v3 export file in v3-export-format.yaml."`;

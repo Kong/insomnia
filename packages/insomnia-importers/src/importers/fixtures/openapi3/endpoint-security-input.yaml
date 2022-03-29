@@ -39,7 +39,6 @@ components:
       in: query
     OAuth2-AuthorizationCode:
       type: oauth2
-      scheme: bearer
       flows:
         authorizationCode:
           authorizationUrl: https://api.server.test/v1/auth
@@ -49,7 +48,6 @@ components:
             write:something: Write all the data
     OAuth2-Implicit:
       type: oauth2
-      scheme: bearer
       flows:
         implicit:
           authorizationUrl: https://api.server.test/v1/auth
@@ -58,7 +56,6 @@ components:
             write:something: Write all the data
     OAuth2-ClientCredentials:
       type: oauth2
-      scheme: bearer
       flows:
         clientCredentials:
           tokenUrl: https://api.server.test/v1/token
@@ -67,7 +64,6 @@ components:
             write:something: Write all the data
     OAuth2-Password:
       type: oauth2
-      scheme: bearer
       flows:
         password:
           tokenUrl: https://api.server.test/v1/token

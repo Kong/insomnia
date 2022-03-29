@@ -1,8 +1,11 @@
-import * as networkUtils from '../network';
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import electron from 'electron';
 import fs from 'fs';
+import { HttpVersions } from 'insomnia-common';
 import { join as pathJoin, resolve as pathResolve } from 'path';
-import { getRenderedRequestAndContext } from '../../common/render';
-import * as models from '../../models';
+
+import { globalBeforeEach } from '../../__jest__/before-each';
 import {
   AUTH_AWS_IAM,
   AUTH_BASIC,
@@ -11,21 +14,26 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  HttpVersions,
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
-import { globalBeforeEach } from '../../__jest__/before-each';
+import { getRenderedRequestAndContext } from '../../common/render';
+import * as models from '../../models';
+import { _parseHeaders } from '../libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../multipart';
-const CONTEXT = {};
+import * as networkUtils from '../network';
+window.app = electron.app;
 
-const getRenderedRequest = async (...args) => (await getRenderedRequestAndContext(...args)).request;
+const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
 describe('actuallySend()', () => {
-  beforeEach(globalBeforeEach);
+  beforeEach(async () => {
+    await globalBeforeEach();
+    await models.project.all();
+  });
 
   it('sends a generic request', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -89,10 +97,9 @@ describe('actuallySend()', () => {
         password: 'pass',
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -134,7 +141,7 @@ describe('actuallySend()', () => {
 
   it('sends a urlencoded', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -164,10 +171,9 @@ describe('actuallySend()', () => {
       },
       url: 'http://localhost',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -203,7 +209,7 @@ describe('actuallySend()', () => {
 
   it('skips sending and storing cookies with setting', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -264,10 +270,9 @@ describe('actuallySend()', () => {
       settingStoreCookies: false,
       settingSendCookies: false,
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -303,7 +308,7 @@ describe('actuallySend()', () => {
 
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     await models.cookieJar.create({
       parentId: workspace._id,
     });
@@ -324,10 +329,9 @@ describe('actuallySend()', () => {
         fileName,
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -366,7 +370,7 @@ describe('actuallySend()', () => {
 
   it('sends multipart form data', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     await models.cookieJar.create({
       parentId: workspace._id,
     });
@@ -404,10 +408,9 @@ describe('actuallySend()', () => {
         ],
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -458,17 +461,16 @@ describe('actuallySend()', () => {
 
   it('uses unix socket', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
       url: 'http://unix:/my/socket:/my/path',
       method: 'GET',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -498,17 +500,16 @@ describe('actuallySend()', () => {
 
   it('uses works with HEAD', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
       url: 'http://localhost:3000/foo/bar',
       method: 'HEAD',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -537,17 +538,16 @@ describe('actuallySend()', () => {
 
   it('uses works with "unix" host', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
       url: 'http://unix:3000/my/path',
       method: 'GET',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -576,7 +576,7 @@ describe('actuallySend()', () => {
 
   it('uses netrc', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -584,10 +584,9 @@ describe('actuallySend()', () => {
         type: AUTH_NETRC,
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -607,8 +606,120 @@ describe('actuallySend()', () => {
         NOPROGRESS: true,
         PROXY: '',
         TIMEOUT_MS: 0,
-        NETRC: 'Required',
+        NETRC: CurlNetrc.Required,
         URL: '',
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true,
+      },
+    });
+  });
+
+  it('disables ssl verification when configured to do so', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.getOrCreate();
+    const cookies = [
+      {
+        creation: new Date('2016-10-05T04:40:49.505Z'),
+        key: 'foo',
+        value: 'barrrrr',
+        expires: new Date('2096-10-12T04:40:49.000Z'),
+        domain: 'notlocalhost',
+        path: '/',
+        hostOnly: true,
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
+      {
+        creation: new Date('2016-10-05T04:40:49.505Z'),
+        key: 'foo',
+        value: 'bar',
+        expires: new Date('2096-10-12T04:40:49.000Z'),
+        domain: 'localhost',
+        path: '/',
+        hostOnly: true,
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
+    ];
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
+    await models.cookieJar.update(cookieJar, {
+      parentId: workspace._id,
+      cookies,
+    });
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [
+        {
+          name: 'Content-Type',
+          value: 'application/json',
+        },
+        {
+          name: 'Empty',
+          value: '',
+        },
+      ],
+      parameters: [
+        {
+          name: 'foo bar',
+          value: 'hello&world',
+        },
+      ],
+      method: 'POST',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: [
+          {
+            name: 'foo',
+            value: 'bar',
+          },
+        ],
+      },
+      url: 'http://localhost',
+      authentication: {
+        type: AUTH_BASIC,
+        username: 'user',
+        password: 'pass',
+      },
+    });
+    const renderedRequest = await getRenderedRequest({ request });
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      workspace,
+      settings,
+      null,
+      false
+    );
+    const bodyBuffer = models.response.getBodyBuffer(response);
+    const body = JSON.parse(String(bodyBuffer));
+    expect(body).toEqual({
+      meta: {},
+      features: {
+        Raw: true,
+      },
+      options: {
+        COOKIELIST: [
+          'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
+          'localhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbar',
+        ],
+        ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
+        FOLLOWLOCATION: true,
+        HTTPHEADER: [
+          'Content-Type: application/json',
+          'Empty;',
+          'Expect:',
+          'Transfer-Encoding:',
+          'Authorization: Basic dXNlcjpwYXNz',
+          'Accept: */*',
+          'Accept-Encoding:',
+        ],
+        NOPROGRESS: true,
+        POSTFIELDS: 'foo=bar',
+        POST: 1,
+        PROXY: '',
+        SSL_VERIFYHOST: 0, // should disbale SSL
+        SSL_VERIFYPEER: 0, // should disbale SSL
+        TIMEOUT_MS: 0,
+        URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
       },
@@ -617,88 +728,24 @@ describe('actuallySend()', () => {
 
   it('sets HTTP version', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
     });
-    const renderedRequest = await getRenderedRequest(request);
-    const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+    const renderedRequest = await getRenderedRequest({ request });
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, workspace, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
-    const responseV11 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V1_1,
-    });
-    const responseV2 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V2_0,
-    });
-    const responseV3 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.v3,
-    });
-    const responseDefault = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.default,
-    });
-    const responseInvalid = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      // @ts-expect-error intentionally invalid
-      preferredHttpVersion: 'blah',
-    });
-    const r = models.response;
-    expect(JSON.parse(String(r.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV11))).options.HTTP_VERSION).toBe('V1_1');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV2))).options.HTTP_VERSION).toBe('V2_0');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV3))).options.HTTP_VERSION).toBe('v3');
-    expect(JSON.parse(String(r.getBodyBuffer(responseDefault))).options.HTTP_VERSION).toBe(undefined);
-    expect(JSON.parse(String(r.getBodyBuffer(responseInvalid))).options.HTTP_VERSION).toBe(undefined);
-  });
-
-  it('requests can be cancelled by requestId', async () => {
-    // GIVEN
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
-    const request1 = Object.assign(models.request.init(), {
-      _id: 'req_15',
-      parentId: workspace._id,
-      url: 'http://unix:3000/requestA',
-      method: 'GET',
-    });
-    const request2 = Object.assign(models.request.init(), {
-      _id: 'req_10',
-      parentId: workspace._id,
-      url: 'http://unix:3000/requestB',
-      method: 'GET',
-    });
-    const renderedRequest1 = await getRenderedRequest(request1);
-    const renderedRequest2 = await getRenderedRequest(request2);
-
-    // WHEN
-    const response1Promise = networkUtils._actuallySend(
-      renderedRequest1,
-      CONTEXT,
-      workspace,
-      settings,
-    );
-
-    const response2Promise = networkUtils._actuallySend(
-      renderedRequest2,
-      CONTEXT,
-      workspace,
-      settings,
-    );
-
-    await networkUtils.cancelRequestById(renderedRequest1._id);
-    const response1 = await response1Promise;
-    const response2 = await response2Promise;
-    // THEN
-    expect(response1.statusMessage).toBe('Cancelled');
-    expect(response2.statusMessage).toBe('OK');
-    expect(networkUtils.hasCancelFunctionForId(request1._id)).toBe(false);
-    expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(1);
+    expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
+    expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
+    expect(networkUtils.getHttpVersion(HttpVersions.v3).curlHttpVersion).toBe(CurlHttpVersion.v3);
+    expect(networkUtils.getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
+    expect(networkUtils.getHttpVersion('blah').curlHttpVersion).toBe(undefined);
   });
 });
 
@@ -801,7 +848,7 @@ describe('_parseHeaders', () => {
   const minimalHeaders = ['HTTP/1.1 301', ''];
 
   it('Parses single response headers', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
+    expect(_parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -849,7 +896,7 @@ describe('_parseHeaders', () => {
   });
 
   it('Parses Windows newlines', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
+    expect(_parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -898,7 +945,7 @@ describe('_parseHeaders', () => {
 
   it('Parses multiple responses', () => {
     const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
-    expect(networkUtils._parseHeaders(Buffer.from(blobs))).toEqual([
+    expect(_parseHeaders(Buffer.from(blobs))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',

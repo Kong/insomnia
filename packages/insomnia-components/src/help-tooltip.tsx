@@ -1,7 +1,8 @@
-import React, { CSSProperties, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Tooltip } from './tooltip';
+import React, { CSSProperties, PureComponent, ReactNode } from 'react';
+
 import { SvgIcon } from './svg-icon';
+import { Tooltip } from './tooltip';
 
 interface Props {
   children: ReactNode;

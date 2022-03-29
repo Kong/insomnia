@@ -1,7 +1,8 @@
 import React, { FunctionComponent } from 'react';
 import styled, { css } from 'styled-components';
-import { Button } from './button';
+
 import type { ButtonProps } from './button';
+import { Button } from './button';
 
 export interface CircleButtonProps extends ButtonProps {
   height?: string;

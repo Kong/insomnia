@@ -1,7 +1,8 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import KeydownBinder from '../keydown-binder';
+import { KeydownBinder } from '../keydown-binder';
 
 export const shouldSave = (oldValue, newValue, preventBlank = false) => {
   // Should not save if length = 0 and we want to prevent blank
@@ -19,15 +20,15 @@ export const shouldSave = (oldValue, newValue, preventBlank = false) => {
 };
 
 interface Props {
-  onSubmit: (value?: string) => void,
-  value: string,
-  fallbackValue?: string,
-  blankValue?: string,
-  renderReadView?: Function,
-  singleClick?: boolean,
-  onEditStart?: Function,
-  className?: string,
-  preventBlank?: boolean,
+  onSubmit: (value?: string) => void;
+  value: string;
+  fallbackValue?: string;
+  blankValue?: string;
+  renderReadView?: Function;
+  singleClick?: boolean;
+  onEditStart?: Function;
+  className?: string;
+  preventBlank?: boolean;
 }
 
 interface State {
@@ -35,10 +36,10 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Editable extends PureComponent<Props, State> {
+export class Editable extends PureComponent<Props, State> {
   state: State = {
     editing: false,
-  }
+  };
 
   _input: HTMLInputElement | null = null;
 
@@ -57,8 +58,8 @@ class Editable extends PureComponent<Props, State> {
       editing: true,
     });
     setTimeout(() => {
-      this._input && this._input.focus();
-      this._input && this._input.select();
+      this._input?.focus();
+      this._input?.select();
     });
 
     if (this.props.onEditStart) {
@@ -87,14 +88,14 @@ class Editable extends PureComponent<Props, State> {
     );
   }
 
-  _handleEditKeyDown(e) {
-    if (e.keyCode === 13) {
+  _handleEditKeyDown(event: KeyboardEvent) {
+    if (event.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
-    } else if (e.keyCode === 27) {
+    } else if (event.keyCode === 27) {
       // Pressed Escape
       // Prevent bubbling to modals and other escape listeners.
-      e.stopPropagation();
+      event.stopPropagation();
 
       if (this._input) {
         // Set the input to the original value
@@ -153,5 +154,3 @@ class Editable extends PureComponent<Props, State> {
     }
   }
 }
-
-export default Editable;

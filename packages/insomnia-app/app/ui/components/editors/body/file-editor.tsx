@@ -1,11 +1,11 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../../common/constants';
 import fs from 'fs';
-import electron from 'electron';
-import FileInputButton from '../../base/file-input-button';
-import PromptButton from '../../base/prompt-button';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import * as misc from '../../../../common/misc';
+import { FileInputButton } from '../../base/file-input-button';
+import { PromptButton } from '../../base/prompt-button';
 
 interface Props {
   onChange: (path: string) => void;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FileEditor extends PureComponent<Props> {
+export class FileEditor extends PureComponent<Props> {
   _handleResetFile() {
     this.props.onChange('');
   }
@@ -25,7 +25,7 @@ class FileEditor extends PureComponent<Props> {
   render() {
     const { path } = this.props;
     // Replace home path with ~/ to make the path shorter
-    const homeDirectory = electron.remote.app.getPath('home');
+    const homeDirectory = window.app.getPath('home');
     const pathDescription = path.replace(homeDirectory, '~');
     let sizeDescription = '';
 
@@ -55,7 +55,8 @@ class FileEditor extends PureComponent<Props> {
           <PromptButton
             className="btn btn--super-compact"
             disabled={!path}
-            onClick={this._handleResetFile}>
+            onClick={this._handleResetFile}
+          >
             Reset File
           </PromptButton>
           &nbsp;&nbsp;
@@ -69,5 +70,3 @@ class FileEditor extends PureComponent<Props> {
     );
   }
 }
-
-export default FileEditor;

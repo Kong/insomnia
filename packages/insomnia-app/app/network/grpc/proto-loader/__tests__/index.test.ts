@@ -1,8 +1,9 @@
-import { loadMethods } from '../index';
-import writeProtoFile from '../write-proto-file';
 import path from 'path';
+
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import * as models from '../../../../models';
+import { loadMethods } from '../index';
+import writeProtoFile from '../write-proto-file';
 
 jest.mock('../write-proto-file', () => ({
   __esModule: true,

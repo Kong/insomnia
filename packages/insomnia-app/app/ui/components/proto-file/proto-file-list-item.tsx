@@ -1,14 +1,15 @@
+import { AsyncButton, Button } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
+
 import type { ProtoFile } from '../../../models/proto-file';
+import { Editable } from '../base/editable';
 import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,
   SelectProtoFileHandler,
   UpdateProtoFileHandler,
 } from './proto-file-list';
-import { Button, AsyncButton } from 'insomnia-components';
-import Editable from '../base/editable';
-import ProtoListItem from './proto-list-item';
+import { ProtoListItem } from './proto-list-item';
 
 interface Props {
   protoFile: ProtoFile;
@@ -22,7 +23,7 @@ interface Props {
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
 
-const ProtoFileListItem: FunctionComponent<Props> = ({
+export const ProtoFileListItem: FunctionComponent<Props> = ({
   protoFile,
   isSelected,
   handleSelect,
@@ -60,7 +61,8 @@ const ProtoFileListItem: FunctionComponent<Props> = ({
       selectable
       isSelected={isSelected}
       onClick={handleSelectCallback}
-      indentLevel={indentLevel}>
+      indentLevel={indentLevel}
+    >
       {isReadOnly && (
         <span className="wide">
           <i className="fa fa-file-o pad-right-sm" />
@@ -79,14 +81,16 @@ const ProtoFileListItem: FunctionComponent<Props> = ({
               title="Re-upload Proto File"
               onClick={handleUpdateCallback}
               loadingNode={spinner}
-              className="space-right">
+              className="space-right"
+            >
               <i className="fa fa-upload" />
             </AsyncButton>
             <Button
               variant="text"
               title="Delete Proto File"
               bg="danger"
-              onClick={handleDeleteCallback}>
+              onClick={handleDeleteCallback}
+            >
               <i className="fa fa-trash-o" />
             </Button>
           </div>
@@ -95,5 +99,3 @@ const ProtoFileListItem: FunctionComponent<Props> = ({
     </ProtoListItem>
   );
 };
-
-export default ProtoFileListItem;

@@ -1,10 +1,11 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import MethodTag from '../tags/method-tag';
-import type { Request } from '../../../models/request';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import GrpcTag from '../tags/grpc-tag';
+import type { Request } from '../../../models/request';
+import { GrpcTag } from '../tags/grpc-tag';
+import { MethodTag } from '../tags/method-tag';
 
 interface Props {
   handleSetItemSelected: (...args: any[]) => any;
@@ -13,7 +14,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestRow extends PureComponent<Props> {
+export class RequestRow extends PureComponent<Props> {
   handleSelect(e: React.SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
     const value = el.checked;
@@ -34,7 +35,6 @@ class RequestRow extends PureComponent<Props> {
             {isGrpc ? (
               <GrpcTag />
             ) : (
-            // @ts-expect-error -- TSCONVERSION
               <MethodTag method={request.method} />
             )}
             <span className="inline-block">{request.name}</span>
@@ -44,5 +44,3 @@ class RequestRow extends PureComponent<Props> {
     );
   }
 }
-
-export default RequestRow;

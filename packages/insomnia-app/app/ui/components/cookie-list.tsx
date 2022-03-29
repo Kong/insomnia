@@ -1,14 +1,16 @@
-import React, { PureComponent } from 'react';
-import * as uuid from 'uuid';
-import * as toughCookie from 'tough-cookie';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
-import PromptButton from './base/prompt-button';
-import RenderedText from './rendered-text';
-import type { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import React, { PureComponent } from 'react';
+import * as toughCookie from 'tough-cookie';
+import { v4 as uuidv4 } from 'uuid';
+
 import { AUTOBIND_CFG } from '../../common/constants';
-import { HandleRender } from '../../common/render';
+import type { Cookie } from '../../models/cookie-jar';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownItem } from './base/dropdown/dropdown-item';
+import { PromptButton } from './base/prompt-button';
+import { RenderedText } from './rendered-text';
 
 export interface CookieListProps {
   handleCookieAdd: Function;
@@ -17,7 +19,6 @@ export interface CookieListProps {
   cookies: Cookie[];
   newCookieDomainName: string;
   handleShowModifyCookieModal: (cookie: Cookie) => void;
-  handleRender: HandleRender;
 }
 
 // Use tough-cookie MAX_DATE value
@@ -25,10 +26,10 @@ export interface CookieListProps {
 const MAX_TIME = 2147483647000;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookieList extends PureComponent<CookieListProps> {
+export class CookieList extends PureComponent<CookieListProps> {
   _handleCookieAdd() {
     const newCookie: Cookie = {
-      id: uuid.v4(),
+      id: uuidv4(),
       key: 'foo',
       value: 'bar',
       domain: this.props.newCookieDomainName,
@@ -45,7 +46,7 @@ class CookieList extends PureComponent<CookieListProps> {
   }
 
   render() {
-    const { cookies, handleDeleteAll, handleShowModifyCookieModal, handleRender } = this.props;
+    const { cookies, handleDeleteAll, handleShowModifyCookieModal } = this.props;
     return (
       <div>
         <table className="table--fancy cookie-table table--striped">
@@ -54,24 +55,28 @@ class CookieList extends PureComponent<CookieListProps> {
               <th
                 style={{
                   minWidth: '10rem',
-                }}>
+                }}
+              >
                 Domain
               </th>
               <th
                 style={{
                   width: '90%',
-                }}>
+                }}
+              >
                 Cookie
               </th>
               <th
                 style={{
                   width: '2rem',
                 }}
-                className="text-right">
+                className="text-right"
+              >
                 <Dropdown right>
                   <DropdownButton
                     title="Add cookie"
-                    className="btn btn--super-duper-compact btn--outlined txt-md">
+                    className="btn btn--super-duper-compact btn--outlined txt-md"
+                  >
                     Actions <i className="fa fa-caret-down" />
                   </DropdownButton>
                   <DropdownItem onClick={this._handleCookieAdd}>
@@ -90,16 +95,17 @@ class CookieList extends PureComponent<CookieListProps> {
               return (
                 <tr className="selectable" key={i}>
                   <td>
-                    <RenderedText render={handleRender}>{cookie.domain || ''}</RenderedText>
+                    <RenderedText>{cookie.domain || ''}</RenderedText>
                   </td>
                   <td className="force-wrap wide">
-                    <RenderedText render={handleRender}>{cookieString || ''}</RenderedText>
+                    <RenderedText>{cookieString || ''}</RenderedText>
                   </td>
                   <td onClick={() => {}} className="text-right no-wrap">
                     <button
                       className="btn btn--super-compact btn--outlined"
                       onClick={() => { handleShowModifyCookieModal(cookie); }}
-                      title="Edit cookie properties">
+                      title="Edit cookie properties"
+                    >
                       Edit
                     </button>{' '}
                     <PromptButton
@@ -107,7 +113,8 @@ class CookieList extends PureComponent<CookieListProps> {
                       addIcon
                       confirmMessage=""
                       onClick={() => this._handleDeleteCookie(cookie)}
-                      title="Delete cookie">
+                      title="Delete cookie"
+                    >
                       <i className="fa fa-trash-o" />
                     </PromptButton>
                   </td>
@@ -130,5 +137,3 @@ class CookieList extends PureComponent<CookieListProps> {
     );
   }
 }
-
-export default CookieList;

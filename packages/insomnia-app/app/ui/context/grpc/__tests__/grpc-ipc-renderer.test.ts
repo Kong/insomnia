@@ -1,9 +1,10 @@
+import { createBuilder } from '@develohpanda/fluent-builder';
 import { ipcRenderer } from 'electron';
+
 import { GrpcRequestEventEnum, GrpcResponseEventEnum } from '../../../../common/grpc-events';
 import { grpcStatusObjectSchema } from '../__schemas__';
-import { createBuilder } from '@develohpanda/fluent-builder';
-import { grpcIpcRenderer, sendGrpcIpcMultiple } from '../grpc-ipc-renderer';
 import { grpcActions } from '../grpc-actions';
+import { grpcIpcRenderer, sendGrpcIpcMultiple } from '../grpc-ipc-renderer';
 
 jest.mock('../grpc-actions', () => ({
   grpcActions: {

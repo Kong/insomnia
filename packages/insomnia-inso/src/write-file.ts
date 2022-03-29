@@ -1,6 +1,7 @@
-import path from 'path';
-import mkdirp from 'mkdirp';
 import fs from 'fs';
+import mkdirp from 'mkdirp';
+import path from 'path';
+
 import { InsoError } from './errors';
 
 export async function writeFileWithCliOptions(

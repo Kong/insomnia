@@ -1,6 +1,6 @@
-import type { BaseModel } from './index';
 import { database as db } from '../common/database';
 import type { GitCredentials } from '../sync/git/git-vcs';
+import type { BaseModel } from './index';
 
 export type GitRepository = BaseModel & BaseGitRepository;
 
@@ -27,7 +27,7 @@ export function init(): BaseGitRepository {
   };
 }
 
-interface BaseGitRepository {
+export interface BaseGitRepository {
   needsFullClone: boolean;
   uri: string;
   credentials: GitCredentials | null;

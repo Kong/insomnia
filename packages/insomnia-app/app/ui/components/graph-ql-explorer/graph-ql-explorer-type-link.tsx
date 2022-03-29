@@ -1,16 +1,16 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { GraphQLList, GraphQLNonNull, GraphQLType } from 'graphql';
+import React, { Fragment, PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { GraphQLList, GraphQLNonNull } from 'graphql';
-import type { GraphQLType } from 'graphql';
 
 interface Props {
-  onNavigate: (type: Record<string, any>) => void;
+  onNavigate: (type: GraphQLType) => void;
   type: GraphQLType;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerTypeLink extends PureComponent<Props> {
+export class GraphQLExplorerTypeLink extends PureComponent<Props> {
   _handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
     const { onNavigate, type } = this.props;
@@ -43,5 +43,3 @@ class GraphQLExplorerTypeLink extends PureComponent<Props> {
     );
   }
 }
-
-export default GraphQLExplorerTypeLink;

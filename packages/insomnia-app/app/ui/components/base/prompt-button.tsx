@@ -1,7 +1,8 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Button from './button';
+import { Button } from './button';
 
 type States =
   | typeof STATE_DEFAULT
@@ -27,16 +28,16 @@ interface Props {
 }
 
 interface State {
-  state: States
+  state: States;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PromptButton extends PureComponent<Props> {
+export class PromptButton extends PureComponent<Props> {
   _doneTimeout: NodeJS.Timeout | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
   state: State = {
     state: STATE_DEFAULT,
-  }
+  };
 
   _confirm(...args) {
     if (this._triggerTimeout !== null) {
@@ -149,5 +150,3 @@ class PromptButton extends PureComponent<Props> {
     );
   }
 }
-
-export default PromptButton;

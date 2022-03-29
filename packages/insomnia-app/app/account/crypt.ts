@@ -1,6 +1,6 @@
 import HKDF from 'hkdf';
-import srp from 'srp-js';
 import forge from 'node-forge';
+import srp from 'srp-js';
 
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
@@ -269,6 +269,9 @@ export async function generateKeyPairJWK() {
       true,
       ['encrypt', 'decrypt'],
     );
+    if (!pair.publicKey || !pair.privateKey) {
+      throw new Error('Unexpected error generating a keypair.');
+    }
     return {
       publicKey: await subtle.exportKey('jwk', pair.publicKey),
       privateKey: await subtle.exportKey('jwk', pair.privateKey),

@@ -1,8 +1,9 @@
 import deepEqual from 'deep-equal';
-import * as models from './index';
+
 import { database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import type { BaseModel } from './index';
+import * as models from './index';
 import { isRequest, Request } from './request';
 
 export const name = 'Request Version';

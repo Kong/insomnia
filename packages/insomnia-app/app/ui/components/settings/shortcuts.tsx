@@ -1,31 +1,36 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Hotkey from '../hotkey';
-import type { HotKeyDefinition, HotKeyRegistry, KeyCombination } from '../../../common/hotkeys';
 import {
   areKeyBindingsSameAsDefault,
   areSameKeyCombinations,
   constructKeyCombinationDisplay,
   getPlatformKeyCombinations,
+  HotKeyDefinition,
   hotKeyRefs,
   newDefaultKeyBindings,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { PromptButton } from '../base/prompt-button';
+import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
-import AddKeyCombinationModal from '../modals/add-key-combination-modal';
-import PromptButton from '../base/prompt-button';
+import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;
-  handleUpdateKeyBindings: (...args: any[]) => any;
+  handleUpdateKeyBindings: (keyBindings: HotKeyRegistry) => void;
 }
 
 const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Shortcuts extends PureComponent<Props> {
+export class Shortcuts extends PureComponent<Props> {
   /**
    * Checks whether the given key combination already existed.
    * @param newKeyComb the key combination to be checked.
@@ -77,9 +82,9 @@ class Shortcuts extends PureComponent<Props> {
     const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
     const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
     let toBeRemovedIndex = -1;
-    keyCombs.forEach((existingKeyComb, idx) => {
+    keyCombs.forEach((existingKeyComb, index) => {
       if (areSameKeyCombinations(existingKeyComb, keyComb)) {
-        toBeRemovedIndex = idx;
+        toBeRemovedIndex = index;
       }
     });
 
@@ -100,24 +105,24 @@ class Shortcuts extends PureComponent<Props> {
     handleUpdateKeyBindings(newDefaultRegistry());
   }
 
-  renderHotKey(def: HotKeyDefinition, i: number) {
+  renderHotKey(def: HotKeyDefinition, index: number) {
     const keyBindings = this.props.hotKeyRegistry[def.id];
     const keyCombinations = getPlatformKeyCombinations(keyBindings);
     const hasRemoveItems = keyCombinations.length > 0;
     const hasResetItems = !areKeyBindingsSameAsDefault(def.id, keyBindings);
     return (
-      <tr key={i}>
-        <td>{def.description}</td>
+      <tr key={index}>
+        <td style={{ verticalAlign: 'middle' }}>{def.description}</td>
         <td className="text-right">
-          {keyCombinations.map((keyComb: KeyCombination, idx: number) => {
+          {keyCombinations.map((keyComb: KeyCombination, index: number) => {
             return (
-              <code key={idx} className="margin-left-sm">
+              <code key={index} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
                 <Hotkey keyCombination={keyComb} />
               </code>
             );
           })}
         </td>
-        <td className="text-right options">
+        <td className="text-right options" style={{ verticalAlign: 'middle' }}>
           <Dropdown outline>
             <DropdownButton className="btn btn--clicky-small">
               <i className="fa fa-gear" />
@@ -140,7 +145,8 @@ class Shortcuts extends PureComponent<Props> {
                       keyComb: keyComb,
                     }}
                     buttonClass={PromptButton}
-                    onClick={this.handleRemoveKeyCombination}>
+                    onClick={this.handleRemoveKeyCombination}
+                  >
                     <i className="fa fa-trash-o" /> {display}
                   </DropdownItem>
                 );
@@ -152,7 +158,8 @@ class Shortcuts extends PureComponent<Props> {
               <DropdownItem
                 value={def.id}
                 buttonClass={PromptButton}
-                onClick={this.handleResetKeyBindings}>
+                onClick={this.handleResetKeyBindings}
+              >
                 <i className="fa fa-empty" /> Reset keyboard shortcuts
               </DropdownItem>
             )}
@@ -174,8 +181,8 @@ class Shortcuts extends PureComponent<Props> {
         </div>
         <table className="table--fancy">
           <tbody>
-            {HOT_KEY_DEFS.map((def: HotKeyDefinition, idx: number) => {
-              return this.renderHotKey(def, idx);
+            {HOT_KEY_DEFS.map((def: HotKeyDefinition, index: number) => {
+              return this.renderHotKey(def, index);
             })}
           </tbody>
         </table>
@@ -183,5 +190,3 @@ class Shortcuts extends PureComponent<Props> {
     );
   }
 }
-
-export default Shortcuts;

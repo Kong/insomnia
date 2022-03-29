@@ -1,21 +1,22 @@
-import React, { FunctionComponent } from 'react';
 import { motion } from 'framer-motion';
+import React, { FunctionComponent } from 'react';
+import { useToggle } from 'react-use';
 import styled from 'styled-components';
+
+import { Dropdown } from '../dropdown/dropdown';
+import { DropdownDivider } from '../dropdown/dropdown-divider';
+import { DropdownItem } from '../dropdown/dropdown-item';
+import { IconEnum, SvgIcon } from '../svg-icon';
 import { SidebarHeader } from './sidebar-header';
+import { SidebarHeaders } from './sidebar-headers';
 import { SidebarInfo, SidebarInfoType } from './sidebar-info';
-import { SidebarServers, SidebarServer } from './sidebar-servers';
+import { SidebarParameters } from './sidebar-parameters';
 import { SidebarPaths, SidebarPathsType } from './sidebar-paths';
 import { SidebarRequests } from './sidebar-requests';
 import { SidebarResponses } from './sidebar-responses';
-import { SidebarParameters } from './sidebar-parameters';
-import { SidebarHeaders } from './sidebar-headers';
 import { SidebarSchemas } from './sidebar-schemas';
 import { SidebarSecurity } from './sidebar-security';
-import { Dropdown } from '../dropdown/dropdown';
-import { DropdownItem } from '../dropdown/dropdown-item';
-import { DropdownDivider } from '../dropdown/dropdown-divider';
-import { SvgIcon, IconEnum } from '../svg-icon';
-import { useToggle } from 'react-use';
+import { SidebarServer, SidebarServers } from './sidebar-servers';
 
 export interface SidebarProps {
   className?: string;

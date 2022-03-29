@@ -1,5 +1,5 @@
-import { canClientStream, getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
 import type { GrpcMethodType } from '../method';
+import { canClientStream, getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
 
 describe('getMethodType', () => {
   it('should return unary', () => {

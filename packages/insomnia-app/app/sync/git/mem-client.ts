@@ -1,7 +1,8 @@
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
+
 import Stat from './stat';
 import { SystemError } from './system-error';
-import { BufferEncoding } from './utils';
 
 interface FSFile {
   readonly type: 'file';
@@ -36,7 +37,7 @@ export class MemClient {
   __fs: FSEntry;
   __ino: 0;
 
-  static createClient() {
+  static createClient(): PromiseFsClient {
     return {
       promises: new MemClient(),
     };
@@ -112,7 +113,7 @@ export class MemClient {
   async writeFile(
     filePath: string,
     data: Buffer | string,
-    options: BufferEncoding | { encoding?: BufferEncoding, flag?: string; } = {},
+    options: BufferEncoding | { encoding?: BufferEncoding; flag?: string } = {},
   ) {
     filePath = path.normalize(filePath);
 

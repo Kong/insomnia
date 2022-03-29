@@ -1,14 +1,14 @@
-import { generateServices } from './services';
-import { DCRoute, DCService } from '../types/declarative-config';
 import { OA3Operation } from '../types';
+import { DCRoute, DCService } from '../types/declarative-config';
 import { xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types/kong';
-import { tags, getSpec } from './jest/test-helpers';
+import { getSpec, tags } from './jest/test-helpers';
+import { generateServices } from './services';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCService =>
   JSON.parse(
     JSON.stringify({
-      host: 'My_API',
+      host: 'server1.com',
       name: 'My_API',
       plugins: [],
       path: '/path',
@@ -41,7 +41,7 @@ const getSpecResult = (): DCService =>
           name: 'My_API-birds_id-get',
           strip_path: false,
           methods: ['GET'],
-          paths: ['/birds/(?<id>[^\\/\\s]+)$'],
+          paths: ['/birds/(?<id>[^\\/]+)$'],
           tags,
         },
       ],
@@ -253,7 +253,7 @@ describe('services', () => {
           tags,
           name: 'My_API-birds_id-get',
           methods: ['GET'],
-          paths: ['/birds/(?<id>[^\\/\\s]+)$'],
+          paths: ['/birds/(?<id>[^\\/]+)$'],
           strip_path: false,
           plugins: [
             {
@@ -352,6 +352,7 @@ describe('services', () => {
       ];
       const specResult = getSpecResult();
       specResult.port = 8443;
+      specResult.host = 'demo.saas-app.com';
       specResult.path = '/v2';
       expect(generateServices(spec, tags)).toEqual([specResult]);
     });

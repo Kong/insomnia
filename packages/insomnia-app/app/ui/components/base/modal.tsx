@@ -1,27 +1,30 @@
-import React, { CSSProperties, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import KeydownBinder from '../keydown-binder';
+import React, { CSSProperties, PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { pressedHotKey } from '../../../common/hotkeys-listener';
+import { KeydownBinder } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
 export interface ModalProps {
-  tall?: boolean,
-  wide?: boolean,
-  skinny?: boolean,
-  noEscape?: boolean,
-  dontFocus?: boolean,
-  closeOnKeyCodes?: any[],
-  onHide?: Function,
-  onCancel?: Function,
-  onKeyDown?: Function,
-  freshState?: boolean,
-  children?: ReactNode,
-  className?: string,
+  centered?: boolean;
+  tall?: boolean;
+  wide?: boolean;
+  skinny?: boolean;
+  noEscape?: boolean;
+  dontFocus?: boolean;
+  closeOnKeyCodes?: any[];
+  onShow?: Function;
+  onHide?: Function;
+  onCancel?: Function;
+  onKeyDown?: Function;
+  freshState?: boolean;
+  children?: ReactNode;
+  className?: string;
 }
 
 interface State {
@@ -31,7 +34,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Modal extends PureComponent<ModalProps, State> {
+export class Modal extends PureComponent<ModalProps, State> {
   onHide: Function | null = null;
   _node: HTMLDivElement | null = null;
 
@@ -41,12 +44,12 @@ class Modal extends PureComponent<ModalProps, State> {
     zIndex: globalZIndex,
   };
 
-  async _handleKeyDown(e) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this.state.open) {
       return;
     }
 
-    this.props.onKeyDown && this.props.onKeyDown(e);
+    this.props.onKeyDown?.(event);
 
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
@@ -54,14 +57,14 @@ class Modal extends PureComponent<ModalProps, State> {
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = await pressedHotKey(e, hotKeyRefs.CLOSE_MODAL);
-    const pressedCloseButton = closeOnKeyCodes.find(c => c === e.keyCode);
+    const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
+    const pressedCloseButton = closeOnKeyCodes.find(c => c === event.keyCode);
 
     // Pressed escape
     if (pressedEscape || pressedCloseButton) {
-      e.preventDefault();
+      event.preventDefault();
       this.hide();
-      this.props.onCancel && this.props.onCancel();
+      this.props.onCancel?.();
     }
   }
 
@@ -88,7 +91,7 @@ class Modal extends PureComponent<ModalProps, State> {
 
     if (shouldHide) {
       this.hide();
-      this.props.onCancel && this.props.onCancel();
+      this.props.onCancel?.();
     }
   }
 
@@ -106,13 +109,15 @@ class Modal extends PureComponent<ModalProps, State> {
       forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
     });
 
+    this.props.onShow?.();
+
     if (this.props.dontFocus) {
       return;
     }
 
     // Allow instance-based onHide method
     this.onHide = options?.onHide ?? null;
-    setTimeout(() => this._node && this._node.focus());
+    setTimeout(() => this._node?.focus());
   }
 
   toggle() {
@@ -131,12 +136,12 @@ class Modal extends PureComponent<ModalProps, State> {
     this.setState({
       open: false,
     });
-    this.props.onHide && this.props.onHide();
-    this.onHide && this.onHide();
+    this.props.onHide?.();
+    this.onHide?.();
   }
 
   render() {
-    const { tall, wide, skinny, noEscape, className, children } = this.props;
+    const { tall, wide, skinny, noEscape, className, children, centered } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
     if (!open) {
@@ -174,9 +179,10 @@ class Modal extends PureComponent<ModalProps, State> {
           className={classes}
           style={styles}
           aria-hidden={!open}
-          onClick={this._handleClick}>
+          onClick={this._handleClick}
+        >
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-          <div className="modal__content__wrapper">
+          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
             <div className="modal__content" key={forceRefreshCounter}>
               {children}
             </div>
@@ -186,5 +192,3 @@ class Modal extends PureComponent<ModalProps, State> {
     );
   }
 }
-
-export default Modal;

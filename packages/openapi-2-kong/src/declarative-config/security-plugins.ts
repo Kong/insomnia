@@ -1,7 +1,7 @@
 import { getSecurity } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { BasicAuthPlugin, KeyAuthPlugin, OpenIDConnectPlugin } from '../types/kong';
-import { OA3Operation, OpenApi3Spec, OA3SecurityScheme, OA3SecuritySchemeApiKey, OA3SecuritySchemeHttp, OA3SecuritySchemeOpenIdConnect } from '../types/openapi3';
+import { OA3Operation, OA3SecurityScheme, OA3SecuritySchemeApiKey, OA3SecuritySchemeHttp, OA3SecuritySchemeOpenIdConnect, OpenApi3Spec } from '../types/openapi3';
 
 export function generateSecurityPlugins(
   op: OA3Operation | null,

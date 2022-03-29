@@ -1,9 +1,10 @@
-import { Readable, Writable } from 'stream';
 import fuzzysort from 'fuzzysort';
-import * as uuid from 'uuid';
-import zlib from 'zlib';
 import { join as pathJoin } from 'path';
-import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+import { head, tail } from 'ramda';
+import { v4 as uuidv4 } from 'uuid';
+import zlib from 'zlib';
+
+import { DEBOUNCE_MILLIS, METHOD_DELETE, METHOD_OPTIONS } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -107,7 +108,7 @@ export function getContentLengthHeader<T extends Header>(headers: T[]): T | null
  * @returns {string}
  */
 export function generateId(prefix?: string) {
-  const id = uuid.v4().replace(/-/g, '');
+  const id = uuidv4().replace(/-/g, '');
 
   if (prefix) {
     return `${prefix}_${id}`;
@@ -199,6 +200,19 @@ export function preventDefault(e: Event) {
   e.preventDefault();
 }
 
+export function xmlDecode(input: string) {
+  const ESCAPED_CHARACTERS_MAP = {
+    '&amp;': '&',
+    '&quot;': '"',
+    '&lt;': '<',
+    '&gt;': '>',
+  };
+
+  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
+    ESCAPED_CHARACTERS_MAP[item])
+  );
+}
+
 export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
@@ -252,13 +266,15 @@ export function escapeRegex(str: string) {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
+export interface FuzzyMatchOptions {
+  splitSpace?: boolean;
+  loose?: boolean;
+}
+
 export function fuzzyMatch(
   searchString: string,
   text: string,
-  options: {
-    splitSpace?: boolean;
-    loose?: boolean;
-  } = {},
+  options: FuzzyMatchOptions = {},
 ): null | {
   score: number;
   indexes: number[];
@@ -269,10 +285,7 @@ export function fuzzyMatch(
 export function fuzzyMatchAll(
   searchString: string,
   allText: string[],
-  options: {
-    splitSpace?: boolean;
-    loose?: boolean;
-  } = {},
+  options: FuzzyMatchOptions = {},
 ) {
   if (!searchString || !searchString.trim()) {
     return null;
@@ -326,27 +339,6 @@ export function fuzzyMatchAll(
     indexes,
     target: allText.join(' '),
   };
-}
-
-export async function waitForStreamToFinish(stream: Readable | Writable) {
-  return new Promise<void>(resolve => {
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._readableState?.finished) {
-      return resolve();
-    }
-
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._writableState?.finished) {
-      return resolve();
-    }
-
-    stream.on('close', () => {
-      resolve();
-    });
-    stream.on('error', () => {
-      resolve();
-    });
-  });
 }
 
 export function chunkArray<T>(arr: T[], chunkSize: number) {
@@ -444,6 +436,35 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   return value;
 }
 
-export function isNotNullOrUndefined(obj: any | null | undefined) {
-  return obj !== null && obj !== undefined;
+export function isNotNullOrUndefined<ValueType>(
+  value: ValueType | null | undefined
+): value is ValueType {
+  if (value === null || value === undefined) return false;
+
+  return true;
 }
+
+export const toKebabCase = (value: string) => value.replace(/ /g, '-');
+
+export const capitalize = (value: string) => (
+  `${head(value).toUpperCase()}${tail(value).toLowerCase()}`
+);
+
+export const toTitleCase = (value: string) => (
+  value
+    .toLowerCase()
+    .split(' ')
+    .map(capitalize)
+    .join(' ')
+);
+
+// Because node-libcurl changed some names that we used in the timeline
+export const LIBCURL_DEBUG_MIGRATION_MAP = {
+  HeaderIn: 'HEADER_IN',
+  DataIn: 'DATA_IN',
+  SslDataIn: 'SSL_DATA_IN',
+  HeaderOut: 'HEADER_OUT',
+  DataOut: 'DATA_OUT',
+  SslDataOut: 'SSL_DATA_OUT',
+  Text: 'TEXT',
+} as const;

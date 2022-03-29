@@ -1,23 +1,24 @@
-import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { ButtonHTMLAttributes, CSSProperties, PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 export interface ButtonProps<T> {
-  children: ReactNode,
-  value?: T,
-  className?: string,
-  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void),
-  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void),
-  disabled?: boolean,
-  tabIndex?: number,
-  type?: ButtonHTMLAttributes<HTMLButtonElement>['type'],
-  id?: string,
-  // TODO(TSCONVERSION) figure out why so many components pass this yet it isn't used
+  children: ReactNode;
+  value?: T;
+  className?: string;
+  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void);
+  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void);
+  disabled?: boolean;
+  tabIndex?: number;
+  type?: ButtonHTMLAttributes<HTMLButtonElement>['type'];
+  id?: string;
   title?: string;
+  style?: CSSProperties;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Button<T> extends PureComponent<ButtonProps<T>> {
+export class Button<T> extends PureComponent<ButtonProps<T>> {
   _handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     const { onClick, onDisabledClick, disabled, value } = this.props;
     const fn = disabled ? onDisabledClick : onClick;
@@ -32,7 +33,7 @@ class Button<T> extends PureComponent<ButtonProps<T>> {
   }
 
   render() {
-    const { children, disabled, tabIndex, className, type, id } = this.props;
+    const { children, disabled, tabIndex, className, type, id, style, title } = this.props;
     return (
       <button
         disabled={disabled}
@@ -41,11 +42,11 @@ class Button<T> extends PureComponent<ButtonProps<T>> {
         tabIndex={tabIndex}
         className={className}
         onClick={this._handleClick}
+        style={style}
+        title={title}
       >
         {children}
       </button>
     );
   }
 }
-
-export default Button;

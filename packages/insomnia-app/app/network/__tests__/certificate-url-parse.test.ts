@@ -1,6 +1,7 @@
-import certificateUrlParse from '../certificate-url-parse';
 import { parse as urlParse } from 'url';
+
 import { globalBeforeEach } from '../../__jest__/before-each';
+import certificateUrlParse from '../certificate-url-parse';
 
 describe('certificateUrlParse', () => {
   beforeEach(globalBeforeEach);

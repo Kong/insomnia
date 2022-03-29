@@ -11,7 +11,7 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-interface BaseUnitTestResult {
+export interface BaseUnitTestResult {
   results: Record<string, any>;
 }
 

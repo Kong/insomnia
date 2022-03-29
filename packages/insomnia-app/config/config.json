@@ -1,5 +1,5 @@
 {
-  "version": "2021.4.0",
+  "version": "2022.3.0-beta.1",
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
@@ -15,8 +15,6 @@
   "darkTheme": "default",
   "githubOrg": "Kong",
   "githubRepo": "insomnia",
-  "gaId": "UA-8499472-34",
-  "gaLocation": "https://core.lytics.insomnia.rest",
   "segmentWriteKeys": {
     "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
     "production": "4l7QUfACrIcqvC913hiIwAA2BDYP2OJ1"
@@ -33,6 +31,8 @@
     "insomnia-plugin-jsonpath",
     "insomnia-plugin-cookie-jar",
     "insomnia-plugin-core-themes",
-    "insomnia-plugin-kong-bundle"
+    "insomnia-plugin-kong-declarative-config",
+    "insomnia-plugin-kong-kubernetes-config",
+    "insomnia-plugin-kong-portal"
   ]
 }

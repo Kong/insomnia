@@ -1,13 +1,14 @@
-import React, { Fragment, PureComponent } from 'react';
 import type { GraphQLSchema, GraphQLType } from 'graphql';
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import React, { Fragment, PureComponent } from 'react';
+
+import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;
   schema: GraphQLSchema;
 }
 
-class GraphQLExplorerSchema extends PureComponent<Props> {
+export class GraphQLExplorerSchema extends PureComponent<Props> {
   renderQueryType() {
     const { schema, onNavigateType } = this.props;
     const type = schema.getQueryType();
@@ -70,5 +71,3 @@ class GraphQLExplorerSchema extends PureComponent<Props> {
     );
   }
 }
-
-export default GraphQLExplorerSchema;

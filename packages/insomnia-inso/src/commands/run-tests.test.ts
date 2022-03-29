@@ -1,8 +1,9 @@
 import { generate as _generate, runTestsCli as _runTestsCli } from 'insomnia-testing';
-import { runInsomniaTests, RunTestsOptions } from './run-tests';
+
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import { GenerateConfigOptions } from './generate-config';
+import { runInsomniaTests, RunTestsOptions } from './run-tests';
 
 jest.mock('insomnia-testing');
 jest.mock('insomnia-send-request');
@@ -25,7 +26,7 @@ describe('runInsomniaTests()', () => {
 
   const base: RunTestsOptions = {
     reporter: 'spec',
-    appDataDir: 'src/db/fixtures/nedb',
+    src: 'src/db/fixtures/nedb',
     ci: true,
   };
 

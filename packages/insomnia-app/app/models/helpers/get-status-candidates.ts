@@ -1,5 +1,5 @@
-import { BaseModel, canSync } from '..';
 import { StatusCandidate } from '../../sync/types';
+import { BaseModel, canSync } from '..';
 
 const toStatusCandidate = (doc: BaseModel): StatusCandidate => ({
   key: doc._id,

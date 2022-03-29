@@ -1,29 +1,22 @@
-import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
-import type { Request, RequestHeader } from '../models/request';
-import { isWorkspace, Workspace } from '../models/workspace';
-import type { Settings } from '../models/settings';
-import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
-import {
-  getRenderedRequestAndContext,
-  RENDER_PURPOSE_NO_RENDER,
-  RENDER_PURPOSE_SEND,
-} from '../common/render';
-import mkdirp from 'mkdirp';
-import crypto from 'crypto';
+import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import aws4 from 'aws4';
 import clone from 'clone';
-import { parse as urlParse, resolve as urlResolve } from 'url';
+import fs from 'fs';
+import { HttpVersions } from 'insomnia-common';
+import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import {
-  Curl,
-  CurlAuth,
-  CurlCode,
-  CurlInfoDebug,
-  CurlFeature,
-  CurlNetrc,
-  CurlHttpVersion,
-} from 'node-libcurl';
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  setDefaultProtocol,
+  smartEncodeUrl,
+} from 'insomnia-url';
+import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import * as uuid from 'uuid';
-import * as models from '../models';
+import { parse as urlParse, resolve as urlResolve } from 'url';
+import { v4 as uuidv4 } from 'uuid';
+
 import {
   AUTH_AWS_IAM,
   AUTH_DIGEST,
@@ -32,12 +25,12 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
+import { database as db } from '../common/database';
+import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
   delay,
-  describeByteSize,
   getContentTypeHeader,
   getHostHeader,
   getLocationHeader,
@@ -47,27 +40,69 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
   hasUserAgentHeader,
-  waitForStreamToFinish,
+  LIBCURL_DEBUG_MIGRATION_MAP,
 } from '../common/misc';
-import { getDataDirectory, getTempDir } from '../common/electron-helpers';
+import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
 import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString,
-  setDefaultProtocol,
-  smartEncodeUrl,
-} from 'insomnia-url';
-import fs from 'fs';
-import { database as db } from '../common/database';
-import caCerts from './ca-certs';
-import * as plugins from '../plugins/index';
-import * as pluginContexts from '../plugins/context/index';
-import { getAuthHeader } from './authentication';
-import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
-import { urlMatchesCertHost } from './url-matches-cert-host';
-import aws4 from 'aws4';
-import { buildMultipart } from './multipart';
+  getRenderedRequestAndContext,
+  RENDER_PURPOSE_NO_RENDER,
+  RENDER_PURPOSE_SEND,
+} from '../common/render';
+import * as models from '../models';
 import type { Environment } from '../models/environment';
+import type { Request, RequestHeader } from '../models/request';
+import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
+import type { Settings } from '../models/settings';
+import { isWorkspace, Workspace } from '../models/workspace';
+import * as pluginContexts from '../plugins/context/index';
+import * as plugins from '../plugins/index';
+import { getAuthHeader } from './authentication';
+import caCerts from './ca-certs';
+import { buildMultipart } from './multipart';
+import { urlMatchesCertHost } from './url-matches-cert-host';
 
+// Based on list of option properties but with callback options removed
+const Curl = {
+  option: {
+    ACCEPT_ENCODING: 'ACCEPT_ENCODING',
+    CAINFO: 'CAINFO',
+    COOKIE: 'COOKIE',
+    COOKIEFILE: 'COOKIEFILE',
+    COOKIELIST: 'COOKIELIST',
+    CUSTOMREQUEST: 'CUSTOMREQUEST',
+    FOLLOWLOCATION: 'FOLLOWLOCATION',
+    HTTPAUTH: 'HTTPAUTH',
+    HTTPGET: 'HTTPGET',
+    HTTPHEADER: 'HTTPHEADER',
+    HTTPPOST: 'HTTPPOST',
+    HTTP_VERSION: 'HTTP_VERSION',
+    INFILESIZE_LARGE: 'INFILESIZE_LARGE',
+    KEYPASSWD: 'KEYPASSWD',
+    MAXREDIRS: 'MAXREDIRS',
+    NETRC: 'NETRC',
+    NOBODY: 'NOBODY',
+    NOPROGRESS: 'NOPROGRESS',
+    NOPROXY: 'NOPROXY',
+    PASSWORD: 'PASSWORD',
+    POST: 'POST',
+    POSTFIELDS: 'POSTFIELDS',
+    PATH_AS_IS: 'PATH_AS_IS',
+    PROXY: 'PROXY',
+    PROXYAUTH: 'PROXYAUTH',
+    SSLCERT: 'SSLCERT',
+    SSLCERTTYPE: 'SSLCERTTYPE',
+    SSLKEY: 'SSLKEY',
+    SSL_VERIFYHOST: 'SSL_VERIFYHOST',
+    SSL_VERIFYPEER: 'SSL_VERIFYPEER',
+    TIMEOUT_MS: 'TIMEOUT_MS',
+    UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
+    UPLOAD: 'UPLOAD',
+    URL: 'URL',
+    USERAGENT: 'USERAGENT',
+    USERNAME: 'USERNAME',
+    VERBOSE: 'VERBOSE',
+  },
+};
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
@@ -95,80 +130,70 @@ const MAX_DELAY_TIME = 1000;
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
-// Because node-libcurl changed some names that we used in the timeline
-const LIBCURL_DEBUG_MIGRATION_MAP = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-  '': '',
-};
-
 const cancelRequestFunctionMap = {};
 
 let lastUserInteraction = Date.now();
 
+export const getHttpVersion = preferredHttpVersion => {
+  switch (preferredHttpVersion) {
+    case HttpVersions.V1_0:
+      return { log: 'Using HTTP 1.0', curlHttpVersion:CurlHttpVersion.V1_0 };
+    case HttpVersions.V1_1:
+      return { log: 'Using HTTP 1.1', curlHttpVersion:CurlHttpVersion.V1_1 };
+    case HttpVersions.V2PriorKnowledge:
+      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion:CurlHttpVersion.V2PriorKnowledge };
+    case HttpVersions.V2_0:
+      return { log: 'Using HTTP/2', curlHttpVersion:CurlHttpVersion.V2_0 };
+    case HttpVersions.v3:
+      return { log: 'Using HTTP/3', curlHttpVersion:CurlHttpVersion.v3 };
+    case HttpVersions.default:
+      return { log: 'Using default HTTP version' };
+    default:
+      return { log: `Unknown HTTP version specified ${preferredHttpVersion}`  };
+  }
+};
+
 export async function cancelRequestById(requestId) {
-  if (hasCancelFunctionForId(requestId)) {
-    const cancelRequestFunction = cancelRequestFunctionMap[requestId];
-
-    if (typeof cancelRequestFunction === 'function') {
-      return cancelRequestFunction();
-    }
+  const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
+  if (hasCancelFunction) {
+    return cancelRequestFunctionMap[requestId]();
   }
-
   console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
-}
-
-function clearCancelFunctionForId(requestId) {
-  if (hasCancelFunctionForId(requestId)) {
-    delete cancelRequestFunctionMap[requestId];
-  }
-}
-
-export function hasCancelFunctionForId(requestId) {
-  return cancelRequestFunctionMap.hasOwnProperty(requestId);
 }
 
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
-  renderContext: Record<string, any>,
   workspace: Workspace,
-  settings: Settings,
+  settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
   environment?: Environment | null,
+  validateSSL = true,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
 
-    function addTimeline(name, value) {
+    const addTimelineItem = (name: ResponseTimelineEntry['name']) => (value: string) => {
       timeline.push({
         name,
         value,
         timestamp: Date.now(),
       });
-    }
+    };
 
-    function addTimelineText(value) {
-      addTimeline('TEXT', value);
-    }
-
-    // Initialize the curl handle
-    const curl = new Curl();
+    const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
 
     /** Helper function to respond with a success */
     async function respond(
       patch: ResponsePatch,
       bodyPath: string | null,
-      noPlugins = false,
+      debugTimeline: any[] = []
     ) {
-      const timelinePath = await storeTimeline(timeline);
+      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
-      clearCancelFunctionForId(renderedRequest._id);
+      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+        delete cancelRequestFunctionMap[renderedRequest._id];
+      }
       const environmentId = environment ? environment._id : null;
-      const responsePatchBeforeHooks = Object.assign(
+      return resolve(Object.assign(
         {
           timelinePath,
           environmentId,
@@ -180,76 +205,51 @@ export async function _actuallySend(
           settingStoreCookies: renderedRequest.settingStoreCookies,
         } as ResponsePatch,
         patch,
-      );
-
-      if (noPlugins) {
-        resolve(responsePatchBeforeHooks);
-        return;
-      }
-
-      let responsePatch: ResponsePatch | null = null;
-
-      try {
-        responsePatch = await _applyResponsePluginHooks(
-          responsePatchBeforeHooks,
-          renderedRequest,
-          renderContext,
-        );
-      } catch (err) {
-        await handleError(
-          new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`),
-        );
-        return;
-      }
-
-      resolve(responsePatch);
+      ));
     }
 
     /** Helper function to respond with an error */
     async function handleError(err: Error) {
+
       await respond(
         {
           url: renderedRequest.url,
           parentId: renderedRequest._id,
-          error: err.message,
+          error: err.message || 'Something went wrong',
           elapsedTime: 0, // 0 because this path is hit during plugin calls
           statusMessage: 'Error',
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies,
         },
         null,
-        true,
       );
     }
-
-    /** Helper function to set Curl options */
-    const setOpt: typeof curl.setOpt = (opt: any, val: any) => {
-      try {
-        return curl.setOpt(opt, val);
-      } catch (err) {
-        const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-        throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
-      }
+    // NOTE: can have duplicate keys because of cookie options
+    const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
+    const setOpt = (key: string, value: string | string[] | number | boolean) => {
+      curlOptions.push({ key, value });
     };
 
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
+
         await respond(
           {
-            elapsedTime: (curl.getInfo(Curl.info.TOTAL_TIME) as number || 0) * 1000,
-            // @ts-expect-error -- needs generic
-            bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-            // @ts-expect-error -- needs generic
-            url: curl.getInfo(Curl.info.EFFECTIVE_URL),
+            elapsedTime: 0,
+            bytesRead: 0,
+            url: renderedRequest.url,
             statusMessage: 'Cancelled',
             error: 'Request was cancelled',
           },
           null,
-          true,
         );
-        // Kill it!
-        curl.close();
+        // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
+        const nodejsCancelCurlRequest = process.type === 'renderer'
+          ? window.main.cancelCurlRequest
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          : require('./libcurl-promise').cancelCurlRequest;
+        nodejsCancelCurlRequest(renderedRequest._id);
       };
 
       // Set all the basic options
@@ -260,9 +260,6 @@ export async function _actuallySend(
 
       // True so curl doesn't print progress
       setOpt(Curl.option.ACCEPT_ENCODING, '');
-
-      // Auto decode everything
-      curl.enable(CurlFeature.Raw);
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
@@ -310,42 +307,6 @@ export async function _actuallySend(
           break;
       }
 
-      // Setup debug handler
-      setOpt(Curl.option.DEBUGFUNCTION, (infoType, contentBuffer) => {
-        const content = contentBuffer.toString('utf8');
-        const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
-        const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
-
-        if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
-          return 0;
-        }
-
-        // Ignore the possibly large data messages
-        if (infoType === CurlInfoDebug.DataOut) {
-          if (contentBuffer.length === 0) {
-            // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (contentBuffer.length / 1024 < settings.maxTimelineDataSizeKB) {
-            addTimeline(name, content);
-          } else {
-            addTimeline(name, `(${describeByteSize(contentBuffer.length)} hidden)`);
-          }
-
-          return 0;
-        }
-
-        if (infoType === CurlInfoDebug.DataIn) {
-          addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
-          return 0;
-        }
-
-        // Don't show cookie setting because this will display every domain in the jar
-        if (infoType === CurlInfoDebug.Text && content.indexOf('Added cookie') === 0) {
-          return 0;
-        }
-
-        addTimeline(name, content);
-        return 0; // Must be here
-      });
       // Set the headers (to be modified as we go)
       const headers = clone(renderedRequest.headers);
       // Set the URL, including the query parameters
@@ -368,37 +329,12 @@ export async function _actuallySend(
 
       addTimelineText('Preparing request to ' + finalUrl);
       addTimelineText('Current time is ' + new Date().toISOString());
-      addTimelineText(`Using ${Curl.getVersion()}`);
 
-      // Set HTTP version
-      switch (settings.preferredHttpVersion) {
-        case HttpVersions.V1_0:
-          addTimelineText('Using HTTP 1.0');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_0);
-          break;
-
-        case HttpVersions.V1_1:
-          addTimelineText('Using HTTP 1.1');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V1_1);
-          break;
-
-        case HttpVersions.V2_0:
-          addTimelineText('Using HTTP/2');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.V2_0);
-          break;
-
-        case HttpVersions.v3:
-          addTimelineText('Using HTTP/3');
-          setOpt(Curl.option.HTTP_VERSION, CurlHttpVersion.v3);
-          break;
-
-        case HttpVersions.default:
-          addTimelineText('Using default HTTP version');
-          break;
-
-        default:
-          addTimelineText(`Unknown HTTP version specified ${settings.preferredHttpVersion}`);
-          break;
+      const httpVersion = getHttpVersion(settings.preferredHttpVersion);
+      addTimelineText(httpVersion.log);
+      if (httpVersion.curlHttpVersion){
+        // Set HTTP version
+        setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
       }
 
       // Set timeout
@@ -418,7 +354,7 @@ export async function _actuallySend(
       }
 
       // SSL Validation
-      if (settings.validateSSL) {
+      if (validateSSL) {
         addTimelineText('Enable SSL validation');
       } else {
         setOpt(Curl.option.SSL_VERIFYHOST, 0);
@@ -435,8 +371,9 @@ export async function _actuallySend(
       } catch (err) {
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
-        // @ts-expect-error -- TSCONVERSION
-        fs.writeFileSync(fullCAPath, caCerts);
+        // TODO: Should mock cacerts module for testing. This is literally
+        // coercing a function to string in tests due to lack of val-loader.
+        fs.writeFileSync(fullCAPath, String(caCerts));
         console.log('[net] Set CA to', fullCAPath);
       }
 
@@ -562,7 +499,8 @@ export async function _actuallySend(
       let noBody = false;
       let requestBody: string | null = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-
+      let requestBodyPath;
+      let isMultipart = false;
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
@@ -570,6 +508,8 @@ export async function _actuallySend(
         const { filePath: multipartBodyPath, boundary, contentLength } = await buildMultipart(
           params,
         );
+        requestBodyPath = multipartBodyPath;
+        isMultipart = true;
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);
 
@@ -582,36 +522,18 @@ export async function _actuallySend(
           });
         }
 
-        const fd = fs.openSync(multipartBodyPath, 'r');
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
-        setOpt(Curl.option.READDATA, fd);
         // We need this, otherwise curl will send it as a PUT
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-
-        const fn = () => {
-          fs.closeSync(fd);
-          fs.unlink(multipartBodyPath, () => {
-            // Pass
-          });
-        };
-
-        curl.on('end', fn);
-        curl.on('error', fn);
       } else if (renderedRequest.body.fileName) {
         const { size } = fs.statSync(renderedRequest.body.fileName);
-        const fileName = renderedRequest.body.fileName || '';
-        const fd = fs.openSync(fileName, 'r');
+        requestBodyPath = renderedRequest.body.fileName || '';
+
         setOpt(Curl.option.INFILESIZE_LARGE, size);
         setOpt(Curl.option.UPLOAD, 1);
-        setOpt(Curl.option.READDATA, fd);
         // We need this, otherwise curl will send it as a POST
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-
-        const fn = () => fs.closeSync(fd);
-
-        curl.on('end', fn);
-        curl.on('error', fn);
       } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
         requestBody = renderedRequest.body.text || '';
       } else {
@@ -736,119 +658,86 @@ export async function _actuallySend(
           }
         });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
-      let responseBodyBytes = 0;
+
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
-      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-      curl.on('end', () => responseBodyWriteStream.end());
-      curl.on('error', () => responseBodyWriteStream.end());
-      setOpt(Curl.option.WRITEFUNCTION, buff => {
-        responseBodyBytes += buff.length;
-        responseBodyWriteStream.write(buff);
-        return buff.length;
-      });
-      // Handle the response ending
-      curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
-        const allCurlHeadersObjects = _parseHeaders(rawHeaders);
+      const responseBodyPath = pathJoin(responsesDir, uuidv4() + '.response');
+      // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
+      const nodejsCurlRequest = process.type === 'renderer'
+        ? window.main.curlRequest
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        : require('./libcurl-promise').curlRequest;
+      const requestOptions = {
+        curlOptions,
+        responseBodyPath,
+        requestBodyPath,
+        isMultipart,
+        maxTimelineDataSizeKB: settings.maxTimelineDataSizeKB,
+        requestId: renderedRequest._id,
+      };
+      const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
 
-        // Headers are an array (one for each redirect)
-        const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
-        // Collect various things
-        const httpVersion = lastCurlHeadersObject.version || '';
-        const statusCode = lastCurlHeadersObject.code || -1;
-        const statusMessage = lastCurlHeadersObject.reason || '';
-        // Collect the headers
-        const headers = lastCurlHeadersObject.headers;
-        // Calculate the content type
-        const contentTypeHeader = getContentTypeHeader(headers);
-        const contentType = contentTypeHeader ? contentTypeHeader.value : '';
-        // Update Cookie Jar
-        let currentUrl = finalUrl;
-        let setCookieStrings: string[] = [];
-        const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
+      // Headers are an array (one for each redirect)
+      const lastCurlHeadersObject = headerResults[headerResults.length - 1];
 
-        for (const { headers } of allCurlHeadersObjects) {
-          // Collect Set-Cookie headers
-          const setCookieHeaders = getSetCookieHeaders(headers);
-          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
-          // Pull out new URL if there is a redirect
-          const newLocation = getLocationHeader(headers);
+      // Calculate the content type
+      const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
+      // Update Cookie Jar
+      let currentUrl = finalUrl;
+      let setCookieStrings: string[] = [];
+      const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
-          if (newLocation !== null) {
-            currentUrl = urlResolve(currentUrl, newLocation.value);
-          }
+      for (const { headers } of headerResults) {
+        // Collect Set-Cookie headers
+        const setCookieHeaders = getSetCookieHeaders(headers);
+        setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
+        // Pull out new URL if there is a redirect
+        const newLocation = getLocationHeader(headers);
+
+        if (newLocation !== null) {
+          currentUrl = urlResolve(currentUrl, newLocation.value);
         }
+      }
 
-        // Update jar with Set-Cookie headers
-        for (const setCookieStr of setCookieStrings) {
-          try {
-            jar.setCookieSync(setCookieStr, currentUrl);
-          } catch (err) {
-            addTimelineText(`Rejected cookie: ${err.message}`);
-          }
+      // Update jar with Set-Cookie headers
+      for (const setCookieStr of setCookieStrings) {
+        try {
+          jar.setCookieSync(setCookieStr, currentUrl);
+        } catch (err) {
+          addTimelineText(`Rejected cookie: ${err.message}`);
         }
+      }
 
-        // Update cookie jar if we need to and if we found any cookies
-        if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
-          const cookies = await cookiesFromJar(jar);
-          await models.cookieJar.update(renderedRequest.cookieJar, {
-            cookies,
-          });
+      // Update cookie jar if we need to and if we found any cookies
+      if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
+        const cookies = await cookiesFromJar(jar);
+        await models.cookieJar.update(renderedRequest.cookieJar, {
+          cookies,
+        });
+      }
+
+      // Print informational message
+      if (setCookieStrings.length > 0) {
+        const n = setCookieStrings.length;
+
+        if (renderedRequest.settingStoreCookies) {
+          addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
+        } else {
+          addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
         }
+      }
 
-        // Print informational message
-        if (setCookieStrings.length > 0) {
-          const n = setCookieStrings.length;
+      const responsePatch: ResponsePatch = {
+        contentType: contentTypeHeader ? contentTypeHeader.value : '',
+        headers: lastCurlHeadersObject.headers,
+        httpVersion: lastCurlHeadersObject.version,
+        statusCode: lastCurlHeadersObject.code,
+        statusMessage: lastCurlHeadersObject.reason,
+        ...patch,
+      };
 
-          if (renderedRequest.settingStoreCookies) {
-            addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
-          } else {
-            addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
-          }
-        }
+      respond(responsePatch, responseBodyPath, debugTimeline);
 
-        // Return the response data
-        const responsePatch: ResponsePatch = {
-          contentType,
-          headers,
-          httpVersion,
-          statusCode,
-          statusMessage,
-          bytesContent: responseBodyBytes,
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
-        };
-        // Close the request
-        curl.close();
-        // Make sure the response body has been fully written first
-        await waitForStreamToFinish(responseBodyWriteStream);
-        // Send response
-        await respond(responsePatch, responseBodyPath);
-      });
-      curl.on('error', async function(err, code) {
-        let error = err + '';
-        let statusMessage = 'Error';
-
-        if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-          error = 'Request aborted';
-          statusMessage = 'Abort';
-        }
-
-        await respond(
-          {
-            statusMessage,
-            error,
-            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
-          },
-          null,
-          true,
-        );
-      });
-      curl.perform();
     } catch (err) {
       console.log('[network] Error', err);
       await handleError(err);
@@ -860,12 +749,12 @@ export async function sendWithSettings(
   requestId: string,
   requestPatch: Record<string, any>,
 ) {
+  console.log(`[network] Sending with settings req=${requestId}`);
   const request = await models.request.getById(requestId);
 
   if (!request) {
     throw new Error(`Failed to find request: ${requestId}`);
   }
-
   const settings = await models.settings.getOrCreate();
   const ancestors = await db.withAncestors(request, [
     models.request.type,
@@ -891,19 +780,26 @@ export async function sendWithSettings(
     request: RenderedRequest;
     context: Record<string, any>;
   };
-
   try {
-    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
+    renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(
+  const response = await _actuallySend(
     renderResult.request,
-    renderResult.context,
     workspace,
     settings,
     environment,
+    settings.validateAuthSSL,
+  );
+  if (response.error){
+    return response;
+  }
+  return _applyResponsePluginHooks(
+    response,
+    renderResult.request,
+    renderResult.context,
   );
 }
 
@@ -924,12 +820,12 @@ export async function send(
    */
   const timeSinceLastInteraction = Date.now() - lastUserInteraction;
   const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
-
   if (delayMillis > 0) {
     await delay(delayMillis);
   }
 
   // Fetch some things
+
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
   const ancestors = await db.withAncestors(request, [
@@ -944,11 +840,14 @@ export async function send(
 
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const renderResult = await getRenderedRequestAndContext(
-    request,
-    environmentId || null,
-    RENDER_PURPOSE_SEND,
-    extraInfo,
+    {
+      request,
+      environmentId,
+      purpose: RENDER_PURPOSE_SEND,
+      extraInfo,
+    },
   );
+
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
   const workspaceDoc = ancestors.find(isWorkspace);
@@ -968,7 +867,7 @@ export async function send(
   } catch (err) {
     return {
       environmentId: environmentId,
-      error: err.message,
+      error: err.message || 'Something went wrong',
       parentId: renderedRequestBeforePlugins._id,
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
       settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
@@ -980,17 +879,25 @@ export async function send(
 
   const response = await _actuallySend(
     renderedRequest,
-    renderedContextBeforePlugins,
     workspace,
     settings,
     environment,
+    settings.validateSSL,
   );
+
   console.log(
     response.error
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
       : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
   );
-  return response;
+  if (response.error){
+    return response;
+  }
+  return _applyResponsePluginHooks(
+    response,
+    renderedRequest,
+    renderedContextBeforePlugins,
+  );
 }
 
 async function _applyRequestPluginHooks(
@@ -1002,7 +909,7 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
       ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
@@ -1023,74 +930,42 @@ async function _applyResponsePluginHooks(
   response: ResponsePatch,
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-) {
-  const newResponse = clone(response);
-  const newRequest = clone(renderedRequest);
+): Promise<ResponsePatch> {
+  try {
+    const newResponse = clone(response);
+    const newRequest = clone(renderedRequest);
 
-  for (const { plugin, hook } of await plugins.getResponseHooks()) {
-    const context = {
-      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
-      ...(pluginContexts.store.init(plugin) as Record<string, any>),
-      ...(pluginContexts.response.init(newResponse) as Record<string, any>),
-      ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
+    for (const { plugin, hook } of await plugins.getResponseHooks()) {
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...pluginContexts.data.init(renderedContext.getProjectId()),
+        ...(pluginContexts.store.init(plugin) as Record<string, any>),
+        ...(pluginContexts.response.init(newResponse) as Record<string, any>),
+        ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
+        ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
+      };
+
+      try {
+        await hook(context);
+      } catch (err) {
+        err.plugin = plugin;
+        throw err;
+      }
+    }
+
+    return newResponse;
+  } catch (err) {
+    return {
+      url: renderedRequest.url,
+      parentId: renderedRequest._id,
+      error: `[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      statusMessage: 'Error',
+      settingSendCookies: renderedRequest.settingSendCookies,
+      settingStoreCookies: renderedRequest.settingStoreCookies,
     };
-
-    try {
-      await hook(context);
-    } catch (err) {
-      err.plugin = plugin;
-      throw err;
-    }
   }
 
-  return newResponse;
-}
-
-interface HeaderResult {
-  headers: ResponseHeader[];
-  version: string;
-  code: number;
-  reason: string;
-}
-
-export function _parseHeaders(
-  buffer: Buffer,
-) {
-  const results: HeaderResult[] = [];
-  const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
-
-  for (let i = 0, currentResult: HeaderResult | null = null; i < lines.length; i++) {
-    const line = lines[i];
-    const isEmptyLine = line.trim() === '';
-
-    // If we hit an empty line, start parsing the next response
-    if (isEmptyLine && currentResult) {
-      results.push(currentResult);
-      currentResult = null;
-      continue;
-    }
-
-    if (!currentResult) {
-      const [version, code, ...other] = line.split(/ +/g);
-      currentResult = {
-        version,
-        code: parseInt(code, 10),
-        reason: other.join(' '),
-        headers: [],
-      };
-    } else {
-      const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = {
-        name,
-        value: value || '',
-      };
-      currentResult.headers.push(header);
-    }
-  }
-
-  return results;
 }
 
 // exported for unit tests only
@@ -1109,49 +984,48 @@ export function _getAwsAuthHeaders(
 ): {
   name: string;
   value: string;
-  description?: string;
-  disabled?: boolean;
 }[] {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
   // AWS uses host header for signing so prioritize that if the user set it manually
   const hostHeader = getHostHeader(headers);
   const host = hostHeader ? hostHeader.value : parsedUrl.host;
-  const awsSignOptions = {
+  const awsSignOptions: aws4.Request = {
     service,
     region,
-    host,
+    ...(host ? { host } : {}),
     body,
     method,
-    path: parsedUrl.path,
-    headers: contentTypeHeader
-      ? {
-        'content-type': contentTypeHeader.value,
-      }
-      : {},
+    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
+    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
   };
   const signature = aws4.sign(awsSignOptions, credentials);
+  if (!signature.headers) {
+    return [];
+  }
   return Object.keys(signature.headers)
     .filter(name => name !== 'content-type') // Don't add this because we already have it
     .map(name => ({
       name,
-      value: signature.headers[name],
+      value: String(signature.headers?.[name]),
     }));
 }
 
 function storeTimeline(timeline: ResponseTimelineEntry[]) {
+  const timelineStr = JSON.stringify(timeline, null, '\t');
+  const timelineHash = uuidv4();
+  const responsesDir = pathJoin(getDataDirectory(), 'responses');
+  mkdirp.sync(responsesDir);
+  const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
+  if (process.type === 'renderer'){
+    return window.main.writeFile({ path: timelinePath, content: timelineStr });
+  }
   return new Promise<string>((resolve, reject) => {
-    const timelineStr = JSON.stringify(timeline, null, '\t');
-    const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
-    const responsesDir = pathJoin(getDataDirectory(), 'responses');
-    mkdirp.sync(responsesDir);
-    const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
     fs.writeFile(timelinePath, timelineStr, err => {
       if (err != null) {
-        reject(err);
-      } else {
-        resolve(timelinePath);
+        return reject(err);
       }
+      resolve(timelinePath);
     });
   });
 }

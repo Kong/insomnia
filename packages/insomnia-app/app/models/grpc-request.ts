@@ -2,17 +2,20 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'gRPC Request';
-
 export const type = 'GrpcRequest';
-
 export const prefix = 'greq';
-
 export const canDuplicate = true;
-
 export const canSync = true;
 
 export interface GrpcRequestBody {
   text?: string;
+}
+
+export interface GrpcRequestHeader {
+  name: string;
+  value: string;
+  description?: string;
+  disabled?: boolean;
 }
 
 interface BaseGrpcRequest {
@@ -22,6 +25,7 @@ interface BaseGrpcRequest {
   protoFileId?: string;
   protoMethodName?: string;
   body: GrpcRequestBody;
+  metadata: GrpcRequestHeader[];
   metaSortKey: number;
   isPrivate: boolean;
 }
@@ -43,6 +47,7 @@ export function init(): BaseGrpcRequest {
     description: '',
     protoFileId: '',
     protoMethodName: '',
+    metadata: [],
     body: {
       text: '{}',
     },

@@ -1,22 +1,24 @@
-import React, { PureComponent } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
-import Modal from '../base/modal';
-import Button from '../base/button';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import SettingsShortcuts from '../settings/shortcuts';
-import General from '../settings/general';
-import { ImportExport } from '../settings/import-export';
-import Plugins from '../settings/plugins';
-import Theme from '../settings/theme';
-import * as models from '../../../models/index';
-import { Curl } from 'node-libcurl';
-import Tooltip from '../tooltip';
-import { applyColorScheme } from '../../../plugins/misc';
+import { HotKeyRegistry } from 'insomnia-common';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+
 import * as session from '../../../account/session';
-import Account from '../settings/account';
+import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import * as models from '../../../models/index';
+import { RootState } from '../../redux/modules';
+import { selectSettings } from '../../redux/selectors';
+import { Button } from '../base/button';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { Account } from '../settings/account';
+import { General } from '../settings/general';
+import { ImportExport } from '../settings/import-export';
+import { Plugins } from '../settings/plugins';
+import { Shortcuts } from '../settings/shortcuts';
+import { ThemePanel } from '../settings/theme-panel';
 import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
@@ -24,8 +26,9 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-interface Props {
-  settings: any;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -33,10 +36,10 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SettingsModal extends PureComponent<Props, State> {
+export class UnconnectedSettingsModal extends PureComponent<Props, State> {
   state: State = {
     currentTabIndex: null,
-  }
+  };
 
   modal: Modal | null = null;
 
@@ -44,61 +47,8 @@ class SettingsModal extends PureComponent<Props, State> {
     this.modal = n;
   }
 
-  async _handleUpdateSetting(key: string, value: any) {
-    return models.settings.update(this.props.settings, {
-      [key]: value,
-    });
-  }
-
-  hideSettingsModal() {
-    this.modal?.hide();
-  }
-
-  async _handleChangeTheme(themeName, colorScheme, persist = true) {
-    const { settings } = this.props;
-    let patch;
-
-    switch (colorScheme) {
-      case 'light':
-        patch = {
-          lightTheme: themeName,
-        };
-        break;
-
-      case 'dark':
-        patch = {
-          darkTheme: themeName,
-        };
-        break;
-
-      case 'default':
-      default:
-        patch = {
-          theme: themeName,
-        };
-        break;
-    }
-
-    applyColorScheme({ ...settings, ...patch });
-
-    if (persist) {
-      await models.settings.update(settings, patch);
-    }
-  }
-
-  async _handleAutoDetectColorSchemeChange(autoDetectColorScheme, persist = true) {
-    const { settings } = this.props;
-    applyColorScheme({ ...settings, autoDetectColorScheme });
-
-    if (persist) {
-      models.settings.update(settings, {
-        autoDetectColorScheme,
-      });
-    }
-  }
-
-  async _handleUpdateKeyBindings(hotKeyRegistry) {
-    models.settings.update(this.props.settings, {
+  async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {
+    await models.settings.update(this.props.settings, {
       hotKeyRegistry,
     });
   }
@@ -128,9 +78,6 @@ class SettingsModal extends PureComponent<Props, State> {
           {getAppName()} Preferences
           <span className="faint txt-sm">
             &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
-            <Tooltip position="bottom" message={Curl.getVersion()}>
-              <i className="fa fa-info-circle" />
-            </Tooltip>
             {email ? ` – ${email}` : null}
           </span>
         </ModalHeader>
@@ -157,29 +104,18 @@ class SettingsModal extends PureComponent<Props, State> {
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <General
-                settings={settings}
-                hideModal={this.hide}
-                updateSetting={this._handleUpdateSetting}
-              />
+              <General />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
-                hideSettingsModal={this.hideSettingsModal}
+                hideSettingsModal={this.hide}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Theme
-                handleChangeTheme={this._handleChangeTheme}
-                activeTheme={settings.theme}
-                handleAutoDetectColorSchemeChange={this._handleAutoDetectColorSchemeChange}
-                autoDetectColorScheme={settings.autoDetectColorScheme}
-                activeLightTheme={settings.lightTheme}
-                activeDarkTheme={settings.darkTheme}
-              />
+              <ThemePanel />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <SettingsShortcuts
+              <Shortcuts
                 hotKeyRegistry={settings.hotKeyRegistry}
                 handleUpdateKeyBindings={this._handleUpdateKeyBindings}
               />
@@ -188,7 +124,7 @@ class SettingsModal extends PureComponent<Props, State> {
               <Account />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
+              <Plugins settings={settings} />
             </TabPanel>
           </Tabs>
         </ModalBody>
@@ -199,4 +135,13 @@ class SettingsModal extends PureComponent<Props, State> {
 
 export const showSettingsModal = () => showModal(SettingsModal);
 
-export default SettingsModal;
+const mapStateToProps = (state: RootState) => ({
+  settings: selectSettings(state),
+});
+
+export const SettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSettingsModal);

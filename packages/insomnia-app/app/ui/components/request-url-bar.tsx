@@ -1,35 +1,30 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { OpenDialogOptions, remote } from 'electron';
-import { DEBOUNCE_MILLIS, AUTOBIND_CFG, isMac } from '../../common/constants';
-import {
-  DropdownButton,
-  DropdownDivider,
-  DropdownHint,
-  DropdownItem,
-} from './base/dropdown';
-import Dropdown from './base/dropdown/dropdown';
-import { showPrompt } from './modals/index';
-import MethodDropdown from './dropdowns/method-dropdown';
-import PromptButton from './base/prompt-button';
-import OneLineEditor from './codemirror/one-line-editor';
-import KeydownBinder from './keydown-binder';
-import type { Request } from '../../models/request';
-import type { HotKeyRegistry } from '../../common/hotkeys';
+import { OpenDialogOptions } from 'electron';
+import { HotKeyRegistry } from 'insomnia-common';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
+import type { Request } from '../../models/request';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownDivider } from './base/dropdown/dropdown-divider';
+import { DropdownHint } from './base/dropdown/dropdown-hint';
+import { DropdownItem } from './base/dropdown/dropdown-item';
+import { PromptButton } from './base/prompt-button';
+import { OneLineEditor } from './codemirror/one-line-editor';
+import { MethodDropdown } from './dropdowns/method-dropdown';
+import { KeydownBinder } from './keydown-binder';
+import { showPrompt } from './modals/index';
 
 interface Props {
-  handleAutocompleteUrls: Function;
+  handleAutocompleteUrls: () => Promise<string[]>;
   handleGenerateCode: Function;
-  handleGetRenderContext: HandleGetRenderContext;
   handleImport: Function;
-  handleRender: HandleRender;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
-  isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
@@ -45,7 +40,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestUrlBar extends PureComponent<Props, State> {
+export class RequestUrlBar extends PureComponent<Props, State> {
   _urlChangeDebounceTimeout: NodeJS.Timeout | null = null;
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
@@ -55,9 +50,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
   state: State = {
     currentInterval: null,
     currentTimeout: null,
-  }
+  };
 
-  _lastPastedText: string | null = null;
+  _lastPastedText?: string;
 
   _inputHadFocus: boolean | undefined = false;
 
@@ -75,7 +70,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
 
   _handleMetaClickSend(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
-    this._dropdown && this._dropdown.show();
+    this._dropdown?.show();
   }
 
   _handleFormSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -103,7 +98,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
       }
 
       // Reset pasted text cache
-      this._lastPastedText = null;
+      this._lastPastedText = undefined;
       // Attempt to import the pasted text
       const importedRequest = await this.props.handleImport(pastedText);
 
@@ -116,9 +111,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
     }, DEBOUNCE_MILLIS);
   }
 
-  _handleUrlPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+  _handleUrlPaste(e: ClipboardEvent) {
     // NOTE: We're not actually doing the import here to avoid races with onChange
-    this._lastPastedText = e.clipboardData.getData('text/plain');
+    this._lastPastedText = e.clipboardData?.getData('text/plain');
   }
 
   _handleGenerateCode() {
@@ -132,7 +127,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
       buttonLabel: 'Select',
       properties: ['openDirectory'],
     };
-    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
 
     if (canceled) {
       return;
@@ -146,20 +141,20 @@ class RequestUrlBar extends PureComponent<Props, State> {
     this.props.handleUpdateDownloadPath(request._id, null);
   }
 
-  async _handleKeyDown(e: KeyboardEvent) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
-      this._input && this._input.focus();
-      this._input && this._input.selectAll();
+    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+      this._input?.focus();
+      this._input?.selectAll();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
-      this._methodDropdown && this._methodDropdown.toggle();
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
+      this._methodDropdown?.toggle();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
-      this._dropdown && this._dropdown.toggle(true);
+    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
+      this._dropdown?.toggle(true);
     });
   }
 
@@ -294,7 +289,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           type="button"
           key="cancel-interval"
           className="urlbar__send-btn danger"
-          onClick={this._handleStopInterval}>
+          onClick={this._handleStopInterval}
+        >
           Stop
         </button>
       );
@@ -304,7 +300,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           type="button"
           key="cancel-timeout"
           className="urlbar__send-btn danger"
-          onClick={this._handleStopTimeout}>
+          onClick={this._handleStopTimeout}
+        >
           Cancel
         </button>
       );
@@ -318,7 +315,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           <DropdownButton
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
-            onClick={this._handleClickSend}>
+            onClick={this._handleClickSend}
+          >
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
@@ -341,7 +339,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
               stayOpenAfterClick
               addIcon
               buttonClass={PromptButton}
-              onClick={this._handleClearDownloadLocation}>
+              onClick={this._handleClearDownloadLocation}
+            >
               <i className="fa fa-stop-circle" /> Stop Auto-Download
             </DropdownItem>
           ) : (
@@ -359,24 +358,27 @@ class RequestUrlBar extends PureComponent<Props, State> {
     return [cancelButton, sendButton];
   }
 
+  // note: not an unused function, used by parent, RequestPane
+  focusInput() {
+    this._input?.focus(true);
+  }
+
   render() {
     const {
       request,
-      handleRender,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-      handleGetRenderContext,
       handleAutocompleteUrls,
       uniquenessKey,
     } = this.props;
     const { url, method } = request;
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="urlbar">
           <MethodDropdown
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
-            method={method}>
+            method={method}
+          >
             {method} <i className="fa fa-caret-down" />
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>
@@ -386,11 +388,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
               onPaste={this._handleUrlPaste}
               forceEditor
               type="text"
-              render={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
-              getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}
               onChange={this._handleUrlChange}
@@ -402,5 +400,3 @@ class RequestUrlBar extends PureComponent<Props, State> {
     );
   }
 }
-
-export default RequestUrlBar;

@@ -1,22 +1,24 @@
-import { Spectral, isOpenApiv2, isOpenApiv3 } from '@stoplight/spectral';
-import type { GlobalOptions } from '../get-options';
-import { loadDb } from '../db';
-import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
-import { logger } from '../logger';
-import { InsoError } from '../errors';
+import { isOpenApiv2, isOpenApiv3, Spectral } from '@stoplight/spectral';
 import fs from 'fs';
 import path from 'path';
+
+import { loadDb } from '../db';
+import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
+import { InsoError } from '../errors';
+import type { GlobalOptions } from '../get-options';
+import { logger } from '../logger';
 
 export type LintSpecificationOptions = GlobalOptions;
 
 export async function lintSpecification(
   identifier: string | null | undefined,
-  { workingDir, appDataDir, ci }: LintSpecificationOptions,
+  { workingDir, appDataDir, ci, src }: LintSpecificationOptions,
 ) {
   const db = await loadDb({
     workingDir,
     appDataDir,
     filterTypes: ['ApiSpec'],
+    src,
   });
 
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
@@ -58,7 +60,7 @@ export async function lintSpecification(
 
   if (results.length) {
     logger.log(`${results.length} lint errors found. \n`);
-    results.forEach((r) =>
+    results.forEach(r =>
       logger.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
     );
     return false;

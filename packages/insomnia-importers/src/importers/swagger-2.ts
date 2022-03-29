@@ -1,9 +1,10 @@
-import crypto from 'crypto';
-import { unthrowableParseJson } from '../utils';
 import SwaggerParser from '@apidevtools/swagger-parser';
+import crypto from 'crypto';
 import { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
+
 import { Converter, Header, ImportRequest } from '../entities';
+import { unthrowableParseJson } from '../utils';
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
@@ -68,8 +69,8 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
         schemasPerMethod,
       ) as (keyof OpenAPIV2.PathItemObject)[];
       return methods
-        .filter((method) => method !== 'parameters' && method !== '$ref')
-        .map((method) => ({
+        .filter(method => method !== 'parameters' && method !== '$ref')
+        .map(method => ({
           ...(schemasPerMethod[method] as OpenAPIV2.OperationObject),
           path,
           method,
@@ -80,7 +81,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   const tags = document.tags || [];
 
   const implicitTags = endpointsSchemas
-    .map((endpointSchema) => endpointSchema.tags)
+    .map(endpointSchema => endpointSchema.tags)
     .flat()
     .reduce((distinct, value) => {
       // remove duplicates
@@ -89,8 +90,8 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
       }
       return distinct;
     }, [] as string[])
-    .filter((tag) => !tags.map((tag) => tag.name).includes(tag))
-    .map((name) => ({ name, description: '' }));
+    .filter(tag => !tags.map(tag => tag.name).includes(tag))
+    .map(name => ({ name, description: '' }));
 
   const folders = [...tags, ...implicitTags].map(
     importFolderItem(defaultParent),
@@ -105,7 +106,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   );
 
   const requests: ImportRequest[] = [];
-  endpointsSchemas.map((endpointSchema) => {
+  endpointsSchemas.map(endpointSchema => {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) tags = [''];
     tags.forEach((tag, index) => {
@@ -143,7 +144,7 @@ const importRequest = (
 
   let headers = prepareHeaders(endpointSchema);
   const noContentTypeHeader = !headers?.find(
-    (header) => header.name === 'Content-Type',
+    header => header.name === 'Content-Type',
   );
 
   if (body.mimeType && noContentTypeHeader) {
@@ -314,7 +315,7 @@ const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => {
   return (
     convertParameters(
       ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        (parameter) => parameter.in === 'query',
+        parameter => parameter.in === 'query',
       ),
     ) || []
   );
@@ -329,7 +330,7 @@ const prepareHeaders = (
   return (
     (convertParameters(
       ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        (parameter) => parameter.in === 'header',
+        parameter => parameter.in === 'header',
       ),
     ) as Header[]) || []
   );
@@ -355,14 +356,14 @@ const prepareBody = (
 ) => {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
 
-  const supportedMimeType = SUPPORTED_MIME_TYPES.find((mimeType) =>
+  const supportedMimeType = SUPPORTED_MIME_TYPES.find(mimeType =>
     mimeTypes.includes(mimeType),
   );
 
   if (supportedMimeType === MIMETYPE_JSON) {
     const parameters = endpointSchema.parameters || [];
     const bodyParameter = parameters.find(
-      (parameter) => (parameter as OpenAPIV2.Parameter).in === 'body',
+      parameter => (parameter as OpenAPIV2.Parameter).in === 'body',
     );
 
     if (!bodyParameter) {
@@ -397,7 +398,7 @@ const prepareBody = (
   ) {
     const parameters = endpointSchema.parameters || [];
     const formDataParameters = ((parameters as unknown) as OpenAPIV2.Parameter[]).filter(
-      (parameter) => parameter.in === 'formData',
+      parameter => parameter.in === 'formData',
     );
 
     if (formDataParameters.length === 0) {
@@ -464,7 +465,7 @@ const generateParameterExample = (
       const { properties } = parameter;
       if (properties) {
         ancestors.push(parameter);
-        Object.keys(properties).forEach((propertyName) => {
+        Object.keys(properties).forEach(propertyName => {
           // @ts-expect-error there's no way, so far as I'm aware, for TypeScript to know what's actually going on here.
           example[propertyName] = generateParameterExample(
             properties[propertyName],
@@ -518,7 +519,7 @@ const generateParameterExample = (
  * Converts swagger schema of parameters into insomnia one.
  */
 const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
-  return parameters?.map((parameter) => {
+  return parameters?.map(parameter => {
     const { required, name, type } = parameter;
 
     if (type === 'file') {
@@ -537,7 +538,7 @@ const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
   });
 };
 
-export const convert: Converter = async (rawData) => {
+export const convert: Converter = async rawData => {
   requestCount = 1; // Validate
 
   let api = await parseDocument(rawData);

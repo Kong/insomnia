@@ -1,22 +1,78 @@
-import React from 'react';
 import * as electron from 'electron';
-import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
+import React from 'react';
+
+import * as analytics from '../../../app/common/analytics';
+import { axiosRequest as axios } from '../../../app/network/axios-request';
+import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {
   RENDER_PURPOSE_GENERAL,
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
-import WrapperModal from '../../ui/components/modals/wrapper-modal';
-import HtmlElementWrapper from '../../ui/components/html-element-wrapper';
-import { axiosRequest as axios } from '../../../app/network/axios-request';
-import * as analytics from '../../../app/common/analytics';
+import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
+import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
+import { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
+import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
+
+interface DialogOptions {
+  onHide?: () => void;
+  tall?: boolean;
+  skinny?: boolean;
+  wide?: boolean;
+}
+
+interface AppInfo {
+  version: string;
+  platform: NodeJS.Platform;
+}
+
+interface ShowDialogOptions {
+  defaultPath?: string;
+}
+
+interface AppClipboard {
+  readText(): string;
+  writeText(text: string): void;
+  clear(): void;
+}
+
+interface ShowGenericModalDialogOptions {
+  html?: string;
+}
+
+export interface AppContext {
+  alert: (
+    title: string,
+    message?: string
+  ) => Promise<undefined> | ReturnType<typeof showAlert>;
+  dialog: (title: string, body: HTMLElement, options?: DialogOptions) => void;
+  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'cancelable'>) => Promise<string>;
+  getPath: (name: string) => string;
+  getInfo: () => AppInfo;
+  showSaveDialog: (options?: ShowDialogOptions) => Promise<string | null>;
+  clipboard: AppClipboard;
+  /**
+   * @deprecated as it was never officially supported
+   */
+  showGenericModalDialog: (
+    title: string,
+    options?: ShowGenericModalDialogOptions
+  ) => void;
+}
+
+export interface PrivateProperties {
+  axios: typeof axios;
+  analytics: typeof analytics;
+}
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
-  app: Record<string, any>;
+  app: AppContext;
+  __private: PrivateProperties;
 } {
   const canShowDialogs =
-    renderPurpose === RENDER_PURPOSE_SEND || renderPurpose === RENDER_PURPOSE_NO_RENDER;
+    renderPurpose === RENDER_PURPOSE_SEND ||
+    renderPurpose === RENDER_PURPOSE_NO_RENDER;
   return {
     app: {
       alert(title: string, message?: string) {
@@ -32,15 +88,13 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
       dialog(
         title,
-        body: HTMLElement,
-        options: {
-          onHide?: () => void;
-          tall?: boolean;
-          skinny?: boolean;
-          wide?: boolean;
-        } = {},
+        body,
+        options = {},
       ) {
-        if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
+        if (
+          renderPurpose !== RENDER_PURPOSE_SEND &&
+          renderPurpose !== RENDER_PURPOSE_NO_RENDER
+        ) {
           return;
         }
 
@@ -54,21 +108,18 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
 
       prompt(
-        title: string,
-        options?: {
-          label?: string;
-          defaultValue?: string;
-          submitName?: string;
-          cancelable?: boolean;
-        },
+        title,
+        options = {},
       ) {
-        options = options || {};
-
         if (!canShowDialogs) {
           return Promise.resolve(options.defaultValue || '');
         }
 
-        return new Promise((resolve, reject) => {
+        // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
+        return new Promise<string>((resolve, reject) => {
+          let shouldResolve = false;
+          let resolveWith: string | null = null;
+
           showPrompt({
             title,
             ...(options || ({} as Record<string, any>)),
@@ -78,7 +129,15 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
             },
 
             onComplete(value: string) {
-              resolve(value);
+              shouldResolve = true;
+              resolveWith = value;
+            },
+
+            // don't resolve the overall promise until the modal has hidden after clicking submit
+            onHide() {
+              if (shouldResolve && resolveWith !== null) {
+                resolve(resolveWith);
+              }
             },
           });
         });
@@ -87,17 +146,22 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       getPath(name: string) {
         switch (name.toLowerCase()) {
           case 'desktop':
-            return electron.remote.app.getPath('desktop');
+            return window.app.getPath('desktop');
 
           default:
             throw new Error(`Unknown path name ${name}`);
         }
       },
 
+      getInfo() {
+        return {
+          version: getAppVersion(),
+          platform: getAppPlatform(),
+        };
+      },
+
       async showSaveDialog(
-        options: {
-          defaultPath?: string;
-        } = {},
+        options = {},
       ): Promise<string | null> {
         if (!canShowDialogs) {
           return Promise.resolve(null);
@@ -108,30 +172,46 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           buttonLabel: 'Save',
           defaultPath: options.defaultPath,
         };
-        const { filePath } = await electron.remote.dialog.showSaveDialog(saveOptions);
+        const { filePath } = await window.dialog.showSaveDialog(
+          saveOptions
+        );
         return filePath || null;
+      },
+
+      clipboard: {
+        readText() {
+          return electron.clipboard.readText();
+        },
+
+        writeText(text) {
+          electron.clipboard.writeText(text);
+        },
+
+        clear() {
+          electron.clipboard.clear();
+        },
       },
 
       // ~~~~~~~~~~~~~~~~~~ //
       // Deprecated Methods //
       // ~~~~~~~~~~~~~~~~~~ //
-
-      /** @deprecated as it was never officially supported */
       showGenericModalDialog(
-        title: string,
-        options: {
-          html?: string;
-        } = {},
+        title,
+        options = {},
       ) {
-        console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
+        console.warn(
+          'app.showGenericModalDialog() is deprecated. Use app.dialog() instead.'
+        );
         // Create DOM node so we can adapt to the new dialog() method
         const body = document.createElement('div');
-        // @ts-expect-error -- TSCONVERSION
-        body.innerHTML = options.html;
+
+        if (options.html) {
+          body.innerHTML = options.html;
+        }
+
         return this.dialog(title, body);
       },
     },
-    // @ts-expect-error -- TSCONVERSION
     __private: {
       axios,
       analytics,

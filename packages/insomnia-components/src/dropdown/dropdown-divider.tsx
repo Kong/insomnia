@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
+import React, { FC, memo } from 'react';
 import styled, { css } from 'styled-components';
 
 const StyledDivider = styled.div<{ hasName: boolean }>`
-  border-bottom: 1px solid var(--hl-lg);
+  border-bottom: 1px solid var(--hl-sm);
   overflow: visible !important;
   height: 0;
   margin: var(--padding-md) var(--padding-md) var(--padding-md) var(--padding-md);
@@ -25,13 +25,10 @@ const StyledLabel = styled.span`
   font-family: var(--font-default);
 `;
 
-export class DropdownDivider extends PureComponent {
-  render() {
-    const { children } = this.props;
-    return (
-      <StyledDivider hasName={!!children}>
-        {children && <StyledLabel>{children}</StyledLabel>}
-      </StyledDivider>
-    );
-  }
-}
+export const DropdownDivider: FC = memo(({ children }) => (
+  <StyledDivider hasName={!!children}>
+    {children && <StyledLabel>{children}</StyledLabel>}
+  </StyledDivider>
+));
+
+DropdownDivider.displayName = 'DropdownDivider';

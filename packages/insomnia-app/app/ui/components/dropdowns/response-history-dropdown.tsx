@@ -1,22 +1,25 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
+import React, { Fragment, PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import moment from 'moment';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
-import StatusTag from '../tags/status-tag';
-import URLTag from '../tags/url-tag';
-import PromptButton from '../base/prompt-button';
-import KeydownBinder from '../keydown-binder';
-import TimeTag from '../tags/time-tag';
-import SizeTag from '../tags/size-tag';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import TimeFromNow from '../time-from-now';
-import type { Response } from '../../../models/response';
-import type { RequestVersion } from '../../../models/request-version';
+import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
+import type { RequestVersion } from '../../../models/request-version';
+import type { Response } from '../../../models/response';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { PromptButton } from '../base/prompt-button';
+import { KeydownBinder } from '../keydown-binder';
+import { SizeTag } from '../tags/size-tag';
+import { StatusTag } from '../tags/status-tag';
+import { TimeTag } from '../tags/time-tag';
+import { URLTag } from '../tags/url-tag';
+import { TimeFromNow } from '../time-from-now';
 
 interface Props {
   handleSetActiveResponse: Function;
@@ -31,7 +34,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseHistoryDropdown extends PureComponent<Props> {
+export class ResponseHistoryDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _handleDeleteResponses() {
@@ -48,13 +51,13 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     this.props.handleSetActiveResponse(response);
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
-      this._dropdown && this._dropdown.toggle(true);
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
+      this._dropdown?.toggle(true);
     });
   }
 
-  renderDropdownItem(response: Response, i: number) {
+  renderDropdownItem(response: Response) {
     const { activeResponse, requestVersions } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
@@ -67,8 +70,9 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
       <DropdownItem
         key={response._id}
         disabled={active}
-        value={i === 0 ? null : response}
-        onClick={this._handleSetActiveResponse}>
+        value={response}
+        onClick={this._handleSetActiveResponse}
+      >
         {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
         <StatusTag
           small
@@ -95,42 +99,47 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
   }
 
   renderPastResponses(responses: Response[]) {
-    const now = moment();
-    // Four arrays for four time groups
-    const categories = {
-      minutes: [] as Response[],
-      hours: [] as Response[],
-      today: [] as Response[],
-      week: [] as Response[],
-      other: [] as Response[],
+    const now = new Date();
+
+    const categories: Record<string, Response[]> = {
+      minutes: [],
+      hours: [],
+      today: [],
+      week: [],
+      other: [],
     };
 
     responses.forEach(response => {
-      const resTime = moment(response.created);
+      const responseTime = new Date(response.created);
 
-      if (now.diff(resTime, 'minutes') < 5) {
-        // Five minutes ago
+      if (differenceInMinutes(now, responseTime) < 5) {
         categories.minutes.push(response);
-      } else if (now.diff(resTime, 'hours') < 2) {
-        // Two hours ago
-        categories.hours.push(response);
-      } else if (now.isSame(resTime, 'day')) {
-        // Today
-        categories.today.push(response);
-      } else if (now.isSame(resTime, 'week')) {
-        // This week
-        categories.week.push(response);
-      } else {
-        // Older
-        categories.other.push(response);
+        return;
       }
+
+      if (differenceInHours(now, responseTime) < 2) {
+        categories.hours.push(response);
+        return;
+      }
+
+      if (isToday(responseTime)) {
+        categories.today.push(response);
+        return;
+      }
+
+      if (isThisWeek(responseTime)) {
+        categories.week.push(response);
+        return;
+      }
+
+      categories.other.push(response);
     });
 
     return (
       <Fragment>
-        <DropdownDivider>5 Minutes Ago</DropdownDivider>
+        <DropdownDivider>Just Now</DropdownDivider>
         {categories.minutes.map(this.renderDropdownItem)}
-        <DropdownDivider>2 Hours Ago</DropdownDivider>
+        <DropdownDivider>Less Than Two Hours Ago</DropdownDivider>
         {categories.hours.map(this.renderDropdownItem)}
         <DropdownDivider>Today</DropdownDivider>
         {categories.today.map(this.renderDropdownItem)}
@@ -166,7 +175,7 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
           {...extraProps}
         >
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
-            {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
+            {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
             {!isLatestResponseActive ? (
               <i className="fa fa-thumb-tack space-left" />
             ) : (
@@ -190,5 +199,3 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default ResponseHistoryDropdown;

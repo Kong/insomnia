@@ -1,42 +1,59 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, AUTOBIND_CFG, GlobalActivity, isWorkspaceActivity } from '../../../common/constants';
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import Button from '../base/button';
-import Highlight from '../base/highlight';
-import Modal from '../base/modal';
-import ModalHeader from '../base/modal-header';
-import ModalBody from '../base/modal-body';
-import MethodTag from '../tags/method-tag';
-import { fuzzyMatchAll } from '../../../common/misc';
-import type { BaseModel } from '../../../models';
-import * as models from '../../../models';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import { isRequest, Request } from '../../../models/request';
-import { isDesign, Workspace } from '../../../models/workspace';
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import KeydownBinder from '../keydown-binder';
-import type { RequestMeta } from '../../../models/request-meta';
 import { keyboardKeys } from '../../../common/keyboard-keys';
-import { setActiveActivity, setActiveWorkspace } from '../../redux/modules/global';
+import { fuzzyMatchAll } from '../../../common/misc';
+import * as models from '../../../models';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isRequest, Request } from '../../../models/request';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { activateWorkspace } from '../../redux/modules/workspace';
+import { selectActiveRequest, selectActiveWorkspace, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { Button } from '../base/button';
+import { Highlight } from '../base/highlight';
+import { Modal } from '../base/modal';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
+import { KeydownBinder } from '../keydown-binder';
+import { GrpcTag } from '../tags/grpc-tag';
+import { MethodTag } from '../tags/method-tag';
+import { wrapToIndex } from './utils';
 
-interface Props {
-  handleSetActiveWorkspace: typeof setActiveWorkspace;
-  handleSetActiveActivity: typeof setActiveActivity;
+type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+
+const mapStateToProps = (state: RootState) => ({
+  activeRequest: selectActiveRequest(state),
+  workspace: selectActiveWorkspace(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+  requestMetas: selectRequestMetas(state),
+  grpcRequestMetas: selectGrpcRequestMetas(state),
+  workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
+});
+
+const mapDispatchToProps = dispatch => {
+  const bound = bindActionCreators({ activateWorkspace }, dispatch);
+  return {
+    handleActivateWorkspace: bound.activateWorkspace,
+  };
+};
+
+interface Props extends ReduxProps {
   activateRequest: (id: string) => void;
-  activeRequest?: Request;
-  workspaceChildren: (Request | RequestGroup)[];
-  workspace?: Workspace;
-  workspaces: Workspace[];
-  requestMetas: RequestMeta[];
 }
 
 interface State {
   searchString: string;
-  workspaces: Workspace[];
-  matchedRequests: Request[];
+  workspacesForActiveProject: Workspace[];
+  matchedRequests: (Request | GrpcRequest)[];
   matchedWorkspaces: Workspace[];
   activeIndex: number;
   maxRequests: number;
@@ -56,7 +73,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   state: State = {
     searchString: '',
-    workspaces: [],
+    workspacesForActiveProject: [],
     matchedRequests: [],
     matchedWorkspaces: [],
     activeIndex: -1,
@@ -67,7 +84,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     hideNeverActiveRequests: false,
     isModalVisible: true,
     title: null,
-  }
+  };
 
   _handleInputKeydown(e: React.KeyboardEvent<HTMLDivElement>) {
     const keyCode = e.keyCode;
@@ -98,15 +115,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   _setActiveIndex(activeIndex: number) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
-
-    if (activeIndex < 0) {
-      activeIndex = this.state.matchedRequests.length - 1;
-    } else if (activeIndex >= maxIndex) {
-      activeIndex = 0;
-    }
-
     this.setState({
-      activeIndex,
+      activeIndex: wrapToIndex(activeIndex, maxIndex),
     });
   }
 
@@ -154,29 +164,18 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   async _activateWorkspace(workspace: Workspace) {
-    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await this.props.handleActivateWorkspace({ workspace });
 
-    let goToActivity: GlobalActivity;
-
-    if (activeActivity && isWorkspaceActivity(activeActivity)) {
-      goToActivity = activeActivity;
-    } else {
-      goToActivity = isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG;
-    }
-
-    this.props.handleSetActiveActivity(goToActivity);
-    this.props.handleSetActiveWorkspace(workspace._id);
-
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
-  _activateRequest(request: Request) {
+  _activateRequest(request: Request | GrpcRequest) {
     if (!request) {
       return;
     }
 
     this.props.activateRequest(request._id);
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -184,9 +183,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: BaseModel): string[] {
-    const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(isRequestGroup);
+  _groupOf(requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] {
+    const { workspaceRequestsAndRequestGroups } = this.props;
+    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
     const currentGroupName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
 
@@ -204,16 +203,23 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     return this._groupOf(matchedGroups[0]);
   }
 
-  _isMatch(request: Request, searchStrings: string): number | null {
+  _isMatch(request: Request | GrpcRequest, searchStrings: string): number | null {
     let finalUrl = request.url;
+    let method = '';
 
-    if (request.parameters) {
+    if (isRequest(request)) {
       finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
+      method = request.method;
+    }
+
+    if (isGrpcRequest(request)) {
+      finalUrl = request.url + request.protoMethodName;
+      method = METHOD_GRPC;
     }
 
     const match = fuzzyMatchAll(
       searchStrings,
-      [request.name, finalUrl, request.method || '', this._groupOf(request).join('/')],
+      [request.name, finalUrl, method, this._groupOf(request).join('/')],
       {
         splitSpace: true,
       },
@@ -234,17 +240,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   _handleChangeValue(searchString: string) {
-    const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
+    const { workspace, workspaceRequestsAndRequestGroups, workspacesForActiveProject, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
     const lastActiveMap = {};
 
     for (const meta of requestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
     }
+    for (const meta of grpcRequestMetas) {
+      lastActiveMap[meta.parentId] = meta.lastActive;
+    }
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = workspaceChildren
-      .filter(isRequest)
+    let matchedRequests = (workspaceRequestsAndRequestGroups
+      .filter(child => isRequest(child) || isGrpcRequest(child)) as (Request | GrpcRequest)[])
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -265,14 +274,14 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       matchedRequests = matchedRequests
         .map(r => ({
           request: r,
-          score: this._isMatch(r as any, searchString),
+          score: this._isMatch(r, searchString),
         }))
         .filter(v => v.score !== null)
         .sort((a, b) => (a.score || -Infinity) - (b.score || -Infinity))
         .map(v => v.request);
     }
 
-    const matchedWorkspaces = workspaces
+    const matchedWorkspaces = workspacesForActiveProject
       .filter(w => w._id !== workspace?._id)
       .filter(w => {
         const name = w.name.toLowerCase();
@@ -286,7 +295,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.setState({
       searchString,
       activeIndex: indexOfFirstNonActiveRequest >= 0 ? indexOfFirstNonActiveRequest : 0,
-      matchedRequests: (matchedRequests as any[]).slice(0, maxRequests),
+      matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }
@@ -303,7 +312,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     } = {},
   ) {
     // Don't show if we're already showing
-    if (this.modal && this.modal.isOpen()) {
+    if (this.modal?.isOpen()) {
       return;
     }
 
@@ -333,39 +342,39 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       // Change value after because it accesses state properties
       this._handleChangeValue('');
     });
-    this.modal && this.modal.show();
-    setTimeout(() => this._input && this._input.focus(), 100);
+    this.modal?.show();
+    setTimeout(() => this._input?.focus(), 100);
   }
 
   hide() {
     if (this._openTimeout !== null) {
       clearTimeout(this._openTimeout);
     }
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   toggle() {
-    if (this.modal && this.modal.isOpen()) {
+    if (this.modal?.isOpen()) {
       this.hide();
     } else {
       this.show();
     }
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    if (e.keyCode === keyboardKeys.esc.keyCode) {
+  _handleKeydown(event: KeyboardEvent) {
+    if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
     }
 
     // Only control up/down with tab if modal is visible
-    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex + 1);
       }
     });
     // Only control up/down with tab if modal is visible
-    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex - 1);
       }
@@ -378,7 +387,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     // the user unpresses the hotkey that triggered this modal but we currently do not
     // have the facilities to do that.
     const isMetaKeyDown = e.ctrlKey || e.shiftKey || e.metaKey || e.altKey;
-    const isActive = this.modal && this.modal.isOpen();
+    const isActive = this.modal?.isOpen();
 
     if (selectOnKeyup && isActive && !isMetaKeyDown) {
       await this._activateCurrentIndex();
@@ -396,14 +405,15 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       title,
       isModalVisible,
     } = this.state;
-    const { workspaceChildren, workspace } = this.props;
-    const requestGroups = workspaceChildren.filter(isRequestGroup);
+    const { workspaceRequestsAndRequestGroups, workspace } = this.props;
+    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal
           ref={this._setModalRef}
           dontFocus={!disableInput}
-          className={isModalVisible ? '' : 'hide'}>
+          className={isModalVisible ? '' : 'hide'}
+        >
           <ModalHeader hideCloseButton>
             {title || (
               <Fragment>
@@ -458,8 +468,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                         <Highlight search={searchString} text={r.name} />
                       </div>
                       <div className="margin-left-xs faint">
-                        <MethodTag method={r.method} />
-                        <Highlight search={searchString} text={r.url} />
+                        { isRequest(r) ? <MethodTag method={r.method} /> : null}
+                        { isGrpcRequest(r) ? <GrpcTag /> : null }
+                        { <Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url } /> }
                       </div>
                     </Button>
                   </li>
@@ -496,7 +507,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 {workspace ? <button
                   className="btn btn--outlined btn--compact"
                   disabled={!searchString}
-                  onClick={this._activateCurrentIndex}>
+                  onClick={this._activateCurrentIndex}
+                >
                   Create a request named {searchString}
                 </button> : null}
               </div>
@@ -508,4 +520,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 }
 
-export default RequestSwitcherModal;
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+  null,
+  { forwardRef: true }
+)(RequestSwitcherModal);
