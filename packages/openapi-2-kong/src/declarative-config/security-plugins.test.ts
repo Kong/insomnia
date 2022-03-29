@@ -1,4 +1,4 @@
-import { OA3SecurityScheme } from '../types/openapi3';
+import { OA3SecurityScheme, OA3SecuritySchemeOpenIdConnect } from '../types/openapi3';
 import { tags } from './jest/test-helpers';
 import { generateSecurityPlugin } from './security-plugins';
 
@@ -17,6 +17,34 @@ describe('security-plugins', () => {
         tags,
         config: {
           key_names: ['x-api-key'],
+        },
+      });
+    });
+
+    it('concatenates kongSecurity config', async () => {
+      const scheme = {
+        name: 'ziltoid',
+        type: 'openIdConnect',
+        openIdConnectUrl: 'https://idp-endpoint.example.com/.well-kown',
+        'x-kong-security-openid-connect': {
+          config: {
+            'auth_methods': ['bearer'],
+          },
+          enabled: true,
+          protocols: ['http', 'https'],
+        },
+      } as OA3SecuritySchemeOpenIdConnect;
+
+      const scopesRequired = ['required_scope', 'ziltoid_omniscient_power'];
+      const result = generateSecurityPlugin(scheme, scopesRequired, tags);
+      expect(result).toMatchObject({
+        name: 'openid-connect',
+        config: {
+          issuer: 'https://idp-endpoint.example.com/.well-kown',
+          'scopes_required': scopesRequired,
+          'auth_methods': [
+            'bearer',
+          ],
         },
       });
     });
