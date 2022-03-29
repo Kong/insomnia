@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useCallback } from 'react';
 
-import { kebabCase } from '../../../../../common/misc';
+import { toKebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { Button } from '../../../base/button';
 import { AuthRow } from './auth-row';
@@ -31,7 +31,7 @@ export const AuthToggleRow: FC<Props> = ({
 
   const isActuallyOn = invert ? !databaseValue : databaseValue;
 
-  const id = kebabCase(label);
+  const id = toKebabCase(label);
   const title = isActuallyOn ? onTitle : offTitle;
 
   return (
