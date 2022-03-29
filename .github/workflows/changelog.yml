@@ -163,7 +163,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          if-no-files-found: ignore
+          if-no-files-found: error
           name: changelog-image-${{ needs.parse-version.outputs.version }}
           path: |
             *.svg
