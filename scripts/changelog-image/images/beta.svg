@@ -1,0 +1,22 @@
+<svg width="827" height="350" viewBox="0 0 827 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_0_83)">
+<rect width="826.67" height="350" rx="6" fill="url(#paint0_linear_0_83)"/>
+<text stroke="#5A3884" stroke-opacity="0.5" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="96" font-weight="900" letter-spacing="0em"><tspan x="104" y="205.909">Beta Release</tspan></text>
+<text stroke="#5A3884" stroke-opacity="0.6" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="96" font-weight="900" letter-spacing="0em"><tspan x="104" y="185.909">Beta Release</tspan></text>
+<text id="version" fill="white" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="48" font-weight="bold" letter-spacing="0em"><tspan x="332.547" y="292.455">2022.3.0</tspan></text>
+<text fill="white" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="48" font-weight="200" letter-spacing="0em"><tspan x="121.609" y="292.455">Insomnia </tspan></text>
+<text id="revision" fill="white" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="48" font-weight="300" letter-spacing="0em"><tspan x="675.953" y="292.455">0</tspan></text>
+<text id="beta" fill="white" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="48" font-weight="300" letter-spacing="0em"><tspan x="546.062" y="292.455"> Beta </tspan></text>
+<text stroke="#5A3884" stroke-opacity="0.8" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="96" font-weight="900" letter-spacing="0em"><tspan x="104" y="165.909">Beta Release</tspan></text>
+<text fill="white" stroke="white" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="96" font-weight="900" letter-spacing="0em"><tspan x="104" y="142.909">Beta Release</tspan></text>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_83" x1="413.335" y1="0" x2="413.335" y2="350" gradientUnits="userSpaceOnUse">
+<stop stop-color="#150326"/>
+<stop offset="1"/>
+</linearGradient>
+<clipPath id="clip0_0_83">
+<rect width="826.67" height="350" fill="white"/>
+</clipPath>
+</defs>
+</svg>
