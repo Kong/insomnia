@@ -12,7 +12,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
-          "name": "Security_Example-only_oath2-get",
+          "name": "Security_Example-only-oath2-get",
           "plugins": [
             {
               "config": { "auth_methods": ["client_credentials"] },
@@ -26,7 +26,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
-          "name": "Security_Example-only_key-get",
+          "name": "Security_Example-only-key-get",
           "plugins": [
             {
               "config": { "key_names": ["api_key_by_me"] },
@@ -40,7 +40,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
-          "name": "Security_Example-and_based_auth-get",
+          "name": "Security_Example-and-based-auth-get",
           "plugins": [
             {
               "config": { "auth_methods": ["client_credentials"] },
@@ -54,7 +54,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
-          "name": "Security_Example-or_based_auth-get",
+          "name": "Security_Example-or-based-auth-get",
           "plugins": [
             {
               "config": { "key_names": ["api_key_by_me"] },
@@ -68,7 +68,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
-          "name": "Security_Example-only_oidc-get",
+          "name": "Security_Example-only-oidc-get",
           "plugins": [
             {
               "config": {
@@ -85,7 +85,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
-          "name": "Security_Example-only_basic-get",
+          "name": "Security_Example-only-basic-get",
           "plugins": [
             {
               "name": "basic-auth",
