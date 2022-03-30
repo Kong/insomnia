@@ -1,0 +1,13 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Sample-API
+servers:
+  - url: https://example.com
+paths:
+  /list:
+    get:
+      description: Returns a list of stuff
+      responses:
+        '200':
+          description: Successful response
