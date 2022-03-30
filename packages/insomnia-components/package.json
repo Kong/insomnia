@@ -22,6 +22,7 @@
     "clean:svg:index": "rimraf src/assets/svgr/index.tsx",
     "convert-svg": "npm run clean:svg && svgr --config-file svgr.config.js --out-dir src/assets/svgr src/assets && npm run clean:svg:index",
     "jest:watch": "jest --watch",
+    "prepare": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
     "test": "jest",
