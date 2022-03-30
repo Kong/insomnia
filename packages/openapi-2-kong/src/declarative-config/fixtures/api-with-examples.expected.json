@@ -16,7 +16,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
-          "name": "Simple_API_overview-x_kong_name_override_at_method",
+          "name": "Simple_API_overview-x-kong-name-override-at-method",
           "paths": ["/$"]
         },
         {
