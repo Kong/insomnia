@@ -12,21 +12,21 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-          "name": "USPTO_Data_Set_API-list_data_sets",
+          "name": "USPTO_Data_Set_API-list-data-sets",
           "paths": ["/$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-          "name": "USPTO_Data_Set_API-list_searchable_fields",
+          "name": "USPTO_Data_Set_API-list-searchable-fields",
           "paths": ["/(?<dataset>[^\\/]+)/(?<version>[^\\/]+)/fields$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-          "name": "USPTO_Data_Set_API-perform_search",
+          "name": "USPTO_Data_Set_API-perform-search",
           "paths": ["/(?<dataset>[^\\/]+)/(?<version>[^\\/]+)/records$"]
         }
       ],

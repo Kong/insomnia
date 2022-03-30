@@ -19,7 +19,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-basic_auth_user_password-get",
+          "name": "httpbin-basic-auth-user-password-get",
           "plugins": [
             {
               "config": { "hide_credentials": true },
@@ -33,14 +33,14 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-image_format-get",
+          "name": "httpbin-image-format-get",
           "paths": ["/image/(?<format>[^\\/]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-delay_n-get",
+          "name": "httpbin-delay-n-get",
           "paths": ["/delay/(?<n>[^\\/]+)$"]
         },
         {
@@ -54,49 +54,49 @@
           "methods": ["DELETE"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-status_statusCode-delete",
+          "name": "httpbin-status-statusCode-delete",
           "paths": ["/status/(?<statusCode>[^\\/]+)$"]
         },
         {
           "methods": ["PUT"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-status_statusCode-put",
+          "name": "httpbin-status-statusCode-put",
           "paths": ["/status/(?<statusCode>[^\\/]+)$"]
         },
         {
           "methods": ["PATCH"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-status_statusCode-patch",
+          "name": "httpbin-status-statusCode-patch",
           "paths": ["/status/(?<statusCode>[^\\/]+)$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-status_statusCode-post",
+          "name": "httpbin-status-statusCode-post",
           "paths": ["/status/(?<statusCode>[^\\/]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-status_statusCode-get",
+          "name": "httpbin-status-statusCode-get",
           "paths": ["/status/(?<statusCode>[^\\/]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-user_agent-get",
+          "name": "httpbin-user-agent-get",
           "paths": ["/user-agent$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-hidden_basic_auth_user_password-get",
+          "name": "httpbin-hidden-basic-auth-user-password-get",
           "plugins": [
             {
               "config": { "hide_credentials": true },
@@ -146,7 +146,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-cookies_delete-get",
+          "name": "httpbin-cookies-delete-get",
           "paths": ["/cookies/delete$"]
         },
         {
@@ -160,7 +160,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-parse_machine_timestamp-get",
+          "name": "httpbin-parse-machine_timestamp-get",
           "paths": ["/parse/(?<machine_timestamp>[^\\/]+)$"]
         },
         {
@@ -188,7 +188,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-when_human_timestamp-get",
+          "name": "httpbin-when-human_timestamp-get",
           "plugins": [
             {
               "name": "request-validator",
@@ -236,7 +236,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "name": "httpbin-cookies_set-get",
+          "name": "httpbin-cookies-set-get",
           "paths": ["/cookies/set$"]
         }
       ],
