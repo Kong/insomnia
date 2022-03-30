@@ -50,10 +50,10 @@ export default vite.defineConfig({
   base: "/",
   resolve: {
     alias: {
-      "react": path.resolve(__dirname, "node_modules/react"),
-      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+      react: path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom")
     },
-    dedupe: ["react", "react-dom", "react-dom/server"],
+    dedupe: ["react", "react-dom", "react-dom/server"]
   },
   define: {
     __DEV__: true,
