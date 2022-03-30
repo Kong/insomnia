@@ -76,7 +76,7 @@
     "vkbeautify"
   ],
   "dependencies": {
-    "@getinsomnia/node-libcurl": "2.3.4-3",
+    "@getinsomnia/node-libcurl": "2.3.5-0",
     "@hapi/hawk": "^8.0.0",
     "@stoplight/spectral": "^5.9.0",
     "analytics-node": "^6.0.0",
