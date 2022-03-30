@@ -229,7 +229,7 @@
     "css-loader": "^2.1.1",
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
-    "electron": "17.1.0",
+    "electron": "17.3.0",
     "electron-builder": "23.0.3",
     "electron-builder-squirrel-windows": "23.0.3",
     "electron-devtools-installer": "^3.2.0",
