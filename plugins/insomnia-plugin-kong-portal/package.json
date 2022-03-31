@@ -15,8 +15,11 @@
     "url": "https://github.com/Kong/insomnia/issues"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
-    "clean": "tsc --build tsconfig.build.json --clean",
+    "prebuild": "npm run clean",
+    "build:source": "esr esbuild.ts",
+    "build:types": "tsc --build tsconfig.build.json",
+    "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
+    "clean": "rimraf dist",
     "bootstrap": "npm run build"
   },
   "insomnia": {
@@ -35,8 +38,11 @@
     "@types/react-dom": "^16.9.12",
     "@types/url-join": "^4.0.1",
     "axios": "^0.21.2",
-    "rimraf": "^3.0.2",
-    "insomnia-components": "2.11.0-beta.0",
+    "concurrently": "^7.0.0",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.14.29",
+    "esbuild-runner": "^2.2.1",
+    "rimraf": "3.0.2",
     "typescript": "^4.5.5"
   }
 }
