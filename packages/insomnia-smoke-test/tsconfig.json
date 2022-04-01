@@ -6,11 +6,11 @@
   },
   "include": [
     "__jest__",
+    "tests",
     "cli",
-    "core",
-    "designer",
     "fixtures",
-    "modules",
+    "playwright.config.ts",
+    "playwright",
     "server",
     "jest.config.js",
     ".eslintrc.js"

@@ -5,36 +5,42 @@ import {
   Dropdown,
   DropdownItem,
   ListGroup,
+  SvgIcon,
   UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
+import { isEmpty } from 'ramda';
 import React, { PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
-import type { GlobalActivity } from '../../common/constants';
 import { AUTOBIND_CFG } from '../../common/constants';
+import { documentationLinks } from '../../common/documentation';
 import { getSendRequestCallback } from '../../common/send-request';
 import * as models from '../../models';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
+import { RootState } from '../redux/modules';
+import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
 import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
+import { EmptyStatePane } from './panes/empty-state-pane';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { WrapperProps } from './wrapper';
+import type { HandleActivityChange, WrapperProps } from './wrapper';
 
-interface Props {
+interface Props extends ReturnType<typeof mapStateToProps> {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: HandleActivityChange;
   wrapperProps: WrapperProps;
 }
 
@@ -44,7 +50,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WrapperUnitTest extends PureComponent<Props, State> {
+class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
   state: State = {
     testsRunning: null,
     resultsError: null,
@@ -127,7 +133,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleCreateTestSuite() {
-    const { activeWorkspace } = this.props.wrapperProps;
+    const { activeWorkspace } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -151,7 +157,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleCreateTest() {
-    const { activeUnitTestSuite } = this.props.wrapperProps;
+    const { activeUnitTestSuite } = this.props;
     showPrompt({
       title: 'New Test',
       defaultValue: 'Returns 200',
@@ -176,7 +182,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleRunTests() {
-    const { activeUnitTests } = this.props.wrapperProps;
+    const { activeUnitTests } = this.props;
     await this._runTests(activeUnitTests);
     trackSegmentEvent(SegmentEvent.unitTestRunAll);
   }
@@ -229,7 +235,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
-    const { activeWorkspace } = this.props.wrapperProps;
+    const { activeWorkspace } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -247,15 +253,18 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _handleChangeActiveSuiteName(name: string) {
-    const { activeUnitTestSuite } = this.props.wrapperProps;
-    // @ts-expect-error -- TSCONVERSION
+    const { activeUnitTestSuite } = this.props;
+    if (!activeUnitTestSuite) {
+      return;
+    }
+
     await models.unitTestSuite.update(activeUnitTestSuite, {
       name,
     });
   }
 
   async _runTests(unitTests: UnitTest[]) {
-    const { activeWorkspace, activeEnvironment } = this.props.wrapperProps;
+    const { activeWorkspace, activeEnvironment } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -331,7 +340,7 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderResults() {
-    const { activeUnitTestResult } = this.props.wrapperProps;
+    const { activeUnitTestResult } = this.props;
     const { testsRunning, resultsError } = this.state;
 
     if (resultsError) {
@@ -403,7 +412,6 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   renderUnitTest(unitTest: UnitTest) {
-    const { settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const selectableRequests = this.buildSelectableRequests();
     return (
@@ -428,18 +436,11 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
         <CodeEditor
           dynamicHeight
           manualPrettify
-          fontSize={settings.editorFontSize}
-          indentSize={settings.editorIndentSize}
-          indentWithTabs={settings.editorIndentWithTabs}
-          keyMap={settings.editorKeyMap}
           defaultValue={unitTest ? unitTest.code : ''}
           getAutocompleteSnippets={() => this.autocompleteSnippets(unitTest)}
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          isVariableUncovered={settings.isVariableUncovered}
           mode="javascript"
-          lineWrapping={settings.editorLineWrapping}
           placeholder=""
         />
       </UnitTestItem>
@@ -447,8 +448,22 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderTestSuite() {
-    const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
+    const { activeUnitTests, activeUnitTestSuite } = this.props;
     const { testsRunning } = this.state;
+
+    const emptyStatePane = (
+      <div style={{ height: '100%' }}>
+        <EmptyStatePane
+          icon={<SvgIcon icon="vial" />}
+          documentationLinks={[
+            documentationLinks.unitTesting,
+            documentationLinks.introductionToInsoCLI,
+          ]}
+          title="Add unit tests to verify your API"
+          secondaryAction="You can run these tests in CI with Inso CLI"
+        />
+      </div>
+    );
 
     if (!activeUnitTestSuite) {
       return <div className="unit-tests pad theme--pane__body">No test suite selected</div>;
@@ -478,13 +493,15 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
             <i className="fa fa-play space-left" />
           </Button>
         </div>
+
+        {isEmpty(activeUnitTests) ? emptyStatePane : null}
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
   }
 
   _renderPageSidebar() {
-    const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
+    const { activeUnitTestSuites, activeUnitTestSuite } = this.props;
     const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
     return (
@@ -534,10 +551,9 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   _renderPageHeader() {
-    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+    const { gitSyncDropdown, handleActivityChange } = this.props;
     return (
       <WorkspacePageHeader
-        wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
         gridRight={gitSyncDropdown}
       />
@@ -556,3 +572,14 @@ export class WrapperUnitTest extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspace: selectActiveWorkspace(state),
+  activeUnitTestSuite: selectActiveUnitTestSuite(state),
+  activeUnitTestSuites: selectActiveUnitTestSuites(state),
+  activeUnitTests: selectActiveUnitTests(state),
+  activeEnvironment: selectActiveEnvironment(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+});
+
+export const WrapperUnitTest = connect(mapStateToProps)(UnconnectedWrapperUnitTest);

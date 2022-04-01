@@ -82,9 +82,9 @@ export class Shortcuts extends PureComponent<Props> {
     const { hotKeyRegistry, handleUpdateKeyBindings } = this.props;
     const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
     let toBeRemovedIndex = -1;
-    keyCombs.forEach((existingKeyComb, idx) => {
+    keyCombs.forEach((existingKeyComb, index) => {
       if (areSameKeyCombinations(existingKeyComb, keyComb)) {
-        toBeRemovedIndex = idx;
+        toBeRemovedIndex = index;
       }
     });
 
@@ -105,24 +105,24 @@ export class Shortcuts extends PureComponent<Props> {
     handleUpdateKeyBindings(newDefaultRegistry());
   }
 
-  renderHotKey(def: HotKeyDefinition, i: number) {
+  renderHotKey(def: HotKeyDefinition, index: number) {
     const keyBindings = this.props.hotKeyRegistry[def.id];
     const keyCombinations = getPlatformKeyCombinations(keyBindings);
     const hasRemoveItems = keyCombinations.length > 0;
     const hasResetItems = !areKeyBindingsSameAsDefault(def.id, keyBindings);
     return (
-      <tr key={i}>
-        <td>{def.description}</td>
+      <tr key={index}>
+        <td style={{ verticalAlign: 'middle' }}>{def.description}</td>
         <td className="text-right">
-          {keyCombinations.map((keyComb: KeyCombination, idx: number) => {
+          {keyCombinations.map((keyComb: KeyCombination, index: number) => {
             return (
-              <code key={idx} className="margin-left-sm">
+              <code key={index} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
                 <Hotkey keyCombination={keyComb} />
               </code>
             );
           })}
         </td>
-        <td className="text-right options">
+        <td className="text-right options" style={{ verticalAlign: 'middle' }}>
           <Dropdown outline>
             <DropdownButton className="btn btn--clicky-small">
               <i className="fa fa-gear" />
@@ -181,8 +181,8 @@ export class Shortcuts extends PureComponent<Props> {
         </div>
         <table className="table--fancy">
           <tbody>
-            {HOT_KEY_DEFS.map((def: HotKeyDefinition, idx: number) => {
-              return this.renderHotKey(def, idx);
+            {HOT_KEY_DEFS.map((def: HotKeyDefinition, index: number) => {
+              return this.renderHotKey(def, index);
             })}
           </tbody>
         </table>

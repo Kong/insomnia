@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import React, { FC, memo, ReactNode } from 'react';
 import styled from 'styled-components';
 
@@ -10,7 +11,7 @@ export interface HeaderProps {
 
 const StyledHeader = styled.div`
   border-bottom: 1px solid var(--hl-md);
-  padding: var(--padding-md);
+  padding: var(--padding-xxs) var(--padding-sm);
   display: grid;
   grid-template-columns: 2fr 1.5fr 2fr;
   grid-template-rows: 1fr;
@@ -37,7 +38,7 @@ const StyledHeader = styled.div`
 `;
 
 export const Header: FC<HeaderProps> = memo(({ className, gridLeft, gridCenter, gridRight }) => (
-  <StyledHeader className={className}>
+  <StyledHeader className={classNames('app-header theme--app-header', className)}>
     <div className="header_left">{gridLeft}</div>
     <div className="header_center">{gridCenter}</div>
     <div className="header_right">{gridRight}</div>

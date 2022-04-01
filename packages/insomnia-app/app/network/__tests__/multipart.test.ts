@@ -1,9 +1,10 @@
+import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { buildMultipart, DEFAULT_BOUNDARY } from '../multipart';
-
+window.app = electron.app;
 describe('buildMultipart()', () => {
   beforeEach(globalBeforeEach);
 

@@ -1,4 +1,4 @@
-import { OpenDialogOptions, remote } from 'electron';
+import { OpenDialogOptions } from 'electron';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 interface Options {
@@ -49,7 +49,8 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
     }],
   };
 
-  const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
+  const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
+
   const fileSelection: FileSelection = {
     filePath: filePaths[0],
     canceled,

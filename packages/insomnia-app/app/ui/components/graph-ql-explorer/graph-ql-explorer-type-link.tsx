@@ -1,6 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { GraphQLType } from 'graphql';
-import { GraphQLList, GraphQLNonNull } from 'graphql';
+import { GraphQLList, GraphQLNonNull, GraphQLType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';

@@ -2,6 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
 
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import type { GitRepository } from '../../../models/git-repository';
@@ -113,6 +114,7 @@ export class GitBranchesModal extends PureComponent<Props, State> {
       const { vcs } = this.props;
       const { newBranchName } = this.state;
       await vcs.checkout(newBranchName);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'create_branch'));
       await this._refreshState({
         newBranchName: '',
       });
@@ -125,6 +127,7 @@ export class GitBranchesModal extends PureComponent<Props, State> {
       await vcs.merge(branch);
       // Apparently merge doesn't update the working dir so need to checkout too
       await this._handleCheckout(branch);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'merge_branch'));
     });
   }
 
@@ -132,6 +135,7 @@ export class GitBranchesModal extends PureComponent<Props, State> {
     await this._errorHandler(async () => {
       const { vcs } = this.props;
       await vcs.deleteBranch(branch);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'delete_branch'));
       await this._refreshState();
     });
   }
@@ -150,6 +154,7 @@ export class GitBranchesModal extends PureComponent<Props, State> {
       const { vcs, handleInitializeEntities } = this.props;
       const bufferId = await db.bufferChanges();
       await vcs.checkout(branch);
+      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'checkout_branch'));
       await db.flushChanges(bufferId, true);
       await handleInitializeEntities();
       await this._refreshState();

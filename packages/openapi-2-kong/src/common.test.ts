@@ -177,6 +177,7 @@ describe('common', () => {
       expect(generateSlug('foo bar')).toBe('foo_bar');
       expect(generateSlug('foo, bar')).toBe('foo_bar');
       expect(generateSlug('Foo Bar')).toBe('Foo_Bar');
+      expect(generateSlug('Foo-Bar')).toBe('Foo-Bar');
       expect(
         generateSlug('foo bar', {
           replacement: '?',

@@ -101,10 +101,9 @@ class ProjectSettingsModal extends PureComponent<Props> {
   }
 }
 
-const mapStateToProps = (state: RootState) => {
-  const project = selectActiveProject(state);
-  return { project };
-};
+const mapStateToProps = (state: RootState) => ({
+  project: selectActiveProject(state),
+});
 
 const mapDispatchToProps = dispatch => {
   const boundProjectActions = bindActionCreators(projectActions, dispatch);

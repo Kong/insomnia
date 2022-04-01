@@ -1,14 +1,16 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import type { BaseRequest, Request } from '../../../models/request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -16,16 +18,9 @@ import { ModalHeader } from '../base/modal-header';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
-interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  workspaces: Workspace[];
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -34,7 +29,7 @@ interface State {
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
-  workspaces: Workspace[];
+  workspacesForActiveProject: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
 }
@@ -45,7 +40,7 @@ interface RequestSettingsModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestSettingsModal extends PureComponent<Props, State> {
+export class UnconnectedRequestSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: MarkdownEditor | null = null;
 
@@ -55,7 +50,7 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
-    workspaces: [],
+    workspacesForActiveProject: [],
     justCopied: false,
     justMoved: false,
   };
@@ -201,13 +196,13 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   async show({ request, forceEditMode }: RequestSettingsModalOptions) {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
     const hasDescription = !!request.description;
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(request);
     const doc = ancestors.find(isWorkspace);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find(w => w._id === workspaceId);
+    const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
     this.setState(
       {
         request,
@@ -325,14 +320,6 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
 
   _renderDescription() {
     const {
-      editorLineWrapping,
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
     const { showDescription, defaultPreviewMode, request } = this.state;
 
@@ -346,15 +333,7 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
         ref={this._setEditorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        keyMap={editorKeyMap}
         placeholder="Write a description"
-        lineWrapping={editorLineWrapping}
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
-        isVariableUncovered={isVariableUncovered}
         defaultValue={request.description}
         onChange={this._handleDescriptionChange}
       />
@@ -385,7 +364,7 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   _renderMoveCopy() {
-    const { workspaces } = this.props;
+    const { workspacesForActiveProject } = this.props;
     const { activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace, request } = this.state;
 
     // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
@@ -407,7 +386,7 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
               onChange={this._handleUpdateMoveCopyWorkspace}
             >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map(w => {
+              {workspacesForActiveProject.map(w => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }
@@ -488,3 +467,14 @@ export class RequestSettingsModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+});
+
+export const RequestSettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedRequestSettingsModal);

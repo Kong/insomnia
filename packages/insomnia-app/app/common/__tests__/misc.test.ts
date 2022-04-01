@@ -1,5 +1,6 @@
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
+  capitalize,
   chunkArray,
   convertEpochToMilliseconds,
   debounce,
@@ -13,8 +14,12 @@ import {
   keyedDebounce,
   pluralize,
   snapNumberToLimits,
+  toKebabCase,
+  toTitleCase,
   xmlDecode,
 } from '../misc';
+
+jest.spyOn(global, 'setTimeout');
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -150,7 +155,7 @@ describe('keyedDebounce()', () => {
     fn('foo', 'bar2');
     fn('foo', 'bar3');
     fn('multi', 'foo', 'bar', 'baz');
-    expect(setTimeout.mock.calls.length).toBe(5);
+    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultsList).toEqual([]);
     jest.runAllTimers();
     expect(resultsList).toEqual([
@@ -179,7 +184,7 @@ describe('debounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     fn('baz', 'bar');
     fn('foo', 'bar3');
-    expect(setTimeout.mock.calls.length).toBe(5);
+    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultList).toEqual([]);
     jest.runAllTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);
@@ -411,5 +416,48 @@ describe('xmlDecode()', () => {
     const input = '&lt;a href=&quot;http://example.com?query1=value1&amp;query2=value2&quot;&gt;a link&lt;/a&gt;';
     const output = '<a href="http://example.com?query1=value1&query2=value2">a link</a>';
     expect(xmlDecode(input)).toEqual(output);
+  });
+});
+
+describe('toKebabCase', () => {
+  it('leaves strings without spaces alone', () => {
+    expect(toKebabCase('')).toEqual('');
+    expect(toKebabCase('-')).toEqual('-');
+    expect(toKebabCase('a')).toEqual('a');
+    expect(toKebabCase('A')).toEqual('A');
+    expect(toKebabCase('aBcD')).toEqual('aBcD');
+  });
+
+  it('replease spaces with hyphens', () => {
+    expect(toKebabCase('a A')).toEqual('a-A');
+    expect(toKebabCase('a A b B c')).toEqual('a-A-b-B-c');
+  });
+});
+
+describe('capitalize', () => {
+  it('capitalizes first letter', () => {
+    expect(capitalize('')).toEqual('');
+    expect(capitalize('a')).toEqual('A');
+    expect(capitalize('A')).toEqual('A');
+    expect(capitalize('abcd')).toEqual('Abcd');
+    expect(capitalize('abcd efg')).toEqual('Abcd efg');
+  });
+  it('lowercases all other letters but the first', () => {
+    expect(capitalize('aBcd efg')).toEqual('Abcd efg');
+    expect(capitalize('aBcd Efg')).toEqual('Abcd efg');
+  });
+});
+
+describe('toTitleCase', () => {
+  it('capitalizes first letter of each word', () => {
+    expect(toTitleCase('')).toEqual('');
+    expect(toTitleCase('a')).toEqual('A');
+    expect(toTitleCase('A')).toEqual('A');
+    expect(toTitleCase('abcd')).toEqual('Abcd');
+    expect(toTitleCase('abcd efg')).toEqual('Abcd Efg');
+  });
+  it('lowercases all other letters but the first of each word', () => {
+    expect(toTitleCase('aBcd efg')).toEqual('Abcd Efg');
+    expect(toTitleCase('aBcd Efg')).toEqual('Abcd Efg');
   });
 });

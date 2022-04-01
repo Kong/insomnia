@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -24,17 +24,6 @@ const MODES = {
   'text/html': 'HTML',
 };
 
-interface Props {
-  editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  handleGetRenderContext?: HandleGetRenderContext;
-  handleRender?: HandleRender;
-}
-
 interface State {
   title: string;
   defaultValue: string;
@@ -48,7 +37,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class CodePromptModal extends PureComponent<Props, State> {
+export class CodePromptModal extends PureComponent<{}, State> {
   state: State = {
     title: 'Not Set',
     defaultValue: '',
@@ -116,14 +105,6 @@ export class CodePromptModal extends PureComponent<Props, State> {
 
   render() {
     const {
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-      handleRender,
-      editorKeyMap,
-      editorIndentSize,
-      editorFontSize,
-      editorLineWrapping,
     } = this.props;
     const {
       submitName,
@@ -155,52 +136,39 @@ export class CodePromptModal extends PureComponent<Props, State> {
               }
           }
         >
-          {showCopyButton ? (
-            <div className="pad-top-sm pad-right-sm">
-              <CopyButton content={defaultValue} className="pull-right" />
-            </div>
-          ) : null}
-          {mode === 'text/x-markdown' ? (
-            <div className="pad-sm tall">
-              <MarkdownEditor
-                tall
-                defaultValue={defaultValue}
-                placeholder={placeholder}
-                onChange={this._handleChange}
-                handleGetRenderContext={enableRender ? handleGetRenderContext : undefined}
-                handleRender={enableRender ? handleRender : undefined}
-                mode={mode}
-                keyMap={editorKeyMap}
-                indentSize={editorIndentSize}
-                fontSize={editorFontSize}
-                lineWrapping={editorLineWrapping}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                isVariableUncovered={isVariableUncovered}
-              />
-            </div>
-          ) : (
-            <div className="pad-sm pad-bottom tall">
-              <div className="form-control form-control--outlined form-control--tall tall">
-                <CodeEditor
-                  hideLineNumbers
-                  manualPrettify
-                  className="tall"
+          <NunjucksEnabledProvider disable={!enableRender}>
+            {showCopyButton ? (
+              <div className="pad-top-sm pad-right-sm">
+                <CopyButton content={defaultValue} className="pull-right" />
+              </div>
+            ) : null}
+            {mode === 'text/x-markdown' ? (
+              <div className="pad-sm tall">
+                <MarkdownEditor
+                  tall
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={this._handleChange}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  isVariableUncovered={isVariableUncovered}
-                  getRenderContext={handleGetRenderContext}
-                  render={handleRender}
                   mode={mode}
-                  keyMap={editorKeyMap}
-                  indentSize={editorIndentSize}
-                  fontSize={editorFontSize}
-                  lineWrapping={editorLineWrapping}
                 />
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="pad-sm pad-bottom tall">
+                <div className="form-control form-control--outlined form-control--tall tall">
+                  <CodeEditor
+                    hideLineNumbers
+                    manualPrettify
+                    className="tall"
+                    defaultValue={defaultValue}
+                    placeholder={placeholder}
+                    onChange={this._handleChange}
+                    mode={mode}
+                    enableNunjucks
+                  />
+                </div>
+              </div>
+            )}
+          </NunjucksEnabledProvider>
         </ModalBody>
         <ModalFooter>
           {!hideMode ? (

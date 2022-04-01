@@ -1,7 +1,6 @@
 import React, { FunctionComponent } from 'react';
 
 import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Settings } from '../../../models/settings';
 import { useGrpcRequestState } from '../../context/grpc';
 import { GrpcSpinner } from '../grpc-spinner';
 import { GrpcStatusTag } from '../tags/grpc-status-tag';
@@ -11,10 +10,9 @@ import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
   forceRefreshKey: number;
   activeRequest: GrpcRequest;
-  settings: Settings;
 }
 
-export const GrpcResponsePane: FunctionComponent<Props> = ({ settings, activeRequest, forceRefreshKey }) => {
+export const GrpcResponsePane: FunctionComponent<Props> = ({ activeRequest, forceRefreshKey }) => {
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
@@ -32,7 +30,6 @@ export const GrpcResponsePane: FunctionComponent<Props> = ({ settings, activeReq
         {!!responseMessages.length && (
           <GrpcTabbedMessages
             uniquenessKey={uniquenessKey}
-            settings={settings}
             tabNamePrefix="Response"
             messages={responseMessages}
           />

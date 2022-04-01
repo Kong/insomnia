@@ -5,7 +5,7 @@ export const matchIdIsh = ({ _id }: BaseModel, identifier: string) =>
   _id.startsWith(identifier);
 
 export const generateIdIsh = ({ _id }: BaseModel, length = 10) =>
-  _id.substr(0, length);
+  _id.slice(0, length);
 
 function indent(level: number, code: string, tab = '  |'): string {
   if (!level || level < 0) {

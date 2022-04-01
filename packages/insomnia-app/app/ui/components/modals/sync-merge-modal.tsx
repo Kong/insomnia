@@ -1,19 +1,21 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
-import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
+import type { DocumentKey, MergeConflict } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectSyncItems } from '../../redux/selectors';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 
-interface Props {
-  workspace: Workspace;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
-  syncItems: StatusCandidate[];
 }
 
 interface State {
@@ -21,7 +23,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SyncMergeModal extends PureComponent<Props, State> {
+export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _handleDone: (arg0: MergeConflict[]) => void;
 
@@ -126,3 +128,14 @@ export class SyncMergeModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  syncItems: selectSyncItems(state),
+});
+
+export const SyncMergeModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncMergeModal);

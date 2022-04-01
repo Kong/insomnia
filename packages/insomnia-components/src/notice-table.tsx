@@ -11,9 +11,9 @@ export interface Notice {
   message: string;
 }
 
-export interface NoticeTableProps {
-  notices: Notice[];
-  onClick?: (n: Notice, e: React.SyntheticEvent<HTMLElement>) => any;
+export interface NoticeTableProps<T extends Notice> {
+  notices: T[];
+  onClick?: (notice: T, event: React.SyntheticEvent<HTMLElement>) => any;
   onVisibilityToggle?: (expanded: boolean) => any;
   compact?: boolean;
   className?: string;
@@ -94,7 +94,7 @@ const Header = styled.header`
   padding-left: var(--padding-md);
 `;
 
-export class NoticeTable extends PureComponent<NoticeTableProps, State> {
+export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProps<T>, State> {
   state: State = {
     collapsed: false,
   };
@@ -113,14 +113,9 @@ export class NoticeTable extends PureComponent<NoticeTableProps, State> {
     );
   }
 
-  onClick(notice: Notice, e: React.SyntheticEvent<HTMLButtonElement>) {
+  onClick(notice: T, event: React.SyntheticEvent<HTMLButtonElement>) {
     const { onClick } = this.props;
-
-    if (!onClick) {
-      return;
-    }
-
-    onClick(notice, e);
+    onClick?.(notice, event);
   }
 
   render() {
@@ -178,18 +173,18 @@ export class NoticeTable extends PureComponent<NoticeTableProps, State> {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {notices.map(n => (
-                  <TableRow key={`${n.line}:${n.type}:${n.message}`}>
+                {notices.map(notice => (
+                  <TableRow key={`${notice.line}:${notice.type}:${notice.message}`}>
                     <TableData align="center">
-                      <SvgIcon icon={n.type} />
+                      <SvgIcon icon={notice.type} />
                     </TableData>
                     <TableData align="center">
-                      {n.line}
-                      <JumpButton onClick={this.onClick.bind(this, n)}>
+                      {notice.line}
+                      <JumpButton onClick={this.onClick.bind(this, notice)}>
                         <SvgIcon icon={IconEnum.arrowRight} />
                       </JumpButton>
                     </TableData>
-                    <TableData align="left">{n.message}</TableData>
+                    <TableData align="left">{notice.message}</TableData>
                   </TableRow>
                 ))}
               </TableBody>

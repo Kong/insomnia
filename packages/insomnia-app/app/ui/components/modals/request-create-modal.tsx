@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
-import { trackEvent } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
   AUTOBIND_CFG,
   getContentTypeName,
@@ -97,7 +97,7 @@ export class RequestCreateModal extends PureComponent<{}, State> {
     }
 
     this.hide();
-    trackEvent('Request', 'Create');
+    trackSegmentEvent(SegmentEvent.requestCreate);
   }
 
   _handleChangeSelectedContentType(selectedContentType: string | null) {

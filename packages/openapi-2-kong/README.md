@@ -164,7 +164,9 @@ The service name is set to the following
 
 ### `$.upstreams`
 
-Upstreams and targets are generated from the `servers` root property (note that `servers` defined on `operation` or `path` objects are ignored).
+Upstreams and targets are generated from the `servers` root property.
+
+> Note: In OpenAPI, `servers` can be overridden on the `operation` or `path` object. These overrides are currently not supported by openapi-2-kong and will be ignored while generating config.
 
 One OpenAPI spec will result in one `service` and one `upstream`, and each individual `server` in the root `servers` property will become a `target` in the `upstream`.
 

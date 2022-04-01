@@ -1,24 +1,18 @@
-import electron from 'electron';
+import { format } from 'date-fns';
 import fs, { NoParamCallback } from 'fs';
-import moment from 'moment';
 import path from 'path';
 import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import { trackEvent } from '../../../common/analytics';
+import { trackPageView } from '../../../common/analytics';
 import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
-  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
-  DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
 import { database } from '../../../common/database';
-import { getDesignerDataDir } from '../../../common/electron-helpers';
 import {
   exportRequestsData,
   exportRequestsHAR,
@@ -32,12 +26,11 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
-import { Settings } from '../../../models/settings';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
-import install from '../../../plugins/install';
 import { setTheme } from '../../../plugins/misc';
+import { exchangeCodeForToken } from '../../../sync/git/github-oauth-provider';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
@@ -49,8 +42,10 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveProjectName, selectSettings, selectWorkspacesForActiveProject } from '../selectors';
+import { selectActiveProjectName, selectStats, selectWorkspacesForActiveProject } from '../selectors';
+import { RootState } from '.';
 import { importUri } from './import';
+import { activateWorkspace } from './workspace';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -62,16 +57,28 @@ export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
+export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
+export const COMMAND_GITHUB_OAUTH_AUTHENTICATE = 'oauth/github/authenticate';
 
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
+const isFinishedBootingReducer = (state = false, action) => {
+  switch (action.type) {
+    case SET_IS_FINISHED_BOOTING:
+      return action.payload;
+
+    default:
+      return state;
+  }
+};
+
 function activeActivityReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
@@ -153,6 +160,7 @@ function loginStateChangeReducer(state = false, action) {
 }
 
 export interface GlobalState {
+  isFinishedBooting: boolean;
   isLoading: boolean;
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
@@ -163,6 +171,7 @@ export interface GlobalState {
 }
 
 export const reducer = combineReducers<GlobalState>({
+  isFinishedBooting: isFinishedBootingReducer,
   isLoading: loadingReducer,
   dashboardSortOrder: dashboardSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
@@ -172,9 +181,15 @@ export const reducer = combineReducers<GlobalState>({
   isLoggedIn: loginStateChangeReducer,
 });
 
+export const selectIsLoading = (state: RootState) => state.global.isLoading;
+
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
+const setIsFinishedBooting = (isFinishedBooting: boolean) => ({
+  type: SET_IS_FINISHED_BOOTING,
+  payload: isFinishedBooting,
+});
 
 export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
@@ -225,7 +240,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
           }
 
           try {
-            await install(args.name);
+            await window.main.installPlugin(args.name);
             showModal(SettingsModal, TAB_INDEX_PLUGINS);
           } catch (err) {
             showError({
@@ -271,7 +286,23 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       });
       break;
 
-    default: // Nothing
+    case COMMAND_GITHUB_OAUTH_AUTHENTICATE: {
+      await exchangeCodeForToken(args).catch((error: Error) => {
+        showError({
+          error,
+          title: 'Error authorizing GitHub',
+          message: error.message,
+        });
+      });
+      break;
+    }
+
+    case null:
+      break;
+
+    default: {
+      console.log(`Unknown command: ${command}`);
+    }
   }
 };
 
@@ -299,81 +330,13 @@ export const loadRequestStop = (requestId: string) => ({
   requestId,
 });
 
-function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
-  switch (currentActivity) {
-    case ACTIVITY_MIGRATION:
-      // Has not seen the onboarding step? Go to onboarding
-      if (!settings.hasPromptedOnboarding) {
-        return ACTIVITY_ONBOARDING;
-      }
-
-      // Has not seen the analytics prompt? Go to it
-      if (!settings.hasPromptedAnalytics) {
-        return ACTIVITY_ANALYTICS;
-      }
-
-      // Otherwise, go to home
-      return ACTIVITY_HOME;
-
-    case ACTIVITY_ONBOARDING:
-      // Always go to home after onboarding
-      return ACTIVITY_HOME;
-
-    default:
-      return currentActivity;
-  }
-}
-
-/*
-  Go to the next activity in a sequential activity flow, depending on different conditions
- */
-export const goToNextActivity = () => (dispatch, getState) => {
-  const state = getState();
-  const { activeActivity } = state.global;
-  const settings = selectSettings(state);
-
-  const nextActivity = _getNextActivity(settings, activeActivity);
-
-  if (nextActivity !== activeActivity) {
-    dispatch(setActiveActivity(nextActivity));
-  }
-};
-
 /*
   Go to an explicit activity
  */
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
-
-  // Don't need to await settings update
-  switch (activity) {
-    case ACTIVITY_MIGRATION:
-      trackEvent('Data', 'Migration', 'Manual');
-      models.settings.patch({
-        hasPromptedToMigrateFromDesigner: true,
-      });
-      break;
-
-    case ACTIVITY_ONBOARDING:
-      models.settings.patch({
-        hasPromptedOnboarding: true,
-        // Don't show the analytics preferences prompt as it is part of the onboarding flow
-        hasPromptedAnalytics: true,
-      });
-      break;
-
-    case ACTIVITY_ANALYTICS:
-      models.settings.patch({
-        hasPromptedAnalytics: true,
-      });
-      break;
-
-    default:
-      break;
-  }
-
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  trackEvent('Activity', 'Change', activity);
+  trackPageView(activity);
   return {
     type: SET_ACTIVE_ACTIVITY,
     activity,
@@ -466,16 +429,16 @@ const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix: string;
   selectedFormat: SelectedFormat;
 }) => {
-  const date = moment().format('YYYY-MM-DD');
+  const date = format(Date.now(), 'yyyy-MM-dd');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-  const dir = lastDir || electron.remote.app.getPath('desktop');
+  const dir = lastDir || window.app.getPath('desktop');
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
-  const { filePath } = await electron.remote.dialog.showSaveDialog(options);
+  const { filePath } = await window.dialog.showSaveDialog(options);
   return filePath || null;
 };
 
@@ -489,9 +452,9 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   const state = getState();
   const activeProjectName = selectActiveProjectName(state);
-  const workspaces = selectWorkspacesForActiveProject(state);
+  const workspacesForActiveProject = selectWorkspacesForActiveProject(state);
 
-  if (!workspaces.length) {
+  if (!workspacesForActiveProject.length) {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
@@ -530,15 +493,15 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(workspaces, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, exportPrivateEnvironments, 'json');
             break;
 
           default:
@@ -705,30 +668,22 @@ export function initActiveWorkspace() {
   return setActiveWorkspace(workspaceId);
 }
 
-function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
-  // @ts-expect-error -- TSCONVERSION
-  return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
-}
-
 function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
-  activity = _migrateDeprecatedActivity(activity);
-
   if (isValidActivity(activity)) {
     return activity;
-  } else {
-    const fallbackActivity = ACTIVITY_HOME;
-    console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
-    return fallbackActivity;
   }
+
+  const fallbackActivity = ACTIVITY_HOME;
+  console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
+  return fallbackActivity;
 }
 
 /*
   Initialize with the cached active activity, and navigate to the next activity if necessary
-  This will also decide whether to start with the migration or onboarding activities
+  This will also decide whether to start with the migration
  */
 export const initActiveActivity = () => (dispatch, getState) => {
   const state = getState();
-  const settings = selectSettings(state);
   // Default to home
   let activeActivity = ACTIVITY_HOME;
 
@@ -741,32 +696,47 @@ export const initActiveActivity = () => (dispatch, getState) => {
     // Nothing here...
   }
 
-  activeActivity = _normalizeActivity(activeActivity);
-  let overrideActivity: GlobalActivity | null = null;
+  const initializeToActivity = _normalizeActivity(activeActivity);
+  if (initializeToActivity === state.global.activeActivity) {
+    // no need to dispatch the action twice if it has already been set to the correct value.
+    return;
+  }
+  dispatch(setActiveActivity(initializeToActivity));
+};
 
-  switch (activeActivity) {
-    // If relaunched after a migration, go to the next activity
-    // Don't need to do this for onboarding because that doesn't require a restart
-    case ACTIVITY_MIGRATION:
-      overrideActivity = _getNextActivity(settings, activeActivity);
-      break;
+export const initFirstLaunch = () => async (dispatch, getState) => {
+  const state = getState();
 
-    // Always check if user has been prompted to migrate or onboard
-    default:
-      if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-        trackEvent('Data', 'Migration', 'Auto');
-        overrideActivity = ACTIVITY_MIGRATION;
-      } else if (!settings.hasPromptedOnboarding) {
-        overrideActivity = ACTIVITY_ONBOARDING;
-      } else if (!settings.hasPromptedAnalytics) {
-        overrideActivity = ACTIVITY_ANALYTICS;
-      }
-
-      break;
+  const stats = selectStats(state);
+  if (stats.launches > 1) {
+    dispatch(setIsFinishedBooting(true));
+    return;
   }
 
-  const initializeToActivity = overrideActivity || activeActivity;
-  dispatch(setActiveActivity(initializeToActivity));
+  const workspace = await models.workspace.create({
+    scope: 'design',
+    name: `New ${strings.document.singular}`,
+    parentId: DEFAULT_PROJECT_ID,
+  });
+  const { _id: workspaceId } = workspace;
+
+  await models.workspace.ensureChildren(workspace);
+  const request = await models.request.create({ parentId: workspaceId });
+
+  const unitTestSuite = await models.unitTestSuite.create({
+    parentId: workspaceId,
+    name: 'Example Test Suite',
+  });
+
+  await models.workspaceMeta.updateByParentId(workspaceId, {
+    activeRequestId: request._id,
+    activeActivity: ACTIVITY_DEBUG,
+    activeUnitTestSuiteId: unitTestSuite._id,
+  });
+
+  dispatch(activateWorkspace({ workspaceId }));
+  dispatch(setActiveActivity(ACTIVITY_DEBUG));
+  dispatch(setIsFinishedBooting(true));
 };
 
 export const init = () => [
@@ -774,4 +744,5 @@ export const init = () => [
   initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
+  initFirstLaunch(),
 ];

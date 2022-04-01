@@ -1,13 +1,14 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import highlight from 'highlight.js';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
+import { useGatedNunjucks } from '../context/nunjucks/use-gated-nunjucks';
 
 interface Props {
   markdown: string;
@@ -23,7 +24,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class MarkdownPreview extends PureComponent<Props, State> {
+class MarkdownPreviewInternal extends PureComponent<Props, State> {
   state: State = {
     compiled: '',
     renderError: '',
@@ -128,3 +129,8 @@ export class MarkdownPreview extends PureComponent<Props, State> {
     );
   }
 }
+
+export const MarkdownPreview: FC<Omit<Props, 'handleRender'>> = props => {
+  const { handleRender } = useGatedNunjucks();
+  return <MarkdownPreviewInternal {...props} handleRender={handleRender}/>;
+};

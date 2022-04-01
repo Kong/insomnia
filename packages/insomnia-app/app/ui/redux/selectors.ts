@@ -1,9 +1,10 @@
 import { createSelector } from 'reselect';
 import { ValueOf } from 'type-fest';
 
-import { isWorkspaceActivity } from '../../common/constants';
+import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
@@ -64,6 +65,10 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 
+export const selectStats = createSelector(
+  selectEntitiesLists,
+  entities => entities.stats[0] || models.stats.init());
+
 export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
@@ -71,6 +76,11 @@ export const selectSettings = createSelector(
 export const selectRequestMetas = createSelector(
   selectEntitiesLists,
   entities => entities.requestMetas,
+);
+
+export const selectGrpcRequestMetas = createSelector(
+  selectEntitiesLists,
+  entities => entities.grpcRequestMetas,
 );
 
 export const selectProjects = createSelector(
@@ -96,13 +106,13 @@ export const selectDashboardSortOrder = createSelector(
   global => global.dashboardSortOrder
 );
 
-export const selectAllWorkspaces = createSelector(
+export const selectWorkspaces = createSelector(
   selectEntitiesLists,
   entities => entities.workspaces,
 );
 
 export const selectWorkspacesForActiveProject = createSelector(
-  selectAllWorkspaces,
+  selectWorkspaces,
   selectActiveProject,
   (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject._id),
 );
@@ -122,22 +132,48 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
+export const selectWorkspaceMetas = createSelector(
+  selectEntitiesLists,
+  entities => entities.workspaceMetas,
+);
+
 export const selectActiveWorkspaceMeta = createSelector(
   selectActiveWorkspace,
   selectEntitiesLists,
   (activeWorkspace, entities) => {
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    return entities.workspaceMetas.find(m => m.parentId === id);
+    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === id);
   },
 );
 
-export const selectAllApiSpecs = createSelector(
+export const selectApiSpecs = createSelector(
   selectEntitiesLists,
   entities => entities.apiSpecs,
 );
 
+export const selectWorkspacesWithResolvedNameForActiveProject = createSelector(
+  selectWorkspacesForActiveProject,
+  selectApiSpecs,
+  (workspaces, apiSpecs) => {
+    return workspaces.map(workspace => {
+      if (isCollection(workspace)) {
+        return workspace;
+      }
+
+      const apiSpec = apiSpecs.find(
+        apiSpec => apiSpec.parentId === workspace._id
+      );
+
+      return {
+        ...workspace,
+        name: apiSpec?.fileName || workspace.name,
+      };
+    });
+  }
+);
+
 export const selectActiveApiSpec = createSelector(
-  selectAllApiSpecs,
+  selectApiSpecs,
   selectActiveWorkspace,
   (apiSpecs, activeWorkspace) => {
     if (!activeWorkspace) {
@@ -168,15 +204,40 @@ export const selectActiveWorkspaceName = createSelector(
   }
 );
 
+export const selectEnvironments = createSelector(
+  selectEntitiesLists,
+  entities => entities.environments,
+);
+
+export const selectGitRepositories = createSelector(
+  selectEntitiesLists,
+  entities => entities.gitRepositories,
+);
+
+export const selectRequestGroups = createSelector(
+  selectEntitiesLists,
+  entities => entities.requestGroups,
+);
+
+export const selectRequestVersions = createSelector(
+  selectEntitiesLists,
+  entities => entities.requestVersions,
+);
+
+export const selectRequests = createSelector(
+  selectEntitiesLists,
+  entities => entities.requests,
+);
+
 export const selectActiveEnvironment = createSelector(
   selectActiveWorkspaceMeta,
-  selectEntitiesLists,
-  (meta, entities) => {
+  selectEnvironments,
+  (meta, environments) => {
     if (!meta) {
       return null;
     }
 
-    return entities.environments.find(e => e._id === meta.activeEnvironmentId) || null;
+    return environments.find(environment => environment._id === meta.activeEnvironmentId) || null;
   },
 );
 
@@ -270,8 +331,8 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      e => isRequest(e) || isRequestGroup(e),
-    ) as (Request | RequestGroup)[];
+      e => isRequest(e) || isGrpcRequest(e) || isRequestGroup(e),
+    ) as (Request | GrpcRequest | RequestGroup)[];
   },
 );
 
@@ -308,6 +369,17 @@ export const selectActiveOAuth2Token = createSelector(
   },
 );
 
+export const selectLoadingRequestIds = createSelector(
+  selectGlobal,
+  global => global.loadingRequestIds,
+);
+
+export const selectLoadStartTime = createSelector(
+  selectLoadingRequestIds,
+  selectActiveRequest,
+  (loadingRequestIds, activeRequest) => loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1
+);
+
 export const selectUnseenWorkspaces = createSelector(
   selectEntitiesLists,
   entities => {
@@ -325,6 +397,26 @@ export const selectActiveRequestMeta = createSelector(
     const id = activeRequest?._id || 'n/a';
     return entities.requestMetas.find(m => m.parentId === id);
   },
+);
+
+export const selectResponsePreviewMode = createSelector(
+  selectActiveRequestMeta,
+  requestMeta => requestMeta?.previewMode || PREVIEW_MODE_SOURCE,
+);
+
+export const selectResponseFilter = createSelector(
+  selectActiveRequestMeta,
+  requestMeta => requestMeta?.responseFilter || '',
+);
+
+export const selectResponseFilterHistory = createSelector(
+  selectActiveRequestMeta,
+  requestMeta => requestMeta?.responseFilterHistory || [],
+);
+
+export const selectResponseDownloadPath = createSelector(
+  selectActiveRequestMeta,
+  requestMeta => requestMeta?.downloadPath || null,
 );
 
 export const selectActiveRequestResponses = createSelector(
@@ -446,4 +538,9 @@ export const selectIsLoggedIn = createSelector(
 export const selectActiveActivity = createSelector(
   selectGlobal,
   global => global.activeActivity,
+);
+
+export const selectIsFinishedBooting = createSelector(
+  selectGlobal,
+  global => global.isFinishedBooting,
 );

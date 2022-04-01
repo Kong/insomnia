@@ -1,14 +1,14 @@
 import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
-import { Curl } from 'node-libcurl';
 import * as os from 'os';
 import path from 'path';
+import url from 'url';
 
 import {
   changelogUrl,
+  getAppBuildDate,
   getAppLongName,
   getAppName,
-  getAppReleaseDate,
   getAppVersion,
   isDevelopment,
   isLinux,
@@ -16,17 +16,14 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import { clickLink, getDataDirectory, restartApp } from '../common/electron-helpers';
+import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard } = electron;
-// So we can use native modules in renderer
-// NOTE: This was (deprecated in Electron 10)[https://github.com/electron/electron/issues/18397] and (removed in Electron 14)[https://github.com/electron/electron/pull/26874]
-app.allowRendererProcessReuse = false;
 
 const DEFAULT_WIDTH = 1280;
-const DEFAULT_HEIGHT = 700;
+const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
@@ -42,11 +39,9 @@ interface Bounds {
 
 export function init() {
   initLocalStorage();
-  initContextMenus();
 }
 
 export function createWindow() {
-  const zoomFactor = getZoomFactor();
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
@@ -85,10 +80,10 @@ export function createWindow() {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
-      zoomFactor: zoomFactor,
+      preload: path.join(__dirname, 'preload.js'),
+      zoomFactor: getZoomFactor(),
       nodeIntegration: true,
       webviewTag: true,
-      enableRemoteModule: true,
       // TODO: enable context isolation
       contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
@@ -124,8 +119,8 @@ export function createWindow() {
   });
 
   // Load the html of the app.
-  const url = process.env.APP_RENDER_URL;
-  const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
+  const appPath = path.resolve(__dirname, './renderer.html');
+  const appUrl = process.env.APP_RENDER_URL || url.pathToFileURL(appPath).href;
   console.log(`[main] Loading ${appUrl}`);
   mainWindow?.loadURL(appUrl);
   // Emitted when the window is closed.
@@ -229,47 +224,51 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Actual Size`,
         accelerator: 'CmdOrCtrl+0',
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          const zoomFactor = 1;
-          w.webContents.setZoomFactor(zoomFactor);
-          saveZoomFactor(zoomFactor);
-        },
+        click: setZoom(() => 1),
       },
       {
         label: `Zoom ${MNEMONIC_SYM}In`,
         accelerator: 'CmdOrCtrl+=',
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          const zoomFactor = Math.min(1.8, getZoomFactor() + 0.05);
-          w.webContents.setZoomFactor(zoomFactor);
-          saveZoomFactor(zoomFactor);
-        },
+        click: setZoom(zoom => zoom * 1.2),
       },
       {
         label: `Zoom ${MNEMONIC_SYM}Out`,
         accelerator: 'CmdOrCtrl+-',
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
-          w.webContents.setZoomFactor(zoomFactor);
-          saveZoomFactor(zoomFactor);
-        },
+        click: setZoom(zoom => zoom * 0.8),
+      },
+      {
+        label: 'Specific Zoom Level',
+        submenu: [25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 500].map(item => ({
+          label: `${item}%`,
+          click: setZoom(() => item / 100),
+        })),
+      },
+      {
+        type: 'separator',
+      },
+      {
+        label: `Resize to ${MNEMONIC_SYM}Small (qHD 540)`,
+        click: () =>
+          mainWindow?.setBounds({
+            width: 960,
+            height: 540,
+          }),
+      },
+      {
+        label: `Resize to Defaul${MNEMONIC_SYM}t (HD 720)`,
+        click: () =>
+          mainWindow?.setBounds({
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
+          }),
+      },
+      {
+        label: `Resize to ${MNEMONIC_SYM}Large (FHD 1080)`,
+        click: () =>
+          mainWindow?.setBounds({
+            width: 1920,
+            height: 1080,
+          }),
       },
       {
         type: 'separator',
@@ -379,13 +378,12 @@ export function createWindow() {
     const buttons = isLinux() ? [copy, ok] : [ok, copy];
     const detail = [
       `Version: ${getAppLongName()} ${getAppVersion()}`,
-      `Release date: ${getAppReleaseDate()}`,
+      `Build date: ${getAppBuildDate()}`,
       `OS: ${os.type()} ${os.arch()} ${os.release()}`,
       `Electron: ${process.versions.electron}`,
       `Node: ${process.versions.node}`,
       `V8: ${process.versions.v8}`,
       `Architecture: ${process.arch}`,
-      `node-libcurl: ${Curl.getVersion()}`,
     ].join('\n');
 
     const msgBox = await dialog.showMessageBox({
@@ -437,16 +435,6 @@ export function createWindow() {
         click: () => mainWindow?.reload(),
       },
       {
-        label: `Resize to Defaul${MNEMONIC_SYM}t`,
-        click: () =>
-          mainWindow?.setBounds({
-            x: 100,
-            y: 100,
-            width: DEFAULT_WIDTH,
-            height: DEFAULT_HEIGHT,
-          }),
-      },
-      {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
@@ -471,7 +459,17 @@ export function createWindow() {
       },
       {
         label: `R${MNEMONIC_SYM}estart`,
-        click: restartApp,
+        click: window?.main.restart,
+      },
+      {
+        label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
+        click: () => {
+          mainWindow?.setBounds({
+            width: 1920,
+            height: 1080,
+          });
+          setZoom(() => 4)();
+        },
       },
     ],
   };
@@ -563,29 +561,37 @@ function getBounds() {
   };
 }
 
-function saveZoomFactor(zoomFactor) {
-  localStorage?.setItem('zoomFactor', zoomFactor);
-}
+const ZOOM_MAX = 6;
+const ZOOM_DEFAULT = 1;
+const ZOOM_MIN = 0.05;
 
-function getZoomFactor() {
-  let zoomFactor = 1;
-
+const getZoomFactor = () => {
   try {
-    zoomFactor = localStorage?.getItem('zoomFactor', 1);
+    return localStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse zoomFactor', e);
   }
 
-  return zoomFactor;
-}
+  return ZOOM_DEFAULT;
+};
+
+export const setZoom = (transformer: (current: number) => number) => () => {
+  const browserWindow = electron.BrowserWindow.getFocusedWindow();
+
+  if (!browserWindow || !browserWindow.webContents) {
+    return;
+  }
+
+  const current = getZoomFactor();
+  const desired = transformer(current);
+  const actual = Math.min(Math.max(ZOOM_MIN, desired), ZOOM_MAX);
+
+  browserWindow.webContents.setZoomLevel(actual);
+  localStorage?.setItem('zoomFactor', actual);
+};
 
 function initLocalStorage() {
   const localStoragePath = path.join(getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
-}
-
-function initContextMenus() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require('electron-context-menu')({});
 }

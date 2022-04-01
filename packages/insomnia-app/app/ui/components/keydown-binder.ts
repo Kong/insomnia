@@ -54,22 +54,22 @@ export class KeydownBinder extends PureComponent<Props> {
   componentDidMount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
-      el?.addEventListener('keydown', this._handleKeydown);
-      el?.addEventListener('keyup', this._handleKeyup);
+      el?.addEventListener('keydown', this._handleKeydown, { capture: true });
+      el?.addEventListener('keyup', this._handleKeyup, { capture: true });
     } else {
-      document.body && document.body.addEventListener('keydown', this._handleKeydown);
-      document.body && document.body.addEventListener('keyup', this._handleKeyup);
+      document.body && document.body.addEventListener('keydown', this._handleKeydown, { capture: true });
+      document.body && document.body.addEventListener('keyup', this._handleKeyup, { capture: true });
     }
   }
 
   componentWillUnmount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
-      el?.removeEventListener('keydown', this._handleKeydown);
-      el?.removeEventListener('keyup', this._handleKeyup);
+      el?.removeEventListener('keydown', this._handleKeydown, { capture: true });
+      el?.removeEventListener('keyup', this._handleKeyup, { capture: true });
     } else {
-      document.body && document.body.removeEventListener('keydown', this._handleKeydown);
-      document.body && document.body.removeEventListener('keyup', this._handleKeyup);
+      document.body && document.body.removeEventListener('keydown', this._handleKeydown, { capture: true });
+      document.body && document.body.removeEventListener('keyup', this._handleKeyup, { capture: true });
     }
   }
 

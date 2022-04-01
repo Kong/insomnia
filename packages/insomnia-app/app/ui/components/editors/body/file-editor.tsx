@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import electron from 'electron';
 import fs from 'fs';
 import React, { PureComponent } from 'react';
 
@@ -26,7 +25,7 @@ export class FileEditor extends PureComponent<Props> {
   render() {
     const { path } = this.props;
     // Replace home path with ~/ to make the path shorter
-    const homeDirectory = electron.remote.app.getPath('home');
+    const homeDirectory = window.app.getPath('home');
     const pathDescription = path.replace(homeDirectory, '~');
     let sizeDescription = '';
 

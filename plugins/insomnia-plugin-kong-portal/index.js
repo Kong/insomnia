@@ -13,7 +13,7 @@ export const documentActions = [
           spec={spec}
           store={context.store}
           axios={context.__private.axios}
-          trackEvent={context.__private.analytics.trackEvent}
+          trackSegmentEvent={context.__private.analytics.trackSegmentEvent}
         />,
         root,
       );

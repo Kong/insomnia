@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { difference } from 'lodash';
+import { difference } from 'ramda';
 
 import * as models from '../../../models';
 import { baseModelSchema, grpcRequestModelSchema, requestGroupModelSchema, requestModelSchema } from '../../../models/__schemas__/model-schemas';

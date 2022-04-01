@@ -55,8 +55,8 @@ export class SidebarFilter extends PureComponent<Props> {
     this.props.requestCreate();
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
       this._input?.focus();
     });
   }

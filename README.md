@@ -1,11 +1,11 @@
-# Insomnia REST Client
+# Insomnia API Client
 
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 
-Insomnia is an open-source, cross-platform API Client for GraphQL, REST, and gRPC.
+Insomnia is an open-source, cross-platform API client for GraphQL, REST, and gRPC.
 
-![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
+![Insomnia API Client](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
 
 ## Download
 
@@ -27,7 +27,11 @@ For more generic product questions and feedback, join the [Slack Team](https://c
 
 Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). Included are directions for opening issues, coding standards, and notes on development.
 
-## Developing
+## Documentation
+
+Check out our open-source [Insomnia Documentation](https://docs.insomnia.rest/).
+
+## Develop Insomnia app
 
 Development on Insomnia can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
 
@@ -60,10 +64,6 @@ sudo apt-get update
 
 # Install font configuration library & support
 sudo apt-get install libfontconfig-dev
-sudo apt-get install font-manager
-
-# Build capability for required font-scanner package
-sudo apt-get install build-essential
 ```
 
 </details>
@@ -72,16 +72,6 @@ sudo apt-get install build-essential
 <summary>Fedora</summary>
 
 ```shell
-# Enable FontManager Copr (https://github.com/FontManager/font-manager#fedora-copr)
-sudo dnf copr enable jerrycasiano/FontManager
-
-# Install font configuration library & support
-sudo dnf install font-manager
-sudo dnf install fontconfig-devel
-
-# Build capability for required font-scanner package
-sudo dnf install make automake gcc gcc-c++ kernel-devel
-
 # Install libcurl for node-libcurl
 sudo dnf install libcurl-devel
 ```
@@ -111,9 +101,15 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 </details>
 
+## Develop Inso CLI
+
+- Bootstrap: `npm run bootstrap`
+- Start the compiler in watch mode: `npm run inso-start`
+- Run: `./packages/insomnia-inso/bin/inso -v`
+
 ## Plugins
 
-Search, discover, and install plugins from the Insomnia [Plugin Hub](https://insomnia.rest/plugins/)!
+Search for, discover, and install plugins from the Insomnia [Plugin Hub](https://insomnia.rest/plugins/)!
 
 ## Community Projects
 

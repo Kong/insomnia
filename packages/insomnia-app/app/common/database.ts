@@ -2,7 +2,7 @@
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import * as uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { mustGetModel } from '../models';
 import { CookieJar } from '../models/cookie-jar';
@@ -247,12 +247,14 @@ export const database = {
     for (const fn of changeListeners) {
       await fn(changes);
     }
-
     // Notify remote listeners
-    const windows = electron.BrowserWindow.getAllWindows();
+    const isMainContext = process.type === 'browser';
+    if (isMainContext){
+      const windows = electron.BrowserWindow.getAllWindows();
 
-    for (const window of windows) {
-      window.webContents.send('db.changes', changes);
+      for (const window of windows) {
+        window.webContents.send('db.changes', changes);
+      }
     }
   },
 
@@ -686,7 +688,7 @@ type Patch<T> = Partial<T>;
 // ~~~~~~~ //
 async function _send<T>(fnName: string, ...args: any[]) {
   return new Promise<T>((resolve, reject) => {
-    const replyChannel = `db.fn.reply:${uuid.v4()}`;
+    const replyChannel = `db.fn.reply:${uuidv4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
     electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => {
       if (err) {

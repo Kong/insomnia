@@ -1,3 +1,6 @@
+import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
+import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
 import { join as pathJoin, resolve as pathResolve } from 'path';
@@ -15,9 +18,10 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
+import { _parseHeaders } from '../libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
-const CONTEXT = {};
+window.app = electron.app;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
@@ -96,7 +100,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -171,7 +174,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -271,7 +273,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -331,7 +332,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -411,7 +411,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -472,7 +471,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -512,7 +510,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -551,7 +548,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -591,7 +587,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
     );
@@ -611,7 +606,7 @@ describe('actuallySend()', () => {
         NOPROGRESS: true,
         PROXY: '',
         TIMEOUT_MS: 0,
-        NETRC: 'Required',
+        NETRC: CurlNetrc.Required,
         URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
@@ -688,7 +683,6 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      CONTEXT,
       workspace,
       settings,
       null,
@@ -740,82 +734,18 @@ describe('actuallySend()', () => {
       parentId: workspace._id,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, workspace, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
-    const responseV11 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V1_1,
-    });
-    const responseV2 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V2_0,
-    });
-    const responseV3 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.v3,
-    });
-    const responseDefault = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.default,
-    });
-    const responseInvalid = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
-      ...settings,
-      // @ts-expect-error intentionally invalid
-      preferredHttpVersion: 'blah',
-    });
-    const r = models.response;
-    expect(JSON.parse(String(r.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV11))).options.HTTP_VERSION).toBe('V1_1');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV2))).options.HTTP_VERSION).toBe('V2_0');
-    expect(JSON.parse(String(r.getBodyBuffer(responseV3))).options.HTTP_VERSION).toBe('v3');
-    expect(JSON.parse(String(r.getBodyBuffer(responseDefault))).options.HTTP_VERSION).toBe(undefined);
-    expect(JSON.parse(String(r.getBodyBuffer(responseInvalid))).options.HTTP_VERSION).toBe(undefined);
-  });
-
-  it('requests can be cancelled by requestId', async () => {
-    // GIVEN
-    const workspace = await models.workspace.create();
-    const settings = await models.settings.getOrCreate();
-    const request1 = Object.assign(models.request.init(), {
-      _id: 'req_15',
-      parentId: workspace._id,
-      url: 'http://unix:3000/requestA',
-      method: 'GET',
-    });
-    const request2 = Object.assign(models.request.init(), {
-      _id: 'req_10',
-      parentId: workspace._id,
-      url: 'http://unix:3000/requestB',
-      method: 'GET',
-    });
-    const renderedRequest1 = await getRenderedRequest({ request: request1 });
-    const renderedRequest2 = await getRenderedRequest({ request: request2 });
-
-    // WHEN
-    const response1Promise = networkUtils._actuallySend(
-      renderedRequest1,
-      CONTEXT,
-      workspace,
-      settings,
-    );
-
-    const response2Promise = networkUtils._actuallySend(
-      renderedRequest2,
-      CONTEXT,
-      workspace,
-      settings,
-    );
-
-    await networkUtils.cancelRequestById(renderedRequest1._id);
-    const response1 = await response1Promise;
-    const response2 = await response2Promise;
-    // THEN
-    expect(response1.statusMessage).toBe('Cancelled');
-    expect(response2.statusMessage).toBe('OK');
-    expect(networkUtils.hasCancelFunctionForId(request1._id)).toBe(false);
-    expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(1);
+    expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
+    expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
+    expect(networkUtils.getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
+    expect(networkUtils.getHttpVersion(HttpVersions.v3).curlHttpVersion).toBe(CurlHttpVersion.v3);
+    expect(networkUtils.getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
+    expect(networkUtils.getHttpVersion('blah').curlHttpVersion).toBe(undefined);
   });
 });
 
@@ -918,7 +848,7 @@ describe('_parseHeaders', () => {
   const minimalHeaders = ['HTTP/1.1 301', ''];
 
   it('Parses single response headers', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
+    expect(_parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -966,7 +896,7 @@ describe('_parseHeaders', () => {
   });
 
   it('Parses Windows newlines', () => {
-    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
+    expect(_parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -1015,7 +945,7 @@ describe('_parseHeaders', () => {
 
   it('Parses multiple responses', () => {
     const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
-    expect(networkUtils._parseHeaders(Buffer.from(blobs))).toEqual([
+    expect(_parseHeaders(Buffer.from(blobs))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',

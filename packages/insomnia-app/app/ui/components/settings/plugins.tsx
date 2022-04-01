@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as electron from 'electron';
 import { PluginConfig } from 'insomnia-common';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
@@ -13,11 +12,11 @@ import {
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { delay } from '../../../common/misc';
+import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
-import installPlugin from '../../../plugins/install';
 import { reload } from '../../../templating/index';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -26,7 +25,6 @@ import { showAlert, showPrompt } from '../modals';
 
 interface Props {
   settings: Settings;
-  updateSetting: (...args: any[]) => any;
 }
 
 interface State {
@@ -76,7 +74,7 @@ export class Plugins extends PureComponent<Props, State> {
     };
 
     try {
-      await installPlugin(this.state.npmPluginValue.trim());
+      await window.main.installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
@@ -88,7 +86,7 @@ export class Plugins extends PureComponent<Props, State> {
   }
 
   static _handleOpenDirectory(directory: string) {
-    electron.remote.shell.showItemInFolder(directory);
+    window.shell.showItemInFolder(directory);
   }
 
   async _handleRefreshPlugins() {
@@ -116,7 +114,7 @@ export class Plugins extends PureComponent<Props, State> {
   }
 
   static _handleClickShowPluginsFolder() {
-    electron.remote.shell.showItemInFolder(PLUGIN_PATH);
+    window.shell.showItemInFolder(PLUGIN_PATH);
   }
 
   _handleCreatePlugin() {
@@ -167,8 +165,10 @@ export class Plugins extends PureComponent<Props, State> {
   }
 
   async _handleUpdatePluginConfig(pluginName: string, config: PluginConfig) {
-    const { updateSetting, settings } = this.props;
-    await updateSetting('pluginConfig', { ...settings.pluginConfig, [pluginName]: config });
+    const { settings } = this.props;
+    await models.settings.update(this.props.settings, {
+      pluginConfig: { ...settings.pluginConfig, [pluginName]: config },
+    });
   }
 
   async _togglePluginEnabled(name: string, enabled: boolean, config: PluginConfig) {

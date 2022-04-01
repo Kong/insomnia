@@ -4,27 +4,24 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
-import type { Settings } from '../../../models/settings';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
-interface Props {
-  settings: Settings;
-}
-
 interface State {
   response: Response | null;
+  showBody?: boolean;
   title: string | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseDebugModal extends PureComponent<Props, State> {
+export class ResponseDebugModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
 
   state: State = {
     response: null,
+    showBody: false,
     title: '',
   };
 
@@ -36,20 +33,20 @@ export class ResponseDebugModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  async show(options: { responseId?: string; response?: Response; title?: string }) {
+  async show(options: { responseId?: string; response?: Response; title?: string; showBody?: boolean }) {
     const response = options.response
       ? options.response
       : await models.response.getById(options.responseId || 'n/a');
     this.setState({
       response,
       title: options.title || null,
+      showBody: options.showBody,
     });
     this.modal?.show();
   }
 
   render() {
-    const { settings } = this.props;
-    const { response, title } = this.state;
+    const { response, title, showBody } = this.state;
     return (
       <Modal ref={this._setModalRef} tall>
         <ModalHeader>{title || 'Response Timeline'}</ModalHeader>
@@ -62,10 +59,8 @@ export class ResponseDebugModal extends PureComponent<Props, State> {
           >
             {response ? (
               <ResponseTimelineViewer
-                editorFontSize={settings.editorFontSize}
-                editorIndentSize={settings.editorIndentSize}
-                editorLineWrapping={settings.editorLineWrapping}
                 response={response}
+                showBody={showBody}
               />
             ) : (
               <div>No response found</div>
