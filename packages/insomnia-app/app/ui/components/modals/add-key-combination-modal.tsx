@@ -1,12 +1,12 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { KeyCombination } from 'insomnia-common';
+import { noop } from 'ramda-adjunct';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
-import * as misc from '../../../common/misc';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -24,8 +24,8 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
 
   state: State = {
     hotKeyRefId: null,
-    checkKeyCombinationDuplicate: misc.nullFn,
-    onAddKeyCombination: misc.nullFn,
+    checkKeyCombinationDuplicate: noop,
+    onAddKeyCombination: noop,
     pressedKeyCombination: null,
   };
 
