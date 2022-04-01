@@ -16,30 +16,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  generate-changelog:
+  parse-version:
     if: "startsWith(github.head_ref, 'release/') || github.event_name == 'workflow_dispatch'"
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-
       - name: Set release version Env (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
-           echo "RELEASE_VERSION=${{ github.event.inputs.version }} " >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }} " >> $GITHUB_ENV
 
       - name: Set release version Env (pull_request)
         if: "startsWith(github.head_ref, 'release/')"
         shell: bash
         run: |
-           echo "RELEASE_VERSION=${BRANCH/release\//} " >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${BRANCH/release\//} " >> $GITHUB_ENV
         env:
           BRANCH: ${{ github.head_ref }}
 
+      - name: Save release version as output
+        id: version
+        run: echo "::set-output name=version::$RELEASE_VERSION"
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+
+
+  generate-changelog:
+    needs: parse-version
+    runs-on: ubuntu-latest
+    steps:
       - name: Find Pull Request
         uses: juliangruber/find-pull-request-action@v1
         id: find-pull-request
         with:
-          branch: release/${{ env.RELEASE_VERSION }}
+          branch: release/${{ needs.parse-version.outputs.version }}
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -75,8 +87,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
-          HEAD: release/${{ env.RELEASE_VERSION }}
-          RELEASE_NAME: ${{ env.RELEASE_VERSION }}
+          HEAD: release/${{ needs.parse-version.outputs.version }}
+          RELEASE_NAME: ${{ needs.parse-version.outputs.version }}
 
       - name: Read changelog
         id: read-changelog
@@ -118,10 +130,40 @@ jobs:
             ```
             Last Updated: ${{ steps.timestamp.outputs.timestamp }}
 
+            You can download this release header image 🌌 [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
             To re-trigger:
-            - Via UI, run [Generate Changelog workflow](https://github.com/${{ github.repository }}/actions/workflows/changelog.yml) (`version`): `${{ env.RELEASE_VERSION }}`
+            - Via UI, run [Generate Changelog workflow](https://github.com/${{ github.repository }}/actions/workflows/changelog.yml) (`version`): `${{ needs.parse-version.outputs.version }}`
             - Via CLI, run [Github CLI](https://cli.github.com/):
             ```bash
-            gh workflow run changelog.yml -f version=${{ env.RELEASE_VERSION }} --repo ${{ github.repository }}
+            gh workflow run changelog.yml -f version=${{ needs.parse-version.outputs.version }} --repo ${{ github.repository }}
             ```
           edit-mode: replace
+
+  generate-changelog-image:
+    needs: parse-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+        with:
+          ref: release/${{ needs.parse-version.outputs.version }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      - name: Run changelog-image
+        run: npm run changelog-image
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: error
+          name: changelog-image-${{ needs.parse-version.outputs.version }}
+          path: |
+            *.svg
