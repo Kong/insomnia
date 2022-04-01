@@ -1,0 +1,18 @@
+{
+    "_format_version": "1.1",
+    "services": [
+       {
+          "name": "Greeting_API",
+          "host": "example.org",
+          "path": "/",
+          "port": 80,
+          "protocol": "http",
+          "plugins": [],
+          "routes": [],
+          "tags": [
+             "OAS3_import",
+             "OAS3file_openapi-303.yaml"
+          ]
+       }
+    ]
+ }

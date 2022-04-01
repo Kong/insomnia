@@ -59,7 +59,7 @@
         },
         {
           "methods": ["GET"],
-          "name": "Example-params_pathid-get",
+          "name": "Example-params-pathid-get",
           "paths": ["/params/(?<pathid>[^\\/]+)/$"],
           "plugins": [
             {

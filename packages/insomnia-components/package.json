@@ -1,6 +1,6 @@
 {
   "name": "insomnia-components",
-  "version": "2.10.0-beta.0",
+  "version": "2.11.0-beta.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
@@ -69,7 +69,7 @@
     "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.3.1",
     "framer-motion": "4.1.17",
-    "fuzzysort": "^1.1.4",
+    "fuzzysort": "^1.2.1",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",
     "react-switch": "^6.0.0"

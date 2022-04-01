@@ -35,7 +35,7 @@ const compare = (expected: string, pathItem: OA3PathItem) => {
 
 describe('names', () => {
   it("api.paths[path][method]['x-kong-name'] is highest priority", () => {
-    compare('Nebulo_9-method_smash', {
+    compare('Nebulo_9-method-smash', {
       [xKongName]: 'pathItem-smash',
       post: {
         [xKongName]: 'method-smash',
@@ -45,7 +45,7 @@ describe('names', () => {
   });
 
   it('api.paths[path][method].operationId is second priority (and not slugified)', () => {
-    compare('Nebulo_9-operationId_smash', {
+    compare('Nebulo_9-operationId-smash', {
       [xKongName]: 'pathItem-smash',
       post: {
         operationId: 'operationId-smash',
@@ -54,14 +54,14 @@ describe('names', () => {
   });
 
   it("api.paths[path]['x-kong-name'] is third priority", () => {
-    compare('Nebulo_9-pathItem_smash-post', {
+    compare('Nebulo_9-pathItem-smash-post', {
       [xKongName]: 'pathItem-smash',
       post: {},
     });
   });
 
   it('purely generated is fourth priority', () => {
-    compare('Nebulo_9-planet_smasher-post', {
+    compare('Nebulo_9-planet-smasher-post', {
       post: {},
     });
   });

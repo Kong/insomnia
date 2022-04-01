@@ -1,0 +1,33 @@
+{
+    "_format_version": "1.1",
+    "services": [
+        {
+            "name": "Sample-API",
+            "protocol": "https",
+            "host": "example.com",
+            "port": 443,
+            "path": "/",
+            "plugins": [],
+            "routes": [
+                {
+                    "tags": [
+                        "OAS3_import",
+                        "OAS3file_dash-and-underscore.yaml"
+                    ],
+                    "name": "Sample-API-list-get",
+                    "methods": [
+                        "GET"
+                    ],
+                    "paths": [
+                        "/list$"
+                    ],
+                    "strip_path": false
+                }
+            ],
+            "tags": [
+                "OAS3_import",
+                "OAS3file_dash-and-underscore.yaml"
+            ]
+        }
+    ]
+}

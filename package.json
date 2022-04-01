@@ -36,7 +36,8 @@
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test",
     "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test",
     "hard-reset": "npm run clean && npm run bootstrap && npm run app-start",
-    "type-check": "lerna run type-check"
+    "type-check": "lerna run type-check",
+    "changelog-image": "ts-node ./scripts/changelog-image/changelog-image.ts"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
@@ -51,6 +52,7 @@
     "@types/jest": "^26.0.23",
     "@types/node": "^17.0.21",
     "@types/rimraf": "^3.0.0",
+    "@types/svgo": "^2.6.3",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.2",
     "babel-loader": "^8.0.5",
@@ -74,7 +76,11 @@
     "lerna": "^4.0.0",
     "markdownlint-cli2": "^0.2.0",
     "rimraf": "^3.0.2",
+    "svg-text-to-path": "^1.1.2",
+    "svgo": "^2.8.0",
     "ts-jest": "^26.5.6",
+    "ts-node": "^10.7.0",
+    "tsimportlib": "^0.0.3",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5"
   },
