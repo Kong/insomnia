@@ -1,17 +1,18 @@
+import react from '@vitejs/plugin-react';
 import childProcess from 'child_process';
-import { build } from 'esbuild'
+import { build } from 'esbuild';
 import { promises, readFileSync, writeFileSync } from 'fs';
 import licenseChecker from 'license-checker';
 import mkdirp from 'mkdirp';
+import { builtinModules } from 'module';
 import { ncp } from 'ncp';
+import path from 'path';
 import rimraf from 'rimraf';
-import { builtinModules } from "module";
-import path from "path";
-import * as vite from "vite";
-import react from "@vitejs/plugin-react";
-import commonjsExt from "vite-plugin-commonjs-externals";
-import packageJSON from "../package.json";
+import * as vite from 'vite';
+import commonjsExt from 'vite-plugin-commonjs-externals';
+
 import appConfig from '../config/config.json';
+import packageJSON from '../package.json';
 
 const { readFile, writeFile } = promises;
 
@@ -195,114 +196,112 @@ export const start = async () => {
   console.log('[build] Building license list');
   await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
 
-
   console.log('[build] Building main.min.js');
   build({
-    entryPoints: [path.join(__dirname, "../app/main.development.ts")],
-    outfile: path.join(__dirname, "../build/main.min.js"),
+    entryPoints: [path.join(__dirname, '../app/main.development.ts')],
+    outfile: path.join(__dirname, '../build/main.min.js'),
     bundle: true,
-    platform: "node",
-    target: "esnext",
+    platform: 'node',
+    target: 'esnext',
     sourcemap: true,
     watch: true,
-    format: "cjs",
+    format: 'cjs',
     define: {
-      __DEV__: "false",
-      "process.env.NODE_ENV": JSON.stringify("production")
+      __DEV__: 'false',
+      'process.env.NODE_ENV': JSON.stringify('production'),
     },
-    external: ["@getinsomnia/node-libcurl"]
+    external: ['@getinsomnia/node-libcurl'],
   });
 
   console.log('[build] Building renderer');
 
   const commonjsPackages = [
-    "electron",
-    "electron/main",
-    "electron/common",
-    "electron/renderer",
-    "original-fs",
-    "fs",
-    "@grpc/grpc-js",
-    "insomnia-url",
-    "insomnia-config",
-    "insomnia-common",
-    "insomnia-cookies",
-    "insomnia-importers",
-    "nunjucks/browser/nunjucks",
-    "insomnia-xpath",
-    "insomnia-prettify",
-    "insomnia-url",
-    "styled-components",
-    "node-libcurl",
-    "@getinsomnia/node-libcurl",
-    "insomnia-plugin-kong-portal",
-    "nimma",
-    "path",
-    "system",
-    "file",
-    "url",
+    'electron',
+    'electron/main',
+    'electron/common',
+    'electron/renderer',
+    'original-fs',
+    'fs',
+    '@grpc/grpc-js',
+    'insomnia-url',
+    'insomnia-config',
+    'insomnia-common',
+    'insomnia-cookies',
+    'insomnia-importers',
+    'nunjucks/browser/nunjucks',
+    'insomnia-xpath',
+    'insomnia-prettify',
+    'insomnia-url',
+    'styled-components',
+    'node-libcurl',
+    '@getinsomnia/node-libcurl',
+    'insomnia-plugin-kong-portal',
+    'nimma',
+    'path',
+    'system',
+    'file',
+    'url',
     ...Object.keys(packageJSON.dependencies).filter(
-      (name) => !packageJSON.packedDependencies.includes(name)
+      name => !packageJSON.packedDependencies.includes(name)
     ),
-    "network/ca-certs.js",
-    ...builtinModules
+    'network/ca-certs.js',
+    ...builtinModules,
   ];
 
   vite.build({
-    mode: "production",
-    root: path.join(__dirname, "../app"),
-    base: "/",
+    mode: 'production',
+    root: path.join(__dirname, '../app'),
+    base: '/',
     resolve: {
       alias: {
-        "react": path.resolve(__dirname, "../node_modules/react"),
-        "react-dom": path.resolve(__dirname, "../node_modules/react-dom"),
-        "crypto": "crypto-browserify"
+        'react': path.resolve(__dirname, '../node_modules/react'),
+        'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
+        'crypto': 'crypto-browserify',
       },
-      dedupe: ["react", "react-dom", "react-dom/server"],
+      dedupe: ['react', 'react-dom', 'react-dom/server'],
     },
     define: {
       __DEV__: true,
-      "process.env.NODE_ENV": JSON.stringify("development"),
-      "process.env.INSOMNIA_ENV": JSON.stringify("development")
+      'process.env.NODE_ENV': JSON.stringify('development'),
+      'process.env.INSOMNIA_ENV': JSON.stringify('development'),
     },
     server: {
-      port: packageJSON.dev["dev-server-port"],
+      port: packageJSON.dev['dev-server-port'],
       fs: {
-        strict: true
-      }
+        strict: true,
+      },
     },
     optimizeDeps: {
-      exclude: commonjsPackages
+      exclude: commonjsPackages,
     },
     build: {
       sourcemap: true,
-      outDir: "dist",
-      assetsDir: ".",
+      outDir: 'dist',
+      assetsDir: '.',
       terserOptions: {
         ecma: 2020,
         compress: {
-          passes: 2
+          passes: 2,
         },
-        safari10: false
+        safari10: false,
       },
       emptyOutDir: true,
-      brotliSize: false
+      brotliSize: false,
     },
     plugins: [
       commonjsExt({ externals: commonjsPackages }),
       react({
         fastRefresh: true,
-        jsxRuntime: "classic",
+        jsxRuntime: 'classic',
         babel: {
           plugins: [
-            ["@babel/plugin-proposal-decorators", { legacy: true }],
-            ["@babel/plugin-proposal-class-properties", { loose: true }]
-          ]
-        }
-      })
-    ]
+            ['@babel/plugin-proposal-decorators', { legacy: true }],
+            ['@babel/plugin-proposal-class-properties', { loose: true }],
+          ],
+        },
+      }),
+    ],
   });
-
 
   // Copy necessary files
   console.log('[build] Copying files');

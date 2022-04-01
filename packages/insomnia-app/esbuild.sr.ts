@@ -1,28 +1,28 @@
-import { build } from "esbuild";
-import path from "path";
-const alias = require('esbuild-plugin-alias');
+import { build } from 'esbuild';
+import alias from 'esbuild-plugin-alias';
+import path from 'path';
 
 const env = {
-    window: JSON.stringify({
-      localStorage: {
-        getItem: () => undefined,
-        setItem: () => { },
-      },
-      performance: { now: () => 0 },
-      requestAnimationFrame: () => { },
-      cancelAnimationFrame: () => { },
-    }),
-  };
+  window: JSON.stringify({
+    localStorage: {
+      getItem: () => undefined,
+      setItem: () => { },
+    },
+    performance: { now: () => 0 },
+    requestAnimationFrame: () => { },
+    cancelAnimationFrame: () => { },
+  }),
+};
 
 async function main() {
   await build({
-    entryPoints: ["./send-request/index.ts"],
+    entryPoints: ['./send-request/index.ts'],
     outfile: '../insomnia-send-request/dist/index.js',
     bundle: true,
-    platform: "node",
-    target: "esnext",
+    platform: 'node',
+    target: 'esnext',
     sourcemap: true,
-    format: "cjs",
+    format: 'cjs',
     define: env,
     tsconfig: 'tsconfig.build.sr.json',
     plugins: [
@@ -30,7 +30,7 @@ async function main() {
         'electron': path.resolve(__dirname, './send-request/electron/index.js'),
       }),
     ],
-    external: ["@getinsomnia/node-libcurl"]
+    external: ['@getinsomnia/node-libcurl'],
   });
 
   process.exit(0);

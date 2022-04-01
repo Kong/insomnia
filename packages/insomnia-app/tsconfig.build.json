@@ -1,20 +1,24 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./build",
+    "types": ["vite/client"],
+    "outDir": ".",
     "rootDir": ".",
-    "resolveJsonModule": true,
     "strict": false,
-    "strictNullChecks": true,
-    "jsx": "react",
+    "target": "esnext",
+    "module": "esnext",
+    "isolatedModules": true,
+    "moduleResolution": "node",
+    "esModuleInterop": false,
+    "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true
+
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx"
   },
   "include": [
-    "**/*.d.ts",
-    "app",
-    "**/insomnia.config.json",
-    "package.json"
+    "app"
   ],
   "exclude": [
     "**/*.test.ts",

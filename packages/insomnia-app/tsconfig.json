@@ -1,26 +1,24 @@
 {
-  "compilerOptions": {
-    "types": ["vite/client"],
-    "outDir": ".",
-    "rootDir": ".",
-
-    "strict": false,
-
-    "target": "esnext",
-    "module": "esnext",
-    "isolatedModules": true,
-    "moduleResolution": "node",
-    "esModuleInterop": false,
-    "resolveJsonModule": true,
-    "experimentalDecorators": true,
-
-    "allowSyntheticDefaultImports": true,
-    "strictNullChecks": true,
-    "skipLibCheck": true,
-    "jsx": "react-jsx"
-  },
+  "extends": "./tsconfig.build.json",
   "include": [
-    "package.json"
+    ".eslintrc.js",
+    "app",
+    "config",
+    "jest.config.js",
+    "**/insomnia.config.json",
+    "package.json",
+    "scripts",
+    "send-request",
+    "vite.config.ts",
+    "esbuild.main.ts",
+    "esbuild.sr.ts"
   ],
-  "exclude": []
+  "exclude": [
+    "**/@types/mocha",
+    "**/main.min.js",
+    "bin",
+    "build",
+    "config",
+    "node_modules"
+  ]
 }
