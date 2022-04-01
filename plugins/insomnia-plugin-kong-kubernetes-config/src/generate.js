@@ -3,36 +3,31 @@ const o2k = require('openapi-2-kong');
 
 module.exports = {
   label: 'Kong for Kubernetes',
-  generate: async ({ contents, format, formatVersion }) => {
-    const isSupported = format === 'openapi' && formatVersion.match(/^3./);
+  docsLink: 'https://docs.insomnia.rest/insomnia/kong-for-kubernetes',
+  generate: async ({ contents, formatVersion }) => {
+    const isSupported = formatVersion && formatVersion.match(/^3./);
 
-    // Return to signify that it's not supported
     if (!isSupported) {
       return {
         document: null,
-        error: `Unsupported spec format ${format} ${formatVersion}`,
+        error: `Unsupported OpenAPI spec format ${formatVersion}`,
       };
     }
 
-    let result;
-
     try {
-      result = await o2k.generateFromString(contents, 'kong-for-kubernetes');
+      const result = await o2k.generateFromString(contents, 'kong-for-kubernetes');
+      const yamlDocs = result.documents.map(d => YAML.stringify(d));
+
+      return {
+        // Join the YAML docs with "---" and strip any extra newlines surrounding them
+        document: yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n'),
+        error: null,
+      };
     } catch (err) {
       return {
         document: null,
         error: err.message,
       };
     }
-
-    const yamlDocs = result.documents.map(d => YAML.stringify(d));
-
-    // Join the YAML docs with "---" and strip any extra newlines surrounding them
-    const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
-
-    return {
-      document,
-      error: null,
-    };
   },
 };

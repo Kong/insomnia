@@ -21,7 +21,7 @@ if (process.env.NODE_ENV === 'development') {
       'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/renderer.html`),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
-      'process.env.RELEASE_DATE': JSON.stringify(new Date()),
+      'process.env.BUILD_DATE': JSON.stringify(new Date()),
     }),
   ];
 } else {
@@ -30,7 +30,7 @@ if (process.env.NODE_ENV === 'development') {
   plugins = productionConfig.plugins;
 }
 
-const configuration: Configuration = {
+const configuration: Configuration[] = [{
   ...productionConfig,
   devtool,
   entry: ['./main.development.ts'],
@@ -40,6 +40,14 @@ const configuration: Configuration = {
   },
   target: 'electron-main',
   plugins,
-};
+},
+{
+  entry: './app/preload.js',
+  target: 'electron-preload',
+  output: {
+    path: path.join(__dirname, '../build'),
+    filename: 'preload.js',
+  },
+}];
 
 export default configuration;

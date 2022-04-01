@@ -8,7 +8,7 @@ import { BackendProjectWithTeam } from '../../sync/vcs/normalize-backend-project
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
-import { selectActiveProject, selectAllWorkspaces, selectIsLoggedIn, selectRemoteProjects } from '../redux/selectors';
+import { selectActiveProject, selectIsLoggedIn, selectRemoteProjects, selectSettings, selectWorkspaces } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
 interface State {
@@ -48,10 +48,11 @@ const reducer: Reducer<State, Action> = (prevState, action) => {
 
 export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
-  const workspaces = useSelector(selectAllWorkspaces);
+  const workspaces = useSelector(selectWorkspaces);
   const activeProject = useSelector(selectActiveProject);
   const remoteProjects = useSelector(selectRemoteProjects);
   const isLoggedIn = useSelector(selectIsLoggedIn);
+  const { incognitoMode } = useSelector(selectSettings);
 
   // Local state
   const [{ loading, localBackendProjects, remoteBackendProjects, pullingBackendProjects }, _dispatch] = useReducer(reducer, initialState);
@@ -107,7 +108,11 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   }, [vcs, refresh, remoteProjects, dispatch]);
 
   // If the refresh callback changes, refresh
-  useAsync(refresh, [refresh]);
+  useAsync(async () => {
+    if (!incognitoMode) {
+      await refresh();
+    }
+  }, [refresh, incognitoMode]);
 
   return {
     loading,

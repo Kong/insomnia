@@ -33,6 +33,27 @@ export interface WorkspaceCardProps {
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
 }
 
+/** note: numbers are not technically valid (and, indeed, we throw a lint error), but we need to handle this case otherwise a user will not be able to import a spec with a malformed version and even _see_ that it's got the error. */
+export const getVersionDisplayment = (version?: string | number | null) => {
+  if (version === null || version === undefined || version === '') {
+    return version;
+  }
+
+  if (typeof version === 'number') {
+    console.warn(`OpenAPI documents must not use number data types for $.info.version, found ${version}`);
+    version = String(version);
+  } else if (typeof version !== 'string') {
+    console.error('unable to parse spec version');
+    return '';
+  }
+
+  if (!version.startsWith('v')) {
+    return `v${version}`;
+  }
+
+  return version;
+};
+
 export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   apiSpec,
   filter,
@@ -85,7 +106,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
     />
   );
 
-  const version = spec?.info?.version || '';
+  const version = getVersionDisplayment(spec?.info?.version);
   let label: string = strings.collection.singular;
   let format = '';
   let labelIcon = <i className="fa fa-bars" />;
@@ -108,7 +129,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   }
 
   // Filter the card by multiple different properties
-  const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
+  const matchResults = fuzzyMatchAll(filter, [title, label, branch || '', version || ''], {
     splitSpace: true,
     loose: true,
   });
@@ -120,21 +141,15 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
 
   return (
     <Card
-      docBranch={
-        branch ? <Highlight search={filter} text={branch} /> : undefined
-      }
+      docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
       docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
-      docVersion={
-        version ? <Highlight search={filter} text={`v${version}`} /> : undefined
-      }
-      tagLabel={
-        label ? (
-          <>
-            <span className="margin-right-xs">{labelIcon}</span>
-            <Highlight search={filter} text={label} />
-          </>
-        ) : undefined
-      }
+      docVersion={version ? <Highlight search={filter} text={version} /> : undefined}
+      tagLabel={label ? (
+        <>
+          <span className="margin-right-xs">{labelIcon}</span>
+          <Highlight search={filter} text={label} />
+        </>
+      ) : undefined}
       docLog={log}
       docMenu={docMenu}
       docFormat={format}

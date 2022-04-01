@@ -12,6 +12,7 @@ describe('init()', () => {
       description: '',
       protoFileId: '',
       protoMethodName: '',
+      metadata: [],
       body: {
         text: '{}',
       },
@@ -40,6 +41,7 @@ describe('create()', () => {
       url: '',
       protoFileId: '',
       protoMethodName: '',
+      metadata: [],
       body: {
         text: '{}',
       },

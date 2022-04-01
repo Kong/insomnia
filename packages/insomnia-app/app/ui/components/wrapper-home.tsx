@@ -2,15 +2,14 @@ import 'swagger-ui-react/swagger-ui.css';
 
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
-  Breadcrumb,
   Button,
   CardContainer,
   Dropdown,
   DropdownDivider,
   DropdownItem,
-  Header,
+  SvgIcon,
 } from 'insomnia-components';
-import React, { Fragment, PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
@@ -24,22 +23,20 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
 import { isRemoteProject } from '../../models/project';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import coreLogo from '../images/insomnia-core-logo.png';
+import { RootState } from '../redux/modules';
 import { cloneGitRepository } from '../redux/modules/git';
-import { setDashboardSortOrder } from '../redux/modules/global';
+import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
-import { selectDashboardSortOrder } from '../redux/selectors';
-import SettingsButton from './buttons/settings-button';
-import { AccountDropdown } from './dropdowns/account-dropdown';
+import { selectActiveProject, selectApiSpecs, selectDashboardSortOrder, selectIsLoggedIn, selectWorkspaceMetas, selectWorkspacesForActiveProject } from '../redux/selectors';
+import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
@@ -180,8 +177,10 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _handleCollectionCreate() {
     const {
+      activeProject,
+      isLoggedIn,
       handleCreateWorkspace,
-      wrapperProps: { activeProject, vcs, isLoggedIn },
+      wrapperProps: { vcs },
     } = this.props;
 
     handleCreateWorkspace({
@@ -197,13 +196,13 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _handleImportFile() {
     this.props.handleImportFile({
-      forceToWorkspace: ForceToWorkspace.new,
+      forceToWorkspace: ForceToWorkspace.existing,
     });
   }
 
   _handleImportClipBoard() {
     this.props.handleImportClipboard({
-      forceToWorkspace: ForceToWorkspace.new,
+      forceToWorkspace: ForceToWorkspace.existing,
     });
   }
 
@@ -215,7 +214,7 @@ class WrapperHome extends PureComponent<Props, State> {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         this.props.handleImportUri(uri, {
-          forceToWorkspace: ForceToWorkspace.new,
+          forceToWorkspace: ForceToWorkspace.existing,
         });
       },
     });
@@ -227,8 +226,8 @@ class WrapperHome extends PureComponent<Props, State> {
     });
   }
 
-  _handleKeyDown(e) {
-    executeHotKey(e, hotKeyRefs.FILTER_DOCUMENTS, () => {
+  _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => {
       if (this._filterInput) {
         this._filterInput.focus();
       }
@@ -287,8 +286,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { wrapperProps, handleSetDashboardSortOrder, sortOrder } = this.props;
-    const { vcs } = wrapperProps;
+    const { wrapperProps: { vcs }, handleSetDashboardSortOrder, sortOrder } = this.props;
     return (
       <div className="row row--right pad-left wide">
         <div
@@ -316,18 +314,20 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   render() {
-    const { sortOrder, wrapperProps, handleActivateWorkspace } = this.props;
     const {
-      workspaces,
-      isLoading,
-      vcs,
       activeProject,
-      workspaceMetas,
+      isLoading,
+      sortOrder,
+      wrapperProps,
       apiSpecs,
-    } = wrapperProps;
+      workspacesForActiveProject,
+      handleActivateWorkspace,
+      workspaceMetas,
+    } = this.props;
+    const { vcs } = wrapperProps;
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces
+    const cards = workspacesForActiveProject
       .map(
         mapWorkspaceToWorkspaceCard({
           workspaceMetas,
@@ -346,36 +346,20 @@ class WrapperHome extends PureComponent<Props, State> {
         />
       ));
 
-    const countLabel =
-      cards.length === 1 ? strings.document.singular : strings.document.plural;
     return (
       <PageLayout
-        wrapperProps={this.props.wrapperProps}
+        wrapperProps={wrapperProps}
         renderPageHeader={() => (
-          <Header
-            className="app-header theme--app-header"
-            gridLeft={
-              <Fragment>
-                <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb
-                  crumbs={[
-                    {
-                      id: 'project',
-                      node: <ProjectDropdown vcs={vcs || undefined} />,
-                    },
-                  ]}
-                />
-                {isLoading ? (
-                  <i className="fa fa-refresh fa-spin space-left" />
-                ) : null}
-              </Fragment>
-            }
-            gridRight={
-              <>
-                <SettingsButton className="margin-left" />
-                <AccountDropdown className="margin-left" />
-              </>
-            }
+          <AppHeader
+            breadcrumbProps={{
+              crumbs: [
+                {
+                  id: 'project',
+                  node: <ProjectDropdown vcs={vcs || undefined} />,
+                },
+              ],
+              isLoading,
+            }}
           />
         )}
         renderPageBody={() => (
@@ -393,9 +377,9 @@ class WrapperHome extends PureComponent<Props, State> {
               )}
             </div>
             <div className="document-listing__footer vertically-center">
-              <span>
-                {cards.length} {countLabel}
-              </span>
+              <a className="made-with-love" href="https://github.com/Kong/insomnia">
+                Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
+              </a>
             </div>
           </div>
         )}
@@ -404,8 +388,14 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state: RootState) => ({
   sortOrder: selectDashboardSortOrder(state),
+  activeProject: selectActiveProject(state),
+  isLoggedIn: selectIsLoggedIn(state),
+  isLoading: selectIsLoading(state),
+  apiSpecs: selectApiSpecs(state),
+  workspaceMetas: selectWorkspaceMetas(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
 });
 
 const mapDispatchToProps = dispatch => {

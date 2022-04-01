@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import electron, { SaveDialogOptions } from 'electron';
+import { format } from 'date-fns';
+import { SaveDialogOptions } from 'electron';
 import fs from 'fs';
-import mimes from 'mime-types';
-import moment from 'moment';
+import { extension as mimeExtension } from 'mime-types';
 import multiparty from 'multiparty';
 import path from 'path';
 import React, { PureComponent } from 'react';
@@ -40,9 +40,6 @@ interface Props {
   filter: string;
   filterHistory: string[];
   editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   url: string;
 }
 
@@ -133,10 +130,10 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
     }
 
     const contentType = getContentTypeFromHeaders(part.headers, 'text/plain');
-    const extension = mimes.extension(contentType) || '.txt';
+    const extension = mimeExtension(contentType) || '.txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-    const dir = lastDir || electron.remote.app.getPath('desktop');
-    const date = moment().format('YYYY-MM-DD');
+    const dir = lastDir || window.app.getPath('desktop');
+    const date = format(Date.now(), 'yyyy-MM-dd');
     const filename = part.filename || `${part.name}_${date}`;
     const options: SaveDialogOptions = {
       title: 'Save as File',
@@ -149,7 +146,7 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
         },
       ],
     };
-    const { canceled, filePath } = await electron.remote.dialog.showSaveDialog(options);
+    const { canceled, filePath } = await window.dialog.showSaveDialog(options);
 
     if (canceled) {
       return;
@@ -222,9 +219,6 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
       disableHtmlPreviewJs,
       disablePreviewLinks,
       editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       filter,
       filterHistory,
       responseId,
@@ -303,9 +297,6 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
               disablePreviewLinks={disablePreviewLinks}
               download={download}
               editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-              editorKeyMap={editorKeyMap}
-              editorLineWrapping={editorLineWrapping}
               error={null}
               filter={filter}
               filterHistory={filterHistory}

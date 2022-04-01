@@ -13,7 +13,6 @@ export interface ButtonProps<T> {
   tabIndex?: number;
   type?: ButtonHTMLAttributes<HTMLButtonElement>['type'];
   id?: string;
-  // TODO(TSCONVERSION) figure out why so many components pass this yet it isn't used
   title?: string;
   style?: CSSProperties;
 }
@@ -34,7 +33,7 @@ export class Button<T> extends PureComponent<ButtonProps<T>> {
   }
 
   render() {
-    const { children, disabled, tabIndex, className, type, id, style } = this.props;
+    const { children, disabled, tabIndex, className, type, id, style, title } = this.props;
     return (
       <button
         disabled={disabled}
@@ -44,6 +43,7 @@ export class Button<T> extends PureComponent<ButtonProps<T>> {
         className={className}
         onClick={this._handleClick}
         style={style}
+        title={title}
       >
         {children}
       </button>

@@ -269,6 +269,9 @@ export async function generateKeyPairJWK() {
       true,
       ['encrypt', 'decrypt'],
     );
+    if (!pair.publicKey || !pair.privateKey) {
+      throw new Error('Unexpected error generating a keypair.');
+    }
     return {
       publicKey: await subtle.exportKey('jwk', pair.publicKey),
       privateKey: await subtle.exportKey('jwk', pair.privateKey),

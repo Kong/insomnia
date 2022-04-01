@@ -16,7 +16,7 @@ interface PaneBodyProps {
 }
 
 export const Pane: React.FC<PaneProps> = ({ className, type, children }) => (
-  <section className={classnames(`${type}-pane`, 'theme--pane', 'pane', className)}>
+  <section className={classnames(`${type}-pane`, 'theme--pane', 'pane', className)} data-testid={`${type}-pane`}>
     {children}
   </section>
 );

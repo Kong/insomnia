@@ -5,42 +5,39 @@ import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
-import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveWorkspace, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { KeydownBinder } from '../keydown-binder';
+import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
+import { wrapToIndex } from './utils';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
-const mapStateToProps = (state: RootState) => {
-  const activeRequest = selectActiveRequest(state);
-  // the request switcher modal does not know about grpc requests yet
-  const normalizedRequest = activeRequest && isRequest(activeRequest) ? activeRequest : undefined;
-
-  return {
-    activeRequest: normalizedRequest,
-    workspace: selectActiveWorkspace(state),
-    workspaces: selectWorkspacesForActiveProject(state),
-    requestMetas: selectRequestMetas(state),
-    workspaceChildren: selectWorkspaceRequestsAndRequestGroups(state),
-  };
-};
+const mapStateToProps = (state: RootState) => ({
+  activeRequest: selectActiveRequest(state),
+  workspace: selectActiveWorkspace(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+  requestMetas: selectRequestMetas(state),
+  grpcRequestMetas: selectGrpcRequestMetas(state),
+  workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
+});
 
 const mapDispatchToProps = dispatch => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
@@ -55,8 +52,8 @@ interface Props extends ReduxProps {
 
 interface State {
   searchString: string;
-  workspaces: Workspace[];
-  matchedRequests: Request[];
+  workspacesForActiveProject: Workspace[];
+  matchedRequests: (Request | GrpcRequest)[];
   matchedWorkspaces: Workspace[];
   activeIndex: number;
   maxRequests: number;
@@ -76,7 +73,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   state: State = {
     searchString: '',
-    workspaces: [],
+    workspacesForActiveProject: [],
     matchedRequests: [],
     matchedWorkspaces: [],
     activeIndex: -1,
@@ -118,15 +115,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   _setActiveIndex(activeIndex: number) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
-
-    if (activeIndex < 0) {
-      activeIndex = this.state.matchedRequests.length - 1;
-    } else if (activeIndex >= maxIndex) {
-      activeIndex = 0;
-    }
-
     this.setState({
-      activeIndex,
+      activeIndex: wrapToIndex(activeIndex, maxIndex),
     });
   }
 
@@ -179,7 +169,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _activateRequest(request: Request) {
+  _activateRequest(request: Request | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -193,9 +183,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: BaseModel): string[] {
-    const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(isRequestGroup);
+  _groupOf(requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] {
+    const { workspaceRequestsAndRequestGroups } = this.props;
+    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
     const currentGroupName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
 
@@ -213,16 +203,23 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     return this._groupOf(matchedGroups[0]);
   }
 
-  _isMatch(request: Request, searchStrings: string): number | null {
+  _isMatch(request: Request | GrpcRequest, searchStrings: string): number | null {
     let finalUrl = request.url;
+    let method = '';
 
-    if (request.parameters) {
+    if (isRequest(request)) {
       finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
+      method = request.method;
+    }
+
+    if (isGrpcRequest(request)) {
+      finalUrl = request.url + request.protoMethodName;
+      method = METHOD_GRPC;
     }
 
     const match = fuzzyMatchAll(
       searchStrings,
-      [request.name, finalUrl, request.method || '', this._groupOf(request).join('/')],
+      [request.name, finalUrl, method, this._groupOf(request).join('/')],
       {
         splitSpace: true,
       },
@@ -243,17 +240,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   _handleChangeValue(searchString: string) {
-    const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
+    const { workspace, workspaceRequestsAndRequestGroups, workspacesForActiveProject, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
     const lastActiveMap = {};
 
     for (const meta of requestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
     }
+    for (const meta of grpcRequestMetas) {
+      lastActiveMap[meta.parentId] = meta.lastActive;
+    }
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = workspaceChildren
-      .filter(isRequest)
+    let matchedRequests = (workspaceRequestsAndRequestGroups
+      .filter(child => isRequest(child) || isGrpcRequest(child)) as (Request | GrpcRequest)[])
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -274,14 +274,14 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       matchedRequests = matchedRequests
         .map(r => ({
           request: r,
-          score: this._isMatch(r as any, searchString),
+          score: this._isMatch(r, searchString),
         }))
         .filter(v => v.score !== null)
         .sort((a, b) => (a.score || -Infinity) - (b.score || -Infinity))
         .map(v => v.request);
     }
 
-    const matchedWorkspaces = workspaces
+    const matchedWorkspaces = workspacesForActiveProject
       .filter(w => w._id !== workspace?._id)
       .filter(w => {
         const name = w.name.toLowerCase();
@@ -295,7 +295,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.setState({
       searchString,
       activeIndex: indexOfFirstNonActiveRequest >= 0 ? indexOfFirstNonActiveRequest : 0,
-      matchedRequests: (matchedRequests as any[]).slice(0, maxRequests),
+      matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }
@@ -361,20 +361,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    if (e.keyCode === keyboardKeys.esc.keyCode) {
+  _handleKeydown(event: KeyboardEvent) {
+    if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
     }
 
     // Only control up/down with tab if modal is visible
-    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex + 1);
       }
     });
     // Only control up/down with tab if modal is visible
-    executeHotKey(e, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex - 1);
       }
@@ -405,8 +405,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       title,
       isModalVisible,
     } = this.state;
-    const { workspaceChildren, workspace } = this.props;
-    const requestGroups = workspaceChildren.filter(isRequestGroup);
+    const { workspaceRequestsAndRequestGroups, workspace } = this.props;
+    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal
@@ -468,8 +468,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                         <Highlight search={searchString} text={r.name} />
                       </div>
                       <div className="margin-left-xs faint">
-                        <MethodTag method={r.method} />
-                        <Highlight search={searchString} text={r.url} />
+                        { isRequest(r) ? <MethodTag method={r.method} /> : null}
+                        { isGrpcRequest(r) ? <GrpcTag /> : null }
+                        { <Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url } /> }
                       </div>
                     </Button>
                   </li>

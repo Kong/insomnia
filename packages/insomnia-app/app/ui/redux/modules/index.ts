@@ -1,14 +1,14 @@
-import { bindActionCreators, combineReducers } from 'redux';
+import { bindActionCreators, combineReducers, Store } from 'redux';
 
 import * as fetch from '../../../account/fetch';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
-import { API_BASE_URL, getClientString } from '../../../common/constants';
+import { getApiBaseURL, getClientString } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import configureStore from '../create';
 import * as entities from './entities';
 import * as global from './global';
 
-export async function init() {
+export async function init(): Promise<Store> {
   const store = configureStore();
   // Do things that must happen before initial render
   const { addChanges, initializeWith: initEntities } = bindActionCreators({ addChanges: entities.addChanges, initializeWith: entities.initializeWith }, store.dispatch);
@@ -25,11 +25,11 @@ export async function init() {
     loginStateChange(loggedIn);
   });
   // Bind to fetch commands
-  fetch.setup(getClientString(), API_BASE_URL);
+  fetch.setup(getClientString(), getApiBaseURL());
   fetch.onCommand(newCommand);
 
   for (const action of global.init()) {
-    // @ts-expect-error -- TSCONVERSION
+    // @ts-expect-error needs work for redux-thunk
     store.dispatch(action);
   }
 

@@ -430,14 +430,14 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
 
     return (
       <DropdownButton
-        className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced"
+        className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
         disabled={initializing}
       >
         <div className="ellipsis">
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
         </div>
-        <div className="space-left">
+        <div className="flex space-left">
           <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
             <i
               className={classnames('fa fa-cube fa--fixed-width', {
@@ -602,7 +602,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
               </Fragment>
             ) : (
               <Fragment>
-                <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot
+                <i className="fa fa-cloud-download" /> Pull {behind || ''} Snapshot
                 {behind === 1 ? '' : 's'}
               </Fragment>
             )}

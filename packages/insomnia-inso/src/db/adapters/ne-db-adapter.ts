@@ -7,7 +7,7 @@ import { Database, DbAdapter, emptyDb } from '../index';
 import type { BaseModel } from '../models/types';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
-  // Sanity check - do db files exist?
+  // Confirm if db files exist
   if (!fs.existsSync(path.join(dir, 'insomnia.Workspace.db'))) {
     return null;
   }

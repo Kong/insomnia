@@ -1,68 +1,60 @@
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { FunctionComponent } from 'react';
+import styled from 'styled-components';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
-import * as hotkeys from '../../../common/hotkeys';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
+const Wrapper = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  whiteSpace: 'nowrap',
+});
+
+const Item = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+  margin: 'var(--padding-sm)',
+});
+
+const Description = styled.div({
+  marginRight: '2em',
+});
+
 interface Props {
-  hotKeyRegistry: hotkeys.HotKeyRegistry;
+  hotKeyRegistry: HotKeyRegistry;
 }
 
+// TODO: get hotKeyRegistry from redux
 export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
   <Pane type="response">
     <PaneHeader />
     <PaneBody placeholder>
-      <div>
-        <table className="table--fancy">
-          <tbody>
-            <tr>
-              <td>Send Request</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-            <tr>
-              <td>Focus Url Bar</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_FOCUS_URL.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-            <tr>
-              <td>Manage Cookies</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.SHOW_COOKIES_EDITOR.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-            <tr>
-              <td>Edit Environments</td>
-              <td className="text-right">
-                <code>
-                  <Hotkey
-                    keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
-                    useFallbackMessage
-                  />
-                </code>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <Wrapper>
+        {[
+          hotKeyRefs.REQUEST_SEND,
+          hotKeyRefs.REQUEST_FOCUS_URL,
+          hotKeyRefs.SHOW_COOKIES_EDITOR,
+          hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+          hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+        ].map(({ description, id }) => (
+          <Item key={id}>
+            <Description>{description}</Description>
+            <code>
+              <Hotkey
+                keyBindings={hotKeyRegistry[id]}
+                useFallbackMessage
+              />
+            </code>
+
+          </Item>
+        ))}
+      </Wrapper>
     </PaneBody>
     {children}
   </Pane>

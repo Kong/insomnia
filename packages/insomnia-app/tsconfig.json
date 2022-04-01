@@ -5,6 +5,7 @@
     "app",
     "config",
     "jest.config.js",
+    "**/insomnia.config.json",
     "package.json",
     "scripts",
     "send-request",
@@ -14,6 +15,7 @@
     "**/@types/mocha",
     "**/main.min.js",
     "bin",
+    "build",
     "config",
     "node_modules"
   ]

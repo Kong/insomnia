@@ -1,6 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { GraphQLSchema, GraphQLType } from 'graphql';
-import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
+import { GraphQLInterfaceType, GraphQLObjectType, GraphQLSchema, GraphQLType, GraphQLUnionType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -42,7 +41,7 @@ export class GraphQLExplorerType extends PureComponent<Props> {
     }
 
     let title = 'Types';
-    let types: GraphQLInterfaceType[] | GraphQLObjectType[] = [];
+    let types: readonly GraphQLInterfaceType[] | GraphQLObjectType[] = [];
 
     if (type instanceof GraphQLUnionType) {
       title = 'Possible Types';

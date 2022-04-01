@@ -16,7 +16,7 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-interface BaseStats {
+export interface BaseStats {
   currentLaunch: number | null;
   lastLaunch: number | null;
   currentVersion: string | null;
@@ -67,6 +67,10 @@ export async function get() {
   } else {
     return results[0];
   }
+}
+
+export function all() {
+  return db.all<Stats>(type) || [];
 }
 
 export async function incrementRequestStats({

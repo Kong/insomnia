@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect';
 
+import { DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH } from '../../common/constants';
 import { fuzzyMatchAll } from '../../common/misc';
 import type { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
@@ -42,18 +43,41 @@ export interface SidebarChildren {
   pinned: Child[];
 }
 
+export const selectSidebarHidden = createSelector(
+  selectActiveWorkspaceMeta,
+  activeWorkspaceMeta => activeWorkspaceMeta?.sidebarHidden || false,
+);
+
+export const selectSidebarWidth = createSelector(
+  selectActiveWorkspaceMeta,
+  activeWorkspaceMeta =>  activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
+);
+
+export const selectPaneWidth = createSelector(
+  selectActiveWorkspaceMeta,
+  activeWorkspaceMeta => activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH,
+);
+
+export const selectPaneHeight = createSelector(
+  selectActiveWorkspaceMeta,
+  activeWorkspaceMeta =>  activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT,
+);
+
+export const selectSidebarFilter = createSelector(
+  selectActiveWorkspaceMeta,
+  activeWorkspaceMeta => activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '',
+);
+
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectPinnedRequests,
   selectActiveWorkspace,
-  selectActiveWorkspaceMeta,
   selectEntitiesChildrenMap,
-  (collapsed, pinned, activeWorkspace, activeWorkspaceMeta, childrenMap): SidebarChildren => {
+  selectSidebarFilter,
+  (collapsed, pinned, activeWorkspace, childrenMap, sidebarFilter): SidebarChildren => {
     if (!activeWorkspace) {
       return { all: [], pinned: [] };
     }
-
-    const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
     function next(parentId: string, pinnedChildren: Child[]) {
       const children: SidebarModel[] = (childrenMap[parentId] || [])

@@ -66,15 +66,6 @@ describe('cli', () => {
       logger.restoreAll();
     });
 
-    it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
-      const oldNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-      logger.wrapAll();
-      expect(() => inso(args)).toThrowError('dev');
-      logger.restoreAll();
-      process.env.NODE_ENV = oldNodeEnv;
-    });
-
     it('should print options', () => {
       inso('generate config file.yaml -t declarative --printOptions --verbose');
 
@@ -82,6 +73,7 @@ describe('cli', () => {
 
       expect(logs.log?.[0]).toContainEqual({
         type: 'declarative',
+        format: 'yaml',
         printOptions: true,
         verbose: true,
       });
@@ -93,6 +85,7 @@ describe('cli', () => {
       inso('generate config');
       expect(generateConfig).toHaveBeenCalledWith(undefined, {
         type: 'declarative',
+        format: 'yaml',
       });
     });
 
@@ -112,6 +105,7 @@ describe('cli', () => {
       inso('generate config -t declarative file.yaml');
       expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
         type: 'declarative',
+        format: 'yaml',
       });
     });
 

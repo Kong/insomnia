@@ -56,14 +56,14 @@ export const loadDb = async ({
   let db: Database | null = null;
 
   // try load from git
-  if (!appDataDir && !src) {
-    const dir = workingDir || '.';
+  if (!appDataDir) {
+    const dir = src || workingDir || '.';
     db = await gitAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
   }
 
   // try load from file (higher priority)
-  if (src) {
+  if (!db && src) {
     db = await insomniaAdapter(src, filterTypes);
     db && logger.debug(`Data store configured from file at \`${path.resolve(src)}\``);
   }
@@ -73,17 +73,6 @@ export const loadDb = async ({
     const dir = src || appDataDir || getAppDataDir(getDefaultAppName());
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
-
-    if (!db && !appDataDir && !src) {
-      const designerDir = getAppDataDir('Insomnia Designer');
-      db = await neDbAdapter(designerDir);
-      db &&
-        logger.debug(
-          `Data store configured from Insomnia Designer app data directory at \`${path.resolve(
-            designerDir,
-          )}\``,
-        );
-    }
   } // return empty db
 
   appDataDir && logger.warn(

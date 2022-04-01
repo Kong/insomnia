@@ -10,7 +10,6 @@ import webpack from 'webpack';
 import appConfig from '../config/config.json';
 import electronWebpackConfig from '../webpack/webpack.config.electron';
 import productionWebpackConfig from '../webpack/webpack.config.production';
-import { getBuildContext } from './getBuildContext';
 
 const { readFile, writeFile } = promises;
 
@@ -18,7 +17,7 @@ const { readFile, writeFile } = promises;
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await module.exports.start(false);
+      await module.exports.start();
     } catch (err) {
       console.log('[build] ERROR:', err);
       process.exit(1);
@@ -115,11 +114,11 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
   );
 });
 
-const install = (relDir: string) => new Promise<void>((resolve, reject) => {
-  const prefix = path.resolve(__dirname, relDir);
+const install = () => new Promise<void>((resolve, reject) => {
+  const root = path.resolve(__dirname, '../../../');
 
-  const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
-    cwd: prefix,
+  const p = childProcess.spawn('npm', ['run', 'bootstrap:electron-builder'], {
+    cwd: root,
     shell: true,
   });
 
@@ -190,36 +189,14 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   await writeFile(outPath, outputFile);
 };
 
-export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) => {
-  const buildContext = getBuildContext(forceFromGitRef);
-  const { gitRef, smokeTest, version } = buildContext;
-
-  if (smokeTest) {
-    console.log('[build] Starting build to smoke test');
-  } else {
-    if (!version) {
-      if (!gitRef) {
-        console.log('[build] No git ref found. Check for the presence of a `GIT_TAG`, `GITHUB_REF`, `TRAVIS_TAG`, or `TRAVIS_CURRENT_BRANCH` environment variable');
-      } else {
-        console.log(`[build] git ref \`${gitRef}\` found`);
-      }
-      console.log('[build] Skipping build because no version was found (the version is derived from the git ref)');
-      process.exit(1);
-    }
-
-    if (appConfig.version !== version) {
-      const tags = `${appConfig.version} != ${version}`;
-      console.log(`[build] App version mismatch with Git tag ${tags}`);
-      process.exit(1);
-    }
-    console.log(`[build] Starting build for ref "${gitRef}"`);
-  }
+export const start = async () => {
+  console.log('[build] Starting build');
 
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
-  if (process.version.indexOf('v12.') !== 0) {
-    console.log('[build] Node v12.x.x is required to build');
+  if (process.version.indexOf('v16.') !== 0) {
+    console.log('[build] Node v16.x.x is required to build');
     process.exit(1);
   }
 
@@ -250,8 +227,7 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
 
   // Install Node modules
   console.log('[build] Installing dependencies');
-  await install(buildFolder);
+  await install();
 
   console.log('[build] Complete!');
-  return buildContext;
 };

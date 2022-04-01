@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
-import { trackEvent } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
   AUTOBIND_CFG,
   CONTENT_TYPE_EDN,
@@ -72,7 +72,7 @@ export class ContentTypeDropdown extends PureComponent<Props> {
     }
 
     this.props.onChange(mimeType);
-    trackEvent('Request', 'Change MimeType', mimeType);
+    trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type:mimeType });
   }
 
   _renderDropdownItem(mimeType: string | null, forcedName = '') {

@@ -105,13 +105,13 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     });
   }
 
-  _handleDropdownNavigation(e) {
-    const { key, shiftKey } = e;
+  _handleDropdownNavigation(event: KeyboardEvent) {
+    const { key, shiftKey } = event;
     // Handle tab and arrows to move up and down dropdown entries
     const { filterItems, filterActiveIndex } = this.state;
 
     if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
-      e.preventDefault();
+      event.preventDefault();
       const items = filterItems || [];
 
       if (!filterItems) {
@@ -141,17 +141,17 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     this._filter?.focus();
   }
 
-  _handleBodyKeyDown(e) {
+  _handleBodyKeyDown(event: KeyboardEvent) {
     if (!this.state.open) {
       return;
     }
 
     // Catch all key presses (like global app hotkeys) if we're open
-    e.stopPropagation();
+    event.stopPropagation();
 
-    this._handleDropdownNavigation(e);
+    this._handleDropdownNavigation(event);
 
-    executeHotKey(e, hotKeyRefs.CLOSE_DROPDOWN, () => {
+    executeHotKey(event, hotKeyRefs.CLOSE_DROPDOWN, () => {
       this.hide();
     });
   }
@@ -238,9 +238,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     this.toggle();
   }
 
-  static _handleMouseDown(e) {
+  static _handleMouseDown(event: React.MouseEvent) {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
-    e.preventDefault();
+    event.preventDefault();
   }
 
   _addDropdownListRef(n: HTMLDivElement) {

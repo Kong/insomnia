@@ -12,7 +12,6 @@ import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import Stat from './stat';
 import { SystemError } from './system-error';
-import { BufferEncoding } from './utils';
 
 export class NeDBClient {
   _workspaceId: string;

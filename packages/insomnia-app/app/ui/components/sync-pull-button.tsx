@@ -1,15 +1,18 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../common/constants';
-import { Project } from '../../models/project';
 import { VCS } from '../../sync/vcs/vcs';
+import { RootState } from '../redux/modules';
+import { selectActiveProject } from '../redux/selectors';
 import { showError } from './modals';
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
   branch: string;
-  project: Project;
   onPull: (...args: any[]) => any;
   disabled?: boolean;
   className?: string;
@@ -21,7 +24,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SyncPullButton extends PureComponent<Props, State> {
+export class UnconnectedSyncPullButton extends PureComponent<Props, State> {
   _timeout: NodeJS.Timeout | null = null;
 
   state: State = {
@@ -84,3 +87,14 @@ export class SyncPullButton extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  project: selectActiveProject(state),
+});
+
+export const SyncPullButton = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncPullButton);

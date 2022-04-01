@@ -1,24 +1,24 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Curl } from 'node-libcurl';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
-import { HotKeyRegistry } from '../../../common/hotkeys';
 import * as models from '../../../models/index';
-import { Settings } from '../../../models/settings';
+import { RootState } from '../../redux/modules';
+import { selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { Account } from '../settings/account';
-import General from '../settings/general';
+import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import { Tooltip } from '../tooltip';
 import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
@@ -26,8 +26,9 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-interface Props {
-  settings: Settings;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -35,7 +36,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SettingsModal extends PureComponent<Props, State> {
+export class UnconnectedSettingsModal extends PureComponent<Props, State> {
   state: State = {
     currentTabIndex: null,
   };
@@ -44,12 +45,6 @@ export class SettingsModal extends PureComponent<Props, State> {
 
   _setModalRef(n: Modal) {
     this.modal = n;
-  }
-
-  async _handleUpdateSetting(key: string, value: any) {
-    return models.settings.update(this.props.settings, {
-      [key]: value,
-    });
   }
 
   async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {
@@ -83,9 +78,6 @@ export class SettingsModal extends PureComponent<Props, State> {
           {getAppName()} Preferences
           <span className="faint txt-sm">
             &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
-            <Tooltip position="bottom" message={Curl.getVersion()}>
-              <i className="fa fa-info-circle" />
-            </Tooltip>
             {email ? ` – ${email}` : null}
           </span>
         </ModalHeader>
@@ -112,11 +104,7 @@ export class SettingsModal extends PureComponent<Props, State> {
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <General
-                settings={settings}
-                hideModal={this.hide}
-                updateSetting={this._handleUpdateSetting}
-              />
+              <General />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
@@ -136,7 +124,7 @@ export class SettingsModal extends PureComponent<Props, State> {
               <Account />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
+              <Plugins settings={settings} />
             </TabPanel>
           </Tabs>
         </ModalBody>
@@ -146,3 +134,14 @@ export class SettingsModal extends PureComponent<Props, State> {
 }
 
 export const showSettingsModal = () => showModal(SettingsModal);
+
+const mapStateToProps = (state: RootState) => ({
+  settings: selectSettings(state),
+});
+
+export const SettingsModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSettingsModal);

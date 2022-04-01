@@ -4,7 +4,7 @@ import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
-import type { GrpcRequest } from '../../models/grpc-request';
+import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import callCache from './call-cache';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
@@ -37,6 +37,7 @@ const _makeUnaryRequest = (
     method: { path, requestSerialize, responseDeserialize },
     client,
     respond,
+    metadata,
   }: RequestData,
   bodyText: string,
 ): Call | undefined => {
@@ -50,12 +51,19 @@ const _makeUnaryRequest = (
     return;
   }
 
-  // Make call
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
+
+  // eslint-disable-next-line consistent-return
   return client.makeUnaryRequest(
     path,
     requestSerialize,
     responseDeserialize,
     messageBody,
+    grpcMetadata,
     callback,
   );
 };
@@ -65,12 +73,19 @@ const _makeClientStreamRequest = ({
   method: { path, requestSerialize, responseDeserialize },
   client,
   respond,
+  metadata,
 }: RequestData): Call | undefined => {
   // Create callback
   const callback = _createUnaryCallback(requestId, respond);
 
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
+
   // Make call
-  return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, callback);
+  return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata, callback);
 };
 
 const _makeServerStreamRequest = (
@@ -79,6 +94,7 @@ const _makeServerStreamRequest = (
     method: { path, requestSerialize, responseDeserialize },
     client,
     respond,
+    metadata,
   }: RequestData,
   bodyText: string,
 ): Call | undefined => {
@@ -89,16 +105,24 @@ const _makeServerStreamRequest = (
     return;
   }
 
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
+
   // Make call
   const call = client.makeServerStreamRequest(
     path,
     requestSerialize,
     responseDeserialize,
     messageBody,
+    grpcMetadata,
   );
 
   _setupServerStreamListeners(call, requestId, respond);
 
+  // eslint-disable-next-line consistent-return
   return call;
 };
 
@@ -107,9 +131,16 @@ const _makeBidiStreamRequest = ({
   method: { path, requestSerialize, responseDeserialize },
   client,
   respond,
+  metadata,
 }: RequestData): Call | undefined => {
+  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
+
+  if (!grpcMetadata) {
+    return;
+  }
+
   // Make call
-  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize);
+  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata);
 
   _setupServerStreamListeners(call, requestId, respond);
 
@@ -121,6 +152,7 @@ interface RequestData {
   respond: ResponseCallbacks;
   client: ServiceClient;
   method: GrpcMethodDefinition;
+  metadata: GrpcRequestHeader[];
 }
 
 export const start = async (
@@ -128,6 +160,7 @@ export const start = async (
   respond: ResponseCallbacks,
 ) => {
   const requestId = request._id;
+  const metadata = request.metadata;
   const method = await protoLoader.getSelectedMethod(request);
 
   if (!method) {
@@ -152,6 +185,7 @@ export const start = async (
     client,
     method,
     respond,
+    metadata,
   };
   let call;
 
@@ -278,4 +312,23 @@ const _parseMessage = (
     respond.sendError(requestId, e);
     return undefined;
   }
+};
+
+const _parseMetadata = (
+  metadata: GrpcRequestHeader[],
+  requestId: string,
+  respond: ResponseCallbacks,
+): grpc.Metadata | undefined => {
+  const grpcMetadata = new grpc.Metadata();
+  for (const entry of metadata) {
+    if (!entry.disabled) {
+      try {
+        grpcMetadata.add(entry.name, entry.value);
+      } catch (err) {
+        respond.sendError(requestId, err);
+        return undefined;
+      }
+    }
+  }
+  return grpcMetadata;
 };

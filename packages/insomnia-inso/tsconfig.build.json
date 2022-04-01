@@ -18,6 +18,7 @@
     "webpack",
     "bin",
     "assets",
+    "scripts",
     
     "**/@types/mocha/*",
     "**/*.test.ts",

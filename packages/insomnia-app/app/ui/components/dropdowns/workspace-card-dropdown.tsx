@@ -34,12 +34,14 @@ const spinner = <i className="fa fa-refresh fa-spin" />;
 const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
   const handleDuplicate = useCallback(() => {
     showWorkspaceDuplicateModal({ workspace, apiSpec });
-  }, [apiSpec, workspace]);
+  }, [workspace, apiSpec]);
+
+  const workspaceName = getWorkspaceName(workspace, apiSpec);
 
   const handleRename = useCallback(() => {
     showPrompt({
       title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-      defaultValue: getWorkspaceName(workspace, apiSpec),
+      defaultValue: workspaceName,
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
@@ -47,13 +49,13 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
         await workspaceOperations.rename(workspace, apiSpec, name);
       },
     });
-  }, [apiSpec, workspace]);
+  }, [apiSpec, workspace, workspaceName]);
 
   const handleDelete = useCallback(() => {
     const label = getWorkspaceLabel(workspace);
     showModal(AskModal, {
       title: `Delete ${label.singular}`,
-      message: `Do you really want to delete "${getWorkspaceName(workspace, apiSpec)}"?`,
+      message: `Do you really want to delete "${workspaceName}"?`,
       yesText: 'Yes',
       noText: 'Cancel',
       onDone: async (isYes: boolean) => {
@@ -65,7 +67,7 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
         await models.workspace.remove(workspace);
       },
     });
-  }, [apiSpec, workspace]);
+  }, [workspace, workspaceName]);
 
   return { handleDelete, handleDuplicate, handleRename };
 };
@@ -90,7 +92,6 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
         ...pluginContexts.data.init(project._id),
         ...pluginContexts.store.init(p.plugin),
       };
-      // @ts-expect-error -- TSCONVERSION
       await p.action(context, parseApiSpec(apiSpec.contents));
     } catch (err) {
       showError({

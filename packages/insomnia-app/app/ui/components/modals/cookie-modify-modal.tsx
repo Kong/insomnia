@@ -2,27 +2,25 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import clone from 'clone';
 import { cookieToString } from 'insomnia-cookies';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as toughCookie from 'tough-cookie';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { capitalize } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
-import type { Workspace } from '../../../models/workspace';
-import { Modal, ModalProps } from '../base/modal';
+import { RootState } from '../../redux/modules';
+import { selectActiveCookieJar } from '../../redux/selectors';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 
-interface Props extends ModalProps {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
-  nunjucksPowerUserMode: boolean;
-  isVariableUncovered: boolean;
-  workspace: Workspace;
-  cookieJar: CookieJar;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
 }
 
 interface State {
@@ -31,7 +29,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class CookieModifyModal extends PureComponent<Props, State> {
+export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _rawTimeout: NodeJS.Timeout | null = null;
   _cookieUpdateTimeout: NodeJS.Timeout | null = null;
@@ -48,17 +46,15 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   async show(cookie: Cookie) {
     // Dunno why this is sent as an array
     cookie = cookie[0] || cookie;
-    const { cookieJar } = this.props;
-    const oldCookie = cookieJar.cookies.find(c => c.id === cookie.id);
+    const { activeCookeJar } = this.props;
+    const prevCookie = activeCookeJar?.cookies.find(c => c.id === cookie.id);
 
-    if (!oldCookie) {
+    if (!prevCookie) {
       // Cookie not found in jar
       return;
     }
 
-    this.setState({
-      cookie,
-    });
+    this.setState({ cookie });
     this.modal?.show();
   }
 
@@ -70,13 +66,13 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     await models.cookieJar.update(cookieJar);
   }
 
-  _handleChangeRawValue(e: React.SyntheticEvent<HTMLInputElement>) {
-    const value = e.currentTarget.value;
+  _handleChangeRawValue(event: React.SyntheticEvent<HTMLInputElement>) {
+    const value = event.currentTarget.value;
     if (this._rawTimeout !== null) {
       clearTimeout(this._rawTimeout);
     }
     this._rawTimeout = setTimeout(async () => {
-      const oldCookie = this.state.cookie;
+      const prevCookie = this.state.cookie;
       let cookie;
 
       try {
@@ -88,25 +84,26 @@ export class CookieModifyModal extends PureComponent<Props, State> {
         return;
       }
 
-      if (!this.state.cookie || !oldCookie) {
+      if (!this.state.cookie || !prevCookie) {
         return;
       }
 
       // Make sure cookie has an id
-      cookie.id = oldCookie.id;
+      cookie.id = prevCookie.id;
       await this._handleCookieUpdate(cookie);
     }, DEBOUNCE_MILLIS * 2);
   }
 
-  async _handleCookieUpdate(newCookie: Cookie) {
-    const oldCookie = this.state.cookie;
+  async _handleCookieUpdate(nextCookie: Cookie) {
+    const prevCookie = this.state.cookie;
+    const { activeCookeJar: prevCookieJar } = this.props;
 
-    if (!oldCookie) {
+    if (!prevCookie || !prevCookieJar) {
       // We don't have a cookie to edit
       return;
     }
 
-    const cookie = clone(newCookie);
+    const cookie = clone(nextCookie);
     // Sanitize expires field
     const expires = new Date(cookie.expires || '').getTime();
 
@@ -117,7 +114,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     }
 
     // Clone so we don't modify the original
-    const cookieJar = clone(this.props.cookieJar);
+    const cookieJar = clone(prevCookieJar);
     const { cookies } = cookieJar;
     const index = cookies.findIndex(c => c.id === cookie.id);
 
@@ -127,9 +124,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     }
 
     cookieJar.cookies = [...cookies.slice(0, index), cookie, ...cookies.slice(index + 1)];
-    this.setState({
-      cookie,
-    });
+    this.setState({ cookie });
     await CookieModifyModal._saveChanges(cookieJar);
     return cookie;
   }
@@ -158,14 +153,8 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     }
     this._cookieUpdateTimeout = setTimeout(async () => {
       await this._handleCookieUpdate(newCookie);
-      this.setState({
-        cookie: newCookie,
-      });
+      this.setState({ cookie: newCookie });
     }, DEBOUNCE_MILLIS * 2);
-  }
-
-  static _capitalize(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   _getRawCookieString() {
@@ -186,10 +175,6 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   _renderInputField(field: string, error: string | null = null) {
     const { cookie } = this.state;
     const {
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
     } = this.props;
 
     if (!cookie) {
@@ -200,12 +185,8 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     return (
       <div className="form-control form-control--outlined">
         <label>
-          {CookieModifyModal._capitalize(field)} <span className="danger">{error}</span>
+          {capitalize(field)} <span className="danger">{error}</span>
           <OneLineEditor
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}
           />
@@ -215,14 +196,14 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { cookieJar } = this.props;
+    const { activeCookeJar } = this.props;
     const { cookie } = this.state;
     const checkFields = ['secure', 'httpOnly'];
     return (
       <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
-          {cookieJar && cookie && (
+          {activeCookeJar && cookie && (
             <Tabs>
               <TabList>
                 <Tab tabIndex="-1">
@@ -252,7 +233,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
                     const checked = !!cookie[field];
                     return (
                       <label key={i}>
-                        {CookieModifyModal._capitalize(field)}
+                        {capitalize(field)}
                         <input
                           className="space-left"
                           type="checkbox"
@@ -289,3 +270,14 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeCookeJar: selectActiveCookieJar(state),
+});
+
+export const CookieModifyModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedCookieModifyModal);

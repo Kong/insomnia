@@ -1,6 +1,6 @@
 import React, { FunctionComponent, ReactNode, useCallback, useEffect, useState } from 'react';
 import Switch from 'react-switch';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export interface ToggleSwitchProps {
   labelClassName?: string;
@@ -14,6 +14,12 @@ export interface ToggleSwitchProps {
 const ThemedSwitch = styled(Switch)<{ checked: boolean }>`
   .react-switch-bg {
     background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')} !important;
+    
+    ${({ checked }) => checked && css`
+    path {
+      fill: var(--color-font-surprise) !important
+    }
+    `}
   }
 
   vertical-align: middle;

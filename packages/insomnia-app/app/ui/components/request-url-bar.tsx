@@ -1,12 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { OpenDialogOptions, remote } from 'electron';
+import { OpenDialogOptions } from 'electron';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
-import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import type { Request } from '../../models/request';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
@@ -22,13 +21,10 @@ import { showPrompt } from './modals/index';
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   handleGenerateCode: Function;
-  handleGetRenderContext: HandleGetRenderContext;
   handleImport: Function;
-  handleRender: HandleRender;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
-  isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
@@ -127,7 +123,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
       buttonLabel: 'Select',
       properties: ['openDirectory'],
     };
-    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
 
     if (canceled) {
       return;
@@ -141,19 +137,19 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     this.props.handleUpdateDownloadPath(request._id, null);
   }
 
-  async _handleKeyDown(e: KeyboardEvent) {
+  async _handleKeyDown(event: KeyboardEvent) {
     if (!this._input) {
       return;
     }
 
-    executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       this._input?.focus();
       this._input?.selectAll();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
       this._methodDropdown?.toggle();
     });
-    executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
+    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       this._dropdown?.toggle(true);
     });
   }
@@ -349,17 +345,19 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     return [cancelButton, sendButton];
   }
 
+  // note: not an unused function, used by parent, RequestPane
+  focusInput() {
+    this._input?.focus(true);
+  }
+
   render() {
     const {
       request,
-      handleRender,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-      handleGetRenderContext,
       handleAutocompleteUrls,
       uniquenessKey,
     } = this.props;
     const { url, method } = request;
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="urlbar">
@@ -377,11 +375,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
               onPaste={this._handleUrlPaste}
               forceEditor
               type="text"
-              render={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={handleAutocompleteUrls}
-              getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}
               onChange={this._handleUrlChange}

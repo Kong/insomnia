@@ -7,7 +7,7 @@ export interface BaseModel {
     parentId: string;
 }
 
-interface BaseApiSpec {
+export interface BaseApiSpec {
     fileName: string;
     contentType: 'json' | 'yaml';
     contents: string;

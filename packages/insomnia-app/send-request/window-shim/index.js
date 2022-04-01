@@ -3,4 +3,7 @@ module.exports = {
     getItem: () => undefined,
     setItem: () => {},
   },
+  performance:{ now:() => 0 },
+  requestAnimationFrame: () => {},
+  cancelAnimationFrame: () => {},
 };

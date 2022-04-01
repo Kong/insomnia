@@ -1,23 +1,23 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
-import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import { ApiSpec } from '../../../models/api-spec';
-import type { Environment } from '../../../models/environment';
-import { Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { RootState } from '../../redux/modules';
+import { selectIsLoading } from '../../redux/modules/global';
+import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -29,13 +29,9 @@ import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
-interface Props {
-  displayName: string;
-  activeEnvironment: Environment | null;
-  activeWorkspace: Workspace;
-  activeApiSpec: ApiSpec;
-  activeProject: Project;
-  hotKeyRegistry: HotKeyRegistry;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   isLoading: boolean;
   className?: string;
 }
@@ -47,7 +43,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WorkspaceDropdown extends PureComponent<Props, State> {
+export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
   _dropdown: Dropdown | null = null;
   state: State = {
     actionPlugins: [],
@@ -55,31 +51,31 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     loadingActions: {},
   };
 
-  async _handlePluginClick(p: WorkspaceAction) {
+  async _handlePluginClick({ action, plugin, label }: WorkspaceAction, workspace: Workspace) {
     this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [p.label]: true },
+      loadingActions: { ...state.loadingActions, [label]: true },
     }));
-    const { activeEnvironment, activeWorkspace, activeProject } = this.props;
+    const { activeEnvironment, activeProject } = this.props;
 
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
-        ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
+        ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
-      const docs = await db.withDescendants(activeWorkspace);
+      const docs = await db.withDescendants(workspace);
       const requests = docs
         .filter(isRequest)
         .filter(doc => (
           !doc.isPrivate
         ));
       const requestGroups = docs.filter(isRequestGroup);
-      await p.action(context, {
+      await action(context, {
         requestGroups,
         requests,
-        workspace: activeWorkspace,
+        workspace,
       });
     } catch (err) {
       showError({
@@ -89,7 +85,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     }
 
     this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [p.label]: false },
+      loadingActions: { ...state.loadingActions, [label]: false },
     }));
     this._dropdown?.hide();
   }
@@ -115,14 +111,17 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleKeydown(e: KeyboardEvent) {
-    executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
+  _handleKeydown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown?.toggle(true);
     });
   }
 
   async _handleGenerateConfig(label: string) {
     const { activeApiSpec } = this.props;
+    if (!activeApiSpec) {
+      return;
+    }
     showGenerateConfigModal({
       apiSpec: activeApiSpec,
       activeTabLabel: label,
@@ -131,7 +130,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
 
   render() {
     const {
-      displayName,
+      activeWorkspaceName,
       className,
       activeWorkspace,
       isLoading,
@@ -140,6 +139,11 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     } = this.props;
     const classes = classnames(className, 'wide', 'workspace-dropdown');
     const { actionPlugins, loadingActions, configGeneratorPlugins } = this.state;
+    if (!activeWorkspace) {
+      console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
+      return null;
+    }
+
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
@@ -157,16 +161,13 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
               style={{
                 maxWidth: '400px',
               }}
-              title={displayName}
+              title={activeWorkspaceName}
             >
-              {displayName}
+              {activeWorkspaceName}
             </div>
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
-          <DropdownDivider>
-            {getAppName()} v{getAppVersion()}
-          </DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
@@ -180,7 +181,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
           {actionPlugins.map((p: WorkspaceAction) => (
             <DropdownItem
               key={p.label}
-              onClick={() => this._handlePluginClick(p)}
+              onClick={() => this._handlePluginClick(p, activeWorkspace)}
               stayOpenAfterClick
             >
               {loadingActions[p.label] ? (
@@ -213,3 +214,15 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeEnvironment: selectActiveEnvironment(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+  activeApiSpec: selectActiveApiSpec(state),
+  activeProject: selectActiveProject(state),
+  hotKeyRegistry: selectSettings(state).hotKeyRegistry,
+  isLoading: selectIsLoading(state),
+});
+
+export const WorkspaceDropdown = connect(mapStateToProps)(UnconnectedWorkspaceDropdown);

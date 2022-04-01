@@ -11,6 +11,13 @@ export interface GrpcRequestBody {
   text?: string;
 }
 
+export interface GrpcRequestHeader {
+  name: string;
+  value: string;
+  description?: string;
+  disabled?: boolean;
+}
+
 interface BaseGrpcRequest {
   name: string;
   url: string;
@@ -18,6 +25,7 @@ interface BaseGrpcRequest {
   protoFileId?: string;
   protoMethodName?: string;
   body: GrpcRequestBody;
+  metadata: GrpcRequestHeader[];
   metaSortKey: number;
   isPrivate: boolean;
 }
@@ -39,6 +47,7 @@ export function init(): BaseGrpcRequest {
     description: '',
     protoFileId: '',
     protoMethodName: '',
+    metadata: [],
     body: {
       text: '{}',
     },

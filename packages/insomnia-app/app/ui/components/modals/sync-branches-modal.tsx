@@ -1,24 +1,23 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
-import type { StatusCandidate } from '../../../sync/types';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { selectSyncItems } from '../../redux/selectors';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { SyncPullButton } from '../sync-pull-button';
 
-interface Props {
-  workspace: Workspace;
-  project: Project;
-  syncItems: StatusCandidate[];
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   vcs: VCS;
 }
 
@@ -31,7 +30,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SyncBranchesModal extends PureComponent<Props, State> {
+export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -181,7 +180,7 @@ export class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { vcs, project } = this.props;
+    const { vcs } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -301,7 +300,6 @@ export class SyncBranchesModal extends PureComponent<Props, State> {
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
-                          project={project}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}
@@ -320,3 +318,14 @@ export class SyncBranchesModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  syncItems: selectSyncItems(state),
+});
+
+export const SyncBranchesModal = connect(
+  mapStateToProps,
+  null,
+  null,
+  { forwardRef: true },
+)(UnconnectedSyncBranchesModal);

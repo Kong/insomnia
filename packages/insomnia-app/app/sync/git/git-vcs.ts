@@ -1,7 +1,6 @@
 import * as git from 'isomorphic-git';
 import path from 'path';
 
-import { trackEvent } from '../../common/analytics';
 import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import { gitCallbacks } from './utils';
@@ -16,17 +15,27 @@ export interface GitRemoteConfig {
   url: string;
 }
 
-interface GitCredentialsPassword {
+interface GitCredentialsBase {
   username: string;
   password: string;
 }
 
-interface GitCredentialsToken {
+interface GitCredentialsOAuth {
+  /**
+   * Supported OAuth formats.
+   * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
+   * https://isomorphic-git.org/docs/en/authentication.html
+  */
+  oauth2format?: 'github';
   username: string;
   token: string;
 }
 
-export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
+export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
+
+export const isGitCredentialsOAuth = (credentials: GitCredentials): credentials is GitCredentialsOAuth => {
+  return 'oauth2format' in credentials;
+};
 
 export type GitHash = string;
 
@@ -82,9 +91,9 @@ interface BaseOpts {
   fs: git.CallbackFsClient | git.PromiseFsClient;
   http: git.HttpClient;
   onMessage: (message: string) => void;
-  onAuthFailure: (message: string) => void;
-  onAuthSuccess: (message: string) => void;
-  onAuth: () => void;
+  onAuthFailure: git.AuthFailureCallback;
+  onAuthSuccess: git.AuthSuccessCallback;
+  onAuth: git.AuthCallback;
 }
 
 export class GitVCS {
@@ -223,7 +232,6 @@ export class GitVCS {
 
   async commit(message: string) {
     console.log(`[git] Commit "${message}"`);
-    trackEvent('Git', 'Commit');
     return git.commit({ ...this._baseOpts, message });
   }
 
@@ -264,7 +272,6 @@ export class GitVCS {
 
   async push(gitCredentials?: GitCredentials | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
-    trackEvent('Git', 'Push');
     // eslint-disable-next-line no-unreachable
     const response: git.PushResult = await git.push({
       ...this._baseOpts,
@@ -286,7 +293,6 @@ export class GitVCS {
 
   async pull(gitCredentials?: GitCredentials | null) {
     console.log('[git] Pull remote=origin', await this.getBranch());
-    trackEvent('Git', 'Pull');
     return git.pull({
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
@@ -298,7 +304,6 @@ export class GitVCS {
   async merge(theirBranch: string) {
     const ours = await this.getBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
-    trackEvent('Git', 'Merge');
     return git.merge({
       ...this._baseOpts,
       ours,
@@ -336,13 +341,11 @@ export class GitVCS {
   }
 
   async branch(branch: string, checkout = false) {
-    trackEvent('Git', 'Create Branch');
     // @ts-expect-error -- TSCONVERSION remote doesn't exist as an option
     await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 
   async deleteBranch(branch: string) {
-    trackEvent('Git', 'Delete Branch');
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
@@ -353,7 +356,6 @@ export class GitVCS {
     const branches = await this.listBranches();
 
     if (branches.includes(branch)) {
-      trackEvent('Git', 'Checkout Branch');
       await git.checkout({ ...this._baseOpts, ref: branch, remote: 'origin' });
     } else {
       await this.branch(branch, true);

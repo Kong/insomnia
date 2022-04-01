@@ -18,7 +18,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       inMemoryOnly: true,
     },
     true,
-    () => {},
+    () => { },
   );
   const docs: BaseModel[] = [];
 
@@ -51,7 +51,9 @@ export function getSendRequestCallback(environmentId?: string) {
 
 async function sendAndTransform(requestId: string, environmentId?: string) {
   try {
-    plugins.ignorePlugin('insomnia-plugin-kong-bundle');
+    plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
+    plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
+    plugins.ignorePlugin('insomnia-plugin-kong-portal');
     const res = await send(requestId, environmentId);
     const headersObj: Record<string, string> = {};
 

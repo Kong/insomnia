@@ -1,9 +1,7 @@
 import {
-  ACTIVITY_DEBUG,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
-  DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../common/constants';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
@@ -14,7 +12,7 @@ export const prefix = 'wrkm';
 export const canDuplicate = false;
 export const canSync = false;
 
-interface BaseWorkspaceMeta {
+export interface BaseWorkspaceMeta {
   activeActivity: string | null;
   activeEnvironmentId: string | null;
   activeRequestId: string | null;
@@ -63,15 +61,6 @@ export function init(): BaseWorkspaceMeta {
 }
 
 export function migrate(doc: WorkspaceMeta) {
-  doc = _migrateInsomniaActivity(doc);
-  return doc;
-}
-
-function _migrateInsomniaActivity(doc: WorkspaceMeta) {
-  if (doc.activeActivity === DEPRECATED_ACTIVITY_INSOMNIA) {
-    doc.activeActivity = ACTIVITY_DEBUG;
-  }
-
   return doc;
 }
 

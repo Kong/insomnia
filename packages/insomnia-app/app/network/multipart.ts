@@ -1,6 +1,5 @@
-import * as electron from 'electron';
 import fs from 'fs';
-import mimes from 'mime-types';
+import { lookup } from 'mime-types';
 import path from 'path';
 
 import type { RequestBodyParameter } from '../models/request';
@@ -15,7 +14,7 @@ interface Multipart {
 
 export async function buildMultipart(params: RequestBodyParameter[]) {
   return new Promise<Multipart>(async (resolve, reject) => {
-    const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
+    const filePath = path.join(window.app.getPath('temp'), Math.random() + '.body');
     const writeStream = fs.createWriteStream(filePath);
     const lineBreak = '\r\n';
     let totalSize = 0;
@@ -64,7 +63,7 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
       if (param.type === 'file' && param.fileName) {
         const name = param.name || '';
         const fileName = param.fileName;
-        const contentType = mimes.lookup(fileName) || 'application/octet-stream';
+        const contentType = lookup(fileName) || 'application/octet-stream';
         addString(
           'Content-Disposition: form-data; ' +
             `name="${name.replace(/"/g, '\\"')}"; ` +

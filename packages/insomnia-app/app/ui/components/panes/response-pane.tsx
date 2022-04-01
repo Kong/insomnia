@@ -1,15 +1,15 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { clipboard, remote } from 'electron';
+import { clipboard } from 'electron';
 import fs from 'fs';
+import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
-import mime from 'mime-types';
+import { extension as mimeExtension } from 'mime-types';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -37,7 +37,6 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  showCookiesModal: Function;
   handleSetPreviewMode: Function;
   handleSetActiveResponse: Function;
   handleDeleteResponses: Function;
@@ -48,9 +47,6 @@ interface Props {
   filterHistory: string[];
   disableHtmlPreviewJs: boolean;
   editorFontSize: number;
-  editorIndentSize: number;
-  editorKeyMap: string;
-  editorLineWrapping: boolean;
   loadStartTime: number;
   responses: Response[];
   hotKeyRegistry: HotKeyRegistry;
@@ -88,8 +84,8 @@ export class ResponsePane extends PureComponent<Props> {
     }
 
     const { contentType } = response;
-    const extension = mime.extension(contentType) || 'unknown';
-    const { canceled, filePath: outputPath } = await remote.dialog.showSaveDialog({
+    const extension = mimeExtension(contentType) || 'unknown';
+    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
@@ -138,13 +134,13 @@ export class ResponsePane extends PureComponent<Props> {
       return;
     }
 
-    const timeline = await models.response.getTimeline(response);
+    const timeline = models.response.getTimeline(response);
     const headers = timeline
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)
       .join('');
 
-    const { canceled, filePath } = await remote.dialog.showSaveDialog({
+    const { canceled, filePath } = await window.dialog.showSaveDialog({
       title: 'Save Full Response',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
@@ -196,7 +192,7 @@ export class ResponsePane extends PureComponent<Props> {
     const data = await exportHarCurrentRequest(request, response);
     const har = JSON.stringify(data, null, '\t');
 
-    const { filePath } = await remote.dialog.showSaveDialog({
+    const { filePath } = await window.dialog.showSaveDialog({
       title: 'Export As HAR',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
@@ -229,9 +225,6 @@ export class ResponsePane extends PureComponent<Props> {
     const {
       disableHtmlPreviewJs,
       editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       environment,
       filter,
       disableResponsePreviewLinks,
@@ -249,7 +242,6 @@ export class ResponsePane extends PureComponent<Props> {
       requestVersions,
       response,
       responses,
-      showCookiesModal,
     } = this.props;
 
     if (!request) {
@@ -336,9 +328,6 @@ export class ResponsePane extends PureComponent<Props> {
               disablePreviewLinks={disableResponsePreviewLinks}
               download={this._handleDownloadResponseBody}
               editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-              editorKeyMap={editorKeyMap}
-              editorLineWrapping={editorLineWrapping}
               error={response.error}
               filter={filter}
               filterHistory={filterHistory}
@@ -363,7 +352,6 @@ export class ResponsePane extends PureComponent<Props> {
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
                   cookiesStored={response.settingStoreCookies}
-                  showCookiesModal={showCookiesModal}
                   headers={cookieHeaders}
                 />
               </ErrorBoundary>
@@ -373,9 +361,6 @@ export class ResponsePane extends PureComponent<Props> {
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
                 response={response}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
               />
             </ErrorBoundary>
           </TabPanel>

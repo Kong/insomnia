@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Simple_API_overview",
+      "host": "Simple_API_overview.upstream",
       "port": 80,
       "path": "/path",
       "name": "Simple_API_overview",
@@ -16,7 +16,7 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
-          "name": "Simple_API_overview-x_kong_name_override_at_method",
+          "name": "Simple_API_overview-x-kong-name-override-at-method",
           "paths": ["/$"]
         },
         {
@@ -33,7 +33,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
-      "name": "Simple_API_overview",
+      "name": "Simple_API_overview.upstream",
       "hash_on": "ip",
       "healthchecks": {
         "passive": {

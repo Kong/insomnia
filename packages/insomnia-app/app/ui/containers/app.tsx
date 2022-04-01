@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
+import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
-import * as mime from 'mime-types';
+import { extension as mimeExtension } from 'mime-types';
 import * as path from 'path';
 import React, { createRef, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -12,7 +12,6 @@ import { parse as urlParse } from 'url';
 import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
@@ -26,7 +25,6 @@ import {
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
-  PREVIEW_MODE_SOURCE,
   SortOrder,
 } from '../../common/constants';
 import { database as db } from '../../common/database';
@@ -39,8 +37,6 @@ import {
   generateId,
   getContentDispositionHeader,
 } from '../../common/misc';
-import * as render from '../../common/render';
-import { RenderContextAndKeys } from '../../common/render';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
@@ -52,7 +48,7 @@ import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
-import { isCollection, isWorkspace } from '../../models/workspace';
+import { isWorkspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import * as network from '../../network/network';
 import * as plugins from '../../plugins';
@@ -64,12 +60,10 @@ import { routableFSClient } from '../../sync/git/routable-fs-client';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import { getKeys } from '../../templating/utils';
 import { ErrorBoundary } from '../components/error-boundary';
 import { KeydownBinder } from '../components/keydown-binder';
 import { AskModal } from '../components/modals/ask-modal';
-import { CookiesModal } from '../components/modals/cookies-modal';
+import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
 import { RequestCreateModal } from '../components/modals/request-create-modal';
@@ -85,25 +79,27 @@ import { Toast } from '../components/toast';
 import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
+import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
   exportRequestsToFile,
-  goToNextActivity,
   loadRequestStart,
   loadRequestStop,
   newCommand,
+  selectIsLoading,
   setActiveActivity,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
+import { activateWorkspace } from '../redux/modules/workspace';
 import {
+  selectActiveActivity,
+  selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
-  selectActiveOAuth2Token,
   selectActiveProject,
   selectActiveRequest,
-  selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
   selectActiveUnitTestResult,
@@ -113,15 +109,43 @@ import {
   selectActiveWorkspace,
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
-  selectEntitiesLists,
+  selectActiveWorkspaceName,
+  selectApiSpecs,
+  selectEnvironments,
+  selectGitRepositories,
+  selectIsFinishedBooting,
+  selectIsLoggedIn,
+  selectLoadStartTime,
+  selectRequestGroups,
+  selectRequestMetas,
+  selectRequests,
+  selectRequestVersions,
+  selectResponseDownloadPath,
+  selectResponseFilter,
+  selectResponseFilterHistory,
+  selectResponsePreviewMode,
   selectSettings,
+  selectStats,
   selectSyncItems,
   selectUnseenWorkspaces,
-  selectWorkspaceRequestsAndRequestGroups,
+  selectWorkspaceMetas,
   selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { selectPaneHeight, selectPaneWidth, selectSidebarChildren, selectSidebarFilter, selectSidebarHidden, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
+
+const updateRequestMetaByParentId = async (
+  requestId: string,
+  patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>
+) => {
+  const isGrpc = isGrpcRequestId(requestId);
+
+  if (isGrpc) {
+    return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
+  } else {
+    return models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  }
+};
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -133,7 +157,6 @@ interface State {
   sidebarWidth: number;
   paneWidth: number;
   paneHeight: number;
-  isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
   forceRefreshCounter: number;
@@ -143,7 +166,6 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent<AppProps, State> {
-  private _getRenderContextPromiseCache: Object;
   private _savePaneWidth: (paneWidth: number) => void;
   private _savePaneHeight: (paneWidth: number) => void;
   private _saveSidebarWidth: (paneWidth: number) => void;
@@ -166,7 +188,6 @@ class App extends PureComponent<AppProps, State> {
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
-      isVariableUncovered: false,
       vcs: null,
       gitVCS: null,
       forceRefreshCounter: 0,
@@ -174,7 +195,6 @@ class App extends PureComponent<AppProps, State> {
       isMigratingChildren: false,
     };
 
-    this._getRenderContextPromiseCache = {};
     this._savePaneWidth = debounce(paneWidth =>
       this._updateActiveWorkspaceMeta({
         paneWidth,
@@ -254,13 +274,7 @@ class App extends PureComponent<AppProps, State> {
           showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
         },
       ],
-      [
-        hotKeyRefs.SHOW_COOKIES_EDITOR,
-        () => {
-          const { activeWorkspace } = this.props;
-          showModal(CookiesModal, activeWorkspace);
-        },
-      ],
+      [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
       [
         hotKeyRefs.REQUEST_QUICK_CREATE,
         async () => {
@@ -356,12 +370,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
-      [
-        hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES,
-        async () => {
-          await this._updateIsVariableUncovered();
-        },
-      ],
+      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, this._updateShowVariableSourceAndValue],
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
@@ -492,49 +501,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _fetchRenderContext() {
-    const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
-    const ancestors = await render.getRenderContextAncestors(activeRequest || activeWorkspace);
-    return render.getRenderContext({
-      request: activeRequest || undefined,
-      environmentId: activeEnvironment?._id,
-      ancestors,
-    });
-  }
-
-  async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
-    const context = await this._fetchRenderContext();
-    const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
-    return {
-      context,
-      keys,
-    };
-  }
-
-  /**
-   * Heavily optimized render function
-   *
-   * @param text - template to render
-   * @param contextCacheKey - if rendering multiple times in parallel, set this
-   * @returns {Promise}
-   * @private
-   */
-  async _handleRenderText<T>(obj: T, contextCacheKey = null) {
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
-      // NOTE: We're caching promises here to avoid race conditions
-      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-      this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
-    }
-
-    // Set timeout to delete the key eventually
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-    const context = await this._getRenderContextPromiseCache[contextCacheKey];
-    return render.render(obj, context);
-  }
-
   _handleGenerateCodeForActiveRequest() {
     // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
     App._handleGenerateCode(this.props.activeRequest);
@@ -581,20 +547,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  static async _updateRequestMetaByParentId(requestId, patch) {
-    const isGrpc = isGrpcRequestId(requestId);
-
-    if (isGrpc) {
-      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
-    } else {
-      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
-    }
-  }
-
-  _updateIsVariableUncovered() {
-    this.setState({
-      isVariableUncovered: !this.state.isVariableUncovered,
-    });
+  async _updateShowVariableSourceAndValue() {
+    const { settings } = this.props;
+    await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
   _handleSetPaneWidth(paneWidth: number) {
@@ -617,7 +572,7 @@ class App extends PureComponent<AppProps, State> {
     await this._updateActiveWorkspaceMeta({
       activeRequestId,
     });
-    await App._updateRequestMetaByParentId(activeRequestId, {
+    await updateRequestMetaByParentId(activeRequestId, {
       lastActive: Date.now(),
     });
   }
@@ -659,25 +614,25 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async _handleSetRequestPinned(request, pinned) {
-    App._updateRequestMetaByParentId(request._id, {
+    updateRequestMetaByParentId(request._id, {
       pinned,
     });
   }
 
   _handleSetResponsePreviewMode(requestId, previewMode) {
-    App._updateRequestMetaByParentId(requestId, {
+    updateRequestMetaByParentId(requestId, {
       previewMode,
     });
   }
 
   _handleUpdateDownloadPath(requestId, downloadPath) {
-    App._updateRequestMetaByParentId(requestId, {
+    updateRequestMetaByParentId(requestId, {
       downloadPath,
     });
   }
 
   async _handleSetResponseFilter(requestId, responseFilter) {
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       responseFilter,
     });
 
@@ -700,7 +655,7 @@ class App extends PureComponent<AppProps, State> {
       }
 
       responseFilterHistory.unshift(responseFilter);
-      await App._updateRequestMetaByParentId(requestId, {
+      await updateRequestMetaByParentId(requestId, {
         responseFilterHistory,
       });
     }, 2000);
@@ -748,7 +703,7 @@ class App extends PureComponent<AppProps, State> {
       options.defaultPath = defaultPath;
     }
 
-    const { filePath } = await remote.dialog.showSaveDialog(options);
+    const { filePath } = await window.dialog.showSaveDialog(options);
     // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
     return filePath || null;
@@ -764,7 +719,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     // Start loading
     handleStartLoading(requestId);
 
@@ -780,8 +735,8 @@ class App extends PureComponent<AppProps, State> {
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
-        // @ts-expect-error -- TSCONVERSION contentType can be undefined
-        const extension = mime.extension(responsePatch.contentType) || 'unknown';
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename;
@@ -833,7 +788,7 @@ class App extends PureComponent<AppProps, State> {
       });
     } finally {
       // Unset active response because we just made a new one
-      await App._updateRequestMetaByParentId(requestId, {
+      await updateRequestMetaByParentId(requestId, {
         activeResponseId: null,
       });
       // Stop loading
@@ -851,12 +806,13 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
+    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
     handleStartLoading(requestId);
 
     try {
       const responsePatch = await network.send(requestId, environmentId);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
+
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -879,9 +835,10 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       activeResponseId: null,
     });
+
     // Stop loading
     handleStopLoading(requestId);
   }
@@ -889,7 +846,7 @@ class App extends PureComponent<AppProps, State> {
   async _handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
     const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
-    await App._updateRequestMetaByParentId(requestId, {
+    await updateRequestMetaByParentId(requestId, {
       activeResponseId,
     });
 
@@ -1065,9 +1022,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _handleKeyDown(e) {
+  _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(e, definition, callback);
+      executeHotKey(event, definition, callback);
     }
   }
 
@@ -1107,18 +1064,18 @@ class App extends PureComponent<AppProps, State> {
     const {
       activeWorkspace,
       activeProject,
-      activeApiSpec,
+      activeWorkspaceName,
       activeEnvironment,
       activeRequest,
-      activity,
+      activeActivity,
     } = this.props;
     let title;
 
-    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
+    if (activeActivity === ACTIVITY_HOME) {
       title = getAppName();
-    } else if (activeWorkspace && activeApiSpec) {
+    } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
-      title += ` - ${isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName}`;
+      title += ` - ${activeWorkspaceName}`;
 
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
@@ -1502,12 +1459,16 @@ class App extends PureComponent<AppProps, State> {
       return null;
     }
 
+    if (!this.props.isFinishedBooting) {
+      console.log('[app] Waiting to finish booting');
+      return null;
+    }
+
     const { activeWorkspace } = this.props;
     const {
       paneWidth,
       paneHeight,
       sidebarWidth,
-      isVariableUncovered,
       gitVCS,
       vcs,
       forceRefreshCounter,
@@ -1517,188 +1478,116 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
-          <AppHooks />
+          <NunjucksEnabledProvider>
+            <AppHooks />
 
-          <div className="app" key={uniquenessKey}>
-            <ErrorBoundary showAlert>
-              <Wrapper
-                ref={this._setWrapperRef}
-                {...this.props}
-                paneWidth={paneWidth}
-                paneHeight={paneHeight}
-                sidebarWidth={sidebarWidth}
-                handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-                handleSetRequestPinned={this._handleSetRequestPinned}
-                handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-                handleActivateRequest={this._handleSetActiveRequest}
-                requestPaneRef={this._requestPaneRef}
-                responsePaneRef={this._responsePaneRef}
-                sidebarRef={this._sidebarRef}
-                handleStartDragSidebar={this._startDragSidebar}
-                handleResetDragSidebar={this._resetDragSidebar}
-                handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-                handleStartDragPaneVertical={this._startDragPaneVertical}
-                handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-                handleResetDragPaneVertical={this._resetDragPaneVertical}
-                handleCreateRequest={this._requestCreate}
-                handleRender={this._handleRenderText}
-                handleGetRenderContext={this._handleGetRenderContext}
-                handleDuplicateRequest={this._requestDuplicate}
-                handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                handleCreateRequestGroup={this._requestGroupCreate}
-                handleGenerateCode={App._handleGenerateCode}
-                handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-                handleCopyAsCurl={this._handleCopyAsCurl}
-                handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-                handleSetResponseFilter={this._handleSetResponseFilter}
-                handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-                handleSendAndDownloadRequestWithEnvironment={
-                  this._handleSendAndDownloadRequestWithEnvironment
-                }
-                handleSetActiveResponse={this._handleSetActiveResponse}
-                handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                handleSetSidebarFilter={this._handleSetSidebarFilter}
-                handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                handleShowSettingsModal={App._handleShowSettingsModal}
-                handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-                isVariableUncovered={isVariableUncovered}
-                headerEditorKey={forceRefreshHeaderCounter + ''}
-                handleSidebarSort={this._sortSidebar}
-                vcs={vcs}
-                gitVCS={gitVCS}
-              />
-            </ErrorBoundary>
+            <div className="app" key={uniquenessKey}>
+              <ErrorBoundary showAlert>
+                <Wrapper
+                  ref={this._setWrapperRef}
+                  {...this.props}
+                  paneWidth={paneWidth}
+                  paneHeight={paneHeight}
+                  sidebarWidth={sidebarWidth}
+                  handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                  handleSetRequestPinned={this._handleSetRequestPinned}
+                  handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                  handleActivateRequest={this._handleSetActiveRequest}
+                  requestPaneRef={this._requestPaneRef}
+                  responsePaneRef={this._responsePaneRef}
+                  sidebarRef={this._sidebarRef}
+                  handleStartDragSidebar={this._startDragSidebar}
+                  handleResetDragSidebar={this._resetDragSidebar}
+                  handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                  handleStartDragPaneVertical={this._startDragPaneVertical}
+                  handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                  handleResetDragPaneVertical={this._resetDragPaneVertical}
+                  handleCreateRequest={this._requestCreate}
+                  handleDuplicateRequest={this._requestDuplicate}
+                  handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                  handleCreateRequestGroup={this._requestGroupCreate}
+                  handleGenerateCode={App._handleGenerateCode}
+                  handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                  handleCopyAsCurl={this._handleCopyAsCurl}
+                  handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                  handleSetResponseFilter={this._handleSetResponseFilter}
+                  handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                  handleSendAndDownloadRequestWithEnvironment={
+                    this._handleSendAndDownloadRequestWithEnvironment
+                  }
+                  handleSetActiveResponse={this._handleSetActiveResponse}
+                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                  handleSetSidebarFilter={this._handleSetSidebarFilter}
+                  handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                  handleShowSettingsModal={App._handleShowSettingsModal}
+                  handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                  headerEditorKey={forceRefreshHeaderCounter + ''}
+                  handleSidebarSort={this._sortSidebar}
+                  vcs={vcs}
+                  gitVCS={gitVCS}
+                />
+              </ErrorBoundary>
 
-            <ErrorBoundary showAlert>
-              <Toast />
-            </ErrorBoundary>
+              <ErrorBoundary showAlert>
+                <Toast />
+              </ErrorBoundary>
 
-            {/* Block all mouse activity by showing an overlay while dragging */}
-            {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-          </div>
+              {/* Block all mouse activity by showing an overlay while dragging */}
+              {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+            </div>
+          </NunjucksEnabledProvider>
         </GrpcProvider>
       </KeydownBinder>
     );
   }
 }
 
-function mapStateToProps(state: RootState) {
-  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = state.global;
-  // Entities
-  const entitiesLists = selectEntitiesLists(state);
-  const {
-    apiSpecs,
-    environments,
-    gitRepositories,
-    requestGroups,
-    requestMetas,
-    requestVersions,
-    requests,
-    workspaceMetas,
-  } = entitiesLists;
-
-  const settings = selectSettings(state);
-
-  // Workspace stuff
-  const activeProject = selectActiveProject(state);
-  const workspaces = selectWorkspacesForActiveProject(state);
-  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
-  const activeWorkspace = selectActiveWorkspace(state);
-  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state);
-  const activeGitRepository = selectActiveGitRepository(state);
-
-  const sidebarHidden = activeWorkspaceMeta?.sidebarHidden || false;
-  const sidebarFilter = activeWorkspaceMeta?.sidebarFilter || '';
-  const sidebarWidth = activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT;
-
-  // Request stuff
-  const requestMeta = selectActiveRequestMeta(state);
-  const activeRequest = selectActiveRequest(state);
-
-  const responsePreviewMode = requestMeta?.previewMode || PREVIEW_MODE_SOURCE;
-  const responseFilter = requestMeta?.responseFilter || '';
-  const responseFilterHistory = requestMeta?.responseFilterHistory || [];
-  const responseDownloadPath = requestMeta?.downloadPath || null;
-
-  // Cookie Jar
-  const activeCookieJar = selectActiveCookieJar(state);
-
-  // Response stuff
-  const activeRequestResponses = selectActiveRequestResponses(state);
-  const activeResponse = selectActiveResponse(state);
-
-  // Environment stuff
-  const activeEnvironment = selectActiveEnvironment(state);
-
-  // OAuth2Token stuff
-  const oAuth2Token = selectActiveOAuth2Token(state);
-
-  // Find other meta things
-  const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
-  const sidebarChildren = selectSidebarChildren(state);
-  const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state);
-  const unseenWorkspaces = selectUnseenWorkspaces(state);
-
-  // Sync stuff
-  const syncItems = selectSyncItems(state);
-
-  // Api spec stuff
-  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace?._id);
-
-  // Test stuff
-  const activeUnitTests = selectActiveUnitTests(state);
-  const activeUnitTestSuite = selectActiveUnitTestSuite(state);
-  const activeUnitTestSuites = selectActiveUnitTestSuites(state);
-  const activeUnitTestResult = selectActiveUnitTestResult(state);
-
-  return {
-    activity: activeActivity,
-    activeProject,
-    activeApiSpec,
-    activeCookieJar,
-    activeEnvironment,
-    activeGitRepository,
-    activeRequest,
-    activeRequestResponses,
-    activeResponse,
-    activeUnitTestResult,
-    activeUnitTestSuite,
-    activeUnitTestSuites,
-    activeUnitTests,
-    activeWorkspace,
-    activeWorkspaceClientCertificates,
-    activeWorkspaceMeta,
-    apiSpecs,
-    environments,
-    gitRepositories,
-    isLoading,
-    isLoggedIn,
-    loadStartTime,
-    oAuth2Token,
-    paneHeight,
-    paneWidth,
-    requestGroups,
-    requestMetas,
-    requestVersions,
-    requests,
-    responseDownloadPath,
-    responseFilter,
-    responseFilterHistory,
-    responsePreviewMode,
-    settings,
-    sidebarChildren,
-    sidebarFilter,
-    sidebarHidden,
-    sidebarWidth,
-    syncItems,
-    unseenWorkspaces,
-    workspaceChildren,
-    workspaces,
-    workspaceMetas,
-  };
-}
+const mapStateToProps = (state: RootState) => ({
+  activeActivity: selectActiveActivity(state),
+  activeProject: selectActiveProject(state),
+  activeApiSpec: selectActiveApiSpec(state),
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+  activeCookieJar: selectActiveCookieJar(state),
+  activeEnvironment: selectActiveEnvironment(state),
+  activeGitRepository: selectActiveGitRepository(state),
+  activeRequest: selectActiveRequest(state),
+  activeRequestResponses: selectActiveRequestResponses(state),
+  activeResponse: selectActiveResponse(state),
+  activeUnitTestResult: selectActiveUnitTestResult(state),
+  activeUnitTestSuite: selectActiveUnitTestSuite(state),
+  activeUnitTestSuites: selectActiveUnitTestSuites(state),
+  activeUnitTests: selectActiveUnitTests(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  activeWorkspaceClientCertificates: selectActiveWorkspaceClientCertificates(state),
+  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
+  apiSpecs: selectApiSpecs(state),
+  environments: selectEnvironments(state),
+  gitRepositories: selectGitRepositories(state),
+  isLoading: selectIsLoading(state),
+  isLoggedIn: selectIsLoggedIn(state),
+  isFinishedBooting: selectIsFinishedBooting(state),
+  loadStartTime: selectLoadStartTime(state),
+  paneHeight: selectPaneHeight(state),
+  paneWidth: selectPaneWidth(state),
+  requestGroups: selectRequestGroups(state),
+  requestMetas: selectRequestMetas(state),
+  requestVersions: selectRequestVersions(state),
+  requests: selectRequests(state),
+  responseDownloadPath: selectResponseDownloadPath(state),
+  responseFilter: selectResponseFilter(state),
+  responseFilterHistory: selectResponseFilterHistory(state),
+  responsePreviewMode: selectResponsePreviewMode(state),
+  settings: selectSettings(state),
+  sidebarChildren: selectSidebarChildren(state),
+  sidebarFilter: selectSidebarFilter(state),
+  sidebarHidden: selectSidebarHidden(state),
+  sidebarWidth: selectSidebarWidth(state),
+  stats: selectStats(state),
+  syncItems: selectSyncItems(state),
+  unseenWorkspaces: selectUnseenWorkspaces(state),
+  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+  workspaceMetas: selectWorkspaceMetas(state),
+});
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
@@ -1707,7 +1596,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
-    goToNextActivity: handleGoToNextActivity,
+    activateWorkspace: handleActivateWorkspace,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1716,7 +1605,7 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStop,
     newCommand,
     setActiveActivity,
-    goToNextActivity,
+    activateWorkspace,
     exportRequestsToFile,
     initialize,
   }, dispatch);
@@ -1724,9 +1613,9 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     handleCommand,
     handleImportUri,
     handleSetActiveActivity,
+    handleActivateWorkspace,
     handleStartLoading,
     handleStopLoading,
-    handleGoToNextActivity,
     handleExportRequestsToFile,
     handleInitializeEntities,
   };

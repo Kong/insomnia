@@ -16,6 +16,13 @@ export const conversionOptions: ConversionOption[] = [
   'kubernetes',
 ];
 
+export type FormatOption = 'yaml' | 'json';
+
+export const formatOptions: FormatOption[] = [
+  'yaml',
+  'json',
+];
+
 export const conversionTypeMap: Record<ConversionOption, ConversionResultType> = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
@@ -24,6 +31,7 @@ export const conversionTypeMap: Record<ConversionOption, ConversionResultType> =
 export type GenerateConfigOptions = GlobalOptions & {
   type: ConversionOption;
   output?: string;
+  format?: FormatOption;
 
   /** a comma-separated list of tags */
   tags?: string;
@@ -49,7 +57,7 @@ export const generateConfig = async (
     return false;
   }
 
-  const { type, output, tags, appDataDir, workingDir, ci, src } = options;
+  const { type, output, tags, appDataDir, workingDir, ci, src, format } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
@@ -89,9 +97,18 @@ export const generateConfig = async (
     return false;
   }
 
-  const yamlDocs = result.documents.map((document: DeclarativeConfig | K8sManifest) => YAML.stringify(document));
-  // Join the YAML docs with "---" and strip any extra newlines surrounding them
-  const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
+  const isListOfDeclarativeConfigs = (docs: DeclarativeConfig[] | K8sManifest[]) :docs is DeclarativeConfig[] => typeof docs?.[0] !== 'string' && '_format_version' in docs?.[0];
+
+  let document = '';
+  if (isListOfDeclarativeConfigs(result.documents)){
+    // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
+    const declarativeConfig = result.documents?.[0];
+    document = format?.toLocaleLowerCase() === 'json' ? JSON.stringify(declarativeConfig) : YAML.stringify(declarativeConfig);
+  } else {
+    const yamlDocs = result.documents.map((document: K8sManifest) => YAML.stringify(document));
+    // Join the YAML docs with "---" and strip any extra newlines surrounding them
+    document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
+  }
 
   if (output) {
     const outputPath = await writeFileWithCliOptions(output, document, workingDir);

@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: Smoke Test API server
+  version: 1.0.0
+servers:
+  - url: http://localhost:4010
+tags:
+  - name: Misc
+  - name: Auth
+  - name: File
+paths:
+  /pets/{id}:
+    get:
+      operationId: echoId
+      summary: Echo id
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      tags:
+        - Misc
+      responses:
+        '200':
+          description: A JSON object containing the id
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  id:
+                    type: string
+  /file/dummy.csv:
+    get:
+      operationId: dummyCsvFile
+      summary: Get dummy CSV file
+      tags:
+        - File
+      responses:
+        '200':
+          description: loaded dummy csv file
+          content:
+            application/csv:
+              schema:
+                $ref: '#/components/schemas/File'
+  /file/dummy.pdf:
+    get:
+      operationId: dummyPdfFile
+      summary: Get dummy PDF file
+      tags:
+        - File
+      responses:
+        '200':
+          description: loaded dummy CSV file
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/File'
+  /auth/basic:
+    get:
+      operationId: basicAuth
+      summary: Make basic auth request
+      security:
+        - basicAuth: []
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: successfully authed
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/String'
+  /delay/seconds/{duration}:
+    get:
+      operationId: delayByDuration
+      summary: Delay by seconds
+      parameters:
+        - name: duration
+          in: path
+          schema:
+            type: integer
+          required: true
+      tags:
+        - Misc
+      responses:
+        '200':
+          description: delayed
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/String'
+components:
+  schemas:
+    File:
+      type: string
+      format: binary
+    String:
+      type: string
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    
