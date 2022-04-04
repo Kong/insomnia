@@ -1,0 +1,79 @@
+{
+    "info": {
+        "_postman_id": "73945e9f-0b70-4cf9-aa89-640e807d4200",
+        "name": "Example collection",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Example request with OAuth2",
+            "request": {
+                "auth": {
+                    "type": "oauth2",
+                    "oauth2": [
+                        {
+                            "key": "audience",
+                            "value": {
+                                "5545d202-0633-49d4-810e-83b74b51802e": "exampleAudience"
+                            },
+                            "type": "any"
+                        },
+                        {
+                            "key": "clientSecret",
+                            "value": "exampleClientSecret",
+                            "type": "string"
+                        },
+                        {
+                            "key": "clientId",
+                            "value": "exampleClientId",
+                            "type": "string"
+                        },
+                        {
+                            "key": "accessTokenUrl",
+                            "value": "exampleAccessTokenUrl",
+                            "type": "string"
+                        },
+                        {
+                            "key": "authUrl",
+                            "value": "exampleAuthorizeUrl",
+                            "type": "string"
+                        },
+                        {
+                            "key": "redirect_uri",
+                            "value": "exampleCallbackUrl",
+                            "type": "string"
+                        },
+                        {
+                            "key": "grant_type",
+                            "value": "authorization_code",
+                            "type": "string"
+                        },
+                        {
+                            "key": "tokenName",
+                            "value": "Access token",
+                            "type": "string"
+                        },
+                        {
+                            "key": "challengeAlgorithm",
+                            "value": "S256",
+                            "type": "string"
+                        },
+                        {
+                            "key": "addTokenTo",
+                            "value": "header",
+                            "type": "string"
+                        },
+                        {
+                            "key": "client_authentication",
+                            "value": "header",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": []
+            },
+            "response": []
+        }
+    ]
+}

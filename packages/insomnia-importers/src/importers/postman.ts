@@ -53,7 +53,7 @@ const POSTMAN_SCHEMA_V2_0 =
 const POSTMAN_SCHEMA_V2_1 =
   'https://schema.getpostman.com/json/collection/v2.1.0/collection.json';
 
-class ImportCollection {
+export class ImportPostman {
   collection;
 
   constructor(collection: PostmanCollection) {
@@ -533,7 +533,7 @@ export const convert: Converter = rawData => {
       collection.info.schema === POSTMAN_SCHEMA_V2_0 ||
       collection.info.schema === POSTMAN_SCHEMA_V2_1
     ) {
-      return new ImportCollection(collection).importCollection();
+      return new ImportPostman(collection).importCollection();
     }
   } catch (e) {
     // Nothing
