@@ -56,7 +56,7 @@ export const ingressDoc = (
   serviceName: string,
   path?: string | null,
 ): K8sIngress => ({
-  apiVersion: 'extensions/v1beta1',
+  apiVersion: 'networking.k8s.io/v1',
   kind: 'Ingress',
   metadata: {
     annotations: {
@@ -93,7 +93,7 @@ export const ingressDocWithOverride = (
   serviceName: string,
   path?: string | null,
 ): K8sIngress => ({
-  apiVersion: 'extensions/v1beta1',
+  apiVersion: 'networking.k8s.io/v1',
   kind: 'Ingress',
   metadata: {
     annotations: {

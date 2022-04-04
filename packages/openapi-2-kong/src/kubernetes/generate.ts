@@ -51,7 +51,7 @@ export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
         const rule = generateIngressRule(serverIndex, serverPlugin.server, specName, [pathPlugin.path]);
 
         const doc: K8sIngress = {
-          apiVersion: 'extensions/v1beta1',
+          apiVersion: 'networking.k8s.io/v1',
           kind: 'Ingress',
           metadata,
           spec: {
@@ -211,7 +211,7 @@ export const generateTLS = (server?: OA3Server) => {
   }
 
   if (!Array.isArray(tls)) {
-    throw new Error('x-kubernetes-tls must be an array of IngressTLS, matching the kubernetes IngressSpec resource. see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressspec-v1beta1-extensions');
+    throw new Error('x-kubernetes-tls must be an array of IngressTLS, matching the kubernetes IngressSpec resource. see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#ingressspec-v1-networking-k8s-io');
   }
 
   return tls;

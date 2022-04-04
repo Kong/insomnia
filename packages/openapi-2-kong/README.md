@@ -258,7 +258,7 @@ paths:
 #### Generated config
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-1
@@ -274,7 +274,7 @@ spec:
               serviceName: insomnia-api-service-0
               servicePort: 80
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-2
@@ -300,7 +300,7 @@ The `Ingress` document `metadata.name` is derived from sections in the source sp
 Each of the following specifications generate an `Ingress` document with the following name:
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api
@@ -445,7 +445,7 @@ config:
   key_in_body: false
   hide_credentials: true
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-0
@@ -463,7 +463,7 @@ spec:
               serviceName: insomnia-api-service-0
               servicePort: 80
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-1
@@ -482,7 +482,7 @@ spec:
               serviceName: insomnia-api-service-0
               servicePort: 80
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-2
@@ -500,7 +500,7 @@ spec:
               serviceName: insomnia-api-service-1
               servicePort: 80
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-3
