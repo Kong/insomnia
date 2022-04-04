@@ -271,8 +271,11 @@ spec:
         paths:
           - path: /v1/.*
             backend:
-              serviceName: insomnia-api-service-0
-              servicePort: 80
+              service:
+                name: insomnia-api-service-0
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -287,8 +290,11 @@ spec:
         paths:
           - path: /v2/.*
             backend:
-              serviceName: insomnia-api-service-1
-              servicePort: 80
+              service:
+                name: insomnia-api-service-1
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ```
 
 </details>
@@ -460,8 +466,11 @@ spec:
         paths:
           - path: /v1/path
             backend:
-              serviceName: insomnia-api-service-0
-              servicePort: 80
+              service:
+                name: insomnia-api-service-0
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -479,8 +488,11 @@ spec:
         paths:
           - path: /v1/another
             backend:
-              serviceName: insomnia-api-service-0
-              servicePort: 80
+              service:
+                name: insomnia-api-service-0
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -497,8 +509,11 @@ spec:
         paths:
           - path: /v2/path
             backend:
-              serviceName: insomnia-api-service-1
-              servicePort: 80
+              service:
+                name: insomnia-api-service-1
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -516,8 +531,11 @@ spec:
         paths:
           - path: /v2/another
             backend:
-              serviceName: insomnia-api-service-1
-              servicePort: 80
+              service:
+                name: insomnia-api-service-1
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ```
 
 </details>

@@ -30,14 +30,26 @@ export interface K8sMetadata {
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingressbackend-v1-networking-k8s-io */
 export interface K8sIngressBackend {
-  serviceName: string;
-  servicePort: number;
+  service: K8sIngressServiceBackend;
+}
+
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingressservicebackend-v1-networking-k8s-io */
+export interface K8sIngressServiceBackend {
+  name: string;
+  port: K8sServiceBackendPort;
+}
+
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#servicebackendport-v1-networking-k8s-io */
+export interface K8sServiceBackendPort {
+  name?: string;
+  number: number;
 }
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#httpingresspath-v1-networking-k8s-io */
 export interface K8sHTTPIngressPath {
   path?: string;
   backend: K8sIngressBackend;
+  pathType: string;
 }
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#httpingressrulevalue-v1-networking-k8s-io */

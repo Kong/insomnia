@@ -159,8 +159,12 @@ export const generateIngressRule = (
   const { hostname, pathname } = parseUrl(server.url);
   const pathsToUse = paths?.length ? paths : [''];
   const backend: K8sIngressBackend = {
-    serviceName: generateServiceName(server, specName, index),
-    servicePort: generateServicePort(server),
+    service:{
+      name: generateServiceName(server, specName, index),
+      port: {
+        number: generateServicePort(server),
+      },
+    },
   };
 
   const k8sPaths = pathsToUse.map((pathToUse): K8sHTTPIngressPath => {
@@ -168,6 +172,7 @@ export const generateIngressRule = (
     return {
       backend,
       ...(path ? { path } : {}),
+      pathType: 'ImplementationSpecific',
     };
   });
 

@@ -115,9 +115,12 @@ documents:
           http:
             paths:
               - backend:
-                  serviceName: my-cloud-api-service-0
-                  servicePort: 443
+                  service:
+                    name: my-cloud-api-service-0
+                    port:
+                      number: 443
                 path: /v1/offline-portal
+                pathType: ImplementationSpecific
   - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
@@ -140,6 +143,9 @@ documents:
             paths:
               - path: /v1/user-info
                 backend:
-                  serviceName: my-cloud-api-service-0
-                  servicePort: 443
+                  service:
+                    name: my-cloud-api-service-0
+                    port:
+                      number: 443
+                pathType: ImplementationSpecific
 warnings: []
