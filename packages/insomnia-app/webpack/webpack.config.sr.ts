@@ -5,9 +5,7 @@ import pkg from '../package.json';
 
 const configuration: Configuration = {
   context: path.join(__dirname, '../send-request'),
-  entry: {
-    index: './index.ts',
-  },
+  entry: { index: './index.ts' },
   target: 'node',
   mode: 'production',
   devtool: 'source-map',
