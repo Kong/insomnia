@@ -2,7 +2,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import tls from 'tls';
 
-fs.writeFile(
-  path.join(__dirname, '..', 'app', 'network', 'ca_certs.ts'),
-  `export default \`${tls.rootCertificates.join('\n')}\``
-);
+const filePath = path.join(__dirname, '..', 'app', 'network', 'ca_certs.ts');
+
+const certificates = tls.rootCertificates.join('\n');
+const fileContents = `export default \`${certificates}\`;\n`;
+
+fs.writeFile(filePath, fileContents);
