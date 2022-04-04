@@ -6,8 +6,8 @@ describe('postman', () => {
     requests = [],
     version = 'v2.0.0',
   }: {
-    requests?: Request1[],
-    version?: string,
+    requests?: Request1[];
+    version?: string;
   } = {}) => JSON.parse(JSON.stringify({
     info: {
       name: 'Postman Schema',
@@ -38,52 +38,52 @@ describe('postman', () => {
           {
             key: 'clientSecret',
             value: 'exampleClientSecret',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'clientId',
             value: 'exampleClientId',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'accessTokenUrl',
             value: 'exampleAccessTokenUrl',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'authUrl',
             value: 'exampleAuthorizeUrl',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'redirect_uri',
             value: 'exampleCallbackUrl',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'grant_type',
             value: 'authorization_code',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'tokenName',
             value: 'Access token',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'challengeAlgorithm',
             value: 'S256',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'addTokenTo',
             value: 'header',
-            type: 'string'
+            type: 'string',
           },
           {
             key: 'client_authentication',
             value: 'header',
-            type: 'string'
+            type: 'string',
           },
         ],
       },
