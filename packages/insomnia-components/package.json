@@ -19,12 +19,14 @@
     ".": {
       "require": "./dist/commonjs/index.js",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"      
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "prebuild": "npm run convert-svg",
-    "build": "esr esbuild.ts && esr esbuild.cjs.ts",
+    "build:source": "esr esbuild.ts && esr esbuild.cjs.ts",
+    "build:types": "tsc --build tsconfig.build.json",
+    "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
     "clean": "rimraf dist && npm run clean:svg",
     "clean:svg": "rimraf src/assets/svgr",
     "clean:svg:index": "rimraf src/assets/svgr/index.tsx",
@@ -56,6 +58,7 @@
     "@types/testing-library__jest-dom": "^5.9.5",
     "@types/testing-library__react-hooks": "^4.0.0",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.14.27",
     "esbuild-runner": "^2.2.1",

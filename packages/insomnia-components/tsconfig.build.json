@@ -6,6 +6,7 @@
     "rootDir": "src",
     "jsx": "react",
     "experimentalDecorators": true,
+    "emitDeclarationOnly": true,
     "resolveJsonModule": true
   },
   "include": [
