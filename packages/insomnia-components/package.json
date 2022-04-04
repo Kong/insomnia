@@ -12,11 +12,19 @@
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/commonjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/commonjs/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"      
+    }
+  },
   "scripts": {
     "prebuild": "npm run convert-svg",
-    "build": "esr esbuild.ts",
+    "build": "esr esbuild.ts && esr esbuild.cjs.ts",
     "clean": "rimraf dist && npm run clean:svg",
     "clean:svg": "rimraf src/assets/svgr",
     "clean:svg:index": "rimraf src/assets/svgr/index.tsx",
