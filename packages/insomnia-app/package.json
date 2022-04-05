@@ -30,7 +30,7 @@
     "build": "npm run generate:ca-certs && npm run build:sr && npm run build:app",
     "build:app": "esr ./scripts/build.ts --noErrorTruncation",
     "build:sr": "npm run generate:ca-certs && esr esbuild.sr.ts",
-    "package": "esr scripts/package.ts",
+    "package": "npm run build:app && esr scripts/package.ts",
     "bump-version": "esr scripts/bumpVersion.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
