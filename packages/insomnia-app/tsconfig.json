@@ -11,7 +11,8 @@
     "send-request",
     "vite.config.ts",
     "esbuild.main.ts",
-    "esbuild.sr.ts"
+    "esbuild.sr.ts",
+    "esbuild.preload.ts",
   ],
   "exclude": [
     "**/@types/mocha",

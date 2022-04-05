@@ -17,11 +17,5 @@ export default function() {
   );
   const store = createStore(reducer, enhancer);
 
-  if (__DEV__ && module.hot) {
-    module.hot.accept('./modules/index', () => {
-      store.replaceReducer(reducer);
-    });
-  }
-
   return store as Store;
 }

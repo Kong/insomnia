@@ -21,26 +21,18 @@ const env: Record<string, string> = _DEV_
   : {
     __DEV__: 'false',
     'process.env.NODE_ENV': JSON.stringify('production'),
-    'process.env.HOT': JSON.stringify(null),
   };
 
-async function main() {
-  await build({
-    entryPoints: ['./app/main.development.ts'],
-    outfile: path.join(outdir, 'main.min.js'),
-    bundle: true,
-    platform: 'node',
-    target: 'esnext',
-    sourcemap: true,
-    format: 'cjs',
-    define: env,
-    external: [
-      '@getinsomnia/node-libcurl',
-      'electron',
-    ],
-  });
-
-  process.exit(0);
-}
-
-main();
+build({
+  entryPoints: ['./app/main.development.ts'],
+  outfile: path.join(outdir, 'main.min.js'),
+  bundle: true,
+  platform: 'node',
+  sourcemap: true,
+  format: 'cjs',
+  define: env,
+  external: [
+    '@getinsomnia/node-libcurl',
+    'electron',
+  ],
+});

@@ -212,6 +212,21 @@ export const start = async () => {
     external: ['@getinsomnia/node-libcurl', 'electron'],
   });
 
+  console.log('[build] Building preload');
+  await build({
+    entryPoints: [path.join(__dirname, '../app/preload.js')],
+    outfile: path.join(__dirname, '../build/preload.js'),
+    platform: 'node',
+    bundle: true,
+    target: 'esnext',
+    sourcemap: false,
+    format: 'esm',
+    define: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
+    },
+    external: ['electron'],
+  });
+
   console.log('[build] Building renderer');
 
   const commonjsPackages = [
@@ -251,7 +266,7 @@ export const start = async () => {
   await vite.build({
     mode: 'production',
     root: path.join(__dirname, '../app'),
-    base: '/',
+    base: './',
     resolve: {
       alias: {
         'react': path.resolve(__dirname, '../node_modules/react'),
@@ -270,9 +285,8 @@ export const start = async () => {
     },
     build: {
       sourcemap: false,
-      outDir: 'dist',
-      assetsDir: '.',
-      emptyOutDir: true,
+      outDir: path.join(__dirname, '..', 'build'),
+      assetsDir: './',
       brotliSize: false,
     },
     plugins: [

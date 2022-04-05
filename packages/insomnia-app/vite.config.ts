@@ -70,7 +70,7 @@ export default vite.defineConfig({
   },
   build: {
     sourcemap: true,
-    outDir: 'dist',
+    outDir: 'build',
     assetsDir: '.',
     emptyOutDir: true,
     brotliSize: false,
