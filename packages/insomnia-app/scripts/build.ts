@@ -197,7 +197,7 @@ export const start = async () => {
   await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
 
   console.log('[build] Building main.min.js');
-  build({
+  await build({
     entryPoints: [path.join(__dirname, '../app/main.development.ts')],
     outfile: path.join(__dirname, '../build/main.min.js'),
     bundle: true,
@@ -241,6 +241,7 @@ export const start = async () => {
     'system',
     'file',
     'url',
+    'crypto',
     ...Object.keys(packageJSON.dependencies).filter(
       name => !packageJSON.packedDependencies.includes(name)
     ),
@@ -248,7 +249,7 @@ export const start = async () => {
     ...builtinModules,
   ];
 
-  vite.build({
+  await vite.build({
     mode: 'production',
     root: path.join(__dirname, '../app'),
     base: '/',
@@ -261,9 +262,9 @@ export const start = async () => {
       dedupe: ['react', 'react-dom', 'react-dom/server'],
     },
     define: {
-      __DEV__: true,
-      'process.env.NODE_ENV': JSON.stringify('development'),
-      'process.env.INSOMNIA_ENV': JSON.stringify('development'),
+      __DEV__: false,
+      'process.env.NODE_ENV': JSON.stringify('production'),
+      'process.env.INSOMNIA_ENV': JSON.stringify('production'),
     },
     server: {
       port: packageJSON.dev['dev-server-port'],
@@ -278,20 +279,13 @@ export const start = async () => {
       sourcemap: true,
       outDir: 'dist',
       assetsDir: '.',
-      terserOptions: {
-        ecma: 2020,
-        compress: {
-          passes: 2,
-        },
-        safari10: false,
-      },
       emptyOutDir: true,
       brotliSize: false,
     },
     plugins: [
       commonjsExt({ externals: commonjsPackages }),
       react({
-        fastRefresh: true,
+        fastRefresh: false,
         jsxRuntime: 'classic',
         babel: {
           plugins: [

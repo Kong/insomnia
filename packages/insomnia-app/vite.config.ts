@@ -72,13 +72,6 @@ export default vite.defineConfig({
     sourcemap: true,
     outDir: 'dist',
     assetsDir: '.',
-    terserOptions: {
-      ecma: 2020,
-      compress: {
-        passes: 2,
-      },
-      safari10: false,
-    },
     emptyOutDir: true,
     brotliSize: false,
   },
