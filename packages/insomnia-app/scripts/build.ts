@@ -203,8 +203,7 @@ export const start = async () => {
     bundle: true,
     platform: 'node',
     target: 'esnext',
-    sourcemap: true,
-    watch: true,
+    sourcemap: false,
     format: 'cjs',
     define: {
       __DEV__: 'false',
@@ -266,17 +265,11 @@ export const start = async () => {
       'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.INSOMNIA_ENV': JSON.stringify('production'),
     },
-    server: {
-      port: packageJSON.dev['dev-server-port'],
-      fs: {
-        strict: true,
-      },
-    },
     optimizeDeps: {
       exclude: commonjsPackages,
     },
     build: {
-      sourcemap: true,
+      sourcemap: false,
       outDir: 'dist',
       assetsDir: '.',
       emptyOutDir: true,
