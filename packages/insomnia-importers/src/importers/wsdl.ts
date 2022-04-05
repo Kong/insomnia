@@ -98,7 +98,6 @@ export const convert: Converter = async rawData => {
     }
   } catch (e) {
     // Nothing
-    throw new Error(e);
   }
 
   return null;
