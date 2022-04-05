@@ -209,7 +209,7 @@ export const start = async () => {
       __DEV__: 'false',
       'process.env.NODE_ENV': JSON.stringify('production'),
     },
-    external: ['@getinsomnia/node-libcurl'],
+    external: ['@getinsomnia/node-libcurl', 'electron'],
   });
 
   console.log('[build] Building renderer');
