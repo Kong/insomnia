@@ -1,6 +1,7 @@
 import { Button, Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
+import styled from 'styled-components';
 
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
@@ -11,18 +12,18 @@ import { selectActiveProject } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
-  className?: string;
   vcs?: VCS | null;
 }
 
-const PullButton: FC<{disabled?: boolean; className?: string}> = ({ disabled, className }) => (
+const PullButton = styled(({ disabled, className }) => (
   <Button className={className} disabled={disabled}>
-    Pull
-    <i className="fa fa-caret-down pad-left-sm" />
+    Pull <i className="fa fa-caret-down pad-left-sm" />
   </Button>
-);
+))({
+  marginLeft: 'var(--padding-md)',
+});
 
-export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
+export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {
   const {
     loading,
     refresh,
@@ -47,13 +48,13 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
   if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">
-        <PullButton className={className} disabled />
+        <PullButton disabled />
       </Tooltip>
     );
   }
 
   return (
-    <Dropdown onOpen={refresh} renderButton={<PullButton className={className} />}>
+    <Dropdown onOpen={refresh} renderButton={<PullButton />}>
       <DropdownDivider>
         Remote {strings.collection.plural}
         <HelpTooltip>

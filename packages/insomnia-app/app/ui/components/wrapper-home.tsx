@@ -12,6 +12,7 @@ import {
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -46,6 +47,10 @@ import { Notice } from './notice';
 import { PageLayout } from './page-layout';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 import type { WrapperProps } from './wrapper';
+
+const CreateButton = styled(Button)({
+  marginLeft: 'var(--padding-md)',
+});
 
 interface Props
   extends ReturnType<typeof mapDispatchToProps>,
@@ -236,10 +241,9 @@ class WrapperHome extends PureComponent<Props, State> {
 
   renderCreateMenu() {
     const button = (
-      <Button variant="contained" bg="surprise" className="margin-left">
-        Create
-        <i className="fa fa-caret-down pad-left-sm" />
-      </Button>
+      <CreateButton variant="contained" bg="surprise">
+        Create <i className="fa fa-caret-down pad-left-sm" />
+      </CreateButton>
     );
     return (
       <Dropdown renderButton={button}>
@@ -307,7 +311,7 @@ class WrapperHome extends PureComponent<Props, State> {
           </KeydownBinder>
         </div>
         <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
-        <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
+        <RemoteWorkspacesDropdown vcs={vcs} />
         {this.renderCreateMenu()}
       </div>
     );

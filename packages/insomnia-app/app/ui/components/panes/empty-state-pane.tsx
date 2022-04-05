@@ -56,7 +56,6 @@ const DocumentationLinks = styled.div({
   flexWrap: 'wrap',
 });
 
-// @ts-expect-error the types don't like the addition of !important.  can't say I blame them.
 const StyledLink = styled(Link)({
   display: 'flex',
   marginTop: 'var(--padding-md)',
