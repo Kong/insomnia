@@ -684,7 +684,7 @@ describe('actuallySend()', () => {
     const response = await networkUtils._actuallySend(
       renderedRequest,
       [],
-      settings,
+      { ...settings, validateSSL:false },
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
