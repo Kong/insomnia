@@ -180,8 +180,6 @@ export async function _actuallySend(
 
     const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
 
-    /** Helper function to respond with a success */
-
     // NOTE: can have duplicate keys because of cookie options
     const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
     const setOpt = (key: string, value: string | string[] | number | boolean) => {
@@ -210,8 +208,6 @@ export async function _actuallySend(
           error: 'Request was cancelled',
           timelinePath,
           parentId: renderedRequest._id,
-          bodyCompression: null,
-          bodyPath: '',
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies,
         });
@@ -511,8 +507,6 @@ export async function _actuallySend(
               statusMessage: 'Error',
               timelinePath,
               parentId: renderedRequest._id,
-              bodyCompression: null,
-              bodyPath: '',
               settingSendCookies: renderedRequest.settingSendCookies,
               settingStoreCookies: renderedRequest.settingStoreCookies,
             });
@@ -661,8 +655,6 @@ export async function _actuallySend(
         statusMessage: 'Error',
         timelinePath,
         parentId: renderedRequest._id,
-        bodyCompression: null,
-        bodyPath: '',
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies,
       });
