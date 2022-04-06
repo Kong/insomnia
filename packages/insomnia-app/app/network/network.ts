@@ -164,8 +164,7 @@ export async function cancelRequestById(requestId) {
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
-  settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
-  validateSSL = true,
+  settings: Settings,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
@@ -315,7 +314,7 @@ export async function _actuallySend(
       }
 
       // SSL Validation
-      if (validateSSL) {
+      if (settings.validateSSL) {
         addTimelineText('Enable SSL validation');
       } else {
         setOpt(Curl.option.SSL_VERIFYHOST, 0);
@@ -494,7 +493,8 @@ export async function _actuallySend(
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          if (!requestBody) {
+          // AWS IAM file upload not supported
+          if (requestBodyPath) {
             const timelinePath = await storeTimeline(timeline);
             // Tear Down the cancellation logic
             if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
@@ -662,8 +662,7 @@ export async function _actuallySend(
   });
 }
 
-// design: given a request,
-// return options useful for curl options and logging
+// get request body or path to file
 const parseRequestBodyOptions = async renderedRequest => {
   const hasFileName = renderedRequest.body.fileName;
   const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
@@ -699,12 +698,9 @@ const parseRequestBodyOptions = async renderedRequest => {
   return { requestBody: null };
 };
 
-// design: given a libcurl response
-// add set-cookie headers to file(jar) and database
+// add set-cookie headers to file(cookiejar) and database
 const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
   const headerTimeline: ResponseTimelineEntry[] = [];
-  // Headers are an array (one for each redirect)
-  const lastRedirect = headerResults[headerResults.length - 1];
 
   // Update Cookie Jar
   const setCookieStrings: string[] = headerResults.map(({ headers }) =>
@@ -714,7 +710,8 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
   const jar = jarFromCookies(cookieJar.cookies);
   for (const setCookie of setCookieStrings) {
     try {
-      const locationHeader = headerResults.find(({ headers }) => getLocationHeader(headers));
+      // get the last location header to set the cookie at
+      const locationHeader = headerResults.reverse().find(({ headers }) => getLocationHeader(headers));
       jar.setCookieSync(setCookie, locationHeader?.value || finalUrl);
     } catch (err) {
       headerTimeline.push({
@@ -742,6 +739,8 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
       timestamp: Date.now(),
     });
   }
+  // Headers are an array (one for each redirect)
+  const lastRedirect = headerResults[headerResults.length - 1];
   return {
     lastRedirect,
     contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
@@ -793,8 +792,7 @@ export async function sendWithSettings(
   const response = await _actuallySend(
     renderResult.request,
     clientCertificates,
-    settings,
-    settings.validateAuthSSL,
+    { ...settings, validateSSL: settings.validateAuthSSL },
   );
   if (response.error) {
     return response;
@@ -882,7 +880,6 @@ export async function send(
     renderedRequest,
     clientCertificates,
     settings,
-    settings.validateSSL,
   );
 
   console.log(

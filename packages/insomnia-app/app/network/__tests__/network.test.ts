@@ -685,8 +685,6 @@ describe('actuallySend()', () => {
       renderedRequest,
       [],
       settings,
-      null,
-      false
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
