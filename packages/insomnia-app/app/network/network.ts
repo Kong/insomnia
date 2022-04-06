@@ -794,6 +794,7 @@ export async function sendWithSettings(
     clientCertificates,
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
+  response.environmentId = environmentId;
   if (response.error) {
     return response;
   }
@@ -881,6 +882,7 @@ export async function send(
     clientCertificates,
     settings,
   );
+  response.environmentId = environmentId;
 
   console.log(
     response.error
