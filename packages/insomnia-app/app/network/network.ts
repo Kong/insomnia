@@ -14,7 +14,7 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import { parse as urlParse, resolve as urlResolve } from 'url';
+import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -138,19 +138,19 @@ let lastUserInteraction = Date.now();
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
     case HttpVersions.V1_0:
-      return { log: 'Using HTTP 1.0', curlHttpVersion:CurlHttpVersion.V1_0 };
+      return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
     case HttpVersions.V1_1:
-      return { log: 'Using HTTP 1.1', curlHttpVersion:CurlHttpVersion.V1_1 };
+      return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
     case HttpVersions.V2PriorKnowledge:
-      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion:CurlHttpVersion.V2PriorKnowledge };
+      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
     case HttpVersions.V2_0:
-      return { log: 'Using HTTP/2', curlHttpVersion:CurlHttpVersion.V2_0 };
+      return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
     case HttpVersions.v3:
-      return { log: 'Using HTTP/3', curlHttpVersion:CurlHttpVersion.v3 };
+      return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
     case HttpVersions.default:
       return { log: 'Using default HTTP version' };
     default:
-      return { log: `Unknown HTTP version specified ${preferredHttpVersion}`  };
+      return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
   }
 };
 
@@ -215,6 +215,31 @@ export async function _actuallySend(
         });
       };
 
+      // Set all the basic options
+      setOpt(Curl.option.VERBOSE, true);
+
+      // True so debug function works\
+      setOpt(Curl.option.NOPROGRESS, true);
+
+      // True so curl doesn't print progress
+      setOpt(Curl.option.ACCEPT_ENCODING, '');
+
+      // Set follow redirects setting
+      switch (renderedRequest.settingFollowRedirects) {
+        case 'off':
+          setOpt(Curl.option.FOLLOWLOCATION, false);
+          break;
+
+        case 'on':
+          setOpt(Curl.option.FOLLOWLOCATION, true);
+          break;
+
+        default:
+          // Set to global setting
+          setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+          break;
+      }
+
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
       if (settings.maxRedirects > 0) {
@@ -270,7 +295,7 @@ export async function _actuallySend(
 
       const httpVersion = getHttpVersion(settings.preferredHttpVersion);
       addTimelineText(httpVersion.log);
-      if (httpVersion.curlHttpVersion){
+      if (httpVersion.curlHttpVersion) {
         // Set HTTP version
         setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
       }
@@ -351,8 +376,7 @@ export async function _actuallySend(
         }
 
         addTimelineText(
-          `Enable cookie sending with jar of ${cookies.length} cookie${
-            cookies.length !== 1 ? 's' : ''
+          `Enable cookie sending with jar of ${cookies.length} cookie${cookies.length !== 1 ? 's' : ''
           }`,
         );
       } else {
@@ -431,8 +455,7 @@ export async function _actuallySend(
       }
       const { requestBody, requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBodyOptions(renderedRequest);
       const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
-      if (!hasRequestBodyOrFilePath){
-        // No body
+      if (hasRequestBodyOrFilePath) {
         headers.push({
           name: 'Expect',
           value: DISABLE_HEADER_VALUE,
@@ -442,15 +465,18 @@ export async function _actuallySend(
           value: DISABLE_HEADER_VALUE,
         });
       }
-      if (requestBody){
+      if (requestBody) {
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
-      if (requestBodyPath && contentLength){
-        if (!getContentTypeHeader(headers) && isMultipart && boundary) {
-          headers.push({
+      if (requestBodyPath && contentLength) {
+        if (isMultipart && boundary) {
+          const contentTypeHeader = getContentTypeHeader(headers);
+          if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${boundary}`;
+          else headers.push({
             name: 'Content-Type',
             value: `multipart/form-data; boundary=${boundary}`,
           });
+
         }
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
@@ -705,7 +731,7 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
     } catch (err) {
       headerTimeline.push({
         name: 'TEXT',
-        value:`Rejected cookie: ${err.message}`,
+        value: `Rejected cookie: ${err.message}`,
         timestamp: Date.now(),
       });
     }
@@ -784,7 +810,7 @@ export async function sendWithSettings(
     environment,
     settings.validateAuthSSL,
   );
-  if (response.error){
+  if (response.error) {
     return response;
   }
   return _applyResponsePluginHooks(
@@ -881,7 +907,7 @@ export async function send(
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
       : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
   );
-  if (response.error){
+  if (response.error) {
     return response;
   }
   return _applyResponsePluginHooks(
@@ -1008,7 +1034,7 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
   const responsesDir = pathJoin(getDataDirectory(), 'responses');
   mkdirp.sync(responsesDir);
   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-  if (process.type === 'renderer'){
+  if (process.type === 'renderer') {
     return window.main.writeFile({ path: timelinePath, content: timelineStr });
   }
   return new Promise<string>((resolve, reject) => {
