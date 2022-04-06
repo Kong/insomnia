@@ -3,6 +3,7 @@
   "name": "insomnia-plugin-kong-portal",
   "version": "2.11.0-beta.0",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "repository": {
@@ -14,30 +15,34 @@
     "url": "https://github.com/Kong/insomnia/issues"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js --display errors-only",
-    "watch": "webpack --config webpack.config.js --watch",
-    "prepare": "npm run build"
+    "prebuild": "npm run clean",
+    "build:source": "esr esbuild.ts",
+    "build:types": "tsc --build tsconfig.build.json",
+    "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
+    "clean": "rimraf dist",
+    "bootstrap": "npm run build"
   },
   "insomnia": {
     "name": "kong-portal",
     "description": "Deploy API specifications to Kong Portal",
     "unlisted": true
   },
-  "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
-    "@babel/preset-env": "^7.9.0",
-    "@babel/preset-flow": "^7.9.0",
-    "@babel/preset-react": "^7.9.4",
-    "autobind-decorator": "^2.4.0",
-    "insomnia-components": "2.11.0-beta.0",
+  "dependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "styled-components": "^4.4.1",
-    "url-join": "^4.0.1",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "url-join": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^16.14.5",
+    "@types/react-dom": "^16.9.12",
+    "@types/url-join": "^4.0.1",
+    "axios": "^0.21.2",
+    "concurrently": "^7.0.0",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.14.29",
+    "esbuild-runner": "^2.2.1",
+    "rimraf": "3.0.2",
+    "typescript": "^4.5.5"
   }
 }

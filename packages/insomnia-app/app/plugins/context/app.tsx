@@ -64,6 +64,7 @@ export interface AppContext {
 export interface PrivateProperties {
   axios: typeof axios;
   analytics: typeof analytics;
+  insomniaComponents: any;
 }
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
@@ -215,6 +216,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
     __private: {
       axios,
       analytics,
+      insomniaComponents: globalThis.document ? require('insomnia-components') : {},
     },
   };
 }

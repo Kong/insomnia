@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "strict": true,
+    "jsx": "react",
+    "types": ["node"],
+    "isolatedModules": false,
+    "emitDeclarationOnly": true,
+    "sourceMap": false,
+    "skipLibCheck": true,
+  },
+  "include": ["src"]
+}

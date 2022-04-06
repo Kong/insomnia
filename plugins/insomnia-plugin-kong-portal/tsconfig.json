@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "rootDir": ".",
+  },
+  "include": [
+    "src",
+    ".eslintrc.js",
+    "package.json",
+    "esbuild.ts",
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+  ]
+}
