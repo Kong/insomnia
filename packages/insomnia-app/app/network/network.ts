@@ -494,7 +494,7 @@ export async function _actuallySend(
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          if (hasRequestBodyOrFilePath && !requestBody) {
+          if (!requestBody) {
             const timelinePath = await storeTimeline(timeline);
             // Tear Down the cancellation logic
             if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
