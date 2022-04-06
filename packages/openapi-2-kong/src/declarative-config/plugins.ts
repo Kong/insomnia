@@ -85,7 +85,7 @@ const generateParameterSchema = (operation?: OA3Operation) => {
   return parameterSchemas;
 };
 
-function generateBodyOptions(operation?: OA3Operation) {
+export function generateBodyOptions(operation?: OA3Operation) {
   let bodySchema;
   let allowedContentTypes;
   const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
@@ -96,6 +96,13 @@ function generateBodyOptions(operation?: OA3Operation) {
 
     if (allowedContentTypes.includes(jsonContentType)) {
       const item = bodyContent[jsonContentType];
+      const schema = item.schema;
+      for (const key in schema.properties) {
+        // Append 'null' to property type if nullable true, see FTI-3278
+        if (schema.properties[key].nullable === true) {
+          schema.properties[key].type = [schema.properties[key].type, 'null'];
+        }
+      }
       bodySchema = JSON.stringify(item.schema);
     }
   }

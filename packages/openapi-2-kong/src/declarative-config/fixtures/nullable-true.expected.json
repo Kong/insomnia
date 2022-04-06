@@ -1,0 +1,65 @@
+{
+    "_format_version": "1.1",
+    "services": [
+        {
+            "name": "cktest_cards_api",
+            "protocol": "https",
+            "host": "alb-dev01.openapi-test.merlin",
+            "port": 443,
+            "path": "/",
+            "plugins": [],
+            "routes": [
+                {
+                    "tags": [
+                        "OAS3_import",
+                        "OAS3file_nullable-true.yaml"
+                    ],
+                    "name": "cktest_cards_api-get_api1",
+                    "methods": [
+                        "GET"
+                    ],
+                    "paths": [
+                        "/cktest/cktest_cards/api1$"
+                    ],
+                    "strip_path": false
+                },
+                {
+                    "tags": [
+                        "OAS3_import",
+                        "OAS3file_nullable-true.yaml"
+                    ],
+                    "name": "cktest_cards_api-post_api1",
+                    "methods": [
+                        "POST"
+                    ],
+                    "paths": [
+                        "/cktest/cktest_cards/api1$"
+                    ],
+                    "strip_path": false,
+                    "plugins": [
+                        {
+                            "name": "request-validator",
+                            "config": {
+                                "version": "draft4",
+                                "body_schema": "{\"type\":\"object\",\"title\":\"request-body-nullable\",\"description\":\"This object is sent in post application request.\",\"required\":[\"redirectUri\"],\"properties\":{\"redirectUri\":{\"type\":[\"string\",\"null\"],\"nullable\":true}}}",
+                                "allowed_content_types": [
+                                    "application/json"
+                                ],
+                                "verbose_response": true
+                            },
+                            "tags": [
+                                "OAS3_import",
+                                "OAS3file_nullable-true.yaml"
+                            ],
+                            "enabled": true
+                        }
+                    ]
+                }
+            ],
+            "tags": [
+                "OAS3_import",
+                "OAS3file_nullable-true.yaml"
+            ]
+        }
+    ]
+}

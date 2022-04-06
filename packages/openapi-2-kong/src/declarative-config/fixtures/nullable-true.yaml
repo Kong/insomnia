@@ -1,0 +1,59 @@
+openapi: '3.0.2'
+x-kong-name: cktest_cards_api
+info:
+  title: FTI-3278 Test
+  version: '1.0'
+  description: A sample API specification for FTI-3278
+  contact:
+    email: support@insomnia.rest
+
+servers:
+- url: https://alb-dev01.openapi-test.merlin/
+
+tags:
+  - name: oauth2-credential-flow
+
+paths:
+  /cktest/cktest_cards/api1:
+    get:
+      description: test oauth2
+      operationId: get_api1
+      tags:
+        - oauth2-credential-flow
+
+      responses:
+        '200':
+          description: OK
+
+    post:
+      description: test oauth2
+      operationId: post_api1
+      x-kong-plugin-request-validator:
+        enabled: true
+        config:
+          verbose_response: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/request-body-nullable"
+      responses:
+        '200':
+          description: OK
+
+      tags:
+        - oauth2-credential-flow
+
+
+components:
+  schemas:
+    request-body-nullable:
+      type: object
+      title: request-body-nullable
+      description: This object is sent in post application request.
+      required:
+        - redirectUri
+      properties:
+        redirectUri:
+          type: string
+          nullable: true
