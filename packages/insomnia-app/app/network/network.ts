@@ -193,12 +193,18 @@ export async function _actuallySend(
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
-        const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
+        const timelinePath = await storeTimeline(timeline);
         // Tear Down the cancellation logic
         if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
           delete cancelRequestFunctionMap[renderedRequest._id];
         }
         const environmentId = environment ? environment._id : null;
+        // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
+        const nodejsCancelCurlRequest = process.type === 'renderer'
+        ? window.main.cancelCurlRequest
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        : require('./libcurl-promise').cancelCurlRequest;
+        nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
           elapsedTime: 0,
           bytesRead: 0,
