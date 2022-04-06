@@ -50,7 +50,6 @@ import {
 } from '../common/render';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
-import type { Environment } from '../models/environment';
 import type { Request, RequestHeader } from '../models/request';
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
@@ -166,7 +165,6 @@ export async function _actuallySend(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
   settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
-  environment?: Environment | null,
   validateSSL = true,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
@@ -198,12 +196,11 @@ export async function _actuallySend(
         if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
           delete cancelRequestFunctionMap[renderedRequest._id];
         }
-        const environmentId = environment ? environment._id : null;
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
-        ? window.main.cancelCurlRequest
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        : require('./libcurl-promise').cancelCurlRequest;
+          ? window.main.cancelCurlRequest
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          : require('./libcurl-promise').cancelCurlRequest;
         nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
           elapsedTime: 0,
@@ -212,7 +209,6 @@ export async function _actuallySend(
           statusMessage: 'Cancelled',
           error: 'Request was cancelled',
           timelinePath,
-          environmentId,
           parentId: renderedRequest._id,
           bodyCompression: null,
           bodyPath: '',
@@ -508,14 +504,12 @@ export async function _actuallySend(
             if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
               delete cancelRequestFunctionMap[renderedRequest._id];
             }
-            const environmentId = environment ? environment._id : null;
             return resolve({
               url: renderedRequest.url,
               error: 'AWS authentication not supported for provided body type',
-              elapsedTime: 0, // 0 because this path is hit during plugin calls
+              elapsedTime: 0,
               statusMessage: 'Error',
               timelinePath,
-              environmentId,
               parentId: renderedRequest._id,
               bodyCompression: null,
               bodyPath: '',
@@ -644,10 +638,8 @@ export async function _actuallySend(
       if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
         delete cancelRequestFunctionMap[renderedRequest._id];
       }
-      const environmentId = environment ? environment._id : null;
       return resolve({
         timelinePath,
-        environmentId,
         parentId: renderedRequest._id,
         bodyCompression: null,
         bodyPath: responseBodyPath || '',
@@ -662,14 +654,12 @@ export async function _actuallySend(
       if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
         delete cancelRequestFunctionMap[renderedRequest._id];
       }
-      const environmentId = environment ? environment._id : null;
       return resolve({
         url: renderedRequest.url,
         error: err.message || 'Something went wrong',
         elapsedTime: 0, // 0 because this path is hit during plugin calls
         statusMessage: 'Error',
         timelinePath,
-        environmentId,
         parentId: renderedRequest._id,
         bodyCompression: null,
         bodyPath: '',
@@ -798,7 +788,6 @@ export async function sendWithSettings(
     _id: request._id + '.other',
     parentId: request._id,
   });
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   let renderResult: {
     request: RenderedRequest;
     context: Record<string, any>;
@@ -813,7 +802,6 @@ export async function sendWithSettings(
     renderResult.request,
     clientCertificates,
     settings,
-    environment,
     settings.validateAuthSSL,
   );
   if (response.error) {
@@ -860,8 +848,6 @@ export async function send(
   if (!request) {
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
-
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const renderResult = await getRenderedRequestAndContext(
     {
       request,
@@ -904,7 +890,6 @@ export async function send(
     renderedRequest,
     clientCertificates,
     settings,
-    environment,
     settings.validateSSL,
   );
 
