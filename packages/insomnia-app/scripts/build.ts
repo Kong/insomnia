@@ -237,6 +237,7 @@ export const start = async () => {
     'original-fs',
     'fs',
     '@grpc/grpc-js',
+    '@grpc/proto-loader',
     'insomnia-url',
     'insomnia-config',
     'insomnia-common',
@@ -271,7 +272,6 @@ export const start = async () => {
       alias: {
         'react': path.resolve(__dirname, '../node_modules/react'),
         'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
-        'crypto': 'crypto-browserify',
       },
       dedupe: ['react', 'react-dom', 'react-dom/server'],
     },
@@ -288,6 +288,9 @@ export const start = async () => {
       outDir: path.join(__dirname, '..', 'build'),
       assetsDir: './',
       brotliSize: false,
+      commonjsOptions: {
+        ignore: commonjsPackages,
+      },
     },
     plugins: [
       commonjsExt({ externals: commonjsPackages }),

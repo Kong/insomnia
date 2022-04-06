@@ -15,7 +15,9 @@ const commonjsPackages = [
   'original-fs',
   'crypto',
   'fs',
+  // https://github.com/grpc/grpc-node/issues/1623
   '@grpc/grpc-js',
+  '@grpc/proto-loader',
   'insomnia-url',
   'insomnia-config',
   'insomnia-common',
