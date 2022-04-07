@@ -146,8 +146,6 @@ describe('<Modal /> with <KeydownBinder />', () => {
         key: 'Control',
         keyCode: 17,
         ctrlKey: true,
-        target: modalSelf,
-        currentTarget: modalSelf,
       });
 
     expect(onKeydownMock).not.toHaveBeenCalled();
@@ -207,8 +205,6 @@ describe('<Modal /> with <KeydownBinder />', () => {
         key: 'Meta',
         keyCode: 91,
         metaKey: true,
-        // target: modalSelf,
-        // currentTarget: modalSelf,
       });
 
     expect(onKeydownMock).not.toHaveBeenCalled();
