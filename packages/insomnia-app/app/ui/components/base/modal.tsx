@@ -25,6 +25,7 @@ export interface ModalProps {
   freshState?: boolean;
   children?: ReactNode;
   className?: string;
+  stopMetaPropagation?: boolean;
 }
 
 interface State {
@@ -35,6 +36,10 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class Modal extends PureComponent<ModalProps, State> {
+  static defaultProps: Pick<ModalProps, 'stopMetaPropagation'> = {
+    stopMetaPropagation: true,
+  };
+
   onHide: Function | null = null;
   _node: HTMLDivElement | null = null;
 
@@ -172,7 +177,7 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
 
     return (
-      <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
+      <KeydownBinder stopMetaPropagation={this.props.stopMetaPropagation} scoped onKeydown={this._handleKeyDown}>
         <div
           ref={this._setModalRef}
           tabIndex={-1}

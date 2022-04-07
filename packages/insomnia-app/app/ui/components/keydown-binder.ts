@@ -11,10 +11,15 @@ interface Props {
   disabled?: boolean;
   scoped?: boolean;
   stopMetaPropagation?: boolean;
+  captureEvent?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class KeydownBinder extends PureComponent<Props> {
+  static defaultProps: Pick<Props, 'captureEvent'> = {
+    captureEvent: true,
+  };
+
   _handleKeydown(e: KeyboardEvent) {
     const { stopMetaPropagation, onKeydown, disabled } = this.props;
 
@@ -54,22 +59,22 @@ export class KeydownBinder extends PureComponent<Props> {
   componentDidMount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
-      el?.addEventListener('keydown', this._handleKeydown, { capture: true });
-      el?.addEventListener('keyup', this._handleKeyup, { capture: true });
+      el?.addEventListener('keydown', this._handleKeydown, { capture: this.props.captureEvent });
+      el?.addEventListener('keyup', this._handleKeyup, { capture: this.props.captureEvent });
     } else {
-      document.body && document.body.addEventListener('keydown', this._handleKeydown, { capture: true });
-      document.body && document.body.addEventListener('keyup', this._handleKeyup, { capture: true });
+      document.body && document.body.addEventListener('keydown', this._handleKeydown, { capture: this.props.captureEvent });
+      document.body && document.body.addEventListener('keyup', this._handleKeyup, { capture: this.props.captureEvent });
     }
   }
 
   componentWillUnmount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
-      el?.removeEventListener('keydown', this._handleKeydown, { capture: true });
-      el?.removeEventListener('keyup', this._handleKeyup, { capture: true });
+      el?.removeEventListener('keydown', this._handleKeydown, { capture: this.props.captureEvent });
+      el?.removeEventListener('keyup', this._handleKeyup, { capture: this.props.captureEvent });
     } else {
-      document.body && document.body.removeEventListener('keydown', this._handleKeydown, { capture: true });
-      document.body && document.body.removeEventListener('keyup', this._handleKeyup, { capture: true });
+      document.body && document.body.removeEventListener('keydown', this._handleKeydown, { capture: this.props.captureEvent });
+      document.body && document.body.removeEventListener('keyup', this._handleKeyup, { capture: this.props.captureEvent });
     }
   }
 

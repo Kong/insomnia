@@ -200,7 +200,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     const { cookie } = this.state;
     const checkFields = ['secure', 'httpOnly'];
     return (
-      <Modal ref={this._setModalRef} {...this.props}>
+      <Modal ref={this._setModalRef} {...this.props} stopMetaPropagation={false}>
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
           {activeCookeJar && cookie && (
