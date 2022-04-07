@@ -36,6 +36,7 @@ import * as _unitTestResult from './unit-test-result';
 import * as _unitTestSuite from './unit-test-suite';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
+import { v4 as uuidv4 } from 'uuid';
 /**
  * Generate an ID of the format "<MODEL_NAME>_<TIMESTAMP><RANDOM>"
  * @param prefix

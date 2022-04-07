@@ -1,0 +1,7 @@
+build
+bin
+send-request
+**/main.min.js
+webpack.config.*.js
+webpack.config.*.js.map
+webpack.config.*.d.ts

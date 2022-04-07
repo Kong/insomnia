@@ -4,7 +4,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electro
 import { writeFile } from 'fs';
 import path from 'path';
 
-import appConfig from '../config/config.json';
+import appConfig from '../../insomnia-app/config/config.json';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './constants';
 import { database } from './database';

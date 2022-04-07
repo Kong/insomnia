@@ -2,7 +2,7 @@ import { KeyCombination } from 'insomnia-common';
 import path from 'path';
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import appConfig from '../config/config.json';
+import appConfig from '../../insomnia-app/config/config.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
 
 // App Stuff

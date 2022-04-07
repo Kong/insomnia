@@ -2,7 +2,7 @@ import * as electron from 'electron';
 import mkdirp from 'mkdirp';
 import { join } from 'path';
 
-import appConfig from '../config/config.json';
+import appConfig from '../../insomnia-app/config/config.json';
 
 export function clickLink(href: string) {
   const { protocol } = new URL(href);

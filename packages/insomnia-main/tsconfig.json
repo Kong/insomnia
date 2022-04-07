@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.build.json",
+  "include": [
+    ".eslintrc.js",
+    "app",
+    "config",
+    "jest.config.js",
+    "**/insomnia.config.json",
+    "package.json",
+  ],
+  "exclude": [
+    "**/main.min.js",
+    "dist",
+    "node_modules"
+  ]
+}
