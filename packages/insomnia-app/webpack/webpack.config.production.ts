@@ -1,23 +1,93 @@
-import { Configuration, DefinePlugin } from 'webpack';
+// recommended by the docs: https://webpack.js.org/configuration/configuration-languages/
+// just in case you run into any typescript error when configuring `devServer`
+import 'webpack-dev-server';
 
-import baseConfig from './webpack.config.base';
+import path from 'path';
+import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, optimize } from 'webpack';
 
 const configuration: Configuration = {
-  ...baseConfig,
   devtool: false,
   mode: 'production',
+  stats: 'minimal',
+  context: path.join(__dirname, '../app'),
+  entry: ['./renderer.ts', './renderer.html'],
+  output: {
+    path: path.join(__dirname, '../build'),
+    filename: 'bundle.js',
+    libraryTarget: 'commonjs2',
+  },
   optimization: {
     // Minimization causes lots of small problems in a large project like this so
     // we'll just disable it.
     minimize: false,
   },
-  externals:['@hapi/teamwork','@getinsomnia/node-libcurl'],
+  externals: [
+    '@hapi/teamwork',
+    '@getinsomnia/node-libcurl',
+    // To get jsonlint working...
+    'file',
+    'system',],
+  target: 'electron-renderer',
+  resolve: {
+    alias: {
+      react: path.resolve(path.join(__dirname, '../node_modules/react')),
+      'styled-components': path.resolve(path.join(__dirname, '../node_modules/styled-components')),
+    },
+    extensions: ['.js', '.json', '.ts', '.tsx'],
+    mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main'],
+  },
+  node: {
+    __dirname: false, // Use Node __dirname
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+      },
+      {
+        test: /\.(less|css)$/,
+        use: [
+          'style-loader',
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          { loader: 'less-loader', options: { noIeCompat: true } },
+        ],
+      },
+      {
+        test: /\.(html|woff2)$/,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+        },
+      },
+      {
+        test: /\.(png|svg)$/,
+        loader: 'url-loader',
+      },
+      {
+        test: require.resolve('../app/network/ca-certs.js'),
+        use: [
+          {
+            loader: 'val-loader',
+          },
+        ],
+      },
+    ],
+  },
   plugins: [
-    ...(baseConfig.plugins || []),
+    new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    new DefinePlugin({
+      'process.env.BUILD_DATE': JSON.stringify(new Date()),
+    }),
+    // see: https://github.com/Kong/insomnia/pull/3469 for why this transform is needed
+    new NormalModuleReplacementPlugin(
+      /node_modules\/vscode-languageserver-types\/lib\/umd\/main\.js/,
+      '../esm/main.js',
+    ),
     new DefinePlugin({
       __DEV__: false,
       'process.env.NODE_ENV': JSON.stringify('production'),
-      'process.env.HOT': JSON.stringify(null),
     }),
   ],
 };
