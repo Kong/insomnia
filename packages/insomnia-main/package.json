@@ -6,7 +6,6 @@
   "description": "The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
   "license": "MIT",
-  "main": "dist/main.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/insomnia.git",
@@ -19,8 +18,9 @@
     "clean": "tsc --build tsconfig.webpack.json --clean && tsc --build tsconfig.build.json --clean",
     "test": "jest",
     "type-check": "tsc --noEmit -p tsconfig.build.json",
-    "build:main.min.js": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" cross-env NODE_ENV=development webpack --config webpack.config.electron.ts",
-    "start:electron": "npm run build:main.min.js && electron ./dist/main.min.js",
+    "build:dev": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" cross-env NODE_ENV=development webpack --config webpack.config.electron.ts",
+    "build:prod": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack.config.electron.ts",
+    "start:electron": "npm run build:dev && electron ./bundle-dev/main.min.js",
     "lint": "eslint . --ext .js,.ts,.tsx --cache"
   },
   "dependencies": {

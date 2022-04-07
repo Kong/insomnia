@@ -1,5 +1,2 @@
-dist
-build
-
-# Generated
-app/main.min.js
+bundle-dev
+bundle-prod
