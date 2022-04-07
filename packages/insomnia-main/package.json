@@ -18,8 +18,8 @@
     "clean": "tsc --build tsconfig.webpack.json --clean && tsc --build tsconfig.build.json --clean",
     "test": "jest",
     "type-check": "tsc --noEmit -p tsconfig.build.json",
-    "build:dev": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" cross-env NODE_ENV=development webpack --config webpack.config.electron.ts",
-    "build:prod": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack.config.electron.ts",
+    "build:dev": "ts-node bundle-dev.ts",
+    "build:prod": "ts-node bundle-prod.ts",
     "start:electron": "npm run build:dev && electron ./bundle-dev/main.min.js",
     "lint": "eslint . --ext .js,.ts,.tsx --cache"
   },
