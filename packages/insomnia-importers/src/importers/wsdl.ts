@@ -5,6 +5,7 @@ import {
   getWSDLServices,
   Swagger,
 } from 'apiconnect-wsdl';
+import { path as ramdaPath } from 'ramda';
 
 import { Converter } from '../entities';
 import * as postman from './postman';
@@ -26,7 +27,7 @@ const convertToPostman = (items: Swagger[]) => {
         const paths = api.parameters[0].schema.$ref.split('/');
         paths.shift();
         paths.push('example');
-        const example = swagger.paths.join('.');
+        const example = ramdaPath(paths, swagger);
         item.push({
           name: api.operationId,
           description: api.description || '',
@@ -36,7 +37,7 @@ const convertToPostman = (items: Swagger[]) => {
             header: [
               {
                 key: 'SOAPAction',
-                value: api['x-ibm-soap.soap-action'],
+                value: api['x-ibm-soap']['soap-action'],
                 disabled: false,
               },
               {
