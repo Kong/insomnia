@@ -17,17 +17,6 @@ describe('Fixtures', () => {
       const prefix = input.replace(/-input\.[^.]+/, '');
       const output = `${prefix}-output.json`;
 
-      // TEMPORARY !!!!!!!!!!!!!!!!!!!!1
-      // TEMPORARY !!!!!!!!!!!!!!!!!!!!1
-      // TEMPORARY !!!!!!!!!!!!!!!!!!!!1
-      // TEMPORARY !!!!!!!!!!!!!!!!!!!!1
-      // TODO(TSCONVERSION)
-      // openapi3
-      // swagger2
-      if (name !== 'openapi3') {
-        continue;
-      }
-
       if (prefix.startsWith('skip')) {
         continue;
       }
