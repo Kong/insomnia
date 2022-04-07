@@ -146,7 +146,8 @@ describe('<Modal /> with <KeydownBinder />', () => {
         key: 'Control',
         keyCode: 17,
         ctrlKey: true,
-      });
+      }
+    );
 
     expect(onKeydownMock).not.toHaveBeenCalled();
   });
@@ -172,10 +173,11 @@ describe('<Modal /> with <KeydownBinder />', () => {
     fireEvent.keyDown(
       modalSelf,
       {
-        key: 'Meta',
-        keyCode: 91,
-        metaKey: true,
-      });
+        key: 'Control',
+        keyCode: 17,
+        ctrlKey: true,
+      }
+    );
 
     expect(onKeydownMock).toHaveBeenCalled();
   });
@@ -205,7 +207,8 @@ describe('<Modal /> with <KeydownBinder />', () => {
         key: 'Meta',
         keyCode: 91,
         metaKey: true,
-      });
+      }
+    );
 
     expect(onKeydownMock).not.toHaveBeenCalled();
   });
@@ -234,7 +237,8 @@ describe('<Modal /> with <KeydownBinder />', () => {
         key: 'Meta',
         keyCode: 91,
         metaKey: true,
-      });
+      }
+    );
 
     expect(onKeydownMock).toHaveBeenCalled();
   });
