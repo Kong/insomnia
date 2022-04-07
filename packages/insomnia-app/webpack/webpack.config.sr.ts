@@ -1,8 +1,6 @@
 import path from 'path';
 import { Configuration, ProvidePlugin } from 'webpack';
 
-import pkg from '../package.json';
-
 const configuration: Configuration = {
   context: path.join(__dirname, '../send-request'),
   entry: { index: './index.ts' },
@@ -38,10 +36,7 @@ const configuration: Configuration = {
       },
     ],
   },
-  externals: [
-    // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
-  ],
+
   resolve: {
     alias: {
       // Replace electron with a minimal polyfill that contains just enough to get

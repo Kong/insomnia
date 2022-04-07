@@ -1,5 +1,5 @@
 import childProcess from 'child_process';
-import { promises, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import licenseChecker from 'license-checker';
 import mkdirp from 'mkdirp';
 import { ncp } from 'ncp';
@@ -7,11 +7,8 @@ import path from 'path';
 import rimraf from 'rimraf';
 import webpack from 'webpack';
 
-import appConfig from '../config/config.json';
-import electronWebpackConfig from '../webpack/webpack.config.electron';
 import productionWebpackConfig from '../webpack/webpack.config.production';
 
-const { readFile, writeFile } = promises;
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -114,80 +111,6 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
   );
 });
 
-const install = () => new Promise<void>((resolve, reject) => {
-  const root = path.resolve(__dirname, '../../../');
-
-  const p = childProcess.spawn('npm', ['run', 'bootstrap:electron-builder'], {
-    cwd: root,
-    shell: true,
-  });
-
-  p.stdout.on('data', data => {
-    console.log(data.toString());
-  });
-
-  p.stderr.on('data', data => {
-    console.log(data.toString());
-  });
-
-  p.on('exit', code => {
-    console.log(`child process exited with code ${code}`);
-    if (code === 0) {
-      resolve();
-    } else {
-      reject(new Error('[build] failed to install dependencies'));
-    }
-  });
-});
-
-const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
-  // Read package.json's
-  const basePath = path.resolve(__dirname, relBasePkg);
-  const outPath = path.resolve(__dirname, relOutPkg);
-
-  const inputFile = String(await readFile(basePath));
-  const basePkg = JSON.parse(inputFile);
-
-  const appPkg = {
-    name: appConfig.name,
-    version: appConfig.version,
-    productName: appConfig.productName,
-    longName: appConfig.longName,
-    description: basePkg.description,
-    license: basePkg.license,
-    homepage: basePkg.homepage,
-    author: basePkg.author,
-    copyright: `Copyright © ${new Date().getFullYear()} ${basePkg.author}`,
-    main: 'main.min.js',
-    dependencies: {},
-  };
-
-  console.log(`[build] Generated build config for ${appPkg.name} ${appPkg.version}`);
-
-  for (const key of Object.keys(appPkg)) {
-    if (key === undefined) {
-      throw new Error(`[build] missing "app.${key}" from package.json`);
-    }
-  }
-
-  // Figure out which dependencies to pack
-  const allDependencies = Object.keys(basePkg.dependencies);
-  const packedDependencies = basePkg.packedDependencies;
-  const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
-
-  // Add dependencies
-  console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);
-  for (const name of unpackedDependencies) {
-    const version = basePkg.dependencies[name];
-    if (!version) {
-      throw new Error(`Failed to find packed dep "${name}" in dependencies`);
-    }
-    appPkg.dependencies[name] = version;
-  }
-
-  const outputFile = JSON.stringify(appPkg, null, 2);
-  await writeFile(outPath, outputFile);
-};
 
 export const start = async () => {
   console.log('[build] Starting build');
@@ -213,21 +136,12 @@ export const start = async () => {
   console.log('[build] Building Webpack renderer');
   await buildWebpack(productionWebpackConfig as webpack.Configuration);
 
-  console.log('[build] Building Webpack main');
-  await buildWebpack(electronWebpackConfig as webpack.Configuration);
-
   // Copy necessary files
   console.log('[build] Copying files');
   await copyFiles('../bin', buildFolder);
   await copyFiles('../app/static', path.join(buildFolder, 'static'));
   await copyFiles('../app/icons', buildFolder);
 
-  // Generate necessary files needed by `electron-builder`
-  await generatePackageJson('../package.json', path.join(buildFolder, 'package.json'));
-
-  // Install Node modules
-  console.log('[build] Installing dependencies');
-  await install();
 
   console.log('[build] Complete!');
 };

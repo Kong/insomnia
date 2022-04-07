@@ -11,6 +11,7 @@ const configuration: Configuration = {
     // we'll just disable it.
     minimize: false,
   },
+  externals:['@hapi/teamwork','@getinsomnia/node-libcurl'],
   plugins: [
     ...(baseConfig.plugins || []),
     new DefinePlugin({
