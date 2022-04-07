@@ -5,23 +5,21 @@ import { writeFile } from 'fs';
 import path from 'path';
 
 import appConfig from '../config/config.json';
-import { SegmentEvent, trackSegmentEvent } from './common/analytics';
-import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
-import { disableSpellcheckerDownload } from './common/electron-helpers';
-import log, { initializeLogging } from './common/log';
-import { validateInsomniaConfig } from './common/validate-insomnia-config';
-import * as errorHandling from './main/error-handling';
-import * as grpcIpcMain from './main/grpc-ipc-main';
-import { checkIfRestartNeeded } from './main/squirrel-startup';
-import * as updates from './main/updates';
-import * as windowUtils from './main/window-utils';
+import { SegmentEvent, trackSegmentEvent } from './analytics';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './constants';
+import { database } from './database';
+import { disableSpellcheckerDownload } from './electron-helpers';
+import log, { initializeLogging } from './log';
+import { validateInsomniaConfig } from './validate-insomnia-config';
+import * as errorHandling from './error-handling';
+import * as grpcIpcMain from './grpc-ipc-main';
+import { checkIfRestartNeeded } from './squirrel-startup';
+import * as updates from './updates';
+import * as windowUtils from './window-utils';
 import * as models from './models/index';
-import type { Stats } from './models/stats';
-import { cancelCurlRequest, curlRequest } from './network/libcurl-promise';
-import { authorizeUserInWindow } from './network/o-auth-2/misc';
-import installPlugin from './plugins/install';
-import type { ToastNotification } from './ui/components/toast';
+import { cancelCurlRequest, curlRequest } from './libcurl-promise';
+import { authorizeUserInWindow } from './authorizeUserInWindow';
+import installPlugin from './installPlugin';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -206,7 +204,7 @@ async function _createModelInstances() {
 async function _trackStats() {
   // Handle the stats
   const oldStats = await models.stats.get();
-  const stats: Stats = await models.stats.update({
+  const stats = await models.stats.update({
     currentLaunch: Date.now(),
     lastLaunch: oldStats.currentLaunch,
     currentVersion: getAppVersion(),
@@ -292,7 +290,7 @@ async function _trackStats() {
     }
 
     const { BrowserWindow } = electron;
-    const notification: ToastNotification = {
+    const notification = {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),
       cta: "See What's New",

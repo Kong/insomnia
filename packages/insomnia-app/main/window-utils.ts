@@ -14,13 +14,16 @@ import {
   isLinux,
   isMac,
   MNEMONIC_SYM,
-} from '../common/constants';
-import { docsBase } from '../common/documentation';
-import { clickLink, getDataDirectory } from '../common/electron-helpers';
-import * as log from '../common/log';
+} from './constants';
+import { clickLink, getDataDirectory } from './electron-helpers';
+import * as log from './log';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard } = electron;
+
+const insomniaDocs = (slug: string) => `https://docs.insomnia.rest${slug}`;
+
+export const docsBase = insomniaDocs('/');
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;

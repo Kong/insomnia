@@ -1,9 +1,16 @@
 import { ipcMain } from 'electron';
 
-import { GrpcRequestEventEnum } from '../common/grpc-events';
-import * as grpc from '../network/grpc';
-import { GrpcIpcRequestParams } from '../network/grpc/prepare';
-import { ResponseCallbacks } from '../network/grpc/response-callbacks';
+import * as grpc from './grpc';
+import { GrpcIpcRequestParams } from './grpc/prepare';
+import { ResponseCallbacks } from './grpc/response-callbacks';
+
+export const GrpcRequestEventEnum = {
+  start: 'GRPC_START',
+  sendMessage: 'GRPC_SEND_MESSAGE',
+  commit: 'GRPC_COMMIT',
+  cancel: 'GRPC_CANCEL',
+  cancelMultiple: 'GRPC_CANCEL_MULTIPLE',
+} as const;
 
 export function init() {
   ipcMain.on(GrpcRequestEventEnum.start, (e, params: GrpcIpcRequestParams) =>

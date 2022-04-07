@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package lib;
+
+import public 'hello.proto';
+import public 'nested/time/time.proto';

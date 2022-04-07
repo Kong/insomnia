@@ -8,10 +8,12 @@ import {
   isDevelopment,
   updatesSupported,
   UpdateURL,
-} from '../common/constants';
-import { delay } from '../common/misc';
-import * as models from '../models/index';
+} from './constants';
+import * as models from './models/index';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
+export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
+  return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+}
 
 async function getUpdateUrl(force: boolean): Promise<string | null> {
   const platform = process.platform;

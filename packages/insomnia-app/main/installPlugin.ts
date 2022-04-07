@@ -5,8 +5,8 @@ import fsx from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-import { isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
-import { getTempDir } from '../common/electron-helpers';
+import { isDevelopment, isWindows, PLUGIN_PATH } from './constants';
+import { getTempDir } from './electron-helpers';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 

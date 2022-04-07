@@ -33,7 +33,7 @@ if (process.env.NODE_ENV === 'development') {
 const configuration: Configuration[] = [{
   ...productionConfig,
   devtool,
-  entry: ['./main.development.ts'],
+  entry: ['../main/main.ts'],
   output,
   node: {
     __dirname: false, // Use node.js __dirname
@@ -42,6 +42,8 @@ const configuration: Configuration[] = [{
   plugins,
 },
 {
+  stats:'minimal',
+  mode:'production',
   entry: './app/preload.js',
   target: 'electron-preload',
   output: {
