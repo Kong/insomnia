@@ -25,5 +25,6 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|less|png)$': '<rootDir>/__mocks__/dummy.ts',
     '^worker-loader!': '<rootDir>/__mocks__/dummy.ts',
+    'styled-components': '<rootDir>/../node_modules/styled-components',
   },
 };
