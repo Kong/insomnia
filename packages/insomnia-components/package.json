@@ -45,7 +45,6 @@
     "@types/ramda": "^0.27.44",
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.11",
-    "@types/styled-components": "^4.4.3",
     "@types/testing-library__jest-dom": "^5.9.5",
     "@types/testing-library__react-hooks": "^4.0.0",
     "@types/webpack": "^5.28.0",
@@ -56,16 +55,17 @@
     "react-docgen-typescript": "^1.22.0",
     "react-dom": "^17.0.2",
     "react-use": "^17.2.4",
-    "styled-components": "^4.4.1",
+    "styled-components": "^5.3.3",
     "ts-loader": "^8.2.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
-    "typescript-plugin-styled-components": "^1.5.0",
+    "typescript-plugin-styled-components": "^2.0.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^5.0.7"
   },
   "dependencies": {
+    "@types/styled-components": "^5.1.23",
     "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.3.1",
     "framer-motion": "4.1.17",
@@ -78,6 +78,6 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-use": "^17.2.4",
-    "styled-components": "^4.4.1"
+    "styled-components": "^5.3.3"
   }
 }
