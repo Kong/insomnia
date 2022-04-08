@@ -29,6 +29,8 @@ const configuration: Configuration[] = [{
     : [
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new DefinePlugin({
+        __DEV__: false,
+        'process.env.NODE_ENV': JSON.stringify('production'),
         'process.env.BUILD_DATE': JSON.stringify(new Date()),
       }),
       // see: https://github.com/Kong/insomnia/pull/3469 for why this transform is needed
@@ -36,10 +38,7 @@ const configuration: Configuration[] = [{
         /node_modules\/vscode-languageserver-types\/lib\/umd\/main\.js/,
         '../esm/main.js',
       ),
-      new DefinePlugin({
-        __DEV__: false,
-        'process.env.NODE_ENV': JSON.stringify('production'),
-      }),],
+    ],
   module: {
     rules: [
       {

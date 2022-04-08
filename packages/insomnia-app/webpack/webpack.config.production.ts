@@ -8,7 +8,7 @@ import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, optimize } 
 const configuration: Configuration = {
   devtool: false,
   mode: 'production',
-  stats: 'minimal',
+  // stats: 'minimal',
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.ts', './renderer.html'],
   output: {
@@ -24,6 +24,9 @@ const configuration: Configuration = {
   externals: [
     '@hapi/teamwork',
     '@getinsomnia/node-libcurl',
+    '@stoplight/spectral',
+    'insomnia-testing',
+    'insomnia-importers',
     // To get jsonlint working...
     'file',
     'system',],
@@ -78,6 +81,8 @@ const configuration: Configuration = {
   plugins: [
     new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new DefinePlugin({
+      __DEV__: false,
+      'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.BUILD_DATE': JSON.stringify(new Date()),
     }),
     // see: https://github.com/Kong/insomnia/pull/3469 for why this transform is needed
@@ -85,10 +90,6 @@ const configuration: Configuration = {
       /node_modules\/vscode-languageserver-types\/lib\/umd\/main\.js/,
       '../esm/main.js',
     ),
-    new DefinePlugin({
-      __DEV__: false,
-      'process.env.NODE_ENV': JSON.stringify('production'),
-    }),
   ],
 };
 

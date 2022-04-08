@@ -6,7 +6,6 @@
   "description": "The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
   "license": "MIT",
-  "main": "app/main.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/insomnia.git",
@@ -26,12 +25,13 @@
     "prebuild": "npm run clean",
     "build": "npm run build:sr && npm run build:app",
     "build:app": "ts-node ./scripts/build.ts --noErrorTruncation",
+    "build:prod": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack/webpack.config.production.ts",
     "build:sr": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack/webpack.config.sr.ts",
     "package": "ts-node scripts/package.ts",
     "bump-version": "ts-node scripts/bumpVersion.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
-    "bootstrap": "npm run build:sr"
+    "bootstrap": "echo 'npm run build:sr'"
   },
   "dev": {
     "dev-server-port": 3334

@@ -122,7 +122,7 @@ export function createWindow() {
   });
 
   // Load the html of the app.
-  const appPath = path.resolve(__dirname, './renderer.html');
+  const appPath = path.resolve(__dirname, '../../insomnia-app/build/renderer.html');
   const appUrl = process.env.APP_RENDER_URL || url.pathToFileURL(appPath).href;
   console.log(`[main] Loading ${appUrl}`);
   mainWindow?.loadURL(appUrl);
