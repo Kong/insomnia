@@ -14,7 +14,7 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import { parse as urlParse, resolve as urlResolve } from 'url';
+import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -49,16 +49,16 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../common/render';
 import * as models from '../models';
-import type { Environment } from '../models/environment';
+import { ClientCertificate } from '../models/client-certificate';
 import type { Request, RequestHeader } from '../models/request';
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import caCerts from './ca-certs';
-import { buildMultipart } from './multipart';
+import { buildMultipart, DEFAULT_BOUNDARY } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Based on list of option properties but with callback options removed
@@ -137,19 +137,19 @@ let lastUserInteraction = Date.now();
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
     case HttpVersions.V1_0:
-      return { log: 'Using HTTP 1.0', curlHttpVersion:CurlHttpVersion.V1_0 };
+      return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
     case HttpVersions.V1_1:
-      return { log: 'Using HTTP 1.1', curlHttpVersion:CurlHttpVersion.V1_1 };
+      return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
     case HttpVersions.V2PriorKnowledge:
-      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion:CurlHttpVersion.V2PriorKnowledge };
+      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
     case HttpVersions.V2_0:
-      return { log: 'Using HTTP/2', curlHttpVersion:CurlHttpVersion.V2_0 };
+      return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
     case HttpVersions.v3:
-      return { log: 'Using HTTP/3', curlHttpVersion:CurlHttpVersion.v3 };
+      return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
     case HttpVersions.default:
       return { log: 'Using default HTTP version' };
     default:
-      return { log: `Unknown HTTP version specified ${preferredHttpVersion}`  };
+      return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
   }
 };
 
@@ -163,10 +163,8 @@ export async function cancelRequestById(requestId) {
 
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
-  workspace: Workspace,
-  settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
-  environment?: Environment | null,
-  validateSSL = true,
+  clientCertificates: ClientCertificate[],
+  settings: Settings,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
@@ -181,49 +179,6 @@ export async function _actuallySend(
 
     const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
 
-    /** Helper function to respond with a success */
-    async function respond(
-      patch: ResponsePatch,
-      bodyPath: string | null,
-      debugTimeline: any[] = []
-    ) {
-      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
-      // Tear Down the cancellation logic
-      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-        delete cancelRequestFunctionMap[renderedRequest._id];
-      }
-      const environmentId = environment ? environment._id : null;
-      return resolve(Object.assign(
-        {
-          timelinePath,
-          environmentId,
-          parentId: renderedRequest._id,
-          bodyCompression: null,
-          // Will default to .zip otherwise
-          bodyPath: bodyPath || '',
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies,
-        } as ResponsePatch,
-        patch,
-      ));
-    }
-
-    /** Helper function to respond with an error */
-    async function handleError(err: Error) {
-
-      await respond(
-        {
-          url: renderedRequest.url,
-          parentId: renderedRequest._id,
-          error: err.message || 'Something went wrong',
-          elapsedTime: 0, // 0 because this path is hit during plugin calls
-          statusMessage: 'Error',
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies,
-        },
-        null,
-      );
-    }
     // NOTE: can have duplicate keys because of cookie options
     const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
     const setOpt = (key: string, value: string | string[] | number | boolean) => {
@@ -233,23 +188,25 @@ export async function _actuallySend(
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
-
-        await respond(
-          {
-            elapsedTime: 0,
-            bytesRead: 0,
-            url: renderedRequest.url,
-            statusMessage: 'Cancelled',
-            error: 'Request was cancelled',
-          },
-          null,
-        );
+        const timelinePath = await storeTimeline(timeline);
+        // Tear Down the cancellation logic
+        if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+          delete cancelRequestFunctionMap[renderedRequest._id];
+        }
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
           ? window.main.cancelCurlRequest
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           : require('./libcurl-promise').cancelCurlRequest;
         nodejsCancelCurlRequest(renderedRequest._id);
+        return resolve({
+          elapsedTime: 0,
+          bytesRead: 0,
+          url: renderedRequest.url,
+          statusMessage: 'Cancelled',
+          error: 'Request was cancelled',
+          timelinePath,
+        });
       };
 
       // Set all the basic options
@@ -307,8 +264,6 @@ export async function _actuallySend(
           break;
       }
 
-      // Set the headers (to be modified as we go)
-      const headers = clone(renderedRequest.headers);
       // Set the URL, including the query parameters
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
       const url = joinUrlAndQueryString(renderedRequest.url, qs);
@@ -332,7 +287,7 @@ export async function _actuallySend(
 
       const httpVersion = getHttpVersion(settings.preferredHttpVersion);
       addTimelineText(httpVersion.log);
-      if (httpVersion.curlHttpVersion){
+      if (httpVersion.curlHttpVersion) {
         // Set HTTP version
         setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
       }
@@ -354,7 +309,7 @@ export async function _actuallySend(
       }
 
       // SSL Validation
-      if (validateSSL) {
+      if (settings.validateSSL) {
         addTimelineText('Enable SSL validation');
       } else {
         setOpt(Curl.option.SSL_VERIFYHOST, 0);
@@ -413,8 +368,7 @@ export async function _actuallySend(
         }
 
         addTimelineText(
-          `Enable cookie sending with jar of ${cookies.length} cookie${
-            cookies.length !== 1 ? 's' : ''
+          `Enable cookie sending with jar of ${cookies.length} cookie${cookies.length !== 1 ? 's' : ''
           }`,
         );
       } else {
@@ -440,9 +394,6 @@ export async function _actuallySend(
       } else {
         setOpt(Curl.option.PROXY, '');
       }
-
-      // Set client certs if needed
-      const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
 
       for (const certificate of (clientCertificates || [])) {
         if (certificate.disabled) {
@@ -494,170 +445,60 @@ export async function _actuallySend(
           }
         }
       }
-
-      // Build the body
-      let noBody = false;
-      let requestBody: string | null = null;
-      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-      let requestBodyPath;
-      let isMultipart = false;
-      if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
-      } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-        const params = renderedRequest.body.params || [];
-        const { filePath: multipartBodyPath, boundary, contentLength } = await buildMultipart(
-          params,
-        );
-        requestBodyPath = multipartBodyPath;
-        isMultipart = true;
-        // Extend the Content-Type header
-        const contentTypeHeader = getContentTypeHeader(headers);
-
-        if (contentTypeHeader) {
-          contentTypeHeader.value = `multipart/form-data; boundary=${boundary}`;
-        } else {
-          headers.push({
-            name: 'Content-Type',
-            value: `multipart/form-data; boundary=${boundary}`,
-          });
-        }
-
+      const requestBody = parseRequestBody(renderedRequest);
+      if (requestBody) {
+        setOpt(Curl.option.POSTFIELDS, requestBody);
+      }
+      const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
+      if (requestBodyPath){
+        const { size: contentLength } = fs.statSync(requestBodyPath);
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-        setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a PUT
-        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      } else if (renderedRequest.body.fileName) {
-        const { size } = fs.statSync(renderedRequest.body.fileName);
-        requestBodyPath = renderedRequest.body.fileName || '';
-
-        setOpt(Curl.option.INFILESIZE_LARGE, size);
         setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
-        requestBody = renderedRequest.body.text || '';
-      } else {
-        // No body
-        noBody = true;
       }
-
-      if (!noBody) {
-        // Don't chunk uploads
-        headers.push({
-          name: 'Expect',
-          value: DISABLE_HEADER_VALUE,
-        });
-        headers.push({
-          name: 'Transfer-Encoding',
-          value: DISABLE_HEADER_VALUE,
-        });
-      }
-
-      // If we calculated the body within Insomnia (ie. not computed by Curl)
-      if (requestBody !== null) {
-        setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
-
       // Handle Authorization header
-      if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
+      const { username, password, disabled } = renderedRequest.authentication;
+      if (!hasAuthHeader(renderedRequest.headers) && !disabled) {
         if (renderedRequest.authentication.type === AUTH_DIGEST) {
-          const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_NTLM) {
-          const { username, password } = renderedRequest.authentication;
+        }
+        if (renderedRequest.authentication.type === AUTH_NTLM) {
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          if (!noBody && !requestBody) {
-            return handleError(
-              new Error('AWS authentication not supported for provided body type'),
-            );
-          }
-
-          const { authentication } = renderedRequest;
-          const credentials = {
-            accessKeyId: authentication.accessKeyId || '',
-            secretAccessKey: authentication.secretAccessKey || '',
-            sessionToken: authentication.sessionToken || '',
-          };
-
-          const extraHeaders = _getAwsAuthHeaders(
-            credentials,
-            headers,
-            requestBody || '',
-            finalUrl,
-            renderedRequest.method,
-            authentication.region || '',
-            authentication.service || '',
-          );
-
-          for (const header of extraHeaders) {
-            headers.push(header);
-          }
-        } else if (renderedRequest.authentication.type === AUTH_NETRC) {
-          setOpt(Curl.option.NETRC, CurlNetrc.Required);
-        } else {
-          const authHeader = await getAuthHeader(renderedRequest, finalUrl);
-
-          if (authHeader) {
-            headers.push({
-              name: authHeader.name,
-              value: authHeader.value,
+        }
+        if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
+          // AWS IAM file upload not supported
+          if (requestBodyPath) {
+            const timelinePath = await storeTimeline(timeline);
+            // Tear Down the cancellation logic
+            if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+              delete cancelRequestFunctionMap[renderedRequest._id];
+            }
+            return resolve({
+              url: renderedRequest.url,
+              error: 'AWS authentication not supported for provided body type',
+              elapsedTime: 0,
+              statusMessage: 'Error',
+              timelinePath,
             });
           }
         }
       }
-
-      // Send a default Accept headers of anything
-      if (!hasAcceptHeader(headers)) {
-        headers.push({
-          name: 'Accept',
-          value: '*/*',
-        }); // Default to anything
+      if (renderedRequest.authentication.type === AUTH_NETRC) {
+        setOpt(Curl.option.NETRC, CurlNetrc.Required);
       }
 
-      // Don't auto-send Accept-Encoding header
-      if (!hasAcceptEncodingHeader(headers)) {
-        headers.push({
-          name: 'Accept-Encoding',
-          value: DISABLE_HEADER_VALUE,
-        });
-      }
+      const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
+      setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Set User-Agent if it's not already in headers
-      if (!hasUserAgentHeader(headers)) {
+      if (!hasUserAgentHeader(renderedRequest.headers)) {
         setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
       }
-
-      // Prevent curl from adding default content-type header
-      if (!hasContentTypeHeader(headers)) {
-        headers.push({
-          name: 'content-type',
-          value: DISABLE_HEADER_VALUE,
-        });
-      }
-
-      // NOTE: This is last because headers might be modified multiple times
-      const headerStrings = headers
-        .filter(h => h.name)
-        .map(h => {
-          const value = h.value || '';
-
-          if (value === '') {
-            // Curl needs a semicolon suffix to send empty header values
-            return `${h.name};`;
-          } else if (value === DISABLE_HEADER_VALUE) {
-            // Tell Curl NOT to send the header if value is null
-            return `${h.name}:`;
-          } else {
-            // Send normal header value
-            return `${h.name}: ${value}`;
-          }
-        });
-      setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
@@ -667,6 +508,7 @@ export async function _actuallySend(
         ? window.main.curlRequest
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         : require('./libcurl-promise').curlRequest;
+      const isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const requestOptions = {
         curlOptions,
         responseBodyPath,
@@ -676,74 +518,226 @@ export async function _actuallySend(
         requestId: renderedRequest._id,
       };
       const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
-
-      // Headers are an array (one for each redirect)
-      const lastCurlHeadersObject = headerResults[headerResults.length - 1];
-
-      // Calculate the content type
-      const contentTypeHeader = getContentTypeHeader(lastCurlHeadersObject.headers);
-      // Update Cookie Jar
-      let currentUrl = finalUrl;
-      let setCookieStrings: string[] = [];
-      const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-
-      for (const { headers } of headerResults) {
-        // Collect Set-Cookie headers
-        const setCookieHeaders = getSetCookieHeaders(headers);
-        setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
-        // Pull out new URL if there is a redirect
-        const newLocation = getLocationHeader(headers);
-
-        if (newLocation !== null) {
-          currentUrl = urlResolve(currentUrl, newLocation.value);
-        }
-      }
-
-      // Update jar with Set-Cookie headers
-      for (const setCookieStr of setCookieStrings) {
-        try {
-          jar.setCookieSync(setCookieStr, currentUrl);
-        } catch (err) {
-          addTimelineText(`Rejected cookie: ${err.message}`);
-        }
-      }
-
-      // Update cookie jar if we need to and if we found any cookies
-      if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
-        const cookies = await cookiesFromJar(jar);
-        await models.cookieJar.update(renderedRequest.cookieJar, {
-          cookies,
-        });
-      }
-
-      // Print informational message
-      if (setCookieStrings.length > 0) {
-        const n = setCookieStrings.length;
-
-        if (renderedRequest.settingStoreCookies) {
-          addTimelineText(`Saved ${n} cookie${n === 1 ? '' : 's'}`);
-        } else {
-          addTimelineText(`Ignored ${n} cookie${n === 1 ? '' : 's'}`);
-        }
-      }
+      const { cookieJar, settingStoreCookies } = renderedRequest;
+      const { lastRedirect, contentType, headerTimeline } = await setCookiesFromResponseHeaders({
+        headerResults,
+        finalUrl,
+        cookieJar,
+        settingStoreCookies,
+      });
 
       const responsePatch: ResponsePatch = {
-        contentType: contentTypeHeader ? contentTypeHeader.value : '',
-        headers: lastCurlHeadersObject.headers,
-        httpVersion: lastCurlHeadersObject.version,
-        statusCode: lastCurlHeadersObject.code,
-        statusMessage: lastCurlHeadersObject.reason,
+        contentType,
+        headers: lastRedirect.headers,
+        httpVersion: lastRedirect.version,
+        statusCode: lastRedirect.code,
+        statusMessage: lastRedirect.reason,
         ...patch,
       };
-
-      respond(responsePatch, responseBodyPath, debugTimeline);
-
+      const timelinePath = await storeTimeline([...timeline, ...debugTimeline, ...headerTimeline]);
+      // Tear Down the cancellation logic
+      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+        delete cancelRequestFunctionMap[renderedRequest._id];
+      }
+      return resolve({
+        timelinePath,
+        bodyPath: responseBodyPath,
+        ...responsePatch,
+      });
     } catch (err) {
       console.log('[network] Error', err);
-      await handleError(err);
+      const timelinePath = await storeTimeline(timeline);
+      // Tear Down the cancellation logic
+      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
+        delete cancelRequestFunctionMap[renderedRequest._id];
+      }
+      return resolve({
+        url: renderedRequest.url,
+        error: err.message || 'Something went wrong',
+        elapsedTime: 0, // 0 because this path is hit during plugin calls
+        statusMessage: 'Error',
+        timelinePath,
+      });
     }
   });
 }
+
+const parseRequestBody = req => {
+  const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
+  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
+  const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
+  if (isUrlEncodedForm) {
+    const urlSearchParams = new URLSearchParams();
+    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    return urlSearchParams.toString();
+  }
+  if (hasMimetypeAndUpdateMethod) {
+    return req.body.text;
+  }
+};
+
+const parseRequestBodyPath = async req => {
+  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  if (isMultipartForm) {
+    const { filePath } = await buildMultipart(req.body.params || [],);
+    return filePath;
+  }
+  return req.body.fileName;
+};
+
+// add set-cookie headers to file(cookiejar) and database
+const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
+  const headerTimeline: ResponseTimelineEntry[] = [];
+
+  // Update Cookie Jar
+  const setCookieStrings: string[] = headerResults.map(({ headers }) =>
+    getSetCookieHeaders(headers).map(h => h.value));
+
+  // Update jar with Set-Cookie headers
+  const jar = jarFromCookies(cookieJar.cookies);
+  for (const setCookie of setCookieStrings) {
+    try {
+      // get the last location header to set the cookie at
+      const locationHeader = headerResults.reverse().find(({ headers }) => getLocationHeader(headers));
+      jar.setCookieSync(setCookie, locationHeader?.value || finalUrl);
+    } catch (err) {
+      headerTimeline.push({
+        name: 'TEXT',
+        value: `Rejected cookie: ${err.message}`,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  // Update cookie jar if we need to and if we found any cookies
+  if (settingStoreCookies && setCookieStrings.length) {
+    const cookies = await cookiesFromJar(jar);
+    await models.cookieJar.update(cookieJar, { cookies });
+  }
+
+  // Print informational message
+  if (setCookieStrings.length > 0) {
+    const n = setCookieStrings.length;
+    const intent = settingStoreCookies ? 'Saved' : 'Ignored';
+    const plural = `cookie${n === 1 ? '' : 's'}`;
+    headerTimeline.push({
+      name: 'TEXT',
+      value: `${intent} ${n} ${plural}`,
+      timestamp: Date.now(),
+    });
+  }
+  // Headers are an array (one for each redirect)
+  const lastRedirect = headerResults[headerResults.length - 1];
+  return {
+    lastRedirect,
+    contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
+    headerTimeline,
+  };
+
+};
+
+const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
+  const headers = clone(renderedRequest.headers);
+
+  // Disable Expect and Transfer-Encoding headers when we have POST body/file
+  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
+  if (hasRequestBodyOrFilePath) {
+    headers.push({
+      name: 'Expect',
+      value: DISABLE_HEADER_VALUE,
+    });
+    headers.push({
+      name: 'Transfer-Encoding',
+      value: DISABLE_HEADER_VALUE,
+    });
+  }
+
+  const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
+  const isNTLM = renderedRequest.authentication.type === AUTH_NTLM;
+  const isAWSIAM = renderedRequest.authentication.type === AUTH_AWS_IAM;
+  if (isAWSIAM){
+    const { authentication } = renderedRequest;
+    const credentials = {
+      accessKeyId: authentication.accessKeyId || '',
+      secretAccessKey: authentication.secretAccessKey || '',
+      sessionToken: authentication.sessionToken || '',
+    };
+
+    const extraHeaders = _getAwsAuthHeaders(
+      credentials,
+      headers,
+      requestBody || '',
+      finalUrl,
+      renderedRequest.method,
+      authentication.region || '',
+      authentication.service || '',
+    );
+
+    for (const header of extraHeaders) {
+      headers.push(header);
+    }
+  }
+  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !renderedRequest.authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
+  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest){
+    const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+
+    if (authHeader) {
+      headers.push({
+        name: authHeader.name,
+        value: authHeader.value,
+      });
+    }
+  }
+  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  if (isMultipartForm && requestBodyPath) {
+    const contentTypeHeader = getContentTypeHeader(headers);
+    if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
+    else headers.push({
+      name: 'Content-Type',
+      value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
+    });
+  }
+  // Send a default Accept headers of anything
+  if (!hasAcceptHeader(headers)) {
+    headers.push({
+      name: 'Accept',
+      value: '*/*',
+    }); // Default to anything
+  }
+
+  // Don't auto-send Accept-Encoding header
+  if (!hasAcceptEncodingHeader(headers)) {
+    headers.push({
+      name: 'Accept-Encoding',
+      value: DISABLE_HEADER_VALUE,
+    });
+  }
+
+  // Prevent curl from adding default content-type header
+  if (!hasContentTypeHeader(headers)) {
+    headers.push({
+      name: 'content-type',
+      value: DISABLE_HEADER_VALUE,
+    });
+  }
+
+  return headers
+    .filter(h => h.name)
+    .map(h => {
+      const value = h.value || '';
+
+      if (value === '') {
+      // Curl needs a semicolon suffix to send empty header values
+        return `${h.name};`;
+      } else if (value === DISABLE_HEADER_VALUE) {
+      // Tell Curl NOT to send the header if value is null
+        return `${h.name}:`;
+      } else {
+      // Send normal header value
+        return `${h.name}: ${value}`;
+      }
+    });
+};
 
 export async function sendWithSettings(
   requestId: string,
@@ -775,7 +769,6 @@ export async function sendWithSettings(
     _id: request._id + '.other',
     parentId: request._id,
   });
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   let renderResult: {
     request: RenderedRequest;
     context: Record<string, any>;
@@ -785,15 +778,18 @@ export async function sendWithSettings(
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
-
+  const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderResult.request,
-    workspace,
-    settings,
-    environment,
-    settings.validateAuthSSL,
+    clientCertificates,
+    { ...settings, validateSSL: settings.validateAuthSSL },
   );
-  if (response.error){
+  response.parentId = renderResult.request._id;
+  response.environmentId = environmentId;
+  response.bodyCompression = null;
+  response.settingSendCookies = renderResult.request.settingSendCookies;
+  response.settingStoreCookies = renderResult.request.settingStoreCookies;
+  if (response.error) {
     return response;
   }
   return _applyResponsePluginHooks(
@@ -837,8 +833,6 @@ export async function send(
   if (!request) {
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
-
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const renderResult = await getRenderedRequestAndContext(
     {
       request,
@@ -876,21 +870,24 @@ export async function send(
       url: renderedRequestBeforePlugins.url,
     } as ResponsePatch;
   }
-
+  const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderedRequest,
-    workspace,
+    clientCertificates,
     settings,
-    environment,
-    settings.validateSSL,
   );
+  response.parentId = renderResult.request._id;
+  response.environmentId = environmentId;
+  response.bodyCompression = null;
+  response.settingSendCookies = renderedRequest.settingSendCookies;
+  response.settingStoreCookies = renderedRequest.settingStoreCookies;
 
   console.log(
     response.error
       ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
       : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
   );
-  if (response.error){
+  if (response.error) {
     return response;
   }
   return _applyResponsePluginHooks(
@@ -957,7 +954,6 @@ async function _applyResponsePluginHooks(
   } catch (err) {
     return {
       url: renderedRequest.url,
-      parentId: renderedRequest._id,
       error: `[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
@@ -1017,7 +1013,7 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
   const responsesDir = pathJoin(getDataDirectory(), 'responses');
   mkdirp.sync(responsesDir);
   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-  if (process.type === 'renderer'){
+  if (process.type === 'renderer') {
     return window.main.writeFile({ path: timelinePath, content: timelineStr });
   }
   return new Promise<string>((resolve, reject) => {
