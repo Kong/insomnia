@@ -450,7 +450,9 @@ export async function _actuallySend(
           }
         }
       }
-      const { requestBody, requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBodyOptions(renderedRequest);
+      const requestBody = parseRequestBody(renderedRequest);
+      const { requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBodyPath(renderedRequest);
+
       const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
       if (hasRequestBodyOrFilePath) {
         headers.push({
@@ -662,21 +664,26 @@ export async function _actuallySend(
   });
 }
 
-// get request body or path to file
-const parseRequestBodyOptions = async renderedRequest => {
-  const hasFileName = renderedRequest.body.fileName;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-  const isUrlEncodedForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  const hasMimetypeAndUpdateMethod = typeof renderedRequest.body.mimeType === 'string' || expectsBody;
-
+const parseRequestBody = req => {
+  const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
+  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
+  const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();
-    renderedRequest.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
-    return { requestBody: urlSearchParams.toString() };
+    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    return urlSearchParams.toString();
   }
+  if (hasMimetypeAndUpdateMethod) {
+    return req.body.text;
+  }
+  return;
+};
+
+const parseRequestBodyPath = async req => {
+  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  const hasFileName = req.body.fileName;
   if (isMultipartForm) {
-    const { filePath, boundary, contentLength } = await buildMultipart(renderedRequest.body.params || [],);
+    const { filePath, boundary, contentLength } = await buildMultipart(req.body.params || [],);
     return {
       contentLength,
       requestBodyPath: filePath,
@@ -685,17 +692,14 @@ const parseRequestBodyOptions = async renderedRequest => {
     };
   }
   if (hasFileName) {
-    const requestBodyPath = renderedRequest.body.fileName || '';
-    const { size: contentLength } = fs.statSync(renderedRequest.body.fileName);
+    const requestBodyPath = req.body.fileName || '';
+    const { size: contentLength } = fs.statSync(req.body.fileName);
     return {
       contentLength,
       requestBodyPath,
     };
   }
-  if (hasMimetypeAndUpdateMethod) {
-    return { requestBody: renderedRequest.body.text || '' };
-  }
-  return { requestBody: null };
+  return {};
 };
 
 // add set-cookie headers to file(cookiejar) and database
