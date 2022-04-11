@@ -1,5 +1,4 @@
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
@@ -18,10 +17,10 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
-import { _parseHeaders } from '../libcurl-promise';
-import { getHttpVersion } from '../libcurl-promise';
+import { _parseHeaders, getHttpVersion } from '../libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
+import { _getAwsAuthHeaders } from '../parse-header-strings';
 window.app = electron.app;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
@@ -737,7 +736,7 @@ describe('actuallySend()', () => {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
-    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(1);
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
@@ -777,7 +776,7 @@ describe('_getAwsAuthHeaders', () => {
       sessionToken: req.authentication.sessionToken || '',
     };
 
-    const headers = networkUtils._getAwsAuthHeaders(
+    const headers = _getAwsAuthHeaders(
       credentials,
       req.headers,
       req.body.text,
@@ -811,7 +810,7 @@ describe('_getAwsAuthHeaders', () => {
       sessionToken: req.authentication.sessionToken || '',
     };
 
-    const headers = networkUtils._getAwsAuthHeaders(
+    const headers = _getAwsAuthHeaders(
       credentials,
       req.headers,
       null,

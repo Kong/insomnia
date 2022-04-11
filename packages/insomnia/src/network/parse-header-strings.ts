@@ -1,4 +1,6 @@
+import aws4 from 'aws4';
 import clone from 'clone';
+import { parse as urlParse } from 'url';
 
 import {
   AUTH_AWS_IAM,
@@ -8,13 +10,16 @@ import {
 } from '../common/constants';
 import {
   getContentTypeHeader,
+  getHostHeader,
   hasAcceptEncodingHeader,
   hasAcceptHeader,
   hasAuthHeader,
   hasContentTypeHeader,
 } from '../common/misc';
+import { RequestHeader } from '../models/request';
 import { getAuthHeader } from './authentication';
 import { DEFAULT_BOUNDARY } from './multipart';
+
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 export const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
@@ -119,3 +124,45 @@ export const parseHeaderStrings = async ({ renderedRequest, requestBody, request
       }
     });
 };
+// exported for unit tests only
+export function _getAwsAuthHeaders(
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+    sessionToken: string;
+  },
+  headers: RequestHeader[],
+  body: string,
+  url: string,
+  method: string,
+  region?: string,
+  service?: string,
+): {
+  name: string;
+  value: string;
+}[] {
+  const parsedUrl = urlParse(url);
+  const contentTypeHeader = getContentTypeHeader(headers);
+  // AWS uses host header for signing so prioritize that if the user set it manually
+  const hostHeader = getHostHeader(headers);
+  const host = hostHeader ? hostHeader.value : parsedUrl.host;
+  const awsSignOptions: aws4.Request = {
+    service,
+    region,
+    ...(host ? { host } : {}),
+    body,
+    method,
+    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
+    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
+  };
+  const signature = aws4.sign(awsSignOptions, credentials);
+  if (!signature.headers) {
+    return [];
+  }
+  return Object.keys(signature.headers)
+    .filter(name => name !== 'content-type') // Don't add this because we already have it
+    .map(name => ({
+      name,
+      value: String(signature.headers?.[name]),
+    }));
+}

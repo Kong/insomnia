@@ -15,8 +15,8 @@ import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../config/config.json';
-import { AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
-import { describeByteSize, hasUserAgentHeader } from '../common/misc';
+import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
+import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
 import { ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
 import { buildMultipart } from './multipart';
@@ -51,14 +51,7 @@ interface CurlRequestOutput {
   headerResults: HeaderResult[];
   responseBodyPath?: string;
 }
-export const HttpVersions = {
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2PriorKnowledge: 'V2PriorKnowledge',
-  V2_0: 'V2_0',
-  v3: 'v3',
-  default: 'default',
-} as const;
+
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
@@ -73,23 +66,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
     const { curlOptions, requestId, renderedRequest, finalUrl, settings } = options;
     const curl = new Curl();
-
-    const requestBody = parseRequestBody(renderedRequest);
-    if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
-    const requestBodyPath = await parseRequestBodyPath(renderedRequest);
-    let isMultipart = false;
-    if (requestBodyPath) {
-      // AWS IAM file upload not supported
-      if (renderedRequest.authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
-      isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
-      const { size: contentLength } = fs.statSync(requestBodyPath);
-      curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-      curl.setOpt(Curl.option.UPLOAD, 1);
-      // We need this, otherwise curl will send it as a POST
-      curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-    }
-    const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
-    curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
     curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
@@ -202,6 +178,35 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         timestamp: Date.now(),
       });
     }
+
+    const requestBody = parseRequestBody(renderedRequest);
+    if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    const requestBodyPath = await parseRequestBodyPath(renderedRequest);
+    let isMultipart = false;
+    if (requestBodyPath) {
+      // AWS IAM file upload not supported
+      if (renderedRequest.authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
+      isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
+      const { size: contentLength } = fs.statSync(requestBodyPath);
+      curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
+      curl.setOpt(Curl.option.UPLOAD, 1);
+      // We need this, otherwise curl will send it as a POST
+      curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+    }
+    const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
+    curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
+
+    const { username, password, disabled } = renderedRequest.authentication;
+    const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
+    const isNLTM = renderedRequest.authentication.type === AUTH_NTLM;
+    const isDigestOrNLTM = isDigest || isNLTM;
+    if (!hasAuthHeader(renderedRequest.headers) && !disabled && isDigestOrNLTM) {
+      isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
+      isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
+      curl.setOpt(Curl.option.USERNAME, username || '');
+      curl.setOpt(Curl.option.PASSWORD, password || '');
+    }
+
     let requestFileDescriptor;
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
@@ -407,7 +412,14 @@ const parseRequestBody = req => {
     return req.body.text;
   }
 };
-
+export const HttpVersions = {
+  V1_0: 'V1_0',
+  V1_1: 'V1_1',
+  V2PriorKnowledge: 'V2PriorKnowledge',
+  V2_0: 'V2_0',
+  v3: 'v3',
+  default: 'default',
+} as const;
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
     case HttpVersions.V1_0:

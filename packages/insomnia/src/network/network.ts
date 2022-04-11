@@ -1,5 +1,3 @@
-import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import aws4 from 'aws4';
 import clone from 'clone';
 import fs from 'fs';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
@@ -11,12 +9,9 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  AUTH_DIGEST,
-  AUTH_NTLM,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
@@ -24,10 +19,8 @@ import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
   delay,
   getContentTypeHeader,
-  getHostHeader,
   getLocationHeader,
   getSetCookieHeaders,
-  hasAuthHeader,
   LIBCURL_DEBUG_MIGRATION_MAP,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
@@ -38,7 +31,7 @@ import {
 } from '../common/render';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
-import type { Request, RequestHeader } from '../models/request';
+import type { Request } from '../models/request';
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
@@ -253,21 +246,6 @@ export async function _actuallySend(
           if (passphrase) {
             setOpt(Curl.option.KEYPASSWD, passphrase);
           }
-        }
-      }
-
-      // Handle Authorization header
-      const { username, password, disabled } = renderedRequest.authentication;
-      if (!hasAuthHeader(renderedRequest.headers) && !disabled) {
-        if (renderedRequest.authentication.type === AUTH_DIGEST) {
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
-        }
-        if (renderedRequest.authentication.type === AUTH_NTLM) {
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
         }
       }
 
@@ -601,49 +579,6 @@ async function _applyResponsePluginHooks(
     };
   }
 
-}
-
-// exported for unit tests only
-export function _getAwsAuthHeaders(
-  credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken: string;
-  },
-  headers: RequestHeader[],
-  body: string,
-  url: string,
-  method: string,
-  region?: string,
-  service?: string,
-): {
-  name: string;
-  value: string;
-}[] {
-  const parsedUrl = urlParse(url);
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // AWS uses host header for signing so prioritize that if the user set it manually
-  const hostHeader = getHostHeader(headers);
-  const host = hostHeader ? hostHeader.value : parsedUrl.host;
-  const awsSignOptions: aws4.Request = {
-    service,
-    region,
-    ...(host ? { host } : {}),
-    body,
-    method,
-    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
-    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
-  };
-  const signature = aws4.sign(awsSignOptions, credentials);
-  if (!signature.headers) {
-    return [];
-  }
-  return Object.keys(signature.headers)
-    .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({
-      name,
-      value: String(signature.headers?.[name]),
-    }));
 }
 
 function storeTimeline(timeline: ResponseTimelineEntry[]) {
