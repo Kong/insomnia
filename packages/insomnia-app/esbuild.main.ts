@@ -16,11 +16,13 @@ const env: Record<string, string> = _DEV_
     ),
     'process.env.NODE_ENV': JSON.stringify('development'),
     'process.env.INSOMNIA_ENV': JSON.stringify('development'),
-    'process.env.RELEASE_DATE': JSON.stringify(new Date()),
+    'process.env.BUILD_DATE': JSON.stringify(new Date())
   }
   : {
     __DEV__: 'false',
     'process.env.NODE_ENV': JSON.stringify('production'),
+    'process.env.INSOMNIA_ENV': JSON.stringify('production'),
+    'process.env.BUILD_DATE': JSON.stringify(new Date())
   };
 
 build({
