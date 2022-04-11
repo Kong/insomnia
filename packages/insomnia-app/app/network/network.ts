@@ -574,7 +574,6 @@ const parseRequestBody = req => {
   if (hasMimetypeAndUpdateMethod) {
     return req.body.text;
   }
-  return;
 };
 
 const parseRequestBodyPath = async req => {
