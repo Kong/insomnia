@@ -464,11 +464,13 @@ export async function _actuallySend(
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_NTLM) {
+        }
+        if (renderedRequest.authentication.type === AUTH_NTLM) {
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
+        }
+        if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
           // AWS IAM file upload not supported
           if (requestBodyPath) {
             const timelinePath = await storeTimeline(timeline);
@@ -785,6 +787,9 @@ export async function sendWithSettings(
   );
   response.parentId = renderResult.request._id;
   response.environmentId = environmentId;
+  response.bodyCompression = null;
+  response.settingSendCookies = renderResult.request.settingSendCookies;
+  response.settingStoreCookies = renderResult.request.settingStoreCookies;
   if (response.error) {
     return response;
   }
@@ -874,6 +879,7 @@ export async function send(
   );
   response.parentId = renderResult.request._id;
   response.environmentId = environmentId;
+  response.bodyCompression = null;
   response.settingSendCookies = renderedRequest.settingSendCookies;
   response.settingStoreCookies = renderedRequest.settingStoreCookies;
 
