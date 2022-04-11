@@ -43,43 +43,9 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 // Based on list of option properties but with callback options removed
 const Curl = {
   option: {
-    ACCEPT_ENCODING: 'ACCEPT_ENCODING',
     CAINFO: 'CAINFO',
-    COOKIE: 'COOKIE',
-    COOKIEFILE: 'COOKIEFILE',
-    COOKIELIST: 'COOKIELIST',
-    CUSTOMREQUEST: 'CUSTOMREQUEST',
-    FOLLOWLOCATION: 'FOLLOWLOCATION',
-    HTTPAUTH: 'HTTPAUTH',
-    HTTPGET: 'HTTPGET',
-    HTTPHEADER: 'HTTPHEADER',
-    HTTPPOST: 'HTTPPOST',
-    HTTP_VERSION: 'HTTP_VERSION',
-    INFILESIZE_LARGE: 'INFILESIZE_LARGE',
-    KEYPASSWD: 'KEYPASSWD',
-    MAXREDIRS: 'MAXREDIRS',
-    NETRC: 'NETRC',
-    NOBODY: 'NOBODY',
-    NOPROGRESS: 'NOPROGRESS',
-    NOPROXY: 'NOPROXY',
-    PASSWORD: 'PASSWORD',
-    POST: 'POST',
-    POSTFIELDS: 'POSTFIELDS',
-    PATH_AS_IS: 'PATH_AS_IS',
-    PROXY: 'PROXY',
-    PROXYAUTH: 'PROXYAUTH',
-    SSLCERT: 'SSLCERT',
-    SSLCERTTYPE: 'SSLCERTTYPE',
-    SSLKEY: 'SSLKEY',
-    SSL_VERIFYHOST: 'SSL_VERIFYHOST',
-    SSL_VERIFYPEER: 'SSL_VERIFYPEER',
-    TIMEOUT_MS: 'TIMEOUT_MS',
     UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
-    UPLOAD: 'UPLOAD',
     URL: 'URL',
-    USERAGENT: 'USERAGENT',
-    USERNAME: 'USERNAME',
-    VERBOSE: 'VERBOSE',
   },
 };
 export interface ResponsePatch {
@@ -209,45 +175,10 @@ export async function _actuallySend(
         console.log('[net] Set CA to', fullCAPath);
       }
 
-      setOpt(Curl.option.CAINFO, fullCAPath);
-
-      // Set cookies from jar
       if (!renderedRequest.settingSendCookies) {
         addTimelineText('Disable cookie sending due to user setting');
       }
-
-      for (const certificate of (clientCertificates || [])) {
-        if (certificate.disabled) {
-          continue;
-        }
-
-        const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
-
-        if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
-          const { passphrase, cert, key, pfx } = certificate;
-
-          if (cert) {
-            setOpt(Curl.option.SSLCERT, cert);
-            setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-            addTimelineText('Adding SSL PEM certificate');
-          }
-
-          if (pfx) {
-            setOpt(Curl.option.SSLCERT, pfx);
-            setOpt(Curl.option.SSLCERTTYPE, 'P12');
-            addTimelineText('Adding SSL P12 certificate');
-          }
-
-          if (key) {
-            setOpt(Curl.option.SSLKEY, key);
-            addTimelineText('Adding SSL KEY certificate');
-          }
-
-          if (passphrase) {
-            setOpt(Curl.option.KEYPASSWD, passphrase);
-          }
-        }
-      }
+      const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
@@ -260,6 +191,8 @@ export async function _actuallySend(
         renderedRequest,
         finalUrl,
         settings,
+        certificates,
+        fullCAPath,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;

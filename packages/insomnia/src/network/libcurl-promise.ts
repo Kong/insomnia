@@ -17,6 +17,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { version } from '../../config/config.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
 import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
+import type { RenderedRequest } from '../common/render';
+import { ClientCertificate } from '../models/client-certificate';
 import { ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
 import { buildMultipart } from './multipart';
@@ -34,9 +36,11 @@ interface CurlOpt {
 interface CurlRequestOptions {
   curlOptions: CurlOpt[];
   requestId: string; // for cancellation
-  renderedRequest: any;
+  renderedRequest: RenderedRequest;
   finalUrl: string;
   settings: Settings;
+  certificates: ClientCertificate[];
+  fullCAPath: string;
 }
 
 interface ResponseTimelineEntry {
@@ -64,13 +68,52 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { curlOptions, requestId, renderedRequest, finalUrl, settings } = options;
+    const { curlOptions, requestId, renderedRequest, finalUrl, settings, certificates, fullCAPath } = options;
     const curl = new Curl();
 
     curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
+    curl.setOpt(Curl.option.CAINFO, fullCAPath);
+
+    certificates.forEach(validCert => {
+      const { passphrase, cert, key, pfx } = validCert;
+      if (cert) {
+        curl.setOpt(Curl.option.SSLCERT, cert);
+        curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
+        debugTimeline.push({
+          name: 'TEXT',
+          value: 'Adding SSL PEM certificate',
+          timestamp: Date.now(),
+        });
+      }
+      if (pfx) {
+        curl.setOpt(Curl.option.SSLCERT, pfx);
+        curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
+        debugTimeline.push({
+          name: 'TEXT',
+          value: 'Adding SSL P12 certificate',
+          timestamp: Date.now(),
+        });
+      }
+      if (key) {
+        curl.setOpt(Curl.option.SSLKEY, key);
+        debugTimeline.push({
+          name: 'TEXT',
+          value: 'Adding SSL KEY certificate',
+          timestamp: Date.now(),
+        });
+      }
+      if (passphrase) {
+        curl.setOpt(Curl.option.KEYPASSWD, passphrase);
+      }
+      debugTimeline.push({
+        name: 'TEXT',
+        value: 'Adding SSL PEM certificate',
+        timestamp: Date.now(),
+      });
+    });
     const httpVersion = getHttpVersion(settings.preferredHttpVersion);
     debugTimeline.push({
       name: 'TEXT',
