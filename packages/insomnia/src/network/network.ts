@@ -23,7 +23,6 @@ import {
   AUTH_NETRC,
   AUTH_NTLM,
   CONTENT_TYPE_FORM_DATA,
-  CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
@@ -35,10 +34,7 @@ import {
   getHostHeader,
   getLocationHeader,
   getSetCookieHeaders,
-  hasAcceptEncodingHeader,
-  hasAcceptHeader,
   hasAuthHeader,
-  hasContentTypeHeader,
   hasUserAgentHeader,
   LIBCURL_DEBUG_MIGRATION_MAP,
 } from '../common/misc';
@@ -56,9 +52,8 @@ import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
-import { getAuthHeader } from './authentication';
 import caCerts from './ca_certs';
-import { buildMultipart, DEFAULT_BOUNDARY } from './multipart';
+import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Based on list of option properties but with callback options removed
@@ -126,9 +121,6 @@ export interface ResponsePatch {
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
-
-// Special header value that will prevent the header being sent
-const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 
 const cancelRequestFunctionMap = {};
 
@@ -209,29 +201,15 @@ export async function _actuallySend(
         });
       };
 
-      // Set all the basic options
-      setOpt(Curl.option.VERBOSE, true);
-
-      // True so debug function works\
-      setOpt(Curl.option.NOPROGRESS, true);
-
-      // True so curl doesn't print progress
-      setOpt(Curl.option.ACCEPT_ENCODING, '');
-
       // Set follow redirects setting
-      switch (renderedRequest.settingFollowRedirects) {
-        case 'off':
-          setOpt(Curl.option.FOLLOWLOCATION, false);
-          break;
-
-        case 'on':
-          setOpt(Curl.option.FOLLOWLOCATION, true);
-          break;
-
-        default:
-          // Set to global setting
-          setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-          break;
+      const on = renderedRequest.settingFollowRedirects === 'on';
+      const off = renderedRequest.settingFollowRedirects === 'off';
+      if (off) {
+        setOpt(Curl.option.FOLLOWLOCATION, false);
+      } else if (on) {
+        setOpt(Curl.option.FOLLOWLOCATION, true);
+      } else {
+        setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       }
 
       // Set maximum amount of redirects allowed
@@ -445,11 +423,7 @@ export async function _actuallySend(
           }
         }
       }
-      const requestBody = parseRequestBody(renderedRequest);
-      if (requestBody) {
-        setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
-      const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
+      const requestBodyPath = await parseRequestBodyPath(renderedRequest);
       if (requestBodyPath) {
         const { size: contentLength } = fs.statSync(requestBodyPath);
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
@@ -492,17 +466,11 @@ export async function _actuallySend(
         setOpt(Curl.option.NETRC, CurlNetrc.Required);
       }
 
-      const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
-      setOpt(Curl.option.HTTPHEADER, headerStrings);
-
       // Set User-Agent if it's not already in headers
       if (!hasUserAgentHeader(renderedRequest.headers)) {
         setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
       }
 
-      const responsesDir = pathJoin(getDataDirectory(), 'responses');
-      mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuidv4() + '.response');
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
@@ -511,13 +479,14 @@ export async function _actuallySend(
       const isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const requestOptions = {
         curlOptions,
-        responseBodyPath,
         requestBodyPath,
         isMultipart,
         maxTimelineDataSizeKB: settings.maxTimelineDataSizeKB,
         requestId: renderedRequest._id,
+        renderedRequest,
+        finalUrl,
       };
-      const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
+      const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
       const { lastRedirect, contentType, headerTimeline } = await setCookiesFromResponseHeaders({
         headerResults,
@@ -561,20 +530,6 @@ export async function _actuallySend(
     }
   });
 }
-
-const parseRequestBody = req => {
-  const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
-  const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
-  if (isUrlEncodedForm) {
-    const urlSearchParams = new URLSearchParams();
-    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
-    return urlSearchParams.toString();
-  }
-  if (hasMimetypeAndUpdateMethod) {
-    return req.body.text;
-  }
-};
 
 const parseRequestBodyPath = async req => {
   const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
@@ -633,112 +588,6 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
     headerTimeline,
   };
 
-};
-
-const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
-  const headers = clone(renderedRequest.headers);
-
-  // Disable Expect and Transfer-Encoding headers when we have POST body/file
-  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
-  if (hasRequestBodyOrFilePath) {
-    headers.push({
-      name: 'Expect',
-      value: DISABLE_HEADER_VALUE,
-    });
-    headers.push({
-      name: 'Transfer-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
-
-  const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
-  const isNTLM = renderedRequest.authentication.type === AUTH_NTLM;
-  const isAWSIAM = renderedRequest.authentication.type === AUTH_AWS_IAM;
-  if (isAWSIAM) {
-    const { authentication } = renderedRequest;
-    const credentials = {
-      accessKeyId: authentication.accessKeyId || '',
-      secretAccessKey: authentication.secretAccessKey || '',
-      sessionToken: authentication.sessionToken || '',
-    };
-
-    const extraHeaders = _getAwsAuthHeaders(
-      credentials,
-      headers,
-      requestBody || '',
-      finalUrl,
-      renderedRequest.method,
-      authentication.region || '',
-      authentication.service || '',
-    );
-
-    for (const header of extraHeaders) {
-      headers.push(header);
-    }
-  }
-  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !renderedRequest.authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest) {
-    const authHeader = await getAuthHeader(renderedRequest, finalUrl);
-
-    if (authHeader) {
-      headers.push({
-        name: authHeader.name,
-        value: authHeader.value,
-      });
-    }
-  }
-  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (isMultipartForm && requestBodyPath) {
-    const contentTypeHeader = getContentTypeHeader(headers);
-    if (contentTypeHeader) {
-      contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
-    } else {
-      headers.push({
-        name: 'Content-Type',
-        value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
-      });
-    }
-  }
-  // Send a default Accept headers of anything
-  if (!hasAcceptHeader(headers)) {
-    headers.push({
-      name: 'Accept',
-      value: '*/*',
-    }); // Default to anything
-  }
-
-  // Don't auto-send Accept-Encoding header
-  if (!hasAcceptEncodingHeader(headers)) {
-    headers.push({
-      name: 'Accept-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
-
-  // Prevent curl from adding default content-type header
-  if (!hasContentTypeHeader(headers)) {
-    headers.push({
-      name: 'content-type',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
-
-  return headers
-    .filter(h => h.name)
-    .map(h => {
-      const value = h.value || '';
-
-      if (value === '') {
-      // Curl needs a semicolon suffix to send empty header values
-        return `${h.name};`;
-      } else if (value === DISABLE_HEADER_VALUE) {
-      // Tell Curl NOT to send the header if value is null
-        return `${h.name}:`;
-      } else {
-      // Send normal header value
-        return `${h.name}: ${value}`;
-      }
-    });
 };
 
 export async function sendWithSettings(

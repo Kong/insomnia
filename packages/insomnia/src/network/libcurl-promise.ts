@@ -5,13 +5,19 @@ if (process.type === 'renderer') {
 }
 
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
+import electron from 'electron';
 import fs from 'fs';
+import mkdirp from 'mkdirp';
+import path from 'path';
 import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
+import { v4 as uuidv4 } from 'uuid';
 
+import { CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
 import { describeByteSize } from '../common/misc';
 import { ResponseHeader } from '../models/response';
 import { ResponsePatch } from './network';
+import { parseHeaderStrings } from './parse-header-strings';
 
 // wraps libcurl with a promise taking curl options and others required by read, write and debug callbacks
 // returning a response patch, debug timeline and list of headers for each redirect
@@ -23,11 +29,12 @@ interface CurlOpt {
 
 interface CurlRequestOptions {
   curlOptions: CurlOpt[];
-  responseBodyPath: string;
   maxTimelineDataSizeKB: number;
   requestId: string; // for cancellation
   requestBodyPath?: string; // only used for POST file path
   isMultipart: boolean; // for clean up after implemention side effect
+  renderedRequest: any;
+  finalUrl: string;
 }
 
 interface ResponseTimelineEntry {
@@ -40,16 +47,33 @@ interface CurlRequestOutput {
   patch: ResponsePatch;
   debugTimeline: ResponseTimelineEntry[];
   headerResults: HeaderResult[];
+  responseBodyPath?: string;
 }
+
+const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers = {};
 export const cancelCurlRequest = id => cancelCurlRequestHandlers[id]();
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
+    const responsesDir = path.join(getDataDirectory(), 'responses');
+    mkdirp.sync(responsesDir);
+    const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
+
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { curlOptions, responseBodyPath, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart } = options;
+    const { curlOptions, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart, renderedRequest, finalUrl } = options;
     const curl = new Curl();
+
+    const requestBody = parseRequestBody(renderedRequest);
+    if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
+    curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
+
+    curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
+    curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
+    curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
+
     let requestFileDescriptor;
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
@@ -123,7 +147,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       await waitForStreamToFinish(responseBodyWriteStream);
 
       const headerResults = _parseHeaders(rawHeaders);
-      resolve({ patch, debugTimeline, headerResults });
+      resolve({ patch, debugTimeline, headerResults, responseBodyPath });
     });
     // NOTE: legacy write end callback
     curl.on('error', () => responseBodyWriteStream.end());
@@ -243,3 +267,16 @@ async function waitForStreamToFinish(stream: Readable | Writable) {
     });
   });
 }
+const parseRequestBody = req => {
+  const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
+  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
+  const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
+  if (isUrlEncodedForm) {
+    const urlSearchParams = new URLSearchParams();
+    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    return urlSearchParams.toString();
+  }
+  if (hasMimetypeAndUpdateMethod) {
+    return req.body.text;
+  }
+};
