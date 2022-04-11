@@ -4,18 +4,21 @@ if (process.type === 'renderer') {
   throw new Error('node-libcurl unavailable in renderer');
 }
 
-import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
+import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
+import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import { CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
-import { describeByteSize } from '../common/misc';
+import { version } from '../../config/config.json';
+import { AUTH_NETRC, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
+import { describeByteSize, hasUserAgentHeader } from '../common/misc';
 import { ResponseHeader } from '../models/response';
+import type { Settings } from '../models/settings';
 import { ResponsePatch } from './network';
 import { parseHeaderStrings } from './parse-header-strings';
 
@@ -35,6 +38,7 @@ interface CurlRequestOptions {
   isMultipart: boolean; // for clean up after implemention side effect
   renderedRequest: any;
   finalUrl: string;
+  settings: Settings;
 }
 
 interface ResponseTimelineEntry {
@@ -49,7 +53,14 @@ interface CurlRequestOutput {
   headerResults: HeaderResult[];
   responseBodyPath?: string;
 }
-
+export const HttpVersions = {
+  V1_0: 'V1_0',
+  V1_1: 'V1_1',
+  V2PriorKnowledge: 'V2PriorKnowledge',
+  V2_0: 'V2_0',
+  v3: 'v3',
+  default: 'default',
+} as const;
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
@@ -60,9 +71,10 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responsesDir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(responsesDir);
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
+    const debugTimeline: ResponseTimelineEntry[] = [];
 
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { curlOptions, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart, renderedRequest, finalUrl } = options;
+    const { curlOptions, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart, renderedRequest, finalUrl, settings } = options;
     const curl = new Curl();
 
     const requestBody = parseRequestBody(renderedRequest);
@@ -74,6 +86,83 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
+    const httpVersion = getHttpVersion(settings.preferredHttpVersion);
+    debugTimeline.push({
+      name: 'TEXT',
+      value: httpVersion.log,
+      timestamp: Date.now(),
+    });
+    if (httpVersion.curlHttpVersion) curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
+
+    // Set follow redirects setting
+    const on = renderedRequest.settingFollowRedirects === 'on';
+    const off = renderedRequest.settingFollowRedirects === 'off';
+    if (off) curl.setOpt(Curl.option.FOLLOWLOCATION, false);
+    else if (on) curl.setOpt(Curl.option.FOLLOWLOCATION, true);
+    else curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+
+    // Set maximum amount of redirects allowed
+    // NOTE: Setting this to -1 breaks some versions of libcurl
+    if (settings.maxRedirects > 0) curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+
+    // Don't rebuild dot sequences in path
+    if (!renderedRequest.settingRebuildPath) curl.setOpt(Curl.option.PATH_AS_IS, true);
+
+    // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
+    // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
+    // This is how you tell Curl to send a HEAD request
+    if (renderedRequest.method.toUpperCase() === 'HEAD') curl.setOpt(Curl.option.NOBODY, 1);
+    // This is how you tell Curl to send a POST request
+    else if (renderedRequest.method.toUpperCase() === 'POST') curl.setOpt(Curl.option.POST, 1);
+    // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
+    else curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+
+    if (renderedRequest.authentication.type === AUTH_NETRC) {
+      curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
+    }
+    // Set proxy settings if we have them
+    if (!settings.proxyEnabled) curl.setOpt(Curl.option.PROXY, '');
+    else {
+      const { protocol } = urlParse(renderedRequest.url);
+      const { httpProxy, httpsProxy, noProxy } = settings;
+      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+      debugTimeline.push({
+        name: 'TEXT',
+        value: `Enable network proxy for ${protocol || ''}`,
+        timestamp: Date.now(),
+      });
+      if (proxy) {
+        curl.setOpt(Curl.option.PROXY, proxy);
+        curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
+      }
+      if (noProxy) curl.setOpt(Curl.option.NOPROXY, noProxy);
+    }
+
+    if (settings.timeout <= 0) curl.setOpt(Curl.option.TIMEOUT_MS, 0);
+    else {
+      curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
+      debugTimeline.push({
+        name: 'TEXT',
+        value: `Enable timeout of ${settings.timeout}ms`,
+        timestamp: Date.now(),
+      });
+    }
+
+    if (!settings.validateSSL) {
+      curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
+    }
+    debugTimeline.push({
+      name: 'TEXT',
+      value: `${settings.validateSSL ? 'Enable' : 'Disable'} SSL validation`,
+      timestamp: Date.now(),
+    });
+
+    // Set User-Agent if it's not already in headers
+    if (!hasUserAgentHeader(renderedRequest.headers)) {
+      curl.setOpt(Curl.option.USERAGENT, `insomnia/${version}`);
+    }
     let requestFileDescriptor;
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
@@ -101,7 +190,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       return buffer.length;
     });
     // set up response logger
-    const debugTimeline: ResponseTimelineEntry[] = [];
     curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
       const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
       const infoTypeName = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
@@ -279,4 +367,39 @@ const parseRequestBody = req => {
   if (hasMimetypeAndUpdateMethod) {
     return req.body.text;
   }
+};
+
+export const getHttpVersion = preferredHttpVersion => {
+  switch (preferredHttpVersion) {
+    case HttpVersions.V1_0:
+      return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
+    case HttpVersions.V1_1:
+      return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
+    case HttpVersions.V2PriorKnowledge:
+      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
+    case HttpVersions.V2_0:
+      return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
+    case HttpVersions.v3:
+      return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
+    case HttpVersions.default:
+      return { log: 'Using default HTTP version' };
+    default:
+      return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
+  }
+};
+export const setDefaultProtocol = (url: string, defaultProto?: string) => {
+  const trimmedUrl = url.trim();
+  defaultProto = defaultProto || 'http:';
+
+  // If no url, don't bother returning anything
+  if (!trimmedUrl) {
+    return '';
+  }
+
+  // Default the proto if it doesn't exist
+  if (trimmedUrl.indexOf('://') === -1) {
+    return `${defaultProto}//${trimmedUrl}`;
+  }
+
+  return trimmedUrl;
 };

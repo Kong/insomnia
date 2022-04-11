@@ -1,10 +1,7 @@
 import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
 import aws4 from 'aws4';
 import clone from 'clone';
 import fs from 'fs';
-import { HttpVersions } from 'insomnia-common';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import {
   buildQueryStringFromParams,
@@ -20,10 +17,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   AUTH_AWS_IAM,
   AUTH_DIGEST,
-  AUTH_NETRC,
   AUTH_NTLM,
   CONTENT_TYPE_FORM_DATA,
-  getAppVersion,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
@@ -35,7 +30,6 @@ import {
   getLocationHeader,
   getSetCookieHeaders,
   hasAuthHeader,
-  hasUserAgentHeader,
   LIBCURL_DEBUG_MIGRATION_MAP,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
@@ -126,25 +120,6 @@ const cancelRequestFunctionMap = {};
 
 let lastUserInteraction = Date.now();
 
-export const getHttpVersion = preferredHttpVersion => {
-  switch (preferredHttpVersion) {
-    case HttpVersions.V1_0:
-      return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
-    case HttpVersions.V1_1:
-      return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
-    case HttpVersions.V2PriorKnowledge:
-      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
-    case HttpVersions.V2_0:
-      return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
-    case HttpVersions.v3:
-      return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
-    case HttpVersions.default:
-      return { log: 'Using default HTTP version' };
-    default:
-      return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
-  }
-};
-
 export async function cancelRequestById(requestId) {
   const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
   if (hasCancelFunction) {
@@ -201,47 +176,6 @@ export async function _actuallySend(
         });
       };
 
-      // Set follow redirects setting
-      const on = renderedRequest.settingFollowRedirects === 'on';
-      const off = renderedRequest.settingFollowRedirects === 'off';
-      if (off) {
-        setOpt(Curl.option.FOLLOWLOCATION, false);
-      } else if (on) {
-        setOpt(Curl.option.FOLLOWLOCATION, true);
-      } else {
-        setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      }
-
-      // Set maximum amount of redirects allowed
-      // NOTE: Setting this to -1 breaks some versions of libcurl
-      if (settings.maxRedirects > 0) {
-        setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
-      }
-
-      // Don't rebuild dot sequences in path
-      if (!renderedRequest.settingRebuildPath) {
-        setOpt(Curl.option.PATH_AS_IS, true);
-      }
-
-      // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
-      // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
-      switch (renderedRequest.method.toUpperCase()) {
-        case 'HEAD':
-          // This is how you tell Curl to send a HEAD request
-          setOpt(Curl.option.NOBODY, 1);
-          break;
-
-        case 'POST':
-          // This is how you tell Curl to send a POST request
-          setOpt(Curl.option.POST, 1);
-          break;
-
-        default:
-          // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
-          setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-          break;
-      }
-
       // Set the URL, including the query parameters
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
       const url = joinUrlAndQueryString(renderedRequest.url, qs);
@@ -263,36 +197,11 @@ export async function _actuallySend(
       addTimelineText('Preparing request to ' + finalUrl);
       addTimelineText('Current time is ' + new Date().toISOString());
 
-      const httpVersion = getHttpVersion(settings.preferredHttpVersion);
-      addTimelineText(httpVersion.log);
-      if (httpVersion.curlHttpVersion) {
-        // Set HTTP version
-        setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
-      }
-
-      // Set timeout
-      if (settings.timeout > 0) {
-        addTimelineText(`Enable timeout of ${settings.timeout}ms`);
-        setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
-      } else {
-        addTimelineText('Disable timeout');
-        setOpt(Curl.option.TIMEOUT_MS, 0);
-      }
-
       // log some things
       if (renderedRequest.settingEncodeUrl) {
         addTimelineText('Enable automatic URL encoding');
       } else {
         addTimelineText('Disable automatic URL encoding');
-      }
-
-      // SSL Validation
-      if (settings.validateSSL) {
-        addTimelineText('Enable SSL validation');
-      } else {
-        setOpt(Curl.option.SSL_VERIFYHOST, 0);
-        setOpt(Curl.option.SSL_VERIFYPEER, 0);
-        addTimelineText('Disable SSL validation');
       }
 
       // Setup CA Root Certificates
@@ -351,26 +260,6 @@ export async function _actuallySend(
         );
       } else {
         addTimelineText('Disable cookie sending due to user setting');
-      }
-
-      // Set proxy settings if we have them
-      if (settings.proxyEnabled) {
-        const { protocol } = urlParse(renderedRequest.url);
-        const { httpProxy, httpsProxy, noProxy } = settings;
-        const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-        const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-        addTimelineText(`Enable network proxy for ${protocol || ''}`);
-
-        if (proxy) {
-          setOpt(Curl.option.PROXY, proxy);
-          setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
-        }
-
-        if (noProxy) {
-          setOpt(Curl.option.NOPROXY, noProxy);
-        }
-      } else {
-        setOpt(Curl.option.PROXY, '');
       }
 
       for (const certificate of (clientCertificates || [])) {
@@ -462,14 +351,6 @@ export async function _actuallySend(
           }
         }
       }
-      if (renderedRequest.authentication.type === AUTH_NETRC) {
-        setOpt(Curl.option.NETRC, CurlNetrc.Required);
-      }
-
-      // Set User-Agent if it's not already in headers
-      if (!hasUserAgentHeader(renderedRequest.headers)) {
-        setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
-      }
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
@@ -485,6 +366,7 @@ export async function _actuallySend(
         requestId: renderedRequest._id,
         renderedRequest,
         finalUrl,
+        settings,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
