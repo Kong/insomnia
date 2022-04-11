@@ -21,7 +21,6 @@ import {
   getContentTypeHeader,
   getLocationHeader,
   getSetCookieHeaders,
-  LIBCURL_DEBUG_MIGRATION_MAP,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
 import {
@@ -40,14 +39,6 @@ import * as plugins from '../plugins/index';
 import caCerts from './ca_certs';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// Based on list of option properties but with callback options removed
-const Curl = {
-  option: {
-    CAINFO: 'CAINFO',
-    UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
-    URL: 'URL',
-  },
-};
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
@@ -92,22 +83,6 @@ export async function _actuallySend(
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
 
-    const addTimelineItem = (name: ResponseTimelineEntry['name']) => (value: string) => {
-      timeline.push({
-        name,
-        value,
-        timestamp: Date.now(),
-      });
-    };
-
-    const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
-
-    // NOTE: can have duplicate keys because of cookie options
-    const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
-    const setOpt = (key: string, value: string | string[] | number | boolean) => {
-      curlOptions.push({ key, value });
-    };
-
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
@@ -131,34 +106,37 @@ export async function _actuallySend(
           timelinePath,
         });
       };
-
       // Set the URL, including the query parameters
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
       const url = joinUrlAndQueryString(renderedRequest.url, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      const finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
-
-      if (isUnixSocket) {
+      let finalUrl, socketPath;
+      if (!isUnixSocket) {
+        finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
+      } else {
         // URL prep will convert "unix:/path" hostname to "unix/path"
-        const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+        const match = smartEncodeUrl(url, renderedRequest.settingEncodeUrl).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
         const protocol = (match && match[1]) || '';
-        const socketPath = (match && match[2]) || '';
+        socketPath = (match && match[2]) || '';
         const socketUrl = (match && match[3]) || '';
-        setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
-        setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
-      } else {
-        setOpt(Curl.option.URL, finalUrl);
+        finalUrl = `${protocol}//${socketUrl}`;
       }
+      timeline.push({
+        name: 'TEXT',
+        value: `Preparing request to ${finalUrl}`,
+        timestamp: Date.now(),
+      });
+      timeline.push({
+        name: 'TEXT',
+        value: `Current time is ${new Date().toISOString()}`,
+        timestamp: Date.now(),
+      });
 
-      addTimelineText('Preparing request to ' + finalUrl);
-      addTimelineText('Current time is ' + new Date().toISOString());
-
-      // log some things
-      if (renderedRequest.settingEncodeUrl) {
-        addTimelineText('Enable automatic URL encoding');
-      } else {
-        addTimelineText('Disable automatic URL encoding');
-      }
+      timeline.push({
+        name: 'TEXT',
+        value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
+        timestamp: Date.now(),
+      });
 
       // Setup CA Root Certificates
       const baseCAPath = getTempDir();
@@ -176,8 +154,13 @@ export async function _actuallySend(
       }
 
       if (!renderedRequest.settingSendCookies) {
-        addTimelineText('Disable cookie sending due to user setting');
+        timeline.push({
+          name: 'TEXT',
+          value: 'Disable cookie sending due to user setting',
+          timestamp: Date.now(),
+        });
       }
+
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
@@ -186,10 +169,10 @@ export async function _actuallySend(
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         : require('./libcurl-promise').curlRequest;
       const requestOptions = {
-        curlOptions,
         requestId: renderedRequest._id,
         renderedRequest,
         finalUrl,
+        socketPath,
         settings,
         certificates,
         fullCAPath,

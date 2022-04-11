@@ -28,19 +28,14 @@ import { parseHeaderStrings } from './parse-header-strings';
 // wraps libcurl with a promise taking curl options and others required by read, write and debug callbacks
 // returning a response patch, debug timeline and list of headers for each redirect
 
-interface CurlOpt {
-  key: Parameters<Curl['setOpt']>[0];
-  value: Parameters<Curl['setOpt']>[1];
-}
-
 interface CurlRequestOptions {
-  curlOptions: CurlOpt[];
   requestId: string; // for cancellation
   renderedRequest: RenderedRequest;
   finalUrl: string;
   settings: Settings;
   certificates: ClientCertificate[];
   fullCAPath: string;
+  socketPath?: string;
 }
 
 interface ResponseTimelineEntry {
@@ -68,8 +63,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { curlOptions, requestId, renderedRequest, finalUrl, settings, certificates, fullCAPath } = options;
+    const { requestId, renderedRequest, finalUrl, settings, certificates, fullCAPath, socketPath } = options;
     const curl = new Curl();
+
+    curl.setOpt(Curl.option.URL, finalUrl);
+    socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
 
     curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
@@ -226,6 +224,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     const requestBodyPath = await parseRequestBodyPath(renderedRequest);
     let isMultipart = false;
+    let requestFileDescriptor;
     if (requestBodyPath) {
       // AWS IAM file upload not supported
       if (renderedRequest.authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
@@ -235,6 +234,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.UPLOAD, 1);
       // We need this, otherwise curl will send it as a POST
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      // read file into request and close file descriptor
+      requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
+      curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
+      curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
+      curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
     }
     const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
@@ -250,7 +254,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.PASSWORD, password || '');
     }
 
-    let requestFileDescriptor;
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
     cancelCurlRequestHandlers[requestId] = () => {
@@ -259,15 +262,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       }
       curl.close();
     };
-    // set the string and number options from network.ts
-    curlOptions.forEach(opt => curl.setOpt(opt.key, opt.value));
-    // read file into request and close file desriptor
-    if (requestBodyPath) {
-      requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
-      curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
-      curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
-      curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
-    }
 
     // set up response writer
     let responseBodyBytes = 0;
