@@ -33,7 +33,7 @@ const runInternal = async <TReturn, TNetworkResponse>(
 
   const mocha: Mocha = new Mocha({
     //       ms   * sec * min
-    timeout: 1000 * 60  * 1,
+    timeout: options.testTimeout || 1000 * 60 * 1,
     globals: ['insomnia', 'chai'],
     bail,
     reporter,
