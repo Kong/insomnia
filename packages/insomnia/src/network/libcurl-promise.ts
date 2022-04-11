@@ -15,10 +15,11 @@ import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../config/config.json';
-import { AUTH_NETRC, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
+import { AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
 import { describeByteSize, hasUserAgentHeader } from '../common/misc';
 import { ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
+import { buildMultipart } from './multipart';
 import { ResponsePatch } from './network';
 import { parseHeaderStrings } from './parse-header-strings';
 
@@ -32,10 +33,7 @@ interface CurlOpt {
 
 interface CurlRequestOptions {
   curlOptions: CurlOpt[];
-  maxTimelineDataSizeKB: number;
   requestId: string; // for cancellation
-  requestBodyPath?: string; // only used for POST file path
-  isMultipart: boolean; // for clean up after implemention side effect
   renderedRequest: any;
   finalUrl: string;
   settings: Settings;
@@ -72,13 +70,24 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     mkdirp.sync(responsesDir);
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
-
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { curlOptions, requestBodyPath, maxTimelineDataSizeKB, requestId, isMultipart, renderedRequest, finalUrl, settings } = options;
+    const { curlOptions, requestId, renderedRequest, finalUrl, settings } = options;
     const curl = new Curl();
 
     const requestBody = parseRequestBody(renderedRequest);
     if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    const requestBodyPath = await parseRequestBodyPath(renderedRequest);
+    let isMultipart = false;
+    if (requestBodyPath) {
+      // AWS IAM file upload not supported
+      if (renderedRequest.authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
+      isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
+      const { size: contentLength } = fs.statSync(requestBodyPath);
+      curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
+      curl.setOpt(Curl.option.UPLOAD, 1);
+      // We need this, otherwise curl will send it as a POST
+      curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+    }
     const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
@@ -163,6 +172,36 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     if (!hasUserAgentHeader(renderedRequest.headers)) {
       curl.setOpt(Curl.option.USERAGENT, `insomnia/${version}`);
     }
+    if (renderedRequest.settingSendCookies) {
+      // Tell Curl to store cookies that it receives. This is only important if we receive
+      // a cookie on a redirect that needs to be sent on the next request in the chain.
+      curl.setOpt(Curl.option.COOKIEFILE, '');
+      const cookies = renderedRequest.cookieJar.cookies || [];
+
+      for (const cookie of cookies) {
+        curl.setOpt(
+          Curl.option.COOKIELIST,
+          [
+            cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+            cookie.hostOnly ? 'FALSE' : 'TRUE',
+            cookie.path,
+            cookie.secure ? 'TRUE' : 'FALSE',
+            cookie.expires ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
+            cookie.key,
+            cookie.value,
+          ].join('\t'),
+        );
+      }
+
+      for (const { name, value } of renderedRequest.cookies) {
+        curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
+      }
+      debugTimeline.push({
+        name: 'TEXT',
+        value: `Enable cookie sending with jar of ${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`,
+        timestamp: Date.now(),
+      });
+    }
     let requestFileDescriptor;
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
@@ -205,7 +244,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       let value;
       if (infoType === CurlInfoDebug.DataOut) {
         // Ignore large post data messages
-        const isLessThan10KB = buffer.length / 1024 < (maxTimelineDataSizeKB || 1);
+        const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
         value = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
       if (infoType === CurlInfoDebug.DataIn) {
@@ -402,4 +441,12 @@ export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   }
 
   return trimmedUrl;
+};
+const parseRequestBodyPath = async req => {
+  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  if (isMultipartForm) {
+    const { filePath } = await buildMultipart(req.body.params || [],);
+    return filePath;
+  }
+  return req.body.fileName;
 };

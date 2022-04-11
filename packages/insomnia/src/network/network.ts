@@ -15,10 +15,8 @@ import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  AUTH_AWS_IAM,
   AUTH_DIGEST,
   AUTH_NTLM,
-  CONTENT_TYPE_FORM_DATA,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
@@ -47,7 +45,6 @@ import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import caCerts from './ca_certs';
-import { buildMultipart } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Based on list of option properties but with callback options removed
@@ -222,43 +219,7 @@ export async function _actuallySend(
       setOpt(Curl.option.CAINFO, fullCAPath);
 
       // Set cookies from jar
-      if (renderedRequest.settingSendCookies) {
-        // Tell Curl to store cookies that it receives. This is only important if we receive
-        // a cookie on a redirect that needs to be sent on the next request in the chain.
-        setOpt(Curl.option.COOKIEFILE, '');
-        const cookies = renderedRequest.cookieJar.cookies || [];
-
-        for (const cookie of cookies) {
-          let expiresTimestamp = 0;
-
-          if (cookie.expires) {
-            const expiresDate = new Date(cookie.expires);
-            expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
-          }
-
-          setOpt(
-            Curl.option.COOKIELIST,
-            [
-              cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-              cookie.hostOnly ? 'FALSE' : 'TRUE',
-              cookie.path,
-              cookie.secure ? 'TRUE' : 'FALSE',
-              expiresTimestamp,
-              cookie.key,
-              cookie.value,
-            ].join('\t'),
-          );
-        }
-
-        for (const { name, value } of renderedRequest.cookies) {
-          setOpt(Curl.option.COOKIE, `${name}=${value}`);
-        }
-
-        addTimelineText(
-          `Enable cookie sending with jar of ${cookies.length} cookie${cookies.length !== 1 ? 's' : ''
-          }`,
-        );
-      } else {
+      if (!renderedRequest.settingSendCookies) {
         addTimelineText('Disable cookie sending due to user setting');
       }
 
@@ -312,14 +273,7 @@ export async function _actuallySend(
           }
         }
       }
-      const requestBodyPath = await parseRequestBodyPath(renderedRequest);
-      if (requestBodyPath) {
-        const { size: contentLength } = fs.statSync(requestBodyPath);
-        setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-        setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a POST
-        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      }
+
       // Handle Authorization header
       const { username, password, disabled } = renderedRequest.authentication;
       if (!hasAuthHeader(renderedRequest.headers) && !disabled) {
@@ -333,23 +287,6 @@ export async function _actuallySend(
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         }
-        if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          // AWS IAM file upload not supported
-          if (requestBodyPath) {
-            const timelinePath = await storeTimeline(timeline);
-            // Tear Down the cancellation logic
-            if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-              delete cancelRequestFunctionMap[renderedRequest._id];
-            }
-            return resolve({
-              url: renderedRequest.url,
-              error: 'AWS authentication not supported for provided body type',
-              elapsedTime: 0,
-              statusMessage: 'Error',
-              timelinePath,
-            });
-          }
-        }
       }
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
@@ -357,12 +294,8 @@ export async function _actuallySend(
         ? window.main.curlRequest
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         : require('./libcurl-promise').curlRequest;
-      const isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const requestOptions = {
         curlOptions,
-        requestBodyPath,
-        isMultipart,
-        maxTimelineDataSizeKB: settings.maxTimelineDataSizeKB,
         requestId: renderedRequest._id,
         renderedRequest,
         finalUrl,
@@ -412,15 +345,6 @@ export async function _actuallySend(
     }
   });
 }
-
-const parseRequestBodyPath = async req => {
-  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (isMultipartForm) {
-    const { filePath } = await buildMultipart(req.body.params || [],);
-    return filePath;
-  }
-  return req.body.fileName;
-};
 
 // add set-cookie headers to file(cookiejar) and database
 const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
