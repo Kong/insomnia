@@ -5,6 +5,7 @@ export interface InsomniaOptions<TResponse> {
   bail?: boolean;
   keepFile?: boolean;
   testFilter?: string;
+  testTimeout?: number;
 }
 
 /**
