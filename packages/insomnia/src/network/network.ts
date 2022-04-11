@@ -231,40 +231,22 @@ export async function _actuallySend(
         const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
 
         if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
-          const ensureFile = blobOrFilename => {
-            try {
-              fs.statSync(blobOrFilename);
-            } catch (err) {
-              // Certificate file not found!
-              // LEGACY: Certs used to be stored in blobs (not as paths), so let's write it to
-              // the temp directory first.
-              const fullBase = getTempDir();
-              const name = `${renderedRequest._id}_${renderedRequest.modified}`;
-              const fullPath = pathJoin(fullBase, name);
-              fs.writeFileSync(fullPath, Buffer.from(blobOrFilename, 'base64'));
-              // Set filename to the one we just saved
-              blobOrFilename = fullPath;
-            }
-
-            return blobOrFilename;
-          };
-
           const { passphrase, cert, key, pfx } = certificate;
 
           if (cert) {
-            setOpt(Curl.option.SSLCERT, ensureFile(cert));
+            setOpt(Curl.option.SSLCERT, cert);
             setOpt(Curl.option.SSLCERTTYPE, 'PEM');
             addTimelineText('Adding SSL PEM certificate');
           }
 
           if (pfx) {
-            setOpt(Curl.option.SSLCERT, ensureFile(pfx));
+            setOpt(Curl.option.SSLCERT, pfx);
             setOpt(Curl.option.SSLCERTTYPE, 'P12');
             addTimelineText('Adding SSL P12 certificate');
           }
 
           if (key) {
-            setOpt(Curl.option.SSLKEY, ensureFile(key));
+            setOpt(Curl.option.SSLKEY, key);
             addTimelineText('Adding SSL KEY certificate');
           }
 
