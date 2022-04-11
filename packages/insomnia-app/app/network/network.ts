@@ -58,7 +58,7 @@ import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import caCerts from './ca-certs';
-import { buildMultipart } from './multipart';
+import { buildMultipart, DEFAULT_BOUNDARY } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Based on list of option properties but with callback options removed
@@ -452,8 +452,9 @@ export async function _actuallySend(
       if (requestBody) {
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
-      const { requestBodyPath, contentLength, isMultipart, boundary } = await parseRequestBodyPath(renderedRequest);
-      if (requestBodyPath && contentLength) {
+      const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
+      if (requestBodyPath){
+        const { size: contentLength } = fs.statSync(requestBodyPath);
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
@@ -495,9 +496,13 @@ export async function _actuallySend(
         setOpt(Curl.option.NETRC, CurlNetrc.Required);
       }
 
-      const headerStrings = await parseHeaderStrings({ isMultipart, boundary, renderedRequest, requestBody, requestBodyPath, finalUrl });
-
+      const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
+
+      // Set User-Agent if it's not already in headers
+      if (!hasUserAgentHeader(renderedRequest.headers)) {
+        setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
+      }
 
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
@@ -507,6 +512,7 @@ export async function _actuallySend(
         ? window.main.curlRequest
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         : require('./libcurl-promise').curlRequest;
+      const isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const requestOptions = {
         curlOptions,
         responseBodyPath,
@@ -584,25 +590,11 @@ const parseRequestBody = req => {
 
 const parseRequestBodyPath = async req => {
   const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  const hasFileName = req.body.fileName;
   if (isMultipartForm) {
-    const { filePath, boundary, contentLength } = await buildMultipart(req.body.params || [],);
-    return {
-      contentLength,
-      requestBodyPath: filePath,
-      isMultipart: true,
-      boundary,
-    };
+    const { filePath } = await buildMultipart(req.body.params || [],);
+    return filePath;
   }
-  if (hasFileName) {
-    const requestBodyPath = req.body.fileName || '';
-    const { size: contentLength } = fs.statSync(req.body.fileName);
-    return {
-      contentLength,
-      requestBodyPath,
-    };
-  }
-  return {};
+  return req.body.fileName;
 };
 
 // add set-cookie headers to file(cookiejar) and database
@@ -656,8 +648,22 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
 
 };
 
-const parseHeaderStrings = async ({ isMultipart, boundary, renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
+const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
   const headers = clone(renderedRequest.headers);
+
+  // Disable Expect and Transfer-Encoding headers when we have POST body/file
+  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
+  if (hasRequestBodyOrFilePath) {
+    headers.push({
+      name: 'Expect',
+      value: DISABLE_HEADER_VALUE,
+    });
+    headers.push({
+      name: 'Transfer-Encoding',
+      value: DISABLE_HEADER_VALUE,
+    });
+  }
+
   const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
   const isNTLM = renderedRequest.authentication.type === AUTH_NTLM;
   const isAWSIAM = renderedRequest.authentication.type === AUTH_AWS_IAM;
@@ -694,12 +700,13 @@ const parseHeaderStrings = async ({ isMultipart, boundary, renderedRequest, requ
       });
     }
   }
-  if (isMultipart && boundary) {
+  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  if (isMultipartForm && requestBodyPath) {
     const contentTypeHeader = getContentTypeHeader(headers);
-    if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${boundary}`;
+    if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
     else headers.push({
       name: 'Content-Type',
-      value: `multipart/form-data; boundary=${boundary}`,
+      value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
     });
   }
   // Send a default Accept headers of anything
@@ -718,11 +725,6 @@ const parseHeaderStrings = async ({ isMultipart, boundary, renderedRequest, requ
     });
   }
 
-  // Set User-Agent if it's not already in headers
-  if (!hasUserAgentHeader(headers)) {
-    setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
-  }
-
   // Prevent curl from adding default content-type header
   if (!hasContentTypeHeader(headers)) {
     headers.push({
@@ -731,18 +733,6 @@ const parseHeaderStrings = async ({ isMultipart, boundary, renderedRequest, requ
     });
   }
 
-  // Disable Expect and Transfer-Econding headers when we have POST body/file
-  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
-  if (hasRequestBodyOrFilePath) {
-    headers.push({
-      name: 'Expect',
-      value: DISABLE_HEADER_VALUE,
-    });
-    headers.push({
-      name: 'Transfer-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
   return headers
     .filter(h => h.name)
     .map(h => {
