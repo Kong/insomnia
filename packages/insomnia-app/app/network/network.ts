@@ -206,9 +206,6 @@ export async function _actuallySend(
           statusMessage: 'Cancelled',
           error: 'Request was cancelled',
           timelinePath,
-          parentId: renderedRequest._id,
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies,
         });
       };
 
@@ -485,9 +482,6 @@ export async function _actuallySend(
               elapsedTime: 0,
               statusMessage: 'Error',
               timelinePath,
-              parentId: renderedRequest._id,
-              settingSendCookies: renderedRequest.settingSendCookies,
-              settingStoreCookies: renderedRequest.settingStoreCookies,
             });
           }
         }
@@ -545,11 +539,7 @@ export async function _actuallySend(
       }
       return resolve({
         timelinePath,
-        parentId: renderedRequest._id,
-        bodyCompression: null,
-        bodyPath: responseBodyPath || '',
-        settingSendCookies: renderedRequest.settingSendCookies,
-        settingStoreCookies: renderedRequest.settingStoreCookies,
+        bodyPath: responseBodyPath,
         ...responsePatch,
       });
     } catch (err) {
@@ -565,9 +555,6 @@ export async function _actuallySend(
         elapsedTime: 0, // 0 because this path is hit during plugin calls
         statusMessage: 'Error',
         timelinePath,
-        parentId: renderedRequest._id,
-        settingSendCookies: renderedRequest.settingSendCookies,
-        settingStoreCookies: renderedRequest.settingStoreCookies,
       });
     }
   });
@@ -796,6 +783,7 @@ export async function sendWithSettings(
     clientCertificates,
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
+  response.parentId = renderResult.request._id;
   response.environmentId = environmentId;
   if (response.error) {
     return response;
@@ -884,7 +872,10 @@ export async function send(
     clientCertificates,
     settings,
   );
+  response.parentId = renderResult.request._id;
   response.environmentId = environmentId;
+  response.settingSendCookies = renderedRequest.settingSendCookies;
+  response.settingStoreCookies = renderedRequest.settingStoreCookies;
 
   console.log(
     response.error
@@ -958,7 +949,6 @@ async function _applyResponsePluginHooks(
   } catch (err) {
     return {
       url: renderedRequest.url,
-      parentId: renderedRequest._id,
       error: `[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
