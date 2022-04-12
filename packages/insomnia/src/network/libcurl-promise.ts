@@ -435,27 +435,20 @@ const parseRequestBodyPath = async body => {
   const { filePath } = await buildMultipart(body.params || [],);
   return filePath;
 };
-export const HttpVersions = {
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2PriorKnowledge: 'V2PriorKnowledge',
-  V2_0: 'V2_0',
-  v3: 'v3',
-  default: 'default',
-} as const;
+
 export const getHttpVersion = preferredHttpVersion => {
   switch (preferredHttpVersion) {
-    case HttpVersions.V1_0:
+    case 'V1_0':
       return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
-    case HttpVersions.V1_1:
+    case 'V1_1':
       return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
-    case HttpVersions.V2PriorKnowledge:
+    case 'V2PriorKnowledge':
       return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
-    case HttpVersions.V2_0:
+    case 'V2_0':
       return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
-    case HttpVersions.v3:
+    case 'v3':
       return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
-    case HttpVersions.default:
+    case 'default':
       return { log: 'Using default HTTP version' };
     default:
       return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
