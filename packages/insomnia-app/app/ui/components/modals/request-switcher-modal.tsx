@@ -408,7 +408,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     const { workspaceRequestsAndRequestGroups, workspace } = this.props;
     const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     return (
-      <KeydownBinder name="RequestSwitcherModal" onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
+      <KeydownBinder name={RequestSwitcherModal.name} onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal
           ref={this._setModalRef}
           dontFocus={!disableInput}

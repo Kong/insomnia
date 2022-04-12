@@ -1278,32 +1278,33 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
 
     return (
-      <div
-        className={classes}
-        style={style}
-        data-editor-type={type}
-        data-testid="CodeEditor"
-      >
-        <KeydownBinder name="CodeEditor" onKeydown={this._handleKeyDown} />
+      <KeydownBinder name={CodeEditor.name} onKeydown={this._handleKeyDown}>
         <div
-          className={classnames('editor__container', 'input', className)}
-          style={styles}
-          onClick={onClick}
-          onMouseLeave={onMouseLeave}
+          className={classes}
+          style={style}
+          data-editor-type={type}
+          data-testid="CodeEditor"
         >
-          <textarea
-            id={id}
-            ref={this._handleInitTextarea}
-            style={{
-              display: 'none',
-            }}
-            readOnly={readOnly}
-            autoComplete="off"
-            defaultValue=""
-          />
+          <div
+            className={classnames('editor__container', 'input', className)}
+            style={styles}
+            onClick={onClick}
+            onMouseLeave={onMouseLeave}
+          >
+            <textarea
+              id={id}
+              ref={this._handleInitTextarea}
+              style={{
+                display: 'none',
+              }}
+              readOnly={readOnly}
+              autoComplete="off"
+              defaultValue=""
+            />
+          </div>
+          {toolbar}
         </div>
-        {toolbar}
-      </div>
+      </KeydownBinder>
     );
   }
 }

@@ -145,7 +145,7 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
     }
 
     return (
-      <KeydownBinder name="WorkspaceDropdown" onKeydown={this._handleKeydown}>
+      <KeydownBinder name={WorkspaceDropdown.name} onKeydown={this._handleKeydown}>
         <Dropdown
           beside
           ref={this._setDropdownRef}

@@ -126,7 +126,7 @@ export class Editable extends PureComponent<Props, State> {
       return (
         // KeydownBinder must be used here to properly stop propagation
         // from reaching other scoped KeydownBinders
-        <KeydownBinder name="Editable" onKeydown={this._handleEditKeyDown}>
+        <KeydownBinder name={Editable.name} onKeydown={this._handleEditKeyDown}>
           <input
             {...extra}
             className={`editable ${className || ''}`}

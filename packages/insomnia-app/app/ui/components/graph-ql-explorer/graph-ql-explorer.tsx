@@ -313,7 +313,7 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
     const typeName = isNamedType(currentType) ? currentType.name : null;
     const schemaName = schema ? 'Schema' : null;
     return (
-      <KeydownBinder name="GraphQLExplorer" onKeydown={this._handleKeydown}>
+      <KeydownBinder name={GraphQLExplorer.name} onKeydown={this._handleKeydown}>
         <div className="graphql-explorer theme--dialog">
           <div className="graphql-explorer__header">
             {this.renderHistoryItem()}
