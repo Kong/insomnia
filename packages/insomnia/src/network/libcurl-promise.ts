@@ -25,7 +25,7 @@ import { buildMultipart } from './multipart';
 import { ResponsePatch } from './network';
 import { parseHeaderStrings } from './parse-header-strings';
 
-// wraps libcurl with a promise taking curl options and others required by read, write and debug callbacks
+// wraps libcurl with a promise
 // returning a response patch, debug timeline and list of headers for each redirect
 
 interface CurlRequestOptions {
@@ -36,7 +36,7 @@ interface CurlRequestOptions {
   certificates: ClientCertificate[];
   fullCAPath: string;
   socketPath?: string;
-  authHeader: {name: string; value:string};
+  authHeader?: {name: string; value:string};
 }
 
 interface ResponseTimelineEntry {

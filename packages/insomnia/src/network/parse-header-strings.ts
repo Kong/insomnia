@@ -16,12 +16,20 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
 } from '../common/misc';
+import type { RenderedRequest } from '../common/render';
 import { RequestHeader } from '../models/request';
 import { DEFAULT_BOUNDARY } from './multipart';
 
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
-export const parseHeaderStrings = ({ renderedRequest, requestBody, requestBodyPath, finalUrl, authHeader }) => {
+interface Input {
+  renderedRequest: RenderedRequest;
+  finalUrl: string;
+  requestBody?: string;
+  requestBodyPath?: string;
+  authHeader?: {name: string; value:string};
+}
+export const parseHeaderStrings = ({ renderedRequest, finalUrl, requestBody, requestBodyPath,  authHeader }: Input) => {
   const headers = clone(renderedRequest.headers);
 
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
