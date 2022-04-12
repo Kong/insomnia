@@ -19,25 +19,21 @@ import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DAT
 import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
 import { ClientCertificate } from '../models/client-certificate';
 import { ResponseHeader } from '../models/response';
-import type { Settings } from '../models/settings';
 import { buildMultipart } from './multipart';
 import { ResponsePatch } from './network';
 import { parseHeaderStrings } from './parse-header-strings';
 
-// wraps libcurl with a promise
-// returning a response patch, debug timeline and list of headers for each redirect
-
 interface CurlRequestOptions {
   requestId: string; // for cancellation
-  req: Req;
+  req: RequestUsedHere;
   finalUrl: string;
-  settings: Settings;
+  settings: SettingsUsedHere;
   certificates: ClientCertificate[];
   fullCAPath: string;
   socketPath?: string;
   authHeader?: { name: string; value: string };
 }
-interface Req {
+interface RequestUsedHere {
   headers: any;
   method: string;
   body: { mimeType?: string | null };
@@ -48,6 +44,18 @@ interface Req {
   url: string;
   cookieJar: any;
   cookies: { name: string; value: string }[];
+}
+interface SettingsUsedHere {
+  preferredHttpVersion: string;
+  maxRedirects: number;
+  proxyEnabled: boolean;
+  timeout: number;
+  validateSSL: boolean;
+  followRedirects: boolean;
+  maxTimelineDataSizeKB: number;
+  httpProxy: string;
+  httpsProxy: string;
+  noProxy: string;
 }
 interface ResponseTimelineEntry {
   name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
@@ -73,9 +81,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     mkdirp.sync(responsesDir);
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
-    // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { requestId, req, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
 
+    const { requestId, req, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
     const curl = new Curl();
 
     curl.setOpt(Curl.option.URL, finalUrl);
@@ -154,24 +161,24 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       }
       if (noProxy) curl.setOpt(Curl.option.NOPROXY, noProxy);
     }
-
-    if (settings.timeout <= 0) curl.setOpt(Curl.option.TIMEOUT_MS, 0);
+    const { timeout } = settings;
+    if (timeout <= 0) curl.setOpt(Curl.option.TIMEOUT_MS, 0);
     else {
-      curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
+      curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
       debugTimeline.push({
         name: 'TEXT',
-        value: `Enable timeout of ${settings.timeout}ms`,
+        value: `Enable timeout of ${timeout}ms`,
         timestamp: Date.now(),
       });
     }
-
-    if (!settings.validateSSL) {
+    const { validateSSL } = settings;
+    if (!validateSSL) {
       curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
       curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
     }
     debugTimeline.push({
       name: 'TEXT',
-      value: `${settings.validateSSL ? 'Enable' : 'Disable'} SSL validation`,
+      value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`,
       timestamp: Date.now(),
     });
 
@@ -190,7 +197,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
       }
       // set-cookies from previous redirects
-      if (cookieJar.cookies.length){
+      if (cookieJar.cookies.length) {
         debugTimeline.push({
           name: 'TEXT',
           value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`,
@@ -266,6 +273,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
     }
 
+    // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
     cancelCurlRequestHandlers[requestId] = () => {
