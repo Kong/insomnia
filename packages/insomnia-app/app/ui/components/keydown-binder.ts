@@ -1,21 +1,22 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+import { RequireAtLeastOne } from 'type-fest';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
   name: string;
-  children?: ReactNode;
   onKeydown?: (...args: any[]) => any;
   onKeyup?: (...args: any[]) => any;
+  children: ReactNode;
   disabled?: boolean;
   scoped?: boolean;
   captureEvent?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class KeydownBinder extends PureComponent<Props> {
+export class KeydownBinder extends PureComponent<RequireAtLeastOne<Props, 'onKeydown' | 'onKeyup'>> {
   static defaultProps: Pick<Props, 'captureEvent' | 'scoped'> = {
     captureEvent: false,
     scoped: true,
