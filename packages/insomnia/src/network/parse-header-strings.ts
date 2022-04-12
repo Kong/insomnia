@@ -17,12 +17,11 @@ import {
   hasContentTypeHeader,
 } from '../common/misc';
 import { RequestHeader } from '../models/request';
-import { getAuthHeader } from './authentication';
 import { DEFAULT_BOUNDARY } from './multipart';
 
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
-export const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
+export const parseHeaderStrings = ({ renderedRequest, requestBody, requestBodyPath, finalUrl, authHeader }) => {
   const headers = clone(renderedRequest.headers);
 
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
@@ -65,8 +64,6 @@ export const parseHeaderStrings = async ({ renderedRequest, requestBody, request
   }
   const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !renderedRequest.authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
   if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest) {
-    const authHeader = await getAuthHeader(renderedRequest, finalUrl);
-
     if (authHeader) {
       headers.push({
         name: authHeader.name,

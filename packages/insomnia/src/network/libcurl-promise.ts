@@ -36,6 +36,7 @@ interface CurlRequestOptions {
   certificates: ClientCertificate[];
   fullCAPath: string;
   socketPath?: string;
+  authHeader: {name: string; value:string};
 }
 
 interface ResponseTimelineEntry {
@@ -63,7 +64,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { requestId, renderedRequest, finalUrl, settings, certificates, fullCAPath, socketPath } = options;
+    const { requestId, renderedRequest, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
     const curl = new Curl();
 
     curl.setOpt(Curl.option.URL, finalUrl);
@@ -240,7 +241,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
       curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
     }
-    const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
+    const headerStrings = parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
     const { username, password, disabled } = renderedRequest.authentication;
@@ -343,6 +344,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
     curl.perform();
   } catch (e) {
+    console.error(e);
     const patch = {
       statusMessage: 'Error',
       error: e.message || 'Something went wrong',

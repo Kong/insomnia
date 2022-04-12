@@ -36,6 +36,7 @@ import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { getAuthHeader } from './authentication';
 import caCerts from './ca_certs';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
@@ -163,6 +164,8 @@ export async function _actuallySend(
 
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
 
+      const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
@@ -176,6 +179,7 @@ export async function _actuallySend(
         settings,
         certificates,
         fullCAPath,
+        authHeader,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
