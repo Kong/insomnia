@@ -24,7 +24,7 @@
   },
   "scripts": {
     "prebuild": "npm run convert-svg",
-    "build:source": "esr esbuild.ts && esr esbuild.cjs.ts",
+    "build:source": "vite build",
     "build:types": "tsc --build tsconfig.build.json",
     "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
     "clean": "rimraf dist && npm run clean:svg",
@@ -71,7 +71,8 @@
     "ts-loader": "^8.2.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
-    "typescript-plugin-styled-components": "^2.0.0"
+    "typescript-plugin-styled-components": "^2.0.0",
+    "vite": "^2.9.1"
   },
   "dependencies": {
     "@types/styled-components": "^5.1.23",

@@ -1,14 +1,15 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "."
+    "rootDir": ".",
+    "isolatedModules": true,
+    "lib": ["DOM"]
   },
   "include": [
     "src",
     "jest.config.js",
     ".eslintrc.js",
-    "esbuild.ts",
-    "esbuild.cjs.ts",
+    "vite.config.ts",
     "svgr.config.js"
   ],
   "exclude": [
