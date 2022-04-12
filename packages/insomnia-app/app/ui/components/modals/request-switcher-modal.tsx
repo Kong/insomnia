@@ -326,8 +326,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       isModalVisible: false,
     };
 
-    // Using a visibility toggle here because we want to be able to interact with everything
-    // here via keyboard BEFORE the modal shows.
+    // Using a visibility toggle here because we want to be able to interact with everything here via keyboard BEFORE the modal shows.
     if (options.openDelay) {
       this._openTimeout = setTimeout(() => {
         this.setState({
@@ -383,9 +382,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
   async _handleKeyup(e: KeyboardEvent) {
     const { selectOnKeyup } = this.state;
-    // Handle selection if unpresses all modifier keys. Ideally this would trigger once
-    // the user unpresses the hotkey that triggered this modal but we currently do not
-    // have the facilities to do that.
+    // Handle selection if unpresses all modifier keys.
+    // Ideally this would trigger once the user unpresses the hotkey that triggered this modal but we currently do not have the facilities to do that.
     const isMetaKeyDown = e.ctrlKey || e.shiftKey || e.metaKey || e.altKey;
     const isActive = this.modal?.isOpen();
 
@@ -408,7 +406,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     const { workspaceRequestsAndRequestGroups, workspace } = this.props;
     const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     return (
-      <KeydownBinder name={RequestSwitcherModal.name} onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
+      <KeydownBinder name={RequestSwitcherModal.name} onKeydown={this._handleKeydown} onKeyup={this._handleKeyup} scoped={false}>
         <Modal
           ref={this._setModalRef}
           dontFocus={!disableInput}
