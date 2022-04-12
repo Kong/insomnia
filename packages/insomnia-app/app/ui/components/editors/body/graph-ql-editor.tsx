@@ -724,7 +724,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
     return (
       <div className="graphql-editor">
-        <KeydownBinder onKeydown={this._handleKeyDown} />
+        <KeydownBinder name="GraphQLEditor" onKeydown={this._handleKeyDown} />
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
           <DropdownButton className="space-left btn btn--micro btn--outlined">

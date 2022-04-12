@@ -295,7 +295,7 @@ class WrapperHome extends PureComponent<Props, State> {
             maxWidth: '400px',
           }}
         >
-          <KeydownBinder onKeydown={this._handleKeyDown}>
+          <KeydownBinder name="WrapperHome" onKeydown={this._handleKeyDown}>
             <input
               ref={this._setFilterInputRef}
               type="text"

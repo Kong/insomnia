@@ -64,7 +64,7 @@ export class SidebarFilter extends PureComponent<Props> {
   render() {
     const { filter, hotKeyRegistry, sidebarSort } = this.props;
     return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
+      <KeydownBinder name="SidebarFilter" onKeydown={this._handleKeydown}>
         <div className="sidebar__filter">
           <div className="form-control form-control--outlined form-control--btn-right">
             <input
