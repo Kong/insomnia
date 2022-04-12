@@ -224,7 +224,7 @@ export function decompressObject(input: string | null): any {
 
 export function resolveHomePath(p: string) {
   if (p.indexOf('~/') === 0) {
-    return pathJoin(process.env.HOME || '/', p.slice(1));
+    return pathJoin(process.env['HOME'] || '/', p.slice(1));
   } else {
     return p;
   }

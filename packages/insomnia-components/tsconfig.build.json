@@ -5,6 +5,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "jsx": "react",
+    "isolatedModules": true,
+    "lib": ["DOM"],
     "experimentalDecorators": true,
     "emitDeclarationOnly": true,
     "resolveJsonModule": true

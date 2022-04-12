@@ -5,6 +5,8 @@ import { unreachableCase } from 'ts-assert-unreachable';
 import appConfig from '../../config/config.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
 
+const env = process['env'];
+
 // App Stuff
 export const getAppVersion = () => appConfig.version;
 export const getAppLongName = () => appConfig.longName;
@@ -18,10 +20,10 @@ export const getAppPlatform = () => process.platform;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
-export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+export const getAppEnvironment = () => env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
-export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || process.env.PLAYWRIGHT) ? 'development' : 'production'];
-export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
+export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
+export const getAppBuildDate = () => new Date(env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
@@ -126,13 +128,13 @@ export enum UpdateURL {
 }
 
 // API
-export const getApiBaseURL = () => process.env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
+export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 
 // App website
-export const getAppWebsiteBaseURL = () => process.env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
+export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
 
 // GitHub API
-export const getGitHubGraphQLApiURL = () => process.env.INSOMNIA_GITHUB_API_URL || 'https://api.github.com/graphql';
+export const getGitHubGraphQLApiURL = () => env.INSOMNIA_GITHUB_API_URL || 'https://api.github.com/graphql';
 
 // SYNC
 export const DEFAULT_BRANCH_NAME = 'master';

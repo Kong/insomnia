@@ -1,9 +1,7 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "isolatedModules": true,
-    "lib": ["DOM"]
+    "rootDir": "."
   },
   "include": [
     "src",

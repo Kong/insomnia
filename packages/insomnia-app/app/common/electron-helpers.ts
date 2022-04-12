@@ -16,11 +16,11 @@ export function clickLink(href: string) {
  * This environment variable is added by electron-builder.
  * see: https://www.electron.build/configuration/nsis.html#portable\
  */
-export const getPortableExecutableDir = () => process.env.PORTABLE_EXECUTABLE_DIR;
+export const getPortableExecutableDir = () => process.env['PORTABLE_EXECUTABLE_DIR'];
 
 export function getDataDirectory() {
   const { app } = process.type === 'renderer' ? window : electron;
-  return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
+  return process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
 }
 
 export function getTempDir() {

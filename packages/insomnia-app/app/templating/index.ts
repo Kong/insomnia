@@ -1,4 +1,5 @@
-import nunjucks from 'nunjucks/browser/nunjucks';
+import { type Environment } from 'nunjucks';
+import * as nunjucks from 'nunjucks/browser/nunjucks';
 
 import type { TemplateTag } from '../plugins/index';
 import * as plugins from '../plugins/index';
@@ -24,9 +25,9 @@ export const RENDER_TAGS = 'tags';
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 // Cached globals
-let nunjucksVariablesOnly: nunjucks.Environment | null = null;
-let nunjucksTagsOnly: nunjucks.Environment | null = null;
-let nunjucksAll: nunjucks.Environment | null = null;
+let nunjucksVariablesOnly: Environment | null = null;
+let nunjucksTagsOnly: Environment | null = null;
+let nunjucksAll: Environment | null = null;
 
 /**
  * Render text based on stuff

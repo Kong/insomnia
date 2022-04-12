@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
         formats: ['cjs', 'es'],
         name: 'insomnia-components',
       },
+      emptyOutDir: false,
       rollupOptions: {
         external: ['react', 'react-dom', 'styled-components', 'react-use'],
       },

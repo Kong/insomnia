@@ -61,6 +61,11 @@ export class ResponsePDFViewer extends PureComponent<Props, State> {
         container.appendChild(canvas);
         // get context and render page
         const context = canvas.getContext('2d');
+
+        if (!context) {
+          return;
+        }
+
         const renderContext = {
           id: `${this.props.uniqueKey}.${i}`,
           canvasContext: context,

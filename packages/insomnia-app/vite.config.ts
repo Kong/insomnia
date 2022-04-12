@@ -1,93 +1,79 @@
 import react from '@vitejs/plugin-react';
-import { readFileSync } from 'fs';
 import { builtinModules } from 'module';
 import path from 'path';
-import * as vite from 'vite';
-import commonjsExt from 'vite-plugin-commonjs-externals';
+import { defineConfig } from 'vite';
+import commonjsExternals from 'vite-plugin-commonjs-externals';
 
-const pkg = JSON.parse(readFileSync('./package.json').toString('utf-8'));
+import pkg from './package.json';
 
+// The list of packages that will be included in the node_modules folder of the packaged app.
+// Exclude all package.json dependencies except from the ones in the packedDependencies list
+const unpackedDependencies = [
+  ...Object.keys(pkg.dependencies).filter(
+    name => !pkg.packedDependencies.includes(name)
+  ),
+];
+
+// The list of packages we want to keep as commonJS require().
+// Must be resolvable import paths, cannot be globs
+// These will be available via Node's require function from the node_modules folder or Node's builtin modules
 const commonjsPackages = [
   'electron',
   'electron/main',
   'electron/common',
   'electron/renderer',
-  'original-fs',
-  'crypto',
-  'fs',
-  // https://github.com/grpc/grpc-node/issues/1623
-  '@grpc/grpc-js',
-  '@grpc/proto-loader',
-  'insomnia-url',
-  'insomnia-config',
-  'insomnia-common',
-  'insomnia-cookies',
-  'insomnia-importers',
-  'nunjucks/browser/nunjucks',
-  'insomnia-xpath',
-  'insomnia-prettify',
-  'insomnia-url',
-  'styled-components',
   '@getinsomnia/node-libcurl',
   '@getinsomnia/node-libcurl/dist/enum/CurlAuth',
   '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion',
   '@getinsomnia/node-libcurl/dist/enum/CurlNetrc',
-  'insomnia-plugin-kong-portal',
-  'nimma',
-  'path',
-  'system',
-  'file',
-  'url',
-  ...Object.keys(pkg.dependencies).filter(
-    name => !pkg.packedDependencies.includes(name)
-  ),
-  'network/ca-certs.js',
+  'nunjucks/browser/nunjucks',
+  ...unpackedDependencies,
   ...builtinModules,
 ];
 
-export default vite.defineConfig({
-  mode: 'development',
-  root: path.join(__dirname, 'app'),
-  base: '/',
-  resolve: {
-    alias: {
-      react: path.resolve(__dirname, 'node_modules/react'),
-      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+export default defineConfig(({ mode }) => {
+  const __DEV__ = mode !== 'production';
+
+  return {
+    mode,
+    root: path.join(__dirname, 'app'),
+    base: __DEV__ ? '/' : './',
+    define: {
+      __DEV__: JSON.stringify(__DEV__),
+      'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.INSOMNIA_ENV': JSON.stringify(mode),
     },
-    dedupe: ['react', 'react-dom', 'react-dom/server'],
-  },
-  define: {
-    __DEV__: true,
-    'process.env.NODE_ENV': JSON.stringify('development'),
-    'process.env.INSOMNIA_ENV': JSON.stringify('development'),
-  },
-  server: {
-    port: pkg.dev['dev-server-port'],
-    fs: {
-      strict: true,
+    optimizeDeps: {
+      exclude: commonjsPackages,
     },
-  },
-  optimizeDeps: {
-    exclude: commonjsPackages,
-  },
-  build: {
-    sourcemap: true,
-    outDir: 'build',
-    assetsDir: '.',
-    emptyOutDir: true,
-    brotliSize: false,
-  },
-  plugins: [
-    commonjsExt({ externals: commonjsPackages }),
-    react({
-      fastRefresh: true,
-      jsxRuntime: 'classic',
-      babel: {
-        plugins: [
-          ['@babel/plugin-proposal-decorators', { legacy: true }],
-          ['@babel/plugin-proposal-class-properties', { loose: true }],
-        ],
+    server: {
+      port: pkg.dev['dev-server-port'],
+      fs: {
+        strict: true,
       },
-    }),
-  ],
+    },
+    build: {
+      sourcemap: __DEV__,
+      outDir: path.join(__dirname, 'build'),
+      assetsDir: './',
+      brotliSize: false,
+      emptyOutDir: false,
+      commonjsOptions: {
+        ignore: commonjsPackages,
+      },
+    },
+    plugins: [
+      commonjsExternals({ externals: commonjsPackages }),
+      react({
+        fastRefresh: __DEV__,
+        jsxRuntime: 'automatic',
+        babel: {
+          plugins: [
+            ['@babel/plugin-proposal-decorators', { legacy: true }],
+            ['@babel/plugin-proposal-class-properties', { loose: true }],
+          ],
+        },
+      }),
+    ],
+  };
 });
