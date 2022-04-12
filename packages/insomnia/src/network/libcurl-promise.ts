@@ -17,7 +17,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { version } from '../../config/config.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
 import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
-import type { RenderedRequest } from '../common/render';
 import { ClientCertificate } from '../models/client-certificate';
 import { ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
@@ -30,15 +29,26 @@ import { parseHeaderStrings } from './parse-header-strings';
 
 interface CurlRequestOptions {
   requestId: string; // for cancellation
-  renderedRequest: RenderedRequest;
+  req: Req;
   finalUrl: string;
   settings: Settings;
   certificates: ClientCertificate[];
   fullCAPath: string;
   socketPath?: string;
-  authHeader?: {name: string; value:string};
+  authHeader?: { name: string; value: string };
 }
-
+interface Req {
+  headers: any;
+  method: string;
+  body: { mimeType?: string | null };
+  authentication: Record<string, any>;
+  settingFollowRedirects: string;
+  settingRebuildPath: boolean;
+  settingSendCookies: boolean;
+  url: string;
+  cookieJar: any;
+  cookies: { name: string; value: string }[];
+}
 interface ResponseTimelineEntry {
   name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
   timestamp: number;
@@ -64,7 +74,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const { requestId, renderedRequest, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
+    const { requestId, req, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
+
     const curl = new Curl();
 
     curl.setOpt(Curl.option.URL, finalUrl);
@@ -121,36 +132,14 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
     if (httpVersion.curlHttpVersion) curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
 
-    // Set follow redirects setting
-    const on = renderedRequest.settingFollowRedirects === 'on';
-    const off = renderedRequest.settingFollowRedirects === 'off';
-    if (off) curl.setOpt(Curl.option.FOLLOWLOCATION, false);
-    else if (on) curl.setOpt(Curl.option.FOLLOWLOCATION, true);
-    else curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-
     // Set maximum amount of redirects allowed
     // NOTE: Setting this to -1 breaks some versions of libcurl
     if (settings.maxRedirects > 0) curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
 
-    // Don't rebuild dot sequences in path
-    if (!renderedRequest.settingRebuildPath) curl.setOpt(Curl.option.PATH_AS_IS, true);
-
-    // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
-    // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
-    // This is how you tell Curl to send a HEAD request
-    if (renderedRequest.method.toUpperCase() === 'HEAD') curl.setOpt(Curl.option.NOBODY, 1);
-    // This is how you tell Curl to send a POST request
-    else if (renderedRequest.method.toUpperCase() === 'POST') curl.setOpt(Curl.option.POST, 1);
-    // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
-    else curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-
-    if (renderedRequest.authentication.type === AUTH_NETRC) {
-      curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
-    }
     // Set proxy settings if we have them
     if (!settings.proxyEnabled) curl.setOpt(Curl.option.PROXY, '');
     else {
-      const { protocol } = urlParse(renderedRequest.url);
+      const { protocol } = urlParse(req.url);
       const { httpProxy, httpsProxy, noProxy } = settings;
       const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
       const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
@@ -186,73 +175,95 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       timestamp: Date.now(),
     });
 
-    // Set User-Agent if it's not already in headers
-    if (!hasUserAgentHeader(renderedRequest.headers)) {
-      curl.setOpt(Curl.option.USERAGENT, `insomnia/${version}`);
-    }
-    if (renderedRequest.settingSendCookies) {
-      // Tell Curl to store cookies that it receives. This is only important if we receive
-      // a cookie on a redirect that needs to be sent on the next request in the chain.
+    // Set follow redirects setting
+    if (req.settingFollowRedirects === 'off') curl.setOpt(Curl.option.FOLLOWLOCATION, false);
+    else if (req.settingFollowRedirects === 'on') curl.setOpt(Curl.option.FOLLOWLOCATION, true);
+    else curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+    // Don't rebuild dot sequences in path
+    if (!req.settingRebuildPath) curl.setOpt(Curl.option.PATH_AS_IS, true);
+
+    if (req.settingSendCookies) {
+      const { cookieJar, cookies } = req;
       curl.setOpt(Curl.option.COOKIEFILE, '');
-      const cookies = renderedRequest.cookieJar.cookies || [];
 
-      for (const cookie of cookies) {
-        curl.setOpt(
-          Curl.option.COOKIELIST,
-          [
-            cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-            cookie.hostOnly ? 'FALSE' : 'TRUE',
-            cookie.path,
-            cookie.secure ? 'TRUE' : 'FALSE',
-            cookie.expires ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
-            cookie.key,
-            cookie.value,
-          ].join('\t'),
-        );
-      }
-
-      for (const { name, value } of renderedRequest.cookies) {
+      for (const { name, value } of cookies) {
         curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
       }
-      debugTimeline.push({
-        name: 'TEXT',
-        value: `Enable cookie sending with jar of ${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`,
-        timestamp: Date.now(),
-      });
-    }
+      // set-cookies from previous redirects
+      if (cookieJar.cookies.length){
+        debugTimeline.push({
+          name: 'TEXT',
+          value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`,
+          timestamp: Date.now(),
+        });
+        for (const cookie of cookieJar.cookies) {
+          curl.setOpt(
+            Curl.option.COOKIELIST,
+            [
+              cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+              cookie.hostOnly ? 'FALSE' : 'TRUE',
+              cookie.path,
+              cookie.secure ? 'TRUE' : 'FALSE',
+              cookie.expires ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
+              cookie.key,
+              cookie.value,
+            ].join('\t'),
+          );
+        }
+      }
 
-    const requestBody = parseRequestBody(renderedRequest);
+    }
+    const { method, body } = req;
+    // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
+    // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
+    // This is how you tell Curl to send a HEAD request
+    if (method.toUpperCase() === 'HEAD') curl.setOpt(Curl.option.NOBODY, 1);
+    // This is how you tell Curl to send a POST request
+    else if (method.toUpperCase() === 'POST') curl.setOpt(Curl.option.POST, 1);
+    // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
+    else curl.setOpt(Curl.option.CUSTOMREQUEST, method);
+
+    const requestBody = parseRequestBody({ body, method });
     if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
-    const requestBodyPath = await parseRequestBodyPath(renderedRequest);
+    const requestBodyPath = await parseRequestBodyPath(body);
     let isMultipart = false;
     let requestFileDescriptor;
+    const { authentication } = req;
     if (requestBodyPath) {
       // AWS IAM file upload not supported
-      if (renderedRequest.authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
-      isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
+      if (authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
+      isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const { size: contentLength } = fs.statSync(requestBodyPath);
       curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
       curl.setOpt(Curl.option.UPLOAD, 1);
       // We need this, otherwise curl will send it as a POST
-      curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      curl.setOpt(Curl.option.CUSTOMREQUEST, method);
       // read file into request and close file descriptor
       requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
       curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
       curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
       curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
     }
-    const headerStrings = parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl, authHeader });
+    const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
-    const { username, password, disabled } = renderedRequest.authentication;
-    const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
-    const isNLTM = renderedRequest.authentication.type === AUTH_NTLM;
+    const { headers } = req;
+    // Set User-Agent if it's not already in headers
+    if (!hasUserAgentHeader(headers)) {
+      curl.setOpt(Curl.option.USERAGENT, `insomnia/${version}`);
+    }
+    const { username, password, disabled } = authentication;
+    const isDigest = authentication.type === AUTH_DIGEST;
+    const isNLTM = authentication.type === AUTH_NTLM;
     const isDigestOrNLTM = isDigest || isNLTM;
-    if (!hasAuthHeader(renderedRequest.headers) && !disabled && isDigestOrNLTM) {
+    if (!hasAuthHeader(headers) && !disabled && isDigestOrNLTM) {
       isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
       isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
       curl.setOpt(Curl.option.USERNAME, username || '');
       curl.setOpt(Curl.option.PASSWORD, password || '');
+    }
+    if (authentication.type === AUTH_NETRC) {
+      curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
     }
 
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
@@ -438,18 +449,24 @@ async function waitForStreamToFinish(stream: Readable | Writable) {
     });
   });
 }
-const parseRequestBody = req => {
-  const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
-  const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
+const parseRequestBody = ({ body, method }) => {
+  const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
+  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
+  const hasMimetypeAndUpdateMethod = typeof body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();
-    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
     return urlSearchParams.toString();
   }
   if (hasMimetypeAndUpdateMethod) {
-    return req.body.text;
+    return body.text;
   }
+};
+const parseRequestBodyPath = async body => {
+  const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;
+  if (!isMultipartForm) return body.fileName;
+  const { filePath } = await buildMultipart(body.params || [],);
+  return filePath;
 };
 export const HttpVersions = {
   V1_0: 'V1_0',
@@ -492,12 +509,4 @@ export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   }
 
   return trimmedUrl;
-};
-const parseRequestBodyPath = async req => {
-  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (isMultipartForm) {
-    const { filePath } = await buildMultipart(req.body.params || [],);
-    return filePath;
-  }
-  return req.body.fileName;
 };

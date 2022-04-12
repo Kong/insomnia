@@ -173,7 +173,7 @@ export async function _actuallySend(
         : require('./libcurl-promise').curlRequest;
       const requestOptions = {
         requestId: renderedRequest._id,
-        renderedRequest,
+        req: renderedRequest,
         finalUrl,
         socketPath,
         settings,
