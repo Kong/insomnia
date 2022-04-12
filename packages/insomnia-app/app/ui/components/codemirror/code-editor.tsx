@@ -104,7 +104,9 @@ interface RawProps {
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
+  onPrettify?: (input: string) => string;
   mode?: string;
+  modeLabel?: string;
   id?: string;
   placeholder?: string;
   hideLineNumbers?: boolean;
@@ -685,6 +687,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   _prettify() {
+    console.log('ce');
     const canPrettify = this._canPrettify();
     if (!canPrettify) {
       return;
@@ -1119,7 +1122,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       console.warn('Code editor was passed non-string value', code);
       return;
     }
-    const { autoPrettify, mode } = this.props;
+    const { autoPrettify, mode, onPrettify } = this.props;
     this._originalCode = code;
     const shouldPrettify = forcePrettify || autoPrettify;
 
@@ -1128,6 +1131,8 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         code = this._prettifyXML(code);
       } else if (UnconnectedCodeEditor._isJSON(mode)) {
         code = this._prettifyJSON(code);
+      } else if (onPrettify) {
+        code = onPrettify(code);
       } else {
         unreachable('attempted to prettify in a mode that should not support prettifying');
       }
@@ -1170,7 +1175,10 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   _canPrettify() {
-    const { mode } = this.props;
+    const { mode, onPrettify } = this.props;
+    if (typeof onPrettify === 'function') {
+      return true;
+    }
     return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode);
   }
 
@@ -1194,6 +1202,8 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       style,
       type,
       raw,
+      modeLabel,
+      onPrettify,
     } = this.props;
     const classes = classnames(className, {
       editor: true,
@@ -1241,12 +1251,12 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
 
     if (this.props.manualPrettify && this._canPrettify()) {
-      let contentTypeName = '';
+      let contentName = modeLabel;
 
       if (UnconnectedCodeEditor._isJSON(mode)) {
-        contentTypeName = 'JSON';
+        contentName = 'JSON';
       } else if (UnconnectedCodeEditor._isXML(mode)) {
-        contentTypeName = 'XML';
+        contentName = 'XML';
       }
 
       toolbarChildren.push(
@@ -1256,7 +1266,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
           title="Auto-format request body whitespace"
           onClick={this._prettify}
         >
-          Beautify {contentTypeName}
+          Beautify {contentName}
         </button>,
       );
     }
@@ -1278,7 +1288,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
 
     return (
-      <KeydownBinder name={CodeEditor.name} onKeydown={this._handleKeyDown}>
+      <KeydownBinder name={CodeEditor.name} onKeydown={this._handleKeyDown} scoped={Boolean(onPrettify)}>
         <div
           className={classes}
           style={style}

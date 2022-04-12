@@ -17,8 +17,6 @@ import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
-import { hotKeyRefs } from '../../../../common/hotkeys';
-import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import * as models from '../../../../models/index';
@@ -36,7 +34,6 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
-import { KeydownBinder } from '../../keydown-binder';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
@@ -188,10 +185,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       explorerVisible: false,
     });
-  }
-
-  _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
   }
 
   _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
@@ -476,11 +469,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
-
-    // Update editor contents
-    if (this._queryEditor) {
-      this._queryEditor.setValue(prettyQuery);
-    }
+    return prettyQuery;
   }
 
   _getOperations(): any[] {
@@ -723,116 +712,109 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     }
 
     return (
-      <KeydownBinder name={GraphQLEditor.name} onKeydown={this._handleKeyDown}>
-        <div className="graphql-editor">
-          <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
+      <div className="graphql-editor">
+        <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
-            <DropdownButton className="space-left btn btn--micro btn--outlined">
-              schema <i className="fa fa-wrench" />
-            </DropdownButton>
+          <DropdownButton className="space-left btn btn--micro btn--outlined">
+            schema <i className="fa fa-wrench" />
+          </DropdownButton>
 
-            <DropdownItem onClick={this._handleShowDocumentation} disabled={!schema}>
-              <i className="fa fa-file-code-o" /> Show Documentation
-            </DropdownItem>
+          <DropdownItem onClick={this._handleShowDocumentation} disabled={!schema}>
+            <i className="fa fa-file-code-o" /> Show Documentation
+          </DropdownItem>
 
-            <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
+          <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
 
-            <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
-              <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
-            </DropdownItem>
-            <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
-              <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
-              Automatic Fetch
-              <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
-            </DropdownItem>
+          <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
+            <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
+          </DropdownItem>
+          <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
+            <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
+            Automatic Fetch
+            <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+          </DropdownItem>
 
-            <DropdownDivider>Local GraphQL Schema</DropdownDivider>
+          <DropdownDivider>Local GraphQL Schema</DropdownDivider>
 
-            <DropdownItem onClick={this._handleSetLocalSchema}>
-              <i className="fa fa-file-code-o" /> Load schema from JSON
-              <HelpTooltip>
-                Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
-                convert GraphQL DSL to JSON.
-              </HelpTooltip>
-            </DropdownItem>
-          </Dropdown>
-
-          <div className="graphql-editor__query">
-            <CodeEditor
-              dynamicHeight
-              manualPrettify
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-              defaultValue={query}
-              className={className}
-              onChange={this._handleQueryChange}
-              onCodeMirrorInit={this._handleQueryEditorInit}
-              onCursorActivity={this._handleQueryUserActivity}
-              onFocus={this._handleQueryFocus}
-              mode="graphql"
-              placeholder=""
-              {...graphqlOptions}
-            />
-          </div>
-          <div className="graphql-editor__schema-error">
-            {!hideSchemaFetchErrors && schemaFetchError && (
-              <div className="notice error margin no-margin-top margin-bottom-sm">
-                <div className="pull-right">
-                  <Tooltip position="top" message="View introspection request/response timeline">
-                    <button className="icon icon--success" onClick={this._handleViewResponse}>
-                      <i className="fa fa-bug" />
-                    </button>
-                  </Tooltip>{' '}
-                  <button className="icon" onClick={this._hideSchemaFetchError}>
-                    <i className="fa fa-times" />
-                  </button>
-                </div>
-                {schemaFetchError.message}
-                <br />
-              </div>
-            )}
-          </div>
-          <div className="graphql-editor__meta">
-            {this.renderSchemaFetchMessage()}
-            <div className="graphql-editor__operation-name">{this.renderSelectedOperationName()}</div>
-          </div>
-          <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
-            Query Variables
-            <HelpTooltip className="space-left">
-              Variables to use in GraphQL query <br />
-              (JSON format)
+          <DropdownItem onClick={this._handleSetLocalSchema}>
+            <i className="fa fa-file-code-o" /> Load schema from JSON
+            <HelpTooltip>
+              Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
+              convert GraphQL DSL to JSON.
             </HelpTooltip>
-            {variablesSyntaxError && (
-              <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
-            )}
-          </h2>
-          <div className="graphql-editor__variables">
-            <CodeEditor
-              dynamicHeight
-              enableNunjucks
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-              debounceMillis={DEBOUNCE_MILLIS * 4}
-              manualPrettify={false}
-              defaultValue={variables}
-              className={className}
-              getAutocompleteConstants={() => Object.keys(variableTypes || {})}
-              lintOptions={{
-                variableToType: variableTypes,
-              }}
-              noLint={!variableTypes}
-              onChange={this._handleVariablesChange}
-              mode="graphql-variables"
-              placeholder=""
-            />
-          </div>
-          <div className="pane__footer">
-            <button className="pull-right btn btn--compact" onClick={this._handlePrettify}>
-              Prettify GraphQL
-            </button>
-          </div>
+          </DropdownItem>
+        </Dropdown>
 
-          {graphQLExplorerPortal}
+        <div className="graphql-editor__query">
+          <CodeEditor
+            dynamicHeight
+            manualPrettify
+            onPrettify={this._handlePrettify}
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
+            defaultValue={query}
+            className={className}
+            onChange={this._handleQueryChange}
+            onCodeMirrorInit={this._handleQueryEditorInit}
+            onCursorActivity={this._handleQueryUserActivity}
+            onFocus={this._handleQueryFocus}
+            mode="graphql"
+            modeLabel="GraphQL"
+            placeholder=""
+            {...graphqlOptions}
+          />
         </div>
-      </KeydownBinder>
+        <div className="graphql-editor__schema-error">
+          {!hideSchemaFetchErrors && schemaFetchError && (
+            <div className="notice error margin no-margin-top margin-bottom-sm">
+              <div className="pull-right">
+                <Tooltip position="top" message="View introspection request/response timeline">
+                  <button className="icon icon--success" onClick={this._handleViewResponse}>
+                    <i className="fa fa-bug" />
+                  </button>
+                </Tooltip>{' '}
+                <button className="icon" onClick={this._hideSchemaFetchError}>
+                  <i className="fa fa-times" />
+                </button>
+              </div>
+              {schemaFetchError.message}
+              <br />
+            </div>
+          )}
+        </div>
+        <div className="graphql-editor__meta">
+          {this.renderSchemaFetchMessage()}
+          <div className="graphql-editor__operation-name">{this.renderSelectedOperationName()}</div>
+        </div>
+        <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
+          Query Variables
+          <HelpTooltip className="space-left">
+            Variables to use in GraphQL query <br />
+            (JSON format)
+          </HelpTooltip>
+          {variablesSyntaxError && (
+            <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
+          )}
+        </h2>
+        <div className="graphql-editor__variables">
+          <CodeEditor
+            dynamicHeight
+            enableNunjucks
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+            debounceMillis={DEBOUNCE_MILLIS * 4}
+            defaultValue={variables}
+            className={className}
+            getAutocompleteConstants={() => Object.keys(variableTypes || {})}
+            lintOptions={{
+              variableToType: variableTypes,
+            }}
+            noLint={!variableTypes}
+            onChange={this._handleVariablesChange}
+            mode="graphql-variables"
+            placeholder=""
+          />
+        </div>
+        {graphQLExplorerPortal}
+      </div>
     );
   }
 }
