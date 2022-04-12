@@ -16,21 +16,26 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
 } from '../common/misc';
-import type { RenderedRequest } from '../common/render';
 import { RequestHeader } from '../models/request';
 import { DEFAULT_BOUNDARY } from './multipart';
 
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
 interface Input {
-  renderedRequest: RenderedRequest;
+  req: Req;
   finalUrl: string;
   requestBody?: string;
   requestBodyPath?: string;
-  authHeader?: {name: string; value:string};
+  authHeader?: { name: string; value: string };
 }
-export const parseHeaderStrings = ({ renderedRequest, finalUrl, requestBody, requestBodyPath,  authHeader }: Input) => {
-  const headers = clone(renderedRequest.headers);
+interface Req {
+  headers: any;
+  method: string;
+  body: { mimeType?: string | null };
+  authentication: Record<string, any>;
+}
+export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath, authHeader }: Input) => {
+  const headers = clone(req.headers);
 
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
   const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
@@ -44,12 +49,11 @@ export const parseHeaderStrings = ({ renderedRequest, finalUrl, requestBody, req
       value: DISABLE_HEADER_VALUE,
     });
   }
-
-  const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
-  const isNTLM = renderedRequest.authentication.type === AUTH_NTLM;
-  const isAWSIAM = renderedRequest.authentication.type === AUTH_AWS_IAM;
+  const { authentication, method } = req;
+  const isDigest = authentication.type === AUTH_DIGEST;
+  const isNTLM = authentication.type === AUTH_NTLM;
+  const isAWSIAM = authentication.type === AUTH_AWS_IAM;
   if (isAWSIAM) {
-    const { authentication } = renderedRequest;
     const credentials = {
       accessKeyId: authentication.accessKeyId || '',
       secretAccessKey: authentication.secretAccessKey || '',
@@ -61,7 +65,7 @@ export const parseHeaderStrings = ({ renderedRequest, finalUrl, requestBody, req
       headers,
       requestBody || '',
       finalUrl,
-      renderedRequest.method,
+      method,
       authentication.region || '',
       authentication.service || '',
     );
@@ -70,7 +74,7 @@ export const parseHeaderStrings = ({ renderedRequest, finalUrl, requestBody, req
       headers.push(header);
     }
   }
-  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !renderedRequest.authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
+  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
   if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest) {
     if (authHeader) {
       headers.push({
@@ -79,7 +83,7 @@ export const parseHeaderStrings = ({ renderedRequest, finalUrl, requestBody, req
       });
     }
   }
-  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
+  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (isMultipartForm && requestBodyPath) {
     const contentTypeHeader = getContentTypeHeader(headers);
     if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
