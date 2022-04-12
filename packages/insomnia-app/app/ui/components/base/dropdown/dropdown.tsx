@@ -450,7 +450,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
 
     return (
-      <KeydownBinder stopMetaPropagation onKeydown={this._handleBodyKeyDown} disabled={!open}>
+      <KeydownBinder name="Dropdown" onKeydown={this._handleBodyKeyDown} disabled={!open}>
         <div
           style={style}
           className={classes}

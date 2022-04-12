@@ -1284,7 +1284,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         data-editor-type={type}
         data-testid="CodeEditor"
       >
-        <KeydownBinder onKeydown={this._handleKeyDown} />
+        <KeydownBinder name="CodeEditor" onKeydown={this._handleKeyDown} />
         <div
           className={classnames('editor__container', 'input', className)}
           style={styles}

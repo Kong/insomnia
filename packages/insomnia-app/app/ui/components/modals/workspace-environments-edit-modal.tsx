@@ -439,7 +439,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     };
 
     return (
-      <Modal ref={this._setModalRef} wide tall {...this.props} stopMetaPropagation={false}>
+      <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">

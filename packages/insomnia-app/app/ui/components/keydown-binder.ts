@@ -2,34 +2,33 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
-import { AUTOBIND_CFG, isMac } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
+  name: string;
   children?: ReactNode;
   onKeydown?: (...args: any[]) => any;
   onKeyup?: (...args: any[]) => any;
   disabled?: boolean;
   scoped?: boolean;
-  stopMetaPropagation?: boolean;
   captureEvent?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class KeydownBinder extends PureComponent<Props> {
-  static defaultProps: Pick<Props, 'captureEvent'> = {
-    captureEvent: true,
+  static defaultProps: Pick<Props, 'captureEvent' | 'scoped'> = {
+    captureEvent: false,
+    scoped: true,
   };
 
   _handleKeydown(e: KeyboardEvent) {
-    const { stopMetaPropagation, onKeydown, disabled } = this.props;
+    const { onKeydown, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
-
-    if (stopMetaPropagation && isMeta) {
+    if (this.props.scoped) {
       e.stopPropagation();
     }
 
@@ -39,15 +38,13 @@ export class KeydownBinder extends PureComponent<Props> {
   }
 
   _handleKeyup(e: KeyboardEvent) {
-    const { stopMetaPropagation, onKeyup, disabled } = this.props;
+    const { onKeyup, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
-
-    if (stopMetaPropagation && isMeta) {
+    if (this.props.scoped) {
       e.stopPropagation();
     }
 
