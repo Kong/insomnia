@@ -362,7 +362,7 @@ interface HeaderResult {
 export function _parseHeaders(buffer: Buffer): HeaderResult[] {
   // split on two new lines
   const redirects = buffer.toString('utf8').split(/\r?\n\r?\n|\r\r/g);
-  return redirects.map(redirect => {
+  return redirects.filter(r => !!r.trim()).map(redirect => {
     // split on one new line
     const [first, ...rest] = redirect.split(/\r?\n|\r/g);
     const headers = rest.map(l => l.split(/:\s(.+)/))
