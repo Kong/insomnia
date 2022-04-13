@@ -1288,7 +1288,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
 
     return (
-      <KeydownBinder name={CodeEditor.name} onKeydown={this._handleKeyDown} scoped={Boolean(onPrettify)}>
+      <KeydownBinder onKeydown={this._handleKeyDown} scoped={Boolean(onPrettify)}>
         <div
           className={classes}
           style={style}

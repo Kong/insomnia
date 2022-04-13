@@ -92,7 +92,7 @@ export class EnvironmentsDropdown extends PureComponent<Props> {
     }
 
     return (
-      <KeydownBinder name={EnvironmentsDropdown.name} onKeydown={this._handleKeydown}>
+      <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
           ref={this._setDropdownRef}
           {...(other as Record<string, any>)}

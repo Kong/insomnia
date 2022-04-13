@@ -6,7 +6,6 @@ import { RequireAtLeastOne } from 'type-fest';
 import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
-  name: string;
   onKeydown?: (...args: any[]) => any;
   onKeyup?: (...args: any[]) => any;
   children: ReactNode;

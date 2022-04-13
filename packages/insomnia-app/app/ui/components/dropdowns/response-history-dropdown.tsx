@@ -168,7 +168,7 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
     const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
     const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
     return (
-      <KeydownBinder name={ResponseHistoryDropdown.name} onKeydown={this._handleKeydown}>
+      <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
           ref={ref => { this._dropdown = ref; }}
           key={activeResponse ? activeResponse._id : 'n/a'}

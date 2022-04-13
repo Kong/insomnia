@@ -78,7 +78,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   }, [method, running, start]);
 
   return (
-    <KeydownBinder name={GrpcRequestPane.name} onKeydown={_handleKeyDown}>
+    <KeydownBinder onKeydown={_handleKeyDown}>
       <Pane type="request">
         <PaneHeader>
           <StyledUrlBar>

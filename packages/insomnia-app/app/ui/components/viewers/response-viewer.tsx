@@ -462,6 +462,6 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
   }
 
   render() {
-    return <KeydownBinder name={ResponseViewer.name} scoped={false} onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
+    return <KeydownBinder scoped={false} onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
   }
 }
