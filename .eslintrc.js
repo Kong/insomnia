@@ -76,6 +76,7 @@ module.exports = {
     'comma-dangle': [ERROR, 'always-multiline'],
     'comma-spacing': ERROR,
     'consistent-return': OFF('found to be too many false positives'),
+    'curly': ERROR,
     'default-case': ERROR,
     'default-case-last': ERROR,
     'filenames/match-exported': [ERROR, 'kebab'],

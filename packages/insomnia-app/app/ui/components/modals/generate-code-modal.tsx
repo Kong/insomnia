@@ -111,7 +111,7 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     const { environmentId } = this.props;
     const har = await exportHarRequest(request._id, environmentId, addContentLength);
     // @TODO Should we throw instead?
-    if (!har) return;
+    if (!har) {return;}
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key) || '';
     this.setState({
