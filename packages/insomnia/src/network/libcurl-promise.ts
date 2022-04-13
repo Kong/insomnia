@@ -359,42 +359,26 @@ interface HeaderResult {
   code: number;
   reason: string;
 }
-// NOTE: legacy, has tests, could be simplified
-export function _parseHeaders(buffer: Buffer) {
-  const results: HeaderResult[] = [];
-  const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
+export function _parseHeaders(buffer: Buffer): HeaderResult[] {
+  // split on two new lines
+  const redirects = buffer.toString('utf8').split(/\r?\n\r?\n|\r\r/g);
+  return redirects.map(redirect => {
+    // split on one new line
+    const [first, ...rest] = redirect.split(/\r?\n|\r/g);
+    const headers = rest.map(l => l.split(/:\s(.+)/))
+      .filter(([n]) => !!n)
+      .map(([name, value = '']) => ({ name, value }));
 
-  for (let i = 0, currentResult: HeaderResult | null = null; i < lines.length; i++) {
-    const line = lines[i];
-    const isEmptyLine = line.trim() === '';
-
-    // If we hit an empty line, start parsing the next response
-    if (isEmptyLine && currentResult) {
-      results.push(currentResult);
-      currentResult = null;
-      continue;
-    }
-
-    if (!currentResult) {
-      const [version, code, ...other] = line.split(/ +/g);
-      currentResult = {
-        version,
-        code: parseInt(code, 10),
-        reason: other.join(' '),
-        headers: [],
-      };
-    } else {
-      const [name, value] = line.split(/:\s(.+)/);
-      const header: ResponseHeader = {
-        name,
-        value: value || '',
-      };
-      currentResult.headers.push(header);
-    }
-  }
-
-  return results;
+    const [version, code, ...other] = first.split(/ +/g);
+    return {
+      version,
+      code: parseInt(code, 10),
+      reason: other.join(' '),
+      headers,
+    };
+  });
 }
+
 // NOTE: legacy, suspicious, could be simplified
 async function waitForStreamToFinish(stream: Readable | Writable) {
   return new Promise<void>(resolve => {
