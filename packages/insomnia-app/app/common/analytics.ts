@@ -41,7 +41,9 @@ const sendSegment = async (segmentType: 'track' | 'page', options) => {
       os: { name: _getOsName(), version: process.getSystemVersion() },
     };
     segmentClient?.[segmentType]({ ...options, context, anonymousId, userId }, error => {
-      if (error) console.warn('[analytics] Error sending segment event', error);
+      if (error) {
+        console.warn('[analytics] Error sending segment event', error);
+      }
     });
   } catch (error: unknown) {
     console.warn('[analytics] Unexpected error while sending segment event', error);
@@ -153,7 +155,9 @@ export async function trackSegmentEvent(
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
-  if (!settings.enableAnalytics) return;
+  if (!settings.enableAnalytics) {
+    return;
+  }
   sendSegment('page', { name });
 }
 

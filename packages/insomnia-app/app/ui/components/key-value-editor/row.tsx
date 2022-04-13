@@ -310,7 +310,9 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     if (pair.type === 'file') {
       return (
         <FileInputButton
-          ref={ref => { this._valueInput = ref; }}
+          ref={ref => {
+            this._valueInput = ref;
+          }}
           showFileName
           showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
@@ -333,7 +335,9 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     } else {
       return (
         <OneLineEditor
-          ref={ref => { this._valueInput = ref; }}
+          ref={ref => {
+            this._valueInput = ref;
+          }}
           readOnly={readOnly}
           forceInput={forceInput}
           type={valueInputType || 'text'}
@@ -461,7 +465,9 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
             })}
           >
             <OneLineEditor
-              ref={ref => { this._nameInput = ref; }}
+              ref={ref => {
+                this._nameInput = ref;
+              }}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               getAutocompleteConstants={this._handleAutocompleteNames}

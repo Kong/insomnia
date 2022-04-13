@@ -72,10 +72,12 @@ module.exports = {
   rules: {
     'array-bracket-spacing': ERROR,
     'brace-style': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'block-spacing': ERROR,
     'camelcase': [ERROR, { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': [ERROR, 'always-multiline'],
     'comma-spacing': ERROR,
     'consistent-return': OFF('found to be too many false positives'),
+    'curly': ERROR,
     'default-case': ERROR,
     'default-case-last': ERROR,
     'filenames/match-exported': [ERROR, 'kebab'],
@@ -98,6 +100,7 @@ module.exports = {
     'object-curly-spacing': [ERROR, 'always'],
     'quotes': OFF(UNKNOWN),
     'semi': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'space-before-blocks': ERROR, // TODO: use the @typescript-eslint/space-before-blocks once we typescript-eslint past 5.13
     'space-before-function-paren': [ERROR, { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
     'space-infix-ops': SUCCESSOR(TYPESCRIPT_EXTENSION),
     'space-unary-ops': ERROR,
@@ -140,7 +143,7 @@ module.exports = {
 
     '@typescript-eslint/array-type': [ERROR, { default: 'array', readonly: 'array' }],
     '@typescript-eslint/ban-types': OFF(UNKNOWN),
-    '@typescript-eslint/brace-style': [ERROR, '1tbs', { 'allowSingleLine': true }],
+    '@typescript-eslint/brace-style': [ERROR, '1tbs'],
     '@typescript-eslint/consistent-type-definitions': [ERROR, 'interface'],
     '@typescript-eslint/explicit-module-boundary-types': OFF(UNKNOWN),
     '@typescript-eslint/keyword-spacing': ERROR,

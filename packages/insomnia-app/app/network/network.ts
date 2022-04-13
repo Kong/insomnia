@@ -450,7 +450,7 @@ export async function _actuallySend(
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
       const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
-      if (requestBodyPath){
+      if (requestBodyPath) {
         const { size: contentLength } = fs.statSync(requestBodyPath);
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
@@ -655,7 +655,7 @@ const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPat
   const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
   const isNTLM = renderedRequest.authentication.type === AUTH_NTLM;
   const isAWSIAM = renderedRequest.authentication.type === AUTH_AWS_IAM;
-  if (isAWSIAM){
+  if (isAWSIAM) {
     const { authentication } = renderedRequest;
     const credentials = {
       accessKeyId: authentication.accessKeyId || '',
@@ -678,7 +678,7 @@ const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPat
     }
   }
   const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !renderedRequest.authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest){
+  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest) {
     const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
     if (authHeader) {
@@ -691,11 +691,14 @@ const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPat
   const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (isMultipartForm && requestBodyPath) {
     const contentTypeHeader = getContentTypeHeader(headers);
-    if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
-    else headers.push({
-      name: 'Content-Type',
-      value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
-    });
+    if (contentTypeHeader) {
+      contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
+    } else {
+      headers.push({
+        name: 'Content-Type',
+        value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
+      });
+    }
   }
   // Send a default Accept headers of anything
   if (!hasAcceptHeader(headers)) {

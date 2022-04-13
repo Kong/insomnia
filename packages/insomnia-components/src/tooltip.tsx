@@ -225,7 +225,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
     return (
       <StyledTooltip
         className={tooltipClasses}
-        ref={ref => { this._tooltip = ref; }}
+        ref={ref => {
+          this._tooltip = ref;
+        }}
         id={this._id}
         onMouseEnter={this._handleMouseEnter}
         onMouseLeave={this._handleMouseLeave}
@@ -237,7 +239,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
           role="tooltip"
           aria-hidden={!visible}
           aria-describedby={this._id}
-          ref={ref => { this._bubble = ref; }}
+          ref={ref => {
+            this._bubble = ref;
+          }}
         >
           {message}
         </StyledTooltipBubble>

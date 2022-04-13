@@ -144,7 +144,9 @@ export class DebouncedInput extends PureComponent<Props> {
     if (textarea) {
       return (
         <textarea
-          ref={ref => { this._input = ref; }}
+          ref={ref => {
+            this._input = ref;
+          }}
           {...props}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
@@ -154,7 +156,9 @@ export class DebouncedInput extends PureComponent<Props> {
     } else {
       return (
         <input
-          ref={ref => { this._input = ref; }}
+          ref={ref => {
+            this._input = ref;
+          }}
           {...props}
           onChange={this._handleChange}
           onFocus={this._handleFocus}

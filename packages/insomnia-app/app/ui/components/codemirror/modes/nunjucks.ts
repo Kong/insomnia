@@ -64,9 +64,15 @@ function _nunjucksMode() {
       }
 
       while (stream.next() != null) {
-        if (stream.match(regexVariable, false)) break;
-        if (stream.match(regexTag, false)) break;
-        if (stream.match(regexComment, false)) break;
+        if (stream.match(regexVariable, false)) {
+          break;
+        }
+        if (stream.match(regexTag, false)) {
+          break;
+        }
+        if (stream.match(regexComment, false)) {
+          break;
+        }
       }
 
       return null;

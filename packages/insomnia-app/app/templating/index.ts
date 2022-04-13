@@ -47,7 +47,9 @@ export function render(
   const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
   const hasNunjucksCustomTagSymbols = text.includes('{%') && text.includes('%}');
   const hasNunjucksCommentSymbols = text.includes('{#') && text.includes('#}');
-  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) return text;
+  if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) {
+    return text;
+  }
   const context = config.context || {};
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}

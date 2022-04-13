@@ -103,7 +103,9 @@ export class CookieList extends PureComponent<CookieListProps> {
                   <td onClick={() => {}} className="text-right no-wrap">
                     <button
                       className="btn btn--super-compact btn--outlined"
-                      onClick={() => { handleShowModifyCookieModal(cookie); }}
+                      onClick={() => {
+                        handleShowModifyCookieModal(cookie);
+                      }}
                       title="Edit cookie properties"
                     >
                       Edit

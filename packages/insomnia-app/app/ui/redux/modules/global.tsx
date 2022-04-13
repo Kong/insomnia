@@ -464,7 +464,9 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   }
 
   showSelectExportTypeModal({
-    onCancel: () => { dispatch(loadStop()); },
+    onCancel: () => {
+      dispatch(loadStop());
+    },
     onDone: async selectedFormat => {
       // Check if we want to export private environments.
       const environments = await models.environment.all();
@@ -531,7 +533,9 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
 export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
   showSelectExportTypeModal({
-    onCancel: () => { dispatch(loadStop()); },
+    onCancel: () => {
+      dispatch(loadStop());
+    },
     onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request)[] = [];
       const privateEnvironments: Environment[] = [];

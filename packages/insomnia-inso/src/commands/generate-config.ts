@@ -100,7 +100,7 @@ export const generateConfig = async (
   const isListOfDeclarativeConfigs = (docs: DeclarativeConfig[] | K8sManifest[]) :docs is DeclarativeConfig[] => typeof docs?.[0] !== 'string' && '_format_version' in docs?.[0];
 
   let document = '';
-  if (isListOfDeclarativeConfigs(result.documents)){
+  if (isListOfDeclarativeConfigs(result.documents)) {
     // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
     const declarativeConfig = result.documents?.[0];
     document = format?.toLocaleLowerCase() === 'json' ? JSON.stringify(declarativeConfig) : YAML.stringify(declarativeConfig);

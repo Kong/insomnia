@@ -1,6 +1,8 @@
 // NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
-if (process.type === 'renderer') throw new Error('node-libcurl unavailable in renderer');
+if (process.type === 'renderer') {
+  throw new Error('node-libcurl unavailable in renderer');
+}
 
 import { Curl, CurlCode, CurlFeature, CurlInfoDebug } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
@@ -161,7 +163,9 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
   fs.closeSync(fd);
   // NOTE: multipart files are combined before sending, so this file is deleted after
   // alt implemention to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
-  if (isMultipart && path) fs.unlink(path, () => { });
+  if (isMultipart && path) {
+    fs.unlink(path, () => { });
+  }
 };
 
 // Because node-libcurl changed some names that we used in the timeline
