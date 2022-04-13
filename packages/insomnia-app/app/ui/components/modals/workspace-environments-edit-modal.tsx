@@ -513,7 +513,9 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                   <input
                     className="hidden"
                     type="color"
-                    ref={ref => { this.environmentColorInputRef = ref; }}
+                    ref={ref => {
+                      this.environmentColorInputRef = ref;
+                    }}
                     onChange={this.handleInputColorChage}
                   />
 

@@ -141,7 +141,7 @@ module.exports = {
 
     '@typescript-eslint/array-type': [ERROR, { default: 'array', readonly: 'array' }],
     '@typescript-eslint/ban-types': OFF(UNKNOWN),
-    '@typescript-eslint/brace-style': [ERROR, '1tbs', { 'allowSingleLine': true }],
+    '@typescript-eslint/brace-style': [ERROR, '1tbs'],
     '@typescript-eslint/consistent-type-definitions': [ERROR, 'interface'],
     '@typescript-eslint/explicit-module-boundary-types': OFF(UNKNOWN),
     '@typescript-eslint/keyword-spacing': ERROR,

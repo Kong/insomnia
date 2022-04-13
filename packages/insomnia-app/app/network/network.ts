@@ -691,7 +691,9 @@ const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPat
   const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (isMultipartForm && requestBodyPath) {
     const contentTypeHeader = getContentTypeHeader(headers);
-    if (contentTypeHeader) {contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;} else {
+    if (contentTypeHeader) {
+      contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
+    } else {
       headers.push({
         name: 'Content-Type',
         value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
