@@ -72,6 +72,7 @@ module.exports = {
   rules: {
     'array-bracket-spacing': ERROR,
     'brace-style': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'block-spacing': ERROR,
     'camelcase': [ERROR, { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': [ERROR, 'always-multiline'],
     'comma-spacing': ERROR,
@@ -99,6 +100,7 @@ module.exports = {
     'object-curly-spacing': [ERROR, 'always'],
     'quotes': OFF(UNKNOWN),
     'semi': SUCCESSOR(TYPESCRIPT_EXTENSION),
+    'space-before-blocks': ERROR, // TODO: use the @typescript-eslint/space-before-blocks once we typescript-eslint past 5.13
     'space-before-function-paren': [ERROR, { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
     'space-infix-ops': SUCCESSOR(TYPESCRIPT_EXTENSION),
     'space-unary-ops': ERROR,

@@ -267,7 +267,7 @@ export const database = {
     }
     // Notify remote listeners
     const isMainContext = process.type === 'browser';
-    if (isMainContext){
+    if (isMainContext) {
       const windows = electron.BrowserWindow.getAllWindows();
 
       for (const window of windows) {
