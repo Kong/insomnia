@@ -1,3 +1,4 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import { Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, useMemo } from 'react';
 import styled from 'styled-components';
@@ -8,14 +9,13 @@ import {
   groupGrpcMethodsByPackage,
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import { GrpcMethodTag } from '../../tags/grpc-method-tag';
 import { GrpcMethodDropdownButton } from './grpc-method-dropdown-button';
 
 interface Props {
   disabled?: boolean;
-  methods: GrpcMethodDefinition[];
-  selectedMethod?: GrpcMethodDefinition;
+  methods: MethodDefinition<any, any>[];
+  selectedMethod?: MethodDefinition<any, any>;
   handleChange: (arg0: string) => Promise<void>;
   handleChangeProtoFile: (arg0: string) => Promise<void>;
 }

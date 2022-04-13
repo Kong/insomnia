@@ -1,9 +1,8 @@
-import { ServiceError, StatusObject } from '@grpc/grpc-js';
+import { MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { ValueOf } from 'type-fest';
 
 import { generateId } from '../../../common/misc';
 import * as models from '../../../models';
-import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 import * as protoLoader from '../../../network/grpc/proto-loader';
 
 export interface GrpcMessage {
@@ -62,7 +61,7 @@ export type ErrorAction = Action<typeof GrpcActionTypeEnum.error> & Payload<Serv
 export type StatusAction = Action<typeof GrpcActionTypeEnum.status> & Payload<StatusObject>;
 
 export type LoadMethodsAction = Action<typeof GrpcActionTypeEnum.loadMethods> &
-  Payload<GrpcMethodDefinition[]>;
+  Payload<MethodDefinition<any, any>[]>;
 
 type InvalidateManyAction = ActionMany<typeof GrpcActionTypeEnum.invalidateMany>;
 

@@ -1,10 +1,10 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, ServiceDefinition } from '@grpc/proto-loader';
 
 import * as models from '../../../models';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { ProtoFile } from '../../../models/proto-file';
-import type { GrpcMethodDefinition } from '../method';
 import writeProtoFile from './write-proto-file';
 
 const GRPC_LOADER_OPTIONS = {
@@ -23,7 +23,7 @@ const isServiceDefinition = (obj: AnyDefinition): obj is ServiceDefinition => !i
 //  writing to a file in those cases, but it becomes more important to cache
 export const loadMethods = async (
   protoFile?: ProtoFile | null,
-): Promise<GrpcMethodDefinition[]> => {
+): Promise<MethodDefinition<any, any>[]> => {
   if (!protoFile?.protoText) {
     return [];
   }
@@ -35,7 +35,7 @@ export const loadMethods = async (
 export const loadMethodsFromPath = async (
   filePath: string,
   includeDirs?: string[],
-): Promise<GrpcMethodDefinition[]> => {
+): Promise<MethodDefinition<any, any>[]> => {
   const definition = await protoLoader.load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs });
   return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values);
 };

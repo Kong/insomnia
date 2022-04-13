@@ -2,11 +2,10 @@ import * as grpc from '@grpc/grpc-js';
 import { Call, ServiceError } from '@grpc/grpc-js';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
-import * as models from '../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import * as models from '../models';
+import type { GrpcRequest, GrpcRequestHeader } from '../models/grpc-request';
 import callCache from './call-cache';
-import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
 import parseGrpcUrl from './parse-grpc-url';
 import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
@@ -151,7 +150,7 @@ interface RequestData {
   requestId: string;
   respond: ResponseCallbacks;
   client: ServiceClient;
-  method: GrpcMethodDefinition;
+  method: MethodDefinition<any, any>;
   metadata: GrpcRequestHeader[];
 }
 

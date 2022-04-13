@@ -1,8 +1,17 @@
 import { ipcRenderer } from 'electron';
 import { useCallback } from 'react';
+import { ValueOf } from 'type-fest';
 
 import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
-import type { GrpcMethodType } from '../../../../network/grpc/method';
+
+export const GrpcMethodTypeEnum = {
+  unary: 'unary',
+  server: 'server',
+  client: 'client',
+  bidi: 'bidi',
+} as const;
+
+export type GrpcMethodType = ValueOf<typeof GrpcMethodTypeEnum>;
 import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
 import { grpcActions, GrpcDispatch } from '../../../context/grpc';
 

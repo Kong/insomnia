@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { ValueOf } from 'type-fest';
 
 import type { GrpcRequest } from '../../../../models/grpc-request';
-import type { GrpcMethodDefinition, GrpcMethodType } from '../../../../network/grpc/method';
+import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import {
   canClientStream,
   getMethodType,
@@ -9,6 +10,14 @@ import {
 } from '../../../../network/grpc/method';
 import type { GrpcRequestState } from '../../../context/grpc';
 
+export const GrpcMethodTypeEnum = {
+  unary: 'unary',
+  server: 'server',
+  client: 'client',
+  bidi: 'bidi',
+} as const;
+
+export type GrpcMethodType = ValueOf<typeof GrpcMethodTypeEnum>;
 interface MethodSelection {
   method?: GrpcMethodDefinition;
   methodType?: GrpcMethodType;

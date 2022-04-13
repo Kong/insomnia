@@ -1,9 +1,15 @@
 import { Button, ButtonProps } from 'insomnia-components';
 import React, { FunctionComponent } from 'react';
+import { ValueOf } from 'type-fest';
 
-import type { GrpcMethodType } from '../../../network/grpc/method';
-import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
+export const GrpcMethodTypeEnum = {
+  unary: 'unary',
+  server: 'server',
+  client: 'client',
+  bidi: 'bidi',
+} as const;
 
+export type GrpcMethodType = ValueOf<typeof GrpcMethodTypeEnum>;
 interface Props {
   running: boolean;
   methodType?: GrpcMethodType;

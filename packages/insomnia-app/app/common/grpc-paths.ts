@@ -1,6 +1,15 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import { groupBy, map, pipe } from 'ramda';
+import { ValueOf } from 'type-fest';
 
-import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/method';
+export const GrpcMethodTypeEnum = {
+  unary: 'unary',
+  server: 'server',
+  client: 'client',
+  bidi: 'bidi',
+} as const;
+
+export type GrpcMethodType = ValueOf<typeof GrpcMethodTypeEnum>;
 import { getMethodType } from '../network/grpc/method';
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
@@ -37,7 +46,7 @@ export interface GrpcMethodInfo {
   fullPath: string;
 }
 
-const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
+const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
   segments: getGrpcPathSegments(method.path),
   type: getMethodType(method),
   fullPath: method.path,
@@ -45,7 +54,7 @@ const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
 
 export const NO_PACKAGE_KEY = 'no-package';
 
-export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]) => pipe(
+export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: MethodDefinition<any, any>[]) => pipe(
   () => grpcMethodDefinitions,
   map(getMethodInfo),
   groupBy(({ segments }) => segments.packageName || NO_PACKAGE_KEY),
