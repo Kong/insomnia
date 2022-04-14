@@ -70,7 +70,6 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
     'Show Keyboard Shortcuts',
   ),
   PREFERENCES_SHOW_GENERAL: defineHotKey('preferences_showGeneral', 'Show App Preferences'),
-  TOGGLE_MAIN_MENU: defineHotKey('toggleMainMenu', 'Toggle Main Menu'),
   REQUEST_QUICK_SWITCH: defineHotKey('request_quickSwitch', 'Switch Requests'),
   SHOW_RECENT_REQUESTS: defineHotKey('request_showRecent', 'Show Recent Requests'),
   SHOW_RECENT_REQUESTS_PREVIOUS: defineHotKey(
@@ -130,10 +129,6 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.comma.keyCode),
     keyComb(true, false, false, false, keyboardKeys.comma.keyCode),
-  ),
-  [hotKeyRefs.TOGGLE_MAIN_MENU.id]: keyBinds(
-    keyComb(false, true, false, true, keyboardKeys.comma.keyCode),
-    keyComb(true, true, false, false, keyboardKeys.comma.keyCode),
   ),
   [hotKeyRefs.REQUEST_QUICK_SWITCH.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.p.keyCode),
