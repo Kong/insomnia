@@ -590,8 +590,7 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
   const headerTimeline: ResponseTimelineEntry[] = [];
 
   // Update Cookie Jar
-  const setCookieStrings: string[] = headerResults.map(({ headers }) =>
-    getSetCookieHeaders(headers).map(h => h.value));
+  const setCookieStrings: string[] = headerResults.map(({ headers }) => getSetCookieHeaders(headers).map(s => s.value)).flat().filter(s => s.length);
 
   // Update jar with Set-Cookie headers
   const jar = jarFromCookies(cookieJar.cookies);
