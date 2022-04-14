@@ -1,8 +1,8 @@
 import axios from 'axios';
-import React from 'react';
-import ReactDOM from 'react-dom';
+import type React from 'react';
+import type ReactDOM from 'react-dom';
 
-import { DeployToPortal } from './deploy-to-portal';
+import { getDeployToPortalComponent } from './deploy-to-portal';
 
 // This is a temporary shim until insomnia-app exports plugin types that plugin authors can use
 export interface Spec {
@@ -24,7 +24,11 @@ export interface Context {
     analytics: {
       trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
     };
-    insomniaComponents: any;
+    loadRendererModules: () => Promise<{
+      insomniaComponents: any;
+      ReactDOM: typeof ReactDOM;
+      React: typeof React;
+    }>;
   };
   app: {
     dialog: (message: string, root: HTMLElement, config: any) => void;
@@ -35,15 +39,19 @@ export const documentActions = [
   {
     label: 'Deploy to Dev Portal',
     hideAfterClick: true,
-    action(context: Context, spec: Spec) {
+    async action(context: Context, spec: Spec) {
       const root = document.createElement('div');
+      const { analytics, axios, loadRendererModules } = context.__private;
+      const { React, ReactDOM, insomniaComponents } = await loadRendererModules();
+      const { DeployToPortal } = getDeployToPortalComponent({ React });
+
       ReactDOM.render(
         <DeployToPortal
           spec={spec}
           store={context.store}
-          axios={context.__private.axios}
-          insomniaComponents={context.__private.insomniaComponents}
-          trackSegmentEvent={context.__private.analytics.trackSegmentEvent}
+          axios={axios}
+          insomniaComponents={insomniaComponents}
+          trackSegmentEvent={analytics.trackSegmentEvent}
         />,
         root,
       );
