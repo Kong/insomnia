@@ -450,7 +450,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
 
     return (
-      <KeydownBinder onKeydown={this._handleBodyKeyDown} disabled={!open} scoped={false}>
+      <KeydownBinder onKeydown={this._handleBodyKeyDown} disabled={!open} attachToDocumentBody>
         <div
           style={style}
           className={classes}

@@ -1462,7 +1462,7 @@ class App extends PureComponent<AppProps, State> {
     } = this.state;
     const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace?._id || 'n/a'}`;
     return (
-      <KeydownBinder scoped={false} onKeydown={this._handleKeyDown}>
+      <KeydownBinder attachToDocumentBody onKeydown={this._handleKeyDown} detectCapturingPhase>
         <GrpcProvider>
           <NunjucksEnabledProvider>
             <AppHooks />
