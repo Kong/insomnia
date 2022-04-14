@@ -1,4 +1,3 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { CSSProperties, MouseEvent, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
@@ -57,7 +56,6 @@ const StyledTooltipBubble = styled.div`
   }
 `;
 
-@autoBindMethodsForReact
 export class Tooltip extends PureComponent<TooltipProps, State> {
   _showTimeout: NodeJS.Timeout | null = null;
   _hideTimeout: NodeJS.Timeout | null = null;
@@ -71,11 +69,11 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
     movedToBody: false,
   };
 
-  _handleStopClick(e: MouseEvent) {
+  _handleStopClick = (e: MouseEvent) => {
     e.stopPropagation();
-  }
+  };
 
-  _handleMouseEnter() {
+  _handleMouseEnter = () => {
     if (this._showTimeout !== null) {
       clearTimeout(this._showTimeout);
     }
@@ -129,9 +127,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
         visible: true,
       });
     }, this.props.delay || 400);
-  }
+  };
 
-  _handleMouseLeave(): void {
+  _handleMouseLeave = (): void => {
     if (this._showTimeout !== null) {
       clearTimeout(this._showTimeout);
     }
@@ -154,9 +152,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
       bubble.style.bottom = '';
       bubble.style.right = '';
     }, 100);
-  }
+  };
 
-  _getContainer() {
+  _getContainer = () => {
     let container = document.querySelector<HTMLElement>('#tooltips-container');
 
     if (!container) {
@@ -168,9 +166,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
     }
 
     return container;
-  }
+  };
 
-  _moveBubbleToBody() {
+  _moveBubbleToBody = () => {
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().appendChild(el);
@@ -178,9 +176,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
         movedToBody: true,
       });
     }
-  }
+  };
 
-  _removeBubbleFromBody() {
+  _removeBubbleFromBody = () => {
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().removeChild(el);
@@ -188,7 +186,7 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
         movedToBody: false,
       });
     }
-  }
+  };
 
   componentDidMount() {
     // Move the element to the body so we can position absolutely

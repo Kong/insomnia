@@ -1,26 +1,8 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, ReactNode, useCallback } from 'react';
 import styled, { css } from 'styled-components';
 
-interface ControlledDropdown<T> {
-  value: T;
-  onClick?: (value: T, event: React.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
-}
-
-interface UncontrolledDropdown {
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-}
-
-const isControlledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): dropdown is ControlledDropdown<T> => (
-  Object.prototype.hasOwnProperty.call(dropdown, 'value')
-);
-
-const isUncontrolledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): dropdown is UncontrolledDropdown => (
-  !isControlledInput(dropdown)
-);
-
-export type DropdownItemProps<T = string> = {
+export interface DropdownItemProps {
   buttonClass?: string;
   stayOpenAfterClick?: boolean;
   disabled?: boolean;
@@ -30,7 +12,9 @@ export type DropdownItemProps<T = string> = {
   className?: string;
   color?: string;
   selected?: boolean;
-} & (ControlledDropdown<T> | UncontrolledDropdown);
+  onClick: (value: any, e: React.MouseEvent<HTMLButtonElement>) => void;
+  value?: any;
+}
 
 const StyledButton = styled.button<{ selected?: boolean }>`
   display: flex;
@@ -101,57 +85,44 @@ const StyledIconContainer = styled.div`
   padding-right: var(--padding-md);
 `;
 
-@autoBindMethodsForReact
-export class DropdownItem<T> extends PureComponent<DropdownItemProps<T>> {
-  _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
-    const { stayOpenAfterClick, onClick, disabled } = this.props;
-
+export const DropdownItem: FC<DropdownItemProps> = ({
+  buttonClass,
+  children,
+  className,
+  color,
+  disabled,
+  right,
+  icon,
+  selected,
+  onClick,
+  stayOpenAfterClick,
+  value,
+}) => {
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     if (stayOpenAfterClick) {
       event.stopPropagation();
     }
-
     if (!onClick || disabled) {
       return;
     }
+    onClick(value, event);
+  }, [stayOpenAfterClick, disabled, value, onClick]);
 
-    if (isControlledInput<T>(this.props)) {
-      this.props.onClick?.(this.props.value, event);
-    } else if (isUncontrolledInput(this.props)) {
-      this.props.onClick?.(event);
-    }
-  }
+  const styles = color ? { color } : {};
 
-  render() {
-    const {
-      buttonClass,
-      children,
-      className,
-      color,
-      disabled,
-      right,
-      icon,
-      selected,
-    } = this.props;
-
-    const styles = color ? { color } : {};
-
-    const inner = (
+  return (
+    <StyledButton
+      className={classnames(className, buttonClass)}
+      type="button"
+      onClick={handleClick}
+      disabled={disabled}
+      selected={selected}
+    >
+      {icon && <StyledIconContainer>{icon}</StyledIconContainer>}
       <StyledInner className={className}>
         <StyledText style={styles}>{children}</StyledText>
       </StyledInner>
-    );
-    return (
-      <StyledButton
-        className={classnames(className, buttonClass)}
-        type="button"
-        onClick={this._handleClick}
-        disabled={disabled}
-        selected={selected}
-      >
-        {icon && <StyledIconContainer>{icon}</StyledIconContainer>}
-        {inner}
-        {right && <StyledRightNode>{right}</StyledRightNode>}
-      </StyledButton>
-    );
-  }
-}
+      {right && <StyledRightNode>{right}</StyledRightNode>}
+    </StyledButton>
+  );
+};

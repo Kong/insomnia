@@ -1,4 +1,3 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import fuzzySort from 'fuzzysort';
 import { any, equals } from 'ramda';
@@ -155,7 +154,6 @@ const isComponent = (match: string) => (child: ReactNode) => any(equals(match), 
 const isDropdownItem = isComponent(DropdownItem.name);
 const isDropdownDivider = isComponent(DropdownDivider.name);
 
-@autoBindMethodsForReact
 export class Dropdown extends PureComponent<DropdownProps, State> {
   // Save body overflow so we can revert it when needed
   defaultBodyOverflow = document.body.style.overflow;
@@ -200,15 +198,15 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _handleCheckFilterSubmit(e: React.KeyboardEvent<HTMLInputElement>) {
+  _handleCheckFilterSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
       this._dropdownList?.querySelector<HTMLButtonElement>(selector)?.click();
     }
-  }
+  };
 
-  _handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
+  _handleChangeFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newFilter = event.target.value;
 
     // Nothing to do if the filter didn't change
@@ -239,9 +237,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       filterActiveIndex: filterItems[0] || -1,
       filterVisible: this.state.filterVisible ? true : newFilter.length > 0,
     });
-  }
+  };
 
-  _handleDropdownNavigation(event: React.KeyboardEvent<HTMLDivElement>) {
+  _handleDropdownNavigation = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const { key, shiftKey } = event;
     // Handle tab and arrows to move up and down dropdown entries
     const { filterItems, filterActiveIndex } = this.state;
@@ -274,9 +272,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
 
     this._filter?.focus();
-  }
+  };
 
-  _handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  _handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!this.state.open) {
       return;
     }
@@ -289,9 +287,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     if (event.key === 'Escape') {
       this.hide();
     }
-  }
+  };
 
-  _checkSizeAndPosition() {
+  _checkSizeAndPosition = () => {
     if (!this.state.open || !this._dropdownList) {
       return;
     }
@@ -381,20 +379,20 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       this._dropdownList.style.top = `${bottom}px`;
       this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - screenMargin}px`;
     }
-  }
+  };
 
-  _handleClick(event: React.MouseEvent<HTMLDivElement>) {
+  _handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
     this.toggle();
-  }
+  };
 
-  static _handleMouseDown(event: React.MouseEvent<HTMLDivElement>) {
+  _handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
     event.preventDefault();
-  }
+  };
 
-  _getFlattenedChildren(children: ReactNode) {
+  _getFlattenedChildren = (children: ReactNode) => {
     let newChildren: (ReactChild | ReactFragment | ReactPortal)[] = [];
 
     for (const child of React.Children.toArray(children)) {
@@ -421,13 +419,13 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
 
     return newChildren;
-  }
+  };
 
   componentDidUpdate() {
     this._checkSizeAndPosition();
   }
 
-  hide() {
+  hide = () => {
     // Focus the dropdown button after hiding
     if (this._node) {
       const button = this._node.querySelector('button');
@@ -439,9 +437,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       open: false,
     });
     this.props.onHide?.();
-  }
+  };
 
-  show(filterVisible = false, forcedPosition = null) {
+  show = (filterVisible = false, forcedPosition = null) => {
     const bodyHeight = document.body.getBoundingClientRect().height;
 
     const dropdownTop = this._node?.getBoundingClientRect().top || 0;
@@ -458,9 +456,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       uniquenessKey: this.state.uniquenessKey + 1,
     });
     this.props.onOpen?.();
-  }
+  };
 
-  toggle(filterVisible = false) {
+  toggle = (filterVisible = false) => {
     if (this.state.open) {
       this.hide();
       document.body.style.overflow = this.defaultBodyOverflow;
@@ -469,7 +467,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       // Prevent body from scrolling when dropdown is open
       document.body.style.overflow = 'hidden';
     }
-  }
+  };
 
   render() {
     const { className, style, children, renderButton } = this.props;
@@ -541,7 +539,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
         onClick={this._handleClick}
         onKeyDown={this._handleKeyDown}
         tabIndex={-1}
-        onMouseDown={Dropdown._handleMouseDown}
+        onMouseDown={this._handleMouseDown}
       >
         <Fragment key="button">{button}</Fragment>
         {this.dropdownsContainer && ReactDOM.createPortal(
