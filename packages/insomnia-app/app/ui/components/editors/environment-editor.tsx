@@ -150,7 +150,6 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
         <CodeEditor
           ref={this._setEditorRef}
           autoPrettify
-          onPrettify={() => ''}
           enableNunjucks
           onChange={this._handleChange}
           defaultValue={defaultValue}
