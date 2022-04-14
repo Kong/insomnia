@@ -11,24 +11,25 @@ interface Props {
   onKeyup?: (...args: any[]) => any;
   children: ReactNode;
   disabled?: boolean;
+
+  /** When set to `true` the key event is added to `document.body`.
+   * This could be useful in situations where you have to execute the keyboard event handler globally.
+   *
+   * When set to `false` (or unset) it attached the event listener to the child component directly.
+   */
   attachToDocumentBody?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class KeydownBinder extends PureComponent<RequireAtLeastOne<Props, 'onKeydown' | 'onKeyup'>> {
-  static defaultProps: Pick<Props, 'attachToDocumentBody' | 'detectCapturingPhase'> = {
-    attachToDocumentBody: false,
-    detectCapturingPhase: false,
-  };
-
   _handleKeydown(e: KeyboardEvent) {
-    const { onKeydown, disabled } = this.props;
+    const { attachToDocumentBody, onKeydown, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    if (!this.props.attachToDocumentBody) {
+    if (!attachToDocumentBody) {
       e.stopPropagation();
     }
 
@@ -38,13 +39,13 @@ export class KeydownBinder extends PureComponent<RequireAtLeastOne<Props, 'onKey
   }
 
   _handleKeyup(e: KeyboardEvent) {
-    const { onKeyup, disabled } = this.props;
+    const { attachToDocumentBody, onKeyup, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    if (!this.props.attachToDocumentBody) {
+    if (!attachToDocumentBody) {
       e.stopPropagation();
     }
 
@@ -54,24 +55,28 @@ export class KeydownBinder extends PureComponent<RequireAtLeastOne<Props, 'onKey
   }
 
   componentDidMount() {
-    if (!this.props.attachToDocumentBody) {
+    const { detectCapturingPhase, attachToDocumentBody } = this.props;
+    const options = { capture: detectCapturingPhase };
+    if (!attachToDocumentBody) {
       const el = ReactDOM.findDOMNode(this);
-      el?.addEventListener('keydown', this._handleKeydown, { capture: this.props.detectCapturingPhase });
-      el?.addEventListener('keyup', this._handleKeyup);
+      el?.addEventListener('keydown', this._handleKeydown, options);
+      el?.addEventListener('keyup', this._handleKeyup, options);
     } else {
-      document.body && document.body.addEventListener('keydown', this._handleKeydown, { capture: this.props.detectCapturingPhase });
-      document.body && document.body.addEventListener('keyup', this._handleKeyup, { capture: this.props.detectCapturingPhase });
+      document.body && document.body.addEventListener('keydown', this._handleKeydown, options);
+      document.body && document.body.addEventListener('keyup', this._handleKeyup, options);
     }
   }
 
   componentWillUnmount() {
-    if (!this.props.attachToDocumentBody) {
+    const { detectCapturingPhase, attachToDocumentBody } = this.props;
+    const options = { capture: detectCapturingPhase };
+    if (!attachToDocumentBody) {
       const el = ReactDOM.findDOMNode(this);
-      el?.removeEventListener('keydown', this._handleKeydown, { capture: this.props.detectCapturingPhase });
-      el?.removeEventListener('keyup', this._handleKeyup, { capture: this.props.detectCapturingPhase });
+      el?.removeEventListener('keydown', this._handleKeydown, options);
+      el?.removeEventListener('keyup', this._handleKeyup, options);
     } else {
-      document.body && document.body.removeEventListener('keydown', this._handleKeydown, { capture: this.props.detectCapturingPhase });
-      document.body && document.body.removeEventListener('keyup', this._handleKeyup, { capture: this.props.detectCapturingPhase });
+      document.body && document.body.removeEventListener('keydown', this._handleKeydown, options);
+      document.body && document.body.removeEventListener('keyup', this._handleKeyup, options);
     }
   }
 

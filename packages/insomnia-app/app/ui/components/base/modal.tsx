@@ -172,7 +172,7 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown} attachToDocumentBody={false}>
+      <KeydownBinder onKeydown={this._handleKeyDown}>
         <div
           role="dialog"
           ref={this._setModalRef}
