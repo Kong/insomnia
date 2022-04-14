@@ -39,28 +39,29 @@ export const documentActions = [
   {
     label: 'Deploy to Dev Portal',
     hideAfterClick: true,
-    async action(context: Context, spec: Spec) {
+    action(context: Context, spec: Spec) {
       const root = document.createElement('div');
       const { analytics, axios, loadRendererModules } = context.__private;
-      const { React, ReactDOM, insomniaComponents } = await loadRendererModules();
-      const { DeployToPortal } = getDeployToPortalComponent({ React });
+      loadRendererModules().then(({ React, ReactDOM, insomniaComponents }) => {
+        const { DeployToPortal } = getDeployToPortalComponent({ React });
 
-      ReactDOM.render(
-        <DeployToPortal
-          spec={spec}
-          store={context.store}
-          axios={axios}
-          insomniaComponents={insomniaComponents}
-          trackSegmentEvent={analytics.trackSegmentEvent}
-        />,
-        root,
-      );
+        ReactDOM.render(
+          <DeployToPortal
+            spec={spec}
+            store={context.store}
+            axios={axios}
+            insomniaComponents={insomniaComponents}
+            trackSegmentEvent={analytics.trackSegmentEvent}
+          />,
+          root,
+        );
 
-      context.app.dialog('Deploy to Dev Portal', root, {
-        skinny: true,
-        onHide() {
-          ReactDOM.unmountComponentAtNode(root);
-        },
+        context.app.dialog('Deploy to Dev Portal', root, {
+          skinny: true,
+          onHide() {
+            ReactDOM.unmountComponentAtNode(root);
+          },
+        });
       });
     },
   },
