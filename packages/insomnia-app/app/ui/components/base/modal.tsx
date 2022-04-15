@@ -172,7 +172,7 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
 
     return (
-      <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
+      <KeydownBinder onKeydown={this._handleKeyDown}>
         <div
           ref={this._setModalRef}
           tabIndex={-1}
