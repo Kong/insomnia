@@ -40,100 +40,63 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
   const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
   if (hasRequestBodyOrFilePath) {
-    headers.push({
-      name: 'Expect',
-      value: DISABLE_HEADER_VALUE,
-    });
-    headers.push({
-      name: 'Transfer-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
+    headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE });
+    headers.push({ name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE });
   }
   const { authentication, method } = req;
   const isDigest = authentication.type === AUTH_DIGEST;
   const isNTLM = authentication.type === AUTH_NTLM;
   const isAWSIAM = authentication.type === AUTH_AWS_IAM;
+  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
+  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeader) {
+    headers.push(authHeader);
+  }
   if (isAWSIAM) {
-    const credentials = {
-      accessKeyId: authentication.accessKeyId || '',
-      secretAccessKey: authentication.secretAccessKey || '',
-      sessionToken: authentication.sessionToken || '',
-    };
-
-    const extraHeaders = _getAwsAuthHeaders(
-      credentials,
+    _getAwsAuthHeaders(
+      {
+        accessKeyId: authentication.accessKeyId || '',
+        secretAccessKey: authentication.secretAccessKey || '',
+        sessionToken: authentication.sessionToken || '',
+      },
       headers,
       requestBody || '',
       finalUrl,
       method,
       authentication.region || '',
       authentication.service || '',
-    );
-
-    for (const header of extraHeaders) {
-      headers.push(header);
-    }
-  }
-  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest) {
-    if (authHeader) {
-      headers.push({
-        name: authHeader.name,
-        value: authHeader.value,
-      });
-    }
+    ).forEach(header => headers.push(header));
   }
   const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (isMultipartForm && requestBodyPath) {
     const contentTypeHeader = getContentTypeHeader(headers);
-    if (contentTypeHeader) contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
-    else headers.push({
-      name: 'Content-Type',
-      value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
-    });
+    if (contentTypeHeader) {
+      contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
+    } else {
+      headers.push({ name: 'Content-Type', value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}` });
+    }
   }
   // Send a default Accept headers of anything
   if (!hasAcceptHeader(headers)) {
-    headers.push({
-      name: 'Accept',
-      value: '*/*',
-    }); // Default to anything
+    headers.push({ name: 'Accept', value: '*/*' }); // Default to anything
   }
 
   // Don't auto-send Accept-Encoding header
   if (!hasAcceptEncodingHeader(headers)) {
-    headers.push({
-      name: 'Accept-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
+    headers.push({ name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE });
   }
 
   // Prevent curl from adding default content-type header
   if (!hasContentTypeHeader(headers)) {
-    headers.push({
-      name: 'content-type',
-      value: DISABLE_HEADER_VALUE,
-    });
+    headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
   }
 
-  return headers
-    .filter(h => h.name)
-    .map(h => {
-      const value = h.value || '';
-
-      if (value === '') {
-        // Curl needs a semicolon suffix to send empty header values
-        return `${h.name};`;
-      } else if (value === DISABLE_HEADER_VALUE) {
-        // Tell Curl NOT to send the header if value is null
-        return `${h.name}:`;
-      } else {
-        // Send normal header value
-        return `${h.name}: ${value}`;
-      }
-    });
+  return headers.filter(h => h.name)
+    .map(({ name, value }) =>
+      value === '' ? `${name};` // Curl needs a semicolon suffix to send empty header values
+        : value === DISABLE_HEADER_VALUE ? `${name}:` // Tell Curl NOT to send the header if value is null
+          : `${name}: ${value}`);
 };
-// exported for unit tests only
+
 export function _getAwsAuthHeaders(
   credentials: {
     accessKeyId: string;
