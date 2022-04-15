@@ -9,6 +9,7 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
+import { resolve as urlResolve } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -184,12 +185,21 @@ export async function _actuallySend(
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
 
-      const { headerTimeline } = await setCookiesFromResponseHeaders({
-        headerResults,
-        finalUrl,
-        cookieJar,
-        settingStoreCookies,
-      });
+      if (settingStoreCookies) {
+        const redirects: string[][] = headerResults.map(getSetCookiesFromResponseHeaders);
+        const setCookieStrings = redirects.flat();
+        const totalSetCookies = setCookieStrings.length;
+        if (totalSetCookies) {
+          const currentUrl = getCurrentUrl({ headerResults, finalUrl });
+          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'TEXT', timestamp: Date.now() }));
+          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+          if (hasCookiesToPersist) {
+            await models.cookieJar.update(cookieJar, { cookies });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'TEXT', timestamp: Date.now() });
+          }
+        }
+      }
 
       const lastRedirect = headerResults[headerResults.length - 1];
       const responsePatch: ResponsePatch = {
@@ -200,7 +210,7 @@ export async function _actuallySend(
         statusMessage: lastRedirect.reason,
         ...patch,
       };
-      const timelinePath = await storeTimeline([...timeline, ...debugTimeline, ...headerTimeline]);
+      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
       if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
         delete cancelRequestFunctionMap[renderedRequest._id];
@@ -229,43 +239,39 @@ export async function _actuallySend(
 }
 
 // add set-cookie headers to file(cookiejar) and database
+export const getSetCookiesFromResponseHeaders = headers => {
+  const setCookieStrings: string[] = [];
+  const setCookieHeaders = getSetCookieHeaders(headers);
+  return  [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
+};
 
-const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
-  const headerTimeline: ResponseTimelineEntry[] = [];
+export const getCurrentUrl = ({ headerResults, finalUrl }) => {
+  let currentUrl = finalUrl;
 
-  // Update Cookie Jar
-  const setCookieStrings: string[] = headerResults.map(({ headers }) => getSetCookieHeaders(headers).map(s => s.value)).flat().filter(s => s.length);
+  for (const { headers } of headerResults) {
+    const newLocation = getLocationHeader(headers);
 
-  // Update jar with Set-Cookie headers
+    if (newLocation !== null) {
+      currentUrl = urlResolve(currentUrl, newLocation.value);
+    }
+  }
+  return currentUrl;
+};
+
+const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }) => {
+  const rejectedCookies: string[] = [];
   const jar = jarFromCookies(cookieJar.cookies);
-  for (const setCookie of setCookieStrings) {
+  for (const setCookieStr of setCookieStrings) {
     try {
-      // NOTE: LEGACY get the last location header to set the cookie at
-      const locationHeader = headerResults.reverse().find(({ headers }) => getLocationHeader(headers));
-      jar.setCookieSync(setCookie, locationHeader?.value || finalUrl);
+      jar.setCookieSync(setCookieStr, currentUrl);
     } catch (err) {
-      headerTimeline.push({
-        name: 'TEXT',
-        value: `Rejected cookie: ${err.message}`,
-        timestamp: Date.now(),
-      });
+      if (err instanceof Error) {
+        rejectedCookies.push(err.message);
+      }
     }
   }
-
-  // Update cookie jar if we need to and if we found any cookies
-  if (setCookieStrings.length > 0) {
-    if (settingStoreCookies) {
-      const cookies = await cookiesFromJar(jar);
-      await models.cookieJar.update(cookieJar, { cookies });
-
-    }
-    // Print informational message
-    const n = setCookieStrings.length;
-    const intent = settingStoreCookies ? 'Saved' : 'Ignored';
-    const plural = `cookie${n === 1 ? '' : 's'}`;
-    headerTimeline.push({ value: `${intent} ${n} ${plural}`, name: 'TEXT', timestamp: Date.now() });
-  }
-  return { headerTimeline };
+  const cookies = await cookiesFromJar(jar);
+  return { cookies, rejectedCookies };
 };
 
 export async function sendWithSettings(

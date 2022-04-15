@@ -20,6 +20,7 @@ import * as models from '../../models';
 import { _parseHeaders, getHttpVersion } from '../libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
+import { getSetCookiesFromResponseHeaders } from '../network';
 import { _getAwsAuthHeaders } from '../parse-header-strings';
 window.app = electron.app;
 
@@ -994,5 +995,37 @@ describe('_parseHeaders', () => {
         version: 'HTTP/1.1',
       },
     ]);
+  });
+});
+
+describe('getSetCookiesFromResponseHeaders', () => {
+  it('defaults to empty array', () => {
+    const headers = [];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual([]);
+  });
+  it('gets set-cookies', () => {
+    const headers = [{ name:'Set-Cookie', value:'monster' }];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster']);
+  });
+  it('gets two case-insenstive set-cookies', () => {
+    const headers = [{ name:'Set-Cookie', value:'monster' }, { name:'set-cookie', value:'mash' }];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster', 'mash']);
+  });
+});
+describe('getCurrentUrl', () => {
+  it('defaults to finalUrl', () => {
+    const headerResults = [];
+    const finalUrl = 'http://mergemyshit.dev';
+    expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl);
+  });
+  it('append location to finalUrl', () => {
+    const headerResults = [{ headers:[{ name:'Location', value:'/cookies' }] }];
+    const finalUrl = 'http://mergemyshit.dev';
+    expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/cookies');
+  });
+  it('appends only last location to finalUrl', () => {
+    const headerResults = [{ headers:[{ name:'Location', value:'/cookies' }] }, { headers:[{ name:'location', value:'/biscuit' }] }];
+    const finalUrl = 'http://mergemyshit.dev';
+    expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
   });
 });
