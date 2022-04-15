@@ -9,7 +9,6 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import { resolve as urlResolve } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -239,23 +238,22 @@ export async function _actuallySend(
 }
 
 // add set-cookie headers to file(cookiejar) and database
-export const getSetCookiesFromResponseHeaders = headers => {
-  const setCookieStrings: string[] = [];
-  const setCookieHeaders = getSetCookieHeaders(headers);
-  return  [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
-};
+export const getSetCookiesFromResponseHeaders = headers => getSetCookieHeaders(headers).map(h => h.value);
 
 export const getCurrentUrl = ({ headerResults, finalUrl }) => {
-  let currentUrl = finalUrl;
-
-  for (const { headers } of headerResults) {
-    const newLocation = getLocationHeader(headers);
-
-    if (newLocation !== null) {
-      currentUrl = urlResolve(currentUrl, newLocation.value);
-    }
+  if (!headerResults || !headerResults.length) {
+    return finalUrl;
   }
-  return currentUrl;
+  const lastRedirect = headerResults[headerResults.length - 1];
+  const location = getLocationHeader(lastRedirect.headers);
+  if (!location || !location.value) {
+    return finalUrl;
+  }
+  try {
+    return new URL(location.value, finalUrl).toString();
+  } catch (error) {
+    return finalUrl;
+  }
 };
 
 const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }) => {
