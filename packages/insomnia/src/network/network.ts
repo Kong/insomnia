@@ -122,22 +122,9 @@ export async function _actuallySend(
         const socketUrl = (match && match[3]) || '';
         finalUrl = `${protocol}//${socketUrl}`;
       }
-      timeline.push({
-        name: 'TEXT',
-        value: `Preparing request to ${finalUrl}`,
-        timestamp: Date.now(),
-      });
-      timeline.push({
-        name: 'TEXT',
-        value: `Current time is ${new Date().toISOString()}`,
-        timestamp: Date.now(),
-      });
-
-      timeline.push({
-        name: 'TEXT',
-        value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`,
-        timestamp: Date.now(),
-      });
+      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'TEXT', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'TEXT', timestamp: Date.now() });
+      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'TEXT', timestamp: Date.now() });
 
       // Setup CA Root Certificates
       const baseCAPath = getTempDir();
@@ -155,11 +142,7 @@ export async function _actuallySend(
       }
 
       if (!renderedRequest.settingSendCookies) {
-        timeline.push({
-          name: 'TEXT',
-          value: 'Disable cookie sending due to user setting',
-          timestamp: Date.now(),
-        });
+        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'TEXT', timestamp: Date.now() });
       }
 
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
@@ -184,9 +167,11 @@ export async function _actuallySend(
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
 
+      // add set-cookie headers to file(cookiejar) and database
       if (settingStoreCookies) {
+        // supports many set-cookies over many redirects
         const redirects: string[][] = headerResults.map(getSetCookiesFromResponseHeaders);
-        const setCookieStrings = redirects.flat();
+        const setCookieStrings: string[] = redirects.flat();
         const totalSetCookies = setCookieStrings.length;
         if (totalSetCookies) {
           const currentUrl = getCurrentUrl({ headerResults, finalUrl });
@@ -237,7 +222,6 @@ export async function _actuallySend(
   });
 }
 
-// add set-cookie headers to file(cookiejar) and database
 export const getSetCookiesFromResponseHeaders = headers => getSetCookieHeaders(headers).map(h => h.value);
 
 export const getCurrentUrl = ({ headerResults, finalUrl }) => {

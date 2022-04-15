@@ -210,7 +210,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     }
     const requestBodyPath = await parseRequestBodyPath(body);
-    let isMultipart = false;
+    const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
     let requestFileDescriptor;
     const { authentication } = req;
     if (requestBodyPath) {
@@ -218,7 +218,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       if (authentication.type === AUTH_AWS_IAM) {
         throw new Error('AWS authentication not supported for provided body type');
       }
-      isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const { size: contentLength } = fs.statSync(requestBodyPath);
       curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
       curl.setOpt(Curl.option.UPLOAD, 1);
@@ -271,9 +270,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
     // set up response logger
     curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
-      const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
-      const infoTypeName = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
-
       const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
       const isEmpty = buffer.length === 0;
       // Don't show cookie setting because this will display every domain in the jar
@@ -282,25 +278,26 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         return 0;
       }
 
-      let value;
+      let timelineMessage;
       if (infoType === CurlInfoDebug.DataOut) {
         // Ignore large post data messages
         const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
-        value = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+        timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
       if (infoType === CurlInfoDebug.DataIn) {
-        value = `Received ${describeByteSize(buffer.length)} chunk`;
+        timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
       }
 
       debugTimeline.push({
-        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : infoTypeName,
-        value: value || buffer.toString('utf8'),
+        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : LIBCURL_DEBUG_MIGRATION_MAP[CurlInfoDebug[infoType]],
+        value: timelineMessage || buffer.toString('utf8'),
         timestamp: Date.now(),
       });
-      return 0; // Must be here
+      return 0;
     });
 
-    // makes rawHeaders a buffer, rather than HeaderInfo[]
+    // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
+    // this provides support for multiple set-cookies and duplicated headers
     curl.enable(CurlFeature.Raw);
     // NOTE: legacy write end callback
     curl.on('end', () => responseBodyWriteStream.end());
