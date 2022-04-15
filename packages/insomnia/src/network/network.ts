@@ -183,15 +183,17 @@ export async function _actuallySend(
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
       const { cookieJar, settingStoreCookies } = renderedRequest;
-      const { lastRedirect, contentType, headerTimeline } = await setCookiesFromResponseHeaders({
+
+      const { headerTimeline } = await setCookiesFromResponseHeaders({
         headerResults,
         finalUrl,
         cookieJar,
         settingStoreCookies,
       });
 
+      const lastRedirect = headerResults[headerResults.length - 1];
       const responsePatch: ResponsePatch = {
-        contentType,
+        contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
         headers: lastRedirect.headers,
         httpVersion: lastRedirect.version,
         statusCode: lastRedirect.code,
@@ -227,6 +229,7 @@ export async function _actuallySend(
 }
 
 // add set-cookie headers to file(cookiejar) and database
+
 const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
   const headerTimeline: ResponseTimelineEntry[] = [];
 
@@ -237,7 +240,7 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
   const jar = jarFromCookies(cookieJar.cookies);
   for (const setCookie of setCookieStrings) {
     try {
-      // get the last location header to set the cookie at
+      // NOTE: LEGACY get the last location header to set the cookie at
       const locationHeader = headerResults.reverse().find(({ headers }) => getLocationHeader(headers));
       jar.setCookieSync(setCookie, locationHeader?.value || finalUrl);
     } catch (err) {
@@ -250,30 +253,19 @@ const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJa
   }
 
   // Update cookie jar if we need to and if we found any cookies
-  if (settingStoreCookies && setCookieStrings.length) {
-    const cookies = await cookiesFromJar(jar);
-    await models.cookieJar.update(cookieJar, { cookies });
-  }
-
-  // Print informational message
   if (setCookieStrings.length > 0) {
+    if (settingStoreCookies) {
+      const cookies = await cookiesFromJar(jar);
+      await models.cookieJar.update(cookieJar, { cookies });
+
+    }
+    // Print informational message
     const n = setCookieStrings.length;
     const intent = settingStoreCookies ? 'Saved' : 'Ignored';
     const plural = `cookie${n === 1 ? '' : 's'}`;
-    headerTimeline.push({
-      name: 'TEXT',
-      value: `${intent} ${n} ${plural}`,
-      timestamp: Date.now(),
-    });
+    headerTimeline.push({ value: `${intent} ${n} ${plural}`, name: 'TEXT', timestamp: Date.now() });
   }
-  // Headers are an array (one for each redirect)
-  const lastRedirect = headerResults[headerResults.length - 1];
-  return {
-    lastRedirect,
-    contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
-    headerTimeline,
-  };
-
+  return { headerTimeline };
 };
 
 export async function sendWithSettings(
