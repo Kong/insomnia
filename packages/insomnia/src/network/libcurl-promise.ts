@@ -117,14 +117,19 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const httpVersion = getHttpVersion(settings.preferredHttpVersion);
     debugTimeline.push({ value: httpVersion.log, name: 'TEXT', timestamp: Date.now() });
 
-    if (httpVersion.curlHttpVersion) curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
+    if (httpVersion.curlHttpVersion) {
+      curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
+    }
 
     // Set maximum amount of redirects allowed
     // NOTE: Setting this to -1 breaks some versions of libcurl
-    if (settings.maxRedirects > 0) curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+    if (settings.maxRedirects > 0) {
+      curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+    }
 
-    if (!settings.proxyEnabled) curl.setOpt(Curl.option.PROXY, '');
-    else {
+    if (!settings.proxyEnabled) {
+      curl.setOpt(Curl.option.PROXY, '');
+    } else {
       const { protocol } = urlParse(req.url);
       const { httpProxy, httpsProxy, noProxy } = settings;
       const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
@@ -134,11 +139,14 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         curl.setOpt(Curl.option.PROXY, proxy);
         curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
       }
-      if (noProxy) curl.setOpt(Curl.option.NOPROXY, noProxy);
+      if (noProxy) {
+        curl.setOpt(Curl.option.NOPROXY, noProxy);
+      }
     }
     const { timeout } = settings;
-    if (timeout <= 0) curl.setOpt(Curl.option.TIMEOUT_MS, 0);
-    else {
+    if (timeout <= 0) {
+      curl.setOpt(Curl.option.TIMEOUT_MS, 0);
+    } else {
       curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
       debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'TEXT', timestamp: Date.now() });
     }
@@ -149,11 +157,17 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     }
     debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'TEXT', timestamp: Date.now() });
 
-    if (req.settingFollowRedirects === 'off') curl.setOpt(Curl.option.FOLLOWLOCATION, false);
-    else if (req.settingFollowRedirects === 'on') curl.setOpt(Curl.option.FOLLOWLOCATION, true);
-    else curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+    if (req.settingFollowRedirects === 'off') {
+      curl.setOpt(Curl.option.FOLLOWLOCATION, false);
+    } else if (req.settingFollowRedirects === 'on') {
+      curl.setOpt(Curl.option.FOLLOWLOCATION, true);
+    } else {
+      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+    }
     // Don't rebuild dot sequences in path
-    if (!req.settingRebuildPath) curl.setOpt(Curl.option.PATH_AS_IS, true);
+    if (!req.settingRebuildPath) {
+      curl.setOpt(Curl.option.PATH_AS_IS, true);
+    }
 
     if (req.settingSendCookies) {
       const { cookieJar, cookies } = req;
@@ -183,21 +197,27 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
     // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
     // This is how you tell Curl to send a HEAD request
-    if (method.toUpperCase() === 'HEAD') curl.setOpt(Curl.option.NOBODY, 1);
-    // This is how you tell Curl to send a POST request
-    else if (method.toUpperCase() === 'POST') curl.setOpt(Curl.option.POST, 1);
-    // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
-    else curl.setOpt(Curl.option.CUSTOMREQUEST, method);
+    if (method.toUpperCase() === 'HEAD') {
+      curl.setOpt(Curl.option.NOBODY, 1);
+    } else if (method.toUpperCase() === 'POST') { // This is how you tell Curl to send a POST request
+      curl.setOpt(Curl.option.POST, 1);
+    } else { // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
+      curl.setOpt(Curl.option.CUSTOMREQUEST, method);
+    }
 
     const requestBody = parseRequestBody({ body, method });
-    if (requestBody) curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    if (requestBody) {
+      curl.setOpt(Curl.option.POSTFIELDS, requestBody);
+    }
     const requestBodyPath = await parseRequestBodyPath(body);
     let isMultipart = false;
     let requestFileDescriptor;
     const { authentication } = req;
     if (requestBodyPath) {
       // AWS IAM file upload not supported
-      if (authentication.type === AUTH_AWS_IAM) throw new Error('AWS authentication not supported for provided body type');
+      if (authentication.type === AUTH_AWS_IAM) {
+        throw new Error('AWS authentication not supported for provided body type');
+      }
       isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const { size: contentLength } = fs.statSync(requestBodyPath);
       curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
@@ -415,7 +435,9 @@ const parseRequestBody = ({ body, method }) => {
 };
 const parseRequestBodyPath = async body => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (!isMultipartForm) return body.fileName;
+  if (!isMultipartForm) {
+    return body.fileName;
+  }
   const { filePath } = await buildMultipart(body.params || [],);
   return filePath;
 };
