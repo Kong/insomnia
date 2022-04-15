@@ -7,7 +7,6 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
@@ -23,7 +22,6 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { KeydownBinder } from '../keydown-binder';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
@@ -111,12 +109,6 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleKeydown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
-      this._dropdown?.toggle(true);
-    });
-  }
-
   async _handleGenerateConfig(label: string) {
     const { activeApiSpec } = this.props;
     if (!activeApiSpec) {
@@ -145,72 +137,70 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
     }
 
     return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
-        <Dropdown
-          beside
-          ref={this._setDropdownRef}
-          className={classes}
-          onOpen={this._handleDropdownOpen}
-          // @ts-expect-error -- TSCONVERSION appears to be genuine
-          onHide={this._handleDropdownHide}
-          {...(other as Record<string, any>)}
-        >
-          <DropdownButton className="row">
-            <div
-              className="ellipsis"
-              style={{
-                maxWidth: '400px',
-              }}
-              title={activeWorkspaceName}
-            >
-              {activeWorkspaceName}
-            </div>
-            <i className="fa fa-caret-down space-left" />
-            {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
-          </DropdownButton>
-          <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
-            <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
-            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
-          </DropdownItem>
+      <Dropdown
+        beside
+        ref={this._setDropdownRef}
+        className={classes}
+        onOpen={this._handleDropdownOpen}
+        // @ts-expect-error -- TSCONVERSION appears to be genuine
+        onHide={this._handleDropdownHide}
+        {...(other as Record<string, any>)}
+      >
+        <DropdownButton className="row">
+          <div
+            className="ellipsis"
+            style={{
+              maxWidth: '400px',
+            }}
+            title={activeWorkspaceName}
+          >
+            {activeWorkspaceName}
+          </div>
+          <i className="fa fa-caret-down space-left" />
+          {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
+        </DropdownButton>
+        <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
+          <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
+        </DropdownItem>
 
-          <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
-            <i className="fa fa-share" /> Import/Export
-          </DropdownItem>
+        <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
+          <i className="fa fa-share" /> Import/Export
+        </DropdownItem>
 
-          {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-          {actionPlugins.map((p: WorkspaceAction) => (
-            <DropdownItem
-              key={p.label}
-              onClick={() => this._handlePluginClick(p, activeWorkspace)}
-              stayOpenAfterClick
-            >
-              {loadingActions[p.label] ? (
-                <i className="fa fa-refresh fa-spin" />
-              ) : (
-                <i className={classnames('fa', p.icon || 'fa-code')} />
-              )}
-              {p.label}
-            </DropdownItem>
-          ))}
-          {isDesign(activeWorkspace) && (
-            <>
-              {configGeneratorPlugins.length > 0 && (
-                <DropdownDivider>Config Generators</DropdownDivider>
-              )}
-              {configGeneratorPlugins.map((p: ConfigGenerator) => (
-                <DropdownItem
-                  key="generateConfig"
-                  onClick={this._handleGenerateConfig}
-                  value={p.label}
-                >
-                  <i className="fa fa-code" />
-                  {p.label}
-                </DropdownItem>
-              ))}
-            </>
-          )}
-        </Dropdown>
-      </KeydownBinder>
+        {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
+        {actionPlugins.map((p: WorkspaceAction) => (
+          <DropdownItem
+            key={p.label}
+            onClick={() => this._handlePluginClick(p, activeWorkspace)}
+            stayOpenAfterClick
+          >
+            {loadingActions[p.label] ? (
+              <i className="fa fa-refresh fa-spin" />
+            ) : (
+              <i className={classnames('fa', p.icon || 'fa-code')} />
+            )}
+            {p.label}
+          </DropdownItem>
+        ))}
+        {isDesign(activeWorkspace) && (
+          <>
+            {configGeneratorPlugins.length > 0 && (
+              <DropdownDivider>Config Generators</DropdownDivider>
+            )}
+            {configGeneratorPlugins.map((p: ConfigGenerator) => (
+              <DropdownItem
+                key="generateConfig"
+                onClick={this._handleGenerateConfig}
+                value={p.label}
+              >
+                <i className="fa fa-code" />
+                {p.label}
+              </DropdownItem>
+            ))}
+          </>
+        )}
+      </Dropdown>
     );
   }
 }
