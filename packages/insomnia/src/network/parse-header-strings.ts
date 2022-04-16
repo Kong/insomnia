@@ -16,7 +16,6 @@ import {
   hasAuthHeader,
   hasContentTypeHeader,
 } from '../common/misc';
-import { RequestHeader } from '../models/request';
 import { DEFAULT_BOUNDARY } from './multipart';
 
 // Special header value that will prevent the header being sent
@@ -52,19 +51,16 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
     headers.push(authHeader);
   }
   if (isAWSIAM) {
-    _getAwsAuthHeaders(
-      {
-        accessKeyId: authentication.accessKeyId || '',
-        secretAccessKey: authentication.secretAccessKey || '',
-        sessionToken: authentication.sessionToken || '',
-      },
-      headers,
-      requestBody || '',
-      finalUrl,
+    const hostHeader = getHostHeader(headers)?.value;
+    const contentTypeHeader = getContentTypeHeader(headers)?.value;
+    _getAwsAuthHeaders({
+      authentication,
+      url: finalUrl,
+      hostHeader,
+      contentTypeHeader,
+      body: requestBody,
       method,
-      authentication.region || '',
-      authentication.service || '',
-    ).forEach(header => headers.push(header));
+    }).forEach(header => headers.push(header));
   }
   const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (isMultipartForm && requestBodyPath) {
@@ -97,44 +93,38 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
           : `${name}: ${value}`);
 };
 
-export function _getAwsAuthHeaders(
-  credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken: string;
-  },
-  headers: RequestHeader[],
-  body: string,
-  url: string,
-  method: string,
-  region?: string,
-  service?: string,
-): {
-  name: string;
-  value: string;
-}[] {
-  const parsedUrl = urlParse(url);
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // AWS uses host header for signing so prioritize that if the user set it manually
-  const hostHeader = getHostHeader(headers);
-  const host = hostHeader ? hostHeader.value : parsedUrl.host;
-  const awsSignOptions: aws4.Request = {
+interface AWSOptions {
+  authentication: {
+    accessKeyId?: string;
+    secretAccessKey?: string;
+    sessionToken?: string;
+    region?: string;
+    service?: string;
+  };
+  url: string;
+  method: string;
+  hostHeader?: string;
+  contentTypeHeader?: string;
+  body?: string;
+}
+export function _getAwsAuthHeaders({ authentication, url, method, hostHeader, contentTypeHeader, body }: AWSOptions): { name: string; value: any }[] {
+  const { path, host } = urlParse(url);
+  const onlyContentTypeHeader = contentTypeHeader ? { 'content-type': contentTypeHeader } : {};
+  const { service, region, accessKeyId, secretAccessKey, sessionToken } = authentication;
+  const signature = aws4.sign({
     service,
     region,
-    ...(host ? { host } : {}),
     body,
     method,
-    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
-    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
-  };
-  const signature = aws4.sign(awsSignOptions, credentials);
+    headers: onlyContentTypeHeader,
+    path: path || undefined,
+    // AWS uses host header for signing so prioritize that if the user set it manually
+    host: hostHeader || host || undefined,
+  }, { accessKeyId, secretAccessKey, sessionToken });
   if (!signature.headers) {
     return [];
   }
-  return Object.keys(signature.headers)
-    .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({
-      name,
-      value: String(signature.headers?.[name]),
-    }));
+  return Object.entries(signature.headers)
+    .filter(([name]) => name !== 'content-type') // Don't add this because we already have it
+    .map(([name, value]) => ({ name, value }));
 }
