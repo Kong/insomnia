@@ -96,6 +96,7 @@
         "group": "Insomnia",
         "order": 0
       },
+      "stopAll": true,
       "preLaunchTask": "Insomnia: Compile (Watch)",
       "configurations": [
         "Electron: main",
