@@ -4,7 +4,6 @@ import rimraf from 'rimraf';
 
 import appConfig from '../config/config.json';
 import electronBuilderConfig from '../config/electronbuilder.json';
-import { start as build } from './build';
 
 const PLATFORM_MAP = {
   darwin: 'mac',
@@ -15,19 +14,6 @@ const PLATFORM_MAP = {
 const isSupportedPlatform = (platform: NodeJS.Platform): platform is keyof typeof PLATFORM_MAP => (
   PLATFORM_MAP[platform] !== undefined
 );
-
-// Start package if ran from CLI
-if (require.main === module) {
-  process.nextTick(async () => {
-    try {
-      await build();
-      await module.exports.start();
-    } catch (err) {
-      console.log('[package] ERROR:', err);
-      process.exit(1);
-    }
-  });
-}
 
 const pkg = () => {
   const { BUILD_TARGETS } = process.env;
@@ -64,7 +50,7 @@ const pkg = () => {
   return electronBuilder.build({
     config,
     [targetPlatform]: target,
-    ...targetPlatform === 'mac' ? { universal: true } : {},
+    ...(targetPlatform === 'mac' ? { universal: true } : {}),
   });
 };
 
@@ -79,7 +65,7 @@ const emptyDir = (relPath: string) => new Promise<void>((resolve, reject) => {
   });
 });
 
-export const start = async () => {
+const start = async () => {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
@@ -91,3 +77,5 @@ export const start = async () => {
 
   console.log('[package] Complete!');
 };
+
+start();

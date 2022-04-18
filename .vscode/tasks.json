@@ -5,32 +5,31 @@
   "tasks": [
     {
       "label": "Insomnia: Compile Main",
-      "detail": "webpack --config webpack/webpack.config.electron.ts",
+      "detail": "esbuild.main.ts",
       "type": "shell",
       "promptOnClose": false,
       "options": {
         "cwd": "${workspaceFolder}/packages/insomnia-app",
         "env": {
           "NODE_ENV": "development",
-          "TS_NODE_PROJECT": "tsconfig.webpack.json"
         }
       },
-      "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/webpack --config webpack/webpack.config.electron.ts"
+      "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/esr esbuild.main.ts"
     },
     {
       "label": "Insomnia: Compile Renderer (Watch)",
-      "detail": "webpack-dev-server --config webpack/webpack.config.development.ts",
+      "detail": "vite dev",
       "type": "shell",
       "promptOnClose": false,
       "options": {
         "cwd": "${workspaceFolder}/packages/insomnia-app",
         "env": {
-          "TS_NODE_PROJECT": "tsconfig.webpack.json"
+          "NODE_ENV": "development",
         }
       },
       "isBackground": true,
       "problemMatcher": {
-        "owner": "webpack",
+        "owner": "vite",
         "severity": "error",
         "fileLocation": "absolute",
         "pattern": [
@@ -47,13 +46,13 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "Compiling\\.\\.\\.",
+          "beginsPattern": "vite",
           "endsPattern": {
-            "regexp": "Compiled"
+            "regexp": "ready in"
           }
         }
       },
-      "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/webpack-dev-server --config webpack/webpack.config.development.ts"
+      "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/vite dev"
     },
     {
       "label": "Insomnia: Compile (Watch)",

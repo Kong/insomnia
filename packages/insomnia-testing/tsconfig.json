@@ -6,8 +6,7 @@
   "include": [
     "src",
     ".eslintrc.js",
-    "jest.config.js",
-    "webpack.config.js"
+    "jest.config.js"
   ],
   "exclude": [
     "dist"

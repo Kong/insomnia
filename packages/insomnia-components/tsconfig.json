@@ -5,9 +5,9 @@
   },
   "include": [
     "src",
-    "webpack",
     "jest.config.js",
     ".eslintrc.js",
+    "vite.config.ts",
     "svgr.config.js"
   ],
   "exclude": [

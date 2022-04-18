@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as PDF from 'pdfjs-dist/webpack';
+import * as PDF from 'pdfjs-dist';
 import React, { CSSProperties, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -61,6 +61,11 @@ export class ResponsePDFViewer extends PureComponent<Props, State> {
         container.appendChild(canvas);
         // get context and render page
         const context = canvas.getContext('2d');
+
+        if (!context) {
+          return;
+        }
+
         const renderContext = {
           id: `${this.props.uniqueKey}.${i}`,
           canvasContext: context,

@@ -57,7 +57,7 @@ import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
-import caCerts from './ca-certs';
+import caCerts from './ca_certs';
 import { buildMultipart, DEFAULT_BOUNDARY } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
@@ -326,8 +326,8 @@ export async function _actuallySend(
       } catch (err) {
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
-        // TODO: Should mock cacerts module for testing. This is literally
-        // coercing a function to string in tests due to lack of val-loader.
+        // TODO: Should mock cacerts module for testing.
+        // This is literally coercing a function to string in tests due to lack of val-loader.
         fs.writeFileSync(fullCAPath, String(caCerts));
         console.log('[net] Set CA to', fullCAPath);
       }

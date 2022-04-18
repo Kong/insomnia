@@ -21,13 +21,12 @@ const shell = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
 };
 
-// if (process.contextIsolated) { TODO: use if rather than try after upgrading to electron 13
-try {
+if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
   contextBridge.exposeInMainWorld('app', app);
   contextBridge.exposeInMainWorld('shell', shell);
-} catch {
+} else {
   window.main = main;
   window.dialog = dialog;
   window.app = app;

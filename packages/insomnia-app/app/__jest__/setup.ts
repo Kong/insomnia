@@ -37,6 +37,7 @@ global.requestAnimationFrame = (callback: FrameRequestCallback) => {
 };
 
 global.require = require;
+
 // Don't console log real logs that start with a tag (eg. [db] ...). It's annoying
 const log = console.log;
 

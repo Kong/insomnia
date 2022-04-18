@@ -37,7 +37,8 @@
     "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test",
     "hard-reset": "npm run clean && npm run bootstrap && npm run app-start",
     "type-check": "lerna run type-check",
-    "changelog-image": "ts-node ./scripts/changelog-image/changelog-image.ts"
+    "changelog-image": "ts-node ./scripts/changelog-image/changelog-image.ts",
+    "dev": "npm start --prefix packages/insomnia-app"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

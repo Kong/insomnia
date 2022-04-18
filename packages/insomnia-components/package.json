@@ -12,21 +12,31 @@
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/commonjs/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/commonjs/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "prebuild": "npm run convert-svg",
-    "build": "webpack --config webpack/webpack.prod.js --display errors-only",
+    "build:source": "vite build",
+    "build:types": "tsc --build tsconfig.build.json",
+    "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
     "clean": "rimraf dist && npm run clean:svg",
     "clean:svg": "rimraf src/assets/svgr",
     "clean:svg:index": "rimraf src/assets/svgr/index.tsx",
     "convert-svg": "npm run clean:svg && svgr --config-file svgr.config.js --out-dir src/assets/svgr src/assets && npm run clean:svg:index",
     "jest:watch": "jest --watch",
+    "prepare": "npm run convert-svg && npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "npm run build",
     "test": "jest",
-    "watch": "webpack --config webpack/webpack.dev.js --watch"
+    "watch": "cross-env ESBUILD_WATCH=true esr esbuild.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
@@ -47,9 +57,11 @@
     "@types/react-dom": "^17.0.11",
     "@types/testing-library__jest-dom": "^5.9.5",
     "@types/testing-library__react-hooks": "^4.0.0",
-    "@types/webpack": "^5.28.0",
-    "@types/webpack-merge": "^5.0.0",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "concurrently": "^7.0.0",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.14.27",
+    "esbuild-runner": "^2.2.1",
     "jest": "^26.6.3",
     "react": "^17.0.2",
     "react-docgen-typescript": "^1.22.0",
@@ -60,9 +72,7 @@
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
     "typescript-plugin-styled-components": "^2.0.0",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.11",
-    "webpack-merge": "^5.0.7"
+    "vite": "^2.9.1"
   },
   "dependencies": {
     "@types/styled-components": "^5.1.23",
