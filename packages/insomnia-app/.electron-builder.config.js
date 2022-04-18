@@ -1,3 +1,5 @@
+const BINARY_PREFIX = 'Insomnia.Core';
+
 /**
  * @type {import('electron-builder').Configuration}
  * @see https://www.electron.build/configuration/configuration
@@ -45,7 +47,7 @@ const config = {
         hardenedRuntime: true,
         category: "public.app-category.developer-tools",
         entitlements: "./build/static/entitlements.mac.inherit.plist",
-        artifactName: "Insomnia.Core-${version}.${ext}",
+    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
         target: ["dmg", "zip"],
         extendInfo: {
             NSRequiresAquaSystemAppearance: false,
@@ -73,15 +75,15 @@ const config = {
         target: ["squirrel", "portable"],
     },
     squirrelWindows: {
-        artifactName: "Insomnia.Core-${version}.${ext}",
+    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
         iconUrl:
             "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true",
     },
     portable: {
-        artifactName: "Insomnia.Core-${version}-portable.${ext}",
+    artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
     },
     linux: {
-        artifactName: "Insomnia.Core-${version}.${ext}",
+    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
         executableName: "insomnia",
         synopsis: "The Collaborative API Client and Design Tool",
         category: "Development",
