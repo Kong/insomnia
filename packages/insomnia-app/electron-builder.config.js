@@ -92,11 +92,11 @@ const config = {
   },
 };
 
-const { env: { BUILD_TARGETS }, platform } = process
-const targets = BUILD_TARGETS?.split(',')
+const { env: { BUILD_TARGETS }, platform } = process;
+const targets = BUILD_TARGETS?.split(',');
 if (platform && targets) {
-  console.log('overriding build targets to: ', targets)
+  console.log('overriding build targets to: ', targets);
   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
-  config[PLATFORM_MAP[platform]].target = targets
+  config[PLATFORM_MAP[platform]].target = targets;
 }
 module.exports = config;
