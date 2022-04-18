@@ -9,7 +9,7 @@ const env = process['env'];
 
 // App Stuff
 export const getAppVersion = () => appConfig.version;
-export const getAppName = () => appConfig.productName;
+export const getAppName = () => appConfig.appName;
 export const getAppDefaultTheme = () => appConfig.theme;
 export const getAppDefaultLightTheme = () => appConfig.lightTheme;
 export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
