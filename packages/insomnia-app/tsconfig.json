@@ -1,18 +1,19 @@
 {
   "extends": "./tsconfig.build.json",
   "include": [
+    "**/insomnia.config.json",
+    "electron-builder.config.js",
     ".eslintrc.js",
     "app",
     "config",
+    "esbuild.main.ts",
+    "esbuild.preload.ts",
+    "esbuild.sr.ts",
     "jest.config.js",
-    "**/insomnia.config.json",
     "package.json",
     "scripts",
     "send-request",
     "vite.config.ts",
-    "esbuild.main.ts",
-    "esbuild.sr.ts",
-    "esbuild.preload.ts",
   ],
   "exclude": [
     "**/@types/mocha",
