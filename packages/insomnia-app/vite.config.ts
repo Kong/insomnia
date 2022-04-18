@@ -6,14 +6,6 @@ import commonjsExternals from 'vite-plugin-commonjs-externals';
 
 import pkg from './package.json';
 
-// The list of packages that will be included in the node_modules folder of the packaged app.
-// Exclude all package.json dependencies except from the ones in the packedDependencies list
-const unpackedDependencies = [
-  ...Object.keys(pkg.dependencies).filter(
-    name => !pkg.packedDependencies.includes(name)
-  ),
-];
-
 // The list of packages we want to keep as commonJS require().
 // Must be resolvable import paths, cannot be globs
 // These will be available via Node's require function from the node_modules folder or Node's builtin modules
@@ -27,7 +19,7 @@ const commonjsPackages = [
   '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion',
   '@getinsomnia/node-libcurl/dist/enum/CurlNetrc',
   'nunjucks/browser/nunjucks',
-  ...unpackedDependencies,
+  ...Object.keys(pkg.dependencies),
   ...builtinModules,
 ];
 
