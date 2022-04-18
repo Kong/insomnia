@@ -1,13 +1,15 @@
 const BINARY_PREFIX = 'Insomnia.Core';
 
+// NOTE: USE_HARD_LINKS
+// https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
+
 /**
  * @type {import('electron-builder').Configuration}
  * @see https://www.electron.build/configuration/configuration
  */
-// NOTE: USE_HARD_LINKS
-// https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 const config = {
   appId: 'com.insomnia.app',
+  asar: true,
   electronVersion: '17.3.0',
   protocols: [
     {
@@ -40,7 +42,6 @@ const config = {
   ],
   fileAssociations: [],
   directories: {
-    app: '.',
     output: 'dist',
   },
   mac: {
@@ -77,7 +78,7 @@ const config = {
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     iconUrl:
-            'https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true',
+      'https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true',
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
@@ -87,8 +88,15 @@ const config = {
     executableName: 'insomnia',
     synopsis: 'The Collaborative API Client and Design Tool',
     category: 'Development',
-    target: ['AppImage', 'deb', 'tar.gz', 'rpm', 'snap'],
+    target: ['AppImage', 'deb', 'tar.gz', 'snap'],
   },
 };
 
+const { env: { BUILD_TARGETS }, platform } = process
+const targets = BUILD_TARGETS?.split(',')
+if (platform && targets) {
+  console.log('overriding build targets to: ', targets)
+  const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
+  config[PLATFORM_MAP[platform]].target = targets
+}
 module.exports = config;
