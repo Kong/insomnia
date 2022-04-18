@@ -7,7 +7,6 @@ import { pathToFileURL } from 'url';
 import {
   changelogUrl,
   getAppBuildDate,
-  getAppLongName,
   getAppName,
   getAppVersion,
   isDevelopment,
@@ -378,7 +377,7 @@ export function createWindow() {
     const ok = 'OK';
     const buttons = isLinux() ? [copy, ok] : [ok, copy];
     const detail = [
-      `Version: ${getAppLongName()} ${getAppVersion()}`,
+      `Version: ${getAppName()} ${getAppVersion()}`,
       `Build date: ${getAppBuildDate()}`,
       `OS: ${os.type()} ${os.arch()} ${os.release()}`,
       `Electron: ${process.versions.electron}`,
@@ -390,7 +389,7 @@ export function createWindow() {
     const msgBox = await dialog.showMessageBox({
       type: 'info',
       title: getAppName(),
-      message: getAppLongName(),
+      message: getAppName(),
       detail,
       buttons,
       defaultId: buttons.indexOf(ok),
