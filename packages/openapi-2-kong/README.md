@@ -258,7 +258,7 @@ paths:
 #### Generated config
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-1
@@ -271,10 +271,13 @@ spec:
         paths:
           - path: /v1/.*
             backend:
-              serviceName: insomnia-api-service-0
-              servicePort: 80
+              service:
+                name: insomnia-api-service-0
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-2
@@ -287,8 +290,11 @@ spec:
         paths:
           - path: /v2/.*
             backend:
-              serviceName: insomnia-api-service-1
-              servicePort: 80
+              service:
+                name: insomnia-api-service-1
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ```
 
 </details>
@@ -300,7 +306,7 @@ The `Ingress` document `metadata.name` is derived from sections in the source sp
 Each of the following specifications generate an `Ingress` document with the following name:
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api
@@ -445,7 +451,7 @@ config:
   key_in_body: false
   hide_credentials: true
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-0
@@ -460,10 +466,13 @@ spec:
         paths:
           - path: /v1/path
             backend:
-              serviceName: insomnia-api-service-0
-              servicePort: 80
+              service:
+                name: insomnia-api-service-0
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-1
@@ -479,10 +488,13 @@ spec:
         paths:
           - path: /v1/another
             backend:
-              serviceName: insomnia-api-service-0
-              servicePort: 80
+              service:
+                name: insomnia-api-service-0
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-2
@@ -497,10 +509,13 @@ spec:
         paths:
           - path: /v2/path
             backend:
-              serviceName: insomnia-api-service-1
-              servicePort: 80
+              service:
+                name: insomnia-api-service-1
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: insomnia-api-3
@@ -516,8 +531,11 @@ spec:
         paths:
           - path: /v2/another
             backend:
-              serviceName: insomnia-api-service-1
-              servicePort: 80
+              service:
+                name: insomnia-api-service-1
+                port:
+                  number: 80
+            pathType: 'ImplementationSpecific'
 ```
 
 </details>

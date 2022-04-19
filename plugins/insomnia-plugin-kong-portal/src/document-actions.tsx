@@ -1,8 +1,8 @@
 import axios from 'axios';
-import React from 'react';
-import ReactDOM from 'react-dom';
+import type React from 'react';
+import type ReactDOM from 'react-dom';
 
-import { DeployToPortal } from './deploy-to-portal';
+import { getDeployToPortalComponent } from './deploy-to-portal';
 
 // This is a temporary shim until insomnia-app exports plugin types that plugin authors can use
 export interface Spec {
@@ -24,7 +24,11 @@ export interface Context {
     analytics: {
       trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
     };
-    insomniaComponents: any;
+    loadRendererModules: () => Promise<{
+      insomniaComponents: any;
+      ReactDOM: typeof ReactDOM;
+      React: typeof React;
+    }>;
   };
   app: {
     dialog: (message: string, root: HTMLElement, config: any) => void;
@@ -37,22 +41,27 @@ export const documentActions = [
     hideAfterClick: true,
     action(context: Context, spec: Spec) {
       const root = document.createElement('div');
-      ReactDOM.render(
-        <DeployToPortal
-          spec={spec}
-          store={context.store}
-          axios={context.__private.axios}
-          insomniaComponents={context.__private.insomniaComponents}
-          trackSegmentEvent={context.__private.analytics.trackSegmentEvent}
-        />,
-        root,
-      );
+      const { analytics, axios, loadRendererModules } = context.__private;
+      loadRendererModules().then(({ React, ReactDOM, insomniaComponents }) => {
+        const { DeployToPortal } = getDeployToPortalComponent({ React });
 
-      context.app.dialog('Deploy to Dev Portal', root, {
-        skinny: true,
-        onHide() {
-          ReactDOM.unmountComponentAtNode(root);
-        },
+        ReactDOM.render(
+          <DeployToPortal
+            spec={spec}
+            store={context.store}
+            axios={axios}
+            insomniaComponents={insomniaComponents}
+            trackSegmentEvent={analytics.trackSegmentEvent}
+          />,
+          root,
+        );
+
+        context.app.dialog('Deploy to Dev Portal', root, {
+          skinny: true,
+          onHide() {
+            ReactDOM.unmountComponentAtNode(root);
+          },
+        });
       });
     },
   },
