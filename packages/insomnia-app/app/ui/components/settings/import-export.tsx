@@ -2,7 +2,7 @@ import { importers } from 'insomnia-importers';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { getAppName } from '../../../common/constants';
+import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
@@ -24,7 +24,7 @@ interface Props {
 
 export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
-  const projectName = useSelector(selectActiveProjectName) ?? getAppName();
+  const projectName = useSelector(selectActiveProjectName) ?? getProductName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const forceToWorkspace = activeWorkspace?._id ? ForceToWorkspace.current : ForceToWorkspace.existing;
 

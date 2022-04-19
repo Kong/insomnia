@@ -9,9 +9,9 @@ import * as session from '../../account/session';
 import {
   AUTOBIND_CFG,
   getAppId,
-  getAppName,
   getAppPlatform,
   getAppVersion,
+  getProductName,
   updatesSupported,
 } from '../../common/constants';
 import * as models from '../../models/index';
@@ -30,7 +30,7 @@ export interface ToastNotification {
 interface State {
   notification: ToastNotification | null;
   visible: boolean;
-  appName: string;
+  productName: string;
 }
 
 const StyledLogo = styled.div`
@@ -67,7 +67,7 @@ export class Toast extends PureComponent<{}, State> {
   state: State = {
     notification: null,
     visible: false,
-    appName: getAppName(),
+    productName: getProductName(),
   };
 
   _cancel() {
@@ -200,7 +200,7 @@ export class Toast extends PureComponent<{}, State> {
   }
 
   render() {
-    const { notification, visible, appName } = this.state;
+    const { notification, visible, productName } = this.state;
 
     if (!notification) {
       return null;
@@ -213,7 +213,7 @@ export class Toast extends PureComponent<{}, State> {
         })}
       >
         <StyledLogo>
-          <img src={imgSrcCore} alt={appName} />
+          <img src={imgSrcCore} alt={productName} />
         </StyledLogo>
         <StyledContent>
           <p>{notification?.message || 'Unknown'}</p>
