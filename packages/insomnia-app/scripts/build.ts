@@ -150,7 +150,7 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   const appPkg = {
     name: appConfig.name,
     version: appConfig.version,
-    appName: appConfig.appName,
+    productName: appConfig.productName,
     description: pkg.description,
     license: pkg.license,
     homepage: pkg.homepage,

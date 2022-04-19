@@ -7,8 +7,7 @@ import { pathToFileURL } from 'url';
 import {
   changelogUrl,
   getAppBuildDate,
-  getAppName,
-  getAppVersion,
+  getProductName,
   isDevelopment,
   isLinux,
   isMac,
@@ -71,7 +70,7 @@ export function createWindow() {
     backgroundColor: '#2C2C2C',
     fullscreen: fullscreen,
     fullscreenable: true,
-    title: getAppName(),
+    title: getProductName(),
     width: width || DEFAULT_WIDTH,
     height: height || DEFAULT_HEIGHT,
     minHeight: MINIMUM_HEIGHT,
@@ -377,7 +376,7 @@ export function createWindow() {
     const ok = 'OK';
     const buttons = isLinux() ? [copy, ok] : [ok, copy];
     const detail = [
-      `Version: ${getAppName()} ${getAppVersion()}`,
+      `Version: ${getProductName()} ${getProductName()}`,
       `Build date: ${getAppBuildDate()}`,
       `OS: ${os.type()} ${os.arch()} ${os.release()}`,
       `Electron: ${process.versions.electron}`,
@@ -388,8 +387,8 @@ export function createWindow() {
 
     const msgBox = await dialog.showMessageBox({
       type: 'info',
-      title: getAppName(),
-      message: getAppName(),
+      title: getProductName(),
+      message: getProductName(),
       detail,
       buttons,
       defaultId: buttons.indexOf(ok),
@@ -406,7 +405,7 @@ export function createWindow() {
     // @ts-expect-error -- TSCONVERSION type splitting
     applicationMenu.submenu?.unshift(
       {
-        label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
+        label: `A${MNEMONIC_SYM}bout ${getProductName()}`,
         click: aboutMenuClickHandler,
       },
       {

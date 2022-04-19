@@ -4,7 +4,7 @@
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
   "userDataFolder": "Insomnia",
-  "appName": "Insomnia",
+  "productName": "Insomnia",
   "binaryPrefix": "Insomnia.Core",
   "synopsis": "The Collaborative API Client and Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true",
