@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
-import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import { AUTOBIND_CFG, getAppVersion, getProductName } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
@@ -75,7 +75,7 @@ export class UnconnectedSettingsModal extends PureComponent<Props, State> {
     return (
       <Modal ref={this._setModalRef} tall freshState {...this.props}>
         <ModalHeader>
-          {getAppName()} Preferences
+          {getProductName()} Preferences
           <span className="faint txt-sm">
             &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
             {email ? ` – ${email}` : null}

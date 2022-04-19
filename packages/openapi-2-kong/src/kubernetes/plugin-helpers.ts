@@ -53,10 +53,10 @@ export const ingressDoc = (
   index: number,
   plugins: string[],
   host: string,
-  serviceName: string,
+  name: string,
   path?: string | null,
 ): K8sIngress => ({
-  apiVersion: 'extensions/v1beta1',
+  apiVersion: 'networking.k8s.io/v1',
   kind: 'Ingress',
   metadata: {
     annotations: {
@@ -73,10 +73,15 @@ export const ingressDoc = (
           paths: [
             {
               backend: {
-                serviceName,
-                servicePort: 80,
+                service: {
+                  name,
+                  port: {
+                    number: 80,
+                  },
+                },
               },
               ...(path ? { path } : {}),
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -90,10 +95,10 @@ export const ingressDocWithOverride = (
   plugins: string[],
   override: string,
   host: string,
-  serviceName: string,
+  name: string,
   path?: string | null,
 ): K8sIngress => ({
-  apiVersion: 'extensions/v1beta1',
+  apiVersion: 'networking.k8s.io/v1',
   kind: 'Ingress',
   metadata: {
     annotations: {
@@ -111,10 +116,13 @@ export const ingressDocWithOverride = (
           paths: [
             {
               backend: {
-                serviceName,
-                servicePort: 80,
+                service: {
+                  name,
+                  port: { number: 80 },
+                },
               },
               ...(path ? { path } : {}),
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
