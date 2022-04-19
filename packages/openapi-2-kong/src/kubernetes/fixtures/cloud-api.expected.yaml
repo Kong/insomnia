@@ -94,7 +94,7 @@ documents:
       issuer: <well-known-config>
       scopes_required:
         - fred_read
-  - apiVersion: extensions/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       name: my-cloud-api-0
@@ -115,10 +115,13 @@ documents:
           http:
             paths:
               - backend:
-                  serviceName: my-cloud-api-service-0
-                  servicePort: 443
+                  service:
+                    name: my-cloud-api-service-0
+                    port:
+                      number: 443
                 path: /v1/offline-portal
-  - apiVersion: extensions/v1beta1
+                pathType: ImplementationSpecific
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       name: my-cloud-api-1
@@ -140,6 +143,9 @@ documents:
             paths:
               - path: /v1/user-info
                 backend:
-                  serviceName: my-cloud-api-service-0
-                  servicePort: 443
+                  service:
+                    name: my-cloud-api-service-0
+                    port:
+                      number: 443
+                pathType: ImplementationSpecific
 warnings: []
