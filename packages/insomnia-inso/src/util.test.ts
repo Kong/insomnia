@@ -2,7 +2,7 @@ import * as packageJson from '../package.json';
 import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { exit, getDefaultAppName, getVersion, logErrorExit1, noop } from './util';
+import { exit, getDefaultProductName, getVersion, logErrorExit1, noop } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -99,7 +99,7 @@ describe('logErrorExit1()', () => {
   });
 });
 
-describe('getDefaultAppName()', () => {
+describe('getDefaultProductName()', () => {
   const OLD_ENV = process.env;
   beforeEach(() => {
     process.env = { ...OLD_ENV }; // make a copy
@@ -112,12 +112,12 @@ describe('getDefaultAppName()', () => {
   it('should return value if set', () => {
     const value = 'dir';
     process.env.DEFAULT_APP_NAME = value;
-    expect(getDefaultAppName()).toBe(value);
+    expect(getDefaultProductName()).toBe(value);
   });
 
   it('should throw error if not set', () => {
     process.env.DEFAULT_APP_NAME = '';
-    expect(getDefaultAppName).toThrowError('Environment variable DEFAULT_APP_NAME is not set.');
+    expect(getDefaultProductName).toThrowError('Environment variable DEFAULT_APP_NAME is not set.');
   });
 });
 

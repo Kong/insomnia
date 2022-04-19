@@ -6,7 +6,6 @@
   "userDataFolder": "Insomnia",
   "productName": "Insomnia",
   "binaryPrefix": "Insomnia.Core",
-  "longName": "Insomnia",
   "synopsis": "The Collaborative API Client and Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true",
   "changelogUrl": "https://insomnia.rest/changelog",
