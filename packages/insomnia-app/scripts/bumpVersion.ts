@@ -1,7 +1,8 @@
 import { writeFileSync } from 'fs';
 import path from 'path';
 
-import appConfig from '../config/config.json';
+import packageConfig from '../package.json';
+import packageLockConfig from '../package-lock.json';
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -22,7 +23,7 @@ export const start = async () => {
   const buildRef = process.env.BUILD_REF;
   if (buildRef) {
     // Ignore any existing semver prerelease/build tags
-    const cleanedVersion = appConfig.version.match(/^(\d{4}\.\d+\.\d)/);
+    const cleanedVersion = packageConfig.version.match(/^(\d{4}\.\d+\.\d)/);
     if (!cleanedVersion) {
       console.log('[build] Invalid version found in app config');
       process.exit(1);
@@ -37,6 +38,11 @@ export const start = async () => {
   }
 
   console.log('Overwriting app config version:', appVersionOverride);
-  appConfig.version = appVersionOverride;
-  writeFileSync(path.resolve(__dirname, '../config/config.json'), JSON.stringify(appConfig, null, 2) + '\n');
+
+  packageConfig.version = appVersionOverride;
+  writeFileSync(path.resolve(__dirname, '../package.json'), JSON.stringify(packageConfig, null, 2) + '\n');
+
+  packageLockConfig.version = appVersionOverride;
+  packageLockConfig.packages[''].version = appVersionOverride;
+  writeFileSync(path.resolve(__dirname, '../package-lock.json'), JSON.stringify(packageLockConfig, null, '\t') + '\n');
 };
