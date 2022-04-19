@@ -7,6 +7,7 @@ import { pathToFileURL } from 'url';
 import {
   changelogUrl,
   getAppBuildDate,
+  getAppVersion,
   getProductName,
   isDevelopment,
   isLinux,
@@ -376,7 +377,7 @@ export function createWindow() {
     const ok = 'OK';
     const buttons = isLinux() ? [copy, ok] : [ok, copy];
     const detail = [
-      `Version: ${getProductName()} ${getProductName()}`,
+      `Version: ${getProductName()} ${getAppVersion()}`,
       `Build date: ${getAppBuildDate()}`,
       `OS: ${os.type()} ${os.arch()} ${os.release()}`,
       `Electron: ${process.versions.electron}`,
