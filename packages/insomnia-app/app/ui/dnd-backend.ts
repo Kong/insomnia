@@ -17,25 +17,33 @@ class DNDBackend extends HTML5Backend {
 
   handleTopDragOver(e) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
-    if (this.isDraggingNativeItem()) return;
+    if (this.isDraggingNativeItem()) {
+      return;
+    }
     super.handleTopDragOver(e);
   }
 
   handleTopDragLeaveCapture(e) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
-    if (this.isDraggingNativeItem()) return;
+    if (this.isDraggingNativeItem()) {
+      return;
+    }
     super.handleTopDragLeaveCapture(e);
   }
 
   handleTopDropCapture(e) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
-    if (this.isDraggingNativeItem()) return;
+    if (this.isDraggingNativeItem()) {
+      return;
+    }
     super.handleTopDropCapture(e);
   }
 
   handleTopDrop(e) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
-    if (!this.monitor.isDragging() || this.isDraggingNativeItem()) return;
+    if (!this.monitor.isDragging() || this.isDraggingNativeItem()) {
+      return;
+    }
     super.handleTopDrop(e);
   }
 }

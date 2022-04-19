@@ -1,4 +1,3 @@
-/// <reference types="webpack-env" />
 import { applyMiddleware, compose, createStore, Store } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 
@@ -17,12 +16,6 @@ export default function() {
     applyMiddleware(...middleware), // other store enhancers if any
   );
   const store = createStore(reducer, enhancer);
-
-  if (__DEV__ && module.hot) {
-    module.hot.accept('./modules/index', () => {
-      store.replaceReducer(reducer);
-    });
-  }
 
   return store as Store;
 }

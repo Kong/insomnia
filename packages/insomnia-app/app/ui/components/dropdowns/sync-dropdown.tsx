@@ -30,8 +30,7 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
-import { showAlert, showModal } from '../modals';
-import { ErrorModal } from '../modals/error-modal';
+import { showError, showModal } from '../modals';
 import { LoginModal } from '../modals/login-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
@@ -238,9 +237,10 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
         resourceType: 'branch',
       });
     } catch (err) {
-      showModal(ErrorModal, {
+      showError({
         title: 'Push Error',
         message: err.message,
+        error: err,
       });
     }
 
@@ -267,9 +267,10 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
     } catch (err) {
-      showModal(ErrorModal, {
+      showError({
         title: 'Pull Error',
         message: err.message,
+        error: err,
       });
     }
 
@@ -294,9 +295,10 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
     } catch (err) {
-      showModal(ErrorModal, {
+      showError({
         title: 'Revert Error',
         message: err.message,
+        error: err,
       });
     }
   }
@@ -367,9 +369,10 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
     } catch (err) {
-      showAlert({
+      showError({
         title: 'Branch Switch Error',
         message: err.message,
+        error: err,
       });
     }
 

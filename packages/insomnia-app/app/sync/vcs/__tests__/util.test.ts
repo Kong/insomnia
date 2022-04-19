@@ -1025,7 +1025,9 @@ describe('interceptAccessError', () => {
     // Act
     const action = async () => await interceptAccessError({
       action: 'action',
-      callback: () => { throw new Error(message); },
+      callback: () => {
+        throw new Error(message);
+      },
       resourceName: 'resourceName',
       resourceType: 'resourceType',
     }) as Error;

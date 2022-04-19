@@ -275,8 +275,18 @@ const IndividualTheme: FC<{
         {isInOsThemeMode ? (
           <>
             <OverlayWrapper className="overlay-wrapper">
-              <OverlaySide $theme="light" onClick={() => { onChangeTheme(name, 'light'); }}><SunSvg /></OverlaySide>
-              <OverlaySide $theme="dark" onClick={() => { onChangeTheme(name, 'dark'); }}><MoonSvg /></OverlaySide>
+              <OverlaySide
+                $theme="light"
+                onClick={() => {
+                  onChangeTheme(name, 'light');
+                }}
+              ><SunSvg /></OverlaySide>
+              <OverlaySide
+                $theme="dark"
+                onClick={() => {
+                  onChangeTheme(name, 'dark');
+                }}
+              ><MoonSvg /></OverlaySide>
             </OverlayWrapper>
 
             {isActive && isDark ? (

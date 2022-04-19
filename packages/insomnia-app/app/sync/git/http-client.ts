@@ -20,7 +20,7 @@ export const httpClient = {
         maxRedirects: 10,
       });
     } catch (err) {
-      if (!err.response){
+      if (!err.response) {
         // NOTE: config.url is unreachable
         throw err;
       }

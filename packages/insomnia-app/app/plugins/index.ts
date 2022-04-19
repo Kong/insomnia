@@ -18,7 +18,7 @@ import type { PluginTheme } from './misc';
 
 export interface Module {
   templateTags?: PluginTemplateTag[];
-  requestHooks?: ((requstContext: any) => void)[];
+  requestHooks?: ((requestContext: any) => void)[];
   responseHooks?: ((responseContext: any) => void)[];
   themes?: PluginTheme[];
   requestGroupActions?: OmitInternal<RequestGroupAction>[];
@@ -172,7 +172,6 @@ async function _traversePluginPath(
           }
         }
 
-        // Use global.require() instead of require() because Webpack wraps require()
         const pluginJson = global.require(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']

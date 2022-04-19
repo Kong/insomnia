@@ -13,8 +13,6 @@ There are a few more technologies and tools worth mentioning:
 - [`React`](https://reactjs.org/) is the library used for all UI components.
 - [`styled-components`](https://styled-components.com/) and [`Less`](http://lesscss.org/) are used for styling UI components.
 - [`Electron Builder`](https://github.com/electron-userland/electron-builder) is used to help build, sign, and package Insomnia for distribution.
-- [`Flow`](https://flow.org/) is used for adding types to the codebase. Not everything is Flow but all new code should be typed with Flow.
-- [`Webpack`](https://webpack.js.org/) is the bundler used to compile the JS/Less/babel/etc
 - [`libcurl`](https://curl.se/libcurl/) is the library that Insomnia uses to make requests. Libcurl is the HTTP client of choice because it allows the deepest amount of debuggability and control of HTTP requests.
 - [`nedb`](https://github.com/louischatriot/nedb) a local in-memory database.
 - [`node-libcurl`](https://github.com/JCMais/node-libcurl) is a Node.js wrapper around the native libcurl library.

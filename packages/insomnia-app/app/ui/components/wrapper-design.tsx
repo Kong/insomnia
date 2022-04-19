@@ -80,7 +80,7 @@ const useDesignEmptyState = () => {
   const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
 
   useEffect(() => {
-    if (contents && shouldIncrementCounter){
+    if (contents && shouldIncrementCounter) {
       setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
       setShouldIncrementCounter(false);
     }

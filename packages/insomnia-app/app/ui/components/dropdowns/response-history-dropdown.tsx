@@ -170,7 +170,9 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
-          ref={ref => { this._dropdown = ref; }}
+          ref={ref => {
+            this._dropdown = ref;
+          }}
           key={activeResponse ? activeResponse._id : 'n/a'}
           {...extraProps}
         >

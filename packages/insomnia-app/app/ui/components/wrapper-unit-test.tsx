@@ -13,6 +13,7 @@ import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
 import React, { PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
+import styled from 'styled-components';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { AUTOBIND_CFG } from '../../common/constants';
@@ -36,6 +37,10 @@ import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
+
+const HeaderButton = styled(Button)({
+  marginRight: 'var(--padding-md)',
+});
 
 interface Props extends ReturnType<typeof mapStateToProps> {
   children: SidebarChildObjects;
@@ -479,10 +484,15 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
               value={activeUnitTestSuite.name}
             />
           </h2>
-          <Button variant="outlined" onClick={this._handleCreateTest}>
+
+          <HeaderButton
+            variant="outlined"
+            onClick={this._handleCreateTest}
+          >
             New Test
-          </Button>
-          <Button
+          </HeaderButton>
+
+          <HeaderButton
             variant="contained"
             bg="surprise"
             onClick={this._handleRunTests}
@@ -491,7 +501,7 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
           >
             {testsRunning ? 'Running... ' : 'Run Tests'}
             <i className="fa fa-play space-left" />
-          </Button>
+          </HeaderButton>
         </div>
 
         {isEmpty(activeUnitTests) ? emptyStatePane : null}

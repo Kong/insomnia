@@ -7,7 +7,7 @@ import { BackendProject } from '../../sync/types';
 import { BackendProjectWithTeam } from '../../sync/vcs/normalize-backend-project-team';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
-import { showAlert } from '../components/modals';
+import { showError } from '../components/modals';
 import { selectActiveProject, selectIsLoggedIn, selectRemoteProjects, selectSettings, selectWorkspaces } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
@@ -98,9 +98,10 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
 
       await refresh();
     } catch (err) {
-      showAlert({
+      showError({
         title: 'Pull Error',
         message: `Failed to pull workspace. ${err.message}`,
+        error: err,
       });
     } finally {
       dispatch({ type: 'stopPullingBackendProject', backendProjectId: backendProject.id });
