@@ -53,7 +53,7 @@ const POSTMAN_SCHEMA_V2_0 =
 const POSTMAN_SCHEMA_V2_1 =
   'https://schema.getpostman.com/json/collection/v2.1.0/collection.json';
 
-class ImportCollection {
+export class ImportPostman {
   collection;
 
   constructor(collection: PostmanCollection) {
@@ -473,9 +473,25 @@ class ImportCollection {
   importOauth2Authentication = (auth: Auth) => {
     if (!auth.oauth2) {
       return {};
-    } // Note: Postman v2.0 and v2.1 don't export any Oauth config. They only export the token
-    // So just return a disabled and empty Oauth 2 configuration so the user can fill it in later.
-
+    }
+    const { schema } = this.collection.info;
+    // Workaround for https://github.com/Kong/insomnia/issues/4437
+    // Note: We only support importing OAuth2 configuration from Postman v2.1
+    if (schema === POSTMAN_SCHEMA_V2_1) {
+      const oauth2 = auth.oauth2 as V210Auth['oauth2'];
+      return {
+        type: 'oauth2',
+        disabled: false,
+        accessTokenUrl: this.findValueByKey(oauth2, 'accessTokenUrl'),
+        authorizationUrl: this.findValueByKey(oauth2, 'authUrl'),
+        grantType: this.findValueByKey(oauth2, 'grant_type'),
+        password: '',
+        username: '',
+        clientId: this.findValueByKey(oauth2, 'clientId'),
+        clientSecret: this.findValueByKey(oauth2, 'clientSecret'),
+        redirectUrl: this.findValueByKey(oauth2, 'redirect_uri'),
+      };
+    }
     const item = {
       type: 'oauth2',
       disabled: true,
@@ -517,7 +533,7 @@ export const convert: Converter = rawData => {
       collection.info.schema === POSTMAN_SCHEMA_V2_0 ||
       collection.info.schema === POSTMAN_SCHEMA_V2_1
     ) {
-      return new ImportCollection(collection).importCollection();
+      return new ImportPostman(collection).importCollection();
     }
   } catch (e) {
     // Nothing
