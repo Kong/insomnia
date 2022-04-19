@@ -1,5 +1,6 @@
 import * as electron from 'electron';
 import React from 'react';
+import type ReactDOM from 'react-dom';
 
 import * as analytics from '../../../app/common/analytics';
 import { axiosRequest as axios } from '../../../app/network/axios-request';
@@ -64,7 +65,11 @@ export interface AppContext {
 export interface PrivateProperties {
   axios: typeof axios;
   analytics: typeof analytics;
-  insomniaComponents: any;
+  loadRendererModules: () => Promise<{
+    insomniaComponents: any;
+    ReactDOM: typeof ReactDOM;
+    React: typeof React;
+  } | {}>;
 }
 
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
@@ -216,7 +221,22 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
     __private: {
       axios,
       analytics,
-      insomniaComponents: globalThis.document ? require('insomnia-components') : {},
+      // Provide modules that can be used in the renderer process
+      async loadRendererModules() {
+        if (typeof globalThis.document === 'undefined') {
+          return {};
+        }
+
+        const ReactDOM = await import('react-dom');
+        const React = await import('react');
+        const insomniaComponents = await import('insomnia-components');
+
+        return {
+          ReactDOM,
+          React,
+          insomniaComponents,
+        };
+      },
     },
   };
 }
