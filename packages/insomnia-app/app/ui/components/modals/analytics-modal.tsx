@@ -3,7 +3,7 @@ import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { getAppLongName, getAppSynopsis } from '../../../common/constants';
+import { getAppSynopsis, getProductName } from '../../../common/constants';
 import * as models from '../../../models';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';
@@ -109,7 +109,7 @@ export const AnalyticsModal: FC = () => {
         </InsomniaLogo>
 
         <Header>
-          <Headline>Welcome to {getAppLongName()}</Headline>
+          <Headline>Welcome to {getProductName()}</Headline>
           <SubHeader>{getAppSynopsis()}</SubHeader>
         </Header>
 
@@ -118,7 +118,7 @@ export const AnalyticsModal: FC = () => {
 
           <DemonstrationChart src={chartSrc} alt="Demonstration chart" />
 
-          <p>Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it better.</p>
+          <p>Help us understand how <strong>you</strong> use {getProductName()} so we can make it better.</p>
         </Body>
 
         <ActionButtons>

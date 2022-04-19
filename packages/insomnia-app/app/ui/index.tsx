@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent } from '../common/analytics';
-import { getAppLongName, isDevelopment } from '../common/constants';
+import { getProductName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
@@ -20,7 +20,7 @@ import './css/index.less'; // this import must come after `App`.  the reason is 
 initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
-document.title = getAppLongName();
+document.title = getProductName();
 
 (async function() {
   await db.initClient();

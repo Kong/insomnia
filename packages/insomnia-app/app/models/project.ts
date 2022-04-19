@@ -1,4 +1,4 @@
-import { getAppName } from '../common/constants';
+import { getProductName } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
@@ -78,7 +78,7 @@ export async function all() {
   const projects = await db.all<Project>(type);
 
   if (!projects.find(c => c._id === DEFAULT_PROJECT_ID)) {
-    await create({ _id: DEFAULT_PROJECT_ID, name: getAppName(), remoteId: null });
+    await create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
     return db.all<Project>(type);
   }
 

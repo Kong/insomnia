@@ -14,7 +14,7 @@ export const exit = async (result: Promise<boolean>): Promise<void> => {
   return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
 };
 
-export const getDefaultAppName = (): string => {
+export const getDefaultProductName = (): string => {
   const name = process.env.DEFAULT_APP_NAME;
 
   if (!name) {
