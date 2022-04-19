@@ -57,7 +57,7 @@ const config = {
       {
         target: 'zip',
         arch: 'universal',
-      }
+      },
     ],
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
