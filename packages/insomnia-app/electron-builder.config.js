@@ -49,7 +49,16 @@ const config = {
     category: 'public.app-category.developer-tools',
     entitlements: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    target: ['dmg', 'zip'],
+    target: [
+      {
+        target: 'dmg',
+        arch: 'universal',
+      },
+      {
+        target: 'zip',
+        arch: 'universal',
+      }
+    ],
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
     },
@@ -88,7 +97,7 @@ const config = {
     executableName: 'insomnia',
     synopsis: 'The Collaborative API Client and Design Tool',
     category: 'Development',
-    target: ['AppImage', 'deb', 'tar.gz', 'snap'],
+    target: ['AppImage', 'deb', 'tar.gz', 'rpm', 'snap'],
   },
 };
 
