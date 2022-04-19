@@ -473,10 +473,10 @@ export class ImportPostman {
   importOauth2Authentication = (auth: Auth) => {
     if (!auth.oauth2) {
       return {};
-    } // Note: Postman v2.0 and v2.1 don't export any Oauth config. They only export the token
-    // So just return a disabled and empty Oauth 2 configuration so the user can fill it in later.
+    }
     const { schema } = this.collection.info;
     // Workaround for https://github.com/Kong/insomnia/issues/4437
+    // Note: We only support importing OAuth2 configuration from Postman v2.1
     if (schema === POSTMAN_SCHEMA_V2_1) {
       const oauth2 = auth.oauth2 as V210Auth['oauth2'];
       return {
