@@ -1,6 +1,7 @@
 {
   "name": "insomnia-app",
-  "version": "2.12.0-beta.0",
+  "version": "2022.3.0-beta.3",
+  "productName": "Insomnia",
   "private": true,
   "description": "The Collaborative API Design Tool",
   "homepage": "https://konghq.com",
