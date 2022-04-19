@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
-import { useToggle } from 'react-use';
+import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
 import { Button } from '../button';

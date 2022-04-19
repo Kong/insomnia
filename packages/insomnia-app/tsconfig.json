@@ -9,7 +9,10 @@
     "package.json",
     "scripts",
     "send-request",
-    "webpack"
+    "vite.config.ts",
+    "esbuild.main.ts",
+    "esbuild.sr.ts",
+    "esbuild.preload.ts",
   ],
   "exclude": [
     "**/@types/mocha",

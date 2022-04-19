@@ -1,4 +1,4 @@
-import url from 'url';
+import { parse as urlParse } from 'url';
 
 const parseGrpcUrl = (
   grpcUrl?: string,
@@ -6,7 +6,7 @@ const parseGrpcUrl = (
   url: string;
   enableTls: boolean;
 } => {
-  const { protocol, host, href } = url.parse(grpcUrl?.toLowerCase() || '');
+  const { protocol, host, href } = urlParse(grpcUrl?.toLowerCase() || '');
 
   switch (protocol) {
     case 'grpcs:':

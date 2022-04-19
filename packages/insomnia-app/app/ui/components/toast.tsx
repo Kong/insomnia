@@ -104,7 +104,9 @@ export class Toast extends PureComponent<{}, State> {
     });
 
     // Fade the notification in
-    setTimeout(() => { this.setState({ visible: true }); }, 1000);
+    setTimeout(() => {
+      this.setState({ visible: true });
+    }, 1000);
   }
 
   async _checkForNotifications() {

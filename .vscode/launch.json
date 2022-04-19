@@ -16,9 +16,6 @@
       "runtimeExecutable": "${workspaceFolder}/packages/insomnia-app/node_modules/.bin/electron",
       "runtimeArgs": ["--remote-debugging-port=9222", "."],
       "outputCapture": "std",
-      "sourceMapPathOverrides": {
-        "webpack:///./*": "${workspaceFolder}/packages/insomnia-app/app/*"
-      },
       "windows": {
         "type": "node",
         "request": "launch",
@@ -26,7 +23,6 @@
         "runtimeExecutable": "${workspaceFolder}/packages/insomnia-app/node_modules/.bin/electron.cmd"
       },
       "env": {
-        "TS_NODE_PROJECT": "tsconfig.webpack.json",
         "NODE_ENV": "development",
         "ELECTRON_IS_DEV": "1"
       }
@@ -41,9 +37,6 @@
         "order": 2
       },
       "port": 9222,
-      "sourceMapPathOverrides": {
-        "webpack:///./*": "${workspaceFolder}/packages/insomnia-app/app/*"
-      },
       "webRoot": "${workspaceFolder}/packages/insomnia-app/app",
       "timeout": 60000
     },
@@ -59,9 +52,6 @@
       "autoAttachChildProcesses": true,
       "trace": true,
       "preLaunchTask": "Inso: Compile (Watch)",
-      "sourceMapPathOverrides": {
-        "webpack://insomniacli/./*": "${workspaceFolder}/packages/insomnia-inso/*"
-      },
       "args": ["${input:insoCommand}", "${input:insoCommandArgs}"],
       "console": "integratedTerminal"
     }
@@ -106,6 +96,7 @@
         "group": "Insomnia",
         "order": 0
       },
+      "stopAll": true,
       "preLaunchTask": "Insomnia: Compile (Watch)",
       "configurations": [
         "Electron: main",

@@ -15,7 +15,9 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirro
       }
 
       while (stream.next() != null) {
-        if (stream.match(FLEXIBLE_URL_REGEX, false)) break;
+        if (stream.match(FLEXIBLE_URL_REGEX, false)) {
+          break;
+        }
       }
 
       return null;

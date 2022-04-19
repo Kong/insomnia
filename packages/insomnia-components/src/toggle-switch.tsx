@@ -1,7 +1,9 @@
 import React, { FunctionComponent, ReactNode, useCallback, useEffect, useState } from 'react';
-import Switch from 'react-switch';
+import ReactSwitch from 'react-switch';
 import styled, { css } from 'styled-components';
 
+// @ts-expect-error Issue with commonJS export in vite
+const Switch = ReactSwitch.default;
 export interface ToggleSwitchProps {
   labelClassName?: string;
   switchClassName?: string;

@@ -535,7 +535,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       <StyledDropdown
         style={style}
         className={className}
-        ref={ref => { this._node = ref; }}
+        ref={ref => {
+          this._node = ref;
+        }}
         onClick={this._handleClick}
         onKeyDown={this._handleKeyDown}
         tabIndex={-1}
@@ -552,7 +554,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             {open && (
               <StyledMenu
                 key={uniquenessKey}
-                ref={ref => { this._dropdownList = ref; }}
+                ref={ref => {
+                  this._dropdownList = ref;
+                }}
                 tabIndex={-1}
               >
                 <StyledFilter filtering={filterVisible}>

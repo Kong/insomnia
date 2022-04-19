@@ -5,6 +5,7 @@
     "rootDir": ".",
     "resolveJsonModule": true,
     "strict": false,
+    "isolatedModules": true,
     "strictNullChecks": true,
     "jsx": "react",
     "experimentalDecorators": true,
@@ -29,11 +30,8 @@
     "assets",
     ".babelrc.js",
     "bin",
-    "build",
     "config",
     "jest.config.js",
     "node_modules",
-    "scripts",
-    "webpack"
   ]
 }

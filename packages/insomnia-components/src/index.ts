@@ -3,25 +3,25 @@ export * from './dropdown';
 export * from './sidebar';
 export * from './list-group';
 
-export { Breadcrumb, BreadcrumbProps, CrumbProps } from './breadcrumb';
+export { Breadcrumb, type BreadcrumbProps, type  CrumbProps } from './breadcrumb';
 export { CardContainer } from './card-container';
-export { Card, CardProps } from './card';
-export { Header, HeaderProps } from './header';
+export { Card, type  CardProps } from './card';
+export { Header, type  HeaderProps } from './header';
 export { MultiSwitch } from './multi-switch';
-export { NoticeTable, NoticeTableProps, Notice } from './notice-table';
-export { RadioButtonGroup, RadioButtonGroupProps } from './radio-button-group';
-export { SvgIcon, SvgIconProps, IconEnum, ThemeEnum, IconId } from './svg-icon';
-export { Switch, SwitchProps, SwitchItem } from './switch';
+export { NoticeTable, type NoticeTableProps, type Notice } from './notice-table';
+export { RadioButtonGroup, type RadioButtonGroupProps } from './radio-button-group';
+export { SvgIcon, type SvgIconProps, type IconEnum, type ThemeEnum, type IconId } from './svg-icon';
+export { Switch, type SwitchProps, type SwitchItem } from './switch';
 export {
   Table,
-  TableProps,
+  type TableProps,
   TableBody,
   TableData,
-  TableDataProps,
+  type TableDataProps,
   TableHead,
   TableHeader,
-  TableHeaderProps,
+  type TableHeaderProps,
   TableRow,
 } from './table';
-export { ToggleSwitch, ToggleSwitchProps } from './toggle-switch';
-export { Tooltip, TooltipProps } from './tooltip';
+export { ToggleSwitch, type ToggleSwitchProps } from './toggle-switch';
+export { Tooltip, type TooltipProps } from './tooltip';

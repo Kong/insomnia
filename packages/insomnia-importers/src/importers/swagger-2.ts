@@ -108,7 +108,9 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   const requests: ImportRequest[] = [];
   endpointsSchemas.map(endpointSchema => {
     let { tags } = endpointSchema;
-    if (!tags || tags.length === 0) tags = [''];
+    if (!tags || tags.length === 0) {
+      tags = [''];
+    }
     tags.forEach((tag, index) => {
       const requestId = endpointSchema.operationId
         ? `${endpointSchema.operationId}${index > 0 ? index : ''}`

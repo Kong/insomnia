@@ -132,8 +132,12 @@ class TagEditorInternal extends PureComponent<Props, State> {
       .filter(model => model.parentId === parentId)
       .sort(metaSortKeySort)
       .forEach(model => {
-        if (isRequest(model)) sortedModels.push(model);
-        if (isRequestGroup(model)) { sortedModels = sortedModels.concat(this._sortRequests(_models, model._id)); }
+        if (isRequest(model)) {
+          sortedModels.push(model);
+        }
+        if (isRequestGroup(model)) {
+          sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
+        }
       });
 
     return sortedModels;

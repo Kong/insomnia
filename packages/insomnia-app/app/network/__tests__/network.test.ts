@@ -100,7 +100,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -174,7 +174,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -273,7 +273,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -332,7 +332,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -411,7 +411,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -471,7 +471,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -510,7 +510,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -548,7 +548,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -587,7 +587,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
+      [],
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -683,10 +683,8 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
-      workspace,
-      settings,
-      null,
-      false
+      [],
+      { ...settings, validateSSL:false },
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -734,7 +732,7 @@ describe('actuallySend()', () => {
       parentId: workspace._id,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const responseV1 = await networkUtils._actuallySend(renderedRequest, workspace, {
+    const responseV1 = await networkUtils._actuallySend(renderedRequest, [], {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });

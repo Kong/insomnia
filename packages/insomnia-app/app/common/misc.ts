@@ -224,7 +224,7 @@ export function decompressObject(input: string | null): any {
 
 export function resolveHomePath(p: string) {
   if (p.indexOf('~/') === 0) {
-    return pathJoin(process.env.HOME || '/', p.slice(1));
+    return pathJoin(process.env['HOME'] || '/', p.slice(1));
   } else {
     return p;
   }
@@ -426,7 +426,9 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
 export function isNotNullOrUndefined<ValueType>(
   value: ValueType | null | undefined
 ): value is ValueType {
-  if (value === null || value === undefined) return false;
+  if (value === null || value === undefined) {
+    return false;
+  }
 
   return true;
 }
