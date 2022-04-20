@@ -17,7 +17,7 @@ module.exports = {
   // extended from preset:
   cache: false,
   modulePathIgnorePatterns: ['<rootDir>/network/.*/__mocks__'],
-  rootDir: 'app',
+  rootDir: 'src',
   setupFiles: ['./__jest__/setup.ts'],
   setupFilesAfterEnv: ['./__jest__/setup-after-env.ts'],
   testEnvironment: 'jsdom',

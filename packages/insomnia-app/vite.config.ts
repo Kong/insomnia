@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     mode,
-    root: path.join(__dirname, 'app'),
+    root: path.join(__dirname, 'src'),
     base: __DEV__ ? '/' : './',
     define: {
       __DEV__: JSON.stringify(__DEV__),

@@ -145,7 +145,7 @@ export const start = async () => {
 
   console.log('[build] Building preload');
   await build({
-    entryPoints: [path.join(__dirname, '../app/preload.js')],
+    entryPoints: [path.join(__dirname, '../src/preload.js')],
     outfile: path.join(__dirname, '../build/preload.js'),
     platform: 'node',
     bundle: true,
@@ -168,8 +168,8 @@ export const start = async () => {
   // Copy necessary files
   console.log('[build] Copying files');
   await copyFiles('../bin', buildFolder);
-  await copyFiles('../app/static', path.join(buildFolder, 'static'));
-  await copyFiles('../app/icons', buildFolder);
+  await copyFiles('../src/static', path.join(buildFolder, 'static'));
+  await copyFiles('../src/icons', buildFolder);
 
   console.log('[build] Complete!');
 };

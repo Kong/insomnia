@@ -14,7 +14,7 @@ export default async function build(options: Options) {
   const PORT = pkg.dev['dev-server-port'];
 
   const outdir = __DEV__
-    ? path.join(__dirname, 'app')
+    ? path.join(__dirname, 'src')
     : path.join(__dirname, 'build');
 
   const env: Record<string, string> = __DEV__
@@ -33,7 +33,7 @@ export default async function build(options: Options) {
     };
 
   return esbuild.build({
-    entryPoints: ['./app/main.development.ts'],
+    entryPoints: ['./src/main.development.ts'],
     outfile: path.join(outdir, 'main.min.js'),
     bundle: true,
     platform: 'node',

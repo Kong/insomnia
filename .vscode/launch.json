@@ -37,7 +37,7 @@
         "order": 2
       },
       "port": 9222,
-      "webRoot": "${workspaceFolder}/packages/insomnia-app/app",
+      "webRoot": "${workspaceFolder}/packages/insomnia-app/src",
       "timeout": 60000
     },
     {

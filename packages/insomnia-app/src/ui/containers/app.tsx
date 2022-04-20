@@ -77,7 +77,7 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
 import { Wrapper } from '../components/wrapper';
-import withDragDropContext from '../context/app/drag-drop-context';
+import withDragDropContext from '../context/src/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { RootState } from '../redux/modules';

@@ -4,7 +4,7 @@ import path from 'path';
 const outdir = path.join(__dirname, 'build');
 
 build({
-  entryPoints: ['./app/preload.ts'],
+  entryPoints: ['./src/preload.ts'],
   outfile: path.join(outdir, 'preload.js'),
   bundle: true,
   platform: 'node',

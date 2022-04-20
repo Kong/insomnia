@@ -3,7 +3,7 @@
 ## Where we are
 
 1. We're trying to move the entire codebase to hooks.  With the possible exception of one component (ErrorBoundary) there should be no component in the codebase that must be a class.
-1. Right now, all modals are classes.  One core reason for this is that `showModal` in `app/ui/components/modals/index.ts` directly calls `show` on the modal instance of a registered modal.
+1. Right now, all modals are classes.  One core reason for this is that `showModal` in `src/ui/components/modals/index.ts` directly calls `show` on the modal instance of a registered modal.
 1. right now there's an approach where a magic z-index number is used and then every time you open a modal it increments this magic number.  this has caused [user-facing bugs](https://github.com/Kong/insomnia/pull/4059).  By the way, this also means that if you ever wanted to use the same modal twice (for different purposes) you'd have layering bugs.
 
 ## Where we're going (TBC, but this is an initial plan)

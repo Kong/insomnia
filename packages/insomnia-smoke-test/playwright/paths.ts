@@ -25,8 +25,8 @@ const electronBinary = path.join('node_modules', '.bin', process.platform === 'w
 
 export const executablePath = bundleType() === 'package' ? insomniaBinary : electronBinary;
 
-// NOTE: main.min.js is built by app-build in /build and also by the watcher in /app
-export const mainPath = path.join(bundleType() === 'dev' ? 'app' : 'build', 'main.min.js');
+// NOTE: main.min.js is built by app-build in /build and also by the watcher in /src
+export const mainPath = path.join(bundleType() === 'dev' ? 'src' : 'build', 'main.min.js');
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia-app');
 
 const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));

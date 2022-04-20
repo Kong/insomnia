@@ -2,8 +2,8 @@ import * as electron from 'electron';
 import React from 'react';
 import type ReactDOM from 'react-dom';
 
-import * as analytics from '../../../app/common/analytics';
-import { axiosRequest as axios } from '../../../app/network/axios-request';
+import * as analytics from '../../../src/common/analytics';
+import { axiosRequest as axios } from '../../../src/network/axios-request';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {

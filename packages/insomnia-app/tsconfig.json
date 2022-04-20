@@ -4,7 +4,7 @@
     "**/insomnia.config.json",
     "electron-builder.config.js",
     ".eslintrc.js",
-    "app",
+    "src",
     "config",
     "esbuild.main.ts",
     "esbuild.preload.ts",

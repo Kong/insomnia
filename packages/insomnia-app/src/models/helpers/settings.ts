@@ -61,7 +61,7 @@ export const readConfigFile = (configPath?: string): unknown | FailedParseResult
 };
 
 export const getLocalDevConfigFilePath = () => (
-  isDevelopment() ? '../../packages/insomnia-app/app' as string : undefined
+  isDevelopment() ? '../../packages/insomnia-app/src' as string : undefined
 );
 
 const addConfigFileToPath = (path: string | undefined) => (
