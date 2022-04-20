@@ -1,5 +1,5 @@
 {
-  "version": "2.12.0-beta.0",
+  "version": "2.13.0-beta.0",
   "includeMergedTags": true,
   "packages": [
     "packages/*",
@@ -10,8 +10,7 @@
       "exact": true,
       "forcePublish": true,
       "gitTagVersion": false,
-      "push": false,
-      "private": false
+      "push": false
     },
     "publish": {
       "verifyAccess": false
