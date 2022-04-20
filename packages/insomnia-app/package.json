@@ -25,7 +25,7 @@
     "build:sr": "npm run generate:ca-certs && esr esbuild.sr.ts",
     "bump-version": "esr scripts/bumpVersion.ts",
     "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf build app/main.min.js",
+    "postclean": "rimraf build dist app/main.min.js",
     "generate:ca-certs": "esr scripts/generateCACerts.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
