@@ -17,7 +17,7 @@ import {
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
-  getAppName,
+  getProductName,
   isDevelopment,
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
@@ -1059,7 +1059,7 @@ class App extends PureComponent<AppProps, State> {
     let title;
 
     if (activeActivity === ACTIVITY_HOME) {
-      title = getAppName();
+      title = getProductName();
     } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
       title += ` - ${activeWorkspaceName}`;
@@ -1073,7 +1073,7 @@ class App extends PureComponent<AppProps, State> {
       }
     }
 
-    document.title = title || getAppName();
+    document.title = title || getProductName();
   }
 
   componentDidUpdate(prevProps: AppProps) {

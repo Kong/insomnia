@@ -2,7 +2,7 @@ import path from 'path';
 
 import { getAppDataDir } from '../data-directory';
 import { logger } from '../logger';
-import { getDefaultAppName } from '../util';
+import { getDefaultProductName } from '../util';
 import gitAdapter from './adapters/git-adapter';
 import insomniaAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
@@ -70,7 +70,7 @@ export const loadDb = async ({
 
   // try load from nedb
   if (!db) {
-    const dir = src || appDataDir || getAppDataDir(getDefaultAppName());
+    const dir = src || appDataDir || getAppDataDir(getDefaultProductName());
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
   } // return empty db
