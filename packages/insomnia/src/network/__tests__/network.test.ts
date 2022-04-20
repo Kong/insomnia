@@ -1,5 +1,4 @@
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
+import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
@@ -18,9 +17,11 @@ import {
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
-import { _parseHeaders } from '../libcurl-promise';
+import { _parseHeaders, getHttpVersion } from '../libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
+import { getSetCookiesFromResponseHeaders } from '../network';
+import { _getAwsAuthHeaders } from '../parse-header-strings';
 window.app = electron.app;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
@@ -684,7 +685,7 @@ describe('actuallySend()', () => {
     const response = await networkUtils._actuallySend(
       renderedRequest,
       [],
-      { ...settings, validateSSL:false },
+      { ...settings, validateSSL: false },
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -736,14 +737,14 @@ describe('actuallySend()', () => {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
-    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe(1);
-    expect(networkUtils.getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
-    expect(networkUtils.getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
-    expect(networkUtils.getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
-    expect(networkUtils.getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
-    expect(networkUtils.getHttpVersion(HttpVersions.v3).curlHttpVersion).toBe(CurlHttpVersion.v3);
-    expect(networkUtils.getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
-    expect(networkUtils.getHttpVersion('blah').curlHttpVersion).toBe(undefined);
+    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
+    expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
+    expect(getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
+    expect(getHttpVersion(HttpVersions.V2_0).curlHttpVersion).toBe(CurlHttpVersion.V2_0);
+    expect(getHttpVersion(HttpVersions.v3).curlHttpVersion).toBe(CurlHttpVersion.v3);
+    expect(getHttpVersion(HttpVersions.default).curlHttpVersion).toBe(undefined);
+    expect(getHttpVersion('blah').curlHttpVersion).toBe(undefined);
   });
 });
 
@@ -751,38 +752,22 @@ describe('_getAwsAuthHeaders', () => {
   beforeEach(globalBeforeEach);
 
   it('should generate expected headers', () => {
-    const req = {
-      authentication: {
-        type: AUTH_AWS_IAM,
-        accessKeyId: 'AKIA99999999',
-        secretAccessKey: 'SAK9999999999999',
-        sessionToken: 'ST9999999999999999',
-      },
-      headers: [
-        {
-          name: 'content-type',
-          value: 'application/json',
-        },
-      ],
-      body: {
-        text: '{}',
-      },
-      method: 'POST',
-      url: 'https://ec2.us-west-2.amazonaws.com/path?query=q1',
-    };
-    const credentials = {
-      accessKeyId: req.authentication.accessKeyId || '',
-      secretAccessKey: req.authentication.secretAccessKey || '',
-      sessionToken: req.authentication.sessionToken || '',
+    const authentication = {
+      type: AUTH_AWS_IAM,
+      accessKeyId: 'AKIA99999999',
+      secretAccessKey: 'SAK9999999999999',
+      sessionToken: 'ST99999999999999',
+      region: 'us-west-2',
+      service: 'ec2',
     };
 
-    const headers = networkUtils._getAwsAuthHeaders(
-      credentials,
-      req.headers,
-      req.body.text,
-      req.url,
-      req.method,
-    );
+    const headers = _getAwsAuthHeaders({
+      authentication,
+      url: 'https://ec2.us-west-2.amazonaws.com/path?query=q1',
+      method: 'POST',
+      contentTypeHeader: 'application/json',
+      body: '{}',
+    });
 
     expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('ec2.us-west-2.amazonaws.com');
@@ -793,33 +778,20 @@ describe('_getAwsAuthHeaders', () => {
   });
 
   it('should handle sparse request', () => {
-    const req = {
-      authentication: {
-        type: AUTH_AWS_IAM,
-        accessKeyId: 'AKIA99999999',
-        secretAccessKey: 'SAK9999999999999',
-        sessionToken: 'ST99999999999999',
-      },
-      headers: ['Accept: */*', 'Accept-Encoding:'],
+    const authentication = {
+      type: AUTH_AWS_IAM,
+      accessKeyId: 'AKIA99999999',
+      secretAccessKey: 'SAK9999999999999',
+      sessionToken: 'ST99999999999999',
+      region: 'us-west-2',
+      service: 'ec2',
+    };
+
+    const headers = _getAwsAuthHeaders({
+      authentication,
       url: 'https://example.com',
       method: 'GET',
-    };
-    const credentials = {
-      accessKeyId: req.authentication.accessKeyId || '',
-      secretAccessKey: req.authentication.secretAccessKey || '',
-      sessionToken: req.authentication.sessionToken || '',
-    };
-
-    const headers = networkUtils._getAwsAuthHeaders(
-      credentials,
-      req.headers,
-      null,
-      req.url,
-      req.method,
-      'us-west-2',
-      'ec2',
-    );
-
+    });
     expect(filterHeaders(headers, 'x-amz-date')[0].value).toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
     expect(filterHeaders(headers, 'authorization')[0].value).toMatch(
@@ -994,5 +966,37 @@ describe('_parseHeaders', () => {
         version: 'HTTP/1.1',
       },
     ]);
+  });
+});
+
+describe('getSetCookiesFromResponseHeaders', () => {
+  it('defaults to empty array', () => {
+    const headers = [];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual([]);
+  });
+  it('gets set-cookies', () => {
+    const headers = [{ name: 'Set-Cookie', value: 'monster' }];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster']);
+  });
+  it('gets two case-insenstive set-cookies', () => {
+    const headers = [{ name: 'Set-Cookie', value: 'monster' }, { name: 'set-cookie', value: 'mash' }];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster', 'mash']);
+  });
+});
+describe('getCurrentUrl for tough-cookie', () => {
+  it('defaults to finalUrl', () => {
+    const headerResults = [];
+    const finalUrl = 'http://mergemyshit.dev';
+    expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl);
+  });
+  it('append location to finalUrl', () => {
+    const headerResults = [{ headers: [{ name: 'Location', value: '/cookies' }] }];
+    const finalUrl = 'http://mergemyshit.dev';
+    expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/cookies');
+  });
+  it('appends only last location to finalUrl', () => {
+    const headerResults = [{ headers: [{ name: 'Location', value: '/cookies' }] }, { headers: [{ name: 'location', value: '/biscuit' }] }];
+    const finalUrl = 'http://mergemyshit.dev';
+    expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
   });
 });

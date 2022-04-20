@@ -1,10 +1,5 @@
-import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
-import aws4 from 'aws4';
 import clone from 'clone';
 import fs from 'fs';
-import { HttpVersions } from 'insomnia-common';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import {
   buildQueryStringFromParams,
@@ -14,17 +9,9 @@ import {
 } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
-import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  AUTH_AWS_IAM,
-  AUTH_DIGEST,
-  AUTH_NETRC,
-  AUTH_NTLM,
-  CONTENT_TYPE_FORM_DATA,
-  CONTENT_TYPE_FORM_URLENCODED,
-  getAppVersion,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
@@ -32,15 +19,8 @@ import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
   delay,
   getContentTypeHeader,
-  getHostHeader,
   getLocationHeader,
   getSetCookieHeaders,
-  hasAcceptEncodingHeader,
-  hasAcceptHeader,
-  hasAuthHeader,
-  hasContentTypeHeader,
-  hasUserAgentHeader,
-  LIBCURL_DEBUG_MIGRATION_MAP,
 } from '../common/misc';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
 import {
@@ -50,7 +30,7 @@ import {
 } from '../common/render';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
-import type { Request, RequestHeader } from '../models/request';
+import type { Request } from '../models/request';
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
@@ -58,51 +38,8 @@ import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import caCerts from './ca_certs';
-import { buildMultipart, DEFAULT_BOUNDARY } from './multipart';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// Based on list of option properties but with callback options removed
-const Curl = {
-  option: {
-    ACCEPT_ENCODING: 'ACCEPT_ENCODING',
-    CAINFO: 'CAINFO',
-    COOKIE: 'COOKIE',
-    COOKIEFILE: 'COOKIEFILE',
-    COOKIELIST: 'COOKIELIST',
-    CUSTOMREQUEST: 'CUSTOMREQUEST',
-    FOLLOWLOCATION: 'FOLLOWLOCATION',
-    HTTPAUTH: 'HTTPAUTH',
-    HTTPGET: 'HTTPGET',
-    HTTPHEADER: 'HTTPHEADER',
-    HTTPPOST: 'HTTPPOST',
-    HTTP_VERSION: 'HTTP_VERSION',
-    INFILESIZE_LARGE: 'INFILESIZE_LARGE',
-    KEYPASSWD: 'KEYPASSWD',
-    MAXREDIRS: 'MAXREDIRS',
-    NETRC: 'NETRC',
-    NOBODY: 'NOBODY',
-    NOPROGRESS: 'NOPROGRESS',
-    NOPROXY: 'NOPROXY',
-    PASSWORD: 'PASSWORD',
-    POST: 'POST',
-    POSTFIELDS: 'POSTFIELDS',
-    PATH_AS_IS: 'PATH_AS_IS',
-    PROXY: 'PROXY',
-    PROXYAUTH: 'PROXYAUTH',
-    SSLCERT: 'SSLCERT',
-    SSLCERTTYPE: 'SSLCERTTYPE',
-    SSLKEY: 'SSLKEY',
-    SSL_VERIFYHOST: 'SSL_VERIFYHOST',
-    SSL_VERIFYPEER: 'SSL_VERIFYPEER',
-    TIMEOUT_MS: 'TIMEOUT_MS',
-    UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
-    UPLOAD: 'UPLOAD',
-    URL: 'URL',
-    USERAGENT: 'USERAGENT',
-    USERNAME: 'USERNAME',
-    VERBOSE: 'VERBOSE',
-  },
-};
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
@@ -127,31 +64,9 @@ export interface ResponsePatch {
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
-// Special header value that will prevent the header being sent
-const DISABLE_HEADER_VALUE = '__Di$aB13d__';
-
 const cancelRequestFunctionMap = {};
 
 let lastUserInteraction = Date.now();
-
-export const getHttpVersion = preferredHttpVersion => {
-  switch (preferredHttpVersion) {
-    case HttpVersions.V1_0:
-      return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
-    case HttpVersions.V1_1:
-      return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
-    case HttpVersions.V2PriorKnowledge:
-      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
-    case HttpVersions.V2_0:
-      return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
-    case HttpVersions.v3:
-      return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
-    case HttpVersions.default:
-      return { log: 'Using default HTTP version' };
-    default:
-      return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
-  }
-};
 
 export async function cancelRequestById(requestId) {
   const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
@@ -168,22 +83,6 @@ export async function _actuallySend(
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
-
-    const addTimelineItem = (name: ResponseTimelineEntry['name']) => (value: string) => {
-      timeline.push({
-        name,
-        value,
-        timestamp: Date.now(),
-      });
-    };
-
-    const addTimelineText = addTimelineItem(LIBCURL_DEBUG_MIGRATION_MAP.Text);
-
-    // NOTE: can have duplicate keys because of cookie options
-    const curlOptions: { key: string; value: string | string[] | number | boolean }[] = [];
-    const setOpt = (key: string, value: string | string[] | number | boolean) => {
-      curlOptions.push({ key, value });
-    };
 
     try {
       // Setup the cancellation logic
@@ -208,114 +107,24 @@ export async function _actuallySend(
           timelinePath,
         });
       };
-
-      // Set all the basic options
-      setOpt(Curl.option.VERBOSE, true);
-
-      // True so debug function works\
-      setOpt(Curl.option.NOPROGRESS, true);
-
-      // True so curl doesn't print progress
-      setOpt(Curl.option.ACCEPT_ENCODING, '');
-
-      // Set follow redirects setting
-      switch (renderedRequest.settingFollowRedirects) {
-        case 'off':
-          setOpt(Curl.option.FOLLOWLOCATION, false);
-          break;
-
-        case 'on':
-          setOpt(Curl.option.FOLLOWLOCATION, true);
-          break;
-
-        default:
-          // Set to global setting
-          setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-          break;
-      }
-
-      // Set maximum amount of redirects allowed
-      // NOTE: Setting this to -1 breaks some versions of libcurl
-      if (settings.maxRedirects > 0) {
-        setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
-      }
-
-      // Don't rebuild dot sequences in path
-      if (!renderedRequest.settingRebuildPath) {
-        setOpt(Curl.option.PATH_AS_IS, true);
-      }
-
-      // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
-      // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
-      switch (renderedRequest.method.toUpperCase()) {
-        case 'HEAD':
-          // This is how you tell Curl to send a HEAD request
-          setOpt(Curl.option.NOBODY, 1);
-          break;
-
-        case 'POST':
-          // This is how you tell Curl to send a POST request
-          setOpt(Curl.option.POST, 1);
-          break;
-
-        default:
-          // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
-          setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-          break;
-      }
-
       // Set the URL, including the query parameters
       const qs = buildQueryStringFromParams(renderedRequest.parameters);
       const url = joinUrlAndQueryString(renderedRequest.url, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      const finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
-
-      if (isUnixSocket) {
+      let finalUrl, socketPath;
+      if (!isUnixSocket) {
+        finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
+      } else {
         // URL prep will convert "unix:/path" hostname to "unix/path"
-        const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+        const match = smartEncodeUrl(url, renderedRequest.settingEncodeUrl).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
         const protocol = (match && match[1]) || '';
-        const socketPath = (match && match[2]) || '';
+        socketPath = (match && match[2]) || '';
         const socketUrl = (match && match[3]) || '';
-        setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
-        setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
-      } else {
-        setOpt(Curl.option.URL, finalUrl);
+        finalUrl = `${protocol}//${socketUrl}`;
       }
-
-      addTimelineText('Preparing request to ' + finalUrl);
-      addTimelineText('Current time is ' + new Date().toISOString());
-
-      const httpVersion = getHttpVersion(settings.preferredHttpVersion);
-      addTimelineText(httpVersion.log);
-      if (httpVersion.curlHttpVersion) {
-        // Set HTTP version
-        setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
-      }
-
-      // Set timeout
-      if (settings.timeout > 0) {
-        addTimelineText(`Enable timeout of ${settings.timeout}ms`);
-        setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
-      } else {
-        addTimelineText('Disable timeout');
-        setOpt(Curl.option.TIMEOUT_MS, 0);
-      }
-
-      // log some things
-      if (renderedRequest.settingEncodeUrl) {
-        addTimelineText('Enable automatic URL encoding');
-      } else {
-        addTimelineText('Disable automatic URL encoding');
-      }
-
-      // SSL Validation
-      if (settings.validateSSL) {
-        addTimelineText('Enable SSL validation');
-      } else {
-        setOpt(Curl.option.SSL_VERIFYHOST, 0);
-        setOpt(Curl.option.SSL_VERIFYPEER, 0);
-        addTimelineText('Disable SSL validation');
-      }
+      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'TEXT', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'TEXT', timestamp: Date.now() });
+      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'TEXT', timestamp: Date.now() });
 
       // Setup CA Root Certificates
       const baseCAPath = getTempDir();
@@ -332,209 +141,60 @@ export async function _actuallySend(
         console.log('[net] Set CA to', fullCAPath);
       }
 
-      setOpt(Curl.option.CAINFO, fullCAPath);
-
-      // Set cookies from jar
-      if (renderedRequest.settingSendCookies) {
-        // Tell Curl to store cookies that it receives. This is only important if we receive
-        // a cookie on a redirect that needs to be sent on the next request in the chain.
-        setOpt(Curl.option.COOKIEFILE, '');
-        const cookies = renderedRequest.cookieJar.cookies || [];
-
-        for (const cookie of cookies) {
-          let expiresTimestamp = 0;
-
-          if (cookie.expires) {
-            const expiresDate = new Date(cookie.expires);
-            expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
-          }
-
-          setOpt(
-            Curl.option.COOKIELIST,
-            [
-              cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-              cookie.hostOnly ? 'FALSE' : 'TRUE',
-              cookie.path,
-              cookie.secure ? 'TRUE' : 'FALSE',
-              expiresTimestamp,
-              cookie.key,
-              cookie.value,
-            ].join('\t'),
-          );
-        }
-
-        for (const { name, value } of renderedRequest.cookies) {
-          setOpt(Curl.option.COOKIE, `${name}=${value}`);
-        }
-
-        addTimelineText(
-          `Enable cookie sending with jar of ${cookies.length} cookie${cookies.length !== 1 ? 's' : ''
-          }`,
-        );
-      } else {
-        addTimelineText('Disable cookie sending due to user setting');
+      if (!renderedRequest.settingSendCookies) {
+        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'TEXT', timestamp: Date.now() });
       }
 
-      // Set proxy settings if we have them
-      if (settings.proxyEnabled) {
-        const { protocol } = urlParse(renderedRequest.url);
-        const { httpProxy, httpsProxy, noProxy } = settings;
-        const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-        const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-        addTimelineText(`Enable network proxy for ${protocol || ''}`);
+      const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
 
-        if (proxy) {
-          setOpt(Curl.option.PROXY, proxy);
-          setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
-        }
+      const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
-        if (noProxy) {
-          setOpt(Curl.option.NOPROXY, noProxy);
-        }
-      } else {
-        setOpt(Curl.option.PROXY, '');
-      }
-
-      for (const certificate of (clientCertificates || [])) {
-        if (certificate.disabled) {
-          continue;
-        }
-
-        const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
-
-        if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
-          const ensureFile = blobOrFilename => {
-            try {
-              fs.statSync(blobOrFilename);
-            } catch (err) {
-              // Certificate file not found!
-              // LEGACY: Certs used to be stored in blobs (not as paths), so let's write it to
-              // the temp directory first.
-              const fullBase = getTempDir();
-              const name = `${renderedRequest._id}_${renderedRequest.modified}`;
-              const fullPath = pathJoin(fullBase, name);
-              fs.writeFileSync(fullPath, Buffer.from(blobOrFilename, 'base64'));
-              // Set filename to the one we just saved
-              blobOrFilename = fullPath;
-            }
-
-            return blobOrFilename;
-          };
-
-          const { passphrase, cert, key, pfx } = certificate;
-
-          if (cert) {
-            setOpt(Curl.option.SSLCERT, ensureFile(cert));
-            setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-            addTimelineText('Adding SSL PEM certificate');
-          }
-
-          if (pfx) {
-            setOpt(Curl.option.SSLCERT, ensureFile(pfx));
-            setOpt(Curl.option.SSLCERTTYPE, 'P12');
-            addTimelineText('Adding SSL P12 certificate');
-          }
-
-          if (key) {
-            setOpt(Curl.option.SSLKEY, ensureFile(key));
-            addTimelineText('Adding SSL KEY certificate');
-          }
-
-          if (passphrase) {
-            setOpt(Curl.option.KEYPASSWD, passphrase);
-          }
-        }
-      }
-      const requestBody = parseRequestBody(renderedRequest);
-      if (requestBody) {
-        setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
-      const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
-      if (requestBodyPath) {
-        const { size: contentLength } = fs.statSync(requestBodyPath);
-        setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-        setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a POST
-        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      }
-      // Handle Authorization header
-      const { username, password, disabled } = renderedRequest.authentication;
-      if (!hasAuthHeader(renderedRequest.headers) && !disabled) {
-        if (renderedRequest.authentication.type === AUTH_DIGEST) {
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
-        }
-        if (renderedRequest.authentication.type === AUTH_NTLM) {
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
-        }
-        if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          // AWS IAM file upload not supported
-          if (requestBodyPath) {
-            const timelinePath = await storeTimeline(timeline);
-            // Tear Down the cancellation logic
-            if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-              delete cancelRequestFunctionMap[renderedRequest._id];
-            }
-            return resolve({
-              url: renderedRequest.url,
-              error: 'AWS authentication not supported for provided body type',
-              elapsedTime: 0,
-              statusMessage: 'Error',
-              timelinePath,
-            });
-          }
-        }
-      }
-      if (renderedRequest.authentication.type === AUTH_NETRC) {
-        setOpt(Curl.option.NETRC, CurlNetrc.Required);
-      }
-
-      const headerStrings = await parseHeaderStrings({ renderedRequest, requestBody, requestBodyPath, finalUrl });
-      setOpt(Curl.option.HTTPHEADER, headerStrings);
-
-      // Set User-Agent if it's not already in headers
-      if (!hasUserAgentHeader(renderedRequest.headers)) {
-        setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
-      }
-
-      const responsesDir = pathJoin(getDataDirectory(), 'responses');
-      mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuidv4() + '.response');
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         : require('./libcurl-promise').curlRequest;
-      const isMultipart = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
       const requestOptions = {
-        curlOptions,
-        responseBodyPath,
-        requestBodyPath,
-        isMultipart,
-        maxTimelineDataSizeKB: settings.maxTimelineDataSizeKB,
         requestId: renderedRequest._id,
-      };
-      const { patch, debugTimeline, headerResults } = await nodejsCurlRequest(requestOptions);
-      const { cookieJar, settingStoreCookies } = renderedRequest;
-      const { lastRedirect, contentType, headerTimeline } = await setCookiesFromResponseHeaders({
-        headerResults,
+        req: renderedRequest,
         finalUrl,
-        cookieJar,
-        settingStoreCookies,
-      });
+        socketPath,
+        settings,
+        certificates,
+        fullCAPath,
+        authHeader,
+      };
+      const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
+      const { cookieJar, settingStoreCookies } = renderedRequest;
 
+      // add set-cookie headers to file(cookiejar) and database
+      if (settingStoreCookies) {
+        // supports many set-cookies over many redirects
+        const redirects: string[][] = headerResults.map(getSetCookiesFromResponseHeaders);
+        const setCookieStrings: string[] = redirects.flat();
+        const totalSetCookies = setCookieStrings.length;
+        if (totalSetCookies) {
+          const currentUrl = getCurrentUrl({ headerResults, finalUrl });
+          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'TEXT', timestamp: Date.now() }));
+          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+          if (hasCookiesToPersist) {
+            await models.cookieJar.update(cookieJar, { cookies });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'TEXT', timestamp: Date.now() });
+          }
+        }
+      }
+
+      const lastRedirect = headerResults[headerResults.length - 1];
       const responsePatch: ResponsePatch = {
-        contentType,
+        contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
         headers: lastRedirect.headers,
         httpVersion: lastRedirect.version,
         statusCode: lastRedirect.code,
         statusMessage: lastRedirect.reason,
         ...patch,
       };
-      const timelinePath = await storeTimeline([...timeline, ...debugTimeline, ...headerTimeline]);
+      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
       if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
         delete cancelRequestFunctionMap[renderedRequest._id];
@@ -562,183 +222,38 @@ export async function _actuallySend(
   });
 }
 
-const parseRequestBody = req => {
-  const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-  const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
-  const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
-  if (isUrlEncodedForm) {
-    const urlSearchParams = new URLSearchParams();
-    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
-    return urlSearchParams.toString();
-  }
-  if (hasMimetypeAndUpdateMethod) {
-    return req.body.text;
-  }
-};
+export const getSetCookiesFromResponseHeaders = headers => getSetCookieHeaders(headers).map(h => h.value);
 
-const parseRequestBodyPath = async req => {
-  const isMultipartForm = req.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (isMultipartForm) {
-    const { filePath } = await buildMultipart(req.body.params || [],);
-    return filePath;
+export const getCurrentUrl = ({ headerResults, finalUrl }) => {
+  if (!headerResults || !headerResults.length) {
+    return finalUrl;
   }
-  return req.body.fileName;
-};
-
-// add set-cookie headers to file(cookiejar) and database
-const setCookiesFromResponseHeaders = async ({ headerResults, finalUrl, cookieJar, settingStoreCookies }) => {
-  const headerTimeline: ResponseTimelineEntry[] = [];
-
-  // Update Cookie Jar
-  const setCookieStrings: string[] = headerResults.map(({ headers }) => getSetCookieHeaders(headers).map(s => s.value)).flat().filter(s => s.length);
-
-  // Update jar with Set-Cookie headers
-  const jar = jarFromCookies(cookieJar.cookies);
-  for (const setCookie of setCookieStrings) {
-    try {
-      // get the last location header to set the cookie at
-      const locationHeader = headerResults.reverse().find(({ headers }) => getLocationHeader(headers));
-      jar.setCookieSync(setCookie, locationHeader?.value || finalUrl);
-    } catch (err) {
-      headerTimeline.push({
-        name: 'TEXT',
-        value: `Rejected cookie: ${err.message}`,
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  // Update cookie jar if we need to and if we found any cookies
-  if (settingStoreCookies && setCookieStrings.length) {
-    const cookies = await cookiesFromJar(jar);
-    await models.cookieJar.update(cookieJar, { cookies });
-  }
-
-  // Print informational message
-  if (setCookieStrings.length > 0) {
-    const n = setCookieStrings.length;
-    const intent = settingStoreCookies ? 'Saved' : 'Ignored';
-    const plural = `cookie${n === 1 ? '' : 's'}`;
-    headerTimeline.push({
-      name: 'TEXT',
-      value: `${intent} ${n} ${plural}`,
-      timestamp: Date.now(),
-    });
-  }
-  // Headers are an array (one for each redirect)
   const lastRedirect = headerResults[headerResults.length - 1];
-  return {
-    lastRedirect,
-    contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
-    headerTimeline,
-  };
-
+  const location = getLocationHeader(lastRedirect.headers);
+  if (!location || !location.value) {
+    return finalUrl;
+  }
+  try {
+    return new URL(location.value, finalUrl).toString();
+  } catch (error) {
+    return finalUrl;
+  }
 };
 
-const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPath, finalUrl }) => {
-  const headers = clone(renderedRequest.headers);
-
-  // Disable Expect and Transfer-Encoding headers when we have POST body/file
-  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
-  if (hasRequestBodyOrFilePath) {
-    headers.push({
-      name: 'Expect',
-      value: DISABLE_HEADER_VALUE,
-    });
-    headers.push({
-      name: 'Transfer-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
-
-  const isDigest = renderedRequest.authentication.type === AUTH_DIGEST;
-  const isNTLM = renderedRequest.authentication.type === AUTH_NTLM;
-  const isAWSIAM = renderedRequest.authentication.type === AUTH_AWS_IAM;
-  if (isAWSIAM) {
-    const { authentication } = renderedRequest;
-    const credentials = {
-      accessKeyId: authentication.accessKeyId || '',
-      secretAccessKey: authentication.secretAccessKey || '',
-      sessionToken: authentication.sessionToken || '',
-    };
-
-    const extraHeaders = _getAwsAuthHeaders(
-      credentials,
-      headers,
-      requestBody || '',
-      finalUrl,
-      renderedRequest.method,
-      authentication.region || '',
-      authentication.service || '',
-    );
-
-    for (const header of extraHeaders) {
-      headers.push(header);
-    }
-  }
-  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !renderedRequest.authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-  if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest) {
-    const authHeader = await getAuthHeader(renderedRequest, finalUrl);
-
-    if (authHeader) {
-      headers.push({
-        name: authHeader.name,
-        value: authHeader.value,
-      });
-    }
-  }
-  const isMultipartForm = renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (isMultipartForm && requestBodyPath) {
-    const contentTypeHeader = getContentTypeHeader(headers);
-    if (contentTypeHeader) {
-      contentTypeHeader.value = `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`;
-    } else {
-      headers.push({
-        name: 'Content-Type',
-        value: `multipart/form-data; boundary=${DEFAULT_BOUNDARY}`,
-      });
-    }
-  }
-  // Send a default Accept headers of anything
-  if (!hasAcceptHeader(headers)) {
-    headers.push({
-      name: 'Accept',
-      value: '*/*',
-    }); // Default to anything
-  }
-
-  // Don't auto-send Accept-Encoding header
-  if (!hasAcceptEncodingHeader(headers)) {
-    headers.push({
-      name: 'Accept-Encoding',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
-
-  // Prevent curl from adding default content-type header
-  if (!hasContentTypeHeader(headers)) {
-    headers.push({
-      name: 'content-type',
-      value: DISABLE_HEADER_VALUE,
-    });
-  }
-
-  return headers
-    .filter(h => h.name)
-    .map(h => {
-      const value = h.value || '';
-
-      if (value === '') {
-      // Curl needs a semicolon suffix to send empty header values
-        return `${h.name};`;
-      } else if (value === DISABLE_HEADER_VALUE) {
-      // Tell Curl NOT to send the header if value is null
-        return `${h.name}:`;
-      } else {
-      // Send normal header value
-        return `${h.name}: ${value}`;
+const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }) => {
+  const rejectedCookies: string[] = [];
+  const jar = jarFromCookies(cookieJar.cookies);
+  for (const setCookieStr of setCookieStrings) {
+    try {
+      jar.setCookieSync(setCookieStr, currentUrl);
+    } catch (err) {
+      if (err instanceof Error) {
+        rejectedCookies.push(err.message);
       }
-    });
+    }
+  }
+  const cookies = await cookiesFromJar(jar);
+  return { cookies, rejectedCookies };
 };
 
 export async function sendWithSettings(
@@ -964,49 +479,6 @@ async function _applyResponsePluginHooks(
     };
   }
 
-}
-
-// exported for unit tests only
-export function _getAwsAuthHeaders(
-  credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken: string;
-  },
-  headers: RequestHeader[],
-  body: string,
-  url: string,
-  method: string,
-  region?: string,
-  service?: string,
-): {
-  name: string;
-  value: string;
-}[] {
-  const parsedUrl = urlParse(url);
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // AWS uses host header for signing so prioritize that if the user set it manually
-  const hostHeader = getHostHeader(headers);
-  const host = hostHeader ? hostHeader.value : parsedUrl.host;
-  const awsSignOptions: aws4.Request = {
-    service,
-    region,
-    ...(host ? { host } : {}),
-    body,
-    method,
-    ...(parsedUrl.path ? { path: parsedUrl.path } : {}),
-    headers: contentTypeHeader ? { 'content-type': contentTypeHeader.value } : {},
-  };
-  const signature = aws4.sign(awsSignOptions, credentials);
-  if (!signature.headers) {
-    return [];
-  }
-  return Object.keys(signature.headers)
-    .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({
-      name,
-      value: String(signature.headers?.[name]),
-    }));
 }
 
 function storeTimeline(timeline: ResponseTimelineEntry[]) {
