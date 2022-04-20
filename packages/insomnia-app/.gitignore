@@ -2,4 +2,4 @@ dist
 build
 
 # Generated
-app/main.min.js
+src/main.min.js
