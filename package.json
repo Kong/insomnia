@@ -22,13 +22,13 @@
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
     "inso-start": "npm start --prefix packages/insomnia-inso",
-    "inso-package": "npm run build:sr --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-inso",
+    "inso-package": "npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --prefix packages/insomnia-inso",
-    "watch:app": "npm run build:main.min.js --prefix packages/insomnia-app && npm run start:dev-server --prefix packages/insomnia-app",
-    "app-start": "npm start --prefix packages/insomnia-app",
-    "app-build": "npm run build --prefix packages/insomnia-app",
-    "app-package": "npm run build --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-app",
-    "app-bump-version": "npm run bump-version --prefix packages/insomnia-app",
+    "watch:app": "npm run build:main.min.js --prefix packages/insomnia && npm run start:dev-server --prefix packages/insomnia",
+    "app-start": "npm start --prefix packages/insomnia",
+    "app-build": "npm run build --prefix packages/insomnia",
+    "app-package": "npm run build --prefix packages/insomnia && npm run package --prefix packages/insomnia",
+    "app-bump-version": "npm run bump-version --prefix packages/insomnia",
     "preinstall": "node ./scripts/check-version.js",
     "test:smoke:dev": "npm run test:dev --prefix packages/insomnia-smoke-test",
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test",
@@ -37,7 +37,7 @@
     "hard-reset": "npm run clean && npm run bootstrap && npm run app-start",
     "type-check": "lerna run type-check",
     "changelog-image": "ts-node ./scripts/changelog-image/changelog-image.ts",
-    "dev": "npm start --prefix packages/insomnia-app"
+    "dev": "npm start --prefix packages/insomnia"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

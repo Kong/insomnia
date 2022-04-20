@@ -23,24 +23,24 @@ There are a few more technologies and tools worth mentioning:
 
 Insomnia uses [`lerna`](https://lerna.js.org/) to manage multiple npm packages within a single repository. There are currently two package locations:
 
-- `/packages` contains related packages that are consumed by `insomnia-app` or externally.
+- `/packages` contains related packages that are consumed by `insomnia` or externally.
 - `/plugins` contains plugin packages that are included by default with the application.
 
-## The `insomnia-app` Main Package
+## The `insomnia` Main Package
 
-`/packages/insomnia-app` is the entry point for the app. All other packages are imported from this one.
+`/packages/insomnia` is the entry point for the app. All other packages are imported from this one.
 
 There are a few notable directories inside of it:
 
 - `/main.development.js` Entry for Electron.
-- `/app/main` Stuff that runs inside Electron's main process.
-- `/app/ui` React components and styling.
-- `/app/common` Utilities used across both main and render processes.
-- `/app/plugins` Logic around installation and usage of plugins.
-- `/app/models` DB models used to store user data.
-- `/app/network` Sending requests and performing auth (eg. OAuth 2).
-- `/app/templating` Nunjucks and rendering related code.
-- `/app/sync(-legacy)?` and `/app/accounts` Team sync and account stuff.
+- `/src/main` Stuff that runs inside Electron's main process.
+- `/src/ui` React components and styling.
+- `/src/common` Utilities used across both main and render processes.
+- `/src/plugins` Logic around installation and usage of plugins.
+- `/src/models` DB models used to store user data.
+- `/src/network` Sending requests and performing auth (eg. OAuth 2).
+- `/src/templating` Nunjucks and rendering related code.
+- `/src/sync(-legacy)?` and `/src/accounts` Team sync and account stuff.
 
 ## Data and State Architecture
 
@@ -48,7 +48,7 @@ Insomnia stores data in a few places:
 
 - A local in-memory NeDB database stores data for data models (requests, folder, workspaces, etc).
 - A local Redux store contains an in-memory copy of all database entities.
-- Multiple React Context stores, defined in `/app/ui/context`.
+- Multiple React Context stores, defined in `/src/ui/context`.
 
 > Note: Eventually, Redux could/should be removed, which would both reduce memory overhead and simplify the codebase. NeDB should essentially replace it
 
@@ -59,8 +59,8 @@ to write our unit tests, and [Playwright](https://github.com/microsoft/playwrigh
 
 Unit tests exist alongside the file under test. For example:
 
-- `/app/common/database.js` contains the database business logic
-- `/app/common/__tests__/database.test.js` contains the database tests
+- `/src/common/database.js` contains the database business logic
+- `/src/common/__tests__/database.test.js` contains the database tests
 
 Unit tests for components follow the same pattern.
 

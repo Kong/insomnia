@@ -1,0 +1,5 @@
+dist
+build
+
+# Generated
+src/main.min.js

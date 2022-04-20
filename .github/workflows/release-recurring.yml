@@ -55,6 +55,6 @@ jobs:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}
           path: |
-            packages/insomnia-app/dist/*.exe
-            packages/insomnia-app/dist/*.tar.gz
-            packages/insomnia-app/dist/*.zip
+            packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.tar.gz
+            packages/insomnia/dist/*.zip

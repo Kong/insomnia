@@ -4,7 +4,7 @@ import type ReactDOM from 'react-dom';
 
 import { getDeployToPortalComponent } from './deploy-to-portal';
 
-// This is a temporary shim until insomnia-app exports plugin types that plugin authors can use
+// This is a temporary shim until insomnia exports plugin types that plugin authors can use
 export interface Spec {
   contents: Object;
   rawContents: string;
@@ -12,7 +12,7 @@ export interface Spec {
   formatVersion: string;
 }
 
-// This is a temporary shim until insomnia-app exports plugin types that plugin authors can use
+// This is a temporary shim until insomnia exports plugin types that plugin authors can use
 export interface Context {
   store: {
     hasItem: (key: string) => Promise<boolean>;
