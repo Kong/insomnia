@@ -3,8 +3,7 @@
   "includeMergedTags": true,
   "packages": [
     "packages/*",
-    "plugins/*",
-    "packages/insomnia/build"
+    "plugins/*"
   ],
   "command": {
     "version": {
