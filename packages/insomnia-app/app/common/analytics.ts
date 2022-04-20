@@ -7,9 +7,9 @@ import { database as db } from '../common/database';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 import {
-  getAppName,
   getAppPlatform,
   getAppVersion,
+  getProductName,
   getSegmentWriteKey,
 } from './constants';
 
@@ -37,7 +37,7 @@ const sendSegment = async (segmentType: 'track' | 'page', options) => {
     const anonymousId = await getDeviceId();
     const userId = getAccountId();
     const context = {
-      app: { name: getAppName(), version: getAppVersion() },
+      app: { name: getProductName(), version: getAppVersion() },
       os: { name: _getOsName(), version: process.getSystemVersion() },
     };
     segmentClient?.[segmentType]({ ...options, context, anonymousId, userId }, error => {

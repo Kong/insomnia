@@ -14,10 +14,10 @@ module.exports = async function(params) {
   // Same appId in electron-builder.
   const { appId } = appConfig;
 
-  const appName = `${params.packager.appInfo.productFilename}.app`;
-  const appPath = path.join(params.appOutDir, appName);
+  const productName = `${params.packager.appInfo.productFilename}.app`;
+  const appPath = path.join(params.appOutDir, productName);
   if (!fs.existsSync(appPath)) {
-    throw new Error(`Cannot find application at: ${appName}`);
+    throw new Error(`Cannot find application at: ${productName}`);
   }
 
   if (!process.env.APPLE_ID) {
@@ -37,7 +37,7 @@ module.exports = async function(params) {
     appleIdPassword: process.env.APPLE_ID_PASSWORD,
   };
 
-  console.log(`[afterSign] Notarizing ${appName} (${appId})`);
+  console.log(`[afterSign] Notarizing ${productName} (${appId})`);
 
   try {
     await electronNotarize.notarize(args);
