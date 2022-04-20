@@ -9,7 +9,6 @@ const BINARY_PREFIX = 'Insomnia.Core';
  */
 const config = {
   appId: 'com.insomnia.app',
-  asar: true,
   electronVersion: '17.3.0',
   protocols: [
     {
@@ -21,8 +20,8 @@ const config = {
   files: [
     {
       from: './build',
-      to: './app',
-      filter: ['**/*'],
+      to: '.',
+      filter: ['**/*', '!opensource-licenses.txt'],
     },
     './package.json',
   ],
@@ -40,10 +39,10 @@ const config = {
       filter: 'opensource-licenses.txt',
     },
   ],
-  fileAssociations: [],
-  directories: {
-    output: 'dist',
+  extraMetadata: {
+    main: 'main.min.js', // Override the main path in package.json
   },
+  fileAssociations: [],
   mac: {
     hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
@@ -82,7 +81,14 @@ const config = {
     ],
   },
   win: {
-    target: ['squirrel', 'portable'],
+    target: [
+      {
+        target: 'squirrel',
+      },
+      {
+        target: 'portable',
+      },
+    ],
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
@@ -97,7 +103,23 @@ const config = {
     executableName: 'insomnia',
     synopsis: 'The Collaborative API Client and Design Tool',
     category: 'Development',
-    target: ['AppImage', 'deb', 'tar.gz', 'rpm', 'snap'],
+    target: [
+      {
+        target: 'AppImage',
+      },
+      {
+        target: 'deb',
+      },
+      {
+        target: 'tar.gz',
+      },
+      {
+        target: 'rpm',
+      },
+      {
+        target: 'snap',
+      },
+    ],
   },
 };
 
@@ -106,6 +128,6 @@ const targets = BUILD_TARGETS?.split(',');
 if (platform && targets) {
   console.log('overriding build targets to: ', targets);
   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
-  config[PLATFORM_MAP[platform]].target = targets;
+  config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) => targets.includes(target));
 }
 module.exports = config;
