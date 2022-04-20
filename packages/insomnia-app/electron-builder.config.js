@@ -9,7 +9,6 @@ const BINARY_PREFIX = 'Insomnia.Core';
  */
 const config = {
   appId: 'com.insomnia.app',
-  electronVersion: '17.3.0',
   protocols: [
     {
       name: 'Insomnia',
