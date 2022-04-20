@@ -299,19 +299,22 @@ const renderIdentityTokenExpiry = (token?: Pick<OAuth2Token, 'identityToken'>) =
     return;
   }
 
-  const { exp } = JSON.parse(decodedString);
-
-  if (!exp) {
-    return '(never expires)';
+  try {
+    const { exp } = JSON.parse(decodedString);
+    if (!exp) {
+      return '(never expires)';
+    }
+    const convertedExp = convertEpochToMilliseconds(exp);
+    return (
+      <span>
+        &#x28;expires <TimeFromNow timestamp={convertedExp} />
+        &#x29;
+      </span>
+    );
+  } catch (error) {
+    console.error(error);
+    return '';
   }
-
-  const convertedExp = convertEpochToMilliseconds(exp);
-  return (
-    <span>
-      &#x28;expires <TimeFromNow timestamp={convertedExp} />
-      &#x29;
-    </span>
-  );
 };
 
 const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expiresAt'>) => {
