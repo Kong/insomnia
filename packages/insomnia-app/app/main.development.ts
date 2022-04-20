@@ -38,10 +38,10 @@ log.info(`Running version ${getAppVersion()}`);
 const envDataPath = process.env.INSOMNIA_DATA_PATH;
 if (envDataPath) {
   app.setPath('userData', envDataPath);
-} else if (!isDevelopment()) {
+} else {
   // Explicitly set userData folder from config because it's sketchy to rely on electron-builder to use productName, which could be changed by accident.
   const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
+  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : appConfig.userDataFolder);
   app.setPath('userData', newPath);
 }
 
