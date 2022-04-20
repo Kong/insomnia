@@ -10,14 +10,6 @@ interface Options {
 
 export default async function build(options: Options) {
   const mode = options.mode || 'production';
-  // The list of packages that will be included in the node_modules folder of the packaged app.
-  // Exclude all package.json dependencies except from the ones in the packedDependencies list
-  const unpackedDependencies = [
-    ...Object.keys(pkg.dependencies).filter(
-      name => !pkg.packedDependencies.includes(name)
-    ),
-  ];
-
   const __DEV__ = mode !== 'production';
   const PORT = pkg.dev['dev-server-port'];
 
@@ -51,7 +43,7 @@ export default async function build(options: Options) {
     external: [
       'electron',
       '@getinsomnia/node-libcurl',
-      ...Object.keys(unpackedDependencies),
+      ...Object.keys(pkg.dependencies),
       ...Object.keys(builtinModules),
     ],
   });

@@ -1,7 +1,7 @@
 import electron from 'electron';
 import { mocked } from 'ts-jest/utils';
 
-import appConfig from '../../../../config/config.json';
+import appPackageJson from '../../../../package.json';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as modals from '../../../ui/components/modals';
@@ -113,7 +113,7 @@ describe('app.getInfo()', () => {
   it('provides app info', async () => {
     const result = plugin.init();
     expect(result.app.getInfo()).toEqual({
-      'version': appConfig.version,
+      'version': appPackageJson.version,
       'platform': process.platform,
     });
   });

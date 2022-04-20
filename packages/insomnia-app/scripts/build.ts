@@ -1,7 +1,6 @@
 import childProcess from 'child_process';
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync } from 'fs';
-import { writeFile } from 'fs/promises';
 import licenseChecker from 'license-checker';
 import mkdirp from 'mkdirp';
 import { ncp } from 'ncp';
@@ -9,9 +8,7 @@ import path from 'path';
 import rimraf from 'rimraf';
 import * as vite from 'vite';
 
-import appConfig from '../config/config.json';
 import buildMain from '../esbuild.main';
-import pkg from '../package.json';
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -111,81 +108,6 @@ const buildLicenseList = (relSource: string, relDest: string) =>
     );
   });
 
-const install = () =>
-  new Promise<void>((resolve, reject) => {
-    const root = path.resolve(__dirname, '../../../');
-
-    const p = childProcess.spawn('npm', ['run', 'bootstrap:electron-builder'], {
-      cwd: root,
-      shell: true,
-    });
-
-    p.stdout.on('data', data => {
-      console.log(data.toString());
-    });
-
-    p.stderr.on('data', data => {
-      console.log(data.toString());
-    });
-
-    p.on('exit', code => {
-      console.log(`child process exited with code ${code}`);
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error('[build] failed to install dependencies'));
-      }
-    });
-  });
-
-const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
-  // Figure out which dependencies to pack
-  const allDependencies = Object.keys(pkg.dependencies);
-  const packedDependencies = pkg.packedDependencies;
-  const unpackedDependencies = allDependencies.filter(
-    name => !packedDependencies.includes(name)
-  );
-  const outPath = path.resolve(__dirname, relOutPkg);
-
-  const appPkg = {
-    name: appConfig.name,
-    version: appConfig.version,
-    productName: appConfig.productName,
-    description: pkg.description,
-    license: pkg.license,
-    homepage: pkg.homepage,
-    author: pkg.author,
-    copyright: `Copyright © ${new Date().getFullYear()} ${pkg.author}`,
-    main: 'main.min.js',
-    dependencies: {},
-  };
-
-  console.log(
-    `[build] Generated build config for ${appPkg.name} ${appPkg.version}`
-  );
-
-  for (const key of Object.keys(appPkg)) {
-    if (key === undefined) {
-      throw new Error(`[build] missing "app.${key}" from package.json`);
-    }
-  }
-
-  // Add dependencies
-  console.log(
-    `[build] Adding ${unpackedDependencies.length} node dependencies`
-  );
-  for (const name of unpackedDependencies) {
-    const version = pkg.dependencies[name];
-    if (!version) {
-      throw new Error(`Failed to find packed dep "${name}" in dependencies`);
-    }
-    appPkg.dependencies[name] = version;
-  }
-
-  const outputFile = JSON.stringify(appPkg, null, 2);
-  await writeFile(outPath, outputFile);
-};
-
 export const start = async () => {
   console.log('[build] Starting build');
 
@@ -248,16 +170,6 @@ export const start = async () => {
   await copyFiles('../bin', buildFolder);
   await copyFiles('../app/static', path.join(buildFolder, 'static'));
   await copyFiles('../app/icons', buildFolder);
-
-  // Generate necessary files needed by `electron-builder`
-  await generatePackageJson(
-    '../package.json',
-    path.join(buildFolder, 'package.json')
-  );
-
-  // Install Node modules
-  console.log('[build] Installing dependencies');
-  await install();
 
   console.log('[build] Complete!');
 };

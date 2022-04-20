@@ -3,15 +3,15 @@
   "includeMergedTags": true,
   "packages": [
     "packages/*",
-    "plugins/*",
-    "packages/insomnia-app/build"
+    "plugins/*"
   ],
   "command": {
     "version": {
       "exact": true,
       "forcePublish": true,
       "gitTagVersion": false,
-      "push": false
+      "push": false,
+      "private": false
     },
     "publish": {
       "verifyAccess": false

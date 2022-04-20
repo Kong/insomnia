@@ -3,12 +3,13 @@ import path from 'path';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import appConfig from '../../config/config.json';
+import { version } from '../../package.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
 
 const env = process['env'];
 
 // App Stuff
-export const getAppVersion = () => appConfig.version;
+export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppDefaultTheme = () => appConfig.theme;
 export const getAppDefaultLightTheme = () => appConfig.lightTheme;

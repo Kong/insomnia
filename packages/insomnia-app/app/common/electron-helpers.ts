@@ -2,7 +2,7 @@ import * as electron from 'electron';
 import mkdirp from 'mkdirp';
 import { join } from 'path';
 
-import appConfig from '../../config/config.json';
+import { version } from '../../package.json';
 
 export function clickLink(href: string) {
   const { protocol } = new URL(href);
@@ -26,7 +26,7 @@ export function getDataDirectory() {
 export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
   const { app } = process.type === 'renderer' ? window : electron;
-  const dir = join(app.getPath('temp'), `insomnia_${appConfig.version}`);
+  const dir = join(app.getPath('temp'), `insomnia_${version}`);
   mkdirp.sync(dir);
   return dir;
 }

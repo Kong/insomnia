@@ -28,7 +28,7 @@
     "watch:app": "npm run build:main.min.js --prefix packages/insomnia-app && npm run start:dev-server --prefix packages/insomnia-app",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
-    "app-package": "npm run package --prefix packages/insomnia-app",
+    "app-package": "npm run build --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-app",
     "app-bump-version": "npm run bump-version --prefix packages/insomnia-app",
     "preinstall": "node ./scripts/check-version.js",
     "test:smoke:dev": "npm run test:dev --prefix packages/insomnia-smoke-test",
