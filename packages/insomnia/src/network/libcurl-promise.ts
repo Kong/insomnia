@@ -14,7 +14,7 @@ import { ValueOf } from 'type-fest';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import { version } from '../../config/config.json';
+import { version } from '../../package.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
 import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
 import { ClientCertificate } from '../models/client-certificate';
