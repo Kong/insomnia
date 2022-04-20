@@ -6,8 +6,10 @@ import coreLogo from '../images/insomnia-logo.svg';
 import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown';
 
-const Header = styled(_Header)({
-  whiteSpace: 'nowrap',
+const Header =  styled(_Header)({
+  '&&': {
+    whiteSpace: 'nowrap',
+  },
 });
 
 const RightWrapper = styled.div({

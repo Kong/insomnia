@@ -11,9 +11,11 @@ interface DashboardSortDropdownProps {
 }
 
 const Checkmark = styled(SvgIcon)({
-  ...svgPlacementHack,
-  '& svg': {
-    fill: 'var(--color-surprise)',
+  '&&': {
+    ...svgPlacementHack,
+    '& svg': {
+      fill: 'var(--color-surprise)',
+    },
   },
 });
 

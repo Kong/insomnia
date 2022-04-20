@@ -10,20 +10,22 @@ export interface CircleButtonProps extends ButtonProps {
 }
 
 const StyledCircleButton = styled(Button)<CircleButtonProps>`
-  padding: unset;
-  font-size: var(--font-size-xl);
-  border-radius: 50%;
-
-  ${({ height }) => css`
-    height: ${height || css`var(--line-height-xs)`};
-  `};
-
-  ${({ width }) => css`
-    width: ${width || css`var(--line-height-xs)`};
-  `};
-
-  svg {
-    padding: var(--padding-xs);
+  && {
+    padding: unset;
+    font-size: var(--font-size-xl);
+    border-radius: 50%;
+  
+    ${({ height }) => css`
+      height: ${height || css`var(--line-height-xs)`};
+    `};
+  
+    ${({ width }) => css`
+      width: ${width || css`var(--line-height-xs)`};
+    `};
+  
+    svg {
+      padding: var(--padding-xs);
+    }
   }
 `;
 

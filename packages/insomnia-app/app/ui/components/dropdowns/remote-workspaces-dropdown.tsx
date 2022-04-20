@@ -20,7 +20,9 @@ const PullButton = styled(({ disabled, className }) => (
     Pull <i className="fa fa-caret-down pad-left-sm" />
   </Button>
 ))({
-  marginLeft: 'var(--padding-md)',
+  '&&': {
+    marginLeft: 'var(--padding-md)',
+  },
 });
 
 export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {

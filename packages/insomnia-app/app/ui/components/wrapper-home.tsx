@@ -49,7 +49,9 @@ import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 import type { WrapperProps } from './wrapper';
 
 const CreateButton = styled(Button)({
-  marginLeft: 'var(--padding-md)',
+  '&&': {
+    marginLeft: 'var(--padding-md)',
+  },
 });
 
 interface Props

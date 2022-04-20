@@ -20,10 +20,12 @@ const Wrapper = styled.div({
 });
 
 const StyledButton = styled(Button)({
-  pointerEvents: 'all',
-  color: 'var(--color-font)',
-  marginTop: 'var(--padding-md)',
-  marginLeft: '0 !important', // unfortunately, we're in specificty battle with a default marginLeft
+  '&&': {
+    pointerEvents: 'all',
+    color: 'var(--color-font)',
+    marginTop: 'var(--padding-md)',
+    marginLeft: '0 !important', // unfortunately, we're in specificty battle with a default marginLeft
+  },
 });
 
 const ExampleButton = styled.div({

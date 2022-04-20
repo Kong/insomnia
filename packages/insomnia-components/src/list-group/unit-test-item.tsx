@@ -30,27 +30,29 @@ export interface UnitTestItemProps {
 }
 
 const StyledResultListItem = styled(ListGroupItem)`
-  padding: 0 var(--padding-sm);
+  && {
+    padding: 0 var(--padding-sm);
 
-  > div:first-of-type {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    align-items: center;
-  }
+    > div:first-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      align-items: center;
+    }
 
-  svg {
-    fill: var(--hl-xl);
-  }
+    svg {
+      fill: var(--hl-xl);
+    }
 
-  h2 {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-normal);
-    margin: 0px;
-  }
+    h2 {
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-normal);
+      margin: 0px;
+    }
 
-  button {
-    padding: 0px var(--padding-sm);
+    button {
+      padding: 0px var(--padding-sm);
+    }
   }
 `;
 

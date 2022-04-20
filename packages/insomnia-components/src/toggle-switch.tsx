@@ -14,17 +14,19 @@ export interface ToggleSwitchProps {
 }
 
 const ThemedSwitch = styled(Switch)<{ checked: boolean }>`
-  .react-switch-bg {
-    background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')} !important;
-    
-    ${({ checked }) => checked && css`
-    path {
-      fill: var(--color-font-surprise) !important
+  && {
+    .react-switch-bg {
+      background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')} !important;
+      
+      ${({ checked }) => checked && css`
+      path {
+        fill: var(--color-font-surprise) !important
+      }
+      `}
     }
-    `}
-  }
 
-  vertical-align: middle;
+    vertical-align: middle;
+  } 
 `;
 
 const StyledLabel = styled.label`
