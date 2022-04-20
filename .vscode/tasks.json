@@ -9,12 +9,12 @@
       "type": "shell",
       "promptOnClose": false,
       "options": {
-        "cwd": "${workspaceFolder}/packages/insomnia-app",
+        "cwd": "${workspaceFolder}/packages/insomnia",
         "env": {
           "NODE_ENV": "development",
         }
       },
-      "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/esr esbuild.main.ts"
+      "command": "${workspaceRoot}/packages/insomnia/node_modules/.bin/esr esbuild.main.ts"
     },
     {
       "label": "Insomnia: Compile Renderer (Watch)",
@@ -22,7 +22,7 @@
       "type": "shell",
       "promptOnClose": false,
       "options": {
-        "cwd": "${workspaceFolder}/packages/insomnia-app",
+        "cwd": "${workspaceFolder}/packages/insomnia",
         "env": {
           "NODE_ENV": "development",
         }
@@ -52,7 +52,7 @@
           }
         }
       },
-      "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/vite dev"
+      "command": "${workspaceRoot}/packages/insomnia/node_modules/.bin/vite dev"
     },
     {
       "label": "Insomnia: Compile (Watch)",

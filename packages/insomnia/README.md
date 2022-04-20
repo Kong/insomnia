@@ -1,3 +1,3 @@
-# Insomnia App
+# Insomnia
 
 The main desktop application.

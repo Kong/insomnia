@@ -11,7 +11,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/insomnia.git",
-    "directory": "packages/insomnia-app"
+    "directory": "packages/insomnia"
   },
   "license": "MIT",
   "author": "Kong <office@konghq.com>",

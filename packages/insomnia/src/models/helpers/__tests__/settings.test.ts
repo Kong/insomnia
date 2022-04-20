@@ -32,7 +32,7 @@ describe('getLocalDevConfigFilePath', () => {
 
   it('will return the local dev config path in development mode', () => {
     isDevelopment.mockReturnValue(true);
-    expect(getLocalDevConfigFilePath()).toContain('insomnia-app/src');
+    expect(getLocalDevConfigFilePath()).toContain('insomnia/src');
   });
 });
 

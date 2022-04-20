@@ -23,12 +23,12 @@ There are a few more technologies and tools worth mentioning:
 
 Insomnia uses [`lerna`](https://lerna.js.org/) to manage multiple npm packages within a single repository. There are currently two package locations:
 
-- `/packages` contains related packages that are consumed by `insomnia-app` or externally.
+- `/packages` contains related packages that are consumed by `insomnia` or externally.
 - `/plugins` contains plugin packages that are included by default with the application.
 
-## The `insomnia-app` Main Package
+## The `insomnia` Main Package
 
-`/packages/insomnia-app` is the entry point for the app. All other packages are imported from this one.
+`/packages/insomnia` is the entry point for the app. All other packages are imported from this one.
 
 There are a few notable directories inside of it:
 

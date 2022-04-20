@@ -95,7 +95,7 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-latest-artifacts/insomnia-app/**"
+          file: "./artifacts/*-latest-artifacts/insomnia/**"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload to snapcraft (stable only)
         if: ${{ env.IS_PRERELEASE == 'false' }}
-        run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia-app/dist/*.snap
+        run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia/dist/*.snap
 
       - name: Publish npm packages
         run: |
@@ -153,7 +153,7 @@ jobs:
           PULP_HOST: ${{ secrets.PULP_HOST }}
         with:
           entrypoint: python3
-          args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia-app/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
+          args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@master

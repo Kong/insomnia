@@ -17,7 +17,7 @@ interface InsomniaPlugin {
     displayName: string;
     description: string;
 
-    // Used by the plugin hub, not currently used by Insomnia app
+    // Used by the plugin hub, not currently used by Insomnia
     // Each image is relative to package root
     images?: {
       icon?: string;
