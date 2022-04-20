@@ -60,6 +60,10 @@ jobs:
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
 
+      # https://github.com/lerna/lerna/issues/2832
+      - name: Update package-lock.json files
+        run: npx lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit
+
       - name: Commit
         run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }} and lerna package versions"
 

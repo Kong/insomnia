@@ -18,7 +18,6 @@
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "bootstrap:electron-builder": "lerna bootstrap --no-ci -- --production --no-optional",
     "version": "lerna version",
-    "postversion": "lerna clean --yes && lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit",
     "publish": "lerna publish from-package",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
