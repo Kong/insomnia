@@ -57,18 +57,22 @@ const DocumentationLinks = styled.div({
 });
 
 const StyledLink = styled(Link)({
-  display: 'flex',
-  marginTop: 'var(--padding-md)',
-  color: 'var(--color-font) !important', // unfortunately, we've set at the root with !important
-  fontWeight: 'normal !important', // unfortunately, we've set at the root with !important
-  pointerEvents: 'all',
-  '& hover': {
-    textDecoration: 'none',
+  '&&': {
+    display: 'flex',
+    marginTop: 'var(--padding-md)',
+    color: 'var(--color-font) !important', // unfortunately, we've set at the root with !important
+    fontWeight: 'normal !important', // unfortunately, we've set at the root with !important
+    pointerEvents: 'all',
+    '& hover': {
+      textDecoration: 'none',
+    },
   },
 });
 
 const LinkIcon = styled(SvgIcon)({
-  paddingLeft: 'var(--padding-sm)',
+  '&&': {
+    paddingLeft: 'var(--padding-sm)',
+  },
 });
 
 export const EmptyStatePane: FC<{

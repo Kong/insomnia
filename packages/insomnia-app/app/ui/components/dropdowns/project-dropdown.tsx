@@ -16,21 +16,27 @@ import ProjectSettingsModal from '../modals/project-settings-modal';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
 const Checkmark = styled(SvgIcon)({
-  ...svgPlacementHack,
-  '& svg': {
-    fill: 'var(--color-surprise)',
+  '&&': {
+    ...svgPlacementHack,
+    '& svg': {
+      fill: 'var(--color-surprise)',
+    },
   },
 });
 
 const StyledSvgIcon = styled(SvgIcon)({
-  ...svgPlacementHack,
-  '& svg': {
-    fill: 'var(--hl)',
+  '&&': {
+    ...svgPlacementHack,
+    '& svg': {
+      fill: 'var(--hl)',
+    },
   },
 });
 
 const StyledTooltip = styled(Tooltip)({
-  ...tooltipIconPlacementHack,
+  '&&': {
+    ...tooltipIconPlacementHack,
+  },
 });
 
 const TooltipIcon = ({ message, icon }: { message: string; icon: SvgIconProps['icon'] }) => (

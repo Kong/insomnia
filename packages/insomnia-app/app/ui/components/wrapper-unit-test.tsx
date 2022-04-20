@@ -39,7 +39,9 @@ import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
 
 const HeaderButton = styled(Button)({
-  marginRight: 'var(--padding-md)',
+  '&&': {
+    marginRight: 'var(--padding-md)',
+  },
 });
 
 interface Props extends ReturnType<typeof mapStateToProps> {

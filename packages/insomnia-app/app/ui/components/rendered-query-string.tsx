@@ -19,9 +19,11 @@ const Wrapper = styled.div({
 });
 
 const CopyButton = styled(_CopyButton)({
-  alignSelf: 'start',
-  position: 'sticky',
-  top: 0,
+  '&&': {
+    alignSelf: 'start',
+    position: 'sticky',
+    top: 0,
+  },
 });
 
 interface Props {
