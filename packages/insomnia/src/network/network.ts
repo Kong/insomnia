@@ -30,6 +30,7 @@ import {
 } from '../common/render';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
+import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
@@ -295,6 +296,10 @@ export async function sendWithSettings(
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
+
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const responseEnvironmentId = environment ? environment._id : null;
+
   const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderResult.request,
@@ -302,7 +307,7 @@ export async function sendWithSettings(
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
   response.parentId = renderResult.request._id;
-  response.environmentId = environmentId;
+  response.environmentId = responseEnvironmentId;
   response.bodyCompression = null;
   response.settingSendCookies = renderResult.request.settingSendCookies;
   response.settingStoreCookies = renderResult.request.settingStoreCookies;
@@ -368,6 +373,9 @@ export async function send(
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
 
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const responseEnvironmentId = environment ? environment._id : null;
+
   let renderedRequest: RenderedRequest;
 
   try {
@@ -377,7 +385,7 @@ export async function send(
     );
   } catch (err) {
     return {
-      environmentId: environmentId,
+      environmentId: responseEnvironmentId,
       error: err.message || 'Something went wrong',
       parentId: renderedRequestBeforePlugins._id,
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
@@ -394,7 +402,7 @@ export async function send(
     settings,
   );
   response.parentId = renderResult.request._id;
-  response.environmentId = environmentId;
+  response.environmentId = responseEnvironmentId;
   response.bodyCompression = null;
   response.settingSendCookies = renderedRequest.settingSendCookies;
   response.settingStoreCookies = renderedRequest.settingStoreCookies;

@@ -70,29 +70,29 @@ export function getDeployToPortalComponent(options: {
       kongPortalDeployError: '',
     };
 
-    _handleLoadingToggle(status: boolean) {
+    _handleLoadingToggle = (status: boolean) => {
       this.setState({ isLoading: status });
-    }
+    };
 
-    _hasConnectInfo() {
+    _hasConnectInfo = () => {
       return (
         this.state.kongPortalApiUrl.length > 0 &&
         this.state.kongPortalUserWorkspace.length > 0
       );
-    }
+    };
 
-    _handleEditKongConnection() {
+    _handleEditKongConnection = () => {
       this.setState({ kongPortalDeployView: 'edit' });
-    }
+    };
 
-    _handleReturnToUpload() {
+    _handleReturnToUpload = () => {
       this.setState({ kongPortalDeployView: 'upload' });
-    }
+    };
 
-    async _handleUploadSpec(
+    _handleUploadSpec = async (
       overwrite: boolean,
       event?: SyntheticEvent<HTMLFormElement>
-    ) {
+    ) => {
       if (event) {
         event.preventDefault();
       }
@@ -175,9 +175,9 @@ export function getDeployToPortalComponent(options: {
           this.setState({ kongPortalDeployView: 'error' });
         }
       }
-    }
+    };
 
-    async _handleConnectKong(event: SyntheticEvent<HTMLFormElement>) {
+    _handleConnectKong = async (event: SyntheticEvent<HTMLFormElement>) => {
       event.preventDefault();
 
       const { axios, trackSegmentEvent } = this.props;
@@ -230,39 +230,39 @@ export function getDeployToPortalComponent(options: {
           this.setState({ connectionError: error });
         }
       }
-    }
+    };
 
-    async componentDidMount() {
+    componentDidMount = async () => {
       const newState = { ...defaultPersistedState };
       for (const key in newState) {
         const value = await this.props.store.getItem(key);
         newState[key as keyof PersistedState] = String(value);
       }
       this.setState(newState);
-    }
+    };
 
-    async componentDidUpdate() {
+    componentDidUpdate = async () => {
       for (const key in defaultPersistedState) {
         await this.props.store.setItem(
           key,
           this.state[key as keyof PersistedState]
         );
       }
-    }
+    };
 
-    async _handleKongPortalApiUrlChange(e: SyntheticEvent<HTMLInputElement>) {
+    _handleKongPortalApiUrlChange = async (e: SyntheticEvent<HTMLInputElement>) => {
       this.setState({ kongPortalApiUrl: e.currentTarget.value });
-    }
+    };
 
-    async _handleRBACKTokenChange(e: SyntheticEvent<HTMLInputElement>) {
+    _handleRBACKTokenChange = async (e: SyntheticEvent<HTMLInputElement>) => {
       this.setState({ kongPortalRbacToken: e.currentTarget.value });
-    }
+    };
 
-    async _handleKongPortalUserWorkspaceChange(
+    _handleKongPortalUserWorkspaceChange = async (
       e: SyntheticEvent<HTMLInputElement>
-    ) {
+    ) => {
       this.setState({ kongPortalUserWorkspace: e.currentTarget.value });
-    }
+    };
 
     render() {
       const {
@@ -355,7 +355,9 @@ export function getDeployToPortalComponent(options: {
                 bg="surprise"
                 type="submit"
                 disabled={!connectIsEnabled}
-                className="margin-right-sm"
+                style={{
+                  marginRight: 'var(--padding-sm)',
+                }}
               >
                 {isLoading ? 'Connecting...' : 'Connect to Kong'}
               </Button>
@@ -412,7 +414,9 @@ export function getDeployToPortalComponent(options: {
               <Button
                 bg="surprise"
                 type="submit"
-                className="margin-right-sm"
+                style={{
+                  marginRight: 'var(--padding-sm)',
+                }}
                 disabled={!uploadIsEnabled}
               >
                 {isLoading ? 'Uploading...' : 'Upload To Dev Portal'}
@@ -452,7 +456,9 @@ export function getDeployToPortalComponent(options: {
               <Button
                 bg="surprise"
                 onClick={() => this._handleUploadSpec(false)}
-                className="margin-right-sm"
+                style={{
+                  marginRight: 'var(--padding-sm)',
+                }}
                 disabled={!uploadIsEnabled}
               >
                 Try Again
@@ -477,7 +483,9 @@ export function getDeployToPortalComponent(options: {
               <Button
                 bg="surprise"
                 onClick={() => this._handleUploadSpec(true)}
-                className="margin-right-sm"
+                style={{
+                  marginRight: 'var(--padding-sm)',
+                }}
                 disabled={!uploadIsEnabled}
               >
                 Overwrite Existing Spec
