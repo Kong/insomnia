@@ -331,12 +331,19 @@ export class Plugins extends PureComponent<Props, State> {
 
         <div className="text-right">
           <Button onClick={this._handleCreatePlugin}>Generate New Plugin</Button>
-          <Button className="space-left" onClick={Plugins._handleClickShowPluginsFolder}>
+          <Button
+            style={{
+              marginLeft: '0.3em',
+            }}
+            onClick={Plugins._handleClickShowPluginsFolder}
+          >
             Reveal Plugins Folder
           </Button>
           <Button
             disabled={isRefreshingPlugins}
-            className="space-left"
+            style={{
+              marginLeft: '0.3em',
+            }}
             onClick={this._handleClickRefreshPlugins}
           >
             Reload Plugins
