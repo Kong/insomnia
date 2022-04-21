@@ -18,6 +18,7 @@ describe('URL Regex', () => {
     expect('https://dash-domain.com').toMatch(FLEXIBLE_URL_REGEX);
     expect('http://localhost:8000').toMatch(FLEXIBLE_URL_REGEX);
     expect('http://localhost:8000/foo/b@@r?hi=there#hello').toMatch(FLEXIBLE_URL_REGEX);
+    expect('http://localhost:8000/foo?Signature=j4w98udA7~NbL6W4~UwAuj').toMatch(FLEXIBLE_URL_REGEX);
   });
 
   it('does not match "stop" characters', () => {
