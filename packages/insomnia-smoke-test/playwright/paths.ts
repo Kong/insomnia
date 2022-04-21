@@ -35,17 +35,17 @@ const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));
 // NOTE: guard against missing build artifacts
 if (bundleType() === 'dev' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-  Have you run "npm run watch:app"?`);
+  Have you run "npm run build:main --prefix packages/insomnia-app && npm run start:dev-server --prefix packages/insomnia-app"?`);
   exit(1);
 }
 if (bundleType() === 'build' && !hasMainBeenBuilt) {
   console.error(`ERROR: ${mainPath} not found at ${path.resolve(cwd, mainPath)}
-  Have you run "npm run app-build"?`);
+  Have you run "npm run build:prod --prefix packages/insomnia-app"?`);
   exit(1);
 }
 if (bundleType() === 'package' && !hasBinaryBeenBuilt) {
   console.error(`ERROR: ${insomniaBinary} not found at ${path.resolve(cwd, insomniaBinary)}
-  Have you run "npm run app-package"?`);
+  Have you run "npm run package --prefix packages/insomnia-app"?`);
   exit(1);
 }
 if (process.env.DEBUG) {

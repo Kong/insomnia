@@ -49,10 +49,10 @@ jobs:
         run: npm test
 
       - name: Build app for smoke tests
-        run: npm run app-build
+        run: npm run build:prod --prefix packages/insomnia
 
       - name: Run app smoke tests
-        run: npm run test:smoke:build
+        run: npm run test:build --prefix packages/insomnia-smoke-test
 
       - name: Set Inso CLI variables
         id: inso-variables
@@ -65,12 +65,12 @@ jobs:
           echo ::set-output name=inso-version::$INSO_VERSION
 
       - name: Package Inso CLI binary
-        run: npm run inso-package
+        run: npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Create Inso CLI artifacts
-        run: npm run inso-package:artifacts
+        run: npm run artifacts --prefix packages/insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
@@ -82,7 +82,7 @@ jobs:
           path: packages/insomnia-inso/artifacts
 
       - name: Run Inso CLI smoke tests
-        run: npm run test:smoke:cli
+        run: npm run test --prefix packages/insomnia-smoke-test
 
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v3

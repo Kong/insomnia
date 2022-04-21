@@ -158,7 +158,7 @@ jobs:
         run: npm run bootstrap
 
       - name: Run changelog-image
-        run: npm run changelog-image
+        run: ts-node ./scripts/changelog-image/changelog-image.ts
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

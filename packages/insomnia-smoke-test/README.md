@@ -21,26 +21,26 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 In one terminal run the watcher
 
 ```shell
-npm run watch:app   # Run watcher
+npm run build:main --prefix packages/insomnia && npm run start:dev-server --prefix packages/insomnia  # Build main and Run watcher
 ```
 
 In a second terminal run/debug/step through smoke tests
 
 ```shell
 # Run tests
-npm run test:smoke:dev
+npm run test:dev --prefix packages/insomnia-smoke-test
 
 # Debug tests with playwright logs
-DEBUG=pw:api npm run test:smoke:dev
+DEBUG=pw:api npm run test:dev --prefix packages/insomnia-smoke-test
 
 # Debug tests with insomnia console logs
-DEBUG=pw:browser npm run test:smoke:dev
+DEBUG=pw:browser npm run test:dev --prefix packages/insomnia-smoke-test
 
 # Debug tests with webserver console logs
-DEBUG=pw:WebServer npm run test:smoke:dev
+DEBUG=pw:WebServer npm run test:dev --prefix packages/insomnia-smoke-test
 
 # Step through tests with playwright inspector
-PWDEBUG=1 npm run test:smoke:dev
+PWDEBUG=1 npm run test:dev --prefix packages/insomnia-smoke-test
 ```
 
 ### Build and package methods
@@ -54,20 +54,20 @@ For `build`:
 
 ```shell
 # Transpile js bundle
-npm run app-build
+npm run build:prod --prefix packages/insomnia
 
 # Run tests
-npm run test:smoke:build
+npm run test:build --prefix packages/insomnia-smoke-test
 ```
 
 For `package`:
 
 ```shell
 # Build executable in /packages/insomnia/dist
-npm run app-package
+npm run package --prefix packages/insomnia
 
 # Run tests
-npm run test:smoke:package
+npm run test:package --prefix packages/insomnia-smoke-test
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
@@ -89,7 +89,7 @@ You can also use the [playwright extension](https://marketplace.visualstudio.com
 With the extension installed, in a terminal, run the watcher
 
 ```shell
-npm run watch:app
+npm run build:main --prefix packages/insomnia && npm run start:dev-server --prefix packages/insomnia
 ```
 
 You can now run and debug playwright tests, either from the `Testing` tab, or by going into one of the test files and clicking the run button.  
@@ -99,10 +99,10 @@ If no tests appear, you may need to run "Refresh playwright tests". This can be 
 
 ```shell
 # Package the Inso CLI binaries
-npm run inso-package
+npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso
 
 # Run CLI tests
-npm run test:smoke:cli
+npm run test --prefix packages/insomnia-smoke-test
 ```
 
 ### Write Inso CLI smoke tests

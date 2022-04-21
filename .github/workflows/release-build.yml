@@ -39,7 +39,7 @@ jobs:
 
       - name: Package app
         shell: bash
-        run: npm run app-package
+        run: npm run package --prefix packages/insomnia-app
         env:
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
@@ -51,7 +51,7 @@ jobs:
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
       - name: Package inso
-        run: npm run inso-package
+        run: npm run build:sr --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
 
@@ -93,7 +93,7 @@ jobs:
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
 
       - name: Create inso artifacts
-        run: npm run inso-package:artifacts
+        run: npm run artifacts --prefix packages/insomnia-inso
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

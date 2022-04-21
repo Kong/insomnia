@@ -47,8 +47,8 @@ npm run bootstrap
 # Run Tests
 npm test
 
-# Start App with Live Reload
-npm run app-start
+# Start App
+npm run dev
 ```
 
 ### Linux
@@ -104,7 +104,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 ## Develop Inso CLI
 
 - Bootstrap: `npm run bootstrap`
-- Start the compiler in watch mode: `npm run inso-start`
+- Start the compiler in watch mode: `npm start --prefix packages/insomnia-inso`
 - Run: `./packages/insomnia-inso/bin/inso -v`
 
 ## Plugins

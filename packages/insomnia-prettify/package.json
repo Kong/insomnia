@@ -21,12 +21,9 @@
     "README.md"
   ],
   "scripts": {
-    "bootstrap": "npm run build",
+    "bootstrap": "tsc --build tsconfig.build.json",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "lint:fix": "npm run lint -- --fix",
-    "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist",
-    "build": "tsc --build tsconfig.build.json",
+    "clean": "rimraf dist *.tsbuildinfo",
     "test": "jest"
   }
 }

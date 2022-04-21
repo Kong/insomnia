@@ -15,15 +15,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "bootstrap": "npm run build",
+    "bootstrap": "tsc --build tsconfig.build.json",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "lint:fix": "npm run lint -- --fix",
-    "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist",
+    "clean": "rimraf dist *.tsbuildinfo ",
     "test": "jest",
-    "build": "tsc --build tsconfig.build.json",
-    "watch": "npm run build -- --watch",
-    "prepublish": "npm run build"
+    "watch": "npm run bootstrap -- --watch"
   },
   "devDependencies": {
     "@types/chai": "^4.2.15",

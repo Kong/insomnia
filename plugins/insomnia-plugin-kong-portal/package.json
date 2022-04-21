@@ -15,12 +15,10 @@
     "url": "https://github.com/Kong/insomnia/issues"
   },
   "scripts": {
-    "prebuild": "npm run clean",
     "build:source": "esr esbuild.ts",
     "build:types": "tsc --build tsconfig.build.json",
-    "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
-    "clean": "rimraf dist",
-    "bootstrap": "npm run build"
+    "clean": "rimraf dist *.tsbuildinfo",
+    "bootstrap": "npm run build:source && npm run build:types"
   },
   "insomnia": {
     "name": "kong-portal",

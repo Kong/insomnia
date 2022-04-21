@@ -1,8 +1,6 @@
 import { spawn } from 'child_process';
+import { promises } from 'fs';
 import path from 'path';
-
-const prefixPkgInso = (msg: string) => `[pkg-inso] ${msg}`;
-
 const { platform } = process;
 const isMac = () => platform === 'darwin';
 const isLinux = () => platform === 'linux';
@@ -22,7 +20,7 @@ const getTargets = () => {
     return 'node16-win-x64';
   }
 
-  throw new Error(prefixPkgInso(`Unsupported OS: ${platform}`));
+  throw new Error(`[pkg-inso] Unsupported OS: ${platform}`);
 };
 
 const pkg = async () => {
@@ -53,8 +51,8 @@ const pkg = async () => {
 
     process.on('exit', code => {
       if (code !== 0) {
-        console.log(prefixPkgInso(`exited with code ${code}`));
-        throw new Error(prefixPkgInso('failed to package'));
+        console.log(`[pkg-inso] exited with code ${code}`);
+        throw new Error('[pkg-inso] failed to package');
       }
 
       resolve();
@@ -63,9 +61,42 @@ const pkg = async () => {
 
 };
 
+const verifyFile = (basePath: string) => async (fileName: string) => {
+  const filePath = path.join(basePath, fileName);
+  try {
+    const stats = await promises.stat(filePath);
+    if (!stats) {
+      throw new Error(`[pkg-inso-verify] failed to find file ${filePath}`);
+    }
+    if (stats.size === 0) {
+      throw new Error(`[pkg-inso-verify] the file ${filePath} is unexpectedly empty`);
+    }
+  } catch (error: unknown) {
+    throw error;
+  }
+};
+
+const verifyPkg = async () => {
+  const basePath = path.resolve('binaries');
+
+  const files = await promises.readdir(basePath);
+  if (files.length === 0) {
+    throw new Error('[pkg-inso-verify] no executable binary found');
+  }
+
+  return Promise.all(files.map(verifyFile(basePath)));
+};
+
 pkg()
   .then(() => {
-    process.exit(0);
+    verifyPkg()
+      .then(() => {
+        process.exit(0);
+      })
+      .catch(error => {
+        console.error(error);
+        process.exit(1);
+      });
   })
   .catch(error => {
     console.error(error);

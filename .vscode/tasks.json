@@ -94,7 +94,7 @@
           }
         }
       },
-      "command": "npm run inso-start"
+      "command": "npm start --prefix packages/insomnia-inso"
     }
   ],
   "inputs": [
