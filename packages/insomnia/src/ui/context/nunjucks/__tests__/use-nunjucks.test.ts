@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react-hooks';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 import { PromiseValue } from 'type-fest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';

@@ -169,6 +169,7 @@
     "highlight.js": "^11.5.1",
     "insomnia-components": "3.1.0-beta.1",
     "jest": "^27.5.1",
+    "jest-mock": "^27.5.1",
     "json-order": "^1.1.0",
     "jwt-authentication": "^0.4.0",
     "less": "^3.8.1",
