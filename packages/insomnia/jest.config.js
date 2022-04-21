@@ -1,3 +1,5 @@
+const babelConfig = require('./.babelrc.js');
+
 /** @type { import('@jest/types').Config.InitialOptions } */
 module.exports = {
   // preset: '../../jest-preset.js', // DOES NOT WORK
@@ -6,6 +8,7 @@ module.exports = {
   globals: {
     'ts-jest': {
       isolatedModules: true,
+      babelConfig,
     },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
