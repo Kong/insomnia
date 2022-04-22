@@ -40,7 +40,6 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
     if (this._compileTimeout !== null) {
       clearTimeout(this._compileTimeout);
     }
-    // @ts-expect-error -- TSCONVERSION
     this._compileTimeout = setTimeout(
       async () => {
         try {
