@@ -18,6 +18,11 @@ on:
         required: false
         description: iteration of the release, used for non-stable releases (version-channel.iteration) (e.g. 0, 1, 2, 3 ...)
         default: '0'
+      major-npm:
+        required: false
+        type: boolean
+        description: whether to increment the major version of the NPM packages or not
+        default: false
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) || '' }}
@@ -55,7 +60,7 @@ jobs:
         run: npm run bootstrap
 
       - name: Lerna version
-        run: npm run version -- --preid "${{ github.event.inputs.channel }}" --yes ${{ github.event.inputs.channel != 'stable' && 'preminor' || 'minor' }}
+        run: npm run version -- --preid "${{ github.event.inputs.channel }}" --yes "${{ github.event.inputs.channel != 'stable' && 'pre' || '' }}${{ github.event.inputs.major-npm != 'true' && 'minor' || 'major' }}"
 
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
