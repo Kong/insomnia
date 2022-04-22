@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { builtinModules } from 'module';
 import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import commonjsExternals from 'vite-plugin-commonjs-externals';
 
@@ -65,6 +66,13 @@ export default defineConfig(({ mode }) => {
             ['@babel/plugin-proposal-class-properties', { loose: true }],
           ],
         },
+      }),
+      visualizer({
+        // Put the file in the build folder when running locally and in the root as json when running in CI
+        filename: Boolean(process.env.CI) ? './stats.json' : './build/stats.html',
+        title: 'Insomnia Renderer Bundle',
+        // Generate a json file containing the stats in CI
+        json: Boolean(process.env.CI),
       }),
     ],
   };

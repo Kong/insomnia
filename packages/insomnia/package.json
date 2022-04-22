@@ -198,6 +198,7 @@
     "redux": "^4.1.2",
     "redux-mock-store": "^1.5.4",
     "redux-thunk": "^2.4.1",
+    "rollup-plugin-visualizer": "^5.6.0",
     "reselect": "^4.1.5",
     "srp-js": "^0.2.1",
     "styled-components": "^5.3.3",
