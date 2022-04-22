@@ -176,7 +176,6 @@
     "license-checker": "^25.0.1",
     "ncp": "^2.0.0",
     "objectpath": "^2.0.0",
-    "pdfjs-dist": "^2.5.207",
     "react": "^17.0.2",
     "react-dnd": "^7.4.5",
     "react-dnd-html5-backend": "^7.4.4",
