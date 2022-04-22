@@ -36,7 +36,8 @@
     "package": "ts-node src/scripts/pkg.ts",
     "pkg": "pkg .",
     "postpackage": "ts-node src/scripts/verify-pkg.ts",
-    "artifacts": "ts-node src/scripts/artifacts.ts"
+    "artifacts": "ts-node src/scripts/artifacts.ts",
+    "prepublishOnly": "npm run build:production"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
