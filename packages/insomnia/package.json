@@ -174,7 +174,7 @@
     "fuzzysort": "^1.2.1",
     "graphql": "^16.3.0",
     "graphql-language-service": "^4.1.5",
-    "highlight.js": "^10.4.1",
+    "highlight.js": "^11.5.1",
     "insomnia-components": "2.13.0-beta.0",
     "jest": "^26.6.3",
     "json-order": "^1.1.0",

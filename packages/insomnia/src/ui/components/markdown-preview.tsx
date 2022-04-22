@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import highlight from 'highlight.js';
+import highlight from 'highlight.js/lib/common';
 import React, { FC, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
