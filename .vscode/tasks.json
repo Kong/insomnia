@@ -8,10 +8,37 @@
       "detail": "esbuild.main.ts",
       "type": "shell",
       "promptOnClose": false,
+      "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}/packages/insomnia",
         "env": {
           "NODE_ENV": "development",
+        }
+      },
+      "problemMatcher": {
+        "owner": "esbuild",
+        "severity": "error",
+        "fileLocation": "absolute",
+        "pattern": [
+          {
+            "regexp": "ERROR in (.*)",
+            "file": 1
+          },
+          {
+            "regexp": "\\((\\d+),(\\d+)\\):(.*)",
+            "line": 1,
+            "column": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "watching"
+          },
+          "endsPattern": {
+            "regexp": "Build complete!"
+          }
         }
       },
       "command": "${workspaceRoot}/packages/insomnia/node_modules/.bin/esr esbuild.main.ts"
@@ -24,7 +51,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/insomnia",
         "env": {
-          "NODE_ENV": "development",
+          "NODE_ENV": "development"
         }
       },
       "isBackground": true,
@@ -95,6 +122,24 @@
         }
       },
       "command": "npm run inso-start"
+    },
+    {
+      "label": "Terminate All Tasks",
+      "command": "echo ${input:terminate}",
+      "type": "shell",
+      "problemMatcher": []
+    },
+    {
+      "label": "Terminate Renderer",
+      "command": "echo ${input:terminateRenderer}",
+      "type": "shell",
+      "problemMatcher": []
+    },
+    {
+      "label": "Terminate Main",
+      "command": "echo ${input:terminateMain}",
+      "type": "shell",
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -103,6 +148,12 @@
       "type": "promptString",
       "description": "Arguments to pass to inso",
       "default": "-v"
+    },
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
     }
   ]
 }

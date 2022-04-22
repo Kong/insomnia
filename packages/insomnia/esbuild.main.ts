@@ -48,6 +48,7 @@ export default async function build(options: Options) {
     platform: 'node',
     sourcemap: true,
     format: 'cjs',
+    watch: __DEV__,
     define: env,
     external: [
       'electron',
@@ -65,5 +66,16 @@ const isMain = require.main === module;
 if (isMain) {
   const mode =
     process.env.NODE_ENV === 'development' ? 'development' : 'production';
-  build({ mode });
+
+  async function main() {
+    const result = await build({ mode });
+
+    if (result.errors.length > 0) {
+      console.error('Error building:', result.errors);
+    } else {
+      console.log('Build complete!');
+    }
+  }
+
+  main();
 }

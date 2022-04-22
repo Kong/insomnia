@@ -22,6 +22,8 @@
         "name": "Electron: main",
         "runtimeExecutable": "${workspaceFolder}/packages/insomnia/node_modules/.bin/electron.cmd"
       },
+      "preLaunchTask": "Insomnia: Compile Main",
+      "postDebugTask": "Terminate All Tasks",
       "env": {
         "NODE_ENV": "development",
         "ELECTRON_IS_DEV": "1"
@@ -36,6 +38,7 @@
         "group": "Insomnia",
         "order": 2
       },
+      "preLaunchTask": "Insomnia: Compile Renderer (Watch)",
       "port": 9222,
       "webRoot": "${workspaceFolder}/packages/insomnia/src",
       "timeout": 60000
