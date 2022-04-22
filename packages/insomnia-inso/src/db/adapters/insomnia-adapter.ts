@@ -26,7 +26,7 @@ import { BaseModel } from '../models/types';
  * models.unitTest.type = 'UnitTest';
  * </pre>
  *
- * @see packages/insomnia-app/app/common/import.js
+ * @see packages/insomnia/src/common/import.js
  */
 
 type RawTypeKey = 'api_spec'

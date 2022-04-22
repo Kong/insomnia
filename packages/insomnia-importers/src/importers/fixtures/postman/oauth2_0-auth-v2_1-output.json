@@ -24,10 +24,13 @@
       "parameters": [],
       "headers": [],
       "authentication": {
-        "disabled": true,
         "accessTokenUrl": "",
         "authorizationUrl": "",
-        "grantType": "authorization_code",
+        "clientId": "",
+        "clientSecret": "",
+        "disabled": false,
+        "grantType": "",
+        "redirectUrl": "",
         "password": "",
         "type": "oauth2",
         "username": ""
@@ -45,10 +48,13 @@
       "parameters": [],
       "headers": [],
       "authentication": {
-        "disabled": true,
         "accessTokenUrl": "",
         "authorizationUrl": "",
-        "grantType": "authorization_code",
+        "clientId": "",
+        "clientSecret": "",
+        "disabled": false,
+        "grantType": "",
+        "redirectUrl": "",
         "password": "",
         "type": "oauth2",
         "username": ""

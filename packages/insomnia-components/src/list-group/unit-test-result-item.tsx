@@ -16,30 +16,32 @@ export interface UnitTestResultItemProps {
 }
 
 const StyledResultListItem = styled(ListGroupItem)`
-  > div:first-of-type {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-
-    > *:not(:first-child) {
-      margin: var(--padding-xs) 0 var(--padding-xs) var(--padding-sm);
+  && {
+    > div:first-of-type {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+  
+      > *:not(:first-child) {
+        margin: var(--padding-xs) 0 var(--padding-xs) var(--padding-sm);
+      }
     }
-  }
-
-  code {
-    background-color: var(--hl-xs);
-    padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
-    color: var(--color-danger);
-    display: block;
-    margin: var(--padding-sm) 0 0 0;
-  }
-
-  p {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-grow: 1;
+  
+    code {
+      background-color: var(--hl-xs);
+      padding: var(--padding-sm) var(--padding-md) var(--padding-sm) var(--padding-md);
+      color: var(--color-danger);
+      display: block;
+      margin: var(--padding-sm) 0 0 0;
+    }
+  
+    p {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-grow: 1;
+    }
   }
 `;
 

@@ -19,13 +19,17 @@ const StyledBadge = styled.span`
 `;
 
 const StyledFailedBadge = styled(StyledBadge)`
-  border-color: var(--color-danger);
-  color: var(--color-danger);
+  && {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+  }
 `;
 
 const StyledPassedBadge = styled(StyledBadge)`
-  border-color: var(--color-success);
-  color: var(--color-success);
+  && {
+    border-color: var(--color-success);
+    color: var(--color-success);
+  }
 `;
 
 export const UnitTestResultBadge: FunctionComponent<UnitTestResultBadgeProps> = ({ failed }) => failed ? (

@@ -3,7 +3,7 @@ import { join as pathJoin, resolve as pathResolve } from 'path';
 import { optimize, OptimizedSvg } from 'svgo';
 import { dynamicImport } from 'tsimportlib';
 const { readFile, writeFile } = promises;
-import { version as appConfigVersion } from '../../packages/insomnia-app/config/config.json';
+import { version as appConfigVersion } from '../../packages/insomnia/package.json';
 
 async function main() {
   await renderImage();

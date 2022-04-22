@@ -14,7 +14,7 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 | `/server`    | Express server used by the tests  |
 | `/fixtures`  | data used by tests and the server |
 
-## Run Insomnia app smoke tests
+## Run Insomnia smoke tests
 
 ### Development method
 
@@ -63,7 +63,7 @@ npm run test:smoke:build
 For `package`:
 
 ```shell
-# Build executable in /packages/insomnia-app/dist
+# Build executable in /packages/insomnia/dist
 npm run app-package
 
 # Run tests
@@ -130,7 +130,7 @@ From project root, in seperate terminals:
 npx lerna --scope insomnia-smoke-test exec 'npm run serve'
 
 # watch send-request
-npx lerna --scope insomnia-app exec 'npm run build:sr -- --watch'
+npx lerna --scope insomnia exec 'npm run build:sr -- --watch'
 
 # watch inso
 npx lerna --scope insomnia-inso exec 'npm run start'

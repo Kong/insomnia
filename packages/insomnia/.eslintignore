@@ -1,0 +1,4 @@
+build
+bin
+send-request
+**/main.min.js

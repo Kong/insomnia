@@ -31,7 +31,7 @@ Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of 
 
 Check out our open-source [Insomnia Documentation](https://docs.insomnia.rest/).
 
-## Develop Insomnia app
+## Develop Insomnia
 
 Development on Insomnia can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
 

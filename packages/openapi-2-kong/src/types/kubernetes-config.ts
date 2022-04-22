@@ -13,7 +13,7 @@ export interface K8sOverrideAnnotation {
   'konghq.com/override'?: string;
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta then look at `annotations`. */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta then look at `annotations`. */
 export type K8sAnnotations =
   & K8sIngressClassAnnotation
   & K8sOverrideAnnotation
@@ -21,45 +21,57 @@ export type K8sAnnotations =
   & Record<string, string>
   ;
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta */
 export interface K8sMetadata {
   /** The unique-per-instance name used by kubernetes to track individual Kubernetes resources */
   name: string;
   annotations?: K8sAnnotations;
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressbackend-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingressbackend-v1-networking-k8s-io */
 export interface K8sIngressBackend {
-  serviceName: string;
-  servicePort: number;
+  service: K8sIngressServiceBackend;
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#httpingresspath-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingressservicebackend-v1-networking-k8s-io */
+export interface K8sIngressServiceBackend {
+  name: string;
+  port: K8sServiceBackendPort;
+}
+
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#servicebackendport-v1-networking-k8s-io */
+export interface K8sServiceBackendPort {
+  name?: string;
+  number: number;
+}
+
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#httpingresspath-v1-networking-k8s-io */
 export interface K8sHTTPIngressPath {
   path?: string;
   backend: K8sIngressBackend;
+  pathType: string;
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#httpingressrulevalue-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#httpingressrulevalue-v1-networking-k8s-io */
 export interface K8sHTTPIngressRuleValue {
   paths: K8sHTTPIngressPath[];
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressrule-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingressrule-v1-networking-k8s-io */
 export interface K8sIngressRule {
   host?: string;
   http?: K8sHTTPIngressRuleValue;
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingresstls-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingresstls-v1-networking-k8s-io */
 export interface K8sIngressTLS {
   hosts?: string[];
   secretName: string;
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressspec-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingressspec-v1-networking-k8s-io */
 export interface K8sIngressSpec {
-  backend?: K8sIngressBackend;
+  defaultBackend?: K8sIngressBackend;
   rules: K8sIngressRule[];
   tls?: K8sIngressTLS[];
 }
@@ -79,9 +91,9 @@ export interface K8sKongIngress extends KubernetesResource {
   };
 }
 
-/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingress-v1beta1-extensions */
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#ingress-v1-networking-k8s-io */
 export interface K8sIngress extends KubernetesResource {
-  apiVersion: 'extensions/v1beta1';
+  apiVersion: 'networking.k8s.io/v1';
   kind: 'Ingress';
   spec: K8sIngressSpec;
 }

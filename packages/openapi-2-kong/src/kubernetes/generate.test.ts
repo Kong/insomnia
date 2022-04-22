@@ -327,9 +327,14 @@ describe('index', () => {
           paths: [
             {
               backend: {
-                serviceName: 'my-ingress-service-0',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-0',
+                  port: {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -351,9 +356,14 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-service-0',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-0',
+                  port: {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -376,9 +386,14 @@ describe('index', () => {
             {
               path: '/v1/.*/.*/path',
               backend: {
-                serviceName: 'my-ingress-service-1',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-1',
+                  port: {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -401,9 +416,14 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-service-1',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-1',
+                  port: {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -422,9 +442,14 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-service-1',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-1',
+                  port : {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -449,9 +474,14 @@ describe('index', () => {
             {
               path: '/v1/.*',
               backend: {
-                serviceName: 'my-ingress-service-1',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-1',
+                  port: {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },
@@ -476,9 +506,14 @@ describe('index', () => {
             {
               path: '/.*/v1/.*',
               backend: {
-                serviceName: 'my-ingress-service-1',
-                servicePort: 80,
+                service: {
+                  name: 'my-ingress-service-1',
+                  port: {
+                    number: 80,
+                  },
+                },
               },
+              pathType: 'ImplementationSpecific',
             },
           ],
         },

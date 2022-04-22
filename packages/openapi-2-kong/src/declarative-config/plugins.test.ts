@@ -1,7 +1,7 @@
 import { ParameterSchema, RequestTerminationPlugin, RequestValidatorPlugin, xKongPluginKeyAuth, xKongPluginRequestTermination, xKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OA3Parameter } from '../types/openapi3';
 import { getSpec, pluginDummy, tags, UserDCPlugin } from './jest/test-helpers';
-import { ALLOW_ALL_SCHEMA, generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
+import { ALLOW_ALL_SCHEMA, generateBodyOptions, generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
 
 describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
@@ -391,6 +391,64 @@ describe('plugins', () => {
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
+      });
+    });
+    describe('body_schema generateBodyOptions FTI-3278', () => {
+      it('should keep to properties[].type unchanged nullable is not set', () => {
+        const generated = generateBodyOptions({
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  properties: {
+                    redirectUri: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+        expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":\"string\"}}}');
+      });
+      it('should keep to properties[].type unchanged nullable is false', () => {
+        const generated = generateBodyOptions({
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  properties: {
+                    redirectUri: {
+                      type: 'string',
+                      nullable: false,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+        expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":\"string\",\"nullable\":false}}}');
+      });
+      it('should append null to properties[].type if nullable is true', () => {
+        const generated = generateBodyOptions({
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  properties: {
+                    redirectUri: {
+                      type: 'string',
+                      nullable: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+        expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":[\"string\",\"null\"],\"nullable\":true}}}');
       });
     });
   });

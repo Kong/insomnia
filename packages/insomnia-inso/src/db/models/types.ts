@@ -1,4 +1,4 @@
-// Simplified and extracted from insomnia-app/app/models/*
+// Simplified and extracted from insomnia/src/models/*
 import { Database } from '../index';
 
 export interface BaseModel {
