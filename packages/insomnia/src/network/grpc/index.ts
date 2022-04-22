@@ -323,7 +323,7 @@ const _parseMetadata = (
   for (const entry of metadata) {
     if (!entry.disabled) {
       try {
-        grpcMetadata.add(entry.name, entry.value);
+        grpcMetadata.add(entry.name, _parseMetadataValue(entry));
       } catch (err) {
         respond.sendError(requestId, err);
         return undefined;
@@ -331,4 +331,26 @@ const _parseMetadata = (
     }
   }
   return grpcMetadata;
+};
+
+const _parseMetadataValue = (
+  metadataEntry: GrpcRequestHeader
+): string | Buffer => {
+  const isBinHeader = metadataEntry.name.endsWith("-bin");
+  if (isBinHeader) {
+    return _parseMetadataBinValue(metadataEntry.value);
+  } else {
+    return metadataEntry.value;
+  }
+};
+
+const _parseMetadataBinValue = (
+  entryValue: string
+) : Buffer => {
+  const regex = /^(?:([\w\-]+?):\/\/)?(.*)$/;
+  const parts = regex.exec(entryValue)!;
+  const encoding = parts[1] as BufferEncoding;
+  const value = parts[2];
+  const encodedValue = Buffer.from(value, encoding);
+  return encodedValue;
 };
