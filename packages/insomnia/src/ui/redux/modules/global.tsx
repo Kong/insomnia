@@ -63,6 +63,7 @@ const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
 export const COMMAND_GITHUB_OAUTH_AUTHENTICATE = 'oauth/github/authenticate';
+export const COMMAND_GITLAB_OAUTH_AUTHENTICATE = 'oauth/gitlab/authenticate';
 
 // ~~~~~~~~ //
 // REDUCERS //
