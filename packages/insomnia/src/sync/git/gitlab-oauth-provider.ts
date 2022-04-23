@@ -1,18 +1,16 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getAppWebsiteBaseURL, getGitLabClientId, getGitLabOauthApiURL } from '../../common/constants';
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import { axiosRequest } from '../../network/axios-request';
 
 // @TODO Replace with client id once we setup the app in GitLab
-// @TODO possible discussion about fetching through ConfigService?
-const GITLAB_OAUTH_CLIENT_ID = getGitLabClientId();
+const GITLAB_OAUTH_CLIENT_ID = 'bc14cca01193ba59994fc93357c8b2d7a132a8a34fb0e37d3df6a2883f76c645';
 const REDIRECT_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab/callback`;
+const OAUTH_PAGE_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab`;
 
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
-
-export const GITLAB_API_URL = getGitLabOauthApiURL();
 
 function base64URLEncode(buffer: Buffer) {
   return buffer.toString('base64')
@@ -31,9 +29,7 @@ const statesCache = new Set<string>();
 
 export function generateAuthorizationUrl() {
   const state = uuid();
-  statesCache.add(state);
-
-  const scopes = ['api', 'read_user', 'write_repository', 'read_repository', 'email'];
+  const scopes = ['api', 'read_user', 'write_repository', 'email'];
   const scope = scopes.join(' ');
 
   function sha256(str: string) {
@@ -42,9 +38,9 @@ export function generateAuthorizationUrl() {
 
   const challenge = base64URLEncode(sha256(verifier));
 
-  const gitlabURL = new URL(`${GITLAB_API_URL}/oauth/authorize`);
-  console.log(gitlabURL);
-  gitlabURL.search = new URLSearchParams({
+  const url = new URL(OAUTH_PAGE_URI);
+
+  url.search = new URLSearchParams({
     client_id: GITLAB_OAUTH_CLIENT_ID || '',
     scope,
     state,
@@ -54,10 +50,12 @@ export function generateAuthorizationUrl() {
     code_challenge_method: 'S256',
   }).toString();
 
-  return gitlabURL.toString();
+  statesCache.add(state);
+
+  return url.toString();
 }
 
-export async function exchangeCodeForGitLabToken(input: {
+export async function exchangeCodeForToken(input: {
   code: string;
   state: string;
   scope: string;
@@ -69,7 +67,7 @@ export async function exchangeCodeForGitLabToken(input: {
     );
   }
 
-  const url = new URL(`${GITLAB_API_URL}/oauth/token`);
+  const url = new URL('https://gitlab.com/oauth/token');
 
   url.search = new URLSearchParams({
     code,
@@ -100,7 +98,7 @@ export async function refreshToken() {
     throw new Error('No refresh token');
   }
 
-  const url = new URL(`${GITLAB_API_URL}/oauth/token`);
+  const url = new URL('https://gitlab.com/oauth/token');
 
   url.search = new URLSearchParams({
     grant_type: 'refresh_token',
