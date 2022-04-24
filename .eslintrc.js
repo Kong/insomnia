@@ -28,12 +28,14 @@ module.exports = {
     },
   },
   extends: [
+    'plugin:@microsoft/eslint-plugin-sdl/recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
   ],
   plugins: [
+    '@microsoft/eslint-plugin-sdl',
     '@typescript-eslint',
     'react',
     'jest',

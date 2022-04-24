@@ -45,6 +45,7 @@
     "@babel/preset-env": "^7.4.3",
     "@babel/preset-react": "^7.9.4",
     "@jest/types": "^26.6.2",
+    "@microsoft/eslint-plugin-sdl": "0.2.0",
     "@types/chai": "^4.2.15",
     "@types/eslint": "8.4.1",
     "@types/jest": "^26.0.23",
