@@ -269,7 +269,7 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
                 <i className="fa fa-caret-down fa--skinny space-left" />
               </DropdownButton>
               {parts.map((part, i) => (
-                <DropdownItem key={i} value={i} onClick={this._handleSelectPart}>
+                <DropdownItem key={part.filename} value={i} onClick={this._handleSelectPart}>
                   {i === activePart ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
                   {this._describePart(part)}
                 </DropdownItem>
