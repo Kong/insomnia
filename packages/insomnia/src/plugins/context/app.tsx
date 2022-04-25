@@ -38,10 +38,6 @@ interface AppClipboard {
   clear(): void;
 }
 
-interface ShowGenericModalDialogOptions {
-  html?: string;
-}
-
 export interface AppContext {
   alert: (
     title: string,
@@ -53,13 +49,6 @@ export interface AppContext {
   getInfo: () => AppInfo;
   showSaveDialog: (options?: ShowDialogOptions) => Promise<string | null>;
   clipboard: AppClipboard;
-  /**
-   * @deprecated as it was never officially supported
-   */
-  showGenericModalDialog: (
-    title: string,
-    options?: ShowGenericModalDialogOptions
-  ) => void;
 }
 
 export interface PrivateProperties {
@@ -196,26 +185,6 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
         clear() {
           electron.clipboard.clear();
         },
-      },
-
-      // ~~~~~~~~~~~~~~~~~~ //
-      // Deprecated Methods //
-      // ~~~~~~~~~~~~~~~~~~ //
-      showGenericModalDialog(
-        title,
-        options = {},
-      ) {
-        console.warn(
-          'app.showGenericModalDialog() is deprecated. Use app.dialog() instead.'
-        );
-        // Create DOM node so we can adapt to the new dialog() method
-        const body = document.createElement('div');
-
-        if (options.html) {
-          body.innerHTML = options.html;
-        }
-
-        return this.dialog(title, body);
       },
     },
     __private: {
