@@ -32,7 +32,7 @@ const HelpExamples: FC<{ helpExamples: HelpExample[] }> = ({ helpExamples }) => 
 const JSONPathHelp: FC = () => (
   <ModalBody className="pad">
     <p>
-      Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some examples that you might use on a book store API:
+      Use <Link href="https://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some examples that you might use on a book store API:
     </p>
     <HelpExamples
       helpExamples={[

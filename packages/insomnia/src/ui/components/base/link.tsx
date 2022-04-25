@@ -43,6 +43,7 @@ export class Link extends PureComponent<Props> {
         {children}
       </button>
     ) : (
+      // eslint-disable-next-line react/jsx-no-target-blank
       <a
         href={href}
         onClick={this._handleClick}
