@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import querystring from 'querystring';
+import { URLSearchParams } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
@@ -23,7 +23,7 @@ export function initNewOAuthSession() {
 }
 
 export function responseToObject(body, keys, defaults = {}) {
-  let data: querystring.ParsedUrlQuery | null = null;
+  let data: URLSearchParams | null = null;
 
   try {
     data = JSON.parse(body);
@@ -33,20 +33,14 @@ export function responseToObject(body, keys, defaults = {}) {
     try {
       // NOTE: parse does not return a JS Object, so
       //   we cannot use hasOwnProperty on it
-      data = querystring.parse(body);
+      data = new URLSearchParams(body);
     } catch (err) {}
   }
-
-  // Shouldn't happen but we'll check anyway
-  if (!data) {
-    data = {};
-  }
-
   const results = {};
 
   for (const key of keys) {
-    if (data[key] !== undefined) {
-      results[key] = data[key];
+    if (data?.get(key) !== undefined) {
+      results[key] = data?.get(key);
     } else if (defaults?.hasOwnProperty(key)) {
       results[key] = defaults[key];
     } else {
