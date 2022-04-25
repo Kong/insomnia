@@ -1,14 +1,12 @@
-import { parse as urlParse } from 'url';
-
 import { globalBeforeEach } from '../../__jest__/before-each';
 import certificateUrlParse from '../certificate-url-parse';
 
 describe('certificateUrlParse', () => {
   beforeEach(globalBeforeEach);
 
-  it('should return the result of url.parse if no wildcard paths are supplied', () => {
+  it('should return the result of new URL if no wildcard paths are supplied', () => {
     const url = 'https://www.example.org:80/some/resources?query=1&other=2#myfragment';
-    const expected = urlParse(url);
+    const expected = new URL(url);
     expect(certificateUrlParse(url)).toEqual(expected);
   });
 
@@ -99,7 +97,7 @@ describe('certificateUrlParse', () => {
     const fragment = 'myfragment';
     const url = `${protocol}://${user}:${password}@${host}:${port}${path}?${query}#${fragment}`;
     const nonWildcardUrl = `${protocol}://${user}:${password}@${nonWildcardHost}:${port}${path}?${query}#${fragment}`;
-    const expected = urlParse(nonWildcardUrl);
+    const expected = new URL(nonWildcardUrl);
     expected.hostname = host;
     expected.href = url;
     expected.host = `${host}:${port}`;

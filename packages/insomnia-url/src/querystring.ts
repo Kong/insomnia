@@ -1,4 +1,4 @@
-import { format as urlFormat, parse as urlParse } from 'url';
+import { format as urlFormat } from 'url';
 
 import { setDefaultProtocol } from './protocol';
 
@@ -181,7 +181,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
     return urlWithProto;
   } else {
     // Parse the URL into components
-    const parsedUrl = urlParse(urlWithProto);
+    const parsedUrl = new URL(urlWithProto);
 
     // ~~~~~~~~~~~ //
     // 1. Pathname //
@@ -198,7 +198,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
     // 2. Querystring //
     // ~~~~~~~~~~~~~~ //
 
-    if (parsedUrl.query) {
+    if (parsedUrl.searchParams.toString()) {
       const qsParams = deconstructQueryStringToParams(parsedUrl.query);
       const encodedQsParams = [];
       for (const { name, value } of qsParams) {
@@ -208,8 +208,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
         });
       }
 
-      parsedUrl.query = buildQueryStringFromParams(encodedQsParams);
-      parsedUrl.search = `?${parsedUrl.query}`;
+      parsedUrl.search = buildQueryStringFromParams(encodedQsParams);
     }
 
     return urlFormat(parsedUrl);

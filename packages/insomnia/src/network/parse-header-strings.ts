@@ -1,6 +1,5 @@
 import aws4 from 'aws4';
 import clone from 'clone';
-import { parse as urlParse } from 'url';
 
 import {
   AUTH_AWS_IAM,
@@ -108,7 +107,7 @@ interface AWSOptions {
   body?: string;
 }
 export function _getAwsAuthHeaders({ authentication, url, method, hostHeader, contentTypeHeader, body }: AWSOptions): { name: string; value: any }[] {
-  const { path, host } = urlParse(url);
+  const { pathname, search, host } = new URL(url);
   const onlyContentTypeHeader = contentTypeHeader ? { 'content-type': contentTypeHeader } : {};
   const { service, region, accessKeyId, secretAccessKey, sessionToken } = authentication;
   const signature = aws4.sign({
@@ -117,7 +116,7 @@ export function _getAwsAuthHeaders({ authentication, url, method, hostHeader, co
     body,
     method,
     headers: onlyContentTypeHeader,
-    path: path || undefined,
+    path: (pathname + search) || undefined,
     // AWS uses host header for signing so prioritize that if the user set it manually
     host: hostHeader || host || undefined,
   }, { accessKeyId, secretAccessKey, sessionToken });

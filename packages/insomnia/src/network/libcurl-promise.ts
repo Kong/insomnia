@@ -11,7 +11,6 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
-import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../package.json';
@@ -130,7 +129,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     if (!settings.proxyEnabled) {
       curl.setOpt(Curl.option.PROXY, '');
     } else {
-      const { protocol } = urlParse(req.url);
+      const { protocol } = new URL(req.url);
       const { httpProxy, httpsProxy, noProxy } = settings;
       const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
       const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;

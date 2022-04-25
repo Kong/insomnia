@@ -1,14 +1,12 @@
-import { parse as urlParse } from 'url';
-
 const WILDCARD_CHARACTER = '*';
 const WILDCARD_SUBSTITUTION = Math.random().toString().split('.')[1];
 const WILDCARD_SUBSTITUTION_PATTERN = new RegExp(`${WILDCARD_SUBSTITUTION}`, 'g');
 
 export default function certificateUrlParse(url) {
   if (url.indexOf(WILDCARD_CHARACTER) === -1) {
-    return urlParse(url);
+    return new URL(url);
   } else {
-    const parsed = urlParse(url.replace(/\*/g, WILDCARD_SUBSTITUTION));
+    const parsed = new URL(url.replace(/\*/g, WILDCARD_SUBSTITUTION));
     parsed.hostname = _reinstateWildcards(parsed.hostname);
     parsed.host = _reinstateWildcards(parsed.host);
     parsed.href = _reinstateWildcards(parsed.href);

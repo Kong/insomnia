@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import { parse as urlParse } from 'url';
 
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
@@ -152,8 +151,8 @@ async function _authorize(
 
   const redirectedTo = await window.main.authorizeUserInWindow({ url: finalUrl, urlSuccessRegex, urlFailureRegex, sessionId });
   console.log('[oauth2] Detected redirect ' + redirectedTo);
-  const { query } = urlParse(redirectedTo);
-  return responseToObject(query, [
+  const { searchParams } = new URL(redirectedTo);
+  return responseToObject(searchParams.toString(), [
     c.P_CODE,
     c.P_STATE,
     c.P_ERROR,

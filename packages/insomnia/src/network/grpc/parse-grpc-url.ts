@@ -1,24 +1,20 @@
-import { parse as urlParse } from 'url';
-
 const parseGrpcUrl = (
   grpcUrl?: string,
 ): {
   url: string;
   enableTls: boolean;
 } => {
-  const { protocol, host, href } = urlParse(grpcUrl?.toLowerCase() || '');
+  const { protocol, host, href } = new URL(grpcUrl?.toLowerCase() || '');
 
   switch (protocol) {
     case 'grpcs:':
       return {
-        // @ts-expect-error -- TSCONVERSION host can be undefined
         url: host,
         enableTls: true,
       };
 
     case 'grpc:':
       return {
-        // @ts-expect-error -- TSCONVERSION host can be undefined
         url: host,
         enableTls: false,
       };
