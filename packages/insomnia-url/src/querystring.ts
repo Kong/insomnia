@@ -1,5 +1,3 @@
-import { format as urlFormat } from 'url';
-
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -199,7 +197,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
     // ~~~~~~~~~~~~~~ //
 
     if (parsedUrl.searchParams.toString()) {
-      const qsParams = deconstructQueryStringToParams(parsedUrl.query);
+      const qsParams = deconstructQueryStringToParams(parsedUrl.searchParams.toString());
       const encodedQsParams = [];
       for (const { name, value } of qsParams) {
         encodedQsParams.push({
@@ -211,7 +209,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
       parsedUrl.search = buildQueryStringFromParams(encodedQsParams);
     }
 
-    return urlFormat(parsedUrl);
+    return parsedUrl.href;
   }
 };
 
