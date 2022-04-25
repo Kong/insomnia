@@ -1,4 +1,4 @@
-const { ERROR, OFF, UNKNOWN, TYPESCRIPT_CONVERSION } = require('eslint-config-helpers');
+const { ERROR, OFF, UNKNOWN, TYPESCRIPT_CONVERSION, WARN } = require('eslint-config-helpers');
 
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
@@ -18,5 +18,14 @@ module.exports = {
       property: 'openExternal',
       message: 'use the `clickLink` function in `electron-helpers.ts` instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
     }],
+    '@microsoft/sdl/no-electron-node-integration': WARN('Needs massive refactor'),
+    '@microsoft/sdl/no-inner-html': WARN('Needs refactoring'),
+    'react/no-danger': WARN('Needs refactoring'),
   },
+  overrides: [
+    {
+      files: ['*.test.ts', '*.test.tsx'],
+      rules: { '@microsoft/sdl/no-insecure-url': OFF(UNKNOWN) },
+    },
+  ],
 };
