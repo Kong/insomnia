@@ -24,7 +24,12 @@ export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: 
   if (!url || !noProxyRule || typeof noProxyRule !== 'string') {
     return false;
   }
-  const uri = new URL(url);
+  let uri;
+  try {
+    uri = new URL(url);
+  } catch (_) {
+    return false;
+  }
   if (!uri.hostname && !uri.port && !uri.protocol) {
     return false;
   }
