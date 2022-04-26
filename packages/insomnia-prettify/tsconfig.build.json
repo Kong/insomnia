@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
-    "module": "CommonJS",
+    "emitDeclarationOnly": true,
     "rootDir": "src",
     "resolveJsonModule": true
   },

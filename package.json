@@ -10,6 +10,9 @@
     "url": "https://github.com/kong/insomnia/issues"
   },
   "homepage": "https://github.com/kong/insomnia#readme",
+  "workspaces":[
+    "packages/insomnia-prettify"
+  ],
   "scripts": {
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --stream --no-bail",
