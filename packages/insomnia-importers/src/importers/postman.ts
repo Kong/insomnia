@@ -119,8 +119,8 @@ export class ImportPostman {
         name: header.key,
         value: header.value,
       })),
-      body: this.importBody(request.body, ((request.header) as Header[]).find(header => header.key === 'Content-Type')?.value),
-      authentication: this.importAuthentication(request.auth, (request.header) as Header[]),
+      body: this.importBody(request.body, ((request.header || []) as Header[]).find(header => header.key === 'Content-Type')?.value),
+      authentication: this.importAuthentication(request.auth, request.header as Header[]),
       parameters: this.importQueryParams(request.url),
     };
   };
@@ -177,7 +177,6 @@ export class ImportPostman {
   };
 
   importQueryParams = (url?: Url) => {
-
     let QueryParams : Parameter[] = [];
 
     if (!url) {
@@ -187,9 +186,9 @@ export class ImportPostman {
     if (typeof url === 'object' && url.query) {
       QueryParams = url.query.map(param => ({
         name: param.key ? param.key : '',
-        value: param.value ? param.value : undefined,
-        disabled:param.disabled,
-        comment:param.description as string,
+        ...(param.value ? { value: param.value } : {}),
+        disabled: param.disabled || false,
+        comment: param.description as string,
       }));
 
       return QueryParams;
@@ -281,13 +280,13 @@ export class ImportPostman {
     };
   };
 
-  importBodyRaw = (raw?: string, contentType?: string) => {
+  importBodyRaw = (raw?: string, mimeType = '') => {
     if (raw === '') {
       return {};
     }
 
     return {
-      mimeType: contentType || '',
+      mimeType,
       text: raw,
     };
   };
@@ -396,7 +395,7 @@ export class ImportPostman {
       region: credentials?.[2],
       secretAccessKey: '',
       service: credentials?.[3],
-      sessionToken,
+      ...(sessionToken ? { sessionToken } : {}),
     };
 
     return item;
@@ -435,8 +434,10 @@ export class ImportPostman {
       return {};
     }
 
-    const authStringIndex = authHeader.replace(/\s+/g, ' ').indexOf(' ');
-    const authString = Buffer.from(authStringIndex + 1 ? authHeader.substring(authStringIndex + 1) : '', 'base64').toString();
+    const authStringIndex = authHeader.trim().replace(/\s+/g, ' ').indexOf(' ');
+    const hasEncodedAuthString = authStringIndex !== -1;
+    const encodedAuthString = hasEncodedAuthString ? authHeader.substring(authStringIndex + 1) : '';
+    const authString = Buffer.from(encodedAuthString, 'base64').toString();
     const item = {
       type: 'basic',
       disabled: false,
@@ -671,6 +672,7 @@ export const convert: Converter = rawData => {
       return new ImportPostman(collection).importCollection();
     }
   } catch (e) {
+    console.error(e);
     // Nothing
   }
 

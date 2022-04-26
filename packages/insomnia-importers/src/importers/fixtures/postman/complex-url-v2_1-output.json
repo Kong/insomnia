@@ -21,7 +21,14 @@
       "description": "",
       "method": "GET",
       "body": {},
-      "parameters": [],
+      "parameters": [
+        {
+          "comment": "baz",
+          "disabled": false,
+          "name": "foo",
+          "value": "bar"
+        }
+      ],
       "headers": [],
       "authentication": {}
     }

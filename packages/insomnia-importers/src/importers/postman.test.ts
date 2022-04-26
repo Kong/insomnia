@@ -1,7 +1,7 @@
 import { ImportPostman } from './postman';
 import { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
 
-describe('postman', () => {
+describe('postmann', () => {
   const postmanSchema = ({
     requests = [],
     version = 'v2.0.0',
@@ -31,6 +31,40 @@ describe('postman', () => {
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
   describe('headers', () => {
+    describe('awsv4', () => {
+    });
+
+    describe('basic', () => {
+      it('returns a simple basic auth', () => {
+        // Arrange
+        const username = 'ziltoid';
+        const password = 'theOmniscient';
+        const token = Buffer.from(`${username}:${password}`).toString('base64');
+
+        const request: Request1 = {
+          header: [{
+            key: 'Authorization',
+            value: `Basic ${token}`,
+          }],
+        };
+
+        const schema = postmanSchema({ requests: [request] });
+
+        const postman = new ImportPostman(schema);
+
+        // Act
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
+
+        // Assert
+        expect(authentication).toEqual({
+          type: 'basic',
+          disabled: false,
+          username: 'ziltoid',
+          password: 'theOmniscient',
+        });
+      });
+    });
+
     describe('bearer', () => {
       it('returns simple token', () => {
         // Arrange
@@ -102,35 +136,13 @@ describe('postman', () => {
       });
     });
 
-    describe('basic', () => {
-      it('returns a simple basic auth', () => {
-        // Arrange
-        const username = 'ziltoid';
-        const password = 'theOmniscient';
-        const token = Buffer.from(`${username}:${password}`).toString();
+    describe('digest', () => {
+    });
 
-        const request: Request1 = {
-          header: [{
-            key: 'Authorization',
-            value: `Basic ${token}`,
-          }],
-        };
+    describe('oauth1', () => {
+    });
 
-        const schema = postmanSchema({ requests: [request] });
-
-        const postman = new ImportPostman(schema);
-
-        // Act
-        const { authentication } = postman.importRequestItem({ request }, 'n/a');
-
-        // Assert
-        expect(authentication).toEqual({
-          type: 'basic',
-          disabled: false,
-          username: 'ziltoid',
-          password: 'theOmniscient',
-        });
-      });
+    describe('oauth2', () => {
     });
   });
 
