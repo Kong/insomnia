@@ -182,19 +182,19 @@ describe('querystring', () => {
       expect(url).toBe('https://google.com/foo%20bar%20baz/100%25/foo/%24');
     });
 
-    it('encodes querystring', () => {
+    it('encodes querystring transforming spaces to addition signs', () => {
       const url = smartEncodeUrl('https://google.com?s=foo bar 100%&hi$');
-      expect(url).toBe('https://google.com/?s=foo%20bar%20100%25&hi%24');
+      expect(url).toBe('https://google.com/?s=foo%2Bbar%2B100%25&hi%24');
     });
 
     it('encodes querystring with mixed spaces', () => {
       const url = smartEncodeUrl('https://google.com?s=foo %20100%');
-      expect(url).toBe('https://google.com/?s=foo%20%20100%25');
+      expect(url).toBe('https://google.com/?s=foo%2B%2B100%25');
     });
 
     it('encodes querystring with repeated keys', () => {
       const url = smartEncodeUrl('https://google.com/;@,!?s=foo,;@-!&s=foo %20100%');
-      expect(url).toBe('https://google.com/;@,!?s=foo,%3B%40-!&s=foo%20%20100%25');
+      expect(url).toBe('https://google.com/;@,!?s=foo,%3B%40-!&s=foo%2B%2B100%25');
     });
 
     it("doesn't decode ignored characters", () => {

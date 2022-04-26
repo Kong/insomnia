@@ -56,7 +56,7 @@ let requestCounts: Record<string, number> = {};
  * @returns the resolved server URL
  */
 const getDefaultServerUrl = (api: OpenAPIV3.Document) => {
-  const exampleServer = 'http://example.com/';
+  const exampleServer = 'https://example.com/';
   const servers = api.servers || [];
   const firstServer = servers[0];
   const foundServer = firstServer && firstServer.url;
