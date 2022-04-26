@@ -447,9 +447,6 @@ export async function _actuallySend(
         }
       }
       const requestBody = parseRequestBody(renderedRequest);
-      if (requestBody !== undefined) {
-        setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
       const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
       if (requestBodyPath) {
         const { size: contentLength } = fs.statSync(requestBodyPath);
@@ -457,6 +454,8 @@ export async function _actuallySend(
         setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      } else if (requestBody !== undefined) {
+        setOpt(Curl.option.POSTFIELDS, requestBody);
       }
       // Handle Authorization header
       const { username, password, disabled } = renderedRequest.authentication;
