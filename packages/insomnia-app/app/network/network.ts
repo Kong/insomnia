@@ -447,9 +447,6 @@ export async function _actuallySend(
         }
       }
       const requestBody = parseRequestBody(renderedRequest);
-      if (requestBody) {
-        setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
       const  requestBodyPath  = await parseRequestBodyPath(renderedRequest);
       if (requestBodyPath) {
         const { size: contentLength } = fs.statSync(requestBodyPath);
@@ -457,6 +454,8 @@ export async function _actuallySend(
         setOpt(Curl.option.UPLOAD, 1);
         // We need this, otherwise curl will send it as a POST
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      } else if (requestBody !== undefined) {
+        setOpt(Curl.option.POSTFIELDS, requestBody);
       }
       // Handle Authorization header
       const { username, password, disabled } = renderedRequest.authentication;
@@ -563,18 +562,21 @@ export async function _actuallySend(
   });
 }
 
-const parseRequestBody = req => {
+const parseRequestBody = (req: RenderedRequest) => {
   const isUrlEncodedForm = req.body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
   const expectsBody = ['POST', 'PUT', 'PATCH'].includes(req.method.toUpperCase());
   const hasMimetypeAndUpdateMethod = typeof req.body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();
-    req.body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    (req.body.params || []).map(p => urlSearchParams.append(p.name, p?.value || ''));
     return urlSearchParams.toString();
   }
+
   if (hasMimetypeAndUpdateMethod) {
-    return req.body.text;
+    return req.body.text || '';
   }
+
+  return undefined;
 };
 
 const parseRequestBodyPath = async req => {
@@ -640,7 +642,7 @@ const parseHeaderStrings = async ({ renderedRequest, requestBody, requestBodyPat
   const headers = clone(renderedRequest.headers);
 
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
-  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
+  const hasRequestBodyOrFilePath = requestBody !== undefined || requestBodyPath;
   if (hasRequestBodyOrFilePath) {
     headers.push({
       name: 'Expect',
