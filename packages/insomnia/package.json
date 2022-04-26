@@ -21,11 +21,11 @@
     "start:dev-server": "vite dev",
     "start:electron": "npm run build:main && electron .",
     "test": "jest",
-    "type-check": "tsc --noEmit -p tsconfig.build.json",
+    "type-check": "esr scripts/generateCACerts.ts && tsc --noEmit -p tsconfig.build.json",
     "clean": "rimraf dist build src/main.min.js *.tsbuildinfo",
     "build:main": "esr esbuild.main.ts",
     "build:prod": "esr --cache ./scripts/build.ts --noErrorTruncation",
-    "package": "esr --cache ./scripts/build.ts --noErrorTruncation && esr scripts/package.ts",
+    "package": "esr scripts/generateCACerts.ts && esr --cache ./scripts/build.ts --noErrorTruncation && esr scripts/package.ts",
     "build:sr": "esr scripts/generateCACerts.ts && esr esbuild.sr.ts",
     "bump-version": "esr scripts/bumpVersion.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache"
