@@ -195,7 +195,6 @@ export class ImportPostman {
     }
 
     return QueryParams;
-
   };
 
   importBody = (body: Body, contentType? : string): ImportRequest['body'] => {
@@ -671,8 +670,7 @@ export const convert: Converter = rawData => {
     ) {
       return new ImportPostman(collection).importCollection();
     }
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
     // Nothing
   }
 

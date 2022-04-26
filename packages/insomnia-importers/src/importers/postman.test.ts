@@ -1,7 +1,7 @@
 import { ImportPostman } from './postman';
 import { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
 
-describe('postmann', () => {
+describe('postman', () => {
   const postmanSchema = ({
     requests = [],
     version = 'v2.0.0',
@@ -29,6 +29,17 @@ describe('postmann', () => {
       },
     ],
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
+
+  describe('query params', () => {
+    it('should not duplicate query params in the url', () => {
+      const schema = postmanSchema({
+
+      });
+      const postman = new ImportPostman(schema).importCollection();
+      const { url } = postman[0];
+      expect(url).toEqual('');
+    });
+  });
 
   describe('headers', () => {
     describe('awsv4', () => {
