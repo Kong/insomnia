@@ -80,7 +80,7 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
 
     // @ts-expect-error -- TSCONVERSION
     for (const block of el.querySelectorAll('pre > code')) {
-      highlight.highlightBlock(block);
+      highlight.highlightElement(block);
     }
 
     // @ts-expect-error -- TSCONVERSION
