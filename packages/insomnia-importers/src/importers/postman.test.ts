@@ -29,6 +29,111 @@ describe('postman', () => {
       },
     ],
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
+
+  describe('headers', () => {
+    describe('bearer', () => {
+      it('returns simple token', () => {
+        // Arrange
+        const request: Request1 = {
+          header: [{
+            key: 'Authorization',
+            value: 'Bearer {{token}}',
+          }],
+        };
+        const schema = postmanSchema({ requests: [request] });
+        const postman = new ImportPostman(schema);
+
+        // Act
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
+
+        // Assert
+        expect(authentication).toEqual({
+          type: 'bearer',
+          disabled: false,
+          token: '{{token}}',
+          prefix: '',
+        });
+      });
+
+      it('handles multiple spaces', () => {
+        // Arrange
+        const request: Request1 = {
+          header: [{
+            key: 'Authorization',
+            value: 'Bearer        {{token}}',
+          }],
+        };
+        const schema = postmanSchema({ requests: [request] });
+        const postman = new ImportPostman(schema);
+
+        // Act
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
+
+        // Assert
+        expect(authentication).toEqual({
+          type: 'bearer',
+          disabled: false,
+          token: '{{token}}',
+          prefix: '',
+        });
+      });
+
+      it('handles no token', () => {
+        // Arrange
+        const request: Request1 = {
+          header: [{
+            key: 'Authorization',
+            value: 'Bearer ',
+          }],
+        };
+        const schema = postmanSchema({ requests: [request] });
+        const postman = new ImportPostman(schema);
+
+        // Act
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
+
+        // Assert
+        expect(authentication).toEqual({
+          type: 'bearer',
+          disabled: false,
+          token: '',
+          prefix: '',
+        });
+      });
+    });
+
+    describe('basic', () => {
+      it('returns a simple basic auth', () => {
+        // Arrange
+        const username = 'ziltoid';
+        const password = 'theOmniscient';
+        const token = Buffer.from(`${username}:${password}`).toString();
+
+        const request: Request1 = {
+          header: [{
+            key: 'Authorization',
+            value: `Basic ${token}`,
+          }],
+        };
+
+        const schema = postmanSchema({ requests: [request] });
+
+        const postman = new ImportPostman(schema);
+
+        // Act
+        const { authentication } = postman.importRequestItem({ request }, 'n/a');
+
+        // Assert
+        expect(authentication).toEqual({
+          type: 'basic',
+          disabled: false,
+          username: 'ziltoid',
+          password: 'theOmniscient',
+        });
+      });
+    });
+  });
+
   describe('oauth2', () => {
     // Arrange
     const request: Request1 = {

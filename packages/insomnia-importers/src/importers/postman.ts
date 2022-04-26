@@ -184,7 +184,7 @@ export class ImportPostman {
       return QueryParams;
     }
 
-    if (typeof url === 'object' && url.query){
+    if (typeof url === 'object' && url.query) {
       QueryParams = url.query.map(param => ({
         name: param.key ? param.key : '',
         value: param.value ? param.value : undefined,
@@ -304,17 +304,17 @@ export class ImportPostman {
   };
 
   importAuthentication = (auth?: Auth | null, headers? : Header[]) => {
-    const authHeader = headers?.find(x => x.key === 'Authorization')?.value;
+    const authHeader = headers?.find(header => header.key === 'Authorization')?.value;
     if (!auth) {
       if (authHeader) {
-        switch (authHeader?.substring(0, authHeader.indexOf(' '))){
+        switch (authHeader?.substring(0, authHeader.indexOf(' '))) {
 
           case 'Bearer': // will work for OAuth2 as well
             return this.importBearerAuthenticationFromHeader(authHeader);
           case 'Basic':
             return this.importBasicAuthenticationFromHeader(authHeader);
           case 'AWS4-HMAC-SHA256':
-            const sessionToken = headers?.find(x => x.key === 'X-Amz-Security-Token')?.value;
+            const sessionToken = headers?.find(header => header.key === 'X-Amz-Security-Token')?.value;
             return this.importАwsv4AuthenticationFromHeader(authHeader, sessionToken);
           case 'Digest':
             return this.importDigestAuthenticationFromHeader(authHeader);
@@ -478,15 +478,14 @@ export class ImportPostman {
     if (!authHeader) {
       return {};
     }
-    const tokenIndex = authHeader.replace(/\s+/g, ' ').indexOf(' ');
-    const item = {
+    const authHeader2 = authHeader.replace(/\s+/, ' ');
+    const tokenIndex = authHeader.indexOf(' ');
+    return {
       type: 'bearer',
       disabled: false,
-      token: tokenIndex + 1 ? authHeader.substring(tokenIndex + 1) : '',
+      token: tokenIndex + 1 ? authHeader2.substring(tokenIndex + 1) : '',
       prefix: '',
     };
-
-    return item;
   };
 
   importDigestAuthentication = (auth: Auth) => {
