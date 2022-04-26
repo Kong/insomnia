@@ -77,7 +77,7 @@ describe('actuallySend()', () => {
       ],
       parameters: [
         {
-          name: 'foo bar',
+          name: 'foobar',
           value: 'hello&world',
         },
       ],
@@ -133,7 +133,7 @@ describe('actuallySend()', () => {
         POST: 1,
         PROXY: '',
         TIMEOUT_MS: 0,
-        URL: 'http://localhost/?foo%20bar=hello%26world',
+        URL: 'http://localhost/?foobar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
       },
@@ -248,7 +248,7 @@ describe('actuallySend()', () => {
       ],
       parameters: [
         {
-          name: 'foo bar',
+          name: 'foobar',
           value: 'hello&world',
         },
       ],
@@ -300,7 +300,7 @@ describe('actuallySend()', () => {
         POSTFIELDS: 'foo=bar',
         PROXY: '',
         TIMEOUT_MS: 0,
-        URL: 'http://localhost/?foo%20bar=hello%26world',
+        URL: 'http://localhost/?foobar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
       },
@@ -660,7 +660,7 @@ describe('actuallySend()', () => {
       ],
       parameters: [
         {
-          name: 'foo bar',
+          name: 'foobar',
           value: 'hello&world',
         },
       ],
@@ -718,7 +718,7 @@ describe('actuallySend()', () => {
         SSL_VERIFYHOST: 0, // should disbale SSL
         SSL_VERIFYPEER: 0, // should disbale SSL
         TIMEOUT_MS: 0,
-        URL: 'http://localhost/?foo%20bar=hello%26world',
+        URL: 'http://localhost/?foobar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true,
       },

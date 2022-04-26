@@ -23,31 +23,31 @@ export function initNewOAuthSession() {
 }
 
 export function responseToObject(body, keys, defaults = {}) {
-  let data: URLSearchParams | null = null;
-
+  let data: {} | null = null;
   try {
     data = JSON.parse(body);
   } catch (err) {}
-
+  const results = {};
   if (!data) {
     try {
-      // NOTE: parse does not return a JS Object, so
-      //   we cannot use hasOwnProperty on it
-      data = new URLSearchParams(body);
+      data = Object.fromEntries(new URLSearchParams(body));
     } catch (err) {}
   }
-  const results = {};
+
+  // Shouldn't happen but we'll check anyway
+  if (!data) {
+    data = {};
+  }
 
   for (const key of keys) {
-    if (data?.get(key) !== undefined) {
-      results[key] = data?.get(key);
+    if (data[key] !== undefined) {
+      results[key] = data[key];
     } else if (defaults?.hasOwnProperty(key)) {
       results[key] = defaults[key];
     } else {
       results[key] = null;
     }
   }
-
   return results;
 }
 
