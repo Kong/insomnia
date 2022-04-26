@@ -22,10 +22,4 @@ module.exports = {
     '@microsoft/sdl/no-inner-html': WARN('Needs refactoring'),
     'react/no-danger': WARN('Needs refactoring'),
   },
-  overrides: [
-    {
-      files: ['*.test.ts', '*.test.tsx'],
-      rules: { '@microsoft/sdl/no-insecure-url': OFF(UNKNOWN) },
-    },
-  ],
 };

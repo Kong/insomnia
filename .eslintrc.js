@@ -70,6 +70,10 @@ module.exports = {
         '@typescript-eslint/no-var-requires': OFF(UNKNOWN),
       },
     },
+    {
+      files: ['*.test.ts', '*.test.tsx'],
+      rules: { '@microsoft/sdl/no-insecure-url': OFF(UNKNOWN) },
+    },
   ],
   rules: {
     'array-bracket-spacing': ERROR,
