@@ -174,7 +174,9 @@ export const smartEncodeUrl = (url: string, encode?: boolean) => {
   encode = encode === undefined ? true : encode;
 
   const urlWithProto = setDefaultProtocol(url);
-
+  if (!url) {
+    return url;
+  }
   if (!encode) {
     return urlWithProto;
   } else {
