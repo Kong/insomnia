@@ -26,20 +26,18 @@ const getTargets = () => {
 const pkg = async () => {
   return new Promise<void>(resolve => {
     const cwd = path.join(__dirname, '../..');
-
-    const process = spawn('npm',
-      [
-        'run',
-        'pkg',
-        '--',
-        '--targets',
-        getTargets(),
-        '--output',
-        'binaries/inso',
-      ], {
-        cwd,
-        shell: true,
-      });
+    const args = [
+      '.',
+      '--targets',
+      getTargets(),
+      '--output',
+      'binaries/inso',
+    ];
+    console.log('pkg', args.join(' '));
+    const process = spawn('node_modules/.bin/pkg', args, {
+      cwd,
+      shell: true,
+    });
 
     process.stdout.on('data', data => {
       console.log(data.toString());
