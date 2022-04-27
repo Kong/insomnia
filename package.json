@@ -18,7 +18,7 @@
     "lint": "lerna run lint --stream --no-bail",
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",
-    "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
+    "bootstrap": "npm install && lerna bootstrap --use-workspaces && lerna run --stream bootstrap",
     "version": "lerna version",
     "publish": "lerna publish from-package",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",

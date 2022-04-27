@@ -5,7 +5,6 @@
     "packages/*",
     "plugins/*"
   ],
-  "useWorkspaces": true,
   "command": {
     "version": {
       "exact": true,
