@@ -25,7 +25,7 @@
     "clean": "rimraf dist build src/main.min.js *.tsbuildinfo",
     "build:main": "esr esbuild.main.ts",
     "build:prod": "esr --cache ./scripts/build.ts --noErrorTruncation",
-    "package": "esr scripts/generateCACerts.ts && esr --cache ./scripts/build.ts --noErrorTruncation && esr scripts/package.ts",
+    "package": "esr scripts/generateCACerts.ts && esr --cache ./scripts/build.ts --noErrorTruncation && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
     "build:sr": "esr scripts/generateCACerts.ts && esr esbuild.sr.ts",
     "bump-version": "esr scripts/bumpVersion.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache"
