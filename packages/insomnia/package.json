@@ -39,7 +39,7 @@
     "type-check:watch": "npm run type-check -- --watch"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "2.3.5-0",
+    "@getinsomnia/node-libcurl": "2.3.5-1",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
     "@hapi/hawk": "^8.0.0",
@@ -163,9 +163,9 @@
     "cross-env": "^7.0.3",
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
-    "electron": "17.3.1",
-    "electron-builder": "23.0.3",
-    "electron-builder-squirrel-windows": "23.0.3",
+    "electron": "18.1.0",
+    "electron-builder": "23.0.7",
+    "electron-builder-squirrel-windows": "23.0.7",
     "electron-devtools-installer": "^3.2.0",
     "electron-notarize": "^1.1.1",
     "esbuild": "^0.14.27",
