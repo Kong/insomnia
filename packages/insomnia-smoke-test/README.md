@@ -63,6 +63,8 @@ npm run test:build --prefix packages/insomnia-smoke-test
 For `package`:
 
 ```shell
+# Transpile js bundle
+npm run build:prod --prefix packages/insomnia
 # Build executable in /packages/insomnia/dist
 npm run package --prefix packages/insomnia
 

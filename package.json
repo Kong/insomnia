@@ -11,7 +11,7 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
-    "dev": "npm start --prefix packages/insomnia-app",
+    "dev": "npm start --prefix packages/insomnia",
     "test": "lerna run test --stream --parallel",
     "type-check": "lerna run type-check",
     "hard-reset": "npm run clean && npm run bootstrap && npm run dev",

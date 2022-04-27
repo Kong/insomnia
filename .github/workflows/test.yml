@@ -64,8 +64,11 @@ jobs:
           echo ::set-output name=pkg-name::$PKG_NAME
           echo ::set-output name=inso-version::$INSO_VERSION
 
+      - name: Bundle send-request
+        run: npm run build:sr --prefix packages/insomnia
+
       - name: Package Inso CLI binary
-        run: npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso
+        run: npm run package --prefix packages/insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 

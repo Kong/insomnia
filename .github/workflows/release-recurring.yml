@@ -45,6 +45,10 @@ jobs:
         shell: bash
         run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run bump-version --prefix packages/insomnia
 
+      - name: Bundle main, renderer, preload, licenses list and copy with assets to /build
+        shell: bash
+        run: npm run build:prod --prefix packages/insomnia
+
       - name: Package
         shell: bash
         run: BUILD_TARGETS='${{ matrix.build-targets }}' npm run package --prefix packages/insomnia

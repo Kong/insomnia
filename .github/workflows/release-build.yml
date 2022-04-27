@@ -37,9 +37,13 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
+      - name: Bundle main, renderer, preload, licenses list and copy with assets to /build
+        shell: bash
+        run: npm run build:prod --prefix packages/insomnia
+
       - name: Package app
         shell: bash
-        run: npm run package --prefix packages/insomnia-app
+        run: npm run package --prefix packages/insomnia
         env:
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
@@ -50,8 +54,11 @@ jobs:
         run:
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
+      - name: Bundle send-request
+        run: npm run build:sr --prefix packages/insomnia
+
       - name: Package inso
-        run: npm run build:sr --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-inso
+        run: npm run package --prefix packages/insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
 
