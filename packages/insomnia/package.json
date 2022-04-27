@@ -152,6 +152,7 @@
     "classnames": "^2.3.1",
     "codemirror": "^5.65.2",
     "codemirror-graphql": "^1.2.12",
+    "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
