@@ -19,8 +19,10 @@
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
+    "cli": "jest --detectOpenHandles cli/app.test.ts",
     "serve": "ts-node server/index.ts",
-    "test:cli": "concurrently -n server,inso --kill-others \"npm run serve\" \"jest --detectOpenHandles --testPathPattern cli\""
+    "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
+    "test:cli": "npm run with-mock \"npm run cli\""
   },
   "devDependencies": {
     "@playwright/test": "^1.20.2",
