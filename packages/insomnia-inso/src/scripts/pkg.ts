@@ -34,7 +34,7 @@ const pkg = async () => {
       'binaries/inso',
     ];
     console.log('pkg', args.join(' '));
-    const process = spawn('node_modules/.bin/pkg', args, {
+    const process = spawn('./node_modules/.bin/pkg', args, {
       cwd,
       shell: true,
     });
