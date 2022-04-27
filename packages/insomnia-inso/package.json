@@ -23,7 +23,7 @@
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "clean": "rimraf dist *.tsbuildinfo binaries compressed artifacts",
     "test": "jest --runInBand",
-    "build": "webpack --config webpack/webpack.config.development.js",
+    "bootstrap": "webpack --config webpack/webpack.config.development.js",
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "prepackage": "npm run build:production",
     "package": "ts-node src/scripts/pkg.ts",
