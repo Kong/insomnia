@@ -82,7 +82,7 @@ jobs:
           path: packages/insomnia-inso/artifacts
 
       - name: Run Inso CLI smoke tests
-        run: npm run test --prefix packages/insomnia-smoke-test
+        run: npm run test:cli --prefix packages/insomnia-smoke-test
 
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v3
