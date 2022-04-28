@@ -38,7 +38,6 @@ import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
-import caCerts from './ca_certs';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export interface ResponsePatch {
@@ -138,6 +137,7 @@ export async function _actuallySend(
         mkdirp.sync(baseCAPath);
         // TODO: Should mock cacerts module for testing.
         // This is literally coercing a function to string in tests due to lack of val-loader.
+        const caCerts = await import('./ca_certs');
         fs.writeFileSync(fullCAPath, String(caCerts));
         console.log('[net] Set CA to', fullCAPath);
       }

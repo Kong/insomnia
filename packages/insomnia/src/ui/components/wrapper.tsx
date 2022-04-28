@@ -79,8 +79,6 @@ import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
 import { WrapperUnitTest } from './wrapper-unit-test';
 
-const spectral = initializeSpectral();
-
 export type WrapperProps = AppProps & {
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
@@ -250,6 +248,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     // Handle switching away from the spec design activity. For this, we want to generate
     // requests that can be accessed from debug or test.
     // If there are errors in the spec, show the user a warning first
+    const spectral = await initializeSpectral();
     const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
     if (activeApiSpec.contents && results && results.length) {
       showModal(AlertModal, {

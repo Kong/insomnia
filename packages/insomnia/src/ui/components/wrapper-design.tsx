@@ -1,10 +1,9 @@
-import { IRuleResult } from '@stoplight/spectral';
+import type { IRuleResult } from '@stoplight/spectral';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { createRef, FC, Fragment, lazy, ReactNode, RefObject, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
-import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
@@ -29,8 +28,6 @@ const EmptySpaceHelper = styled.div({
   padding: '2em',
   textAlign: 'center',
 });
-
-const spectral = initializeSpectral();
 
 const RenderPageHeader: FC<Pick<Props,
 | 'gitSyncDropdown'
@@ -135,6 +132,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   useAsync(async () => {
     // Lint only if spec has content
     if (contents && contents.length !== 0) {
+      const spectral = await initializeSpectral();
       const results: LintMessage[] = (await spectral.run(contents))
         .filter(isLintError)
         .map(({ severity, code, message, range }) => ({
@@ -214,7 +212,7 @@ const RenderPreview: FC = () => {
   if (!swaggerUiSpec) {
     swaggerUiSpec = {};
   }
-
+  const SwaggerUI = lazy(() => import('swagger-ui-react'));
   return (
     <div id="swagger-ui-wrapper">
       <ErrorBoundary
@@ -229,20 +227,23 @@ const RenderPreview: FC = () => {
           </div>
         )}
       >
-        <SwaggerUI
-          spec={swaggerUiSpec}
-          supportedSubmitMethods={[
-            'get',
-            'put',
-            'post',
-            'delete',
-            'options',
-            'head',
-            'patch',
-            'trace',
-          ]}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <SwaggerUI
+            spec={swaggerUiSpec}
+            supportedSubmitMethods={[
+              'get',
+              'put',
+              'post',
+              'delete',
+              'options',
+              'head',
+              'patch',
+              'trace',
+            ]}
+          />
+        </Suspense>
       </ErrorBoundary>
+
     </div>
   );
 };

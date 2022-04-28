@@ -1,5 +1,4 @@
 import * as Hawk from '@hapi/hawk';
-import jwtAuthentication from 'jwt-authentication';
 
 import {
   AUTH_ASAP,
@@ -96,6 +95,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.type === AUTH_ASAP) {
     const { issuer, subject, audience, keyId, additionalClaims, privateKey } = authentication;
+    const jwtAuthentication = await import ('jwt-authentication');
     const generator = jwtAuthentication.client.create();
     let claims = {
       iss: issuer,

@@ -9,7 +9,6 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
-import { JSONPath } from 'jsonpath-plus';
 import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
@@ -698,13 +697,14 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     this._codemirrorSetValue(code, canPrettify);
   }
 
-  _prettifyJSON(code: string) {
+  async _prettifyJSON(code: string) {
     try {
       let jsonString = code;
 
       if (this.props.updateFilter && this.state.filter) {
         try {
           const codeObj = JSON.parse(code);
+          const { JSONPath } = await import('jsonpath-plus');
           const results = JSONPath({ json: codeObj, path: this.state.filter.trim() });
           jsonString = JSON.stringify(results);
         } catch (err) {
@@ -1118,7 +1118,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
    * @param code the code to set in the editor
    * @param forcePrettify
    */
-  _codemirrorSetValue(code?: string, forcePrettify?: boolean) {
+  async _codemirrorSetValue(code?: string, forcePrettify?: boolean) {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -1131,7 +1131,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       if (UnconnectedCodeEditor._isXML(mode)) {
         code = this._prettifyXML(code);
       } else if (UnconnectedCodeEditor._isJSON(mode)) {
-        code = this._prettifyJSON(code);
+        code = await this._prettifyJSON(code);
       } else {
         unreachable('attempted to prettify in a mode that should not support prettifying');
       }

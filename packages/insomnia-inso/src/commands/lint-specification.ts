@@ -1,4 +1,3 @@
-import { isOpenApiv2, isOpenApiv3, Spectral } from '@stoplight/spectral';
 import fs from 'fs';
 import path from 'path';
 
@@ -48,7 +47,7 @@ export async function lintSpecification(
     logger.fatal(e.message);
     return false;
   }
-
+  const { isOpenApiv2, isOpenApiv3, Spectral } = await import('@stoplight/spectral');
   const spectral = new Spectral();
   spectral.registerFormat('oas2', isOpenApiv2);
   spectral.registerFormat('oas3', isOpenApiv3);

@@ -2,9 +2,9 @@ import CodeMirror from 'codemirror';
 
 import { initializeSpectral, isLintError } from '../../../../common/spectral';
 
-const spectral = initializeSpectral();
-
 CodeMirror.registerHelper('lint', 'openapi', async function(text) {
+
+  const spectral = await initializeSpectral();
   const results = (await spectral.run(text)).filter(isLintError);
 
   return results.map(result => ({

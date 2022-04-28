@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { JSONPath } from 'jsonpath-plus';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -45,8 +44,9 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  renderModalBody(request, error) {
+  async renderModalBody(request, error) {
     const fullPath = `Request.${error.path}`;
+    const { JSONPath } = await import('jsonpath-plus');
     const result = JSONPath({ json: request, path: `$.${error.path}` });
     const template = result && result.length ? result[0] : null;
     const locationLabel =
