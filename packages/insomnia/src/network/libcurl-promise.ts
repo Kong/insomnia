@@ -93,11 +93,15 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
     const fullCAPath = path.join(electron.app.getPath('temp'), `insomnia_${version}`, 'ca-certs.pem');
-    const stats = await stat(fullCAPath);
-    if (!stats || stats.size === 0) {
-      throw new Error(`Missing CA Cert at ${fullCAPath}`);
+    try {
+      await stat(fullCAPath);
+      curl.setOpt(Curl.option.CAINFO, fullCAPath);
+    } catch (_) {
+      const isElectronMain = process?.type === 'browser';
+      if (isElectronMain) {
+        throw new Error(`Missing CA Cert at ${fullCAPath}`);
+      }
     }
-    curl.setOpt(Curl.option.CAINFO, fullCAPath);
 
     certificates.forEach(validCert => {
       const { passphrase, cert, key, pfx } = validCert;

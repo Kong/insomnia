@@ -1,7 +1,13 @@
+import { stat, writeFile } from 'fs/promises';
+import mkdirp from 'mkdirp';
+import os from 'os';
+
+import { version } from '../../package.json';
 import { BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import { getBodyBuffer } from '../models/response';
 import { Settings } from '../models/settings';
+import caCerts from '../network/ca_certs';
 import { send } from '../network/network';
 import * as plugins from '../plugins';
 import { database } from './database';
@@ -11,6 +17,14 @@ import { database } from './database';
 type SettingsOverride = Pick<Settings, 'validateSSL'>;
 
 export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride) {
+  const baseCAPath = path.join(os.tmpdir(), `insomnia_${version}`);
+  const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
+  try {
+    await stat(fullCAPath);
+  } catch {
+    mkdirp.sync(baseCAPath);
+    await writeFile(fullCAPath, String(caCerts));
+  }
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
     modelTypes(),
