@@ -206,9 +206,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     }
 
     const requestBody = parseRequestBody({ body, method });
-    if (requestBody) {
-      curl.setOpt(Curl.option.POSTFIELDS, requestBody);
-    }
     const requestBodyPath = await parseRequestBodyPath(body);
     const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
     let requestFileDescriptor;
@@ -228,6 +225,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
       curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
       curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
+    } else if (requestBody !== undefined) {
+      curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     }
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
@@ -423,12 +422,15 @@ const parseRequestBody = ({ body, method }) => {
   const hasMimetypeAndUpdateMethod = typeof body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();
-    body.params.map(p => urlSearchParams.append(p.name, p?.value || ''));
+    (body.params || []).map(p => urlSearchParams.append(p.name, p?.value || ''));
     return urlSearchParams.toString();
   }
+
   if (hasMimetypeAndUpdateMethod) {
-    return body.text;
+    return body.text || '';
   }
+
+  return undefined;
 };
 const parseRequestBodyPath = async body => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;

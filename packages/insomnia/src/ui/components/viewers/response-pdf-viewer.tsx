@@ -1,5 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as PDF from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry';
+PDF.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 import React, { CSSProperties, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';

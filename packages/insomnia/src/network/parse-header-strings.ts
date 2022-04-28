@@ -37,7 +37,7 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
   const headers = clone(req.headers);
 
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
-  const hasRequestBodyOrFilePath = requestBody || requestBodyPath;
+  const hasRequestBodyOrFilePath = requestBody !== undefined || requestBodyPath;
   if (hasRequestBodyOrFilePath) {
     headers.push({ name: 'Expect', value: DISABLE_HEADER_VALUE });
     headers.push({ name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE });
