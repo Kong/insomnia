@@ -140,7 +140,7 @@ jobs:
       - name: Publish npm packages
         run: |
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          node_modules/.bin/lerna publish from-package --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
+          npx lerna publish from-package --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
