@@ -1,10 +1,12 @@
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import { writeFile } from 'fs';
+import { stat, writeFile } from 'fs/promises';
+import mkdirp from 'mkdirp';
 import path from 'path';
 
 import appConfig from '../config/config.json';
+import { version } from '../package.json';
 import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
@@ -18,6 +20,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import caCerts from './network/ca_certs';
 import { cancelCurlRequest, curlRequest } from './network/libcurl-promise';
 import { authorizeUserInWindow } from './network/o-auth-2/misc';
 import installPlugin from './plugins/install';
@@ -44,6 +47,16 @@ if (envDataPath) {
   const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : appConfig.userDataFolder);
   app.setPath('userData', newPath);
 }
+
+const baseCAPath = path.join(app.getPath('temp'), `insomnia_${version}`);
+const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
+stat(fullCAPath)
+  .then(() => console.log('[net] CA found at', fullCAPath))
+  .catch(() => {
+    mkdirp.sync(baseCAPath);
+    writeFile(fullCAPath, String(caCerts));
+    console.log('[net] Set CA to', fullCAPath);
+  });
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -226,7 +239,7 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
-  ipcMain.handle('installPlugin', async (_, options) => {
+  ipcMain.handle('installPlugin', (_, options) => {
     return installPlugin(options);
   });
 
@@ -263,15 +276,9 @@ async function _trackStats() {
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
   });
 
-  ipcMain.handle('writeFile', (_, options) => {
-    return new Promise<string>((resolve, reject) => {
-      writeFile(options.path, options.content, err => {
-        if (err != null) {
-          return reject(err);
-        }
-        resolve(options.path);
-      });
-    });
+  ipcMain.handle('writeFile', async (_, options) => {
+    await writeFile(options.path, options.content);
+    return options.path;
   });
 
   ipcMain.handle('curlRequest', (_, options) => {

@@ -7,6 +7,7 @@ if (process.type === 'renderer') {
 import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
+import { stat } from 'fs/promises';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable, Writable } from 'stream';
@@ -29,7 +30,6 @@ interface CurlRequestOptions {
   finalUrl: string;
   settings: SettingsUsedHere;
   certificates: ClientCertificate[];
-  fullCAPath: string;
   socketPath?: string;
   authHeader?: { name: string; value: string };
 }
@@ -82,7 +82,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
 
-    const { requestId, req, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
+    const { requestId, req, finalUrl, settings, certificates, socketPath, authHeader } = options;
     const curl = new Curl();
 
     curl.setOpt(Curl.option.URL, finalUrl);
@@ -92,6 +92,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
+    const fullCAPath = path.join(electron.app.getPath('temp'), `insomnia_${version}`, 'ca-certs.pem');
+    const stats = await stat(fullCAPath);
+    if (!stats || stats.size === 0) {
+      throw new Error(`Missing CA Cert at ${fullCAPath}`);
+    }
     curl.setOpt(Curl.option.CAINFO, fullCAPath);
 
     certificates.forEach(validCert => {
