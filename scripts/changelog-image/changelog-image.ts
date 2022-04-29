@@ -15,7 +15,7 @@ async function renderImage() {
 
   if (appConfigVersion.includes('beta')) {
     type = 'beta';
-    const appConfigRevision = appConfigVersion.match(/^\d{4}\.\d+\.\d-beta\.(\d+)/);
+    const appConfigRevision = appConfigVersion.match(/^\d{4}\.\d+\.\d+-beta\.(\d+)/);
     if (!appConfigRevision) {
       throw new Error('Invalid app version beta revision');
     }
@@ -25,7 +25,7 @@ async function renderImage() {
   }
 
   // Ignore any semver prerelease/build tags
-  const cleanedAppConfigVersion = appConfigVersion.match(type === 'major' ? /^(\d{4}\.\d+)/ : /^(\d{4}\.\d+\.\d)/);
+  const cleanedAppConfigVersion = appConfigVersion.match(type === 'major' ? /^(\d{4}\.\d+)/ : /^(\d{4}\.\d+\.\d+)/);
   if (!cleanedAppConfigVersion) {
     throw new Error('Invalid app version');
   }
