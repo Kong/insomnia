@@ -17,7 +17,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "bootstrap": "npm run generate",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "lint:fix": "npm run lint -- --fix",
     "test": "jest",
@@ -25,7 +24,7 @@
     "generate": "ts-node ./src/generated/generate.ts",
     "clean": "tsc --build tsconfig.build.json --clean",
     "prebuild": "npm run clean",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "npm run generate"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.2.6",
