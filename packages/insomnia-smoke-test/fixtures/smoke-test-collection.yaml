@@ -175,31 +175,6 @@ resources:
         path: /
         creation: 2021-11-18T23:53:05.310Z
         id: "429589439757017"
-      - key: has_recent_activity
-        value: "1"
-        expires: 2021-11-19T00:53:49.000Z
-        domain: github.com
-        path: /
-        secure: true
-        httpOnly: true
-        extensions:
-          - SameSite=Lax
-        hostOnly: true
-        creation: 2021-11-18T23:53:05.311Z
-        lastAccessed: 2021-11-18T23:53:49.637Z
-        id: "09630096071226024"
-      - key: _gh_sess
-        value: hno6H6Q2M8RK8eDeSpwNIhlNCDPsh%2BTLYCqW37gBtKvE2iHWyuCzusnHmN2M2zqL5fm4vNek98BlbXrBb2xPI%2Fsx9Q%2FPaIPJBeQ%2BJLlAetGuXnjucDjb7jwVFD07jFxPJ8n8%2F3i6yk2II%2BPyPQOfs5y45g4i5JLxhpu5BE6JGj02Jf8PLgXnvNpILm3QiLyT4oIuxqZFEbko%2BdmdIoG8qSs9hUiLBsYp1KgM8v7Jq7EWbb%2BkmVQDFnDkmvFIV6K5Usu6owlZQwM7XTo5KYef%2FcF63ic1o1%2F5JdDHHPoTsW4h68MFGEcPBqxHeGAa7Cw7LV%2FrnsvrNtsAtfMih%2FYI%2FeKn5jk3ChUN7cV43retCmIApNMd%2FFGAeuf4pmmvqbFLHtPk6zd8dXRSdwPGHp608GpTqWhRrh%2FNMnydgZj86h9668yLRNWeii%2B1JToNnpl8gU6iYNUEJuBPlZJ%2BTT5H4ZtNskY5Ccw8ysPLKH1qUtwXc%2ByJPIvYI1fGPNpX8BcLHhM0m5ru0jdEBvOsXd%2FbPdt%2B0%2BKbQEqUyig3hygN3C7bfAkE3%2B1IOhFYdWcMR83msFf1jvuE%2FoWw%2FGOPHYhiO48ePz7V9ZwqOuBG7ikUyfS07XjeTgqPrO5P5ON7YowCK%2F7x7rt%2Beu84Pi8Uc%2FA4aGhQU%2B8Ixn%2BrvnqYMDLlsYwP%2BTcoHLPEKe4IFDWjoTJehae2%2FQ4WAE88L%2FTgXAeqnO4%2BHaiFtoZYfLDMS4Xm0cB7MRC7C%2BaCvr90j56emc13r1%2Fgeg%3D%3D--ZIqRrsGB9DwAmnTG--xwQhqF9WAvbb5FNbLruEzQ%3D%3D
-        domain: github.com
-        path: /
-        secure: true
-        httpOnly: true
-        extensions:
-          - SameSite=Lax
-        hostOnly: true
-        creation: 2021-11-18T23:53:05.312Z
-        lastAccessed: 2021-11-18T23:53:49.637Z
-        id: "5403425689099031"
     _type: cookie_jar
   - _id: req_0769dca586df49358082b2183cfa073e
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
