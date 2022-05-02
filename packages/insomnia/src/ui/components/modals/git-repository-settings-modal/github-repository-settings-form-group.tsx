@@ -325,6 +325,7 @@ interface GitHubSignInFormProps {
 }
 
 const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
+  const [error, setError] = useState('');
   const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
@@ -361,8 +362,7 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
               try {
                 parsedURL = new URL(link);
               } catch (e) {
-                // setError('It appears the URL that you entered is invalid');
-                console.error('Provided url is invalid');
+                setError('It appears the URL that you entered is invalid');
                 return;
               }
 
@@ -377,8 +377,7 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
 
                 command(dispatch);
               } else {
-                // setError('It appears the URL that you entered is incomplete');
-                console.error('Provided url is missing code or state');
+                setError('It appears the URL that you entered is incomplete');
                 return;
               }
             }
@@ -393,6 +392,14 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
               <Button name="add-token">Add</Button>
             </div>
           </label>
+          {error && (
+            <p className="notice error margin-bottom-sm">
+              <button className="pull-right icon" onClick={() => setError('')}>
+                <i className="fa fa-times" />
+              </button>
+              {error}
+            </p>
+          )}
         </form>
       )}
     </AuthorizationFormContainer>
