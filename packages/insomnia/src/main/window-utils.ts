@@ -102,17 +102,6 @@ export function createWindow() {
     showUnresponsiveModal();
   });
 
-  // Open generic links (<a .../>) in default browser
-  mainWindow?.webContents.on('will-navigate', (e, url) => {
-    if (url === appUrl) {
-      return;
-    }
-
-    console.log('[app] Navigate to ' + url);
-    e.preventDefault();
-    clickLink(url);
-  });
-
   mainWindow?.webContents.on('new-window', e => {
     e.preventDefault();
   });
@@ -123,6 +112,18 @@ export function createWindow() {
 
   console.log(`[main] Loading ${appUrl}`);
   mainWindow?.loadURL(appUrl);
+  // Open generic links (<a .../>) in default browser
+  mainWindow?.webContents.on('will-navigate', (e, url) => {
+    // NOTE: hot-reloader url can sometimes include a #
+    if (new URL(url).origin === new URL(appUrl).origin) {
+      return;
+    }
+
+    console.log('[app] Navigate to ' + url);
+    e.preventDefault();
+    clickLink(url);
+  });
+
   // Emitted when the window is closed.
   mainWindow?.on('closed', () => {
     // Dereference the window object, usually you would store windows
