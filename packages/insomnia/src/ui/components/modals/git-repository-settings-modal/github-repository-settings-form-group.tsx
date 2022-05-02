@@ -357,7 +357,15 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
             const formData = new FormData(e.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
-              const parsedURL = new URL(link);
+              let parsedURL: URL;
+              try {
+                parsedURL = new URL(link);
+              } catch (e) {
+                // setError('It appears the URL that you entered is invalid');
+                console.error('Provided url is invalid');
+                return;
+              }
+
               const code = parsedURL.searchParams.get('code');
               const state = parsedURL.searchParams.get('state');
 
@@ -368,14 +376,17 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
                 });
 
                 command(dispatch);
+              } else {
+                // setError('It appears the URL that you entered is incomplete');
+                console.error('Provided url is missing code or state');
+                return;
               }
             }
           }}
         >
           <label className="form-control form-control--outlined">
             <div>
-              If you aren't redirected to the app you can manually paste your
-              code here:
+              If you aren't redirected to the app you can manually paste the authentication url here:
             </div>
             <div className="form-row">
               <input name="link" />
