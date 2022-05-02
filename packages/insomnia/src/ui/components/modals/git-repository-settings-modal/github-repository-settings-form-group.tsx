@@ -362,7 +362,7 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
               try {
                 parsedURL = new URL(link);
               } catch (e) {
-                setError('It appears the URL that you entered is invalid');
+                setError('Invalid URL');
                 return;
               }
 
