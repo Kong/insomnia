@@ -194,23 +194,6 @@ export function init(
     setBody(body: RequestBody) {
       renderedRequest.body = body;
     },
-
-    // ~~~~~~~~~~~~~~~~~~ //
-    // Deprecated Methods //
-    // ~~~~~~~~~~~~~~~~~~ //
-
-    /** @deprecated in favor of getting the whole body by getBody */
-    getBodyText() {
-      console.warn('request.getBodyText() is deprecated. Use request.getBody() instead.');
-      return renderedRequest.body.text || '';
-    },
-
-    /** @deprecated in favor of setting the whole body by setBody */
-    setBodyText(text: string) {
-      console.warn('request.setBodyText() is deprecated. Use request.setBody() instead.');
-      renderedRequest.body.text = text;
-    },
-
     // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
     // addCookie (name: string, value: string) {}
     // getCookie (name: string): string | null {}
