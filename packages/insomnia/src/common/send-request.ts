@@ -1,6 +1,7 @@
 import { stat, writeFile } from 'fs/promises';
 import mkdirp from 'mkdirp';
 import os from 'os';
+import path from 'path';
 
 import { version } from '../../package.json';
 import { BaseModel, types as modelTypes } from '../models';
