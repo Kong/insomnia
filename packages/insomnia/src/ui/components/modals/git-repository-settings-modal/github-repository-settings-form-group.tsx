@@ -369,17 +369,17 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
               const code = parsedURL.searchParams.get('code');
               const state = parsedURL.searchParams.get('state');
 
-              if (typeof code === 'string' && typeof state === 'string') {
-                const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
-                  code,
-                  state,
-                });
-
-                command(dispatch);
-              } else {
-                setError('It appears the URL that you entered is incomplete');
+              if (!(typeof code === 'string') || !(typeof state === 'string')) {
+                setError('Incomplete URL');
                 return;
               }
+
+              const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
+                code,
+                state,
+              });
+
+              command(dispatch);
             }
           }}
         >
