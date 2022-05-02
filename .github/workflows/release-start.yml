@@ -21,7 +21,7 @@ on:
       major-npm:
         required: false
         type: boolean
-        description: whether to increment the major version of the NPM packages or not
+        description: increment the major version of the NPM packages
         default: false
 
 env:
@@ -59,8 +59,13 @@ jobs:
       - name: Run bootstrap
         run: npm run bootstrap
 
-      - name: Lerna version
-        run: npm run version -- --preid "${{ github.event.inputs.channel }}" --yes "${{ github.event.inputs.channel != 'stable' && 'pre' || '' }}${{ github.event.inputs.major-npm != 'true' && 'minor' || 'major' }}"
+      - name: Lerna version (stable)
+        if: github.event.inputs.channel == 'stable'
+        run: npm run version -- --yes "${{ github.event.inputs.major-npm != 'true' && 'minor' || 'major' }}"
+
+      - name: Lerna version (alpha/beta)
+        if: github.event.inputs.channel != 'stable'
+        run: npm run version -- --yes --preid "${{ github.event.inputs.channel }}" "${{ github.event.inputs.iteration == '0' && (github.event.inputs.major-npm != 'true' && 'preminor' || 'premajor') || 'prerelease' }}"
 
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version

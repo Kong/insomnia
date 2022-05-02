@@ -23,7 +23,7 @@ export const start = async () => {
   const buildRef = process.env.BUILD_REF;
   if (buildRef) {
     // Ignore any existing semver prerelease/build tags
-    const cleanedVersion = packageConfig.version.match(/^(\d{4}\.\d+\.\d)/);
+    const cleanedVersion = packageConfig.version.match(/^(\d{4}\.\d+\.\d+)/);
     if (!cleanedVersion) {
       console.log('[build] Invalid version found in app config');
       process.exit(1);
