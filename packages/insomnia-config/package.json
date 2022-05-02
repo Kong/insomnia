@@ -24,7 +24,7 @@
     "generate": "ts-node ./src/generated/generate.ts",
     "clean": "tsc --build tsconfig.build.json --clean",
     "prebuild": "npm run clean",
-    "build": "npm run generate"
+    "build": "tsc --build tsconfig.build.json && ts-node ./src/generated/generate.ts"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.2.6",
