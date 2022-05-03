@@ -19,7 +19,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.locator('button:has-text("Clipboard")').click();
-  await page.locator('text=CollectionOauth Testingjust now').click();
+  await page.click('_react=WorkspaceCard[workspace.name = "Oauth Testing"]');
 
   // Authorization code
   await page.locator('button:has-text("Authorization Code")').click();
