@@ -127,13 +127,13 @@ From project root, in seperate terminals:
 
 ```sh
 # start smoke test api
-npx lerna --scope insomnia-smoke-test exec 'npm run serve'
+npm run serve --prefix packages/insomnia-smoke-test
 
-# watch send-request
-npx lerna --scope insomnia exec 'npm run build:sr -- --watch'
+# build send-request
+npm run build:sr --prefix packages/insomnia
 
 # watch inso
-npx lerna --scope insomnia-inso exec 'npm run start'
+npm run start --prefix packages/insomnia-inso
 
 # run api test
 $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
