@@ -1,1 +1,1 @@
-export { getSendRequestCallbackMemDb, getSendRequestCallback } from '../src/common/send-request';
+export { getSendRequestCallbackMemDb } from '../src/common/send-request';

@@ -150,7 +150,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     {
       completeIfAfterTagOrVarOpen,
       completeForce,
-    } : {
+    }: {
       completeIfAfterTagOrVarOpen: (
         cm: CodeMirror.EditorFromTextArea
       ) => void | typeof CodeMirror.Pass;
@@ -446,18 +446,18 @@ function isTagCompletionItem(item: CompletionItem): item is TagCompletionItem {
   return item.type === TYPE_TAG;
 }
 
-function getCompletionHints(completionItems: CompletionItem[], segment: string, type: CompletionItem['type'], limit = -1): Hint[] {
-  const matches: CodeMirror.Hint[] = [];
+function getCompletionHints(completionItems: CompletionItem[], segment: string, type: CompletionItem['type'], limit = -1) {
+  const matches: Hint[] = [];
 
   for (const item of completionItems) {
     const name = typeof item === 'string' ? item : item.name;
     const value = typeof item === 'string' ? '' : item.value ?? '';
     const displayName = item.displayName || name;
-    let defaultFill = '';
+    let defaultFill: string | (() => PromiseLike<unknown>) = '';
 
-    if (isConstantCompletionItem(item)) {
+    if (isConstantCompletionItem(item) || isSnippetCompletionItem(item)) {
       defaultFill = item.value;
-    } else if (isVariableCompletionItem(item) || isSnippetCompletionItem(item)) {
+    } else if (isVariableCompletionItem(item)) {
       defaultFill = item.name;
     } else if (isTagCompletionItem(item)) {
       defaultFill = getDefaultFill(item.name, item.args);

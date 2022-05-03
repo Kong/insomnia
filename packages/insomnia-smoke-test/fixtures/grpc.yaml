@@ -1,0 +1,79 @@
+_type: export
+__export_format: 4
+__export_date: 2022-05-02T10:00:13.527Z
+__export_source: insomnia.desktop.app:v2022.3.0
+resources:
+  - _id: greq_df47f5e3fd1d4f7c9370bb3431cbc2a5
+    parentId: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
+    modified: 1651485249670
+    created: 1651484553856
+    url: grpc://grpcbin.test.k6.io:9000
+    name: hello k6
+    description: ""
+    protoFileId: pf_ed00515515cd4d25bd71e9eab2cfd8ba
+    protoMethodName: /hello.HelloService/SayHello
+    metadata: []
+    body:
+      text: "{}"
+    metaSortKey: -1651484553856
+    isPrivate: false
+    _type: grpc_request
+  - _id: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
+    parentId: null
+    modified: 1651484378515
+    created: 1651484378515
+    name: Smoke gRPC
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_60264a4ba3f15b7148301c4907f8eb9068ee86d0
+    parentId: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
+    modified: 1651484378528
+    created: 1651484378528
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1651484378528
+    _type: environment
+  - _id: jar_60264a4ba3f15b7148301c4907f8eb9068ee86d0
+    parentId: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
+    modified: 1651484378532
+    created: 1651484378532
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_67f587de1d024914a311d7ba0641b476
+    parentId: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
+    modified: 1651484378520
+    created: 1651484378520
+    fileName: grpc
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: pf_ed00515515cd4d25bd71e9eab2cfd8ba
+    parentId: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
+    modified: 1651484552194
+    created: 1651484552194
+    name: hello.proto
+    protoText: |
+      syntax = "proto2";
+
+      package hello;
+
+      service HelloService {
+        rpc SayHello(HelloRequest) returns (HelloResponse);
+        rpc LotsOfReplies(HelloRequest) returns (stream HelloResponse);
+        rpc LotsOfGreetings(stream HelloRequest) returns (HelloResponse);
+        rpc BidiHello(stream HelloRequest) returns (stream HelloResponse);
+      }
+
+      message HelloRequest {
+        optional string greeting = 1;
+      }
+
+      message HelloResponse {
+        required string reply = 1;
+      }
+    _type: proto_file

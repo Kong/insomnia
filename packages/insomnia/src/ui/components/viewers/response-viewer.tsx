@@ -387,7 +387,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
-          <ResponsePDFViewer body={bodyBuffer} uniqueKey={responseId} />
+          <ResponsePDFViewer body={bodyBuffer} key={responseId} />
         </div>
       );
     }

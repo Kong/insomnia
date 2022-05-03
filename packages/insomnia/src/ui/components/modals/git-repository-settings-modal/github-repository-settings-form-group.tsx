@@ -325,6 +325,7 @@ interface GitHubSignInFormProps {
 }
 
 const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
+  const [error, setError] = useState('');
   const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
@@ -357,31 +358,48 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
             const formData = new FormData(e.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
-              const parsedURL = new URL(link);
+              let parsedURL: URL;
+              try {
+                parsedURL = new URL(link);
+              } catch (e) {
+                setError('Invalid URL');
+                return;
+              }
+
               const code = parsedURL.searchParams.get('code');
               const state = parsedURL.searchParams.get('state');
 
-              if (typeof code === 'string' && typeof state === 'string') {
-                const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
-                  code,
-                  state,
-                });
-
-                command(dispatch);
+              if (!(typeof code === 'string') || !(typeof state === 'string')) {
+                setError('Incomplete URL');
+                return;
               }
+
+              const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
+                code,
+                state,
+              });
+
+              command(dispatch);
             }
           }}
         >
           <label className="form-control form-control--outlined">
             <div>
-              If you aren't redirected to the app you can manually paste your
-              code here:
+              If you aren't redirected to the app you can manually paste the authentication url here:
             </div>
             <div className="form-row">
               <input name="link" />
               <Button name="add-token">Add</Button>
             </div>
           </label>
+          {error && (
+            <p className="notice error margin-bottom-sm">
+              <button className="pull-right icon" onClick={() => setError('')}>
+                <i className="fa fa-times" />
+              </button>
+              {error}
+            </p>
+          )}
         </form>
       )}
     </AuthorizationFormContainer>
