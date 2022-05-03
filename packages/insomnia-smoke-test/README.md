@@ -49,7 +49,7 @@ It's possible to run the smoke tests for:
 
 - A `build`, the JS bundle that is loaded into an electron client
 - A `package`, the executable binary (e.g. `.dmg` or `.exe`)
-  
+
 For `build`:
 
 ```shell
@@ -92,7 +92,7 @@ With the extension installed, in a terminal, run the watcher
 npm run watch:app
 ```
 
-You can now run and debug playwright tests, either from the `Testing` tab, or by going into one of the test files and clicking the run button.  
+You can now run and debug playwright tests, either from the `Testing` tab, or by going into one of the test files and clicking the run button.
 If no tests appear, you may need to run "Refresh playwright tests". This can be done from the command palette, or by using the button at the top of the `Testing` tab.
 
 ## Run Inso CLI smoke tests
