@@ -43,21 +43,11 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
       plugins.ignorePlugin('insomnia-plugin-kong-portal');
       const res = await send(requestId, environmentId);
-      const headersObj: Record<string, string> = {};
-
-      for (const h of res.headers || []) {
-        const name = h.name || '';
-        headersObj[name.toLowerCase()] = h.value || '';
-      }
-
+      const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
+      const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
       const bodyBuffer = await getBodyBuffer(res) as Buffer;
-      return {
-        status: res.statusCode,
-        statusMessage: res.statusMessage,
-        data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
-        headers: headersObj,
-        responseTime: res.elapsedTime,
-      };
+      const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
+      return { status, statusMessage, data, headers, responseTime };
     } finally {
       plugins.clearIgnores();
     }
