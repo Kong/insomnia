@@ -1,9 +1,8 @@
 import { expect } from '@playwright/test';
 
-//import { loadFixture } from '../playwright/paths';
 import { test } from '../playwright/test';
 
-test('can render Petstore internal example', async ({ app, page }) => {
+test('can render Petstore internal example', async ({ page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const specPreview = page.locator('.information-container');
 
@@ -15,4 +14,3 @@ test('can render Petstore internal example', async ({ app, page }) => {
 
   await expect(specPreview).toContainText('This is a sample server Petstore server');
 });
-
