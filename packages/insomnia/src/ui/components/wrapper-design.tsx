@@ -6,7 +6,12 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
-import { BaseButtonEvent, buildEventProperties, SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import {
+  BaseButtonAction,
+  buildEventProperties,
+  SegmentEvent,
+  trackSegmentEvent,
+} from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
@@ -52,7 +57,7 @@ const RenderPageHeader: FC<Pick<Props,
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
 
-    const eventProperties = buildEventProperties<BaseButtonEvent>('design preview toggle', previewHidden ? 'show' : 'hide');
+    const eventProperties = buildEventProperties<BaseButtonAction>('design preview toggle', previewHidden ? 'show' : 'hide');
     trackSegmentEvent(SegmentEvent.buttonClick, eventProperties);
   }, [activeWorkspace, previewHidden]);
 

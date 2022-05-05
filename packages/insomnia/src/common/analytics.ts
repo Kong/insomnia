@@ -93,34 +93,26 @@ interface SegmentEventProperties {
   error?: string;
 }
 
-type PushPull = 'push' | 'pull';
-export function vcsSegmentEventProperties(
-  type: 'git',
-  action: PushPull | `force_${PushPull}` |
-    'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
-    'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
-    'update' | 'setup' | 'clone',
-  error?: string
-): SegmentEventProperties {
-  return {
-    'type': type,
-    'action': action,
-    'error': error,
-  };
-}
-
-export type BaseButtonEvent = 'show' | 'hide';
-
+export type BaseButtonAction = 'show' | 'hide';
 export function buildEventProperties<T extends string>(
   type: string,
   action: T,
   error?: string
 ): SegmentEventProperties {
-  return {
-    'type': type,
-    'action': action,
-    'error': error,
-  };
+  return { type, action, error };
+}
+
+type PushPull = 'push' | 'pull';
+type VCSAction = PushPull | `force_${PushPull}` |
+  'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
+  'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
+  'update' | 'setup' | 'clone';
+export function vcsSegmentEventProperties(
+  type: 'git',
+  action: VCSAction,
+  error?: string
+): SegmentEventProperties {
+  return buildEventProperties<VCSAction>(type, action, error);
 }
 
 interface QueuedSegmentEvent {
