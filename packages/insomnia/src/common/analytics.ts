@@ -109,10 +109,7 @@ export function vcsSegmentEventProperties(
   };
 }
 
-export enum BaseButtonEvent {
-  show = 'show',
-  hide = 'hide',
-}
+export type BaseButtonEvent = 'show' | 'hide';
 
 export function buildEventProperties<T extends string>(
   type: string,

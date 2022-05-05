@@ -52,7 +52,7 @@ const RenderPageHeader: FC<Pick<Props,
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
 
-    const eventProperties = buildEventProperties<BaseButtonEvent>('design preview toggle', previewHidden ? BaseButtonEvent.show : BaseButtonEvent.hide);
+    const eventProperties = buildEventProperties<BaseButtonEvent>('design preview toggle', previewHidden ? 'show' : 'hide');
     trackSegmentEvent(SegmentEvent.buttonClick, eventProperties);
   }, [activeWorkspace, previewHidden]);
 
