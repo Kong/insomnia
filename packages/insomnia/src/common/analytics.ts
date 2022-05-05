@@ -76,8 +76,24 @@ export enum SegmentEvent {
   buttonClick = 'Button Clicked',
 }
 
-type PushPull = 'push' | 'pull';
+interface SegmentEventProperties {
+  /**
+   * TODO: what do we mean by type?
+   * */
+  type: string;
 
+  /**
+   * TODO: what do we mean by action?
+   * */
+  action: string;
+
+  /**
+   * TODO: what is this error for and where is it coming from?
+   * */
+  error?: string;
+}
+
+type PushPull = 'push' | 'pull';
 export function vcsSegmentEventProperties(
   type: 'git',
   action: PushPull | `force_${PushPull}` |
@@ -85,7 +101,24 @@ export function vcsSegmentEventProperties(
     'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
     'update' | 'setup' | 'clone',
   error?: string
-) {
+): SegmentEventProperties {
+  return {
+    'type': type,
+    'action': action,
+    'error': error,
+  };
+}
+
+export enum BaseButtonEvent {
+  show = 'show',
+  hide = 'hide',
+}
+
+export function buildEventProperties<T extends string>(
+  type: string,
+  action: T,
+  error?: string
+): SegmentEventProperties {
   return {
     'type': type,
     'action': action,

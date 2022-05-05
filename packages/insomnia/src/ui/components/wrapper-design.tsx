@@ -6,7 +6,7 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { BaseButtonEvent, buildEventProperties, SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
@@ -14,7 +14,7 @@ import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
-import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
@@ -52,13 +52,8 @@ const RenderPageHeader: FC<Pick<Props,
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
 
-    trackSegmentEvent(
-      SegmentEvent.buttonClick,
-      {
-        type: 'user_event',
-        action: `preview_button_click__previewHidden_${!previewHidden}`,
-        location: 'wrapper-design',
-      });
+    const eventProperties = buildEventProperties<BaseButtonEvent>('design preview toggle', previewHidden ? BaseButtonEvent.show : BaseButtonEvent.hide);
+    trackSegmentEvent(SegmentEvent.buttonClick, eventProperties);
   }, [activeWorkspace, previewHidden]);
 
   return (
