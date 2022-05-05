@@ -27,11 +27,15 @@ function sayHello(call, callback) {
  * Starts an RPC server that receives requests for the Greeter service at the given port
  */
 export const startGRPCServer = (port: number) => {
-  return new Promise<void>(resolve => {
+  return new Promise<void>((resolve, reject) => {
     const server = new grpc.Server();
     // @ts-expect-error generated from proto file
     server.addService(helloProto.HelloService.service, { sayHello: sayHello });
-    server.bindAsync(`localhost:${port}`, grpc.ServerCredentials.createInsecure(), () => {
+    server.bindAsync(`localhost:${port}`, grpc.ServerCredentials.createInsecure(), error => {
+      if (error) {
+        return reject(error);
+      }
+
       console.log(`Listening at grpc://localhost:${port}`);
       server.start();
       resolve();
