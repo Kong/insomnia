@@ -10,7 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  name: Release Build
   build-and-upload-release-artifacts-aarch64:
       runs-on: ubuntu-latest
       strategy:
