@@ -57,7 +57,7 @@ const RenderPageHeader: FC<Pick<Props,
       {
         type: 'user_event',
         action: `preview_button_click__previewHidden_${!previewHidden}`,
-        previewHidden: !previewHidden,
+        location: 'wrapper-design',
       });
   }, [activeWorkspace, previewHidden]);
 
