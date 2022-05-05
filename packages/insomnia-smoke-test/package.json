@@ -23,7 +23,7 @@
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
-    "serve": "concurrently -n http,grpc \"ts-node server/index.ts\" \"ts-node server/grpc.ts\"",
+    "serve": "ts-node server/index.ts",
     "test:cli": "concurrently --names server,cli --success first --kill-others \"ts-node server/index.ts\" \"npm run cli\""
   },
   "devDependencies": {
