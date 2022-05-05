@@ -73,7 +73,7 @@ export enum SegmentEvent {
   vcsSyncStart = 'VCS Sync Started',
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
-  designOutputPreviewToggle = 'Design Output Preview Toggled',
+  buttonClick = 'Button Clicked',
 }
 
 type PushPull = 'push' | 'pull';
