@@ -6,6 +6,7 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
@@ -50,6 +51,8 @@ const RenderPageHeader: FC<Pick<Props,
 
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
+
+    trackSegmentEvent(SegmentEvent.designOutputPreviewToggle, { previewHidden: !previewHidden });
   }, [activeWorkspace, previewHidden]);
 
   return (
