@@ -19,8 +19,8 @@ test('can send gRPC requests', async ({ app, page }) => {
   await page.click('button:has-text("Clipboard")');
   await page.click('text=CollectionSmoke gRPCjust now');
 
-  await page.click('button:has-text("gRPChello k6")');
+  await page.click('button:has-text("gRPCsay hi!")');
   await page.click('text=Send');
   await expect(statusTag).toContainText('0 OK');
-  await expect(responseBody).toContainText('hello noname');
+  await expect(responseBody).toContainText('"reply": "hi"');
 });
