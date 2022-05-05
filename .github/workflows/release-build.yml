@@ -11,17 +11,6 @@ concurrency:
 
 jobs:
   name: Release Build
-
-on:
-  push:
-    branches:
-      - 'release/**'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
   build-and-upload-release-artifacts-aarch64:
       runs-on: ubuntu-latest
       strategy:
