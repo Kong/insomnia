@@ -10,6 +10,69 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  name: Release Build
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload-release-artifacts-aarch64:
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - arch: aarch64
+              distro: ubuntu_latest
+              csc_link_secret: ''
+              csc_key_password_secret: ''
+      steps:
+        - name: Checkout branch
+          uses: uraimo/run-on-arch-action@v2
+          uses: actions/checkout@v3
+
+        - name: Setup Node
+          uses: actions/setup-node@v3
+          with:
+            node-version-file: '.nvmrc'
+
+        - name: Bootstrap packages
+          run: npm run bootstrap
+
+        - name: Package app
+          shell: bash
+          run: npm run app-package
+          env:
+            CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
+            CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
+
+        - name: Setup Inso CLI version env var
+          run:
+            echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
+
+        - name: Package inso
+          run: npm run inso-package
+          env:
+            VERSION: ${{ env.INSO_VERSION }}
+
+        - name: Create inso artifacts
+          run: npm run inso-package:artifacts
+
+        - name: Upload artifacts
+          uses: actions/upload-artifact@v3
+          with:
+            if-no-files-found: ignore
+            name: ${{ matrix.os }}-${{matrix.arch}}-artifacts
+            path: |
+              packages/insomnia/dist/*.deb
+              
+              
   build-and-upload-release-artifacts:
     runs-on: ${{ matrix.os }}
     strategy:
