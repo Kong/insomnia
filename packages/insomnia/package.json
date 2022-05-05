@@ -18,10 +18,10 @@
   "main": "src/main.min.js",
   "scripts": {
     "prebuild": "npm run clean",
-    "build": "npm run generate:ca-certs && npm run build:sr && npm run build:app",
+    "build": "npm run generate:ca-certs",
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
-    "build:sr": "npm run generate:ca-certs && esr esbuild.sr.ts",
+    "build:sr": "esr esbuild.sr.ts",
     "bump-version": "esr scripts/bumpVersion.ts",
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf build dist src/main.min.js",
