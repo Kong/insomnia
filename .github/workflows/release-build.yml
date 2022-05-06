@@ -24,6 +24,10 @@ jobs:
         - uses: uraimo/run-on-arch-action@v2
           with:
             run: uname -a
+
+        - name: Install updated fpm
+          run: sudo apt-get install ruby-dev build-essential && sudo gem i fpm -f
+
         - uses: actions/checkout@v3
           name: Checkout branch
 
@@ -47,12 +51,12 @@ jobs:
             echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
         - name: Package inso
-          run: npm run inso-package
+          run: USE_SYSTEM_FPM=true npm run inso-package
           env:
             VERSION: ${{ env.INSO_VERSION }}
 
         - name: Create inso artifacts
-          run: npm run inso-package:artifacts
+          run: USE_SYSTEM_FPM=true npm run inso-package:artifacts
 
         - name: Upload artifacts
           uses: actions/upload-artifact@v3
