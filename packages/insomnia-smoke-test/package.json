@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "3.0.0",
+  "version": "3.1.0-beta.0",
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -24,10 +24,11 @@
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "ts-node server/index.ts",
-    "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
-    "test:cli": "npm run with-mock \"npm run cli\""
+    "test:cli": "concurrently --names server,cli --success first --kill-others \"ts-node server/index.ts\" \"npm run cli\""
   },
   "devDependencies": {
+    "@grpc/grpc-js": "^1.6.7",
+    "@grpc/proto-loader": "^0.6.11",
     "@playwright/test": "^1.20.2",
     "@types/concurrently": "^6.0.1",
     "@types/express": "^4.17.11",

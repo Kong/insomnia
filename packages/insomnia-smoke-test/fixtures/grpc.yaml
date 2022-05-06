@@ -7,14 +7,14 @@ resources:
     parentId: wrk_b7d0b61f8cc446f9972d4cc42cdf4e2b
     modified: 1651485249670
     created: 1651484553856
-    url: grpc://grpcbin.test.k6.io:9000
-    name: hello k6
+    url: grpc://localhost:50051
+    name: say hi!
     description: ""
     protoFileId: pf_ed00515515cd4d25bd71e9eab2cfd8ba
     protoMethodName: /hello.HelloService/SayHello
     metadata: []
     body:
-      text: "{}"
+      text: '{"greeting":"hi"}'
     metaSortKey: -1651484553856
     isPrivate: false
     _type: grpc_request
