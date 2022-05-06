@@ -21,9 +21,11 @@ jobs:
               csc_link_secret: ''
               csc_key_password_secret: ''
       steps:
-        - name: Checkout branch
-          uses: uraimo/run-on-arch-action@v2
-          uses: actions/checkout@v3
+        - uses: uraimo/run-on-arch-action@v2
+          with:
+            run: uname -a
+        - uses: actions/checkout@v3
+          name: Checkout branch
 
         - name: Setup Node
           uses: actions/setup-node@v3
