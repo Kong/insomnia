@@ -15,6 +15,45 @@ concurrency:
 env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
+  build-and-upload-release-artifacts-aarch64:
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - arch: aarch64
+              distro: ubuntu_latest
+              build-targets: "deb"
+              os: ubuntu-latest
+      steps:
+        - uses: uraimo/run-on-arch-action@v2
+        - uses: actions/checkout@v3
+          name: Checkout branch
+
+        - name: Setup Node
+          uses: actions/setup-node@v3
+          with:
+            node-version-file: '.nvmrc'
+
+        - name: Bootstrap packages
+          run: npm run bootstrap
+
+        - name: Bump version
+          shell: bash
+          run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
+
+        - name: Package
+          shell: bash
+          run: BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+
+        - name: Upload artifacts
+          uses: actions/upload-artifact@v3
+          with:
+            if-no-files-found: ignore
+            name: ${{ matrix.os }}-${{matrix.arch}}-artifacts-${{ github.run_number }}
+            path: |
+              packages/insomnia/dist/*.deb
+
   build-and-upload-artifacts:
     # Skip jobs for release PRs
     if: "!startsWith(github.head_ref, 'release/')"
