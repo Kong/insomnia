@@ -28,7 +28,7 @@ jobs:
       steps:
         - uses: uraimo/run-on-arch-action@v2
           with:
-            run: echo "we are here"
+            run: uname -a
         - uses: actions/checkout@v3
           name: Checkout branch
 
