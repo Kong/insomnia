@@ -26,31 +26,23 @@ jobs:
               build-targets: "deb"
               os: ubuntu-latest
       steps:
-        - uses: uraimo/run-on-arch-action@v2
-          with:
-            run: uname -a
-        - name: Install updated fpm
-          run: sudo apt-get install ruby-dev build-essential && sudo gem i fpm -f
-          
         - uses: actions/checkout@v3
           name: Checkout branch
-
         - name: Setup Node
           uses: actions/setup-node@v3
           with:
             node-version-file: '.nvmrc'
-
-        - name: Bootstrap packages
-          run: npm run bootstrap
-
-        - name: Bump version
-          shell: bash
-          run: BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
-
-        - name: Package
-          shell: bash
-          run: uname -a && USE_SYSTEM_FPM=true BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
-
+            arch: aarch64
+            
+        - uses: uraimo/run-on-arch-action@v2
+          with:
+            run: |
+              #install fpm
+              sudo apt-get install ruby-dev build-essential && sudo gem i fpm -f
+              npm run bootstrap
+              BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
+              USE_SYSTEM_FPM=true BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+              
         - name: Upload artifacts
           uses: actions/upload-artifact@v3
           with:
