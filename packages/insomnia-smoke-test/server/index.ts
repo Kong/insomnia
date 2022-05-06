@@ -2,10 +2,12 @@ import express from 'express';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';
+import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
 
 const app = express();
 const port = 4010;
+const grpcPort = 50051;
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
@@ -42,6 +44,8 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
-app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}`);
+startGRPCServer(grpcPort).then(() => {
+  app.listen(port, () => {
+    console.log(`Listening at http://localhost:${port}`);
+  });
 });

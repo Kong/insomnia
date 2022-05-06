@@ -24,17 +24,21 @@ function sayHello(call, callback) {
 }
 
 /**
- * Starts an RPC server that receives requests for the Greeter service at the
- * sample server port
+ * Starts an RPC server that receives requests for the Greeter service at the given port
  */
-function main() {
-  const server = new grpc.Server();
-  // @ts-expect-error generated from proto file
-  server.addService(helloProto.HelloService.service, { sayHello: sayHello });
-  server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
-    console.log('Listening at grpc://0.0.0.0:50051');
-    server.start();
-  });
-}
+export const startGRPCServer = (port: number) => {
+  return new Promise<void>((resolve, reject) => {
+    const server = new grpc.Server();
+    // @ts-expect-error generated from proto file
+    server.addService(helloProto.HelloService.service, { sayHello: sayHello });
+    server.bindAsync(`localhost:${port}`, grpc.ServerCredentials.createInsecure(), error => {
+      if (error) {
+        return reject(error);
+      }
 
-main();
+      console.log(`Listening at grpc://localhost:${port}`);
+      server.start();
+      resolve();
+    });
+  });
+};
