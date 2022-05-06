@@ -27,6 +27,8 @@ jobs:
               os: ubuntu-latest
       steps:
         - uses: uraimo/run-on-arch-action@v2
+          with:
+            run: echo "we are here"
         - uses: actions/checkout@v3
           name: Checkout branch
 
