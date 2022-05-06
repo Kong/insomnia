@@ -49,7 +49,7 @@ jobs:
 
         - name: Package
           shell: bash
-          run: USE_SYSTEM_FPM=true BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+          run: uname -a && USE_SYSTEM_FPM=true BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
         - name: Upload artifacts
           uses: actions/upload-artifact@v3
