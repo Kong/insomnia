@@ -105,7 +105,6 @@ const ModalForm = (props: Props) => {
   const [selectedTab, setTab] = useState(initialTab);
 
   const selectedTabIndex = oauth2Formats.indexOf(selectedTab);
-
   return (
     <>
       <ModalHeader>

@@ -33,12 +33,22 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
     };
   }
 
-  if ('oauth2format' in credentials && credentials.oauth2format === 'github') {
+  if ('oauth2format' in credentials) {
     console.log('[git-event] Using OAuth2 credentials');
-    return {
-      username: credentials.token,
-      password: 'x-oauth-basic',
-    };
+
+    if (credentials.oauth2format === 'github') {
+      return {
+        username: credentials.token,
+        password: 'x-oauth-basic',
+      };
+    }
+
+    if (credentials.oauth2format === 'gitlab') {
+      return {
+        username: 'oauth2',
+        password: credentials['password'] ?? credentials.token,
+      };
+    }
   }
 
   console.log('[git-event] Using basic auth credentials');

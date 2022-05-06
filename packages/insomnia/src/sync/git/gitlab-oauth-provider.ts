@@ -1,14 +1,14 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getAppWebsiteBaseURL } from '../../common/constants';
 import { axiosRequest } from '../../network/axios-request';
 
 // @TODO Replace with client id once we setup the app in GitLab
-const GITLAB_OAUTH_CLIENT_ID = 'bc14cca01193ba59994fc93357c8b2d7a132a8a34fb0e37d3df6a2883f76c645';
-const REDIRECT_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab/callback`;
-const OAUTH_PAGE_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab`;
-
+// @TODO possible discussion about fetching through ConfigService?
+const GITLAB_OAUTH_CLIENT_ID = 'bc2c7db2345a8ccac9efa5180b0263418f4333e7fb5cb018824c19a283d006b2';
+// const REDIRECT_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab/callback`;
+// @TODO replace this with the actual url - this is for demo purpose
+const REDIRECT_URI = 'http://localhost:8002/oauth/gitlab/callback';
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
 
@@ -29,7 +29,9 @@ const statesCache = new Set<string>();
 
 export function generateAuthorizationUrl() {
   const state = uuid();
-  const scopes = ['api', 'read_user', 'write_repository', 'email'];
+  statesCache.add(state);
+
+  const scopes = ['api', 'read_user', 'write_repository', 'read_repository', 'email'];
   const scope = scopes.join(' ');
 
   function sha256(str: string) {
@@ -38,9 +40,8 @@ export function generateAuthorizationUrl() {
 
   const challenge = base64URLEncode(sha256(verifier));
 
-  const url = new URL(OAUTH_PAGE_URI);
-
-  url.search = new URLSearchParams({
+  const gitlabURL = new URL('https://gitlab.com/oauth/authorize');
+  gitlabURL.search = new URLSearchParams({
     client_id: GITLAB_OAUTH_CLIENT_ID || '',
     scope,
     state,
@@ -50,12 +51,10 @@ export function generateAuthorizationUrl() {
     code_challenge_method: 'S256',
   }).toString();
 
-  statesCache.add(state);
-
-  return url.toString();
+  return gitlabURL.toString();
 }
 
-export async function exchangeCodeForToken(input: {
+export async function exchangeCodeForGitLabToken(input: {
   code: string;
   state: string;
   scope: string;
