@@ -29,6 +29,9 @@ jobs:
         - uses: uraimo/run-on-arch-action@v2
           with:
             run: uname -a
+        - name: Install updated fpm
+          run: sudo apt-get install ruby-dev build-essential && sudo gem i fpm -f
+          
         - uses: actions/checkout@v3
           name: Checkout branch
 
@@ -46,7 +49,7 @@ jobs:
 
         - name: Package
           shell: bash
-          run: BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+          run: USE_SYSTEM_FPM=true BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
         - name: Upload artifacts
           uses: actions/upload-artifact@v3
