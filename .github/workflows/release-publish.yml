@@ -168,7 +168,7 @@ jobs:
           DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
           DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_REGISTRY_USER }}
           DOCKER_REGISTRY: docker.io
-          DOCKER_IMAGE: kongcloud/insomnia-inso
+          DOCKER_IMAGE: kong/inso
           DOCKER_LATEST_TAG: ${{ env.IS_PRERELEASE == 'false' && 'latest' || contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }}
 
       - name: Configure Git user
