@@ -19,6 +19,7 @@ export const GrpcStatusTag: FC<Props> = memo(({ statusMessage, statusCode, small
       className={classnames('tag', colorClass, {
         'tag--small': small,
       })}
+      data-testid="response-status-tag"
     >
       <Tooltip message={message} position="bottom" delay={tooltipDelay}>
         <strong>{statusCode} </strong>

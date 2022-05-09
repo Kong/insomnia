@@ -1,4 +1,4 @@
-import { BaseModel, stats, types as modelTypes } from '../models';
+import { BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import { getBodyBuffer } from '../models/response';
 import { Settings } from '../models/settings';
@@ -38,39 +38,18 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
 
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
-    return sendAndTransform(requestId, environmentId);
-  };
-}
-
-export function getSendRequestCallback(environmentId?: string) {
-  return async function sendRequest(requestId: string) {
-    stats.incrementExecutedRequests();
-    return sendAndTransform(requestId, environmentId);
-  };
-}
-
-async function sendAndTransform(requestId: string, environmentId?: string) {
-  try {
-    plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
-    plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
-    plugins.ignorePlugin('insomnia-plugin-kong-portal');
-    const res = await send(requestId, environmentId);
-    const headersObj: Record<string, string> = {};
-
-    for (const h of res.headers || []) {
-      const name = h.name || '';
-      headersObj[name.toLowerCase()] = h.value || '';
+    try {
+      plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
+      plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
+      plugins.ignorePlugin('insomnia-plugin-kong-portal');
+      const res = await send(requestId, environmentId);
+      const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
+      const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
+      const bodyBuffer = await getBodyBuffer(res) as Buffer;
+      const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
+      return { status, statusMessage, data, headers, responseTime };
+    } finally {
+      plugins.clearIgnores();
     }
-
-    const bodyBuffer = await getBodyBuffer(res) as Buffer;
-    return {
-      status: res.statusCode,
-      statusMessage: res.statusMessage,
-      data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
-      headers: headersObj,
-      responseTime: res.elapsedTime,
-    };
-  } finally {
-    plugins.clearIgnores();
-  }
+  };
 }

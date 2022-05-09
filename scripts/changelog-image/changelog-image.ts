@@ -1,7 +1,6 @@
 import { promises } from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 import { optimize, OptimizedSvg } from 'svgo';
-import { dynamicImport } from 'tsimportlib';
 const { readFile, writeFile } = promises;
 import { version as appConfigVersion } from '../../packages/insomnia/package.json';
 
@@ -15,7 +14,7 @@ async function renderImage() {
 
   if (appConfigVersion.includes('beta')) {
     type = 'beta';
-    const appConfigRevision = appConfigVersion.match(/^\d{4}\.\d+\.\d-beta\.(\d+)/);
+    const appConfigRevision = appConfigVersion.match(/^\d{4}\.\d+\.\d+-beta\.(\d+)/);
     if (!appConfigRevision) {
       throw new Error('Invalid app version beta revision');
     }
@@ -25,7 +24,7 @@ async function renderImage() {
   }
 
   // Ignore any semver prerelease/build tags
-  const cleanedAppConfigVersion = appConfigVersion.match(type === 'major' ? /^(\d{4}\.\d+)/ : /^(\d{4}\.\d+\.\d)/);
+  const cleanedAppConfigVersion = appConfigVersion.match(type === 'major' ? /^(\d{4}\.\d+)/ : /^(\d{4}\.\d+\.\d+)/);
   if (!cleanedAppConfigVersion) {
     throw new Error('Invalid app version');
   }
@@ -33,7 +32,7 @@ async function renderImage() {
 
   const sourceFile = await readFile(pathJoin(__dirname, `images/${type}.svg`), { encoding: 'utf-8' });
 
-  const { getSvgElement } = await dynamicImport('svg-text-to-path', module) as typeof import('svg-text-to-path');
+  const { getSvgElement } = await import('svg-text-to-path');
   const image = getSvgElement(sourceFile);
   if (!image) {
     throw new Error('Failed parsing input image');
@@ -111,7 +110,7 @@ const fontMap: {
 };
 
 async function renderSVG(svgData: string) {
-  const { replaceAllInString } = await dynamicImport('svg-text-to-path', module) as typeof import('svg-text-to-path');
+  const { replaceAllInString } = await import('svg-text-to-path');
   const convertedTextToPathsSvgData = await replaceAllInString(svgData, {
     onFontNotFound: 'error',
     handlers: [

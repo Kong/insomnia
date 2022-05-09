@@ -1,6 +1,3 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "ts-node": {
-    "files": true
-  }
+  "extends": "../../tsconfig.base.json"
 }
