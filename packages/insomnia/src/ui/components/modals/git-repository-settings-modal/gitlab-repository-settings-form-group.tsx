@@ -89,6 +89,7 @@ const GitLabUserInfoQuery = `
     currentUser {
       publicEmail
       name
+      avatarUrl
     }
   }
 `;
@@ -97,6 +98,7 @@ interface GitLabUserInfoQueryResult {
   currentUser: {
     publicEmail: string;
     name: string;
+    avatarUrl: string;
   };
 }
 
@@ -265,9 +267,7 @@ const GitLabRepositoryForm = ({
       )}
       <AccountViewContainer>
         <AccountDetails>
-          <Avatar
-            src={''}
-          />
+          <Avatar src={user?.avatarUrl ?? ''} />
           <Details>
             <span
               style={{
