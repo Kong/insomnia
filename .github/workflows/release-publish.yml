@@ -155,6 +155,22 @@ jobs:
           entrypoint: python3
           args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
 
+      - name: Push Inso CLI docker image tags to Docker Hub
+        run: |
+          echo -n $DOCKER_REGISTRY_TOKEN | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin $DOCKER_REGISTRY
+          docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
+          docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
+          docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
+          docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
+
+        env:
+          DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_REGISTRY_USER }}
+          DOCKER_REGISTRY: docker.io
+          DOCKER_IMAGE: kong/inso
+          DOCKER_LATEST_TAG: ${{ env.IS_PRERELEASE == 'false' && 'latest' || contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }}
+
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@master
         with:
