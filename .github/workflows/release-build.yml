@@ -95,6 +95,12 @@ jobs:
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
 
+      - name: Create Docker Image artifacts
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          DOCKER_BUILDKIT=1 docker build --tag insomnia-inso:temp ./packages/insomnia-inso/
+          docker save insomnia-inso:temp -o ./packages/insomnia-inso/artifacts/inso-docker-image.tar
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
