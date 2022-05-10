@@ -3,7 +3,9 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import { stat, writeFile } from 'fs/promises';
 import mkdirp from 'mkdirp';
+import os from 'os';
 import path from 'path';
+import tls from 'tls';
 
 import appConfig from '../config/config.json';
 import { version } from '../package.json';
@@ -20,7 +22,6 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
-import caCerts from './network/ca_certs';
 import { cancelCurlRequest, curlRequest } from './network/libcurl-promise';
 import { authorizeUserInWindow } from './network/o-auth-2/misc';
 import installPlugin from './plugins/install';
@@ -47,16 +48,6 @@ if (envDataPath) {
   const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : appConfig.userDataFolder);
   app.setPath('userData', newPath);
 }
-
-const baseCAPath = path.join(app.getPath('temp'), `insomnia_${version}`);
-const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
-stat(fullCAPath)
-  .then(() => console.log('[net] CA found at', fullCAPath))
-  .catch(() => {
-    mkdirp.sync(baseCAPath);
-    writeFile(fullCAPath, String(caCerts));
-    console.log('[net] Set CA to', fullCAPath);
-  });
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
@@ -104,8 +95,27 @@ app.on('ready', async () => {
   // Init the rest
   await updates.init();
   grpcIpcMain.init();
+  await ensureCaCertIsWrittenToTemp();
 });
 
+// NOTE: in order to provide a ca certificate to make requests,
+// at build time ca_certs.ts is generated containing root certificates,
+// at app start this is copied into a temp folder named to match insomnia version,
+// in order to be loaded into
+const ensureCaCertIsWrittenToTemp = async () => {
+  // TODO: use os.tmpdir or app.getpath?
+  console.log('what am I?', os.tmpdir(), app.getPath('temp'));
+  const baseCAPath = path.join(app.getPath('temp'), `insomnia_${version}`);
+  const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
+  try {
+    await stat(fullCAPath);
+    console.log('[net] CA found at', fullCAPath);
+  } catch {
+    mkdirp.sync(baseCAPath);
+    await writeFile(fullCAPath, tls.rootCertificates.join('\n'));
+    console.log('[net] Set CA to', fullCAPath);
+  }
+};
 // Set as default protocol
 const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;
@@ -277,8 +287,12 @@ async function _trackStats() {
   });
 
   ipcMain.handle('writeFile', async (_, options) => {
-    await writeFile(options.path, options.content);
-    return options.path;
+    try {
+      await writeFile(options.path, options.content);
+      return options.path;
+    } catch (err) {
+      throw new Error(err);
+    }
   });
 
   ipcMain.handle('curlRequest', (_, options) => {
