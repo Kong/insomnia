@@ -7,9 +7,7 @@ if (process.type === 'renderer') {
 import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
-import { stat, writeFile } from 'fs/promises';
 import mkdirp from 'mkdirp';
-import os from 'os';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import tls from 'tls';
