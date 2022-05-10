@@ -76,19 +76,26 @@ export enum SegmentEvent {
   buttonClick = 'Button Clicked',
 }
 
-export interface SegmentEventProperties {
+/**
+ * You may refer to this Segment API Document - https://segment.com/docs/connections/spec/track/#properties
+ * to understand what 'event properties' is for.
+ *
+ * The following properties are custom defined attributes for our own metrics purpose to help
+ * ourselves to make product decisions
+ */
+interface SegmentEventProperties {
   /**
-   * TODO: what do we mean by type?
+   * a sub category of an event, useful for analytics querying
    * */
   type: string;
 
   /**
-   * TODO: what do we mean by action?
+   * a short description clarifying the specific action the user took
    * */
   action: string;
 
   /**
-   * TODO: what is this error for and where is it coming from?
+   * any error message as a consequence of the event
    * */
   error?: string;
 }

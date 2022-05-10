@@ -6,13 +6,7 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
-import {
-  BaseButtonAction,
-  buildEventProperties,
-  SegmentEvent,
-  SegmentEventProperties,
-  trackSegmentEvent,
-} from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
