@@ -94,15 +94,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
-    const baseCAPath = path.join(os.tmpdir(), `insomnia_${version}`);
-    const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
-    try {
-      await stat(fullCAPath);
-    } catch {
-      mkdirp.sync(baseCAPath);
-      await writeFile(fullCAPath, tls.rootCertificates.join('\n'));
-    }
-    curl.setOpt(Curl.option.CAINFO, fullCAPath);
+    curl.setOpt(Curl.option.CAINFO_BLOB, tls.rootCertificates.join('\n'));
 
     certificates.forEach(validCert => {
       const { passphrase, cert, key, pfx } = validCert;
