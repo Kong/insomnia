@@ -14,6 +14,7 @@ import { applyColorScheme } from '../plugins/misc';
 import App from './containers/app';
 import { init as initStore } from './redux/modules';
 import { initializeSentry } from './sentry';
+import { MemoryRouter as Router } from 'react-router-dom';
 
 import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
 
@@ -42,7 +43,9 @@ document.title = getProductName();
   const render = App => {
     ReactDOM.render(
       <Provider store={store}>
-        <App />
+        <Router>
+          <App />
+        </Router>
       </Provider>,
       document.getElementById('root'),
     );
