@@ -25,7 +25,15 @@ paths:
       responses:
         '200':
           description: OK
-  /oauth2/authorization-code-with-scopes:
+  /oauth2/authorization-code-read:
+    get:
+      security:
+        - OAuth2-AuthorizationCode:
+            - read:something
+      responses:
+        '200':
+          description: OK
+  /oauth2/authorization-code-read-write:
     get:
       security:
         - OAuth2-AuthorizationCode:
