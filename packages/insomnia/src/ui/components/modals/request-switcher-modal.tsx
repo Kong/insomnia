@@ -8,7 +8,7 @@ import { bindActionCreators } from 'redux';
 import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import { keyboardKeys } from '../../../common/keyboard-keys';
+import { isEventKey, keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -86,23 +86,19 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     title: null,
   };
 
-  _handleInputKeydown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const keyCode = e.keyCode;
-
-    if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
-      // Up or Shift+Tab
+  _handleInputKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const isKey = isEventKey(event as unknown as KeyboardEvent);
+    if (isKey('uparrow') || (isKey('tab') && event.shiftKey)) {
       this._setActiveIndex(this.state.activeIndex - 1);
-    } else if (keyCode === 40 || keyCode === 9) {
-      // Down or Tab
+    } else if (isKey('downarrow') || isKey('tab')) {
       this._setActiveIndex(this.state.activeIndex + 1);
-    } else if (keyCode === 13) {
-      // Enter
+    } else if (isKey('enter')) {
       this._activateCurrentIndex();
     } else {
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
   }
 
   _setModalRef(n: Modal) {
@@ -361,20 +357,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
   }
 
-  _handleKeydown(event: KeyboardEvent) {
+  _handleKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
     }
 
     // Only control up/down with tab if modal is visible
-    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex + 1);
       }
     });
     // Only control up/down with tab if modal is visible
-    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex - 1);
       }
