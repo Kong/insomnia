@@ -9,6 +9,7 @@ import electron from 'electron';
 import fs from 'fs';
 import { stat } from 'fs/promises';
 import mkdirp from 'mkdirp';
+import os from 'os';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import { ValueOf } from 'type-fest';
@@ -92,7 +93,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
-    const fullCAPath = path.join(electron.app.getPath('temp'), `insomnia_${version}`, 'ca-certs.pem');
+    const fullCAPath = path.join(os.tmpdir(), `insomnia_${version}`, 'ca-certs.pem');
     try {
       await stat(fullCAPath);
       curl.setOpt(Curl.option.CAINFO, fullCAPath);

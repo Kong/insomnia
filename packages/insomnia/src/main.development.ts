@@ -98,14 +98,8 @@ app.on('ready', async () => {
   await ensureCaCertIsWrittenToTemp();
 });
 
-// NOTE: in order to provide a ca certificate to make requests,
-// at build time ca_certs.ts is generated containing root certificates,
-// at app start this is copied into a temp folder named to match insomnia version,
-// in order to be loaded into
 const ensureCaCertIsWrittenToTemp = async () => {
-  // TODO: use os.tmpdir or app.getpath?
-  console.log('what am I?', os.tmpdir(), app.getPath('temp'));
-  const baseCAPath = path.join(app.getPath('temp'), `insomnia_${version}`);
+  const baseCAPath = path.join(os.tmpdir(), `insomnia_${version}`);
   const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
   try {
     await stat(fullCAPath);
