@@ -76,7 +76,7 @@ export enum SegmentEvent {
   buttonClick = 'Button Clicked',
 }
 
-interface SegmentEventProperties {
+export interface SegmentEventProperties {
   /**
    * TODO: what do we mean by type?
    * */
@@ -93,15 +93,6 @@ interface SegmentEventProperties {
   error?: string;
 }
 
-export type BaseButtonAction = 'show' | 'hide';
-export function buildEventProperties<T extends string>(
-  type: string,
-  action: T,
-  error?: string
-): SegmentEventProperties {
-  return { type, action, error };
-}
-
 type PushPull = 'push' | 'pull';
 type VCSAction = PushPull | `force_${PushPull}` |
   'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
@@ -112,7 +103,7 @@ export function vcsSegmentEventProperties(
   action: VCSAction,
   error?: string
 ): SegmentEventProperties {
-  return buildEventProperties<VCSAction>(type, action, error);
+  return { type, action, error };
 }
 
 interface QueuedSegmentEvent {

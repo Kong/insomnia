@@ -10,6 +10,7 @@ import {
   BaseButtonAction,
   buildEventProperties,
   SegmentEvent,
+  SegmentEventProperties,
   trackSegmentEvent,
 } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -57,8 +58,10 @@ const RenderPageHeader: FC<Pick<Props,
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
 
-    const eventProperties = buildEventProperties<BaseButtonAction>('design preview toggle', previewHidden ? 'show' : 'hide');
-    trackSegmentEvent(SegmentEvent.buttonClick, eventProperties);
+    trackSegmentEvent(SegmentEvent.buttonClick, {
+      type: 'design preview toggle',
+      action: previewHidden ? 'show' : 'hide',
+    });
   }, [activeWorkspace, previewHidden]);
 
   return (
