@@ -1,14 +1,10 @@
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import { stat, writeFile } from 'fs/promises';
-import mkdirp from 'mkdirp';
-import os from 'os';
+import {  writeFile } from 'fs/promises';
 import path from 'path';
-import tls from 'tls';
 
 import appConfig from '../config/config.json';
-import { version } from '../package.json';
 import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
@@ -95,21 +91,8 @@ app.on('ready', async () => {
   // Init the rest
   await updates.init();
   grpcIpcMain.init();
-  await ensureCaCertIsWrittenToTemp();
 });
 
-const ensureCaCertIsWrittenToTemp = async () => {
-  const baseCAPath = path.join(os.tmpdir(), `insomnia_${version}`);
-  const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
-  try {
-    await stat(fullCAPath);
-    console.log('[net] CA found at', fullCAPath);
-  } catch {
-    mkdirp.sync(baseCAPath);
-    await writeFile(fullCAPath, tls.rootCertificates.join('\n'));
-    console.log('[net] Set CA to', fullCAPath);
-  }
-};
 // Set as default protocol
 const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;

@@ -7,11 +7,12 @@ if (process.type === 'renderer') {
 import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
-import { stat } from 'fs/promises';
+import { stat, writeFile } from 'fs/promises';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 import { Readable, Writable } from 'stream';
+import tls from 'tls';
 import { ValueOf } from 'type-fest';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
@@ -93,16 +94,15 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
-    const fullCAPath = path.join(os.tmpdir(), `insomnia_${version}`, 'ca-certs.pem');
+    const baseCAPath = path.join(os.tmpdir(), `insomnia_${version}`);
+    const fullCAPath = path.join(baseCAPath, 'ca-certs.pem');
     try {
       await stat(fullCAPath);
-      curl.setOpt(Curl.option.CAINFO, fullCAPath);
-    } catch (_) {
-      const isElectronMain = process?.type === 'browser';
-      if (isElectronMain) {
-        throw new Error(`Missing CA Cert at ${fullCAPath}`);
-      }
+    } catch {
+      mkdirp.sync(baseCAPath);
+      await writeFile(fullCAPath, tls.rootCertificates.join('\n'));
     }
+    curl.setOpt(Curl.option.CAINFO, fullCAPath);
 
     certificates.forEach(validCert => {
       const { passphrase, cert, key, pfx } = validCert;
