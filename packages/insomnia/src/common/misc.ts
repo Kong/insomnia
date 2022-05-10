@@ -132,18 +132,25 @@ export function formatMethodName(method: string) {
   return methodName;
 }
 
-export function keyedDebounce<T extends Function>(callback: T, millis: number = DEBOUNCE_MILLIS): T {
-  let timeout;
-  let results = {};
-  // @ts-expect-error -- TSCONVERSION
-  const t: T = function(key, ...args) {
+export function keyedDebounce<T>(
+  callback: (t: Record<string, T[]>) => void,
+  millis: number = DEBOUNCE_MILLIS
+) {
+  let timeout: NodeJS.Timeout;
+  let results: Record<string, T[]> = {};
+  const t = function(key: string, ...args: T[]) {
     results[key] = args;
-    clearTimeout(timeout);
+    console.log('inside', results);
+    if (timeout) {
+      console.log('clearing', timeout);
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(() => {
+      console.log('calling', results);
       if (!Object.keys(results).length) {
+        console.log('early return'.repeat(100));
         return;
       }
-
       callback(results);
       results = {};
     }, millis);

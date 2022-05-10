@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
@@ -9,13 +10,9 @@ import * as models from '../../models';
 describe('migrate()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    Date.now = jest.fn(() => 1234567890);
-    jest.useFakeTimers();
-  });
-
-  afterEach(async () => {
-    // Reset to real timers so that other test suites don't fail.
-    jest.useRealTimers();
+    jest.useFakeTimers({
+      now: 1234567890,
+    });
   });
 
   it('migrates utf8 body correctly', async () => {
@@ -62,7 +59,6 @@ describe('migrate()', () => {
       body: '',
     };
     const newModel = await models.initModel(models.response.type, initialModel);
-    jest.runAllTimers();
     jest.runAllTimers();
     const expectedBodyPath = path.join(
       getDataDirectory(),

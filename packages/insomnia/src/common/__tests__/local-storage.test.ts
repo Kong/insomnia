@@ -9,7 +9,6 @@ jest.spyOn(global, 'setTimeout');
 describe('LocalStorage()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    jest.useFakeTimers();
   });
 
   afterEach(() => {
@@ -87,6 +86,7 @@ describe('LocalStorage()', () => {
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar');
 
+    jest.runOnlyPendingTimers();
     // Assert timeouts are called
     expect(setTimeout).toHaveBeenCalledTimes(1);
     expect(setTimeout).toHaveBeenCalledWith(expect.anything(), 100);
