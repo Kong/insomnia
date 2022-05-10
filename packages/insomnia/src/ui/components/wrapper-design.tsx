@@ -6,6 +6,7 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
@@ -13,7 +14,7 @@ import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
-import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
@@ -50,6 +51,11 @@ const RenderPageHeader: FC<Pick<Props,
 
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
+
+    trackSegmentEvent(SegmentEvent.buttonClick, {
+      type: 'design preview toggle',
+      action: previewHidden ? 'show' : 'hide',
+    });
   }, [activeWorkspace, previewHidden]);
 
   return (
