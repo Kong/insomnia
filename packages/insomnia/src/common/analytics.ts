@@ -84,9 +84,6 @@ export enum SegmentEvent {
  * ourselves to make product decisions
  */
 interface SegmentEventProperties {
-  /**
-   * a sub category of an event, useful for analytics querying
-   * */
   type: string;
 
   /**
@@ -95,7 +92,7 @@ interface SegmentEventProperties {
   action: string;
 
   /**
-   * any error message as a consequence of the event
+   * a description of an error that occured as a result of the user action
    * */
   error?: string;
 }
