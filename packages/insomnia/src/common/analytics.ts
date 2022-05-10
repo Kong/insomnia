@@ -80,8 +80,7 @@ export enum SegmentEvent {
  * You may refer to this Segment API Document - https://segment.com/docs/connections/spec/track/#properties
  * to understand what 'event properties' is for.
  *
- * The following properties are custom defined attributes for our own metrics purpose to help
- * ourselves to make product decisions
+ * The following properties are custom defined attributes for our own metrics purpose to help ourselves to make product decisions
  */
 interface SegmentEventProperties {
   type: string;
