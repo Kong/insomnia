@@ -136,6 +136,10 @@ export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https
 // GitHub API
 export const getGitHubGraphQLApiURL = () => env.INSOMNIA_GITHUB_API_URL || 'https://api.github.com/graphql';
 
+// GitLab API
+export const getGitLabOauthApiURL = () => env.INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
+export const getGitLabClientId = () => env.INSOMNIA_GITLAB_CLIENT_ID || 'bc2c7db2345a8ccac9efa5180b0263418f4333e7fb5cb018824c19a283d006b2';
+
 // SYNC
 export const DEFAULT_BRANCH_NAME = 'master';
 

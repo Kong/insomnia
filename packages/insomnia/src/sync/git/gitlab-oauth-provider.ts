@@ -1,16 +1,18 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
+import { getAppWebsiteBaseURL, getGitLabClientId, getGitLabOauthApiURL } from '../../common/constants';
 import { axiosRequest } from '../../network/axios-request';
 
 // @TODO Replace with client id once we setup the app in GitLab
 // @TODO possible discussion about fetching through ConfigService?
-const GITLAB_OAUTH_CLIENT_ID = 'bc2c7db2345a8ccac9efa5180b0263418f4333e7fb5cb018824c19a283d006b2';
-// const REDIRECT_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab/callback`;
-// @TODO replace this with the actual url - this is for demo purpose
-const REDIRECT_URI = 'http://localhost:8002/oauth/gitlab/callback';
+const GITLAB_OAUTH_CLIENT_ID = getGitLabClientId();
+const REDIRECT_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab/callback`;
+
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
+
+export const GITLAB_API_URL = getGitLabOauthApiURL();
 
 function base64URLEncode(buffer: Buffer) {
   return buffer.toString('base64')
@@ -40,7 +42,8 @@ export function generateAuthorizationUrl() {
 
   const challenge = base64URLEncode(sha256(verifier));
 
-  const gitlabURL = new URL('https://gitlab.com/oauth/authorize');
+  const gitlabURL = new URL(`${GITLAB_API_URL}/oauth/authorize`);
+  console.log(gitlabURL);
   gitlabURL.search = new URLSearchParams({
     client_id: GITLAB_OAUTH_CLIENT_ID || '',
     scope,
@@ -66,7 +69,7 @@ export async function exchangeCodeForGitLabToken(input: {
     );
   }
 
-  const url = new URL('https://gitlab.com/oauth/token');
+  const url = new URL(`${GITLAB_API_URL}/oauth/token`);
 
   url.search = new URLSearchParams({
     code,
@@ -97,7 +100,7 @@ export async function refreshToken() {
     throw new Error('No refresh token');
   }
 
-  const url = new URL('https://gitlab.com/oauth/token');
+  const url = new URL(`${GITLAB_API_URL}/oauth/token`);
 
   url.search = new URLSearchParams({
     grant_type: 'refresh_token',
