@@ -43,7 +43,6 @@ export function generateAuthorizationUrl() {
   const challenge = base64URLEncode(sha256(verifier));
 
   const gitlabURL = new URL(`${GITLAB_API_URL}/oauth/authorize`);
-  console.log(gitlabURL);
   gitlabURL.search = new URLSearchParams({
     client_id: GITLAB_OAUTH_CLIENT_ID || '',
     scope,
@@ -70,7 +69,6 @@ export async function exchangeCodeForGitLabToken(input: {
   }
 
   const url = new URL(`${GITLAB_API_URL}/oauth/token`);
-
   url.search = new URLSearchParams({
     code,
     state,

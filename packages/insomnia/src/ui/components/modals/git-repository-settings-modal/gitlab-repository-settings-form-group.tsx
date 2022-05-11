@@ -17,6 +17,7 @@ import {
   newCommand,
 } from '../../../redux/modules/global';
 import { showAlert } from '..';
+import { getGitLabOauthApiURL } from '../../../../common/constants';
 
 interface Props {
   uri?: string;
@@ -202,7 +203,7 @@ const GitLabRepositoryForm = ({
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        url: 'https://gitlab.com/api/graphql',
+        url: `${getGitLabOauthApiURL()}/api/graphql`,
       })
         .then(({ data, errors }) => {
           if (isMounted) {
