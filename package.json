@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.4.0",
-    "@jest/types": "^28.0.2",
+    "@jest/types": "^28.0.3",
     "@jest/globals": "^28.0.3",
     "@types/node": "^17.0.21",
     "@types/svgo": "^2.6.3",
