@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { OA3Operation } from '../types';
 import { DCRoute, DCService } from '../types/declarative-config';
 import { xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types/kong';

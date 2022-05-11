@@ -1,13 +1,13 @@
+import { describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 
 import { generate, generateFromSpec, generateFromString, parseSpec } from './generate';
-import { K8sKongIngress } from './types/kubernetes-config';
 import { OpenApi3Spec } from './types/openapi3';
 import { DeclarativeConfigResult, KongForKubernetesResult } from './types/outputs';
 
-const firstK8sDocument: K8sKongIngress = {
+const firstK8sDocument = {
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongIngress',
   metadata: {

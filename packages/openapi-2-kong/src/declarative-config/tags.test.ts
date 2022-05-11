@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { KeyAuthPlugin, xKongPluginKeyAuth } from '../types/kong';
 import { getSpec, tags } from './jest/test-helpers';
 import { generatePlugins } from './plugins';
