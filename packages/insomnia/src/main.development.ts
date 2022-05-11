@@ -1,7 +1,7 @@
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import {  writeFile } from 'fs/promises';
+import { writeFile } from 'fs/promises';
 import path from 'path';
 
 import appConfig from '../config/config.json';
