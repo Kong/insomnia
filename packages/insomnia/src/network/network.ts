@@ -171,7 +171,7 @@ export async function _actuallySend(
       // add set-cookie headers to file(cookiejar) and database
       if (settingStoreCookies) {
         // supports many set-cookies over many redirects
-        const redirects: string[][] = headerResults.map(getSetCookiesFromResponseHeaders);
+        const redirects: string[][] = headerResults.map(({ headers }) => getSetCookiesFromResponseHeaders(headers));
         const setCookieStrings: string[] = redirects.flat();
         const totalSetCookies = setCookieStrings.length;
         if (totalSetCookies) {
