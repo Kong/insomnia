@@ -18,17 +18,10 @@
       "parentId": "__GRP_1__",
       "url": "https://insomnia.rest?foo=bar",
       "name": "Test Request",
+      "parameters": [],
       "description": "",
       "method": "GET",
       "body": {},
-      "parameters": [
-        {
-          "comment": "baz",
-          "disabled": false,
-          "name": "foo",
-          "value": "bar"
-        }
-      ],
       "headers": [],
       "authentication": {}
     }

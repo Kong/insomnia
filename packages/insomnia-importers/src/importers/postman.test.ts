@@ -30,16 +30,6 @@ describe('postman', () => {
     ],
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
-  describe('query params', () => {
-    it.skip('should not duplicate query params in the url', () => {
-      const schema = postmanSchema({
-      });
-      const postman = new ImportPostman(schema).importCollection();
-      const { url } = postman[0];
-      expect(url).toEqual('');
-    });
-  });
-
   describe('headers', () => {
     describe('awsv4', () => {
       it('should not duplicate headers', () => {

@@ -125,7 +125,6 @@ export class ImportPostman {
       })),
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
-      parameters: this.importQueryParams(request.url),
     };
   };
 
@@ -171,34 +170,10 @@ export class ImportPostman {
       return url.raw;
     }
 
-    if (typeof url === 'object' && url.host && url.protocol && url.path) {
-      return url.protocol + '://' + url.host + url.path;
-    }
     if (typeof url === 'string') {
       return url;
     }
     return '';
-  };
-
-  importQueryParams = (url?: Url) => {
-    let QueryParams : Parameter[] = [];
-
-    if (!url) {
-      return QueryParams;
-    }
-
-    if (typeof url === 'object' && url.query) {
-      QueryParams = url.query.map(param => ({
-        name: param.key ? param.key : '',
-        ...(param.value ? { value: param.value } : {}),
-        disabled: param.disabled || false,
-        comment: param.description as string,
-      }));
-
-      return QueryParams;
-    }
-
-    return QueryParams;
   };
 
   importBody = (body: Body, contentType? : string): ImportRequest['body'] => {

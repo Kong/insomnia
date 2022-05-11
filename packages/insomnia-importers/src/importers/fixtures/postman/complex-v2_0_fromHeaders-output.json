@@ -46,15 +46,9 @@
       ],
       "method": "GET",
       "name": "Return the complete project hierarchy.",
-      "parameters": [
-        {
-          "comment": "The ID of the team to list projects for. Can be omitted to list the user's private projects. See [Return a list containing all the teams you are a member of.](#return-a-list-containing-all-the-teams-you-are-a-member-of) for obtaining a team ID to provide here.",
-          "disabled": true,
-          "name": "team_id"
-        }
-      ],
+      "parameters": [],
       "parentId": "__GRP_2__",
-      "url": "https://web.timingapp.com/api/v1/projects/hierarchy"
+      "url": ""
     },
     {
       "_id": "__REQ_2__",
@@ -84,27 +78,9 @@
       ],
       "method": "GET",
       "name": "Return a list containing all projects.",
-      "parameters": [
-        {
-          "comment": "Filter for projects whose title contains all words in this parameter. The search is case-insensitive but diacritic-sensitive.",
-          "disabled": false,
-          "name": "title",
-          "value": "root"
-        },
-        {
-          "comment": "If set to `true`, archived projects and their children will not be included in the result.",
-          "disabled": false,
-          "name": "hide_archived",
-          "value": "true"
-        },
-        {
-          "comment": "The ID of the team to list projects for. Can be omitted to list the user's private projects. See [Return a list containing all the teams you are a member of.](#return-a-list-containing-all-the-teams-you-are-a-member-of) for obtaining a team ID to provide here.",
-          "disabled": true,
-          "name": "team_id"
-        }
-      ],
+      "parameters": [],
       "parentId": "__GRP_2__",
-      "url": "https://web.timingapp.com/api/v1/projects"
+      "url": ""
     },
     {
       "_id": "__REQ_3__",
@@ -134,7 +110,7 @@
       "name": "Create a new project.",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "url": "https://web.timingapp.com/api/v1/projects"
+      "url": ""
     },
     {
       "_id": "__REQ_4__",
@@ -164,7 +140,7 @@
       "name": "Display the specified project.",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "url": "https://web.timingapp.com/api/v1/projects/:project"
+      "url": ""
     },
     {
       "_id": "__REQ_5__",
@@ -204,7 +180,7 @@
       "name": "Update the specified project.",
       "parameters": [],
       "parentId": "__GRP_2__",
-      "url": "https://web.timingapp.com/api/v1/projects/:project"
+      "url": ""
     }
   ]
 }
