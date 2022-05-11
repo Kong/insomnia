@@ -52,12 +52,7 @@
         ]
       },
       "parameters": [],
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
-        }
-      ],
+      "headers": [],
       "authentication": {
         "disabled": false,
         "password": "password",
@@ -84,12 +79,7 @@
         ]
       },
       "parameters": [],
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
-        }
-      ],
+      "headers": [],
       "authentication": {
         "disabled": false,
         "password": "password",

@@ -1,3 +1,5 @@
+import { reject } from 'ramda';
+
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
@@ -32,7 +34,7 @@ type PostmanCollection = V200Schema | V210Schema;
 
 type Variable = V200Variable2 | V210Variable2;
 
-type Auth = V200Auth | V210Auth;
+type Authetication = V200Auth | V210Auth;
 
 type Body = V200Request1['body'] | V210Request1['body'];
 
@@ -107,6 +109,8 @@ export class ImportPostman {
       return {};
     }
 
+    const { authentication, headers } = this.importAuthentication(request.auth, request.header as Header[]);
+
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
@@ -115,12 +119,12 @@ export class ImportPostman {
       description: (request.description as string) || '',
       url: this.importUrl(request.url),
       method: request.method || 'GET',
-      headers: ((request.header || []) as Header[])?.map(header => ({
-        name: header.key,
-        value: header.value,
+      headers: headers.map(({ key, value }) => ({
+        name: key,
+        value,
       })),
-      body: this.importBody(request.body, ((request.header || []) as Header[]).find(header => header.key === 'Content-Type')?.value),
-      authentication: this.importAuthentication(request.auth, request.header as Header[]),
+      body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
+      authentication,
       parameters: this.importQueryParams(request.url),
     };
   };
@@ -301,49 +305,105 @@ export class ImportPostman {
     };
   };
 
-  importAuthentication = (auth?: Auth | null, headers? : Header[]) => {
-    const authHeader = headers?.find(header => header.key === 'Authorization')?.value;
-    if (!auth) {
-      if (authHeader) {
-        switch (authHeader?.substring(0, authHeader.indexOf(' '))) {
+  importAuthentication = (authentication?: Authetication | null, originalHeaders: Header[] = []) => {
+    const isAuthorizationHeader = ({ key }: Header) => key === 'Authorization';
+    const authorizationHeader = originalHeaders.find(isAuthorizationHeader)?.value;
+
+    // It is a business logic decision to remove the "Authorization" header.
+    // If you think about it, this makes sense because if you've used Insomnia to fill out an Authorization form (e.g. Basic Auth), you wouldn't then also want the header to be added separately.
+    // If users want to manually set up these headers they still aboslutely can, of course, but we try to keep thigns simple and help users out.
+    const headers = reject(isAuthorizationHeader, originalHeaders);
+
+    if (!authentication) {
+      if (authorizationHeader) {
+        switch (authorizationHeader?.substring(0, authorizationHeader.indexOf(' '))) {
 
           case 'Bearer': // will work for OAuth2 as well
-            return this.importBearerAuthenticationFromHeader(authHeader);
+            return {
+              authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
+              headers,
+            };
+
           case 'Basic':
-            return this.importBasicAuthenticationFromHeader(authHeader);
+            return {
+              authentication: this.importBasicAuthenticationFromHeader(authorizationHeader),
+              headers,
+            };
+
           case 'AWS4-HMAC-SHA256':
-            const sessionToken = headers?.find(header => header.key === 'X-Amz-Security-Token')?.value;
-            return this.importАwsv4AuthenticationFromHeader(authHeader, sessionToken);
+            return this.importАwsv4AuthenticationFromHeader(authorizationHeader, headers);
+
           case 'Digest':
-            return this.importDigestAuthenticationFromHeader(authHeader);
+            return {
+              authentication: this.importDigestAuthenticationFromHeader(authorizationHeader),
+              headers,
+            };
+
           case 'OAuth':
-            return this.importOauth1AuthenticationFromHeader(authHeader);
+            return {
+              authentication: this.importOauth1AuthenticationFromHeader(authorizationHeader),
+              headers,
+            };
+
           default:
-            return {};
+            return {
+              authentication: {},
+              headers,
+            };
         }
       }
-      return {};
+      return {
+        authentication: {},
+        headers,
+      };
     }
 
-    switch (auth.type) {
+    switch (authentication.type) {
       case 'awsv4':
-        return this.importAwsV4Authentication(auth);
+        return {
+          authentication: this.importAwsV4Authentication(authentication),
+          headers,
+        };
+
       case 'basic':
-        return this.importBasicAuthentication(auth);
+        return {
+          authentication: this.importBasicAuthentication(authentication),
+          headers,
+        };
+
       case 'bearer':
-        return this.importBearerTokenAuthentication(auth);
+        return {
+          authentication: this.importBearerTokenAuthentication(authentication),
+          headers,
+        };
+
       case 'digest':
-        return this.importDigestAuthentication(auth);
+        return {
+          authentication: this.importDigestAuthentication(authentication),
+          headers,
+        };
+
       case 'oauth1':
-        return this.importOauth1Authentication(auth);
+        return {
+          authentication: this.importOauth1Authentication(authentication),
+          headers,
+        };
+
       case 'oauth2':
-        return this.importOauth2Authentication(auth);
+        return {
+          authentication: this.importOauth2Authentication(authentication),
+          headers,
+        };
+
       default:
-        return {};
+        return {
+          authentication: {},
+          headers: originalHeaders,
+        };
     }
   };
 
-  importAwsV4Authentication = (auth: Auth) => {
+  importAwsV4Authentication = (auth: Authetication) => {
     if (!auth.awsv4) {
       return {};
     }
@@ -380,27 +440,36 @@ export class ImportPostman {
     return item;
   };
 
-  // example of AWS header: AWS4-HMAC-SHA256 Credential=<accessKeyId>/20220110/<region>/<service>/aws4_request, SignedHeaders=accept;content-type;host;x-amz-date;x-amz-security-token, Signature=ed270ed6ad1cad3513f6edad9692e4496e321e44954c70a86504eea5e0ef1ff5
-  importАwsv4AuthenticationFromHeader = (authHeader: string, sessionToken?: string) => {
+  /**
+   * example of AWS header:
+   * @example AWS4-HMAC-SHA256 Credential=<accessKeyId>/20220110/<region>/<service>/aws4_request, SignedHeaders=accept;content-type;host;x-amz-date;x-amz-security-token, Signature=ed270ed6ad1cad3513f6edad9692e4496e321e44954c70a86504eea5e0ef1ff5
+   */
+  importАwsv4AuthenticationFromHeader = (authHeader: string, headers: Header[]) => {
     if (!authHeader) {
-      return {};
+      return {
+        authentication: {},
+        headers,
+      };
     }
+    const isAMZSecurityTokenHeader = ({ key }: Header) => key === 'X-Amz-Security-Token';
+    const sessionToken = headers?.find(isAMZSecurityTokenHeader)?.value;
     const credentials = RegExp(/(?<=Credential=).*/).exec(authHeader)?.[0].split('/');
 
-    const item = {
-      type: 'iam',
-      disabled: false,
-      accessKeyId: credentials?.[0],
-      region: credentials?.[2],
-      secretAccessKey: '',
-      service: credentials?.[3],
-      ...(sessionToken ? { sessionToken } : {}),
+    return {
+      authentication: {
+        type: 'iam',
+        disabled: false,
+        accessKeyId: credentials?.[0],
+        region: credentials?.[2],
+        secretAccessKey: '',
+        service: credentials?.[3],
+        ...(sessionToken ? { sessionToken } : {}),
+      },
+      headers: reject(isAMZSecurityTokenHeader, headers),
     };
-
-    return item;
   };
 
-  importBasicAuthentication = (auth: Auth) => {
+  importBasicAuthentication = (auth: Authetication) => {
     if (!auth.basic) {
       return {};
     }
@@ -447,7 +516,7 @@ export class ImportPostman {
     return item;
   };
 
-  importBearerTokenAuthentication = (auth: Auth) => {
+  importBearerTokenAuthentication = (auth: Authetication) => {
     if (!auth.bearer) {
       return {};
     }
@@ -488,7 +557,7 @@ export class ImportPostman {
     };
   };
 
-  importDigestAuthentication = (auth: Auth) => {
+  importDigestAuthentication = (auth: Authetication) => {
     if (!auth.digest) {
       return {};
     }
@@ -529,7 +598,7 @@ export class ImportPostman {
     return item;
   };
 
-  importOauth1Authentication = (auth: Auth) => {
+  importOauth1Authentication = (auth: Authetication) => {
     if (!auth.oauth1) {
       return {};
     }
@@ -605,7 +674,7 @@ export class ImportPostman {
 
   };
 
-  importOauth2Authentication = (auth: Auth) => {
+  importOauth2Authentication = (auth: Authetication) => {
     if (!auth.oauth2) {
       return {};
     }
