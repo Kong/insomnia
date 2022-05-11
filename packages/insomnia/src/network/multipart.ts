@@ -2,9 +2,9 @@ if (process.type === 'renderer') {
   throw new Error('multipart.ts unavailable in renderer');
 }
 
-import electron from 'electron';
 import fs from 'fs';
 import { lookup } from 'mime-types';
+import os from 'os';
 import path from 'path';
 
 import type { RequestBodyParameter } from '../models/request';
@@ -19,7 +19,7 @@ interface Multipart {
 
 export async function buildMultipart(params: RequestBodyParameter[]) {
   return new Promise<Multipart>(async (resolve, reject) => {
-    const filePath = path.join(electron.app.getPath('temp'), Math.random() + '.body');
+    const filePath = path.join(os.tmpdir(), Math.random() + '.body');
     const writeStream = fs.createWriteStream(filePath);
     const lineBreak = '\r\n';
     let totalSize = 0;
