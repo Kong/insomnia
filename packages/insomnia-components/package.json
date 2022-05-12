@@ -39,6 +39,7 @@
     "watch": "cross-env ESBUILD_WATCH=true esr esbuild.ts"
   },
   "devDependencies": {
+    "@jest/globals": "^28.1.0",
     "@svgr/cli": "^5.5.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^12.1.5",

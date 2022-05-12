@@ -8,12 +8,7 @@ import { getDataDirectory } from '../../common/electron-helpers';
 import * as models from '../../models';
 
 describe('migrate()', () => {
-  beforeEach(async () => {
-    await globalBeforeEach();
-    jest.useFakeTimers({
-      now: 1234567890,
-    });
-  });
+  beforeEach(globalBeforeEach);
 
   it('migrates utf8 body correctly', async () => {
     const initialModel = {

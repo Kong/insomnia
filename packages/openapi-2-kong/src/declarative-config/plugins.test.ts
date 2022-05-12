@@ -2,7 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 
 import { ParameterSchema, RequestTerminationPlugin, RequestValidatorPlugin, xKongPluginKeyAuth, xKongPluginRequestTermination, xKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OA3Parameter } from '../types/openapi3';
-import { getSpec, pluginDummy, tags, UserDCPlugin } from './jest/test-helpers';
+import { getSpec, pluginDummy, tags } from './jest/test-helpers';
 import { ALLOW_ALL_SCHEMA, generateBodyOptions, generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
 describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
@@ -27,7 +27,7 @@ describe('plugins', () => {
 
       const result = generateGlobalPlugins(api, tags);
 
-      expect<UserDCPlugin[]>(result.plugins).toEqual([
+      expect(result.plugins).toEqual([
         {
           name: 'dummy',
           tags,

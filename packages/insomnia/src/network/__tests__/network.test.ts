@@ -1,4 +1,5 @@
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
+import { jest } from '@jest/globals';
 import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';

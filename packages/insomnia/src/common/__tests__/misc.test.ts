@@ -21,9 +21,6 @@ import {
   xmlDecode,
 } from '../misc';
 
-jest.useFakeTimers();
-jest.spyOn(global, 'setTimeout');
-
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
 
@@ -148,6 +145,7 @@ describe('keyedDebounce()', () => {
   });
 
   it('debounces correctly', async () => {
+    jest.useFakeTimers();
     const resultsList: Record<string, string[]>[] = [];
     console.log('starting'.repeat(100));
     const setter = jest.fn((result: Record<string, string[]>) => {
@@ -161,7 +159,6 @@ describe('keyedDebounce()', () => {
     fn('foo', 'bar2');
     fn('foo', 'bar3');
     fn('multi', 'foo', 'bar', 'baz');
-    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultsList).toEqual([]);
 
     jest.runAllTimers();
@@ -177,9 +174,7 @@ describe('keyedDebounce()', () => {
 });
 
 describe('debounce()', () => {
-  beforeEach(async () => {
-    await globalBeforeEach();
-  });
+  beforeEach(globalBeforeEach);
 
   it('debounces correctly', () => {
     jest.useFakeTimers();
@@ -192,7 +187,6 @@ describe('debounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     fn('baz', 'bar');
     fn('foo', 'bar3');
-    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultList).toEqual([]);
     jest.runOnlyPendingTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);

@@ -6,6 +6,9 @@ module.exports = {
       isolatedModules: true,
     },
   },
+  fakeTimers: {
+    enableGlobally: true,
+  },
   setupFilesAfterEnv: ['./src/jest/setup-after-env.ts'],
   testEnvironment: 'jsdom',
 };
