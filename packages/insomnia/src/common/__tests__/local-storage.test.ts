@@ -77,6 +77,7 @@ describe('LocalStorage()', () => {
   });
 
   it('stores a key', () => {
+    jest.useFakeTimers();
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar');
@@ -93,6 +94,7 @@ describe('LocalStorage()', () => {
   });
 
   it('debounces key sets', () => {
+    jest.useFakeTimers();
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar1');

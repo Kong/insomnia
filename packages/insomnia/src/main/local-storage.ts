@@ -14,13 +14,13 @@ class LocalStorage {
     console.log(`[localstorage] Initialized at ${basePath}`);
   }
 
-  setItem(key, obj) {
+  setItem<T>(key: string, obj?: T) {
     clearTimeout(this._timeouts[key]);
     this._buffer[key] = JSON.stringify(obj);
     this._timeouts[key] = setTimeout(this._flush.bind(this), 100);
   }
 
-  getItem(key, defaultObj) {
+  getItem<T>(key: string, defaultObj?: T) {
     // Make sure things are flushed before we read
     this._flush();
 
