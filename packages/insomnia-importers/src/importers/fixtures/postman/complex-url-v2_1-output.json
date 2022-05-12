@@ -18,10 +18,10 @@
       "parentId": "__GRP_1__",
       "url": "https://insomnia.rest?foo=bar",
       "name": "Test Request",
+      "parameters": [],
       "description": "",
       "method": "GET",
       "body": {},
-      "parameters": [],
       "headers": [],
       "authentication": {}
     }

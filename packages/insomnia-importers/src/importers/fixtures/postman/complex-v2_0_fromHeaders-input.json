@@ -1,0 +1,203 @@
+{
+    "variables": [],
+    "info": {
+        "name": "Timing API",
+        "_postman_id": "317142af-1169-4a74-aee7-308c7ccbde76",
+        "description": "",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.0.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Projects",
+            "description": "",
+            "item": [
+                {
+                    "name": "Return the complete project hierarchy.",
+                    "request": {
+                        "url": {
+                            "protocol": "https",
+                            "host": "web.timingapp.com\/",
+                            "path": "api\/v1\/projects\/hierarchy",
+                            "query": [
+                                {
+                                    "key": "team_id",
+                                    "value": "",
+                                    "description": "The ID of the team to list projects for. Can be omitted to list the user's private projects. See [Return a list containing all the teams you are a member of.](#return-a-list-containing-all-the-teams-you-are-a-member-of) for obtaining a team ID to provide here.",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[]"
+                        },
+                        "description": "<br>See [Display the specified project.](#display-the-specified-project) for the returned attributes.",
+                        "response": []
+                    }
+                },
+                {
+                    "name": "Return a list containing all projects.",
+                    "request": {
+                        "url": {
+                            "protocol": "https",
+                            "host": "web.timingapp.com\/",
+                            "path": "api\/v1\/projects",
+                            "query": [
+                                {
+                                    "key": "title",
+                                    "value": "root",
+                                    "description": "Filter for projects whose title contains all words in this parameter. The search is case-insensitive but diacritic-sensitive.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "hide_archived",
+                                    "value": "true",
+                                    "description": "If set to `true`, archived projects and their children will not be included in the result.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "team_id",
+                                    "value": "",
+                                    "description": "The ID of the team to list projects for. Can be omitted to list the user's private projects. See [Return a list containing all the teams you are a member of.](#return-a-list-containing-all-the-teams-you-are-a-member-of) for obtaining a team ID to provide here.",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "AWS4-HMAC-SHA256 Credential=<accessKeyId>/20220110/<region>/<service>/aws4_request, SignedHeaders=accept;content-type;host;x-amz-date;x-amz-security-token, Signature=ed270ed6ad1cad3513f6edad9692e4496e321e44954c70a86504eea5e0ef1ff5"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[]"
+                        },
+                        "description": "<br>See [Display the specified project.](#display-the-specified-project) for the returned attributes.",
+                        "response": []
+                    }
+                },
+                {
+                    "name": "Create a new project.",
+                    "request": {
+                        "url": {
+                            "protocol": "https",
+                            "host": "web.timingapp.com\/",
+                            "path": "api\/v1\/projects",
+                            "query": []
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Basic am9obkBleGFtcGxlLmNvbTphYmMxMjM="
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Acme Inc.\",\n    \"parent\": \"\\\/projects\\\/1\",\n    \"color\": \"#FF0000\",\n    \"productivity_score\": 1,\n    \"is_archived\": false\n}"
+                        },
+                        "description": "<br>See [Display the specified project.](#display-the-specified-project) for the returned attributes.",
+                        "response": []
+                    }
+                },
+                {
+                    "name": "Display the specified project.",
+                    "request": {
+                        "url": {
+                            "protocol": "https",
+                            "host": "web.timingapp.com\/",
+                            "path": "api\/v1\/projects\/:project",
+                            "query": []
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Digest username=\"Username\", realm=\"Realm\", nonce=\"Nonce\", uri=\"//api/v1/report?start_date_min=2019-01-01T00%3A00%3A00%2B00%3A00&start_date_max=2019-01-01T23%3A59%3A59%2B00%3A00&projects[]=%2Fprojects%2F1&include_child_projects=1&search_query=meeting&columns[]=project&include_project_data=1&sort[]=-duration\", algorithm=\"MD5\", response=\"f3f762321e158aefe103529eda4ddb7c\", opaque=\"Opaque\""
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[]"
+                        },
+                        "description": "<br>The following attributes will be returned:\n\n - `self`: A reference to the entity itself, relative to the API root.\n - `title`: The project's title.\n - `title_chain`: An array containing the title of the project and all its ancestors. Example: `[\"Parent\", \"Child\"]`\n - `color`: The project's color, in hexadecimal format (`#RRGGBB`). Example: `#FF0000`\n - `productivity_score`: The project's productivity rating, between -1 (very unproductive) and 1 (very productive). Example: `1`\n - `is_archived`: Whether the project has been archived. Defaults to false. Example: `false`\n - `parent`: A reference to the enclosing project.\n - `children`: The project's children.\n\n<aside class=\"notice\">\nChild projects are provided as references; i.e. they only contain the <code>self<\/code> attribute.\n<\/aside>",
+                        "response": []
+                    }
+                },
+                {
+                    "name": "Update the specified project.",
+                    "request": {
+                        "url": {
+                            "protocol": "https",
+                            "host": "web.timingapp.com\/",
+                            "path": "api\/v1\/projects\/:project",
+                            "query": []
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "OAuth realm=\"Realm\",oauth_consumer_key=\"Consumer%20Key\",oauth_token=\"Access%20Token\",oauth_signature_method=\"HMAC-SHA1\",oauth_timestamp=\"Timestamp\",oauth_nonce=\"Nonce\",oauth_version=\"Version\",oauth_callback=\"Callback%20URL\",oauth_verifier=\"Verifier\",oauth_signature=\"TwJvZVasVWTL6X%2Bz3lmuiyvaX2Q%3D\""
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Acme Inc.\",\n    \"color\": \"#FF0000\",\n    \"productivity_score\": 1,\n    \"is_archived\": false\n}"
+                        },
+                        "description": "<br>See [Display the specified project.](#display-the-specified-project) for the returned attributes.\n\n<aside class=\"notice\">\nOmitted fields will not be updated, even when using the `PUT` method.\n<\/aside>\n\n<aside class=\"notice\">\nChanging a project's parent or children is currently not possible.\n<\/aside>",
+                        "response": []
+                    }
+                }
+            ]
+        }
+    ]
+}

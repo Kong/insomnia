@@ -52,13 +52,13 @@
         ]
       },
       "parameters": [],
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
-        }
-      ],
-      "authentication": {}
+      "headers": [],
+      "authentication": {
+        "disabled": false,
+        "password": "password",
+        "type": "basic",
+        "username": "username"
+      }
     },
     {
       "_id": "__REQ_2__",
@@ -79,13 +79,13 @@
         ]
       },
       "parameters": [],
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
-        }
-      ],
-      "authentication": {}
+      "headers": [],
+      "authentication": {
+        "disabled": false,
+        "password": "password",
+        "type": "basic",
+        "username": "username"
+      }
     },
     {
       "_id": "__REQ_3__",
