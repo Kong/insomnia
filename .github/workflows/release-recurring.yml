@@ -48,10 +48,10 @@ jobs:
               npm install -g npm@latest
             run: |
               cd /app
+              npm config set -g user=`whoami`
               npm install -g n
               n `cat .nvmrc`
               npm install
-              chown -R 1001:121 "/root/.npm"
               npm run bootstrap
               BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
               USE_SYSTEM_FPM=true BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
