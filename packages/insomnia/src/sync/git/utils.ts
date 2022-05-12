@@ -1,6 +1,7 @@
 import { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
 import type { GitCredentials } from './git-vcs';
+import { refreshToken as refreshGitlabToken } from './gitlab-oauth-provider';
 
 export const translateSSHtoHTTP = (url: string) => {
   // handle "shorter scp-like syntax"
@@ -16,9 +17,43 @@ const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
 };
 
-const onAuthFailure: AuthFailureCallback = async message => {
-  console.log(`[git-event] Auth Failure: ${message}`);
-};
+const onAuthFailure =
+  (credentials?: GitCredentials): AuthFailureCallback =>
+    async (message, auth) => {
+      console.log(`[git-event] Auth Failure: ${message}`);
+
+      // Try to refresh the token if auth failed.
+      // Whenever we return a new GitAuth object from this function
+      // isomorphic-git will retry the request with the new credentials.
+      // https://isomorphic-git.org/docs/en/onAuthFailure#docsNav
+      if (
+        credentials &&
+      'oauth2format' in credentials &&
+      credentials.oauth2format === 'gitlab'
+      ) {
+        console.log('[git-event] Attempting to refresh token');
+        try {
+          const refreshToken = await refreshGitlabToken();
+          if (refreshToken) {
+            console.log('[git-event] Token refreshed');
+            return {
+              ...auth,
+              password: refreshToken,
+              headers: {
+                ...auth.headers,
+                Authorization: `Bearer ${refreshToken}`,
+              },
+            };
+          }
+        } catch (e) {
+          console.warn('[git-event] Failed to refresh token', e);
+
+          return;
+        }
+      }
+
+      return;
+    };
 
 const onAuthSuccess: AuthSuccessCallback = message => {
   console.log(`[git-event] Auth Success: ${message}`);
@@ -61,7 +96,7 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
 
 export const gitCallbacks = (credentials?: GitCredentials | null) => ({
   onMessage,
-  onAuthFailure,
+  onAuthFailure: onAuthFailure(credentials ?? undefined),
   onAuthSuccess,
   onAuth: onAuth(credentials ?? undefined),
 });

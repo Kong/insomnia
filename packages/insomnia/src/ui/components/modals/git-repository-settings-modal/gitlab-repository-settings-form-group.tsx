@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
+import { getGitLabOauthApiURL } from '../../../../common/constants';
 import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
@@ -17,7 +18,6 @@ import {
   newCommand,
 } from '../../../redux/modules/global';
 import { showAlert } from '..';
-import { getGitLabOauthApiURL } from '../../../../common/constants';
 
 interface Props {
   uri?: string;
