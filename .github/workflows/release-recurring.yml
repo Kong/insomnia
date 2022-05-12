@@ -47,6 +47,7 @@ jobs:
               gem i fpm -f
             run: |
               cd /app
+              npm install
               chown -R 1001:121 "/root/.npm"
               npm run bootstrap
               BUILD_REF="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" npm run app-bump-version
