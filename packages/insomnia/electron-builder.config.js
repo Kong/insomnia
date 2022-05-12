@@ -120,6 +120,9 @@ const config = {
       },
     ],
   },
+  snap: {
+    compression: 'lzo',
+  },
 };
 
 const { env: { BUILD_TARGETS }, platform } = process;
