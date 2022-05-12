@@ -45,8 +45,11 @@ jobs:
               curl -sL https://deb.nodesource.com/setup_16.x  | bash -
               apt install -y nodejs
               gem i fpm -f
+              npm install -g npm@latest
             run: |
               cd /app
+              npm install -g n
+              n `cat .nvmrc`
               npm install
               chown -R 1001:121 "/root/.npm"
               npm run bootstrap
