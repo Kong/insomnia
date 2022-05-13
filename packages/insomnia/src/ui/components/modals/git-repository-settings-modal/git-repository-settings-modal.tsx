@@ -167,7 +167,7 @@ const ModalForm = (props: Props) => {
             </button>
           )}
           <button type="submit" form={selectedTab} className="btn">
-            Done
+            Sync
           </button>
         </div>
       </ModalFooter>
