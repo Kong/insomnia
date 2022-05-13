@@ -10,76 +10,6 @@ import * as models from '../../models';
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
 
-  it('migrates utf8 body correctly', async () => {
-    const initialModel = {
-      body: 'hello world!',
-      encoding: 'utf8',
-    };
-    jest.runAllTicks();
-    const newModel = await models.initModel(models.response.type, initialModel);
-
-    const storedBody = models.response.getBodyBuffer(newModel);
-
-    // Should have set bodyPath and stored the body
-    const expectedBodyPath = path.join(getDataDirectory(), 'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip');
-    expect(newModel.bodyPath).toBe(expectedBodyPath);
-    expect(storedBody.toString()).toBe('hello world!');
-
-    // Should have stripped these
-    expect(newModel.body).toBeUndefined();
-    expect(newModel.encoding).toBeUndefined();
-  });
-
-  it('migrates base64 body correctly', async () => {
-    const initialModel = {
-      body: 'aGVsbG8gd29ybGQh',
-      encoding: 'base64',
-    };
-    const newModel = await models.initModel(models.response.type, initialModel);
-    jest.runAllTimers();
-    const storedBody = models.response.getBodyBuffer(newModel);
-
-    // Should have stripped these
-    expect(newModel.body).toBeUndefined();
-    expect(newModel.encoding).toBeUndefined();
-
-    // Should have set bodyPath and stored the body
-    const expectedBodyPath = path.join(getDataDirectory(), 'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip');
-    expect(newModel.bodyPath).toBe(expectedBodyPath);
-    expect(storedBody.toString()).toBe('hello world!');
-  });
-
-  it('migrates empty body', async () => {
-    const initialModel = {
-      body: '',
-    };
-    const newModel = await models.initModel(models.response.type, initialModel);
-    jest.runAllTimers();
-    const expectedBodyPath = path.join(
-      getDataDirectory(),
-      'responses/d41d8cd98f00b204e9800998ecf8427e.zip',
-    );
-    const storedBody = models.response.getBodyBuffer(newModel);
-    // Should have stripped these
-    expect(newModel.body).toBeUndefined();
-    expect(newModel.encoding).toBeUndefined();
-    // Should have set bodyPath and stored the body
-    expect(newModel.bodyPath).toBe(expectedBodyPath);
-    expect(storedBody.toString()).toBe('');
-  });
-
-  it('does not migrate body again', async () => {
-    const initialModel = {
-      bodyPath: '/foo/bar',
-    };
-    const newModel = await models.initModel(models.response.type, initialModel);
-    // Should have stripped these
-    expect(newModel.body).toBeUndefined();
-    expect(newModel.encoding).toBeUndefined();
-    // Should have set bodyPath and stored the body
-    expect(newModel.bodyPath).toBe('/foo/bar');
-  });
-
   it('does it', async () => {
     const bodyPath = path.join(getDataDirectory(), 'foo.zip');
     fs.writeFileSync(bodyPath, zlib.gzipSync('Hello World!'));
@@ -89,16 +19,6 @@ describe('migrate()', () => {
     const body = await models.response.getBodyBuffer(response).toString();
     expect(response.bodyCompression).toBe('zip');
     expect(body).toBe('Hello World!');
-  });
-
-  it('migrates old bodies', async () => {
-    const response = await models.initModel(models.response.type, {
-      body: 'aGVsbG8gd29ybGQh',
-      encoding: 'base64',
-    });
-    const body = await models.response.getBodyBuffer(response).toString();
-    expect(response.bodyCompression).toBe(null);
-    expect(body).toBe('hello world!');
   });
 
   it('migrates leaves bodyCompression for null', async () => {

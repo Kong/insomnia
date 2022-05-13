@@ -1,5 +1,9 @@
 import * as crypt from '../crypt';
 
+/**
+ * @jest-environment node
+ */
+
 describe('crypt', () => {
   describe('deriveKey()', () => {
     it('derives a key properly', async () => {
