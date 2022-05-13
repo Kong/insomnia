@@ -102,9 +102,6 @@ export async function migrate(doc: Response) {
 
 export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
   consoleLog('[db] Init responses DB');
-  process.nextTick(async () => {
-    await models.response.cleanDeletedResponses();
-  });
 }
 
 export function hookRemove(doc: Response, consoleLog: typeof console.log = console.log) {
@@ -361,34 +358,5 @@ async function migrateTimelineToFileSystem(doc: Response) {
     });
   } else {
     return doc;
-  }
-}
-
-export async function cleanDeletedResponses() {
-  const responsesDir = path.join(getDataDirectory(), 'responses');
-  mkdirp.sync(responsesDir);
-  const files = fs.readdirSync(responsesDir);
-
-  if (files.length === 0) {
-    return;
-  }
-
-  const whitelistFiles: string[] = [];
-
-  for (const r of (await db.all<Response>(type) || [])) {
-    whitelistFiles.push(r.bodyPath.slice(responsesDir.length + 1));
-    whitelistFiles.push(r.timelinePath.slice(responsesDir.length + 1));
-  }
-
-  for (const filePath of files) {
-    if (whitelistFiles.indexOf(filePath) >= 0) {
-      continue;
-    }
-
-    try {
-      fs.unlinkSync(path.join(responsesDir, filePath));
-    } catch (err) {
-      // Just keep going, doesn't matter
-    }
   }
 }

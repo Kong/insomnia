@@ -15,15 +15,16 @@ describe('migrate()', () => {
       body: 'hello world!',
       encoding: 'utf8',
     };
+    jest.runAllTicks();
     const newModel = await models.initModel(models.response.type, initialModel);
-    const expectedBodyPath = path.join(
-      getDataDirectory(),
-      'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip',
-    );
+
     const storedBody = models.response.getBodyBuffer(newModel);
+
     // Should have set bodyPath and stored the body
+    const expectedBodyPath = path.join(getDataDirectory(), 'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip');
     expect(newModel.bodyPath).toBe(expectedBodyPath);
     expect(storedBody.toString()).toBe('hello world!');
+
     // Should have stripped these
     expect(newModel.body).toBeUndefined();
     expect(newModel.encoding).toBeUndefined();
@@ -36,15 +37,14 @@ describe('migrate()', () => {
     };
     const newModel = await models.initModel(models.response.type, initialModel);
     jest.runAllTimers();
-    const expectedBodyPath = path.join(
-      getDataDirectory(),
-      'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip',
-    );
     const storedBody = models.response.getBodyBuffer(newModel);
+
     // Should have stripped these
     expect(newModel.body).toBeUndefined();
     expect(newModel.encoding).toBeUndefined();
+
     // Should have set bodyPath and stored the body
+    const expectedBodyPath = path.join(getDataDirectory(), 'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip');
     expect(newModel.bodyPath).toBe(expectedBodyPath);
     expect(storedBody.toString()).toBe('hello world!');
   });
@@ -131,44 +131,6 @@ describe('migrate()', () => {
         })
       ).bodyCompression,
     ).toBe('zip');
-  });
-});
-
-describe('cleanDeletedResponses()', function() {
-  beforeEach(globalBeforeEach);
-  afterEach(function() {
-    jest.restoreAllMocks();
-  });
-
-  it('deletes nothing if there is no files in directory', async function() {
-    const mockReaddirSync = jest.spyOn(fs, 'readdirSync');
-    const mockUnlinkSync = jest.spyOn(fs, 'unlinkSync');
-    mockReaddirSync.mockReturnValueOnce([]);
-    mockUnlinkSync.mockImplementation();
-    await models.response.cleanDeletedResponses();
-    expect(fs.unlinkSync.mock.calls.length).toBe(0);
-  });
-
-  it('only deletes response files that are not in db', async function() {
-    const responsesDir = path.join(getDataDirectory(), 'responses');
-    const dbResponseIds = await createModels(responsesDir, 10);
-    const notDbResponseIds = [];
-
-    for (let index = 100; index < 110; index++) {
-      notDbResponseIds.push('res_' + index);
-    }
-
-    const mockReaddirSync = jest.spyOn(fs, 'readdirSync');
-    const mockUnlinkSync = jest.spyOn(fs, 'unlinkSync');
-    mockReaddirSync.mockReturnValueOnce([...dbResponseIds, ...notDbResponseIds]);
-    mockUnlinkSync.mockImplementation();
-    await models.response.cleanDeletedResponses();
-    expect(fs.unlinkSync.mock.calls.length).toBe(notDbResponseIds.length);
-    Object.keys(notDbResponseIds).map(index => {
-      const resId = notDbResponseIds[index];
-      const bodyPath = path.join(responsesDir, resId);
-      expect(fs.unlinkSync.mock.calls[index][0]).toBe(bodyPath);
-    });
   });
 });
 
