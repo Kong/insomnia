@@ -140,15 +140,11 @@ export function keyedDebounce<T>(
   let results: Record<string, T[]> = {};
   const t = function(key: string, ...args: T[]) {
     results[key] = args;
-    console.log('inside', results);
     if (timeout) {
-      console.log('clearing', timeout);
       clearTimeout(timeout);
     }
     timeout = setTimeout(() => {
-      console.log('calling', results);
       if (!Object.keys(results).length) {
-        console.log('early return'.repeat(100));
         return;
       }
       callback(results);
