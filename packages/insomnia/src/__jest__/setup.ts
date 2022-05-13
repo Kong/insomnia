@@ -1,6 +1,3 @@
-import * as buffer from 'buffer/';
-(window as any).Buffer = buffer.Buffer;
-
 const localStorageMock: Storage = (function() {
   let store: Record<string, string> = {};
   return {
