@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render, RenderPurpose } from '../../../common/render';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
@@ -22,12 +22,13 @@ export const useNunjucks = () => {
   const request = useSelector(selectActiveRequest);
   const workspace = useSelector(selectActiveWorkspace);
 
-  const fetchRenderContext = useCallback(async () => {
+  const fetchRenderContext = useCallback(async (purpose: RenderPurpose | undefined = undefined) => {
     const ancestors = await getRenderContextAncestors(request || workspace);
     return getRenderContext({
       request: request || undefined,
       environmentId,
       ancestors,
+      purpose,
     });
   }, [environmentId, request, workspace]);
 
@@ -42,14 +43,15 @@ export const useNunjucks = () => {
    *
    * @param text - template to render
    * @param contextCacheKey - if rendering multiple times in parallel, set this
+   * @param purpose - the rendering purpose
    * @returns {Promise}
    * @private
    */
-  const handleRender: HandleRender = useCallback(async <T>(obj: T, contextCacheKey: string | null = null) => {
+  const handleRender: HandleRender = useCallback(async <T>(obj: T, contextCacheKey: string | null = null, purpose: RenderPurpose | undefined = undefined) => {
     if (!contextCacheKey || !getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
       // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
-      getRenderContextPromiseCache[contextCacheKey] = fetchRenderContext();
+      getRenderContextPromiseCache[contextCacheKey] = fetchRenderContext(purpose);
     }
 
     // Set timeout to delete the key eventually

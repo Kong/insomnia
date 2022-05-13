@@ -2,6 +2,9 @@ import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } fro
 import { useSelector } from 'react-redux';
 
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
+import {
+  RENDER_PURPOSE_SEND,
+} from '../../../../common/render';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
@@ -439,7 +442,7 @@ const useActiveOAuth2Token = () => {
     setLoading(true);
 
     try {
-      const renderedAuthentication = await handleRender(authentication);
+      const renderedAuthentication = await handleRender(authentication, null, RENDER_PURPOSE_SEND);
       await getAccessToken(requestId, renderedAuthentication, true);
       setLoading(false);
     } catch (err) {
