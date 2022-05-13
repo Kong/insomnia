@@ -6,10 +6,6 @@ module.exports = {
       isolatedModules: false,
     },
   },
-  fakeTimers: {
-    // enableGlobally: true,
-    // legacyFakeTimers: true,
-  },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   resetMocks: true,
   resetModules: true,

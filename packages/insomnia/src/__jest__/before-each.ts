@@ -14,5 +14,4 @@ export async function globalBeforeEach() {
     true,
     () => {},
   );
-  // jest.runAllTicks();
 }

@@ -46,7 +46,6 @@
     "@types/svgo": "^2.6.3",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.2",
-    "esbuild-jest": "^0.5.0",
     "esbuild-runner": "^2.2.1",
     "eslint": "^8.8.0",
     "eslint-config-helpers": "^1.1.0",

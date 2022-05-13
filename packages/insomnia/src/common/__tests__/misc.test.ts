@@ -147,9 +147,7 @@ describe('keyedDebounce()', () => {
   it('debounces correctly', async () => {
     jest.useFakeTimers();
     const resultsList: Record<string, string[]>[] = [];
-    console.log('starting'.repeat(100));
     const setter = jest.fn((result: Record<string, string[]>) => {
-      console.log('pusing'.repeat(100), resultsList);
       resultsList.push(result);
     });
     jest.clearAllTimers();
