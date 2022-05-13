@@ -1,7 +1,8 @@
 import { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
 import type { GitCredentials } from './git-vcs';
-import { refreshToken as refreshGitlabToken } from './gitlab-oauth-provider';
+import { getAccessToken as getGitHubAccessToken } from './github-oauth-provider';
+import { getAccessToken as getGitlabAccessToken, refreshToken as refreshGitlabToken } from './gitlab-oauth-provider';
 
 export const translateSSHtoHTTP = (url: string) => {
   // handle "shorter scp-like syntax"
@@ -73,7 +74,7 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
 
     if (credentials.oauth2format === 'github') {
       return {
-        username: credentials.token,
+        username: getGitHubAccessToken() || credentials.token,
         password: 'x-oauth-basic',
       };
     }
@@ -81,7 +82,7 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
     if (credentials.oauth2format === 'gitlab') {
       return {
         username: 'oauth2',
-        password: credentials['password'] ?? credentials.token,
+        password: getGitlabAccessToken() ||  credentials.token,
       };
     }
   }
