@@ -698,6 +698,12 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     this._codemirrorSetValue(code, canPrettify);
   }
 
+  _toggleComment() {
+    if (this.codeMirror) {
+      this.codeMirror.toggleComment();
+    }
+  }
+
   _prettifyJSON(code: string) {
     try {
       let jsonString = code;
@@ -741,6 +747,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
   async _handleKeyDown(event: KeyboardEvent) {
     executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._prettify);
+    executeHotKey(event, hotKeyRefs.TOGGLE_COMMENT_CODE, this._toggleComment);
   }
 
   /**

@@ -106,6 +106,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
   ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE: defineHotKey('environment_showVariableSourceAndValue', 'Show variable source and value'),
   BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Active Code Editors'),
+  TOGGLE_COMMENT_CODE: defineHotKey('toggleCommentCode', 'Toggle Comment'),
   GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
   FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
 };
@@ -249,6 +250,10 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.BEAUTIFY_REQUEST_BODY.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.i.keyCode),
     keyComb(true, false, true, false, keyboardKeys.i.keyCode),
+  ),
+  [hotKeyRefs.TOGGLE_COMMENT_CODE.id]: keyBinds(
+    keyComb(false, false, false, true, keyboardKeys.semicolon.keyCode),
+    keyComb(true, false, false, false, keyboardKeys.semicolon.keyCode),
   ),
   [hotKeyRefs.FILTER_DOCUMENTS.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.f.keyCode),
