@@ -10,6 +10,7 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable, Writable } from 'stream';
+import tls from 'tls';
 import { ValueOf } from 'type-fest';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,7 +30,6 @@ interface CurlRequestOptions {
   finalUrl: string;
   settings: SettingsUsedHere;
   certificates: ClientCertificate[];
-  fullCAPath: string;
   socketPath?: string;
   authHeader?: { name: string; value: string };
 }
@@ -82,7 +82,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
 
-    const { requestId, req, finalUrl, settings, certificates, fullCAPath, socketPath, authHeader } = options;
+    const { requestId, req, finalUrl, settings, certificates, socketPath, authHeader } = options;
     const curl = new Curl();
 
     curl.setOpt(Curl.option.URL, finalUrl);
@@ -92,7 +92,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
 
-    curl.setOpt(Curl.option.CAINFO, fullCAPath);
+    curl.setOpt(Curl.option.CAINFO_BLOB, tls.rootCertificates.join('\n'));
 
     certificates.forEach(validCert => {
       const { passphrase, cert, key, pfx } = validCert;

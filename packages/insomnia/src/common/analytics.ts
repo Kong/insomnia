@@ -73,23 +73,39 @@ export enum SegmentEvent {
   vcsSyncStart = 'VCS Sync Started',
   vcsSyncComplete = 'VCS Sync Completed',
   vcsAction = 'VCS Action Executed',
+  buttonClick = 'Button Clicked',
+}
+
+/**
+ * You may refer to this Segment API Document - https://segment.com/docs/connections/spec/track/#properties to understand what 'event properties' is for.
+ *
+ * The following properties are custom defined attributes for our own metrics purpose to help ourselves to make product decisions
+ */
+interface SegmentEventProperties {
+  type: string;
+
+  /**
+   * a short description clarifying the specific action the user took
+   * */
+  action: string;
+
+  /**
+   * a description of an error that occured as a result of the user action
+   * */
+  error?: string;
 }
 
 type PushPull = 'push' | 'pull';
-
+type VCSAction = PushPull | `force_${PushPull}` |
+  'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
+  'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
+  'update' | 'setup' | 'clone';
 export function vcsSegmentEventProperties(
   type: 'git',
-  action: PushPull | `force_${PushPull}` |
-    'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
-    'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
-    'update' | 'setup' | 'clone',
+  action: VCSAction,
   error?: string
-) {
-  return {
-    'type': type,
-    'action': action,
-    'error': error,
-  };
+): SegmentEventProperties {
+  return { type, action, error };
 }
 
 interface QueuedSegmentEvent {

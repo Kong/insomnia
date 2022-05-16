@@ -1,7 +1,7 @@
 import * as electron from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import { writeFile } from 'fs';
+import { writeFile } from 'fs/promises';
 import path from 'path';
 
 import appConfig from '../config/config.json';
@@ -226,7 +226,7 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
-  ipcMain.handle('installPlugin', async (_, options) => {
+  ipcMain.handle('installPlugin', (_, options) => {
     return installPlugin(options);
   });
 
@@ -263,15 +263,13 @@ async function _trackStats() {
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
   });
 
-  ipcMain.handle('writeFile', (_, options) => {
-    return new Promise<string>((resolve, reject) => {
-      writeFile(options.path, options.content, err => {
-        if (err != null) {
-          return reject(err);
-        }
-        resolve(options.path);
-      });
-    });
+  ipcMain.handle('writeFile', async (_, options) => {
+    try {
+      await writeFile(options.path, options.content);
+      return options.path;
+    } catch (err) {
+      throw new Error(err);
+    }
   });
 
   ipcMain.handle('curlRequest', (_, options) => {

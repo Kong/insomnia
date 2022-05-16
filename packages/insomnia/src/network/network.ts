@@ -15,7 +15,7 @@ import {
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
-import { getDataDirectory, getTempDir } from '../common/electron-helpers';
+import { getDataDirectory } from '../common/electron-helpers';
 import {
   delay,
   getContentTypeHeader,
@@ -38,7 +38,6 @@ import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
-import caCerts from './ca_certs';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export interface ResponsePatch {
@@ -127,21 +126,6 @@ export async function _actuallySend(
       timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'TEXT', timestamp: Date.now() });
       timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'TEXT', timestamp: Date.now() });
 
-      // Setup CA Root Certificates
-      const baseCAPath = getTempDir();
-      const fullCAPath = pathJoin(baseCAPath, 'ca-certs.pem');
-
-      try {
-        fs.statSync(fullCAPath);
-      } catch (err) {
-        // Doesn't exist yet, so write it
-        mkdirp.sync(baseCAPath);
-        // TODO: Should mock cacerts module for testing.
-        // This is literally coercing a function to string in tests due to lack of val-loader.
-        fs.writeFileSync(fullCAPath, String(caCerts));
-        console.log('[net] Set CA to', fullCAPath);
-      }
-
       if (!renderedRequest.settingSendCookies) {
         timeline.push({ value: 'Disable cookie sending due to user setting', name: 'TEXT', timestamp: Date.now() });
       }
@@ -162,7 +146,6 @@ export async function _actuallySend(
         socketPath,
         settings,
         certificates,
-        fullCAPath,
         authHeader,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
@@ -171,7 +154,7 @@ export async function _actuallySend(
       // add set-cookie headers to file(cookiejar) and database
       if (settingStoreCookies) {
         // supports many set-cookies over many redirects
-        const redirects: string[][] = headerResults.map(getSetCookiesFromResponseHeaders);
+        const redirects: string[][] = headerResults.map(({ headers }) => getSetCookiesFromResponseHeaders(headers));
         const setCookieStrings: string[] = redirects.flat();
         const totalSetCookies = setCookieStrings.length;
         if (totalSetCookies) {
