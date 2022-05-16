@@ -347,6 +347,54 @@ export const keyboardKeys = {
     keyCode: 123,
     label: 'F12',
   },
+  f13: {
+    keyCode: 124,
+    label:'F13',
+  },
+  f14: {
+    keyCode: 125,
+    label:'F14',
+  },
+  f15: {
+    keyCode: 126,
+    label:'F15',
+  },
+  f16: {
+    keyCode: 127,
+    label:'F16',
+  },
+  f17: {
+    keyCode: 128,
+    label:'F17',
+  },
+  f18: {
+    keyCode: 129,
+    label:'F18',
+  },
+  f19: {
+    keyCode: 130,
+    label:'F19',
+  },
+  f20: {
+    keyCode: 131,
+    label:'F20',
+  },
+  f21: {
+    keyCode: 132,
+    label:'F21',
+  },
+  f22: {
+    keyCode: 133,
+    label:'F22',
+  },
+  f23: {
+    keyCode: 134,
+    label:'F23',
+  },
+  f24: {
+    keyCode: 135,
+    label:'F24',
+  },
   numlock: {
     keyCode: 144,
     label: 'NumLock',
