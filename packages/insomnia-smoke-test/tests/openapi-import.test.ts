@@ -6,7 +6,6 @@ test('can render Petstore internal example and can render errors', async ({ page
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const specPreview = page.locator('.information-container');
   const codeEditor = page.locator('[data-testid="CodeEditor"]');
-  const tagsOnTextEditor = page.locator('[data-testid="CodeEditor"] >> text=tags').first();
   const noticeTable = page.locator('_react=NoticeTable');
   await page.click('text=Design');
   await page.click('text=start from an example');
@@ -14,8 +13,8 @@ test('can render Petstore internal example and can render errors', async ({ page
   await expect(specPreview).toContainText('This is a sample server Petstore server');
 
   // Can render errors
-  await tagsOnTextEditor.click();
-  await tagsOnTextEditor.press('Tab');
+  await page.locator('[data-testid="CodeEditor"] >> text=tags').first().click();
+  await page.locator('textarea').nth(1).press('Tab');
   await expect(noticeTable).toContainText('oas3-schema Property `ta gs` is not expected to be here.');
 });
 
