@@ -55,12 +55,15 @@ for (const spec of specs) {
     await expect(specPreview).toContainText('Swagger Petstore');
   });
 
-  test(`can import ${spec.name} from within an empty doc`, async ({ app, page }) => {
+  test(`can import ${spec.name} from within initial empty doc`, async ({ app, page }) => {
+    test.fail(); // FAILING when using initial empty doc instead of a brand new empty design doc
     await app.firstWindow(); // TODO: Convenience method that waits for app to be ready
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
     const specPreview = page.locator('.information-container');
     const codeEditor = page.locator('[data-testid="CodeEditor"]');
+
     await page.click('text=Design');
+
     await page.click('text=Import OpenAPI');
     await page.click('button:has-text("URL")');
 
@@ -73,7 +76,30 @@ for (const spec of specs) {
     await expect(specPreview).toContainText('Swagger Petstore');
   });
 
-  test(`can import ${spec.name} from import/export menu`, async ({ app, page }) => {
+  test(`can import ${spec.name} from within a new empty doc`, async ({ app, page }) => {
+    await app.firstWindow(); // TODO: Convenience method that waits for app to be ready
+    test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+    const specPreview = page.locator('.information-container');
+    const codeEditor = page.locator('[data-testid="CodeEditor"]');
+
+    await page.click('[data-testid="project"]');
+    await page.click('text=Create');
+    await page.click('button:has-text("Design Document")');
+    await page.click('.modal__footer >> text=Create');
+
+    await page.click('text=Import OpenAPI');
+    await page.click('button:has-text("URL")');
+
+    // TODO: fix modal flakiness
+    await page.click('input[id="prompt-input"]', { force: true });
+    await page.fill('input[id="prompt-input"]', spec.url, { force: true });
+    await page.click('text=Fetch and Import');
+
+    await expect(codeEditor).toContainText('3.0.0');
+    await expect(specPreview).toContainText('Swagger Petstore');
+  });
+
+  test(`can import ${spec.name} from import/export menu within an empty doc`, async ({ app, page }) => {
     test.fail(); // FAILING DUE TO https://linear.app/insomnia/issue/INS-1393/no-text-rendered-when-folks-import-a-file-into-an-empty-design-doc
     await app.firstWindow(); // TODO: Convenience method that waits for app to be ready
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
