@@ -16,13 +16,13 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 
 ## How to run smoke tests
 
-1. In one terminal run the watcher:
+- In one terminal run the watcher:
 
 ```shell
 npm run watch:app   # Run watcher
 ```
 
-2. In a second terminal, run:
+- In a second terminal, run:
 
 ```shell
 # Run tests
@@ -85,8 +85,8 @@ Each of the above commands will automatically run the Express server, so you do 
 Each time you run a playwright test a trace.zip will be generated, this is useful for debugging CI. [docs](https://playwright.dev/docs/trace-viewer)
 
 Open a trace viewer for a given test output:
-```shell
 
+```shell
 npx playwright show-trace packages/insomnia-smoke-test/screenshots/app-can-send-requests/trace.zip
 ```
 
