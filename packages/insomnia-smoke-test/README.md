@@ -1,6 +1,6 @@
 # Insomnia Smoke Tests
 
-This project contains the smoke testing suite for Insomnia and Inso.
+This project contains the smoke testing suite for Insomnia and Inso CLI.
 
 Tests for the Electron app are written using [Playwright](https://github.com/microsoft/playwright)  while tests for the CLI use [execa](https://github.com/sindresorhus/execa).
 
@@ -14,21 +14,26 @@ Tests for the Electron app are written using [Playwright](https://github.com/mic
 | `/server`    | Express server used by the tests  |
 | `/fixtures`  | data used by tests and the server |
 
-## Run Insomnia smoke tests
+## How to run smoke tests
 
-### Development method
-
-In one terminal run the watcher
+1. In one terminal run the watcher:
 
 ```shell
 npm run watch:app   # Run watcher
 ```
 
-In a second terminal run/debug/step through smoke tests
+2. In a second terminal, run:
 
 ```shell
 # Run tests
 npm run test:smoke:dev
+```
+
+> To use Playwright Inspector, run the previous `npm run test:smoke:dev` with `PWDEBUG=1`.
+
+### Alternative smoke test commands
+
+```shell
 
 # Run individual tests
 npm run test:smoke:dev -- oauth
@@ -79,11 +84,13 @@ Each of the above commands will automatically run the Express server, so you do 
 
 Each time you run a playwright test a trace.zip will be generated, this is useful for debugging CI. [docs](https://playwright.dev/docs/trace-viewer)
 
+Open a trace viewer for a given test output:
 ```shell
-# Open a trace viewer for a given test output
+
 npx playwright show-trace packages/insomnia-smoke-test/screenshots/app-can-send-requests/trace.zip
-# Alternatively you can upload this trace to https://trace.playwright.dev/
 ```
+
+Alternatively you can upload this trace to [trace.playwright.dev](https://trace.playwright.dev/)
 
 ### Using the Playwright VS Code extension
 
