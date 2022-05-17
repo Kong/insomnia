@@ -13,7 +13,6 @@
     "node_modules",
     "dist",
     "src/jest",
-    ".babelrc.js",
     "jest.config.js",
     "webpack",
     "bin",

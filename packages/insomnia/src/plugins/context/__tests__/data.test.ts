@@ -156,7 +156,6 @@ describe('app.export.*', () => {
       _id: 'res_1',
       parentId: 'req_1',
       statusCode: 200,
-      body: 'foo',
     });
   });
 
@@ -244,8 +243,8 @@ describe('app.export.*', () => {
               bodySize: -1,
               content: {
                 mimeType: '',
-                size: 3,
-                text: 'foo',
+                size: 0,
+                text: '',
               },
               cookies: [],
               headers: [],

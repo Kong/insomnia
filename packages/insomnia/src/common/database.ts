@@ -276,12 +276,6 @@ export const database = {
     }
   },
 
-  flushChangesAsync: async (fake = false) => {
-    process.nextTick(async () => {
-      await database.flushChanges(0, fake);
-    });
-  },
-
   get: async function<T extends BaseModel>(type: string, id?: string) {
     if (db._empty) {
       return _send<T>('get', ...arguments);
@@ -348,7 +342,9 @@ export const database = {
           config,
         ),
       );
-      collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+      if (!config.inMemoryOnly) {
+        collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+      }
       db[modelType] = collection;
     }
 

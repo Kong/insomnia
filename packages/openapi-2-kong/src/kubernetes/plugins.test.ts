@@ -1,6 +1,8 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { HttpMethod } from '../common';
-import { dummyPluginDoc, pluginDummy, UserK8sPlugin } from '../declarative-config/jest/test-helpers';
-import { OperationPlugin, PathPlugin } from '../types/k8s-plugins';
+import { dummyPluginDoc, pluginDummy } from '../declarative-config/jest/test-helpers';
+import { IndexIncrement, OperationPlugin, PathPlugin } from '../types/k8s-plugins';
 import {
   OA3Components,
   OA3Operation,
@@ -165,7 +167,7 @@ describe('plugins', () => {
     it('returns multiple plugin docs', () => {
       const api: OpenApi3Spec = { ...spec, ...pluginKeyAuth, ...pluginDummy };
       const result = getGlobalPlugins(api, increment);
-      expect(result).toEqual<UserK8sPlugin[]>([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
+      expect(result).toEqual([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
     });
 
     it('returns security plugin doc', () => {
@@ -430,7 +432,7 @@ describe('plugins', () => {
 
   describe('generateK8sPluginConfig()', () => {
     it('should return empty array if no plugin keys found and not increment', () => {
-      const incrementMock = jest.fn().mockReturnValue(0);
+      const incrementMock = jest.fn<IndexIncrement>().mockReturnValue(0);
       const result = generateK8sPluginConfig(spec, 's', incrementMock);
       expect(result).toHaveLength(0);
       expect(incrementMock).not.toHaveBeenCalled();
