@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { OA3ServerVariable } from '../types/openapi3';
 import { pathVariablesToWildcard, resolveUrlVariables, resolveVariables } from './variables';
 

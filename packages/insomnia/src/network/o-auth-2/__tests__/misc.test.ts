@@ -1,4 +1,4 @@
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';

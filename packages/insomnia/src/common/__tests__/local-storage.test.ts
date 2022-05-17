@@ -1,16 +1,12 @@
+import { jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import LocalStorage from '../../main/local-storage';
 
-jest.spyOn(global, 'setTimeout');
-
 describe('LocalStorage()', () => {
-  beforeEach(async () => {
-    await globalBeforeEach();
-    jest.useFakeTimers();
-  });
+  beforeEach(globalBeforeEach);
 
   afterEach(() => {
     jest.clearAllTimers();
@@ -74,8 +70,6 @@ describe('LocalStorage()', () => {
     fs.rmdirSync(basePath);
     localStorage.setItem('key', 'value');
 
-    jest.runAllTimers();
-
     // Since the above operation failed to write, we should now get back
     // the default value
     expect(localStorage.getItem('key', 'different')).toBe('different');
@@ -83,16 +77,13 @@ describe('LocalStorage()', () => {
   });
 
   it('stores a key', () => {
+    jest.useFakeTimers();
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar');
 
-    // Assert timeouts are called
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    expect(setTimeout).toHaveBeenCalledWith(expect.anything(), 100);
-
     // Force debouncer to flush
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
 
     // Assert there is one item stored
     expect(fs.readdirSync(basePath).length).toEqual(1);
@@ -103,21 +94,16 @@ describe('LocalStorage()', () => {
   });
 
   it('debounces key sets', () => {
+    jest.useFakeTimers();
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     localStorage.setItem('foo', 'bar1');
     localStorage.setItem('another', 10);
     localStorage.setItem('foo', 'bar3');
-
-    // Assert timeouts are called
-    expect(setTimeout).toHaveBeenCalledTimes(3);
-    expect(setTimeout).nthCalledWith(1, expect.anything(), 100);
-    expect(setTimeout).nthCalledWith(2, expect.anything(), 100);
-    expect(setTimeout).nthCalledWith(3, expect.anything(), 100);
     expect(fs.readdirSync(basePath).length).toEqual(0);
 
-    // Force flush
-    jest.runAllTimers();
+    // Force debouncer to flush
+    jest.runOnlyPendingTimers();
 
     // Make sure only one item exists
     expect(fs.readdirSync(basePath).length).toEqual(2);

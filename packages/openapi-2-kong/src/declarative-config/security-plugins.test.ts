@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { OA3SecurityScheme, OA3SecuritySchemeOpenIdConnect } from '../types/openapi3';
 import { tags } from './jest/test-helpers';
 import { generateSecurityPlugin } from './security-plugins';

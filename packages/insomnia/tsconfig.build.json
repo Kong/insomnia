@@ -28,7 +28,6 @@
     "**/main.min.js",
     "__jest__",
     "assets",
-    ".babelrc.js",
     "bin",
     "config",
     "jest.config.js",
