@@ -29,7 +29,7 @@
   "devDependencies": {
     "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.6.11",
-    "@playwright/test": "^1.20.2",
+    "@playwright/test": "^1.22.1",
     "@types/concurrently": "^6.0.1",
     "@types/express": "^4.17.11",
     "@types/faker": "^5.5.5",
