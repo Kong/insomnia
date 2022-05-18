@@ -1,6 +1,6 @@
 import { Settings } from 'insomnia-common';
+import { mocked } from 'jest-mock';
 import { identity } from 'ramda';
-import { mocked } from 'ts-jest/utils';
 
 import * as _constants from '../../../common/constants';
 import * as electronHelpers from '../../../common/electron-helpers';

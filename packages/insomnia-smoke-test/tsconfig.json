@@ -13,6 +13,9 @@
     "playwright",
     "server",
     "jest.config.js",
-    ".eslintrc.js"
+    ".eslintrc.js",
+  ],
+  "exclude": [
+    "dist"
   ]
 }

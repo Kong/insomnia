@@ -1,9 +1,8 @@
+import { jest } from '@jest/globals';
 import { ByRoleMatcher, ByRoleOptions, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 
 import { Tooltip } from './tooltip';
-
-const pause = (time: number) => new Promise(resolve => setTimeout(resolve, time));
 
 type QueryByRole = (
   text: ByRoleMatcher,
@@ -32,14 +31,14 @@ describe('<Tooltip />', () => {
     fireEvent.mouseEnter(getByText(childText));
 
     // Should open after the configured delay, wait a sufficient amount
-    await pause(delay * 2);
+    jest.advanceTimersByTime(delay * 2);
 
     expect(getByRole('tooltip')).toBeTruthy();
 
     fireEvent.mouseLeave(getByText(childText));
 
     // Should close after 100ms default, wait a sufficient amount
-    await pause(200);
+    jest.advanceTimersByTime(delay);
 
     expect(getByRole('tooltip', { hidden: true })).toBeTruthy();
 
