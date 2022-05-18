@@ -1,3 +1,5 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { MockedFunction } from 'jest-mock';
 import { parseArgsStringToArgv } from 'string-argv';
 
 import * as packageJson from '../package.json';
@@ -24,11 +26,11 @@ const initInso = () => {
   };
 };
 
-const generateConfig = _generateConfig as jest.MockedFunction<typeof _generateConfig>;
-const lintSpecification = _lintSpecification as jest.MockedFunction<typeof _lintSpecification>;
-const runInsomniaTests = _runInsomniaTests as jest.MockedFunction<typeof _runInsomniaTests>;
-const exportSpecification = _exportSpecification as jest.MockedFunction<typeof _exportSpecification>;
-const exit = _exit as jest.MockedFunction<typeof _exit>;
+const generateConfig = _generateConfig as MockedFunction<typeof _generateConfig>;
+const lintSpecification = _lintSpecification as MockedFunction<typeof _lintSpecification>;
+const runInsomniaTests = _runInsomniaTests as MockedFunction<typeof _runInsomniaTests>;
+const exportSpecification = _exportSpecification as MockedFunction<typeof _exportSpecification>;
+const exit = _exit as MockedFunction<typeof _exit>;
 
 describe('cli', () => {
   beforeAll(() => {

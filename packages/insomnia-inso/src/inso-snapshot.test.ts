@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import execa from 'execa';
 import { getBinPathSync } from 'get-bin-path';
 

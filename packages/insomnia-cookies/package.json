@@ -29,6 +29,9 @@
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
+  "devDependencies": {
+    "@jest/globals": "^28.1.0"
+  },
   "dependencies": {
     "tough-cookie": "^2.3.3"
   }

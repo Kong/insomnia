@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { convert } from 'insomnia-importers';
+import { convert, ConvertResultType } from 'insomnia-importers';
 
 import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
@@ -24,12 +24,6 @@ export interface ImportResult {
   source: string;
   error: Error | null;
   summary: Record<string, BaseModel[]>;
-}
-
-interface ConvertResultType {
-  id: string;
-  name: string;
-  description: string;
 }
 
 interface ConvertResult {
@@ -123,7 +117,7 @@ export async function importRaw(
   let results: ConvertResult;
 
   try {
-    results = await convert(rawContent);
+    results = (await convert(rawContent)) as unknown as ConvertResult;
   } catch (err) {
     const importResult: ImportResult = {
       source: 'not found',

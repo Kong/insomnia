@@ -1,3 +1,5 @@
+import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { MockedFunction } from 'jest-mock';
 import path from 'path';
 
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
@@ -11,9 +13,9 @@ jest.mock('./adapters/git-adapter');
 jest.mock('./adapters/ne-db-adapter');
 jest.mock('./adapters/insomnia-adapter');
 
-const gitAdapter = _gitAdapter as jest.MockedFunction<typeof _gitAdapter>;
-const neDbAdapter = _neDbAdapter as jest.MockedFunction<typeof _neDbAdapter>;
-const insomniaAdapter = _insomniaAdapter as jest.MockedFunction<typeof _insomniaAdapter>;
+const gitAdapter = _gitAdapter as MockedFunction<typeof _gitAdapter>;
+const neDbAdapter = _neDbAdapter as MockedFunction<typeof _neDbAdapter>;
+const insomniaAdapter = _insomniaAdapter as MockedFunction<typeof _insomniaAdapter>;
 
 describe('loadDb()', () => {
   beforeAll(() => {

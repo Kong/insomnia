@@ -1,4 +1,6 @@
 
+import { describe, expect, it  } from '@jest/globals';
+
 import { generate } from '../generate';
 import { runTests } from '../run';
 import { mockedSendRequest, mockedSendRequestMultiple } from '../test-helpers/send-request-mock';
