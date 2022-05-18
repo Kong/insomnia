@@ -166,7 +166,7 @@ const ModalForm = (props: Props) => {
               Reset
             </button>
           )}
-          <button type="submit" form={selectedTab} className="btn" name="git-sync-done">
+          <button type="submit" form={selectedTab} className="btn" data-testid="git-repository-settings-modal__sync-btn">
             Sync
           </button>
         </div>
