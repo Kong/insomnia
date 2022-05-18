@@ -37,6 +37,7 @@
     "yaml": "^1.10.0"
   },
   "devDependencies": {
+    "@jest/globals": "^28.1.0",
     "@types/ramda": "^0.27.44",
     "@types/shell-quote": "^1.7.0",
     "@types/yaml": "^1.9.7",

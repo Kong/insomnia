@@ -1,3 +1,6 @@
+import { describe, expect, it } from '@jest/globals';
+import { fail } from 'assert';
+
 import { convert } from './convert';
 
 describe('Import errors', () => {

@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { query } from './query';
 
 describe('query()', () => {

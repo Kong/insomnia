@@ -9,7 +9,8 @@
     "strictNullChecks": true,
     "jsx": "react",
     "experimentalDecorators": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
   },
   "include": [
     "**/*.d.ts",

@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { ImportPostman } from './postman';
 import { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
 
