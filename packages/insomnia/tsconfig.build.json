@@ -27,6 +27,7 @@
     "**/__snapshots__",
     "**/__tests__",
     "**/main.min.js",
+    "src/coverage",
     "__jest__",
     "assets",
     "bin",
