@@ -34,7 +34,7 @@
     "start:electron": "cross-env NODE_ENV=development esr esbuild.main.ts && electron .",
     "test": "jest",
     "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit -p tsconfig.build.json",
+    "type-check": "tsc --noEmit --project tsconfig.build.json",
     "type-check:watch": "npm run type-check -- --watch"
   },
   "dependencies": {
