@@ -1,8 +1,9 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { ParameterSchema, RequestTerminationPlugin, RequestValidatorPlugin, xKongPluginKeyAuth, xKongPluginRequestTermination, xKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OA3Parameter } from '../types/openapi3';
-import { getSpec, pluginDummy, tags, UserDCPlugin } from './jest/test-helpers';
+import { getSpec, pluginDummy, tags } from './jest/test-helpers';
 import { ALLOW_ALL_SCHEMA, generateBodyOptions, generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
-
 describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
     it('generates plugin given a spec with a plugin attached', async () => {
@@ -26,7 +27,7 @@ describe('plugins', () => {
 
       const result = generateGlobalPlugins(api, tags);
 
-      expect(result.plugins).toEqual<UserDCPlugin[]>([
+      expect(result.plugins).toEqual([
         {
           name: 'dummy',
           tags,
@@ -78,13 +79,12 @@ describe('plugins', () => {
 
       const result = generateGlobalPlugins(spec, tags);
 
-      expect(result.plugins).toEqual<RequestTerminationPlugin[]>([
+      expect(result.plugins as RequestTerminationPlugin[]).toEqual([
         {
           name: 'request-termination',
           mad: 'max',
           tags,
           config: {
-            // @ts-expect-error this is intentionally passing in an extra property
             max: 'is mad',
             status_code: 403,
             message: 'So long and thanks for all the fish!',
@@ -116,7 +116,7 @@ describe('plugins', () => {
         },
       };
       const generated = generateRequestValidatorPlugin({ plugin, tags });
-      expect(generated).toStrictEqual<RequestValidatorPlugin>({
+      expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
         tags,
@@ -141,7 +141,7 @@ describe('plugins', () => {
         },
       };
       const generated = generateRequestValidatorPlugin({ plugin, tags });
-      expect(generated).toStrictEqual<RequestValidatorPlugin>({
+      expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
         tags,
@@ -163,7 +163,7 @@ describe('plugins', () => {
         };
 
         const generated1 = generateRequestValidatorPlugin({ plugin, tags });
-        expect(generated1.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated1.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
@@ -175,7 +175,7 @@ describe('plugins', () => {
           },
           tags,
         });
-        expect(generated2.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated2.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
@@ -200,7 +200,7 @@ describe('plugins', () => {
           parameters: [param],
         };
         const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
             {
@@ -225,7 +225,7 @@ describe('plugins', () => {
           ],
         };
         const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
             {
@@ -266,7 +266,7 @@ describe('plugins', () => {
           ],
         };
         const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
             {
@@ -299,7 +299,7 @@ describe('plugins', () => {
           },
         };
         const generated = generateRequestValidatorPlugin({ plugin, tags });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
@@ -339,7 +339,7 @@ describe('plugins', () => {
           },
         };
         const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
           allowed_content_types: ['application/xml', 'text/yaml'],
@@ -378,7 +378,7 @@ describe('plugins', () => {
           },
         };
         const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
           allowed_content_types: ['application/xml', 'application/json'],
@@ -387,7 +387,7 @@ describe('plugins', () => {
 
       it('should default body_schema if no schema is defined or generated', () => {
         const generated = generateRequestValidatorPlugin({ tags, operation: {} });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });

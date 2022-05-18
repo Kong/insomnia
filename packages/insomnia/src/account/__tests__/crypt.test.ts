@@ -1,3 +1,5 @@
+import buffer from 'buffer/';
+
 import * as crypt from '../crypt';
 
 describe('crypt', () => {
@@ -33,9 +35,10 @@ describe('crypt', () => {
         key_ops: ['encrypt', 'decrypt'],
         k: '5hs1f2xuiNPHUp11i6SWlsqYpWe_hWPcEKucZlwBfFE',
       };
-      const resultEncrypted = crypt.encryptAESBuffer(key, Buffer.from('Hello World!', 'utf8'));
+      const source = buffer.Buffer.from('Hello World!', 'utf8');
+      const resultEncrypted = crypt.encryptAESBuffer(key, source);
       const resultDecrypted = crypt.decryptAESToBuffer(key, resultEncrypted);
-      expect(resultDecrypted).toEqual(Buffer.from('Hello World!', 'utf8'));
+      expect(resultDecrypted.toString()).toEqual(source.toString());
     });
   });
 

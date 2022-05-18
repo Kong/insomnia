@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { InsomniaConfig } from '.';
 import { ingest, validate } from './validate';
 
