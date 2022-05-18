@@ -2,7 +2,7 @@ import express from 'express';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';
-import gitlabApi from './gitlab-api/gitlab-api';
+import gitlabApi from './gitlab-api';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
 

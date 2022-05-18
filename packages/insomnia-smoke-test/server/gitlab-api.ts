@@ -1,10 +1,16 @@
 import type { Application } from 'express';
 
-import { gitrepo, graphqlPayload } from './gitlab-api.mock';
-
 export default (app: Application) => {
   app.post('/gitlab-api/api/graphql', (_req, res) => {
-    res.status(200).send(graphqlPayload);
+    res.status(200).send({
+      'data': {
+        'currentUser': {
+          'publicEmail': null,
+          'name': 'Mark Kim',
+          'avatarUrl': null,
+        },
+      },
+    });
   });
 
   app.post('/gitlab-api/oauth/token', (_req, res) => {
@@ -21,12 +27,6 @@ export default (app: Application) => {
   app.post('/gitlab-api/oauth/authorize', (_req, res) => {
     res.status(200).send({
       'access_token': '123456789',
-    });
-  });
-
-  app.get('/gitlab-api/i3801/newnewnew.git/info/refs?service=git-upload-pack', (_req, res) => {
-    res.status(200).send({
-      data: gitrepo,
     });
   });
 };

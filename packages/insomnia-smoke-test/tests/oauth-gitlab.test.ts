@@ -36,10 +36,4 @@ test('Sign in with Gitlab', async ({ app, page }) => {
 
   test.expect(await page.locator('text="Mark Kim"')).toBeTruthy();
   test.expect(await page.locator('button[name="sign-out"]')).toBeTruthy();
-
-  await page
-    .locator('input[name="uri"]')
-    .fill('https://gitlab.com/i3801/newnewnew.git');
-
-  await page.locator('button[name="git-done"]').click();
 });
