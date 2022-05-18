@@ -504,12 +504,9 @@ export async function getRenderedRequestAndContext(
   return {
     context: renderContext,
     request: {
-      // Add the yummy cookies
       cookieJar: renderedCookieJar,
       cookies: [],
       isPrivate: false,
-      // NOTE: Flow doesn't like Object.assign, so we have to do each property manually
-      // for now to convert Request to RenderedRequest.
       _id: renderedRequest._id,
       authentication: renderedRequest.authentication,
       body: renderedRequest.body,
