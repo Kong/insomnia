@@ -4,4 +4,3 @@
   {# This is a comment #}
   "tag": {% foo 'bar', "baz" %}
 }
-

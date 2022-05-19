@@ -65,7 +65,7 @@ const matchesOperation = (operationName: string | null | undefined) => ({ name }
 
 interface GraphQLBody {
   query: string;
-  variables?: Record<string, any>;
+  variables: string;
   operationName?: string;
 }
 
@@ -101,7 +101,8 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
-  _queryEditor: null | CodeMirror.Editor = null;
+  _queryEditor:  null | CodeMirror.Editor = null;
+  _queryVariableEditor: null | CodeMirror.Editor = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -279,6 +280,10 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     const { query, variables, operationName } = this.state.body;
 
     this._handleBodyChange(query, variables, operationName);
+  }
+
+  _handleQueryVariableEditorInit(codeMirror: CodeMirror.Editor) {
+    this._queryVariableEditor = codeMirror;
   }
 
   async _fetchAndSetSchema(rawRequest: Request) {
@@ -470,18 +475,25 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _handlePrettify() {
     const { body } = this.state;
     const { variables, query } = body;
+    const { editorIndentWithTabs, editorIndentSize } = this.props.settings;
     const prettyQuery = prettier.format(query, {
       parser: 'graphql',
-      useTabs: this.props.settings.editorIndentWithTabs,
-      tabWidth: this.props.settings.editorIndentSize,
+      useTabs: editorIndentWithTabs,
+      tabWidth: editorIndentSize,
     });
-    const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
+
+    const indentChars = (editorIndentWithTabs) ? '\t' : ' '.repeat(editorIndentSize);
+    const prettyVariables = jsonPrettify(variables, indentChars);
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
 
     // Update editor contents
     if (this._queryEditor) {
       this._queryEditor.setValue(prettyQuery);
+    }
+
+    if (this._queryVariableEditor) {
+      this._queryVariableEditor.setValue(prettyVariables);
     }
   }
 
@@ -503,13 +515,14 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
   _handleBodyChange(
     query: string,
-    variables?: Record<string, any> | null,
+    variables: string,
     operationName?: string | null,
   ) {
     this._setDocumentAST(query);
 
     const body: GraphQLBody = {
       query,
+      variables,
     };
 
     if (variables) {
@@ -549,9 +562,8 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
   _handleVariablesChange(variables: string) {
     try {
-      const variablesObj = JSON.parse(variables || 'null');
-
-      this._handleBodyChange(this.state.body.query, variablesObj, this.state.body.operationName);
+      this._handleBodyChange(this.state.body.query, variables, this.state.body.operationName);
+      JSON.parse(variables || 'null');
     } catch (err) {
       this.setState({
         variablesSyntaxError: err.message,
@@ -567,6 +579,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     } catch (err) {
       obj = {
         query: '',
+        variables: '',
       };
     }
 
@@ -575,10 +588,11 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     }
 
     const query = obj.query || '';
-    const variables = obj.variables || null;
+    const variables = obj.variables || '';
     const operationName = obj.operationName || null;
     const body: GraphQLBody = {
       query,
+      variables,
     };
 
     if (variables) {
@@ -821,6 +835,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             }}
             noLint={!variableTypes}
             onChange={this._handleVariablesChange}
+            onCodeMirrorInit={this._handleQueryVariableEditorInit}
             mode="graphql-variables"
             placeholder=""
           />

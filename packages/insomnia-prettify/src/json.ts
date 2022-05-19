@@ -29,7 +29,7 @@ const NUNJUCKS_CLOSE_STATES: {
 /**
  * Format a JSON string without parsing it as JavaScript.
  *
- * Code taken from jsonlint (http://zaa.ch/jsonlint/)
+ * Code taken from JSON Lint (https://github.com/zaach/jsonlint)
  */
 export const prettify = (json?: string, indentChars = '\t', replaceUnicode = true) => {
   if (!json) {
