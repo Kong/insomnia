@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import type { GrpcMethodType } from '../method';
 import { canClientStream, getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
 

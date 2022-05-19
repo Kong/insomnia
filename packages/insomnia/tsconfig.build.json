@@ -10,7 +10,7 @@
     "jsx": "react",
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "types": ["node", "jest"],
+    "types": ["node"],
   },
   "include": [
     "**/*.d.ts",

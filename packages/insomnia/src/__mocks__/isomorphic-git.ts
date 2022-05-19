@@ -1,11 +1,11 @@
+import { jest } from '@jest/globals';
+import isomorphicGitOriginal from 'isomorphic-git';
+
 // eslint-disable-next-line filenames/match-exported
-const git = jest.requireActual('isomorphic-git');
-const mock = jest.genMockFromModule('isomorphic-git');
+const git = jest.requireActual('isomorphic-git') as typeof isomorphicGitOriginal;
+const mock = jest.createMockFromModule('isomorphic-git') as typeof isomorphicGitOriginal;
 
-// @ts-expect-error -- TSCONVERSION
 git.push = mock.push;
-
-// @ts-expect-error -- TSCONVERSION
 git.clone = mock.clone;
 
 // WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
