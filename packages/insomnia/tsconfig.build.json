@@ -9,7 +9,8 @@
     "strictNullChecks": true,
     "jsx": "react",
     "experimentalDecorators": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
   },
   "include": [
     "**/*.d.ts",
@@ -26,6 +27,7 @@
     "**/__snapshots__",
     "**/__tests__",
     "**/main.min.js",
+    "src/coverage",
     "__jest__",
     "assets",
     "bin",

@@ -19,7 +19,7 @@
     "assets",
     "scripts",
     
-    "**/@types/mocha/*",
+    "**/@types/mocha",
     "**/*.test.ts",
     "**/__snapshots__/**",
     "**/__mocks__/*"

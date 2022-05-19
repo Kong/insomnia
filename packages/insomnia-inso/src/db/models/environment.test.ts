@@ -1,4 +1,6 @@
+import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import _enquirer from 'enquirer';
+import { Mock, MockedClass } from 'jest-mock';
 
 import { globalBeforeAll, globalBeforeEach } from '../../jest/before';
 import type { Database } from '../index';
@@ -8,10 +10,10 @@ import type { Environment, Workspace } from './types';
 import { generateIdIsh } from './util';
 
 jest.mock('enquirer');
-const enquirer = _enquirer as jest.MockedClass<typeof _enquirer> & {
+const enquirer = _enquirer as MockedClass<typeof _enquirer> & {
   __mockPromptRun: (str: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- missing types from enquirer
-  __constructorMock: jest.Mock;
+  __constructorMock: Mock;
 };
 
 describe('Environment', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
@@ -39,11 +40,11 @@ describe('Fixtures', () => {
 
         const ids = new Set();
         for (const resource of results.data.resources) {
-          if (ids.has(resource._id)) {
+          if (ids.has(resource?._id)) {
             const json = JSON.stringify(resource, null, '\t');
             throw new Error(`Export contained multiple duplicate IDs: ${json}`);
           }
-          ids.add(resource._id);
+          ids.add(resource?._id);
         }
       });
     }

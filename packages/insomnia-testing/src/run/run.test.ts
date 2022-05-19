@@ -1,4 +1,4 @@
-import { mocked } from 'jest-mock';
+import { describe, expect, it, jest  } from '@jest/globals';
 
 import { SendRequestCallback } from './insomnia';
 import { runTests } from './run';
@@ -28,7 +28,7 @@ describe('Example', () => {
 `;
 
 describe('run', () => {
-  const getMockedSendRequest = () => mocked<SendRequestCallback<{status: number}>>(jest.fn().mockResolvedValue({ status: 200 }));
+  const getMockedSendRequest = () => jest.fn<SendRequestCallback<{status: number}>>().mockResolvedValue({ status: 200 });
 
   it('runs a mocha suite', async () => {
     const { stats } = await runTests(exampleTest, { sendRequest: getMockedSendRequest() });

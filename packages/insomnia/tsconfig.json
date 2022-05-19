@@ -21,6 +21,7 @@
     "bin",
     "build",
     "config",
+    "src/coverage",
     "node_modules"
   ]
 }

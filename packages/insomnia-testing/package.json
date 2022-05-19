@@ -29,7 +29,7 @@
     "@types/chai": "^4.2.15",
     "@types/mkdirp": "^1.0.1",
     "@types/mocha": "^8.2.1",
-    "jest-mock": "^28.0.2",
+    "@jest/globals": "^28.1.0",
     "typescript": "^4.5.5"
   },
   "dependencies": {
