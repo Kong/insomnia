@@ -5,7 +5,7 @@ import path from 'path';
 import { getAppDataDir } from './data-directory';
 
 jest.mock('os', () => ({
-  ...jest.requireActual('os') as unknown as typeof os,
+  ...jest.requireActual('os') as typeof os,
   homedir: (): string => 'homedir',
 }));
 

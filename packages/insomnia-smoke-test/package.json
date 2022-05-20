@@ -35,7 +35,6 @@
     "@types/express": "^4.17.11",
     "@types/faker": "^5.5.5",
     "@types/mkdirp": "^1.0.1",
-    "@types/mocha": "^8.2.1",
     "@types/oidc-provider": "^7.8.1",
     "@types/ramda": "^0.27.45",
     "@types/uuid": "^8.3.4",

@@ -1,3 +1,4 @@
+import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Settings } from 'insomnia-common';
 import { mocked } from 'jest-mock';
 import { identity } from 'ramda';
@@ -16,7 +17,7 @@ import {
 } from '../settings';
 
 jest.mock('../../../common/constants', () => ({
-  ...jest.requireActual<typeof _constants>('../../../common/constants'),
+  ...jest.requireActual('../../../common/constants') as typeof _constants,
   isDevelopment: jest.fn(),
 }));
 const { isDevelopment } = mocked(_constants);

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import electron from 'electron';
 
 import { clickLink } from '../electron-helpers';

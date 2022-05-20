@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import electron from 'electron';
 import EventEmitter from 'events';
 

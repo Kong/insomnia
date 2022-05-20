@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import MemoryDriver from '../drivers/memory-driver';
 import Store from '../index';
 
