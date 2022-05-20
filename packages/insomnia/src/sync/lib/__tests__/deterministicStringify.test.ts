@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { deterministicStringify } from '../deterministicStringify';
 
 describe('deterministicStringify()', () => {

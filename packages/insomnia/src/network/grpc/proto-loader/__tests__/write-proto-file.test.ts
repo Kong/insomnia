@@ -1,4 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
+import { SpyInstance } from 'jest-mock';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
@@ -8,10 +10,10 @@ import * as models from '../../../../models';
 import writeProtoFile from '../write-proto-file';
 
 describe('writeProtoFile', () => {
-  let existsSyncSpy: jest.SpyInstance<any, any>;
-  let mkdirpSyncSpy: jest.SpyInstance<any, any>;
-  let tmpDirSpy: jest.SpyInstance<any, any>;
-  let writeFileSpy: jest.SpyInstance<any, any>;
+  let existsSyncSpy: SpyInstance<any>;
+  let mkdirpSyncSpy: SpyInstance<any>;
+  let tmpDirSpy: SpyInstance<any>;
+  let writeFileSpy: SpyInstance<any>;
 
   const _setupSpies = () => {
     existsSyncSpy = jest.spyOn(fs, 'existsSync');

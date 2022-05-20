@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import electron from 'electron';
 import { mocked } from 'jest-mock';
 

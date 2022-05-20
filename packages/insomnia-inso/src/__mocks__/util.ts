@@ -1,5 +1,9 @@
-// eslint-disable-next-line filenames/match-exported
-const mod = jest.requireActual('../util');
-mod.exit = jest.fn();
+import { jest } from '@jest/globals';
 
-module.exports = mod;
+import * as utilOriginal from '../util';
+
+// eslint-disable-next-line filenames/match-exported
+const util = jest.requireActual('../util') as typeof utilOriginal;
+util.exit = jest.fn();
+
+module.exports = util;

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import buffer from 'buffer/';
 
 import * as crypt from '../crypt';

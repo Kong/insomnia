@@ -1,3 +1,4 @@
+import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 
 import { GIT_CLONE_DIR } from '../git-vcs';

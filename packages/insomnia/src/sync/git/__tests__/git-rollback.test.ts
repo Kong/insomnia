@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 
 import type { FileWithStatus } from '../git-rollback';

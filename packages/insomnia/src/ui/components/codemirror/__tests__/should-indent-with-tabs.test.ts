@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { shouldIndentWithTabs } from '../should-indent-with-tabs';
 
 describe('shouldIndentWithTabs()', () => {

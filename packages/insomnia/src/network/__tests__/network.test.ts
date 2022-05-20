@@ -1,4 +1,5 @@
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import electron from 'electron';
 import fs from 'fs';
 import { HttpVersions } from 'insomnia-common';
@@ -22,6 +23,7 @@ import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
 import { _getAwsAuthHeaders } from '../parse-header-strings';
+
 window.app = electron.app;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;

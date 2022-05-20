@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 import mkdirp from 'mkdirp';
 import os from 'os';

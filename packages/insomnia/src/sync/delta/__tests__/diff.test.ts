@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { __internal, diff } from '../diff';
 
 describe('diff()', () => {
