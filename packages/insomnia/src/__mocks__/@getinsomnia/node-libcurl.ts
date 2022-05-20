@@ -24,6 +24,7 @@ class Curl extends EventEmitter {
   static option = {
     ACCEPT_ENCODING: 'ACCEPT_ENCODING',
     CAINFO: 'CAINFO',
+    CAINFO_BLOB: 'CAINFO_BLOB',
     COOKIEFILE: 'COOKIEFILE',
     COOKIELIST: 'COOKIELIST',
     CUSTOMREQUEST: 'CUSTOMREQUEST',
@@ -77,7 +78,7 @@ class Curl extends EventEmitter {
       throw new Error(`Invalid option ${name} ${value}`);
     }
 
-    if (name === Curl.option.CAINFO) {
+    if (name === Curl.option.CAINFO_BLOB) {
       // Just ignore this because it's platform-specific
       return;
     }

@@ -5,6 +5,7 @@ import * as models from '../models';
 export async function globalBeforeEach() {
   // Setup the local database in case it's used
   fetch.setup('insomnia-tests', 'http://localhost:8000');
+
   await db.init(
     models.types(),
     {

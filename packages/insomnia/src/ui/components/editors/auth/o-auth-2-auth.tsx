@@ -417,7 +417,7 @@ const OAuth2Error: FC = () => {
       </div>
     );
   }
-  return null;
+  return debugButton;
 };
 
 const useActiveOAuth2Token = () => {

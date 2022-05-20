@@ -1,9 +1,12 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { setDefaults, unthrowableParseJson } from './utils';
 
 describe('setDefaults()', () => {
   it('should leave non-objects alone', () => {
     expect(setDefaults(null)).toBe(null);
   });
+
   it('should leave unrecognized types alone', () => {
     const obj = {
       _type: 'weird',
@@ -11,6 +14,7 @@ describe('setDefaults()', () => {
     // @ts-expect-error -- this is an intentionally unrecognized `_type`
     expect(setDefaults(obj)).toBe(obj);
   });
+
   it('should set correct request defaults', () => {
     expect(
       setDefaults({
@@ -28,6 +32,7 @@ describe('setDefaults()', () => {
       authentication: {},
     });
   });
+
   it('should set correct request_group defaults', () => {
     expect(
       setDefaults({
@@ -40,6 +45,7 @@ describe('setDefaults()', () => {
       environment: {},
     });
   });
+
   it('should set correct environment defaults', () => {
     expect(
       setDefaults({
@@ -52,6 +58,7 @@ describe('setDefaults()', () => {
       data: {},
     });
   });
+
   describe('unthrowableParseJson', () => {
     it('should parse happy json', () => {
       const json = '{"foo": "bar"}';
@@ -60,6 +67,7 @@ describe('setDefaults()', () => {
         foo: 'bar',
       });
     });
+
     it('should quietly fail on bad json', () => {
       expect(() => {
         const json = '{"foo": "bar';

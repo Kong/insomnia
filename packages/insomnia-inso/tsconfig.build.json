@@ -13,14 +13,13 @@
     "node_modules",
     "dist",
     "src/jest",
-    ".babelrc.js",
     "jest.config.js",
     "webpack",
     "bin",
     "assets",
     "scripts",
     
-    "**/@types/mocha/*",
+    "**/@types/mocha",
     "**/*.test.ts",
     "**/__snapshots__/**",
     "**/__mocks__/*"

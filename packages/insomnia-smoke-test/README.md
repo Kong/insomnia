@@ -30,6 +30,9 @@ In a second terminal run/debug/step through smoke tests
 # Run tests
 npm run test:smoke:dev
 
+# Run individual tests
+npm run test:smoke:dev -- oauth
+
 # Debug tests with playwright logs
 DEBUG=pw:api npm run test:smoke:dev
 

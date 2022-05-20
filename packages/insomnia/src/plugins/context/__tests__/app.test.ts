@@ -1,5 +1,5 @@
 import electron from 'electron';
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 
 import appPackageJson from '../../../../package.json';
 import { globalBeforeEach } from '../../../__jest__/before-each';

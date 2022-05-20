@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
   capitalize,
@@ -18,8 +20,6 @@ import {
   toTitleCase,
   xmlDecode,
 } from '../misc';
-
-jest.spyOn(global, 'setTimeout');
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -142,22 +142,25 @@ describe('filterHeaders()', () => {
 describe('keyedDebounce()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    jest.useFakeTimers();
   });
 
-  it('debounces correctly', () => {
-    const resultsList = [];
-    const fn = keyedDebounce(results => {
-      resultsList.push(results);
-    }, 100);
+  it('debounces correctly', async () => {
+    jest.useFakeTimers();
+    const resultsList: Record<string, string[]>[] = [];
+    const setter = jest.fn((result: Record<string, string[]>) => {
+      resultsList.push(result);
+    });
+    jest.clearAllTimers();
+    const fn = keyedDebounce<string>(setter, 100);
     fn('foo', 'bar');
     fn('baz', 'bar');
     fn('foo', 'bar2');
     fn('foo', 'bar3');
     fn('multi', 'foo', 'bar', 'baz');
-    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultsList).toEqual([]);
+
     jest.runAllTimers();
+
     expect(resultsList).toEqual([
       {
         foo: ['bar3'],
@@ -169,12 +172,10 @@ describe('keyedDebounce()', () => {
 });
 
 describe('debounce()', () => {
-  beforeEach(async () => {
-    await globalBeforeEach();
-    jest.useFakeTimers();
-  });
+  beforeEach(globalBeforeEach);
 
   it('debounces correctly', () => {
+    jest.useFakeTimers();
     const resultList = [];
     const fn = debounce((...args) => {
       resultList.push(args);
@@ -184,9 +185,8 @@ describe('debounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     fn('baz', 'bar');
     fn('foo', 'bar3');
-    expect(setTimeout).toHaveBeenCalledTimes(5);
     expect(resultList).toEqual([]);
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);
   });
 });

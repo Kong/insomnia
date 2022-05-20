@@ -1,6 +1,6 @@
 import { ImportRequest } from './entities';
 
-export const setDefaults = (obj: ImportRequest) => {
+export const setDefaults = (obj: ImportRequest | null) => {
   if (!obj || !obj._type) {
     return obj;
   }

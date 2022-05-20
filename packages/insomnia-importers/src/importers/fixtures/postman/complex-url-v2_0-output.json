@@ -19,9 +19,9 @@
       "url": "https://insomnia.rest?foo=bar",
       "name": "Test Request",
       "description": "",
+      "parameters": [],
       "method": "GET",
       "body": {},
-      "parameters": [],
       "headers": [],
       "authentication": {}
     }
