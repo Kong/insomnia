@@ -16,12 +16,9 @@ from the website.
 
 ## Bugs and Feature Requests
 
-Have a bug or a feature request? First, read the
-[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and
-closed issues. If your problem or idea is not addressed yet, [please open a new issue](/issues).
+Have a bug or a feature request? First, read the [issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](/issues).
 
-For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest) or email
-[support@insomnia.rest](mailto:support@insomnia.rest)
+For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest) or email [support@insomnia.rest](mailto:support@insomnia.rest)
 
 ## Contributing
 
@@ -96,8 +93,8 @@ If you are on Windows and have problems, you may need to install [Windows Build 
 
 You can use any editor you'd like, but make sure to have support/plugins for the following tools:
 
-- [ESLint](http://eslint.org/) – For catching syntax problems and common errors
-- [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) – For React components
+- [ESLint](http://eslint.org/) - For catching syntax problems and common errors
+- [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) - For React components
 
 </details>
 
@@ -113,9 +110,9 @@ Search for, discover, and install plugins from the Insomnia [Plugin Hub](https:/
 
 ## Community Projects
 
-- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using the [documenter plugin](https://insomnia.rest/plugins/insomnia-plugin-documenter) or your Insomnia export file.
-- [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) – A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
-- [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
+- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) - Generate beautiful API documentation pages using the [documenter plugin](https://insomnia.rest/plugins/insomnia-plugin-documenter) or your Insomnia export file.
+- [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) - A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
+- [Swaggymnia](https://github.com/mlabouardy/swaggymnia) - Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
 ## License
 
