@@ -1,4 +1,4 @@
-import { IRuleResult } from '@stoplight/spectral';
+import { IRuleResult } from '@stoplight/spectral-core';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
