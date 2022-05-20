@@ -713,7 +713,11 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
+    trackSegmentEvent(SegmentEvent.requestExecute, {
+      preferredHttpVersion: settings.preferredHttpVersion,
+      authenticationType: request.authentication?.type,
+      mimeType: request.body.mimeType,
+    });
     // Start loading
     handleStartLoading(requestId);
 
@@ -800,7 +804,11 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
+    trackSegmentEvent(SegmentEvent.requestExecute, {
+      preferredHttpVersion: settings.preferredHttpVersion,
+      authenticationType: request.authentication?.type,
+      mimeType: request.body.mimeType,
+    });
     handleStartLoading(requestId);
 
     try {
