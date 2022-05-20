@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "outDir": "../insomnia-send-request/dist"
+    "outDir": "../insomnia-send-request/dist",
+    "emitDeclarationOnly": true,
   },
   "include": [
     "**/*.d.ts",

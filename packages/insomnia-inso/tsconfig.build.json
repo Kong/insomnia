@@ -14,7 +14,6 @@
     "dist",
     "src/jest",
     "jest.config.js",
-    "webpack",
     "bin",
     "assets",
     "scripts",
