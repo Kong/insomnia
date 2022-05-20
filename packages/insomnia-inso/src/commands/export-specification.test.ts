@@ -1,3 +1,6 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { MockedFunction } from 'jest-mock';
+
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
@@ -5,7 +8,7 @@ import { exportSpecification } from './export-specification';
 
 jest.mock('../write-file');
 
-const writeFileWithCliOptions = _writeFileWithCliOptions as jest.MockedFunction<typeof _writeFileWithCliOptions>;
+const writeFileWithCliOptions = _writeFileWithCliOptions as MockedFunction<typeof _writeFileWithCliOptions>;
 
 describe('exportSpecification()', () => {
   beforeAll(() => {

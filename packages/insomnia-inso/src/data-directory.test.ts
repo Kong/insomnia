@@ -1,10 +1,11 @@
+import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import os from 'os';
 import path from 'path';
 
 import { getAppDataDir } from './data-directory';
 
 jest.mock('os', () => ({
-  ...jest.requireActual<typeof os>('os'),
+  ...jest.requireActual('os') as unknown as typeof os,
   homedir: (): string => 'homedir',
 }));
 

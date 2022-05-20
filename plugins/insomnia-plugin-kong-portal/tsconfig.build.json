@@ -6,7 +6,6 @@
     "resolveJsonModule": true,
     "strict": true,
     "jsx": "react",
-    "types": ["node"],
     "isolatedModules": false,
     "emitDeclarationOnly": true,
     "sourceMap": false,

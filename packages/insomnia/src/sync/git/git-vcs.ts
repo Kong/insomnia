@@ -200,7 +200,6 @@ export class GitVCS {
     const config = await this.getRemote('origin');
 
     if (config === null) {
-      // Should never happen but it's here to make Flow happy
       throw new Error('Remote not found remote=origin');
     }
 
