@@ -35,7 +35,6 @@ import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
 import { LoginModal } from '../../components/modals/login-modal';
-import { PaymentNotificationModal } from '../../components/modals/payment-notification-modal';
 import { SelectModal } from '../../components/modals/select-modal';
 import {
   SettingsModal,
@@ -60,7 +59,6 @@ export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
-const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
@@ -205,10 +203,6 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         title: args.title,
         message: args.message,
       });
-      break;
-
-    case COMMAND_TRIAL_END:
-      showModal(PaymentNotificationModal);
       break;
 
     case COMMAND_IMPORT_URI:

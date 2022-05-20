@@ -53,7 +53,6 @@ import { GitStagingModal } from './modals/git-staging-modal';
 import { registerModal, showModal } from './modals/index';
 import { LoginModal } from './modals/login-modal';
 import { NunjucksModal } from './modals/nunjucks-modal';
-import { PaymentNotificationModal } from './modals/payment-notification-modal';
 import ProjectSettingsModal from './modals/project-settings-modal';
 import { PromptModal } from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
@@ -488,7 +487,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <AskModal ref={registerModal} />
             <SelectModal ref={registerModal} />
             <RequestCreateModal ref={registerModal} />
-            <PaymentNotificationModal ref={registerModal} />
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} />
