@@ -44,5 +44,5 @@ test('Sign in with GitHub', async ({ app, page }) => {
     .locator('input[name="uri"]')
     .fill('https://github.com/insomnia/example-repo');
 
-  await page.locator('text=Done').click();
+  await page.locator('data-testid=git-repository-settings-modal__sync-btn').click();
 });

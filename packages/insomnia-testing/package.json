@@ -2,7 +2,7 @@
   "private": false,
   "name": "insomnia-testing",
   "license": "Apache-2.0",
-  "version": "3.1.0-beta.1",
+  "version": "3.1.0-beta.2",
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
@@ -26,10 +26,10 @@
     "prepublish": "npm run build"
   },
   "devDependencies": {
+    "@jest/globals": "^28.1.0",
     "@types/chai": "^4.2.15",
     "@types/mkdirp": "^1.0.1",
     "@types/mocha": "^8.2.1",
-    "@jest/globals": "^28.1.0",
     "typescript": "^4.5.5"
   },
   "dependencies": {
