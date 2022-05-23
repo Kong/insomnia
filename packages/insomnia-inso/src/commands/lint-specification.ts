@@ -51,7 +51,8 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  await spectral.setRuleset(oas as unknown as Ruleset);
+  // @ts-expect-error -- TSCONVERSION oas not being properly caught as Ruleset
+  await spectral.setRuleset(oas as Ruleset);
 
   const results = (await spectral.run(specContent)).filter(result => (
     result.severity === 0 // filter for errors only
