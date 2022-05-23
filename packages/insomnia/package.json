@@ -45,6 +45,7 @@
     "@grpc/proto-loader": "^0.5.5",
     "@hapi/hawk": "^8.0.0",
     "@jest/globals": "^28.1.0",
+    "@sentry/electron": "^3.0.7",
     "@stoplight/spectral": "^5.9.0",
     "analytics-node": "^6.0.0",
     "aws4": "^1.11.0",
