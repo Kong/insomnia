@@ -49,11 +49,9 @@ export class SidebarCreateDropdown extends PureComponent<Props> {
         </DropdownItem>
         <DropdownItem onClick={() => handleCreateRequest('GraphQL')}>
           <i className="fa fa-plus-circle" /> New GraphQL Request
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_GRAPHQL.id]} />
         </DropdownItem>
         <DropdownItem onClick={() => handleCreateRequest('gRPC')}>
           <i className="fa fa-plus-circle" /> New gRPC Request
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_GRPC.id]} />
         </DropdownItem>
       </Dropdown>
     );

@@ -306,30 +306,6 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_CREATE_GRAPHQL,
-        () => {
-          const { activeRequest, activeWorkspace } = this.props;
-          if (!activeWorkspace) {
-            return;
-          }
-
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId, 'GraphQL');
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_CREATE_GRPC,
-        () => {
-          const { activeRequest, activeWorkspace } = this.props;
-          if (!activeWorkspace) {
-            return;
-          }
-
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId, 'gRPC');
-        },
-      ],
-      [
         hotKeyRefs.REQUEST_SHOW_DELETE,
         () => {
           const { activeRequest } = this.props;
