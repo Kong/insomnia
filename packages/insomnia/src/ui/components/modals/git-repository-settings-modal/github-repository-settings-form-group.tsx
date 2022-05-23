@@ -191,7 +191,7 @@ const GitHubRepositoryForm = ({
 }: GitHubRepositoryFormProps) => {
   const [error, setError] = useState('');
 
-  const [user, setUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
+  const [user, setUser, removeUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
     'github-user-info',
     undefined
   );
@@ -298,7 +298,7 @@ const GitHubRepositoryForm = ({
                 'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
               okLabel: 'Sign out',
               onConfirm: () => {
-                setUser(undefined);
+                removeUser();
                 onSignOut();
               },
             });

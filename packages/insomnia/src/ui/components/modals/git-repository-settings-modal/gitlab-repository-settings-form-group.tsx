@@ -6,11 +6,12 @@ import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
-import { getGitLabOauthApiURL } from '../../../../common/constants';
 import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
   generateAuthorizationUrl,
+  getGitLabOauthApiURL,
+  refreshToken,
   signOut,
 } from '../../../../sync/git/gitlab-oauth-provider';
 import {
@@ -42,7 +43,7 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
     gitlabToken ? null : 500
   );
 
-  if (!gitlabToken) {
+  if (typeof gitlabToken !== 'string' || !gitlabToken) {
     return <GitLabSignInForm />;
   }
 
@@ -90,6 +91,7 @@ const GitLabUserInfoQuery = `
     currentUser {
       publicEmail
       name
+      username
       avatarUrl
     }
   }
@@ -99,6 +101,7 @@ interface GitLabUserInfoQueryResult {
   currentUser: {
     publicEmail: string;
     name: string;
+    username: string;
     avatarUrl: string;
   };
 }
@@ -189,7 +192,7 @@ const GitLabRepositoryForm = ({
 }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
 
-  const [user, setUser] = useLocalStorage<GitLabUserInfoQueryResult['currentUser']>(
+  const [user, setUser, removeUser] = useLocalStorage<GitLabUserInfoQueryResult['currentUser']>(
     'gitlab-user-info',
     undefined
   );
@@ -218,9 +221,14 @@ const GitLabRepositoryForm = ({
         })
         .catch((e: unknown) => {
           if (e instanceof Error) {
-            setError(
-              'Something went wrong when trying to fetch info from GitLab.'
-            );
+            if (e.message === 'Unauthorized') {
+              console.log('Unauthorized');
+              refreshToken();
+            } else {
+              setError(
+                'Something went wrong when trying to fetch info from GitLab.'
+              );
+            }
           }
         });
     }
@@ -239,7 +247,7 @@ const GitLabRepositoryForm = ({
         onSubmit({
           uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
           author: {
-            name: user?.name ?? '',
+            name: (user?.username || user?.name) ?? '',
             email: user?.publicEmail ?? '',
           },
           credentials: {
@@ -296,7 +304,7 @@ const GitLabRepositoryForm = ({
                 'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
               okLabel: 'Sign out',
               onConfirm: () => {
-                setUser(undefined);
+                removeUser();
                 onSignOut();
               },
             });
@@ -323,7 +331,7 @@ interface GitLabSignInFormProps {
 }
 
 const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
-  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
+  const [authUrl, setAuthUrl] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
 
@@ -331,9 +339,16 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
   useEffect(() => {
     if (token) {
       setIsAuthenticating(false);
-      setAuthUrl(generateAuthorizationUrl());
+
+      generateAuthorizationUrl().then(setAuthUrl);
     }
   }, [token]);
+
+  useEffect(() => {
+    if (!authUrl) {
+      generateAuthorizationUrl().then(setAuthUrl);
+    }
+  }, [authUrl]);
 
   return (
     <AuthorizationFormContainer>
