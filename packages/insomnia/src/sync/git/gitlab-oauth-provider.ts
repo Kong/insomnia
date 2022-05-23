@@ -1,39 +1,79 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getAppWebsiteBaseURL, getGitLabClientId, getGitLabOauthApiURL } from '../../common/constants';
+import { getApiBaseURL } from '../../common/constants';
 import { axiosRequest } from '../../network/axios-request';
 
-// @TODO Replace with client id once we setup the app in GitLab
-// @TODO possible discussion about fetching through ConfigService?
-const GITLAB_OAUTH_CLIENT_ID = getGitLabClientId();
-const REDIRECT_URI = `${getAppWebsiteBaseURL()}/oauth/gitlab/callback`;
+const env = process['env'];
+
+// GitLab API config
+const getGitLabConfig = async () => {
+  const { INSOMNIA_GITLAB_REDIRECT_URI, INSOMNIA_GITLAB_CLIENT_ID } = env;
+
+  // Validate and use the environment variables if provided
+  if (
+    (INSOMNIA_GITLAB_REDIRECT_URI && !INSOMNIA_GITLAB_CLIENT_ID) ||
+    (!INSOMNIA_GITLAB_REDIRECT_URI && INSOMNIA_GITLAB_CLIENT_ID)
+  ) {
+    throw new Error('GitLab Client ID and Redirect URI must both be set.');
+  }
+
+  if (INSOMNIA_GITLAB_REDIRECT_URI && INSOMNIA_GITLAB_CLIENT_ID) {
+    return {
+      clientId: INSOMNIA_GITLAB_CLIENT_ID,
+      redirectUri: INSOMNIA_GITLAB_REDIRECT_URI,
+    };
+  }
+
+  // Otherwise fetch the config for the GitLab API
+  return axiosRequest({
+    url: getApiBaseURL() + '/v1/oauth/gitlab/config',
+    method: 'GET',
+  }).then(({ data }) => {
+
+    return data;
+  });
+};
+
+export const getGitLabOauthApiURL = () =>
+  env.INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
+export const getGitLabRedirectURI = async () =>
+  env.INSOMNIA_GITLAB_REDIRECT_URI || (await getGitLabConfig()).redirectUri;
+export const getGitLabClientId = async () =>
+  env.INSOMNIA_GITLAB_CLIENT_ID || (await getGitLabConfig()).applicationId;
 
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
 
-export const GITLAB_API_URL = getGitLabOauthApiURL();
-
 function base64URLEncode(buffer: Buffer) {
-  return buffer.toString('base64')
+  return buffer
+    .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
 }
 
-const verifier = base64URLEncode(randomBytes(32));
-
 /**
  * This cache stores the states that are generated for the OAuth flow.
  * This is used to check if a command to exchange a code for a token has been initiated by the app or not.
  */
-const statesCache = new Set<string>();
+const statesCache = new Map<string, string>();
 
-export function generateAuthorizationUrl() {
+export async function generateAuthorizationUrl() {
   const state = uuid();
-  statesCache.add(state);
 
-  const scopes = ['api', 'read_user', 'write_repository', 'read_repository', 'email'];
+  const verifier = base64URLEncode(randomBytes(32));
+  statesCache.set(state, verifier);
+
+  const scopes = [
+    // Needed to read the user's email address, username and avatar_url from the GitLab API
+    'read_api',
+    // Read the user name and email address to use in commits
+    'email',
+    // Read/Write access to the user's projects to allow for syncing (push/pull etc.)
+    'write_repository',
+  ];
+
   const scope = scopes.join(' ');
 
   function sha256(str: string) {
@@ -42,13 +82,13 @@ export function generateAuthorizationUrl() {
 
   const challenge = base64URLEncode(sha256(verifier));
 
-  const gitlabURL = new URL(`${GITLAB_API_URL}/oauth/authorize`);
+  const gitlabURL = new URL(`${getGitLabOauthApiURL()}/oauth/authorize`);
   gitlabURL.search = new URLSearchParams({
-    client_id: GITLAB_OAUTH_CLIENT_ID || '',
+    client_id: (await getGitLabClientId()) || '',
     scope,
     state,
     response_type: 'code',
-    redirect_uri: REDIRECT_URI,
+    redirect_uri: await getGitLabRedirectURI(),
     code_challenge: challenge,
     code_challenge_method: 'S256',
   }).toString();
@@ -62,19 +102,21 @@ export async function exchangeCodeForGitLabToken(input: {
   scope: string;
 }) {
   const { code, state } = input;
-  if (!statesCache.has(state)) {
+
+  const verifier = statesCache.get(state);
+  if (!verifier) {
     throw new Error(
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
     );
   }
 
-  const url = new URL(`${GITLAB_API_URL}/oauth/token`);
+  const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
   url.search = new URLSearchParams({
     code,
     state,
-    client_id: GITLAB_OAUTH_CLIENT_ID || '',
+    client_id: (await getGitLabClientId()) || '',
     grant_type: 'authorization_code',
-    redirect_uri: REDIRECT_URI,
+    redirect_uri: await getGitLabRedirectURI(),
     code_verifier: verifier,
   }).toString();
 
@@ -98,12 +140,12 @@ export async function refreshToken() {
     throw new Error('No refresh token');
   }
 
-  const url = new URL(`${GITLAB_API_URL}/oauth/token`);
+  const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
 
   url.search = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
-    client_id: GITLAB_OAUTH_CLIENT_ID || '',
+    client_id: (await getGitLabClientId()) || '',
   }).toString();
 
   return axiosRequest({
@@ -113,7 +155,6 @@ export async function refreshToken() {
       'Content-Type': 'application/json',
     },
   }).then(result => {
-
     setAccessToken(result.data.access_token, result.data.refresh_token);
 
     return result.data.access_token;
