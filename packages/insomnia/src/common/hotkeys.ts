@@ -97,6 +97,8 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
   SHOW_COOKIES_EDITOR: defineHotKey('showCookiesEditor', 'Edit Cookies'),
   REQUEST_SHOW_CREATE: defineHotKey('request_showCreate', 'Create Request'),
+  REQUEST_SHOW_CREATE_GRAPHQL: defineHotKey('request_showCreate', 'Create GraphQL Request'),
+  REQUEST_SHOW_CREATE_GRPC: defineHotKey('request_showgrpcCreate', 'Create gRPC Request'),
   REQUEST_QUICK_CREATE: defineHotKey('request_quickCreate', 'Create Request (Quick)'),
   REQUEST_SHOW_DELETE: defineHotKey('request_showDelete', 'Delete Request'),
   REQUEST_SHOW_CREATE_FOLDER: defineHotKey('request_showCreateFolder', 'Create Folder'),

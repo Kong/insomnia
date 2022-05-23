@@ -24,6 +24,7 @@ import ProtoFilesModal from './proto-files-modal';
 
 interface RequestCreateModalOptions {
   parentId: string;
+  requestType: string;
   onComplete: (arg0: string) => void;
 }
 
@@ -127,11 +128,19 @@ export class RequestCreateModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  show({ parentId, onComplete }: RequestCreateModalOptions) {
+  show({ parentId, requestType, onComplete }: RequestCreateModalOptions) {
+    let selectedMethod = METHOD_GET;
+    let selectedContentType = null;
+    if (requestType === 'grpc') {
+      selectedMethod = METHOD_GRPC;
+    }
+    if (requestType === 'graphql') {
+      selectedContentType = 'graphql';
+    }
     this.setState({
       parentId,
-      selectedContentType: null,
-      selectedMethod: METHOD_GET,
+      selectedContentType,
+      selectedMethod,
     });
     this.modal?.show();
     // Need to do this after render because modal focuses itself too

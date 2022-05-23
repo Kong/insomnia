@@ -51,8 +51,8 @@ export class SidebarFilter extends PureComponent<Props> {
     this.props.requestGroupCreate();
   }
 
-  _handleRequestCreate() {
-    this.props.requestCreate();
+  _handleRequestCreate(requestType?: string) {
+    this.props.requestCreate(requestType);
   }
 
   _handleKeydown(event: KeyboardEvent) {

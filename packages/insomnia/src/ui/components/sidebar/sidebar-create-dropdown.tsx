@@ -39,13 +39,21 @@ export class SidebarCreateDropdown extends PureComponent<Props> {
           <i className="fa fa-plus-circle" />
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        <DropdownItem onClick={handleCreateRequest}>
-          <i className="fa fa-plus-circle" /> New Request
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
-        </DropdownItem>
         <DropdownItem onClick={handleCreateRequestGroup}>
           <i className="fa fa-folder" /> New Folder
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
+        </DropdownItem>
+        <DropdownItem onClick={handleCreateRequest}>
+          <i className="fa fa-plus-circle" /> New REST Request
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
+        </DropdownItem>
+        <DropdownItem onClick={() => handleCreateRequest('graphql')}>
+          <i className="fa fa-plus-circle" /> New GraphQL Request
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_GRAPHQL.id]} />
+        </DropdownItem>
+        <DropdownItem onClick={() => handleCreateRequest('grpc')}>
+          <i className="fa fa-plus-circle" /> New gRPC Request
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_GRPC.id]} />
         </DropdownItem>
       </Dropdown>
     );

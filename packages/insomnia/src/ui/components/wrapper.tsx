@@ -85,14 +85,14 @@ export type WrapperProps = AppProps & {
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleShowSettingsModal: Function;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
-  handleCreateRequest: (id: string) => void;
+  handleCreateRequest: (id: string, requestType?: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleCreateRequestForWorkspace: () => void;
+  handleCreateRequestForWorkspace: (requestType?: string) => void;
   requestPaneRef: Ref<HTMLElement>;
   responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
@@ -391,14 +391,14 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _handleCreateRequestInWorkspace() {
+  _handleCreateRequestInWorkspace(requestType?: string) {
     const { activeWorkspace, handleCreateRequest } = this.props;
 
     if (!activeWorkspace) {
       return;
     }
 
-    handleCreateRequest(activeWorkspace._id);
+    handleCreateRequest(activeWorkspace._id, requestType);
   }
 
   _handleCreateRequestGroupInWorkspace() {

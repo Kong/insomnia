@@ -306,6 +306,30 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
+        hotKeyRefs.REQUEST_SHOW_CREATE_GRAPHQL,
+        () => {
+          const { activeRequest, activeWorkspace } = this.props;
+          if (!activeWorkspace) {
+            return;
+          }
+
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          this._requestCreate(parentId, 'graphql');
+        },
+      ],
+      [
+        hotKeyRefs.REQUEST_SHOW_CREATE_GRPC,
+        () => {
+          const { activeRequest, activeWorkspace } = this.props;
+          if (!activeWorkspace) {
+            return;
+          }
+
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          this._requestCreate(parentId, 'grpc');
+        },
+      ],
+      [
         hotKeyRefs.REQUEST_SHOW_DELETE,
         () => {
           const { activeRequest } = this.props;
@@ -408,9 +432,10 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _requestCreate(parentId: string) {
+  _requestCreate(parentId: string, requestType?: string) {
     showModal(RequestCreateModal, {
       parentId,
+      requestType,
       onComplete: (requestId: string) => {
         this._handleSetActiveRequest(requestId);
 
@@ -876,9 +901,9 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _requestCreateForWorkspace() {
+  _requestCreateForWorkspace(requestType?: string) {
     if (this.props.activeWorkspace) {
-      this._requestCreate(this.props.activeWorkspace._id);
+      this._requestCreate(this.props.activeWorkspace._id, requestType);
     }
   }
 
