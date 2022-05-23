@@ -314,7 +314,7 @@ class App extends PureComponent<AppProps, State> {
           }
 
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId, 'graphql');
+          this._requestCreate(parentId, 'GraphQL');
         },
       ],
       [
@@ -326,7 +326,7 @@ class App extends PureComponent<AppProps, State> {
           }
 
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId, 'grpc');
+          this._requestCreate(parentId, 'gRPC');
         },
       ],
       [

@@ -4,12 +4,14 @@ import React, { PureComponent } from 'react';
 import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
   AUTOBIND_CFG,
+  CONTENT_TYPE_GRAPHQL,
   getContentTypeName,
   METHOD_DELETE,
   METHOD_GET,
   METHOD_GRPC,
   METHOD_HEAD,
   METHOD_OPTIONS,
+  METHOD_POST,
 } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { Request } from '../../../models/request';
@@ -113,29 +115,19 @@ export class RequestCreateModal extends PureComponent<{}, State> {
     });
   }
 
-  _shouldNotHaveBody() {
-    const { selectedMethod } = this.state;
-    return (
-      selectedMethod === METHOD_GET ||
-      selectedMethod === METHOD_HEAD ||
-      selectedMethod === METHOD_DELETE ||
-      selectedMethod === METHOD_OPTIONS ||
-      selectedMethod === METHOD_GRPC
-    );
-  }
-
   hide() {
     this.modal?.hide();
   }
 
   show({ parentId, requestType, onComplete }: RequestCreateModalOptions) {
     let selectedMethod = METHOD_GET;
-    let selectedContentType = null;
-    if (requestType === 'grpc') {
+    let selectedContentType: string | null = null;
+    if (requestType === 'gRPC') {
       selectedMethod = METHOD_GRPC;
     }
-    if (requestType === 'graphql') {
-      selectedContentType = 'graphql';
+    if (requestType === 'GraphQL') {
+      selectedMethod = METHOD_POST;
+      selectedContentType = CONTENT_TYPE_GRAPHQL;
     }
     this.setState({
       parentId,
@@ -183,24 +175,22 @@ export class RequestCreateModal extends PureComponent<{}, State> {
                   onChange={this._handleChangeSelectedMethod}
                 />
               </div>
-              {!this._shouldNotHaveBody() && (
-                <div
-                  className="form-control form-control--no-label"
-                  style={{
-                    width: 'auto',
-                  }}
+              <div
+                className="form-control form-control--no-label"
+                style={{
+                  width: 'auto',
+                }}
+              >
+                <ContentTypeDropdown
+                  className="btn btn--clicky no-wrap"
+                  right
+                  contentType={selectedContentType}
+                  onChange={this._handleChangeSelectedContentType}
                 >
-                  <ContentTypeDropdown
-                    className="btn btn--clicky no-wrap"
-                    right
-                    contentType={selectedContentType}
-                    onChange={this._handleChangeSelectedContentType}
-                  >
-                    {getContentTypeName(selectedContentType) || 'No Body'}{' '}
-                    <i className="fa fa-caret-down" />
-                  </ContentTypeDropdown>
-                </div>
-              )}
+                  {getContentTypeName(selectedContentType) || 'No Body'}{' '}
+                  <i className="fa fa-caret-down" />
+                </ContentTypeDropdown>
+              </div>
             </div>
           </form>
         </ModalBody>
