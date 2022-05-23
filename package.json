@@ -18,7 +18,7 @@
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version",
     "publish": "lerna publish from-package",
-    "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
+    "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules **/*.tsbuildinfo",
     "test": "lerna run --stream --parallel test",
     "inso-start": "npm start --prefix packages/insomnia-inso",
     "inso-package": "npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso",

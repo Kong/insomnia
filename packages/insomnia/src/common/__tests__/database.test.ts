@@ -1,3 +1,5 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { data as fixtures } from '../__fixtures__/nestedfolders';
@@ -662,6 +664,7 @@ describe('_repairDatabase()', () => {
 
 describe('duplicate()', () => {
   beforeEach(globalBeforeEach);
+
   afterEach(() => jest.restoreAllMocks());
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {

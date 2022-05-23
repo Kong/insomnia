@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { AUTH_OAUTH_1 } from '../../common/constants';
 import { _buildBearerHeader, getAuthHeader } from '../authentication';
 

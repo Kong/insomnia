@@ -1,4 +1,7 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { addDotGit, translateSSHtoHTTP } from '../utils';
+
 const links = {
   scp: {
     bare: 'git@github.com:a/b',

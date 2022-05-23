@@ -231,9 +231,6 @@ export function setSessionData(
 export async function listTeams() {
   return fetch.get('/api/teams', getCurrentSessionId());
 }
-export async function endTrial() {
-  await fetch.put('/api/billing/end-trial', null, getCurrentSessionId());
-}
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
