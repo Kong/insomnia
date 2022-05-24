@@ -1,4 +1,5 @@
-import { mocked } from 'ts-jest/utils';
+import { describe, expect, it, jest } from '@jest/globals';
+import { mocked } from 'jest-mock';
 
 import { ConfigError, getConfigSettings as _getConfigSettings  } from '../../models/helpers/settings';
 import { validateInsomniaConfig } from '../validate-insomnia-config';

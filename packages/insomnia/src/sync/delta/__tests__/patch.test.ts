@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { diff } from '../diff';
 import { patch } from '../patch';
 

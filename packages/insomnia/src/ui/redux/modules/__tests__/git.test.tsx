@@ -1,10 +1,11 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PromiseFsClient } from 'isomorphic-git';
+import { mocked } from 'jest-mock';
 import path from 'path';
 import React, { Fragment } from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
-import { mocked } from 'ts-jest/utils';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';

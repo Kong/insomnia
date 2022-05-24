@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import hook from '../compress';
 
 describe('compress hook', () => {

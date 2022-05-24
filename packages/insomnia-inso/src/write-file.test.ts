@@ -1,4 +1,6 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
+import { Mock } from 'jest-mock';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
@@ -65,13 +67,13 @@ describe('writeFileWithCliOptions', () => {
   });
   it('should return an error if make directory fails', async () => {
     const error = new Error('mkdir sync error');
-    (mkdirp.sync as jest.Mock).mockRejectedValue(error);
+    (mkdirp.sync as Mock).mockRejectedValue(error);
     const promise = writeFileWithCliOptions('file.yaml', 'contents');
     await expect(promise).rejects.toThrow(new InsoError('Failed to write to "file.yaml"', error));
   });
   it('should return an error if write file fails', async () => {
     const error = new Error('fs promises writeFile error');
-    (fs.promises.writeFile as jest.Mock).mockRejectedValue(error);
+    (fs.promises.writeFile as Mock).mockRejectedValue(error);
     const promise = writeFileWithCliOptions('file.yaml', 'contents');
     await expect(promise).rejects.toThrow(new InsoError('Failed to write to "file.yaml"', error));
   });

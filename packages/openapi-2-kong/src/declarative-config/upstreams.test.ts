@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { DCUpstream } from '../types';
 import { xKongUpstreamDefaults } from '../types/kong';
 import { getSpec, tags } from './jest/test-helpers';
@@ -22,7 +24,7 @@ describe('upstreams', () => {
   it('generates an upstream', () => {
     const spec = getSpec();
     const specResult = getSpecResult();
-    expect(generateUpstreams(spec, tags)).toEqual<DCUpstream[]>([specResult]);
+    expect(generateUpstreams(spec, tags)).toEqual([specResult]);
   });
 
   it('throws for a root level x-kong-route-default', () => {
@@ -42,7 +44,7 @@ describe('upstreams', () => {
       [xKongUpstreamDefaults]: null,
     });
     const specResult = getSpecResult();
-    expect(generateUpstreams(spec, tags)).toEqual<DCUpstream[]>([specResult]);
+    expect(generateUpstreams(spec, tags)).toEqual([specResult]);
   });
 
   it('generates upstream name by appending .upstream', () => {

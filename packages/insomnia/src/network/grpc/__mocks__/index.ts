@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 module.exports = {
   start: jest.fn(),
   sendMessage: jest.fn(),

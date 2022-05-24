@@ -1,5 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import * as grpcJs from '@grpc/grpc-js';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { grpcMocks } from '../../../__mocks__/@grpc/grpc-js';

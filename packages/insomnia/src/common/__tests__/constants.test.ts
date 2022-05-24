@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,

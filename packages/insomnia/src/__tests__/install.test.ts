@@ -1,3 +1,5 @@
+import { describe, expect, it, jest } from '@jest/globals';
+
 import { containsOnlyDeprecationWarnings, isDeprecatedDependencies } from '../plugins/install';
 
 describe('install.js', () => {

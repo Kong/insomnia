@@ -1,3 +1,5 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { MockedFunction } from 'jest-mock';
 import { DeclarativeConfigResult, generate as _generate, generateFromString as _generateFromString, KongForKubernetesResult } from 'openapi-2-kong';
 import os from 'os';
 import path from 'path';
@@ -11,9 +13,9 @@ import { conversionTypeMap, generateConfig, GenerateConfigOptions } from './gene
 jest.mock('openapi-2-kong');
 jest.mock('../write-file');
 
-const generate = _generate as jest.MockedFunction<typeof _generate>;
-const generateFromString = _generateFromString as jest.MockedFunction<typeof _generateFromString>;
-const writeFileWithCliOptions = _writeFileWithCliOptions as jest.MockedFunction<typeof _writeFileWithCliOptions>;
+const generate = _generate as MockedFunction<typeof _generate>;
+const generateFromString = _generateFromString as MockedFunction<typeof _generateFromString>;
+const writeFileWithCliOptions = _writeFileWithCliOptions as MockedFunction<typeof _writeFileWithCliOptions>;
 
 const mockConversionResult: KongForKubernetesResult = {
   // @ts-expect-error -- TSCONVERSION the tests seem to suggest that this is valid, yet it is not allowed by the types.

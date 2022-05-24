@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { validateThemeName } from './misc';
 
 describe('validateThemeName', () => {

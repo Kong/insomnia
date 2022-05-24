@@ -1,5 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { mocked } from 'ts-jest/utils';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';

@@ -3,7 +3,7 @@ module.exports = {
   collectCoverage: false,
   globals: {
     'ts-jest': {
-      isolatedModules: true,
+      isolatedModules: false,
     },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
