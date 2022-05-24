@@ -56,6 +56,7 @@ export const executeHotKey = async <T extends Function>(
  * Check whether a hotkey has been pressed.
  * @param event the activated keyboard event.
  * @param definition the hotkey definition being checked.
+ * @param hotKeyRegistry the hotkey registry read from the database
  */
 export const checkPressedKeyCombs = (
   event: KeyboardEvent,
