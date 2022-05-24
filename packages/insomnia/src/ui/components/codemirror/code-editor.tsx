@@ -10,7 +10,13 @@ import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
+import React, {
+  Component,
+  CSSProperties,
+  forwardRef,
+  ForwardRefRenderFunction,
+  ReactNode,
+} from 'react';
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
@@ -32,7 +38,6 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { KeydownBinder } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
@@ -1288,7 +1293,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         data-editor-type={type}
         data-testid="CodeEditor"
       >
-        <KeydownBinder onKeydown={this._handleKeyDown} />
+        {/* <KeydownBinder onKeydown={this._handleKeyDown} /> */}
         <div
           className={classnames('editor__container', 'input', className)}
           style={styles}

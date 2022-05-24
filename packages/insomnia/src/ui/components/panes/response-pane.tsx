@@ -58,12 +58,15 @@ interface Props {
   unitTestResult?: UnitTestResult | null;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponsePane extends PureComponent<Props> {
-  _responseViewer: ResponseViewer | null = null;
+interface State {
+  selectedTabIndex: number;
+}
 
-  _setResponseViewerRef(n: ResponseViewer) {
-    this._responseViewer = n;
+@autoBindMethodsForReact(AUTOBIND_CFG)
+export class ResponsePane extends PureComponent<Props, State> {
+  constructor(props) {
+    super(props);
+    this.state = { selectedTabIndex: -1 };
   }
 
   _handleGetResponseBody(): Buffer | null {
@@ -209,16 +212,8 @@ export class ResponsePane extends PureComponent<Props> {
     to.end(har);
   }
 
-  _handleTabSelect(index: number, lastIndex: number) {
-    if (this._responseViewer != null && index === 0 && index !== lastIndex) {
-      // Fix for CodeMirror editor not updating its content.
-      // Refresh must be called when the editor is visible,
-      // so use nextTick to give time for it to be visible.
-      process.nextTick(() => {
-        // @ts-expect-error -- TSCONVERSION
-        this._responseViewer.refresh();
-      });
-    }
+  _handleTabSelect(index: number) {
+    this.setState({ selectedTabIndex: index });
   }
 
   render() {
@@ -321,7 +316,7 @@ export class ResponsePane extends PureComponent<Props> {
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
-              ref={this._setResponseViewerRef}
+              isFocused={this.state.selectedTabIndex === 0}
               bytes={Math.max(response.bytesContent, response.bytesRead)}
               contentType={response.contentType || ''}
               disableHtmlPreviewJs={disableHtmlPreviewJs}

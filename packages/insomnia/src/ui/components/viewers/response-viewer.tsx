@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import iconv from 'iconv-lite';
-import React, { Component, Fragment } from 'react';
+import React, { Component, Fragment, FunctionComponent, useRef } from 'react';
 
 import {
   AUTOBIND_CFG,
@@ -11,10 +11,9 @@ import {
 } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { xmlDecode } from '../../../common/misc';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
-import { KeydownBinder } from '../keydown-binder';
+import { useHotKeyEffect } from '../hotkeys';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
@@ -39,6 +38,7 @@ export interface ResponseViewerProps {
   url: string;
   updateFilter?: (filter: string) => void;
   error?: string | null;
+  isFocused: boolean;
 }
 
 interface State {
@@ -50,7 +50,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseViewer extends Component<ResponseViewerProps, State> {
+export class ResponseViewerOriginal extends Component<ResponseViewerProps, State> {
   _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
@@ -105,6 +105,12 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
           error: `Failed reading response from filesystem: ${err.stack}`,
         });
       }
+    }
+  }
+
+  componentDidUpdate(prevProps: Readonly<ResponseViewerProps>) {
+    if (prevProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+      this._handleResponseFocus();
     }
   }
 
@@ -176,22 +182,20 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     );
   }
 
-  _handleKeyDown(event: KeyboardEvent) {
+  _handleResponseFocus(): void {
     if (!this._isViewSelectable()) {
       return;
     }
 
-    executeHotKey(event, hotKeyRefs.RESPONSE_FOCUS, () => {
-      if (!this._isViewSelectable()) {
-        return;
-      }
+    if (!this._isViewSelectable()) {
+      return;
+    }
 
-      this._selectableView?.focus();
+    this._selectableView?.focus();
 
-      if (!this.state.largeResponse) {
-        this._selectableView?.selectAll();
-      }
-    });
+    if (!this.state.largeResponse) {
+      this._selectableView?.selectAll();
+    }
   }
 
   _getContentType() {
@@ -275,7 +279,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     clickLink(url);
   }
 
-  _renderView() {
+  render() {
     const {
       disableHtmlPreviewJs,
       disablePreviewLinks,
@@ -460,8 +464,17 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       />
     );
   }
-
-  render() {
-    return <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
-  }
 }
+
+export const ResponseViewer: FunctionComponent<ResponseViewerProps> = props => {
+  /**
+   * TODO: refactor the original component into functional component to avoid imperative control of the component.
+   * */
+  const ref = useRef<ResponseViewerOriginal>(null);
+
+  useHotKeyEffect(() => {
+    ref.current?._handleResponseFocus();
+  }, hotKeyRefs.RESPONSE_FOCUS.id);
+
+  return <ResponseViewerOriginal ref={ref} {...props} />;
+};

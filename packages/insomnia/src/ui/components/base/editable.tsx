@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { KeydownBinder } from '../keydown-binder';
 
 export const shouldSave = (oldValue, newValue, preventBlank = false) => {
   // Should not save if length = 0 and we want to prevent blank
@@ -88,7 +87,7 @@ export class Editable extends PureComponent<Props, State> {
     );
   }
 
-  _handleEditKeyDown(event: KeyboardEvent) {
+  _handleEditKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
@@ -124,18 +123,15 @@ export class Editable extends PureComponent<Props, State> {
 
     if (editing) {
       return (
-        // KeydownBinder must be used here to properly stop propagation
-        // from reaching other scoped KeydownBinders
-        <KeydownBinder onKeydown={this._handleEditKeyDown} scoped>
-          <input
-            {...extra}
-            className={`editable ${className || ''}`}
-            type="text"
-            ref={this._handleSetInputRef}
-            defaultValue={initialValue}
-            onBlur={this._handleEditEnd}
-          />
-        </KeydownBinder>
+        <input
+          {...extra}
+          className={`editable ${className || ''}`}
+          type="text"
+          ref={this._handleSetInputRef}
+          defaultValue={initialValue}
+          onBlur={this._handleEditEnd}
+          onKeyDown={this._handleEditKeyDown}
+        />
       );
     } else {
       const readViewProps = {

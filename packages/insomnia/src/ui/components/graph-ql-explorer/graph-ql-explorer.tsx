@@ -1,14 +1,13 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
 import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
-import React, { PureComponent } from 'react';
+import React, { FunctionComponent, PureComponent, useRef } from 'react';
 import { createRef } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { DebouncedInput } from '../base/debounced-input';
-import { KeydownBinder } from '../keydown-binder';
+import { useHotKeyEffect } from '../hotkeys';
 import { GraphQLExplorerEnum } from './graph-ql-explorer-enum';
 import { GraphQLExplorerField } from './graph-ql-explorer-field';
 import { GraphQLExplorerSchema } from './graph-ql-explorer-schema';
@@ -76,7 +75,7 @@ interface State extends HistoryItem {
 const SEARCH_UPDATE_DELAY_IN_MS = 300;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class GraphQLExplorer extends PureComponent<Props, State> {
+export class GraphQLExplorerOriginal extends PureComponent<Props, State> {
   state: State = {
     history: [],
     currentType: undefined,
@@ -85,13 +84,6 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
   };
 
   _searchInput = createRef<DebouncedInput>();
-
-  _handleKeydown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
-      this._navigateToSchema();
-      this._focusAndSelectFilterInput();
-    });
-  }
 
   _focusAndSelectFilterInput() {
     if (this._searchInput) {
@@ -313,21 +305,33 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
     const typeName = isNamedType(currentType) ? currentType.name : null;
     const schemaName = schema ? 'Schema' : null;
     return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
-        <div className="graphql-explorer theme--dialog">
-          <div className="graphql-explorer__header">
-            {this.renderHistoryItem()}
-            <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
-            <button
-              className="btn btn--compact graphql-explorer__header__close-btn"
-              onClick={handleClose}
-            >
-              <i className="fa fa-close" />
-            </button>
-          </div>
-          <div className="graphql-explorer__body">{child}</div>
+      <div className="graphql-explorer theme--dialog">
+        <div className="graphql-explorer__header">
+          {this.renderHistoryItem()}
+          <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
+          <button
+            className="btn btn--compact graphql-explorer__header__close-btn"
+            onClick={handleClose}
+          >
+            <i className="fa fa-close" />
+          </button>
         </div>
-      </KeydownBinder>
+        <div className="graphql-explorer__body">{child}</div>
+      </div>
     );
   }
 }
+
+export const GraphQLExplorer: FunctionComponent<Props> = props => {
+  /**
+   * TODO: refactor the original component into functional component to avoid imperative control of the component.
+   * */
+  const ref = useRef<GraphQLExplorerOriginal>();
+
+  useHotKeyEffect(() => {
+    ref.current?._navigateToSchema();
+    ref.current?._focusAndSelectFilterInput();
+  }, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER.id);
+
+  return <GraphQLExplorerOriginal {...props} />;
+};

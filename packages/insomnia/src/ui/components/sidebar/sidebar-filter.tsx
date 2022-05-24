@@ -1,11 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent } from 'react';
+import React, { FunctionComponent, PureComponent, useRef } from 'react';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import { KeydownBinder } from '../keydown-binder';
+import { useHotKeyEffect } from '../hotkeys';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
@@ -19,7 +18,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SidebarFilter extends PureComponent<Props> {
+export class SidebarFilterOriginal extends PureComponent<Props> {
   _input: HTMLInputElement | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
 
@@ -55,39 +54,44 @@ export class SidebarFilter extends PureComponent<Props> {
     this.props.requestCreate();
   }
 
-  _handleKeydown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
-      this._input?.focus();
-    });
-  }
-
   render() {
     const { filter, hotKeyRegistry, sidebarSort } = this.props;
     return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
-        <div className="sidebar__filter">
-          <div className="form-control form-control--outlined form-control--btn-right">
-            <input
-              ref={this._setInputRef}
-              type="text"
-              placeholder="Filter"
-              defaultValue={filter}
-              onChange={this._handleOnChange}
-            />
-            {filter && (
-              <button className="form-control__right" onClick={this._handleClearFilter}>
-                <i className="fa fa-times-circle" />
-              </button>
-            )}
-          </div>
-          <SidebarSortDropdown handleSort={sidebarSort} />
-          <SidebarCreateDropdown
-            handleCreateRequest={this._handleRequestCreate}
-            handleCreateRequestGroup={this._handleRequestGroupCreate}
-            hotKeyRegistry={hotKeyRegistry}
+      <div className="sidebar__filter">
+        <div className="form-control form-control--outlined form-control--btn-right">
+          <input
+            ref={this._setInputRef}
+            type="text"
+            placeholder="Filter"
+            defaultValue={filter}
+            onChange={this._handleOnChange}
           />
+          {filter && (
+            <button className="form-control__right" onClick={this._handleClearFilter}>
+              <i className="fa fa-times-circle" />
+            </button>
+          )}
         </div>
-      </KeydownBinder>
+        <SidebarSortDropdown handleSort={sidebarSort} />
+        <SidebarCreateDropdown
+          handleCreateRequest={this._handleRequestCreate}
+          handleCreateRequestGroup={this._handleRequestGroupCreate}
+          hotKeyRegistry={hotKeyRegistry}
+        />
+      </div>
     );
   }
 }
+
+export const SidebarFilter: FunctionComponent<Props> = props => {
+  /**
+   * TODO: refactor the original component into functional component to avoid imperative control of the component.
+   * */
+  const ref = useRef<SidebarFilterOriginal>(null);
+
+  useHotKeyEffect(() => {
+    ref.current?._input?.focus();
+  }, hotKeyRefs.SIDEBAR_FOCUS_FILTER.id);
+
+  return <SidebarFilterOriginal ref={ref} {...props} />;
+};

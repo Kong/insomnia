@@ -1,10 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { Fragment, PureComponent } from 'react';
+import React, { Fragment, FunctionComponent, PureComponent, useRef } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import type { RequestVersion } from '../../../models/request-version';
@@ -14,7 +13,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { KeydownBinder } from '../keydown-binder';
+import { useHotKeyEffect } from '../hotkeys';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
@@ -34,7 +33,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseHistoryDropdown extends PureComponent<Props> {
+export class ResponseHistoryDropdownOriginal extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _handleDeleteResponses() {
@@ -51,10 +50,8 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
     this.props.handleSetActiveResponse(response);
   }
 
-  _handleKeydown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
-      this._dropdown?.toggle(true);
-    });
+  _handleToggle(): void {
+    this._dropdown?.toggle(true);
   }
 
   renderDropdownItem(response: Response) {
@@ -168,36 +165,48 @@ export class ResponseHistoryDropdown extends PureComponent<Props> {
     const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
     const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
     return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
-        <Dropdown
-          ref={ref => {
-            this._dropdown = ref;
-          }}
-          key={activeResponse ? activeResponse._id : 'n/a'}
-          {...extraProps}
-        >
-          <DropdownButton className="btn btn--super-compact tall" title="Response history">
-            {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
-            {!isLatestResponseActive ? (
-              <i className="fa fa-thumb-tack space-left" />
-            ) : (
-              <i className="fa fa-caret-down space-left" />
-            )}
-          </DropdownButton>
-          <DropdownDivider>
-            <strong>{environmentName}</strong> Responses
-          </DropdownDivider>
-          <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponse}>
-            <i className="fa fa-trash-o" />
-            Delete Current Response
-          </DropdownItem>
-          <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponses}>
-            <i className="fa fa-trash-o" />
-            Clear History
-          </DropdownItem>
-          {this.renderPastResponses(responses)}
-        </Dropdown>
-      </KeydownBinder>
+      <Dropdown
+        filterVisible
+        ref={ref => {
+          this._dropdown = ref;
+        }}
+        key={activeResponse ? activeResponse._id : 'n/a'}
+        {...extraProps}
+      >
+        <DropdownButton className="btn btn--super-compact tall" title="Response history">
+          {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
+          {!isLatestResponseActive ? (
+            <i className="fa fa-thumb-tack space-left" />
+          ) : (
+            <i className="fa fa-caret-down space-left" />
+          )}
+        </DropdownButton>
+        <DropdownDivider>
+          <strong>{environmentName}</strong> Responses
+        </DropdownDivider>
+        <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponse}>
+          <i className="fa fa-trash-o" />
+          Delete Current Response
+        </DropdownItem>
+        <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteResponses}>
+          <i className="fa fa-trash-o" />
+          Clear History
+        </DropdownItem>
+        {this.renderPastResponses(responses)}
+      </Dropdown>
     );
   }
 }
+
+export const ResponseHistoryDropdown: FunctionComponent<Props> = props => {
+  /**
+   * TODO: refactor the original component into functional component to avoid imperative control of the component.
+   * */
+  const ref = useRef<ResponseHistoryDropdownOriginal>(null);
+
+  useHotKeyEffect(() => {
+    ref.current?._handleToggle();
+  }, hotKeyRefs.REQUEST_TOGGLE_HISTORY.id);
+
+  return <ResponseHistoryDropdownOriginal ref={ref} {...props} />;
+};

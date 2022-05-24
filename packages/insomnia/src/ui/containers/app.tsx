@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
-import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
   AUTOBIND_CFG,
@@ -31,7 +31,6 @@ import { database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
 import {
   debounce,
   generateId,
@@ -61,7 +60,8 @@ import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
 import { ErrorBoundary } from '../components/error-boundary';
-import { KeydownBinder } from '../components/keydown-binder';
+import { HotkeysExecutor, HotKeysProvider } from '../components/hotkeys';
+import { HotKeysExecutionMap, HotkeysPropagator } from '../components/hotkeys';
 import { AskModal } from '../components/modals/ask-modal';
 import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
@@ -162,6 +162,7 @@ interface State {
   forceRefreshCounter: number;
   forceRefreshHeaderCounter: number;
   isMigratingChildren: boolean;
+  keysMap: HotKeysExecutionMap;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -169,7 +170,6 @@ class App extends PureComponent<AppProps, State> {
   private _savePaneWidth: (paneWidth: number) => void;
   private _savePaneHeight: (paneWidth: number) => void;
   private _saveSidebarWidth: (paneWidth: number) => void;
-  private _globalKeyMap: any;
   private _updateVCSLock: any;
   private _requestPaneRef = createRef<HTMLElement>();
   private _responsePaneRef = createRef<HTMLElement>();
@@ -193,6 +193,7 @@ class App extends PureComponent<AppProps, State> {
       forceRefreshCounter: 0,
       forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
+      keysMap: new Map(),
     };
 
     this._savePaneWidth = debounce(paneWidth =>
@@ -210,26 +211,25 @@ class App extends PureComponent<AppProps, State> {
         sidebarWidth,
       }),
     );
-    this._globalKeyMap = null;
     this._updateVCSLock = null;
   }
 
   _setGlobalKeyMap() {
-    this._globalKeyMap = [
+    const keysMap = new Map([
       [
-        hotKeyRefs.PREFERENCES_SHOW_GENERAL,
+        hotKeyRefs.PREFERENCES_SHOW_GENERAL.id,
         () => {
           App._handleShowSettingsModal();
         },
       ],
       [
-        hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+        hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS.id,
         () => {
           App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
         },
       ],
       [
-        hotKeyRefs.SHOW_RECENT_REQUESTS,
+        hotKeyRefs.SHOW_RECENT_REQUESTS.id,
         () => {
           showModal(RequestSwitcherModal, {
             disableInput: true,
@@ -244,14 +244,14 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
+        hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id,
         () => {
           const { activeWorkspace } = this.props;
           showModal(WorkspaceSettingsModal, activeWorkspace);
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_SETTINGS,
+        hotKeyRefs.REQUEST_SHOW_SETTINGS.id,
         () => {
           if (this.props.activeRequest) {
             showModal(RequestSettingsModal, {
@@ -261,22 +261,22 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.REQUEST_QUICK_SWITCH,
+        hotKeyRefs.REQUEST_QUICK_SWITCH.id,
         () => {
           showModal(RequestSwitcherModal);
         },
       ],
-      [hotKeyRefs.REQUEST_SEND, this._handleSendShortcut],
+      [hotKeyRefs.REQUEST_SEND.id, this._handleSendShortcut],
       [
-        hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+        hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id,
         () => {
           const { activeWorkspace } = this.props;
           showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
         },
       ],
-      [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
+      [hotKeyRefs.SHOW_COOKIES_EDITOR.id, showCookiesModal],
       [
-        hotKeyRefs.REQUEST_QUICK_CREATE,
+        hotKeyRefs.REQUEST_QUICK_CREATE.id,
         async () => {
           const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
@@ -294,7 +294,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_CREATE,
+        hotKeyRefs.REQUEST_SHOW_CREATE.id,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
@@ -306,7 +306,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_DELETE,
+        hotKeyRefs.REQUEST_SHOW_DELETE.id,
         () => {
           const { activeRequest } = this.props;
 
@@ -329,7 +329,7 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
+        hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
@@ -341,19 +341,19 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
+        hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id,
         async () => {
           showModal(GenerateCodeModal, this.props.activeRequest);
         },
       ],
       [
-        hotKeyRefs.REQUEST_SHOW_DUPLICATE,
+        hotKeyRefs.REQUEST_SHOW_DUPLICATE.id,
         async () => {
           await this._requestDuplicate(this.props.activeRequest || undefined);
         },
       ],
       [
-        hotKeyRefs.REQUEST_TOGGLE_PIN,
+        hotKeyRefs.REQUEST_TOGGLE_PIN.id,
         async () => {
           // @ts-expect-error -- TSCONVERSION apparently entities doesn't exist on props
           const { activeRequest, entities } = this.props;
@@ -369,15 +369,17 @@ class App extends PureComponent<AppProps, State> {
           await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
       ],
-      [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
-      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, this._updateShowVariableSourceAndValue],
+      [hotKeyRefs.PLUGIN_RELOAD.id, this._handleReloadPlugins],
+      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE.id, this._updateShowVariableSourceAndValue],
       [
-        hotKeyRefs.SIDEBAR_TOGGLE,
+        hotKeyRefs.SIDEBAR_TOGGLE.id,
         () => {
           this._handleToggleSidebar();
         },
       ],
-    ];
+    ]);
+
+    this.setState({ keysMap });
   }
 
   async _handleSendShortcut() {
@@ -1016,12 +1018,6 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _handleKeyDown(event: KeyboardEvent) {
-    for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(event, definition, callback);
-    }
-  }
-
   async _handleToggleSidebar() {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
@@ -1462,68 +1458,71 @@ class App extends PureComponent<AppProps, State> {
     } = this.state;
     const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace?._id || 'n/a'}`;
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
-        <GrpcProvider>
-          <NunjucksEnabledProvider>
-            <AppHooks />
+      <HotKeysProvider hotKeyRegistry={this.props.settings.hotKeyRegistry}>
+        <HotkeysPropagator>
+          <GrpcProvider>
+            <NunjucksEnabledProvider>
+              <AppHooks />
 
-            <div className="app" key={uniquenessKey}>
-              <ErrorBoundary showAlert>
-                <Wrapper
-                  ref={this._setWrapperRef}
-                  {...this.props}
-                  paneWidth={paneWidth}
-                  paneHeight={paneHeight}
-                  sidebarWidth={sidebarWidth}
-                  handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-                  handleSetRequestPinned={this._handleSetRequestPinned}
-                  handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-                  handleActivateRequest={this._handleSetActiveRequest}
-                  requestPaneRef={this._requestPaneRef}
-                  responsePaneRef={this._responsePaneRef}
-                  sidebarRef={this._sidebarRef}
-                  handleStartDragSidebar={this._startDragSidebar}
-                  handleResetDragSidebar={this._resetDragSidebar}
-                  handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-                  handleStartDragPaneVertical={this._startDragPaneVertical}
-                  handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-                  handleResetDragPaneVertical={this._resetDragPaneVertical}
-                  handleCreateRequest={this._requestCreate}
-                  handleDuplicateRequest={this._requestDuplicate}
-                  handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                  handleCreateRequestGroup={this._requestGroupCreate}
-                  handleGenerateCode={App._handleGenerateCode}
-                  handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-                  handleCopyAsCurl={this._handleCopyAsCurl}
-                  handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-                  handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-                  handleSendAndDownloadRequestWithEnvironment={
-                    this._handleSendAndDownloadRequestWithEnvironment
-                  }
-                  handleSetActiveResponse={this._handleSetActiveResponse}
-                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                  handleSetSidebarFilter={this._handleSetSidebarFilter}
-                  handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  handleShowSettingsModal={App._handleShowSettingsModal}
-                  handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-                  headerEditorKey={forceRefreshHeaderCounter + ''}
-                  handleSidebarSort={this._sortSidebar}
-                  vcs={vcs}
-                  gitVCS={gitVCS}
-                />
-              </ErrorBoundary>
+              <div className="app" key={uniquenessKey}>
+                <ErrorBoundary showAlert>
+                  <Wrapper
+                    ref={this._setWrapperRef}
+                    {...this.props}
+                    paneWidth={paneWidth}
+                    paneHeight={paneHeight}
+                    sidebarWidth={sidebarWidth}
+                    handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                    handleSetRequestPinned={this._handleSetRequestPinned}
+                    handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                    handleActivateRequest={this._handleSetActiveRequest}
+                    requestPaneRef={this._requestPaneRef}
+                    responsePaneRef={this._responsePaneRef}
+                    sidebarRef={this._sidebarRef}
+                    handleStartDragSidebar={this._startDragSidebar}
+                    handleResetDragSidebar={this._resetDragSidebar}
+                    handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                    handleStartDragPaneVertical={this._startDragPaneVertical}
+                    handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                    handleResetDragPaneVertical={this._resetDragPaneVertical}
+                    handleCreateRequest={this._requestCreate}
+                    handleDuplicateRequest={this._requestDuplicate}
+                    handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                    handleCreateRequestGroup={this._requestGroupCreate}
+                    handleGenerateCode={App._handleGenerateCode}
+                    handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                    handleCopyAsCurl={this._handleCopyAsCurl}
+                    handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                    handleSetResponseFilter={this._handleSetResponseFilter}
+                    handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                    handleSendAndDownloadRequestWithEnvironment={
+                      this._handleSendAndDownloadRequestWithEnvironment
+                    }
+                    handleSetActiveResponse={this._handleSetActiveResponse}
+                    handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                    handleSetSidebarFilter={this._handleSetSidebarFilter}
+                    handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                    handleShowSettingsModal={App._handleShowSettingsModal}
+                    handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                    headerEditorKey={forceRefreshHeaderCounter + ''}
+                    handleSidebarSort={this._sortSidebar}
+                    vcs={vcs}
+                    gitVCS={gitVCS}
+                  />
+                </ErrorBoundary>
 
-              <ErrorBoundary showAlert>
-                <Toast />
-              </ErrorBoundary>
+                <ErrorBoundary showAlert>
+                  <Toast />
+                </ErrorBoundary>
 
-              {/* Block all mouse activity by showing an overlay while dragging */}
-              {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-            </div>
-          </NunjucksEnabledProvider>
-        </GrpcProvider>
-      </KeydownBinder>
+                {/* Block all mouse activity by showing an overlay while dragging */}
+                {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+              </div>
+            </NunjucksEnabledProvider>
+          </GrpcProvider>
+        </HotkeysPropagator>
+        <HotkeysExecutor keysMap={this.state.keysMap} />
+      </HotKeysProvider>
     );
   }
 }

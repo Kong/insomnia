@@ -1,8 +1,7 @@
 import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import React, { FC, useCallback, useEffect, useRef } from 'react';
+import React, { FC, useCallback } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { useMount } from 'react-use';
 
 import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
@@ -132,17 +131,6 @@ export const RequestPane: FC<Props> = ({
     }
   }, [request, forceUpdateRequest]);
 
-  const requestUrlBarRef = useRef<RequestUrlBar | null>(null);
-  useMount(() => {
-    requestUrlBarRef.current?.focusInput();
-  });
-  useEffect(() => {
-    requestUrlBarRef.current?.focusInput();
-  }, [
-    request?._id, // happens when the user switches requests
-    settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
-  ]);
-
   if (!request) {
     return (
       <PlaceholderRequestPane
@@ -167,7 +155,7 @@ export const RequestPane: FC<Props> = ({
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
-            ref={requestUrlBarRef}
+            // ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             onMethodChange={updateRequestMethod}
             onUrlChange={updateRequestUrl}

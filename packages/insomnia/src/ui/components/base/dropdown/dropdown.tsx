@@ -4,10 +4,7 @@ import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react'
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import { hotKeyRefs } from '../../../../common/hotkeys';
-import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
-import { KeydownBinder } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
@@ -23,6 +20,7 @@ export interface DropdownProps {
   className?: string;
   style?: CSSProperties;
   beside?: boolean;
+  filterVisible?: boolean;
 }
 
 interface State {
@@ -105,7 +103,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     });
   }
 
-  _handleDropdownNavigation(event: KeyboardEvent) {
+  _handleDropdownNavigation(event: React.KeyboardEvent<HTMLDivElement>) {
     const { key, shiftKey } = event;
     // Handle tab and arrows to move up and down dropdown entries
     const { filterItems, filterActiveIndex } = this.state;
@@ -141,7 +139,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     this._filter?.focus();
   }
 
-  _handleBodyKeyDown(event: KeyboardEvent) {
+  _handleBodyKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (!this.state.open) {
       return;
     }
@@ -150,10 +148,12 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     event.stopPropagation();
 
     this._handleDropdownNavigation(event);
-
-    executeHotKey(event, hotKeyRefs.CLOSE_DROPDOWN, () => {
+    /**
+     * it is accessibility requirement to offer an option to close dialog dropdown by pressing Escape key. Therefore, this shouldn't be considered as hot key.
+     */
+    if (event.code === 'Escape') {
       this.hide();
-    });
+    }
   }
 
   _checkSizeAndPosition() {
@@ -235,7 +235,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
   _handleClick(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.toggle();
+    this.toggle(this.props.filterVisible);
   }
 
   static _handleMouseDown(event: React.MouseEvent) {
@@ -450,18 +450,17 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
 
     return (
-      <KeydownBinder stopMetaPropagation onKeydown={this._handleBodyKeyDown} disabled={!open}>
-        <div
-          style={style}
-          className={classes}
-          ref={this._setRef}
-          onClick={this._handleClick}
-          tabIndex={-1}
-          onMouseDown={Dropdown._handleMouseDown}
-        >
-          {finalChildren}
-        </div>
-      </KeydownBinder>
+      <div
+        style={style}
+        className={classes}
+        ref={this._setRef}
+        onClick={this._handleClick}
+        onKeyDown={this._handleBodyKeyDown}
+        tabIndex={-1}
+        onMouseDown={Dropdown._handleMouseDown}
+      >
+        {finalChildren}
+      </div>
     );
   }
 }

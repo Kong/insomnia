@@ -11,14 +11,13 @@ import { Maybe } from 'graphql-language-service';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import prettier from 'prettier';
 import { complement } from 'ramda';
-import React, { PureComponent } from 'react';
+import React, { FunctionComponent, PureComponent, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { hotKeyRefs } from '../../../../common/hotkeys';
-import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import * as models from '../../../../models/index';
@@ -36,7 +35,7 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
-import { KeydownBinder } from '../../keydown-binder';
+import { useHotKeyEffect } from '../../hotkeys';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
@@ -97,7 +96,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class GraphQLEditor extends PureComponent<Props, State> {
+export class GraphQLEditorOriginal extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
@@ -107,7 +106,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    const body = GraphQLEditor._stringToGraphQL(props.content);
+    const body = GraphQLEditorOriginal._stringToGraphQL(props.content);
     this._setDocumentAST(body.query);
     let automaticFetch = true;
 
@@ -188,10 +187,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       explorerVisible: false,
     });
-  }
-
-  _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
   }
 
   _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
@@ -527,7 +522,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       }
     }
 
-    const newContent = GraphQLEditor._graphQLToString(body);
+    const newContent = GraphQLEditorOriginal._graphQLToString(body);
 
     this.setState({
       variablesSyntaxError: '',
@@ -673,7 +668,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       schemaLastFetchTime,
     } = this.state;
 
-    const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
+    const { query, variables: variablesObject } = GraphQLEditorOriginal._stringToGraphQL(content);
 
     const variables = jsonPrettify(JSON.stringify(variablesObject));
 
@@ -709,7 +704,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         },
         infoOptions: {
           schema,
-          renderDescription: GraphQLEditor.renderMarkdown,
+          renderDescription: GraphQLEditorOriginal.renderMarkdown,
           onClick: this._handleClickReference,
         },
         jumpOptions: {
@@ -724,7 +719,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
     return (
       <div className="graphql-editor">
-        <KeydownBinder onKeydown={this._handleKeyDown} />
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
           <DropdownButton className="space-left btn btn--micro btn--outlined">
@@ -835,3 +829,16 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     );
   }
 }
+
+export const GraphQLEditor: FunctionComponent<Props> = props => {
+  /**
+   * TODO: refactor the original component into functional component to avoid imperative control of the component.
+   * */
+  const ref = useRef<GraphQLEditorOriginal>(null);
+
+  useHotKeyEffect(() => {
+    ref.current?._handlePrettify();
+  }, hotKeyRefs.BEAUTIFY_REQUEST_BODY.id);
+
+  return <GraphQLEditorOriginal ref={ref} {...props} />;
+};

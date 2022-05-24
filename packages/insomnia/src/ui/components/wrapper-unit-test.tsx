@@ -431,7 +431,6 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
 
         testsRunning={testsRunning}
         selectedRequestId={unitTest.requestId}
-        // @ts-expect-error -- TSCONVERSION
         selectableRequests={selectableRequests}
         testNameEditable={
           <UnitTestEditable

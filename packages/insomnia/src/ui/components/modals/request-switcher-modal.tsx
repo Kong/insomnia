@@ -6,8 +6,6 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { isEventKey, keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import * as models from '../../../models';
@@ -23,7 +21,6 @@ import { Highlight } from '../base/highlight';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { KeydownBinder } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { wrapToIndex } from './utils';
@@ -358,23 +355,24 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   _handleKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
+    // this is a requirement from accessibility standard. Therefore, let's exclude this from hot key handler
     if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
     }
 
-    // Only control up/down with tab if modal is visible
-    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
-      if (this.state.isModalVisible) {
-        this._setActiveIndex(this.state.activeIndex + 1);
-      }
-    });
-    // Only control up/down with tab if modal is visible
-    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
-      if (this.state.isModalVisible) {
-        this._setActiveIndex(this.state.activeIndex - 1);
-      }
-    });
+    // // Only control up/down with tab if modal is visible
+    // executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+    //   if (this.state.isModalVisible) {
+    //     this._setActiveIndex(this.state.activeIndex + 1);
+    //   }
+    // });
+    // // Only control up/down with tab if modal is visible
+    // executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    //   if (this.state.isModalVisible) {
+    //     this._setActiveIndex(this.state.activeIndex - 1);
+    //   }
+    // });
   }
 
   async _handleKeyup(e: KeyboardEvent) {
@@ -404,114 +402,112 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     const { workspaceRequestsAndRequestGroups, workspace } = this.props;
     const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     return (
-      <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
-        <Modal
-          ref={this._setModalRef}
-          dontFocus={!disableInput}
-          className={isModalVisible ? '' : 'hide'}
-        >
-          <ModalHeader hideCloseButton>
-            {title || (
-              <Fragment>
-                <div className="pull-right txt-sm pad-right tall">
-                  <span className="vertically-center">
+      <Modal
+        ref={this._setModalRef}
+        dontFocus={!disableInput}
+        className={isModalVisible ? '' : 'hide'}
+      >
+        <ModalHeader hideCloseButton>
+          {title || (
+            <Fragment>
+              <div className="pull-right txt-sm pad-right tall">
+                <span className="vertically-center">
+                  <div>
+                    <span className="monospace">tab</span> or&nbsp;
+                    <span className="monospace">↑↓</span> to navigate&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span className="monospace">↵</span> &nbsp;to select&nbsp;&nbsp;&nbsp;&nbsp;
+                    <span className="monospace">esc</span> to dismiss
+                  </div>
+                </span>
+              </div>
+              <div>Quick Switch</div>
+            </Fragment>
+          )}
+        </ModalHeader>
+        <ModalBody className="request-switcher">
+          {!disableInput && (
+            <div className="pad" onKeyDown={this._handleInputKeydown}>
+              <div className="form-control form-control--outlined no-margin">
+                <input
+                  type="text"
+                  placeholder="Filter by name or folder"
+                  ref={this._setInputRef}
+                  value={searchString}
+                  onChange={this._handleChange}
+                />
+              </div>
+            </div>
+          )}
+          <ul>
+            {matchedRequests.map((r, i) => {
+              const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
+              const buttonClasses = classnames(
+                'btn btn--expandable-small wide text-left pad-bottom',
+                {
+                  focus: activeIndex === i,
+                },
+              );
+              return (
+                <li key={r._id}>
+                  <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
                     <div>
-                      <span className="monospace">tab</span> or&nbsp;
-                      <span className="monospace">↑↓</span> to navigate&nbsp;&nbsp;&nbsp;&nbsp;
-                      <span className="monospace">↵</span> &nbsp;to select&nbsp;&nbsp;&nbsp;&nbsp;
-                      <span className="monospace">esc</span> to dismiss
-                    </div>
-                  </span>
-                </div>
-                <div>Quick Switch</div>
-              </Fragment>
-            )}
-          </ModalHeader>
-          <ModalBody className="request-switcher">
-            {!disableInput && (
-              <div className="pad" onKeyDown={this._handleInputKeydown}>
-                <div className="form-control form-control--outlined no-margin">
-                  <input
-                    type="text"
-                    placeholder="Filter by name or folder"
-                    ref={this._setInputRef}
-                    value={searchString}
-                    onChange={this._handleChange}
-                  />
-                </div>
-              </div>
-            )}
-            <ul>
-              {matchedRequests.map((r, i) => {
-                const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
-                const buttonClasses = classnames(
-                  'btn btn--expandable-small wide text-left pad-bottom',
-                  {
-                    focus: activeIndex === i,
-                  },
-                );
-                return (
-                  <li key={r._id}>
-                    <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
-                      <div>
-                        {requestGroup ? (
-                          <div className="pull-right faint italic">
-                            <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
+                      {requestGroup ? (
+                        <div className="pull-right faint italic">
+                          <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
                             &nbsp;&nbsp;
-                            <i className="fa fa-folder-o" />
-                          </div>
-                        ) : null}
-                        <Highlight search={searchString} text={r.name} />
-                      </div>
-                      <div className="margin-left-xs faint">
-                        { isRequest(r) ? <MethodTag method={r.method} /> : null}
-                        { isGrpcRequest(r) ? <GrpcTag /> : null }
-                        { <Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url } /> }
-                      </div>
-                    </Button>
-                  </li>
-                );
-              })}
-
-              {matchedRequests.length > 0 && matchedWorkspaces.length > 0 && (
-                <li className="pad-left pad-right">
-                  <hr />
+                          <i className="fa fa-folder-o" />
+                        </div>
+                      ) : null}
+                      <Highlight search={searchString} text={r.name} />
+                    </div>
+                    <div className="margin-left-xs faint">
+                      { isRequest(r) ? <MethodTag method={r.method} /> : null}
+                      { isGrpcRequest(r) ? <GrpcTag /> : null }
+                      { <Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url } /> }
+                    </div>
+                  </Button>
                 </li>
-              )}
+              );
+            })}
 
-              {matchedWorkspaces.map((w, i) => {
-                const buttonClasses = classnames('btn btn--super-compact wide text-left', {
-                  focus: activeIndex - matchedRequests.length === i,
-                });
-                return (
-                  <li key={w._id}>
-                    <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
-                      <i className="fa fa-random" />
-                      &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-
-            {searchString && matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
-              <div className="text-center pad-bottom">
-                <p>
-                  No matches found for <strong>{searchString}</strong>
-                </p>
-
-                {workspace ? <button
-                  className="btn btn--outlined btn--compact"
-                  disabled={!searchString}
-                  onClick={this._activateCurrentIndex}
-                >
-                  Create a request named {searchString}
-                </button> : null}
-              </div>
+            {matchedRequests.length > 0 && matchedWorkspaces.length > 0 && (
+              <li className="pad-left pad-right">
+                <hr />
+              </li>
             )}
-          </ModalBody>
-        </Modal>
-      </KeydownBinder>
+
+            {matchedWorkspaces.map((w, i) => {
+              const buttonClasses = classnames('btn btn--super-compact wide text-left', {
+                focus: activeIndex - matchedRequests.length === i,
+              });
+              return (
+                <li key={w._id}>
+                  <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
+                    <i className="fa fa-random" />
+                      &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {searchString && matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
+            <div className="text-center pad-bottom">
+              <p>
+                No matches found for <strong>{searchString}</strong>
+              </p>
+
+              {workspace ? <button
+                className="btn btn--outlined btn--compact"
+                disabled={!searchString}
+                onClick={this._activateCurrentIndex}
+              >
+                Create a request named {searchString}
+              </button> : null}
+            </div>
+          )}
+        </ModalBody>
+      </Modal>
     );
   }
 }
