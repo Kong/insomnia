@@ -75,7 +75,7 @@ interface State extends HistoryItem {
 const SEARCH_UPDATE_DELAY_IN_MS = 300;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class GraphQLExplorerOriginal extends PureComponent<Props, State> {
+export class GraphQLExplorerPure extends PureComponent<Props, State> {
   state: State = {
     history: [],
     currentType: undefined,
@@ -326,12 +326,12 @@ export const GraphQLExplorer: FunctionComponent<Props> = props => {
   /**
    * TODO: refactor the original component into functional component to avoid imperative control of the component.
    * */
-  const ref = useRef<GraphQLExplorerOriginal>();
+  const ref = useRef<GraphQLExplorerPure>();
 
   useHotKeyEffect(() => {
     ref.current?._navigateToSchema();
     ref.current?._focusAndSelectFilterInput();
   }, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER.id);
 
-  return <GraphQLExplorerOriginal {...props} />;
+  return <GraphQLExplorerPure {...props} />;
 };

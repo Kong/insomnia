@@ -50,7 +50,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseViewerOriginal extends Component<ResponseViewerProps, State> {
+export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
   _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
@@ -470,11 +470,11 @@ export const ResponseViewer: FunctionComponent<ResponseViewerProps> = props => {
   /**
    * TODO: refactor the original component into functional component to avoid imperative control of the component.
    * */
-  const ref = useRef<ResponseViewerOriginal>(null);
+  const ref = useRef<ResponseViewerPure>(null);
 
   useHotKeyEffect(() => {
     ref.current?._handleResponseFocus();
   }, hotKeyRefs.RESPONSE_FOCUS.id);
 
-  return <ResponseViewerOriginal ref={ref} {...props} />;
+  return <ResponseViewerPure ref={ref} {...props} />;
 };

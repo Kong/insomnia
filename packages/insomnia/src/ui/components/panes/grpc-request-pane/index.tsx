@@ -56,7 +56,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   workspaceId,
   forceRefreshKey,
 }) => {
-  console.log('mounted?');
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
   useProtoFileReload(state, dispatch, activeRequest);

@@ -33,7 +33,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseHistoryDropdownOriginal extends PureComponent<Props> {
+export class ResponseHistoryDropdownPure extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _handleDeleteResponses() {
@@ -202,11 +202,11 @@ export const ResponseHistoryDropdown: FunctionComponent<Props> = props => {
   /**
    * TODO: refactor the original component into functional component to avoid imperative control of the component.
    * */
-  const ref = useRef<ResponseHistoryDropdownOriginal>(null);
+  const ref = useRef<ResponseHistoryDropdownPure>(null);
 
   useHotKeyEffect(() => {
     ref.current?._handleToggle();
   }, hotKeyRefs.REQUEST_TOGGLE_HISTORY.id);
 
-  return <ResponseHistoryDropdownOriginal ref={ref} {...props} />;
+  return <ResponseHistoryDropdownPure ref={ref} {...props} />;
 };

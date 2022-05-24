@@ -89,8 +89,6 @@ function useHotKeyEffect(callback: () => void, hotkeyId: string): ReturnType<typ
 
   return useEffect(() => {
     const handler = (e: HotKeyCommand) => {
-      console.log(e);
-      console.log(hotkeyId);
       if (e.hotkeyId !== hotkeyId) {
         return;
       }

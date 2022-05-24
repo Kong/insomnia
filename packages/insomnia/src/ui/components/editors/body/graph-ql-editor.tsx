@@ -96,7 +96,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class GraphQLEditorOriginal extends PureComponent<Props, State> {
+export class GraphQLEditorPure extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
@@ -106,7 +106,7 @@ export class GraphQLEditorOriginal extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    const body = GraphQLEditorOriginal._stringToGraphQL(props.content);
+    const body = GraphQLEditorPure._stringToGraphQL(props.content);
     this._setDocumentAST(body.query);
     let automaticFetch = true;
 
@@ -522,7 +522,7 @@ export class GraphQLEditorOriginal extends PureComponent<Props, State> {
       }
     }
 
-    const newContent = GraphQLEditorOriginal._graphQLToString(body);
+    const newContent = GraphQLEditorPure._graphQLToString(body);
 
     this.setState({
       variablesSyntaxError: '',
@@ -668,7 +668,7 @@ export class GraphQLEditorOriginal extends PureComponent<Props, State> {
       schemaLastFetchTime,
     } = this.state;
 
-    const { query, variables: variablesObject } = GraphQLEditorOriginal._stringToGraphQL(content);
+    const { query, variables: variablesObject } = GraphQLEditorPure._stringToGraphQL(content);
 
     const variables = jsonPrettify(JSON.stringify(variablesObject));
 
@@ -704,7 +704,7 @@ export class GraphQLEditorOriginal extends PureComponent<Props, State> {
         },
         infoOptions: {
           schema,
-          renderDescription: GraphQLEditorOriginal.renderMarkdown,
+          renderDescription: GraphQLEditorPure.renderMarkdown,
           onClick: this._handleClickReference,
         },
         jumpOptions: {
@@ -834,11 +834,11 @@ export const GraphQLEditor: FunctionComponent<Props> = props => {
   /**
    * TODO: refactor the original component into functional component to avoid imperative control of the component.
    * */
-  const ref = useRef<GraphQLEditorOriginal>(null);
+  const ref = useRef<GraphQLEditorPure>(null);
 
   useHotKeyEffect(() => {
     ref.current?._handlePrettify();
   }, hotKeyRefs.BEAUTIFY_REQUEST_BODY.id);
 
-  return <GraphQLEditorOriginal ref={ref} {...props} />;
+  return <GraphQLEditorPure ref={ref} {...props} />;
 };

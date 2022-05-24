@@ -41,7 +41,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestUrlBarOriginal extends PureComponent<Props & { onKeyDown(e: KeyboardEvent, value?: any): void }, State> {
+class RequestUrlBarPure extends PureComponent<Props & { onKeyDown(e: KeyboardEvent, value?: any): void }, State> {
   _urlChangeDebounceTimeout: NodeJS.Timeout | null = null;
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
@@ -382,7 +382,7 @@ class RequestUrlBarOriginal extends PureComponent<Props & { onKeyDown(e: Keyboar
 export const RequestUrlBar: FunctionComponent<Props> = props => {
   const settings = useSelector(selectSettings);
   const { sendHotkeyCommand } = useHotKey();
-  const ref = useRef<RequestUrlBarOriginal>(null);
+  const ref = useRef<RequestUrlBarPure>(null);
 
   const handleKeyDown = (e: KeyboardEvent): void => {
     if (e.code !== 'Enter') {
@@ -396,5 +396,5 @@ export const RequestUrlBar: FunctionComponent<Props> = props => {
     ref.current?.focusInput();
   }, [props.request?._id, props.request?.method, settings.hasPromptedAnalytics]);
 
-  return <RequestUrlBarOriginal {...props} ref={ref} onKeyDown={handleKeyDown} />;
+  return <RequestUrlBarPure {...props} ref={ref} onKeyDown={handleKeyDown} />;
 };

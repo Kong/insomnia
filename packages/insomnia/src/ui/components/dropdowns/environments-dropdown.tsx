@@ -27,7 +27,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class EnvironmentsDropdownOriginal extends PureComponent<Props> {
+export class EnvironmentsDropdownPure extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _handleActivateEnvironment(environmentId: string) {
@@ -139,11 +139,11 @@ export const EnvironmentsDropdown: FunctionComponent<Props> = props => {
   /**
    * TODO: refactor the original component into functional component to avoid imperative control of the component.
    * */
-  const ref = useRef<EnvironmentsDropdownOriginal>(null);
+  const ref = useRef<EnvironmentsDropdownPure>(null);
 
   useHotKeyEffect(() => {
     ref.current?._dropdown?.toggle(true);
   }, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU.id);
 
-  return <EnvironmentsDropdownOriginal ref={ref} {...props} />;
+  return <EnvironmentsDropdownPure ref={ref} {...props} />;
 };

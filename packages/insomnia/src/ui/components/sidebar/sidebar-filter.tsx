@@ -18,7 +18,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class SidebarFilterOriginal extends PureComponent<Props> {
+export class SidebarFilterPure extends PureComponent<Props> {
   _input: HTMLInputElement | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
 
@@ -87,11 +87,11 @@ export const SidebarFilter: FunctionComponent<Props> = props => {
   /**
    * TODO: refactor the original component into functional component to avoid imperative control of the component.
    * */
-  const ref = useRef<SidebarFilterOriginal>(null);
+  const ref = useRef<SidebarFilterPure>(null);
 
   useHotKeyEffect(() => {
     ref.current?._input?.focus();
   }, hotKeyRefs.SIDEBAR_FOCUS_FILTER.id);
 
-  return <SidebarFilterOriginal ref={ref} {...props} />;
+  return <SidebarFilterPure ref={ref} {...props} />;
 };
