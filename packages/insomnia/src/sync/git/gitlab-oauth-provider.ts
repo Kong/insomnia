@@ -66,10 +66,8 @@ export async function generateAuthorizationUrl() {
   statesCache.set(state, verifier);
 
   const scopes = [
-    // Needed to read the user's email address, username and avatar_url from the GitLab API
-    'read_api',
-    // Read the user name and email address to use in commits
-    'email',
+    // Needed to read the user's email address, username and avatar_url from the /user GitLab API
+    'read_user',
     // Read/Write access to the user's projects to allow for syncing (push/pull etc.)
     'write_repository',
   ];

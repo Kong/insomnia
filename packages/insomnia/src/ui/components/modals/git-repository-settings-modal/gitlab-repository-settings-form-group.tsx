@@ -1,5 +1,3 @@
-import { AxiosResponse } from 'axios';
-import type { GraphQLError } from 'graphql';
 import { Button } from 'insomnia-components';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -59,52 +57,6 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
     />
   );
 };
-
-interface FetchGraphQLInput {
-  query: string;
-  variables?: Record<string, any>;
-  headers: Record<string, any>;
-  url: string;
-}
-
-async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
-  const { headers, query, variables, url } = input;
-  const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
-    await axiosRequest({
-      url,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      data: {
-        query,
-        variables,
-      },
-    });
-
-  return response.data;
-}
-
-const GitLabUserInfoQuery = `
-  query getUserInfo {
-    currentUser {
-      publicEmail
-      name
-      username
-      avatarUrl
-    }
-  }
-`;
-
-interface GitLabUserInfoQueryResult {
-  currentUser: {
-    publicEmail: string;
-    name: string;
-    username: string;
-    avatarUrl: string;
-  };
-}
 
 const AccountViewContainer = styled.div({
   display: 'flex',
@@ -177,6 +129,17 @@ const AuthorizationFormContainer = styled.div({
   boxSizing: 'border-box',
 });
 
+export interface GitLabUserResult {
+  id: number;
+  username: string;
+  name: string;
+  avatar_url: string;
+  public_email: string;
+  email: string;
+  projects_limit: number;
+  commit_email: string;
+}
+
 interface GitLabRepositoryFormProps {
   uri?: string;
   onSubmit: (args: Partial<GitRepository>) => void;
@@ -192,50 +155,31 @@ const GitLabRepositoryForm = ({
 }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
 
-  const [user, setUser, removeUser] = useLocalStorage<GitLabUserInfoQueryResult['currentUser']>(
+  const [user, setUser, removeUser] = useLocalStorage<GitLabUserResult>(
     'gitlab-user-info',
     undefined
   );
 
   useEffect(() => {
-    let isMounted = true;
-
     if (token && !user) {
-      fetchGraphQL<GitLabUserInfoQueryResult>({
-        query: GitLabUserInfoQuery,
+      axiosRequest({
+        method: 'GET',
+        url: `${getGitLabOauthApiURL()}/api/v4/user`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        url: `${getGitLabOauthApiURL()}/api/graphql`,
-      })
-        .then(({ data, errors }) => {
-          if (isMounted) {
-            if (errors) {
-              setError(
-                'Something went wrong when trying to fetch info from GitLab.'
-              );
-            } else if (data) {
-              setUser(data.currentUser);
-            }
-          }
-        })
-        .catch((e: unknown) => {
-          if (e instanceof Error) {
-            if (e.message === 'Unauthorized') {
-              console.log('Unauthorized');
-              refreshToken();
-            } else {
-              setError(
-                'Something went wrong when trying to fetch info from GitLab.'
-              );
-            }
-          }
-        });
-    }
+      }).then(({ data, status }) => {
+        if (status === 401) {
+          refreshToken();
+        }
 
-    return () => {
-      isMounted = false;
-    };
+        setUser(data);
+      }).catch(() => {
+        setError(
+          'Something went wrong when trying to fetch info from GitLab.'
+        );
+      });
+    }
   }, [token, onSubmit, setUser, user]);
 
   return (
@@ -248,7 +192,7 @@ const GitLabRepositoryForm = ({
           uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
           author: {
             name: (user?.username || user?.name) ?? '',
-            email: user?.publicEmail ?? '',
+            email: user?.commit_email ?? user?.public_email ?? user?.email ?? '',
           },
           credentials: {
             username: token ?? '',
@@ -276,7 +220,7 @@ const GitLabRepositoryForm = ({
       )}
       <AccountViewContainer>
         <AccountDetails>
-          <Avatar src={user?.avatarUrl ?? ''} />
+          <Avatar src={user?.avatar_url ?? ''} />
           <Details>
             <span
               style={{
@@ -290,7 +234,7 @@ const GitLabRepositoryForm = ({
                 fontSize: 'var(--font-size-md)',
               }}
             >
-              {user?.publicEmail}
+              {user?.commit_email ?? user?.public_email ?? user?.email}
             </span>
           </Details>
         </AccountDetails>
