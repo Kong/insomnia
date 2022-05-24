@@ -2,6 +2,7 @@ import { build } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
+const watch =  Boolean(process.env.ESBUILD_WATCH);
 
 build({
   outfile: './dist/index.js',
@@ -12,6 +13,7 @@ build({
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.build.json',
+  watch,
   plugins: [
     // Exclude node_modules from the bundle since they will be packaged with the cli
     nodeExternalsPlugin(),

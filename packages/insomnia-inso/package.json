@@ -32,7 +32,7 @@
     "build:types": "tsc --build tsconfig.build.json",
     "prebuild:production": "npm run clean",
     "build:production": "cross-env NODE_ENV=production npm run build",
-    "start": "npm run build -- --watch",
+    "start": "concurrently --names source,types \"ESBUILD_WATCH=true npm run build:source\" \"npm run build:types -- --watch\"",
     "prepackage": "npm run build:production",
     "package": "ts-node src/scripts/pkg.ts",
     "pkg": "pkg .",
