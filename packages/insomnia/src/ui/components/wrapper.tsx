@@ -56,7 +56,6 @@ import { NunjucksModal } from './modals/nunjucks-modal';
 import ProjectSettingsModal from './modals/project-settings-modal';
 import { PromptModal } from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
-import { RequestCreateModal } from './modals/request-create-modal';
 import { RequestGroupSettingsModal } from './modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 import { RequestSettingsModal } from './modals/request-settings-modal';
@@ -486,7 +485,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <LoginModal ref={registerModal} />
             <AskModal ref={registerModal} />
             <SelectModal ref={registerModal} />
-            <RequestCreateModal ref={registerModal} />
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} />

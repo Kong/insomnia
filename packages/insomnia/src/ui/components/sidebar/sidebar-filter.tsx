@@ -11,7 +11,7 @@ import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
   onChange: (value: string) => Promise<void>;
-  requestCreate: () => void;
+  requestCreate: (requestType?: string) => void;
   requestGroupCreate: () => void;
   sidebarSort: (sortOrder: SortOrder) => void;
   filter: string;

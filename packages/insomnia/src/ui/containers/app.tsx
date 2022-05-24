@@ -14,6 +14,8 @@ import {
   ACTIVITY_HOME,
   AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
+  CONTENT_TYPE_GRAPHQL,
+  CONTENT_TYPE_JSON,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
@@ -22,6 +24,8 @@ import {
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
+  METHOD_GET,
+  METHOD_POST,
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
@@ -66,7 +70,7 @@ import { AskModal } from '../components/modals/ask-modal';
 import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { RequestCreateModal } from '../components/modals/request-create-modal';
+import ProtoFilesModal from '../components/modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
@@ -276,7 +280,7 @@ class App extends PureComponent<AppProps, State> {
       ],
       [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
       [
-        hotKeyRefs.REQUEST_QUICK_CREATE,
+        hotKeyRefs.REQUEST_CREATE_HTTP,
         async () => {
           const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
@@ -291,18 +295,6 @@ class App extends PureComponent<AppProps, State> {
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
           trackSegmentEvent(SegmentEvent.requestCreate);
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_CREATE,
-        () => {
-          const { activeRequest, activeWorkspace } = this.props;
-          if (!activeWorkspace) {
-            return;
-          }
-
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId);
         },
       ],
       [
@@ -408,17 +400,51 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _requestCreate(parentId: string, requestType?: string) {
-    showModal(RequestCreateModal, {
-      parentId,
-      requestType,
-      onComplete: (requestId: string) => {
-        this._handleSetActiveRequest(requestId);
+  async _requestCreate(parentId: string, requestType?: string) {
+    const setToActive = id => {
+      this._handleSetActiveRequest(id);
+      models.stats.incrementCreatedRequests();
+      trackSegmentEvent(SegmentEvent.requestCreate);
+    };
+    if (requestType === 'gRPC') {
+      showModal(ProtoFilesModal, {
+        onSave: async (protoFileId: string) => {
+          const createdRequest = await models.grpcRequest.create({
+            parentId,
+            name: 'New Request',
+            protoFileId,
+          });
 
-        models.stats.incrementCreatedRequests();
-        trackSegmentEvent(SegmentEvent.requestCreate);
-      },
+          setToActive(createdRequest._id);
+        },
+      });
+      return;
+    }
+    if (requestType === 'GraphQL') {
+      const request = await models.request.create({
+        parentId,
+        method: METHOD_POST,
+        headers:[{
+          name: 'Content-Type',
+          value: CONTENT_TYPE_JSON,
+        }],
+        body:{
+          mimeType: CONTENT_TYPE_GRAPHQL,
+          text: '',
+        },
+        name: 'New Request',
+      });
+
+      setToActive(request._id);
+      return;
+    }
+    const request = await models.request.create({
+      parentId,
+      method: METHOD_GET,
+      name: 'New Request',
     });
+
+    setToActive(request._id);
   }
 
   async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {

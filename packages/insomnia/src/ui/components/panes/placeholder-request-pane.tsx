@@ -32,7 +32,7 @@ export const PlaceholderRequestPane: FC<Props> = ({
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
+                      keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]}
                       useFallbackMessage
                     />
                   </code>
