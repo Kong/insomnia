@@ -1,11 +1,11 @@
 {
   "extends": "./tsconfig.build.json",
   "include": [
-    "src",
-    "package.json",
+    ".eslintrc.js",
+    "esbuild.ts",
     "jest.config.js",
-    "webpack",
-    ".eslintrc.js"
+    "package.json",
+    "src",
   ],
   "exclude": [
     "node_modules",
