@@ -33,7 +33,7 @@ const mapStateToProps = (state: RootState) => ({
 interface Props extends ReduxProps, Partial<DropdownProps> {
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  handleCreateRequest: (id: string) => any;
+  handleCreateRequest: (id: string, requestType?: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
@@ -56,8 +56,8 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
     this._dropdown = n;
   }
 
-  async _handleRequestCreate() {
-    this.props.handleCreateRequest(this.props.requestGroup._id);
+  async _handleRequestCreate(requestType?: string) {
+    this.props.handleCreateRequest(this.props.requestGroup._id, requestType);
   }
 
   _handleRequestGroupDuplicate() {
@@ -138,6 +138,12 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
         <DropdownItem onClick={this._handleRequestCreate}>
           <i className="fa fa-plus-circle" /> New Request
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
+        </DropdownItem>
+        <DropdownItem onClick={() => this._handleRequestCreate('GraphQL')}>
+          <i className="fa fa-plus-circle" /> New GraphQL Request
+        </DropdownItem>
+        <DropdownItem onClick={() => this._handleRequestCreate('gRPC')}>
+          <i className="fa fa-plus-circle" /> New gRPC Request
         </DropdownItem>
         <DropdownItem onClick={this._handleRequestGroupCreate}>
           <i className="fa fa-folder" /> New Folder
