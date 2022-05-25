@@ -38,11 +38,6 @@ const getGitLabConfig = async () => {
 
 export const getGitLabOauthApiURL = () =>
   env.INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
-export const getGitLabRedirectURI = async () =>
-  env.INSOMNIA_GITLAB_REDIRECT_URI || (await getGitLabConfig()).redirectUri;
-export const getGitLabClientId = async () =>
-  env.INSOMNIA_GITLAB_CLIENT_ID || (await getGitLabConfig()).applicationId;
-
 const GITLAB_TOKEN_STORAGE_KEY = 'gitlab-oauth-token';
 const GITLAB_REFRESH_TOKEN_STORAGE_KEY = 'gitlab-oauth-refresh-token';
 
@@ -82,12 +77,13 @@ export async function generateAuthorizationUrl() {
   const challenge = base64URLEncode(sha256(verifier));
 
   const gitlabURL = new URL(`${getGitLabOauthApiURL()}/oauth/authorize`);
+  const { client_id, redirect_uri } = await getGitLabConfig();
   gitlabURL.search = new URLSearchParams({
-    client_id: (await getGitLabClientId()) || '',
+    client_id,
     scope,
     state,
     response_type: 'code',
-    redirect_uri: await getGitLabRedirectURI(),
+    redirect_uri,
     code_challenge: challenge,
     code_challenge_method: 'S256',
   }).toString();
@@ -108,14 +104,14 @@ export async function exchangeCodeForGitLabToken(input: {
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
     );
   }
-
+  const { client_id, redirect_uri } = await getGitLabConfig();
   const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
   url.search = new URLSearchParams({
     code,
     state,
-    client_id: (await getGitLabClientId()) || '',
+    client_id,
     grant_type: 'authorization_code',
-    redirect_uri: await getGitLabRedirectURI(),
+    redirect_uri,
     code_verifier: verifier,
   }).toString();
 
@@ -138,13 +134,13 @@ export async function refreshToken() {
   if (!refreshToken) {
     throw new Error('No refresh token');
   }
-
+  const { client_id } = await getGitLabConfig();
   const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
 
   url.search = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
-    client_id: (await getGitLabClientId()) || '',
+    client_id,
   }).toString();
 
   return axiosRequest({
