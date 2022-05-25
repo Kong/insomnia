@@ -62,7 +62,7 @@ function useHotKeysEffect(callback: (hotkeyId: string) => void, hotkeys: string[
     callbackRef.current = callback;
   });
 
-  return useEffect(() => {
+  useEffect(() => {
     const handler = (e: HotKeyCommand) => {
       if (!hotkeyIds.has(e.hotkeyId)) {
         return;
@@ -79,7 +79,7 @@ function useHotKeysEffect(callback: (hotkeyId: string) => void, hotkeys: string[
   }, [$hotkeyChannel, callbackRef, hotkeyIds]);
 }
 
-function useHotKeyEffect(callback: () => void, hotkeyId: string): ReturnType<typeof useEffect> {
+function useHotKeyEffect(callback: () => void, hotkeyId: string): void {
   const { $hotkeyChannel } = useContext(HotKeysContext);
   const callbackRef = useRef(callback);
 
@@ -87,7 +87,7 @@ function useHotKeyEffect(callback: () => void, hotkeyId: string): ReturnType<typ
     callbackRef.current = callback;
   });
 
-  return useEffect(() => {
+  useEffect(() => {
     const handler = (e: HotKeyCommand) => {
       if (e.hotkeyId !== hotkeyId) {
         return;
