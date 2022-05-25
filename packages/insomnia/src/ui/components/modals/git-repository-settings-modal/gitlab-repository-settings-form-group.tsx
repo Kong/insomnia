@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { Button } from 'insomnia-components';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -168,17 +169,18 @@ const GitLabRepositoryForm = ({
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }).then(({ data, status }) => {
-        if (status === 401) {
-          refreshToken();
-        }
-
+      }).then(({ data }) => {
         setUser(data);
-      }).catch(() => {
-        setError(
-          'Something went wrong when trying to fetch info from GitLab.'
-        );
-      });
+      })
+        .catch((e: unknown) => {
+          if (axios.isAxiosError(e) && e.response?.status === 401) {
+            refreshToken();
+          } else {
+            const errorMessage = (e instanceof Error) ? e.message : 'Something went wrong when trying to fetch info from GitLab.';
+            setError(errorMessage);
+            console.log(`[gitlab oauth]: ${e}`);
+          }
+        });
     }
   }, [token, onSubmit, setUser, user]);
 
@@ -294,7 +296,7 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
     }
   }, [authUrl]);
 
-  return (
+  return !authUrl ? (<div />) : (
     <AuthorizationFormContainer>
       <a
         href={authUrl}

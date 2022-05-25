@@ -6,6 +6,7 @@ import { axiosRequest } from '../../network/axios-request';
 
 const env = process['env'];
 
+// Warning: As this is a global fetch we need to handle errors, retries and caching
 // GitLab API config
 const getGitLabConfig = async () => {
   const { INSOMNIA_GITLAB_REDIRECT_URI, INSOMNIA_GITLAB_CLIENT_ID } = env;
