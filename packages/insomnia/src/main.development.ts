@@ -10,8 +10,8 @@ import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/cons
 import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
+import { sentryWatchAnalyticsEnabled } from './common/sentry';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
-import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -84,7 +84,7 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
-  errorHandling.init();
+  sentryWatchAnalyticsEnabled();
   windowUtils.init();
   await _launchApp();
 

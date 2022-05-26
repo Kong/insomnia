@@ -4,10 +4,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { SegmentEvent, trackSegmentEvent } from '../common/analytics';
 import { getProductName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
+import { sentryWatchAnalyticsEnabled, sentryWatchUserInfo } from '../common/sentry';
 import * as models from '../models';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
@@ -17,6 +17,7 @@ import { init as initStore } from './redux/modules';
 
 import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
 
+sentryWatchUserInfo();
 initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -24,7 +25,10 @@ document.title = getProductName();
 
 (async function() {
   await db.initClient();
+  sentryWatchAnalyticsEnabled();
+
   await initPlugins();
+
   const settings = await models.settings.getOrCreate();
 
   if (settings.clearOAuth2SessionOnRestart) {
@@ -54,18 +58,6 @@ if (isDevelopment()) {
   window.models = models;
   // @ts-expect-error -- TSCONVERSION needs window augmentation
   window.db = db;
-}
-
-// Catch uncaught errors and report them
-if (window && !isDevelopment()) {
-  window.addEventListener('error', e => {
-    console.error('Uncaught Error', e.error || e);
-    trackSegmentEvent(SegmentEvent.criticalError, { detail: e?.message });
-  });
-  window.addEventListener('unhandledrejection', e => {
-    console.error('Unhandled Promise', e.reason);
-    trackSegmentEvent(SegmentEvent.criticalError, { detail: e?.reason });
-  });
 }
 
 function showUpdateNotification() {
