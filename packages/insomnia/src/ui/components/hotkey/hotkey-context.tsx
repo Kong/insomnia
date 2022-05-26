@@ -72,12 +72,12 @@ function useHotKeysEffect(callback: (hotkeyId: string) => void, hotkeys: string[
   });
 
   useEffect(() => {
-    const handler = (e: HotkeyCommand) => {
-      if (!hotkeyIds.has(e.hotkeyId)) {
+    const handler = (command: HotkeyCommand) => {
+      if (!hotkeyIds.has(command.hotkeyId)) {
         return;
       }
 
-      callbackRef.current?.(e.hotkeyId);
+      callbackRef.current?.(command.hotkeyId);
     };
 
     $hotkeyChannel.on(HOTKEY_EVENT_TAG, handler);
@@ -102,8 +102,8 @@ function useHotKeyEffect(callback: () => void, hotkeyId: string): void {
   });
 
   useEffect(() => {
-    const handler = (e: HotkeyCommand) => {
-      if (e.hotkeyId !== hotkeyId) {
+    const handler = (command: HotkeyCommand) => {
+      if (command.hotkeyId !== hotkeyId) {
         return;
       }
 
