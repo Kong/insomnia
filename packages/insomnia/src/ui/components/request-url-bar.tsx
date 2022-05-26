@@ -1,12 +1,13 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { OpenDialogOptions } from 'electron';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FunctionComponent, PureComponent, ReactNode, useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
 import type { Request } from '../../models/request';
+import { selectSettings } from '../redux/selectors';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -15,7 +16,7 @@ import { DropdownItem } from './base/dropdown/dropdown-item';
 import { PromptButton } from './base/prompt-button';
 import { OneLineEditor } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
-import { KeydownBinder } from './keydown-binder';
+import { useHotKey, useHotKeysEffect } from './hotkey/hotkey-context';
 import { showPrompt } from './modals/index';
 
 interface Props {
@@ -40,7 +41,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestUrlBar extends PureComponent<Props, State> {
+export class RequestUrlBarPure extends PureComponent<Props & { onKeyDown(e: KeyboardEvent, value?: unknown): void }, State> {
   _urlChangeDebounceTimeout: NodeJS.Timeout | null = null;
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
@@ -138,20 +139,11 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   }
 
   async _handleKeyDown(event: KeyboardEvent) {
-    if (!this._input) {
+    if (!this._input || !this.props.request.url) {
       return;
     }
 
-    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
-      this._input?.focus();
-      this._input?.selectAll();
-    });
-    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
-      this._methodDropdown?.toggle();
-    });
-    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
-      this._dropdown?.toggle(true);
-    });
+    this.props.onKeyDown(event);
   }
 
   _handleSend() {
@@ -345,9 +337,22 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     return [cancelButton, sendButton];
   }
 
-  // note: not an unused function, used by parent, RequestPane
+  // note: not an unused function, used by parent, RequestUrlBar (functional wrapper component)
   focusInput() {
     this._input?.focus(true);
+  }
+
+  focusRequestUrl(): void {
+    this._input?.focus();
+    this._input?.selectAll();
+  }
+
+  toggleDropdown(): void {
+    this._dropdown?.toggle(true);
+  }
+
+  toggleMethodDropdown(): void {
+    this._methodDropdown?.toggle();
   }
 
   render() {
@@ -359,31 +364,77 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     const { url, method } = request;
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div className="urlbar">
-          <MethodDropdown
-            ref={this._setMethodDropdownRef}
-            onChange={this._handleMethodChange}
-            method={method}
-          >
-            {method} <i className="fa fa-caret-down" />
-          </MethodDropdown>
-          <form onSubmit={this._handleFormSubmit}>
-            <OneLineEditor
-              key={uniquenessKey}
-              ref={this._setInputRef}
-              onPaste={this._handleUrlPaste}
-              forceEditor
-              type="text"
-              getAutocompleteConstants={handleAutocompleteUrls}
-              placeholder="https://api.myproduct.com/v1/users"
-              defaultValue={url}
-              onChange={this._handleUrlChange}
-            />
-            {this.renderSendButton()}
-          </form>
-        </div>
-      </KeydownBinder>
+      <div className="urlbar">
+        <MethodDropdown
+          ref={this._setMethodDropdownRef}
+          onChange={this._handleMethodChange}
+          method={method}
+        >
+          {method} <i className="fa fa-caret-down" />
+        </MethodDropdown>
+        <form onSubmit={this._handleFormSubmit}>
+          <OneLineEditor
+            key={uniquenessKey}
+            ref={this._setInputRef}
+            onPaste={this._handleUrlPaste}
+            forceEditor
+            type="text"
+            getAutocompleteConstants={handleAutocompleteUrls}
+            placeholder="https://api.myproduct.com/v1/users"
+            defaultValue={url}
+            onChange={this._handleUrlChange}
+            onKeyDown={this._handleKeyDown}
+          />
+          {this.renderSendButton()}
+        </form>
+      </div>
     );
   }
 }
+
+// TODO: this needs to merge with the Pure component when its refactored into functinoal
+export const RequestUrlBar: FunctionComponent<Props> = props => {
+  const settings = useSelector(selectSettings);
+  const { sendHotkeyCommand } = useHotKey();
+  const ref = useRef<RequestUrlBarPure>(null);
+
+  const handleKeyDown = (e: KeyboardEvent): void => {
+    if (e.code !== 'Enter') {
+      return;
+    }
+
+    sendHotkeyCommand(hotKeyRefs.REQUEST_SEND.id);
+  };
+
+  useHotKeysEffect((hotkeyId: string) => {
+    switch (hotkeyId) {
+      case hotKeyRefs.REQUEST_FOCUS_URL.id: {
+        ref.current?.focusRequestUrl();
+        return;
+      }
+
+      case hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU.id: {
+        ref.current?.toggleMethodDropdown();
+        return;
+      }
+
+      case hotKeyRefs.REQUEST_SHOW_OPTIONS.id: {
+        ref.current?.toggleDropdown();
+        return;
+      }
+
+      default:
+        return;
+    }
+  }, [
+    hotKeyRefs.REQUEST_FOCUS_URL.id,
+    hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU.id,
+    hotKeyRefs.REQUEST_SHOW_OPTIONS.id,
+  ]);
+
+  useEffect(() => {
+    ref.current?.focusInput();
+  }, [props.request?._id, props.request?.method, settings.hasPromptedAnalytics]);
+
+  return <RequestUrlBarPure {...props} ref={ref} onKeyDown={handleKeyDown} />;
+};

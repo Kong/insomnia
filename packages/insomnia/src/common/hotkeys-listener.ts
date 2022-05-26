@@ -51,3 +51,15 @@ export const executeHotKey = async <T extends Function>(
     callback();
   }
 };
+
+/**
+ * Check whether a hotkey has been pressed.
+ * @param event the activated keyboard event.
+ * @param bindings the hotkey binding by the hotkey definition
+ */
+export const checkPressedKeyCombs = (
+  event: KeyboardEvent,
+  bindings: KeyBindings,
+): boolean => {
+  return _pressedHotKey(event, bindings);
+};

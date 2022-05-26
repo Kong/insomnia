@@ -9,7 +9,7 @@ import {
   DropdownItem,
   SvgIcon,
 } from 'insomnia-components';
-import React, { PureComponent } from 'react';
+import React, { ChangeEvent, FunctionComponent, PureComponent, useRef } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import styled from 'styled-components';
@@ -41,7 +41,7 @@ import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { KeydownBinder } from './keydown-binder';
+import { useHotKeyEffect } from './hotkey/hotkey-context';
 import { showPrompt } from './modals';
 import { Notice } from './notice';
 import { PageLayout } from './page-layout';
@@ -156,6 +156,32 @@ const mapWorkspaceToWorkspaceCard = ({
     specFormatVersion,
     workspace,
   };
+};
+
+const DocumentFilterInput: FunctionComponent<{ onFilterValueChange(e: ChangeEvent<HTMLInputElement>): void }> = ({ onFilterValueChange }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useHotKeyEffect(() => {
+    inputRef.current?.focus();
+  }, hotKeyRefs.FILTER_DOCUMENTS.id);
+
+  return (
+    <div
+      className="form-control form-control--outlined no-margin"
+      style={{
+        maxWidth: '400px',
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Filter..."
+        onChange={onFilterValueChange}
+        className="no-margin"
+      />
+      <span className="fa fa-search filter-icon" />
+    </div>
+  );
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -295,23 +321,7 @@ class WrapperHome extends PureComponent<Props, State> {
     const { wrapperProps: { vcs }, handleSetDashboardSortOrder, sortOrder } = this.props;
     return (
       <div className="row row--right pad-left wide">
-        <div
-          className="form-control form-control--outlined no-margin"
-          style={{
-            maxWidth: '400px',
-          }}
-        >
-          <KeydownBinder onKeydown={this._handleKeyDown}>
-            <input
-              ref={this._setFilterInputRef}
-              type="text"
-              placeholder="Filter..."
-              onChange={this._handleFilterChange}
-              className="no-margin"
-            />
-            <span className="fa fa-search filter-icon" />
-          </KeydownBinder>
-        </div>
+        <DocumentFilterInput onFilterValueChange={this._handleFilterChange} />
         <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
         <RemoteWorkspacesDropdown vcs={vcs} />
         {this.renderCreateMenu()}
