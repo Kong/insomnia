@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { Fragment, PureComponent } from 'react';
+import React, { createRef, Fragment, PureComponent, RefObject } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -37,7 +37,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class OneLineEditor extends PureComponent<Props, State> {
-  _editor: UnconnectedCodeEditor | null = null;
+  _editorRef: RefObject<UnconnectedCodeEditor> = createRef<UnconnectedCodeEditor>();
   _input: DebouncedInput | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
@@ -62,8 +62,8 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
   focus(setToEnd = false) {
     if (this.state.mode === MODE_EDITOR) {
-      if (this._editor && !this._editor?.hasFocus()) {
-        setToEnd ? this._editor?.focusEnd() : this._editor?.focus();
+      if (!this._editorRef.current?.hasFocus()) {
+        setToEnd ? this._editorRef.current?.focusEnd() : this._editorRef.current?.focus();
       }
     } else {
       if (this._input && !this._input?.hasFocus()) {
@@ -78,7 +78,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
   selectAll() {
     if (this.state.mode === MODE_EDITOR) {
-      this._editor?.selectAll();
+      this._editorRef.current?.selectAll();
     } else {
       this._input?.select();
     }
@@ -86,15 +86,15 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
   getValue() {
     if (this.state.mode === MODE_EDITOR) {
-      return this._editor?.getValue();
+      return this._editorRef.current?.getValue();
     } else {
       return this._input?.getValue();
     }
   }
 
   getSelectionStart() {
-    if (this._editor) {
-      return this._editor?.getSelectionStart();
+    if (this._editorRef.current) {
+      return this._editorRef.current?.getSelectionStart();
     } else {
       console.warn('Tried to get selection start of one-line-editor when <input>');
       // @ts-expect-error -- TSCONVERSION
@@ -103,8 +103,8 @@ export class OneLineEditor extends PureComponent<Props, State> {
   }
 
   getSelectionEnd() {
-    if (this._editor) {
-      return this._editor?.getSelectionEnd();
+    if (this._editorRef.current) {
+      return this._editorRef.current?.getSelectionEnd();
     } else {
       console.warn('Tried to get selection end of one-line-editor when <input>');
       // @ts-expect-error -- TSCONVERSION
@@ -121,19 +121,19 @@ export class OneLineEditor extends PureComponent<Props, State> {
   }
 
   _handleDocumentMousedown(event: KeyboardEvent) {
-    if (!this._editor) {
+    if (!this._editorRef.current) {
       return;
     }
 
     // Clear the selection if mousedown happens outside the input so we act like
     // a regular <input>
     // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
-    const node = ReactDOM.findDOMNode(this._editor);
+    const node = ReactDOM.findDOMNode(this._editorRef.current);
     // @ts-expect-error -- TSCONVERSION
     const clickWasOutsideOfComponent = !node.contains(event.target);
 
     if (clickWasOutsideOfComponent) {
-      this._editor?.clearSelection();
+      this._editorRef.current?.clearSelection();
     }
   }
 
@@ -165,16 +165,16 @@ export class OneLineEditor extends PureComponent<Props, State> {
     const focusedFromTabEvent = !!e.sourceCapabilities;
 
     if (focusedFromTabEvent) {
-      this._editor?.focusEnd();
+      this._editorRef.current?.focusEnd();
     }
 
-    if (!this._editor) {
+    if (!this._editorRef.current) {
       console.warn('Tried to focus editor when it was not mounted', this);
       return;
     }
 
     // Set focused state
-    this._editor?.setAttribute('data-focused', 'on');
+    this._editorRef.current?.setAttribute('data-focused', 'on');
 
     this.props.onFocus?.(e);
   }
@@ -224,12 +224,12 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
   _handleEditorBlur(e: FocusEvent) {
     // Editor was already removed from the DOM, so do nothing
-    if (!this._editor) {
+    if (!this._editorRef.current) {
       return;
     }
 
     // Set focused state
-    this._editor?.removeAttribute('data-focused');
+    this._editorRef.current?.removeAttribute('data-focused');
 
     if (!this.props.forceEditor) {
       // Convert back to input sometime in the future.
@@ -283,10 +283,10 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
       // Wait for the editor to swap and restore cursor position
       const check = () => {
-        if (this._editor) {
-          this._editor?.focus();
+        if (this._editorRef.current) {
+          this._editorRef.current?.focus();
 
-          this._editor?.setSelection(start, end, 0, 0);
+          this._editorRef.current?.setSelection(start, end, 0, 0);
         } else {
           setTimeout(check, 40);
         }
@@ -306,7 +306,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
       return;
     }
 
-    if (!this._editor || this._editor?.hasFocus()) {
+    if (!this._editorRef.current || this._editorRef.current?.hasFocus()) {
       return;
     }
 
@@ -317,10 +317,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this.setState({
       mode: MODE_INPUT,
     });
-  }
-
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
   }
 
   _setInputRef(n: DebouncedInput) {
@@ -357,7 +353,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
       return (
         <Fragment>
           <CodeEditor
-            ref={this._setEditorRef}
+            ref={this._editorRef}
             defaultTabBehavior
             hideLineNumbers
             hideScrollbars

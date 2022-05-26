@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { createRef, PureComponent, RefObject } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG } from '../../common/constants';
@@ -24,7 +24,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class MarkdownEditor extends PureComponent<Props, State> {
-  _editor: UnconnectedCodeEditor | null = null;
+  _editorRef: RefObject<UnconnectedCodeEditor> = createRef();
 
   constructor(props: Props) {
     super(props);
@@ -40,16 +40,12 @@ export class MarkdownEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
-  }
-
   focusEnd() {
-    this._editor?.focusEnd();
+    this._editorRef.current?.focusEnd();
   }
 
   focus() {
-    this._editor?.focus();
+    this._editorRef.current?.focus();
   }
 
   render() {
@@ -77,7 +73,7 @@ export class MarkdownEditor extends PureComponent<Props, State> {
         <TabPanel className="react-tabs__tab-panel markdown-editor__edit">
           <div className="form-control form-control--outlined">
             <CodeEditor
-              ref={this._setEditorRef}
+              ref={this._editorRef}
               hideGutters
               hideLineNumbers
               dynamicHeight={!tall}

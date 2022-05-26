@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import HTTPSnippet, { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
-import React, { PureComponent } from 'react';
+import React, { createRef, PureComponent, RefObject } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { exportHarRequest } from '../../../common/har';
@@ -66,14 +66,11 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
   }
 
   modal: Modal | null = null;
-  _editor: UnconnectedCodeEditor | null = null;
+  // TODO: check if this is actually used?
+  _editorRef: RefObject<UnconnectedCodeEditor> = createRef();
 
   _setModalRef(n: Modal) {
     this.modal = n;
-  }
-
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
   }
 
   hide() {
@@ -194,7 +191,7 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
             className="border-top"
             key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
-            ref={this._setEditorRef}
+            ref={this._editorRef}
             defaultValue={cmd}
           />
         </ModalBody>

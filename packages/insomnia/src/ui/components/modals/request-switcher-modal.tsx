@@ -359,8 +359,15 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
+    } else if (event.code === 'ArrowUp') {
+      this._switchActiveIndex(true);
+    } else if (event.code === 'ArrowDown') {
+      this._switchActiveIndex(false);
     }
 
+    /**
+     * The below part makes this component refactoring very difficult. Let's discuss why is this even needed? We can probably provide arrow up and down to allow this operation?
+     * */
     // // Only control up/down with tab if modal is visible
     // executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
     //   if (this.state.isModalVisible) {
@@ -373,6 +380,15 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     //     this._setActiveIndex(this.state.activeIndex - 1);
     //   }
     // });
+  }
+
+  _switchActiveIndex(shouldIncrease: boolean): void {
+    if (!this.state.isModalVisible) {
+      return;
+    }
+
+    const updatedIndex = shouldIncrease ? 1 : -1;
+    this._setActiveIndex(this.state.activeIndex + updatedIndex);
   }
 
   async _handleKeyup(e: KeyboardEvent) {
@@ -405,6 +421,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       <Modal
         ref={this._setModalRef}
         dontFocus={!disableInput}
+        onKeyDown={this._handleKeydown}
         className={isModalVisible ? '' : 'hide'}
       >
         <ModalHeader hideCloseButton>

@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import iconv from 'iconv-lite';
-import React, { Component, Fragment, FunctionComponent, useRef } from 'react';
+import React, { Component, createRef, Fragment, FunctionComponent, RefObject, useRef } from 'react';
 
 import {
   AUTOBIND_CFG,
@@ -51,7 +51,8 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
-  _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
+  // TODO: this shouldn't combine two types into RefObject. Refactor this by decoupling it
+  _selectableViewRef: RefObject<ResponseRawViewer | UnconnectedCodeEditor> = createRef();
 
   state: State = {
     blockingBecauseTooLarge: false,
@@ -63,9 +64,9 @@ export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
 
   refresh() {
     // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
-    if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
+    if (this._selectableViewRef.current != null && typeof this._selectableViewRef.current.refresh === 'function') {
       // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
-      this._selectableView.refresh();
+      this._selectableViewRef.current.refresh();
     }
   }
 
@@ -170,15 +171,11 @@ export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
-    this._selectableView = n;
-  }
-
   _isViewSelectable() {
     return (
-      this._selectableView != null &&
-      typeof this._selectableView.focus === 'function' &&
-      typeof this._selectableView.selectAll === 'function'
+      this._selectableViewRef.current != null &&
+      typeof this._selectableViewRef.current.focus === 'function' &&
+      typeof this._selectableViewRef.current.selectAll === 'function'
     );
   }
 
@@ -191,10 +188,10 @@ export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
       return;
     }
 
-    this._selectableView?.focus();
+    this._selectableViewRef.current?.focus();
 
     if (!this.state.largeResponse) {
-      this._selectableView?.selectAll();
+      this._selectableViewRef.current?.selectAll();
     }
   }
 
@@ -439,7 +436,7 @@ export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
         <ResponseRawViewer
           key={responseId}
           responseId={responseId}
-          ref={this._setSelectableViewRef}
+          ref={this._selectableViewRef as RefObject<ResponseRawViewer>}
           value={this._getBody()}
         />
       );
@@ -449,7 +446,7 @@ export class ResponseViewerPure extends Component<ResponseViewerProps, State> {
     return (
       <CodeEditor
         key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
-        ref={this._setSelectableViewRef}
+        ref={this._selectableViewRef as RefObject<UnconnectedCodeEditor>}
         autoPrettify
         defaultValue={this._getBody()}
         filter={filter}

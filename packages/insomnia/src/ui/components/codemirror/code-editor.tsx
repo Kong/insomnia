@@ -16,6 +16,8 @@ import React, {
   forwardRef,
   ForwardRefRenderFunction,
   ReactNode,
+  RefObject,
+  useRef,
 } from 'react';
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
@@ -28,7 +30,6 @@ import {
   isMac,
 } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
@@ -38,6 +39,7 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { useHotKeyEffect } from '../hotkeys';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
@@ -183,17 +185,27 @@ const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) 
 
 const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawProps & FCProps> = (
   { enableNunjucks, ignoreEditorFontSettings, ...rawProps },
-  ref
+  ref: RefObject<UnconnectedCodeEditor>,
 ) => {
   const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
+  const refObj = useRef<UnconnectedCodeEditor>(null);
+
+  // this is a total hack to workaround the current way CodeEditor is done
+  const editorRef = ref ?? refObj as RefObject<UnconnectedCodeEditor>;
+
+  // we probably don't want to mix hot key with CodeEditor component but rather use it in where the CodeEditor is wrapped (aka its parent)
+  useHotKeyEffect(() => {
+    if (editorRef.current?.hasFocus()) {
+      editorRef.current?._prettify();
+    }
+  }, hotKeyRefs.BEAUTIFY_REQUEST_BODY.id);
 
   return <UnconnectedCodeEditor
-    ref={ref}
+    ref={editorRef}
     {...rawProps}
     {...derivedProps}
   />;
 };
-
 export const CodeEditor = forwardRef(CodeEditorFCWithRef);
 
 export type CodeEditorProps = RawProps & ReturnType<typeof useDerivedProps>;
@@ -744,10 +756,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  async _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._prettify);
-  }
-
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
@@ -1293,7 +1301,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         data-editor-type={type}
         data-testid="CodeEditor"
       >
-        {/* <KeydownBinder onKeydown={this._handleKeyDown} /> */}
         <div
           className={classnames('editor__container', 'input', className)}
           style={styles}

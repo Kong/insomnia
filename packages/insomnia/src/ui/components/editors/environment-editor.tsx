@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import orderedJSON from 'json-order';
-import React, { PureComponent } from 'react';
+import React, { createRef, PureComponent, RefObject } from 'react';
 
 import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
@@ -69,7 +69,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class EnvironmentEditor extends PureComponent<Props, State> {
-  _editor: UnconnectedCodeEditor | null = null;
+  _editorRef: RefObject<UnconnectedCodeEditor> = createRef<UnconnectedCodeEditor>();
 
   state: State = {
     error: null,
@@ -110,14 +110,10 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
     }
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
-  }
-
   getValue(): EnvironmentInfo | null {
-    if (this._editor) {
+    if (this._editorRef.current) {
       const data = orderedJSON.parse(
-        this._editor.getValue(),
+        this._editorRef.current.getValue(),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
@@ -148,7 +144,7 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
     return (
       <div className="environment-editor">
         <CodeEditor
-          ref={this._setEditorRef}
+          ref={this._editorRef}
           autoPrettify
           enableNunjucks
           onChange={this._handleChange}
