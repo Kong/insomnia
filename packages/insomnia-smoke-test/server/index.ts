@@ -1,4 +1,5 @@
 import express from 'express';
+import expressWs from 'express-ws';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';
@@ -6,7 +7,10 @@ import gitlabApi from './gitlab-api';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
 
-const app = express();
+const appBase = express();
+const wsInstance = expressWs(appBase);
+const { app } = wsInstance;
+
 const port = 4010;
 const grpcPort = 50051;
 
@@ -46,8 +50,24 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
+app.ws('/echo', ws => {
+
+  ws.on('connection', () => {
+    console.debug('WebSocket connection was opened');
+  });
+
+  ws.on('message', msg => {
+    ws.send(msg);
+  });
+
+  ws.on('close', () => {
+    console.debug('WebSocket connection was closed');
+  });
+});
+
 startGRPCServer(grpcPort).then(() => {
   app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`);
+    console.log(`Listening at ws://localhost:${port}/echo`);
   });
 });
