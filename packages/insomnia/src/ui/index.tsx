@@ -7,17 +7,17 @@ import { Provider } from 'react-redux';
 import { getProductName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
-import { sentryWatchAnalyticsEnabled, sentryWatchUserInfo } from '../common/sentry';
 import * as models from '../models';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import App from './containers/app';
 import { init as initStore } from './redux/modules';
+import { initializeSentry } from './sentry';
 
 import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
 
-sentryWatchUserInfo();
+initializeSentry();
 initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -25,7 +25,6 @@ document.title = getProductName();
 
 (async function() {
   await db.initClient();
-  sentryWatchAnalyticsEnabled();
 
   await initPlugins();
 
