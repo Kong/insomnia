@@ -294,7 +294,7 @@ class App extends PureComponent<AppProps, State> {
           });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
-          trackSegmentEvent(SegmentEvent.requestCreate);
+          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
         },
       ],
       [
@@ -404,7 +404,7 @@ class App extends PureComponent<AppProps, State> {
     const setToActive = id => {
       this._handleSetActiveRequest(id);
       models.stats.incrementCreatedRequests();
-      trackSegmentEvent(SegmentEvent.requestCreate);
+      trackSegmentEvent(SegmentEvent.requestCreate, { requestType: requestType || 'HTTP' });
     };
     if (requestType === 'gRPC') {
       showModal(ProtoFilesModal, {
