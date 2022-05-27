@@ -9,8 +9,7 @@ import { isSettings } from '../models/settings';
 let enabled = false;
 
 /**
- * Watch setting for changes.
- * This must be called after the DB is initialized.
+ * Watch setting for changes. This must be called after the DB is initialized.
  */
 export function sentryWatchAnalyticsEnabled() {
   models.settings.getOrCreate().then(settings => {
