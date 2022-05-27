@@ -43,7 +43,14 @@ export async function getJson<T = any>(path: string, sessionId: string | null): 
   return response;
 }
 
-async function _fetch<T = any>(method: 'POST' | 'PUT' | 'GET', path: string, obj: unknown, sessionId: string | null, compressBody = false, retries = 0): Promise<T | string> {
+async function _fetch<T = any>(
+  method: 'POST' | 'PUT' | 'GET',
+  path: string,
+  obj: unknown,
+  sessionId: string | null,
+  compressBody = false,
+  retries = 0
+): Promise<T | string> {
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }

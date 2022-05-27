@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/electron';
 import { getAccountId, onLoginLogout } from '../account/session';
 import { SENTRY_OPTIONS } from '../common/sentry';
 
-// Configures user info in Sentry scope.
+/** Configures user info in Sentry scope. */
 function sentryConfigureUserInfo() {
   Sentry.configureScope(scope => {
     const id = getAccountId();
@@ -15,13 +15,12 @@ function sentryConfigureUserInfo() {
   });
 }
 
-// Watches user info for changes.
+/** Watches user info for changes. */
 function sentryWatchUserInfo() {
   sentryConfigureUserInfo();
   onLoginLogout(() => sentryConfigureUserInfo());
 }
 
-// Initialize sentry.
 export function initializeSentry() {
   Sentry.init(SENTRY_OPTIONS);
   sentryWatchUserInfo();
