@@ -53,7 +53,6 @@ const sendSegment = async (segmentType: 'track' | 'page', options) => {
 export enum SegmentEvent {
   appStarted = 'App Started',
   collectionCreate = 'Collection Created',
-  criticalError = 'Critical Error Encountered',
   dataExport = 'Data Exported',
   dataImport = 'Data Imported',
   documentCreate = 'Document Created',
