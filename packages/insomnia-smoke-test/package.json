@@ -50,7 +50,7 @@
     "oidc-provider": "^7.10.6",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.34.0",
-    "ts-node": "^9.1.1",
+    "ts-node": "^10.8.0",
     "uuid": "^8.3.2",
     "xvfb-maybe": "^0.2.1"
   }

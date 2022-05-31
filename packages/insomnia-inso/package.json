@@ -59,7 +59,7 @@
     "jest-mock": "^28.0.2",
     "pkg": "^5.3.2",
     "rimraf": "^3.0.2",
-    "ts-node": "^9.1.1"
+    "ts-node": "^10.8.0"
   },
   "dependencies": {
     "@stoplight/spectral-core": "^1.12.2",

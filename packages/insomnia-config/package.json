@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "jest": "^28.1.0",
-    "ts-node": "^10.2.1",
+    "ts-node": "^10.8.0",
     "typescript": "^4.5.5",
     "typescript-json-schema": "^0.50.1"
   }
