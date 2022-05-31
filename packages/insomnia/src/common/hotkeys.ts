@@ -211,8 +211,8 @@ const defaultRegistry: HotKeyRegistry = {
       keyComb(false, true, false, true, keyboardKeys.n.keyCode),
     ],
     [
-      keyComb(true, true, false, false, keyboardKeys.n.keyCode),
       keyComb(true, false, false, false, keyboardKeys.n.keyCode),
+      keyComb(true, true, false, false, keyboardKeys.n.keyCode),
     ]
   ),
   [hotKeyRefs.REQUEST_SHOW_DELETE.id]: keyBinds(

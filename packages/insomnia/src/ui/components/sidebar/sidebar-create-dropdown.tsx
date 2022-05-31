@@ -40,7 +40,7 @@ export class SidebarCreateDropdown extends PureComponent<Props> {
           <i className="fa fa-caret-down" />
         </DropdownButton>
         <DropdownItem onClick={handleCreateRequest}>
-          <i className="fa fa-plus-circle" /> REST Request
+          <i className="fa fa-plus-circle" /> HTTP Request
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
         </DropdownItem>
         <DropdownItem onClick={() => handleCreateRequest('GraphQL')}>
