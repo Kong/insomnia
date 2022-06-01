@@ -15,6 +15,7 @@ import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
+import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
 interface State {
   gitRepository: GitRepository | null;
@@ -87,6 +88,8 @@ interface Props {
   onReset: () => void;
 }
 
+const oauth2Formats = ['github', 'gitlab', 'custom'];
+
 const ModalForm = (props: Props) => {
   const { gitRepository, onSubmit, onReset } = props;
 
@@ -101,6 +104,7 @@ const ModalForm = (props: Props) => {
 
   const [selectedTab, setTab] = useState(initialTab);
 
+  const selectedTabIndex = oauth2Formats.indexOf(selectedTab);
   return (
     <>
       <ModalHeader>
@@ -115,13 +119,18 @@ const ModalForm = (props: Props) => {
         <ErrorBoundary>
           <Tabs
             className="react-tabs"
-            onSelect={(index: number) => setTab(index ? 'custom' : 'github')}
-            selectedIndex={selectedTab === 'github' ? 0 : 1}
+            onSelect={(index: number) => setTab(oauth2Formats[index])}
+            selectedIndex={selectedTabIndex}
           >
             <TabList>
               <Tab>
                 <button>
                   <i className="fa fa-github" /> GitHub
+                </button>
+              </Tab>
+              <Tab>
+                <button>
+                  <i className="fa fa-gitlab" /> GitLab
                 </button>
               </Tab>
               <Tab>
@@ -138,6 +147,18 @@ const ModalForm = (props: Props) => {
               }}
             >
               <GitHubRepositorySetupFormGroup
+                uri={gitRepository?.uri}
+                onSubmit={onSubmit}
+              />
+            </TabPanel>
+            <TabPanel
+              className="tabs__tab-panel"
+              selectedClassName="pad pad-top-sm"
+              style={{
+                overflow: 'hidden',
+              }}
+            >
+              <GitLabRepositorySetupFormGroup
                 uri={gitRepository?.uri}
                 onSubmit={onSubmit}
               />

@@ -275,7 +275,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     const renderBtn =
       renderDropdownButton ||
       (children => (
-        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
           {children}
         </DropdownButton>
       ));
