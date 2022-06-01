@@ -400,12 +400,7 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _requestCreate(parentId: string, requestType?: string) {
-    const setToActive = id => {
-      this._handleSetActiveRequest(id);
-      models.stats.incrementCreatedRequests();
-      trackSegmentEvent(SegmentEvent.requestCreate, { requestType: requestType || 'HTTP' });
-    };
+  async handleCreateRequest(parentId: string, requestType?: string) {
     if (requestType === 'gRPC') {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
@@ -414,8 +409,9 @@ class App extends PureComponent<AppProps, State> {
             name: 'New Request',
             protoFileId,
           });
-
-          setToActive(createdRequest._id);
+          models.stats.incrementCreatedRequests();
+          trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
+          this._handleSetActiveRequest(createdRequest._id);
         },
       });
       return;
@@ -434,8 +430,9 @@ class App extends PureComponent<AppProps, State> {
         },
         name: 'New Request',
       });
-
-      setToActive(request._id);
+      models.stats.incrementCreatedRequests();
+      trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
+      this._handleSetActiveRequest(request._id);
       return;
     }
     const request = await models.request.create({
@@ -443,8 +440,9 @@ class App extends PureComponent<AppProps, State> {
       method: METHOD_GET,
       name: 'New Request',
     });
-
-    setToActive(request._id);
+    models.stats.incrementCreatedRequests();
+    trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
+    this._handleSetActiveRequest(request._id);
   }
 
   async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
