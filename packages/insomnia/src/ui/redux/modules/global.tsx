@@ -31,6 +31,7 @@ import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
 import { setTheme } from '../../../plugins/misc';
 import { exchangeCodeForToken } from '../../../sync/git/github-oauth-provider';
+import { exchangeCodeForGitLabToken } from '../../../sync/git/gitlab-oauth-provider';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
@@ -63,6 +64,7 @@ const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
 export const COMMAND_GITHUB_OAUTH_AUTHENTICATE = 'oauth/github/authenticate';
+export const COMMAND_GITLAB_OAUTH_AUTHENTICATE = 'oauth/gitlab/authenticate';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -285,6 +287,17 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         showError({
           error,
           title: 'Error authorizing GitHub',
+          message: error.message,
+        });
+      });
+      break;
+    }
+
+    case COMMAND_GITLAB_OAUTH_AUTHENTICATE: {
+      await exchangeCodeForGitLabToken(args).catch((error: Error) => {
+        showError({
+          error,
+          title: 'Error authorizing GitLab',
           message: error.message,
         });
       });
