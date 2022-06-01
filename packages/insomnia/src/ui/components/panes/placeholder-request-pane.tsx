@@ -67,7 +67,7 @@ export const PlaceholderRequestPane: FC<Props> = ({
             <button className="btn inline-block btn--clicky" onClick={handleImportFile}>
               Import from File
             </button>
-            <button className="btn inline-block btn--clicky" onClick={handleCreateRequest}>
+            <button className="btn inline-block btn--clicky" onClick={() => handleCreateRequest()}>
               New Request
             </button>
           </div>

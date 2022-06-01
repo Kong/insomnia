@@ -400,7 +400,7 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async handleCreateRequest(parentId: string, requestType?: string) {
+  async _requestCreate(parentId: string, requestType?: string) {
     if (requestType === 'gRPC') {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
