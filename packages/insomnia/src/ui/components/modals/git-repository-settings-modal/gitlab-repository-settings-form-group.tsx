@@ -1,5 +1,4 @@
-import { AxiosResponse } from 'axios';
-import type { GraphQLError } from 'graphql';
+import axios from 'axios';
 import { Button } from 'insomnia-components';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -10,11 +9,12 @@ import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
   generateAuthorizationUrl,
-  GITHUB_GRAPHQL_API_URL,
+  getGitLabOauthApiURL,
+  refreshToken,
   signOut,
-} from '../../../../sync/git/github-oauth-provider';
+} from '../../../../sync/git/gitlab-oauth-provider';
 import {
-  COMMAND_GITHUB_OAUTH_AUTHENTICATE,
+  COMMAND_GITLAB_OAUTH_AUTHENTICATE,
   newCommand,
 } from '../../../redux/modules/global';
 import { showAlert } from '..';
@@ -24,86 +24,40 @@ interface Props {
   onSubmit: (args: Partial<GitRepository>) => void;
 }
 
-export const GitHubRepositorySetupFormGroup = (props: Props) => {
+export const GitLabRepositorySetupFormGroup = (props: Props) => {
   const { onSubmit, uri } = props;
 
-  const [githubToken, setGitHubToken] = useState(
-    localStorage.getItem('github-oauth-token') || ''
+  const [gitlabToken, setGitLabToken] = useState(
+    localStorage.getItem('gitlab-oauth-token') || ''
   );
 
   useInterval(
     () => {
-      const token = localStorage.getItem('github-oauth-token');
+      const token = localStorage.getItem('gitlab-oauth-token');
 
       if (token) {
-        setGitHubToken(token);
+        setGitLabToken(token);
       }
     },
-    githubToken ? null : 500
+    gitlabToken ? null : 500
   );
 
-  if (!githubToken) {
-    return <GitHubSignInForm />;
+  if (typeof gitlabToken !== 'string' || !gitlabToken) {
+    return <GitLabSignInForm />;
   }
 
   return (
-    <GitHubRepositoryForm
+    <GitLabRepositoryForm
       uri={uri}
       onSubmit={onSubmit}
-      token={githubToken}
+      token={gitlabToken}
       onSignOut={() => {
-        setGitHubToken('');
+        setGitLabToken('');
         signOut();
       }}
     />
   );
 };
-
-interface FetchGraphQLInput {
-  query: string;
-  variables?: Record<string, any>;
-  headers: Record<string, any>;
-  url: string;
-}
-
-async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
-  const { headers, query, variables, url } = input;
-  const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
-    await axiosRequest({
-      url,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-      data: {
-        query,
-        variables,
-      },
-    });
-
-  return response.data;
-}
-
-const GitHubUserInfoQuery = `
-  query getUserInfo {
-    viewer {
-      login
-      email
-      avatarUrl
-      url
-    }
-  }
-`;
-
-interface GitHubUserInfoQueryResult {
-  viewer: {
-    login: string;
-    email: string;
-    avatarUrl: string;
-    url: string;
-  };
-}
 
 const AccountViewContainer = styled.div({
   display: 'flex',
@@ -176,78 +130,76 @@ const AuthorizationFormContainer = styled.div({
   boxSizing: 'border-box',
 });
 
-interface GitHubRepositoryFormProps {
+export interface GitLabUserResult {
+  id: number;
+  username: string;
+  name: string;
+  avatar_url: string;
+  public_email: string;
+  email: string;
+  projects_limit: number;
+  commit_email: string;
+}
+
+interface GitLabRepositoryFormProps {
   uri?: string;
   onSubmit: (args: Partial<GitRepository>) => void;
   onSignOut: () => void;
   token?: string;
 }
 
-const GitHubRepositoryForm = ({
+const GitLabRepositoryForm = ({
   uri,
   token,
   onSubmit,
   onSignOut,
-}: GitHubRepositoryFormProps) => {
+}: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
 
-  const [user, setUser, removeUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
-    'github-user-info',
+  const [user, setUser, removeUser] = useLocalStorage<GitLabUserResult>(
+    'gitlab-user-info',
     undefined
   );
 
   useEffect(() => {
-    let isMounted = true;
-
     if (token && !user) {
-      fetchGraphQL<GitHubUserInfoQueryResult>({
-        query: GitHubUserInfoQuery,
+      axiosRequest({
+        method: 'GET',
+        url: `${getGitLabOauthApiURL()}/api/v4/user`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        url: GITHUB_GRAPHQL_API_URL,
+      }).then(({ data }) => {
+        setUser(data);
       })
-        .then(({ data, errors }) => {
-          if (isMounted) {
-            if (errors) {
-              setError(
-                'Something went wrong when trying to fetch info from GitHub.'
-              );
-            } else if (data) {
-              setUser(data.viewer);
-            }
-          }
-        })
         .catch((e: unknown) => {
-          if (e instanceof Error) {
-            setError(
-              'Something went wrong when trying to fetch info from GitHub.'
-            );
+          if (axios.isAxiosError(e) && e.response?.status === 401) {
+            refreshToken();
+          } else {
+            const errorMessage = (e instanceof Error) ? e.message : 'Something went wrong when trying to fetch info from GitLab.';
+            setError(errorMessage);
+            console.log(`[gitlab oauth]: ${e}`);
           }
         });
     }
-
-    return () => {
-      isMounted = false;
-    };
   }, [token, onSubmit, setUser, user]);
 
   return (
     <form
-      id="github"
+      id="gitlab"
       className="form-group"
       style={{ height: '100%' }}
       onSubmit={e =>
         onSubmit({
           uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
           author: {
-            name: user?.login ?? '',
-            email: user?.email ?? '',
+            name: (user?.username || user?.name) ?? '',
+            email: user?.commit_email ?? user?.public_email ?? user?.email ?? '',
           },
           credentials: {
             username: token ?? '',
             token: token ?? '',
-            oauth2format: 'github',
+            oauth2format: 'gitlab',
           },
         })
       }
@@ -255,7 +207,7 @@ const GitHubRepositoryForm = ({
       {token && (
         <div className="form-control form-control--outlined">
           <label>
-            GitHub URI
+            GitLab URI
             <input
               className="form-control"
               defaultValue={uri}
@@ -263,28 +215,28 @@ const GitHubRepositoryForm = ({
               name="uri"
               autoFocus
               required
-              placeholder="https://github.com/org/repo.git"
+              placeholder="https://gitlab.com/org/repo.git"
             />
           </label>
         </div>
       )}
       <AccountViewContainer>
         <AccountDetails>
-          <Avatar src={user?.avatarUrl ?? ''} />
+          <Avatar src={user?.avatar_url ?? ''} />
           <Details>
             <span
               style={{
                 fontSize: 'var(--font-size-lg)',
               }}
             >
-              {user?.login}
+              {user?.name}
             </span>
             <span
               style={{
                 fontSize: 'var(--font-size-md)',
               }}
             >
-              {user?.email}
+              {user?.commit_email ?? user?.public_email ?? user?.email}
             </span>
           </Details>
         </AccountDetails>
@@ -293,9 +245,9 @@ const GitHubRepositoryForm = ({
             e.preventDefault();
             e.stopPropagation();
             showAlert({
-              title: 'Sign out of GitHub',
+              title: 'Sign out of GitLab',
               message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
+                'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
               okLabel: 'Sign out',
               onConfirm: () => {
                 removeUser();
@@ -320,13 +272,12 @@ const GitHubRepositoryForm = ({
   );
 };
 
-interface GitHubSignInFormProps {
+interface GitLabSignInFormProps {
   token?: string;
 }
 
-const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
-  const [error, setError] = useState('');
-  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
+const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
+  const [authUrl, setAuthUrl] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
 
@@ -334,11 +285,18 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
   useEffect(() => {
     if (token) {
       setIsAuthenticating(false);
-      setAuthUrl(generateAuthorizationUrl());
+
+      generateAuthorizationUrl().then(setAuthUrl);
     }
   }, [token]);
 
-  return (
+  useEffect(() => {
+    if (!authUrl) {
+      generateAuthorizationUrl().then(setAuthUrl);
+    }
+  }, [authUrl]);
+
+  return !authUrl ? (<div />) : (
     <AuthorizationFormContainer>
       <a
         href={authUrl}
@@ -346,8 +304,8 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
           setIsAuthenticating(true);
         }}
       >
-        <i className="fa fa-github" />
-        {isAuthenticating ? 'Authenticating' : 'Authenticate'} with GitHub
+        <i className="fa fa-gitlab" />
+        {isAuthenticating ? 'Authenticating' : 'Authenticate'} with GitLab
       </a>
 
       {isAuthenticating && (
@@ -358,48 +316,31 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
             const formData = new FormData(e.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
-              let parsedURL: URL;
-              try {
-                parsedURL = new URL(link);
-              } catch (e) {
-                setError('Invalid URL');
-                return;
-              }
-
+              const parsedURL = new URL(link);
               const code = parsedURL.searchParams.get('code');
               const state = parsedURL.searchParams.get('state');
 
-              if (!(typeof code === 'string') || !(typeof state === 'string')) {
-                setError('Incomplete URL');
-                return;
+              if (typeof code === 'string' && typeof state === 'string') {
+                const command = newCommand(COMMAND_GITLAB_OAUTH_AUTHENTICATE, {
+                  code,
+                  state,
+                });
+
+                command(dispatch);
               }
-
-              const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
-                code,
-                state,
-              });
-
-              command(dispatch);
             }
           }}
         >
           <label className="form-control form-control--outlined">
             <div>
-              If you aren't redirected to the app you can manually paste the authentication url here:
+              If you aren't redirected to the app you can manually paste your
+              code here:
             </div>
             <div className="form-row">
               <input name="link" />
               <Button name="add-token">Add</Button>
             </div>
           </label>
-          {error && (
-            <p className="notice error margin-bottom-sm">
-              <button className="pull-right icon" onClick={() => setError('')}>
-                <i className="fa fa-times" />
-              </button>
-              {error}
-            </p>
-          )}
         </form>
       )}
     </AuthorizationFormContainer>

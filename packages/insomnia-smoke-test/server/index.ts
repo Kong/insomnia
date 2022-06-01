@@ -2,6 +2,7 @@ import express from 'express';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';
+import gitlabApi from './gitlab-api';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
 
@@ -30,6 +31,7 @@ app.use('/file', express.static('fixtures/files'));
 app.use('/auth/basic', basicAuthRouter);
 
 githubApi(app);
+gitlabApi(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
