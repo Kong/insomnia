@@ -104,7 +104,7 @@ const Avatar = ({ src }: { src: string }) => {
       img.removeEventListener('load', onLoad);
       img.removeEventListener('error', onError);
     };
-  });
+  }, [src]);
 
   return imageSrc ? (
     <AvatarImg src={imageSrc} />
