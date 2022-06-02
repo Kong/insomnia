@@ -11,8 +11,8 @@ import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
-import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
+import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
@@ -22,6 +22,8 @@ import { cancelCurlRequest, curlRequest } from './network/libcurl-promise';
 import { authorizeUserInWindow } from './network/o-auth-2/misc';
 import installPlugin from './plugins/install';
 import type { ToastNotification } from './ui/components/toast';
+
+initializeSentry();
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -84,7 +86,7 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
-  errorHandling.init();
+  sentryWatchAnalyticsEnabled();
   windowUtils.init();
   await _launchApp();
 

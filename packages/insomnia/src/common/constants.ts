@@ -20,9 +20,10 @@ export const getAppPlatform = () => process.platform;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
-const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
+export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () => encodeURIComponent(
