@@ -1,8 +1,9 @@
 import { cookieToString } from 'insomnia-cookies';
 import React, { FC, useCallback } from 'react';
-import { Cookie } from 'tough-cookie';
+import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
+import { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
@@ -37,7 +38,7 @@ const CookieRow: FC<{
     showModal(cookie);
   }, [showModal, cookie]);
 
-  const cookieString = cookieToString(Cookie.fromJSON(cookie));
+  const cookieString = cookieToString(ToughCookie.fromJSON(cookie));
   return <tr className="selectable" key={index}>
     <td>
       <RenderedText>{cookie.domain || ''}</RenderedText>
@@ -76,7 +77,6 @@ export const CookieList: FC<CookieListProps> = ({
   handleCookieDelete,
 }) => {
   const addCookie = useCallback(() => handleCookieAdd({
-    // @ts-expect-error our code needs to overload the tough-cookie `Cookie` type to include id.
     id: uuidv4(),
     key: 'foo',
     value: 'bar',

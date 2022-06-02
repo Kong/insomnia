@@ -51,7 +51,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ResponseViewer extends Component<ResponseViewerProps, State> {
-  _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
+  _selectableView: typeof ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
     blockingBecauseTooLarge: false,
@@ -164,13 +164,14 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
+  _setSelectableViewRef<T extends typeof ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
     this._selectableView = n;
   }
 
   _isViewSelectable() {
     return (
       this._selectableView != null &&
+      'focus' in this._selectableView &&
       typeof this._selectableView.focus === 'function' &&
       typeof this._selectableView.selectAll === 'function'
     );
@@ -186,10 +187,14 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
         return;
       }
 
-      this._selectableView?.focus();
+      if (this._selectableView) {
+        if ('focus' in this._selectableView) {
+          this._selectableView.focus();
+        }
 
-      if (!this.state.largeResponse) {
-        this._selectableView?.selectAll();
+        if (!this.state.largeResponse && 'selectAll' in this._selectableView) {
+          this._selectableView.selectAll();
+        }
       }
     });
   }
