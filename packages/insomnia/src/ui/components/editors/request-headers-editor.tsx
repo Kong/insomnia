@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, useCallback } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Request, RequestHeader } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -13,25 +11,18 @@ interface Props {
   request: Request;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestHeadersEditor extends PureComponent<Props> {
-  _handleBulkUpdate(headersString: string) {
-    const { onChange, request } = this.props;
+export const RequestHeadersEditor: FC<Props> = ({
+  onChange,
+  request,
+  bulk,
+}) => {
+  const handleBulkUpdate = useCallback((headersString: string) => {
+    const headers: {
+      name: string;
+      value: string;
+    }[] = [];
 
-    const headers = RequestHeadersEditor._getHeadersFromString(headersString);
-
-    onChange(request, headers);
-  }
-
-  _handleKeyValueUpdate(headers: RequestHeader[]) {
-    const { onChange, request } = this.props;
-    onChange(request, headers);
-  }
-
-  static _getHeadersFromString(headersString: string) {
-    const headers: { name: string; value: string }[] = [];
     const rows = headersString.split(/\n+/);
-
     for (const row of rows) {
       const [rawName, rawValue] = row.split(/:(.*)$/);
       const name = (rawName || '').trim();
@@ -47,58 +38,53 @@ export class RequestHeadersEditor extends PureComponent<Props> {
       });
     }
 
-    return headers;
-  }
+    onChange(request, headers);
+  }, [onChange, request]);
 
-  _getHeadersString() {
-    const { headers } = this.props.request;
-    let headersString = '';
-
-    for (const header of headers) {
-      // Make sure it's not disabled
-      if (header.disabled) {
-        continue;
-      }
-
-      // Make sure it's not blank
-      if (!header.name && !header.value) {
-        continue;
-      }
-
-      headersString += `${header.name}: ${header.value}\n`;
+  let headersString = '';
+  for (const header of request.headers) {
+    // Make sure it's not disabled
+    if (header.disabled) {
+      continue;
+    }
+    // Make sure it's not blank
+    if (!header.name && !header.value) {
+      continue;
     }
 
-    return headersString;
+    headersString += `${header.name}: ${header.value}\n`;
   }
 
-  render() {
-    const {
-      bulk,
-      request,
-    } = this.props;
-    return bulk ? (
+  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
+    onChange(request, headers);
+  }, [onChange, request]);
+
+  if (bulk) {
+    return (
       <div className="tall">
         <CodeEditor
-          onChange={this._handleBulkUpdate}
-          defaultValue={this._getHeadersString()}
+          onChange={handleBulkUpdate}
+          defaultValue={headersString}
           enableNunjucks
         />
       </div>
-    ) : (
-      <div className="pad-bottom scrollable-container">
-        <div className="scrollable">
-          <KeyValueEditor
-            sortable
-            namePlaceholder="header"
-            valuePlaceholder="value"
-            descriptionPlaceholder="description"
-            pairs={request.headers}
-            handleGetAutocompleteNameConstants={getCommonHeaderNames}
-            handleGetAutocompleteValueConstants={getCommonHeaderValues}
-            onChange={this._handleKeyValueUpdate}
-          />
-        </div>
-      </div>
     );
   }
-}
+
+  return (
+    <div className="pad-bottom scrollable-container">
+      <div className="scrollable">
+        <KeyValueEditor
+          sortable
+          namePlaceholder="header"
+          valuePlaceholder="value"
+          descriptionPlaceholder="description"
+          pairs={request.headers}
+          handleGetAutocompleteNameConstants={getCommonHeaderNames}
+          handleGetAutocompleteValueConstants={getCommonHeaderValues}
+          onChange={onChangeHeaders}
+        />
+      </div>
+    </div>
+  );
+};

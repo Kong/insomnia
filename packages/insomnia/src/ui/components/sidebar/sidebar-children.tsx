@@ -50,32 +50,6 @@ interface Props extends ReduxProps {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class UnconnectedSidebarChildren extends PureComponent<Props> {
-  _contextMenu: SidebarCreateDropdown | null = null;
-
-  _handleContextMenu(e: React.MouseEvent<HTMLUListElement>) {
-    const { target, currentTarget, clientX, clientY } = e;
-
-    if (target !== currentTarget) {
-      return;
-    }
-
-    e.preventDefault();
-    const menu = this._contextMenu;
-
-    if (menu && document.body) {
-      const x = clientX;
-      const y = document.body.getBoundingClientRect().height - clientY;
-      menu.show({
-        x,
-        y,
-      });
-    }
-  }
-
-  _setContextMenuRef(n: SidebarCreateDropdown) {
-    this._contextMenu = n;
-  }
-
   _renderChildren(children: Child[], isInPinnedList: boolean) {
     const {
       filter,
@@ -161,7 +135,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     return (
       <ul
         className="sidebar__list sidebar__list-root theme--sidebar__list"
-        onContextMenu={this._handleContextMenu}
       >
         {this._renderChildren(children, pinnedList)}
       </ul>
@@ -188,7 +161,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     const contextMenuPortal = ReactDOM.createPortal(
       <div className="hide">
         <SidebarCreateDropdown
-          ref={this._setContextMenuRef}
           handleCreateRequest={this._handleCreateRequest}
           handleCreateRequestGroup={this._handleCreateRequestGroup}
           hotKeyRegistry={hotKeyRegistry}

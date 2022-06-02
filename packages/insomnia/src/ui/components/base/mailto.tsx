@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, ReactNode } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { Link } from './link';
 
 interface Props {
@@ -12,28 +10,27 @@ interface Props {
   body?: string;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Mailto extends PureComponent<Props> {
-  render() {
-    const { email, body, subject, children } = this.props;
-    const params: {name: string; value: string}[] = [];
+export const Mailto: FC<Props> = ({
+  email,
+  body,
+  subject,
+  children,
+}) => {
+  const params: {
+    name: string;
+    value: string;
+  }[] = [
+    ...(subject ? [{
+      name: 'subject',
+      value: subject,
+    }] : []),
+    ...(body ? [{
+      name: 'body',
+      value: body,
+    }] : []),
+  ];
 
-    if (subject) {
-      params.push({
-        name: 'subject',
-        value: subject,
-      });
-    }
-
-    if (body) {
-      params.push({
-        name: 'body',
-        value: body,
-      });
-    }
-
-    const qs = buildQueryStringFromParams(params);
-    const href = joinUrlAndQueryString(`mailto:${email}`, qs);
-    return <Link href={href}>{children || email}</Link>;
-  }
-}
+  const qs = buildQueryStringFromParams(params);
+  const href = joinUrlAndQueryString(`mailto:${email}`, qs);
+  return <Link href={href}>{children || email}</Link>;
+};
