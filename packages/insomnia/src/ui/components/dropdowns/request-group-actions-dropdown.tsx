@@ -135,9 +135,9 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        <DropdownItem onClick={this._handleRequestCreate}>
+        <DropdownItem onClick={() => this._handleRequestCreate()}>
           <i className="fa fa-plus-circle" /> New Request
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
         </DropdownItem>
         <DropdownItem onClick={this._handleRequestGroupCreate}>
           <i className="fa fa-folder" /> New Folder
