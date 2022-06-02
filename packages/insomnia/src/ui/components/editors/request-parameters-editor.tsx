@@ -1,7 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Request, RequestParameter } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -12,23 +10,16 @@ interface Props {
   request: Request;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestParametersEditor extends PureComponent<Props> {
-  _handleBulkUpdate(paramsString: string) {
-    const { onChange, request } = this.props;
-
-    const params = RequestParametersEditor._getParamsFromString(paramsString);
-
-    onChange(request, params);
-  }
-
-  _handleKeyValueUpdate(parameters: RequestParameter[]) {
-    const { onChange, request } = this.props;
-    onChange(request, parameters);
-  }
-
-  static _getParamsFromString(paramsString: string) {
-    const params: { name: string; value: string }[] = [];
+export const RequestParametersEditor: FC<Props> = props => {
+  const _handleBulkUpdate = (paramsString: string) => {
+    const {
+      onChange,
+      request,
+    } = props;
+    const params: {
+      name: string;
+      value: string;
+    }[] = [];
     const rows = paramsString.split(/\n+/);
 
     for (const row of rows) {
@@ -46,11 +37,13 @@ export class RequestParametersEditor extends PureComponent<Props> {
       });
     }
 
-    return params;
-  }
+    onChange(request, params);
+  };
 
-  _getQueriesString() {
-    const { parameters } = this.props.request;
+  const _getQueriesString = () => {
+    const {
+      parameters,
+    } = props.request;
     let paramsString = '';
 
     for (const param of parameters) {
@@ -58,7 +51,6 @@ export class RequestParametersEditor extends PureComponent<Props> {
       if (param.disabled) {
         continue;
       }
-
       // Make sure it's not blank
       if (!param.name && !param.value) {
         continue;
@@ -68,29 +60,13 @@ export class RequestParametersEditor extends PureComponent<Props> {
     }
 
     return paramsString;
-  }
+  };
 
-  render() {
-    const {
-      bulk,
-      request,
-    } = this.props;
-    return bulk ? (
-      <CodeEditor
-        onChange={this._handleBulkUpdate}
-        defaultValue={this._getQueriesString()}
-        enableNunjucks
-      />
-    ) : (
-      <KeyValueEditor
-        sortable
-        allowMultiline
-        namePlaceholder="name"
-        valuePlaceholder="value"
-        descriptionPlaceholder="description"
-        pairs={request.parameters}
-        onChange={this._handleKeyValueUpdate}
-      />
-    );
-  }
-}
+  const {
+    bulk,
+    request,
+  } = props;
+  return bulk ?
+    <CodeEditor onChange={_handleBulkUpdate} defaultValue={_getQueriesString()} enableNunjucks /> :
+    <KeyValueEditor sortable allowMultiline namePlaceholder="name" valuePlaceholder="value" descriptionPlaceholder="description" pairs={request.parameters} onChange={parameters => props.onChange(props.request, parameters)} />;
+};

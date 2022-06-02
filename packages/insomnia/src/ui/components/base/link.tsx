@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, ReactNode } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
 
 interface Props {
@@ -16,45 +14,39 @@ interface Props {
   noTheme?: boolean;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Link extends PureComponent<Props> {
-  _handleClick(e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) {
+export const Link: FC<Props> = props => {
+  const _handleClick = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     e?.preventDefault();
-    const { href, onClick } = this.props;
-    // Also call onClick that was passed to us if there was one
+    const {
+      href,
+      onClick,
+    } = props; // Also call onClick that was passed to us if there was one
+
     onClick?.(e);
     clickLink(href);
-  }
+  };
 
-  render() {
-    const {
-      onClick,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      button,
-      href,
-      children,
-      className,
-      disabled,
-      noTheme,
-      ...other
-    } = this.props;
-    return button ? (
-      <button onClick={this._handleClick} className={className} {...other}>
-        {children}
-      </button>
-    ) : (
-      <a
-        href={href}
-        onClick={this._handleClick}
-        className={classnames(className, {
-          'theme--link': !noTheme,
-        })}
-        // @ts-expect-error -- TSCONVERSION
-        disabled={disabled}
-        {...other}
-      >
-        {children}
-      </a>
-    );
-  }
-}
+  const {
+    onClick,
+    button,
+    href,
+    children,
+    className,
+    disabled,
+    noTheme,
+    ...other
+  } = props;
+  return button ? <button onClick={_handleClick} className={className} {...other}>
+    {children}
+  </button> : <a
+    href={href}
+    onClick={_handleClick}
+    className={classnames(className, {
+      'theme--link': !noTheme,
+    })} // @ts-expect-error -- TSCONVERSION
+    disabled={disabled}
+    {...other}
+  >
+    {children}
+  </a>;
+};
