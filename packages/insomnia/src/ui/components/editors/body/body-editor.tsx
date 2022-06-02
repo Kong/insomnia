@@ -1,11 +1,9 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import clone from 'clone';
 import { SvgIcon } from 'insomnia-components';
 import { lookup } from 'mime-types';
-import React, { PureComponent } from 'react';
+import React, { FC } from 'react';
 
 import {
-  AUTOBIND_CFG,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
@@ -48,35 +46,50 @@ interface Props {
   environmentId: string;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class BodyEditor extends PureComponent<Props> {
-  _handleRawChange(rawValue: string) {
-    const { onChange, request } = this.props;
+export const BodyEditor: FC<Props> = props => {
+  const _handleRawChange = (rawValue: string) => {
+    const {
+      onChange,
+      request,
+    } = props;
     const oldContentType = request.body.mimeType || '';
     const newBody = newBodyRaw(rawValue, oldContentType);
     onChange(request, newBody);
-  }
+  };
 
-  _handleGraphQLChange(content: string) {
-    const { onChange, request } = this.props;
+  const _handleGraphQLChange = (content: string) => {
+    const {
+      onChange,
+      request,
+    } = props;
     const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     onChange(request, newBody);
-  }
+  };
 
-  _handleFormUrlEncodedChange(parameters: RequestBodyParameter[]) {
-    const { onChange, request } = this.props;
+  const _handleFormUrlEncodedChange = (parameters: RequestBodyParameter[]) => {
+    const {
+      onChange,
+      request,
+    } = props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(request, newBody);
-  }
+  };
 
-  _handleFormChange(parameters: RequestBodyParameter[]) {
-    const { onChange, request } = this.props;
+  const _handleFormChange = (parameters: RequestBodyParameter[]) => {
+    const {
+      onChange,
+      request,
+    } = props;
     const newBody = newBodyForm(parameters);
     onChange(request, newBody);
-  }
+  };
 
-  async _handleFileChange(path: string) {
-    const { onChange, onChangeHeaders, request } = this.props;
+  const _handleFileChange = async (path: string) => {
+    const {
+      onChange,
+      onChangeHeaders,
+      request,
+    } = props;
     const headers = clone(request.headers);
     const newBody = newBodyFile(path);
     const newRequest = await onChange(request, newBody);
@@ -98,12 +111,10 @@ export class BodyEditor extends PureComponent<Props> {
       contentTypeHeader.value = newContentType;
       showModal(AskModal, {
         title: 'Change Content-Type',
-        message: (
-          <p>
-            Do you want set the <span className="monospace">Content-Type</span> header to{' '}
-            <span className="monospace">{newContentType}</span>?
-          </p>
-        ),
+        message: <p>
+          Do you want set the <span className="monospace">Content-Type</span> header to{' '}
+          <span className="monospace">{newContentType}</span>?
+        </p>,
         onDone: saidYes => {
           if (saidYes) {
             onChangeHeaders(newRequest, headers);
@@ -111,75 +122,36 @@ export class BodyEditor extends PureComponent<Props> {
         },
       });
     }
-  }
+  };
 
-  render() {
-    const {
-      request,
-      workspace,
-      settings,
-      environmentId,
-    } = this.props;
-    const noRender = request.settingDisableRenderRequestBody;
-    const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
-    const fileName = request.body.fileName;
-    const mimeType = request.body.mimeType;
-    const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
+  const {
+    request,
+    workspace,
+    settings,
+    environmentId,
+  } = props;
+  const noRender = request.settingDisableRenderRequestBody;
+  const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
+  const fileName = request.body.fileName;
+  const mimeType = request.body.mimeType;
+  const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
 
-    const _render = () => {
-      if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        return (
-          <UrlEncodedEditor
-            key={uniqueKey}
-            onChange={this._handleFormUrlEncodedChange}
-            parameters={request.body.params || []}
-          />
-        );
-      } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-        return (
-          <FormEditor
-            key={uniqueKey}
-            onChange={this._handleFormChange}
-            parameters={request.body.params || []}
-          />
-        );
-      } else if (mimeType === CONTENT_TYPE_FILE) {
-        return <FileEditor key={uniqueKey} onChange={this._handleFileChange} path={fileName || ''} />;
-      } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-        return (
-          <GraphQLEditor
-            key={uniqueKey}
-            uniquenessKey={uniqueKey}
-            request={request}
-            content={request.body.text || ''}
-            workspace={workspace}
-            settings={settings}
-            environmentId={environmentId}
-            onChange={this._handleGraphQLChange}
-          />
-        );
-      } else if (!isBodyEmpty) {
-        const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
-        return (
-          <RawEditor
-            uniquenessKey={uniqueKey}
-            contentType={contentType || 'text/plain'}
-            content={request.body.text || ''}
-            onChange={this._handleRawChange}
-          />
-        );
-      } else {
-        return (
-          <EmptyStatePane
-            icon={<SvgIcon icon="bug" />}
-            documentationLinks={[documentationLinks.introductionToInsomnia]}
-            secondaryAction="Select a body type from above to send data in the body of a request"
-            title="Enter a URL and send to get a response"
-          />
-        );
-      }
-    };
+  const _render = () => {
+    if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+      return <UrlEncodedEditor key={uniqueKey} onChange={_handleFormUrlEncodedChange} parameters={request.body.params || []} />;
+    } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+      return <FormEditor key={uniqueKey} onChange={_handleFormChange} parameters={request.body.params || []} />;
+    } else if (mimeType === CONTENT_TYPE_FILE) {
+      return <FileEditor key={uniqueKey} onChange={_handleFileChange} path={fileName || ''} />;
+    } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} content={request.body.text || ''} workspace={workspace} settings={settings} environmentId={environmentId} onChange={_handleGraphQLChange} />;
+    } else if (!isBodyEmpty) {
+      const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
+      return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={_handleRawChange} />;
+    } else {
+      return <EmptyStatePane icon={<SvgIcon icon="bug" />} documentationLinks={[documentationLinks.introductionToInsomnia]} secondaryAction="Select a body type from above to send data in the body of a request" title="Enter a URL and send to get a response" />;
+    }
+  };
 
-    return <NunjucksEnabledProvider disable={noRender}>{_render()}</NunjucksEnabledProvider>;
-  }
-}
+  return <NunjucksEnabledProvider disable={noRender}>{_render()}</NunjucksEnabledProvider>;
+};

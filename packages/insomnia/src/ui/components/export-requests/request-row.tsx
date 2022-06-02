@@ -1,7 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';
 import { GrpcTag } from '../tags/grpc-tag';
@@ -13,34 +11,31 @@ interface Props {
   request: Request | GrpcRequest;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestRow extends PureComponent<Props> {
-  handleSelect(e: React.SyntheticEvent<HTMLInputElement>) {
+export const RequestRow: FC<Props> = props => {
+  const handleSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
     const el = e.currentTarget;
     const value = el.checked;
-    const { handleSetItemSelected, request } = this.props;
+    const {
+      handleSetItemSelected,
+      request,
+    } = props;
     return handleSetItemSelected(request._id, value);
-  }
+  };
 
-  render() {
-    const { request, isSelected } = this.props;
-    const isGrpc = isGrpcRequest(request);
-    return (
-      <li className="tree__row">
-        <div className="tree__item tree__item--request">
-          <div className="tree__item__checkbox tree__indent">
-            <input type="checkbox" checked={isSelected} onChange={this.handleSelect} />
-          </div>
-          <button className="wide">
-            {isGrpc ? (
-              <GrpcTag />
-            ) : (
-              <MethodTag method={request.method} />
-            )}
-            <span className="inline-block">{request.name}</span>
-          </button>
-        </div>
-      </li>
-    );
-  }
-}
+  const {
+    request,
+    isSelected,
+  } = props;
+  const isGrpc = isGrpcRequest(request);
+  return <li className="tree__row">
+    <div className="tree__item tree__item--request">
+      <div className="tree__item__checkbox tree__indent">
+        <input type="checkbox" checked={isSelected} onChange={handleSelect} />
+      </div>
+      <button className="wide">
+        {isGrpc ? <GrpcTag /> : <MethodTag method={request.method} />}
+        <span className="inline-block">{request.name}</span>
+      </button>
+    </div>
+  </li>;
+};
