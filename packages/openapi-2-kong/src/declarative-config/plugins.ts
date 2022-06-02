@@ -5,6 +5,23 @@ import { DCPlugin } from '../types/declarative-config';
 import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OA3Parameter, OA3RequestBody, OpenApi3Spec } from '../types/openapi3';
 
+/**
+ * This is what MDN Doc suggests as a solution for circular dependency as JSON does not support it.
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value#examples
+ * */
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (_key: string, value: unknown) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
 export const isRequestValidatorPluginKey = (property: string): property is typeof xKongPluginRequestValidator => (
   property.match(/-request-validator$/) != null
 );
@@ -85,7 +102,12 @@ const generateParameterSchema = (operation?: OA3Operation) => {
   return parameterSchemas;
 };
 
-export function generateBodyOptions(operation?: OA3Operation) {
+interface BodyOptions {
+  bodySchema: string | undefined;
+  allowedContentTypes: string[] | undefined;
+}
+export function generateBodyOptions(operation?: OA3Operation): BodyOptions {
+  console.log(operation);
   let bodySchema;
   let allowedContentTypes;
   const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
@@ -103,7 +125,7 @@ export function generateBodyOptions(operation?: OA3Operation) {
           schema.properties[key].type = [schema.properties[key].type, 'null'];
         }
       }
-      bodySchema = JSON.stringify(item.schema);
+      bodySchema = JSON.stringify(item.schema, getCircularReplacer());
     }
   }
 
