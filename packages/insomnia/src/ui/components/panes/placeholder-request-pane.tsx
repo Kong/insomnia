@@ -32,7 +32,7 @@ export const PlaceholderRequestPane: FC<Props> = ({
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
+                      keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]}
                       useFallbackMessage
                     />
                   </code>
@@ -67,7 +67,7 @@ export const PlaceholderRequestPane: FC<Props> = ({
             <button className="btn inline-block btn--clicky" onClick={handleImportFile}>
               Import from File
             </button>
-            <button className="btn inline-block btn--clicky" onClick={handleCreateRequest}>
+            <button className="btn inline-block btn--clicky" onClick={() => handleCreateRequest()}>
               New Request
             </button>
           </div>

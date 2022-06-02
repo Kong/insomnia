@@ -39,9 +39,15 @@ export class SidebarCreateDropdown extends PureComponent<Props> {
           <i className="fa fa-plus-circle" />
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        <DropdownItem onClick={handleCreateRequest}>
-          <i className="fa fa-plus-circle" /> New Request
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]} />
+        <DropdownItem onClick={() => handleCreateRequest('HTTP')}>
+          <i className="fa fa-plus-circle" /> HTTP Request
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
+        </DropdownItem>
+        <DropdownItem onClick={() => handleCreateRequest('GraphQL')}>
+          <i className="fa fa-plus-circle" /> GraphQL Request
+        </DropdownItem>
+        <DropdownItem onClick={() => handleCreateRequest('gRPC')}>
+          <i className="fa fa-plus-circle" /> gRPC Request
         </DropdownItem>
         <DropdownItem onClick={handleCreateRequestGroup}>
           <i className="fa fa-folder" /> New Folder
