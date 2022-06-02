@@ -1,7 +1,7 @@
 import clone from 'clone';
 import { SvgIcon } from 'insomnia-components';
 import { lookup } from 'mime-types';
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 
 import {
   CONTENT_TYPE_FILE,
@@ -46,50 +46,36 @@ interface Props {
   environmentId: string;
 }
 
-export const BodyEditor: FC<Props> = props => {
-  const _handleRawChange = (rawValue: string) => {
-    const {
-      onChange,
-      request,
-    } = props;
+export const BodyEditor: FC<Props> = ({
+  onChange,
+  onChangeHeaders,
+  request,
+  workspace,
+  settings,
+  environmentId,
+}) => {
+  const handleRawChange = useCallback((rawValue: string) => {
     const oldContentType = request.body.mimeType || '';
     const newBody = newBodyRaw(rawValue, oldContentType);
     onChange(request, newBody);
-  };
+  }, [onChange, request]);
 
-  const _handleGraphQLChange = (content: string) => {
-    const {
-      onChange,
-      request,
-    } = props;
+  const handleGraphQLChange = useCallback((content: string) => {
     const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     onChange(request, newBody);
-  };
+  }, [onChange, request]);
 
-  const _handleFormUrlEncodedChange = (parameters: RequestBodyParameter[]) => {
-    const {
-      onChange,
-      request,
-    } = props;
+  const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(request, newBody);
-  };
+  }, [onChange, request]);
 
-  const _handleFormChange = (parameters: RequestBodyParameter[]) => {
-    const {
-      onChange,
-      request,
-    } = props;
+  const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
     const newBody = newBodyForm(parameters);
     onChange(request, newBody);
-  };
+  }, [onChange, request]);
 
-  const _handleFileChange = async (path: string) => {
-    const {
-      onChange,
-      onChangeHeaders,
-      request,
-    } = props;
+  const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
     const newBody = newBodyFile(path);
     const newRequest = await onChange(request, newBody);
@@ -124,12 +110,6 @@ export const BodyEditor: FC<Props> = props => {
     }
   };
 
-  const {
-    request,
-    workspace,
-    settings,
-    environmentId,
-  } = props;
   const noRender = request.settingDisableRenderRequestBody;
   const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
   const fileName = request.body.fileName;
@@ -138,16 +118,16 @@ export const BodyEditor: FC<Props> = props => {
 
   const _render = () => {
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-      return <UrlEncodedEditor key={uniqueKey} onChange={_handleFormUrlEncodedChange} parameters={request.body.params || []} />;
+      return <UrlEncodedEditor key={uniqueKey} onChange={handleFormUrlEncodedChange} parameters={request.body.params || []} />;
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-      return <FormEditor key={uniqueKey} onChange={_handleFormChange} parameters={request.body.params || []} />;
+      return <FormEditor key={uniqueKey} onChange={handleFormChange} parameters={request.body.params || []} />;
     } else if (mimeType === CONTENT_TYPE_FILE) {
-      return <FileEditor key={uniqueKey} onChange={_handleFileChange} path={fileName || ''} />;
+      return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} content={request.body.text || ''} workspace={workspace} settings={settings} environmentId={environmentId} onChange={_handleGraphQLChange} />;
+      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} content={request.body.text || ''} workspace={workspace} settings={settings} environmentId={environmentId} onChange={handleGraphQLChange} />;
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
-      return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={_handleRawChange} />;
+      return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;
     } else {
       return <EmptyStatePane icon={<SvgIcon icon="bug" />} documentationLinks={[documentationLinks.introductionToInsomnia]} secondaryAction="Select a body type from above to send data in the body of a request" title="Enter a URL and send to get a response" />;
     }

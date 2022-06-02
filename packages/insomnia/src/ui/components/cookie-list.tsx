@@ -1,9 +1,8 @@
 import { cookieToString } from 'insomnia-cookies';
-import React, { FC } from 'react';
-import * as toughCookie from 'tough-cookie';
+import React, { FC, useCallback } from 'react';
+import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
@@ -11,8 +10,8 @@ import { PromptButton } from './base/prompt-button';
 import { RenderedText } from './rendered-text';
 
 export interface CookieListProps {
-  handleCookieAdd: Function;
-  handleCookieDelete: Function;
+  handleCookieAdd: (cookie: Cookie) => void;
+  handleCookieDelete: (cookie: Cookie) => void;
   handleDeleteAll: Function;
   cookies: Cookie[];
   newCookieDomainName: string;
@@ -23,25 +22,71 @@ export interface CookieListProps {
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
 const MAX_TIME = 2147483647000;
 
-export const CookieList: FC<CookieListProps> = props => {
-  const _handleCookieAdd = () => props.handleCookieAdd({
+const CookieRow: FC<{
+  cookie: Cookie;
+  index: number;
+  deleteCookie: (cookie: Cookie) => void;
+  showModal: (cookie: Cookie) => void;
+}> = ({ cookie, index, deleteCookie, showModal }) => {
+
+  const handleDeleteCookie = useCallback(() => {
+    deleteCookie(cookie);
+  }, [deleteCookie, cookie]);
+
+  const handleShowModal = useCallback(() => {
+    showModal(cookie);
+  }, [showModal, cookie]);
+
+  const cookieString = cookieToString(Cookie.fromJSON(cookie));
+  return <tr className="selectable" key={index}>
+    <td>
+      <RenderedText>{cookie.domain || ''}</RenderedText>
+    </td>
+    <td className="force-wrap wide">
+      <RenderedText>{cookieString || ''}</RenderedText>
+    </td>
+    <td onClick={() => {}} className="text-right no-wrap">
+      <button
+        className="btn btn--super-compact btn--outlined"
+        onClick={handleShowModal}
+        title="Edit cookie properties"
+      >
+        Edit
+      </button>{' '}
+      <PromptButton
+        className="btn btn--super-compact btn--outlined"
+        addIcon
+        confirmMessage=""
+        onClick={handleDeleteCookie}
+        title="Delete cookie"
+      >
+        <i className="fa fa-trash-o" />
+      </PromptButton>
+    </td>
+  </tr>;
+
+};
+
+export const CookieList: FC<CookieListProps> = ({
+  cookies,
+  handleDeleteAll,
+  handleShowModifyCookieModal,
+  handleCookieAdd,
+  newCookieDomainName,
+  handleCookieDelete,
+}) => {
+  const addCookie = useCallback(() => handleCookieAdd({
+    // @ts-expect-error our code needs to overload the tough-cookie `Cookie` type to include id.
     id: uuidv4(),
     key: 'foo',
     value: 'bar',
-    domain: props.newCookieDomainName,
-    expires: MAX_TIME,
+    domain: newCookieDomainName,
+    expires: MAX_TIME as unknown as Date,
     path: '/',
     secure: false,
     httpOnly: false,
-  });
+  }), [newCookieDomainName, handleCookieAdd]);
 
-  const _handleDeleteCookie = (cookie: Cookie) => props.handleCookieDelete(cookie);
-
-  const {
-    cookies,
-    handleDeleteAll,
-    handleShowModifyCookieModal,
-  } = props;
   return <div>
     <table className="table--fancy cookie-table table--striped">
       <thead>
@@ -70,7 +115,7 @@ export const CookieList: FC<CookieListProps> = props => {
               <DropdownButton title="Add cookie" className="btn btn--super-duper-compact btn--outlined txt-md">
                 Actions <i className="fa fa-caret-down" />
               </DropdownButton>
-              <DropdownItem onClick={_handleCookieAdd}>
+              <DropdownItem onClick={addCookie}>
                 <i className="fa fa-plus-circle" /> Add Cookie
               </DropdownItem>
               <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
@@ -81,37 +126,21 @@ export const CookieList: FC<CookieListProps> = props => {
         </tr>
       </thead>
       <tbody key={cookies.length}>
-        {cookies.map((cookie, i) => {
-          const cookieString = cookieToString(toughCookie.Cookie.fromJSON(cookie));
-          return <tr className="selectable" key={i}>
-            <td>
-              <RenderedText>{cookie.domain || ''}</RenderedText>
-            </td>
-            <td className="force-wrap wide">
-              <RenderedText>{cookieString || ''}</RenderedText>
-            </td>
-            <td onClick={() => {}} className="text-right no-wrap">
-              <button
-                className="btn btn--super-compact btn--outlined"
-                onClick={() => {
-                  handleShowModifyCookieModal(cookie);
-                }}
-                title="Edit cookie properties"
-              >
-                Edit
-              </button>{' '}
-              <PromptButton className="btn btn--super-compact btn--outlined" addIcon confirmMessage="" onClick={() => _handleDeleteCookie(cookie)} title="Delete cookie">
-                <i className="fa fa-trash-o" />
-              </PromptButton>
-            </td>
-          </tr>;
-        })}
+        {cookies.map((cookie, i) => (
+          <CookieRow
+            cookie={cookie}
+            index={i}
+            key={i}
+            deleteCookie={handleCookieDelete}
+            showModal={handleShowModifyCookieModal}
+          />
+        ))}
       </tbody>
     </table>
     {cookies.length === 0 && <div className="pad faint italic text-center">
       <p>I couldn't find any cookies for you.</p>
       <p>
-        <button className="btn btn--clicky" onClick={() => _handleCookieAdd()}>
+        <button className="btn btn--clicky" onClick={addCookie}>
           Add Cookie <i className="fa fa-plus-circle" />
         </button>
       </p>

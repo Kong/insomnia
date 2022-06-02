@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 
 import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -16,22 +16,30 @@ interface Props {
   showPrettifyOption?: boolean;
 }
 
-export const PreviewModeDropdown: FC<Props> = props => {
-  const {
-    fullDownload,
-    previewMode,
-    showPrettifyOption,
-    exportAsHAR,
-  } = props;
+export const PreviewModeDropdown: FC<Props> = ({
+  fullDownload,
+  previewMode,
+  showPrettifyOption,
+  download,
+  copyToClipboard,
+  exportAsHAR,
+  updatePreviewMode,
+}) => {
 
-  const _handleClick = async (previewMode: string) => {
-    await props.updatePreviewMode(previewMode);
+  const handleClick = async (previewMode: string) => {
+    await updatePreviewMode(previewMode);
   };
-  const _handleDownloadPrettify =  () => props.download(true);
+  const handleDownloadPrettify = useCallback(() => {
+    download(true);
+  }, [download]);
 
-  const _handleDownloadNormal =  () => props.download(false);
+  const handleDownloadNormal = useCallback(() => {
+    download(false);
+  }, [download]);
 
-  const _handleCopyRawResponse =  () => props.copyToClipboard();
+  const handleCopyRawResponse = useCallback(() => {
+    copyToClipboard();
+  }, [copyToClipboard]);
 
   return <Dropdown beside>
     <DropdownButton className="tall">
@@ -39,20 +47,20 @@ export const PreviewModeDropdown: FC<Props> = props => {
       <i className="fa fa-caret-down space-left" />
     </DropdownButton>
     <DropdownDivider>Preview Mode</DropdownDivider>
-    {PREVIEW_MODES.map(mode => <DropdownItem key={mode} onClick={_handleClick} value={mode}>
-      {props.previewMode === mode ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
+    {PREVIEW_MODES.map(mode => <DropdownItem key={mode} onClick={handleClick} value={mode}>
+      {previewMode === mode ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
       {getPreviewModeName(mode, true)}
     </DropdownItem>)}
     <DropdownDivider>Actions</DropdownDivider>
-    <DropdownItem onClick={_handleCopyRawResponse}>
+    <DropdownItem onClick={handleCopyRawResponse}>
       <i className="fa fa-copy" />
       Copy raw response
     </DropdownItem>
-    <DropdownItem onClick={_handleDownloadNormal}>
+    <DropdownItem onClick={handleDownloadNormal}>
       <i className="fa fa-save" />
       Export raw response
     </DropdownItem>
-    {showPrettifyOption && <DropdownItem onClick={_handleDownloadPrettify}>
+    {showPrettifyOption && <DropdownItem onClick={handleDownloadPrettify}>
       <i className="fa fa-save" />
       Export prettified response
     </DropdownItem>}

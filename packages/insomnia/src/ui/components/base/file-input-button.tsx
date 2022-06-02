@@ -1,5 +1,5 @@
 import { basename as pathBasename } from 'path';
-import React, { forwardRef, HTMLAttributes, useCallback } from 'react';
+import React, { HTMLAttributes, useCallback } from 'react';
 
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 
@@ -12,7 +12,8 @@ interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   showFileIcon?: boolean;
   name?: string;
 }
-const FileInputButtonWithRef = (props: Props, ref) => {
+
+export const FileInputButton = (props: Props) => {
   const { showFileName, showFileIcon, path, name, onChange, itemtypes, extensions, ...extraProps } = props;
   // NOTE: Basename fails if path is not a string, so let's make sure it is
   const fileName = typeof path === 'string' ? pathBasename(path) : null;
@@ -32,7 +33,6 @@ const FileInputButtonWithRef = (props: Props, ref) => {
   return (
     <button
       type="button"
-      ref={ref}
       onClick={_handleChooseFile}
       title={path}
       {...extraProps}
@@ -42,4 +42,3 @@ const FileInputButtonWithRef = (props: Props, ref) => {
     </button>
   );
 };
-export const FileInputButton = forwardRef(FileInputButtonWithRef);

@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, ReactNode } from 'react';
+import React, { FC, ReactNode, useCallback } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
 
@@ -10,43 +10,42 @@ interface Props {
   onClick?: (...args: any[]) => any;
   className?: string;
   children?: ReactNode;
-  disabled?: boolean;
   noTheme?: boolean;
 }
 
-export const Link: FC<Props> = props => {
-  const _handleClick = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+export const Link: FC<Props> = ({
+  onClick,
+  button,
+  href,
+  children,
+  className,
+  noTheme,
+  ...other
+}) => {
+  const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     e?.preventDefault();
-    const {
-      href,
-      onClick,
-    } = props; // Also call onClick that was passed to us if there was one
-
-    onClick?.(e);
+    onClick?.(e); // Also call onClick that was passed to us if there was one
     clickLink(href);
-  };
+  }, [onClick, href]);
 
-  const {
-    onClick,
-    button,
-    href,
-    children,
-    className,
-    disabled,
-    noTheme,
-    ...other
-  } = props;
-  return button ? <button onClick={_handleClick} className={className} {...other}>
-    {children}
-  </button> : <a
-    href={href}
-    onClick={_handleClick}
-    className={classnames(className, {
-      'theme--link': !noTheme,
-    })} // @ts-expect-error -- TSCONVERSION
-    disabled={disabled}
-    {...other}
-  >
-    {children}
-  </a>;
+  if (button) {
+    return (
+      <button onClick={handleClick} className={className} {...other}>
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      onClick={handleClick}
+      className={classnames(className, {
+        'theme--link': !noTheme,
+      })}
+      {...other}
+    >
+      {children}
+    </a>
+  );
 };

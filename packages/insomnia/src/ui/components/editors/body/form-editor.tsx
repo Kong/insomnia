@@ -7,14 +7,19 @@ interface Props {
   parameters: any[];
 }
 
-export const FormEditor: FC<Props> = props => {
-  const {
-    parameters,
-    onChange,
-  } = props;
-  return <div className="scrollable-container tall wide">
+export const FormEditor: FC<Props> = ({ parameters, onChange }) => (
+  <div className="scrollable-container tall wide">
     <div className="scrollable">
-      <KeyValueEditor sortable allowFile allowMultiline namePlaceholder="name" valuePlaceholder="value" descriptionPlaceholder="description" onChange={onChange} pairs={parameters} />
+      <KeyValueEditor
+        sortable
+        allowFile
+        allowMultiline
+        namePlaceholder="name"
+        valuePlaceholder="value"
+        descriptionPlaceholder="description"
+        onChange={onChange}
+        pairs={parameters}
+      />
     </div>
-  </div>;
-};
+  </div>
+);

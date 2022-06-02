@@ -9,14 +9,12 @@ interface Props {
   blankValue?: String;
 }
 
-export const Highlight: FC<Props> = props => {
-  const {
-    search,
-    text,
-    blankValue,
-    ...otherProps
-  } = props;
-
+export const Highlight: FC<Props> = ({
+  search,
+  text,
+  blankValue,
+  ...otherProps
+}) => {
   // Match loose here to make sure our highlighting always works
   const result = fuzzyMatch(search, text, {
     splitSpace: true,
@@ -27,16 +25,18 @@ export const Highlight: FC<Props> = props => {
     return <span {...otherProps}>{text || blankValue || ''}</span>;
   }
 
-  return <span
-    {...otherProps}
-    dangerouslySetInnerHTML={{
+  return (
+    <span
+      {...otherProps}
+      dangerouslySetInnerHTML={{
       // @ts-expect-error -- TSCONVERSION
-      __html: fuzzySort.highlight(
+        __html: fuzzySort.highlight(
         // @ts-expect-error -- TSCONVERSION
-        result,
-        '<strong style="font-style: italic; text-decoration: underline;">',
-        '</strong>'
-      ),
-    }}
-  />;
+          result,
+          '<strong style="font-style: italic; text-decoration: underline;">',
+          '</strong>'
+        ),
+      }}
+    />
+  );
 };

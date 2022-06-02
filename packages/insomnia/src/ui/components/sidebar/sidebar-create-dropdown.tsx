@@ -21,7 +21,9 @@ export const SidebarCreateDropdown: FC<Props> = ({
   hotKeyRegistry,
   right,
 }) => {
-  const create = useCallback(handleCreateRequest, [handleCreateRequest]);
+  const create = useCallback((value: string) => {
+    handleCreateRequest(value);
+  }, [handleCreateRequest]);
 
   return (
     <Dropdown right={right}>

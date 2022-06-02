@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, Fragment, useCallback } from 'react';
 
 import { GraphQLFieldWithParentName } from './graph-ql-types';
 
@@ -7,25 +7,26 @@ interface Props {
   field: GraphQLFieldWithParentName;
 }
 
-export const GraphQLExplorerFieldLink: FC<Props> = props => {
-  const {
-    field: {
-      name,
-      parentName,
-    },
-  } = props;
-  const _handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+export const GraphQLExplorerFieldLink: FC<Props> = ({
+  field,
+  onNavigate,
+}) => {
+  const { name, parentName } = field;
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    props.onNavigate(props.field);
-  };
-  return <>
-    {parentName && <span>{parentName}.</span>}
-    <a
-      href="#"
-      onClick={_handleClick}
-      className="success"
-    >
-      {name}
-    </a>
-  </>;
+    onNavigate(field);
+  }, [onNavigate, field]);
+  return (
+    <Fragment>
+      {parentName ? <span>{parentName}.</span> : null}
+      <a
+        href="#"
+        onClick={handleClick}
+        className="success"
+      >
+        {name}
+      </a>
+    </Fragment>
+  );
 };

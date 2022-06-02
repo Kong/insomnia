@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { Request, RequestHeader } from '../../../models/request';
@@ -11,18 +11,18 @@ interface Props {
   request: Request;
 }
 
-export const RequestHeadersEditor: FC<Props> = props => {
-  const _handleBulkUpdate = (headersString: string) => {
-    const {
-      onChange,
-      request,
-    } = props;
+export const RequestHeadersEditor: FC<Props> = ({
+  onChange,
+  request,
+  bulk,
+}) => {
+  const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
       name: string;
       value: string;
     }[] = [];
-    const rows = headersString.split(/\n+/);
 
+    const rows = headersString.split(/\n+/);
     for (const row of rows) {
       const [rawName, rawValue] = row.split(/:(.*)$/);
       const name = (rawName || '').trim();
@@ -39,39 +39,52 @@ export const RequestHeadersEditor: FC<Props> = props => {
     }
 
     onChange(request, headers);
-  };
+  }, [onChange, request]);
 
-  const _getHeadersString = () => {
-    const {
-      headers,
-    } = props.request;
-    let headersString = '';
-
-    for (const header of headers) {
-      // Make sure it's not disabled
-      if (header.disabled) {
-        continue;
-      }
-      // Make sure it's not blank
-      if (!header.name && !header.value) {
-        continue;
-      }
-
-      headersString += `${header.name}: ${header.value}\n`;
+  let headersString = '';
+  for (const header of request.headers) {
+    // Make sure it's not disabled
+    if (header.disabled) {
+      continue;
+    }
+    // Make sure it's not blank
+    if (!header.name && !header.value) {
+      continue;
     }
 
-    return headersString;
-  };
+    headersString += `${header.name}: ${header.value}\n`;
+  }
 
-  const {
-    bulk,
-    request,
-  } = props;
-  return bulk ? <div className="tall">
-    <CodeEditor onChange={_handleBulkUpdate} defaultValue={_getHeadersString()} enableNunjucks />
-  </div> : <div className="pad-bottom scrollable-container">
-    <div className="scrollable">
-      <KeyValueEditor sortable namePlaceholder="header" valuePlaceholder="value" descriptionPlaceholder="description" pairs={request.headers} handleGetAutocompleteNameConstants={getCommonHeaderNames} handleGetAutocompleteValueConstants={getCommonHeaderValues} onChange={headers => props.onChange(props.request, headers)} />
+  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
+    onChange(request, headers);
+  }, [onChange, request]);
+
+  if (bulk) {
+    return (
+      <div className="tall">
+        <CodeEditor
+          onChange={handleBulkUpdate}
+          defaultValue={headersString}
+          enableNunjucks
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="pad-bottom scrollable-container">
+      <div className="scrollable">
+        <KeyValueEditor
+          sortable
+          namePlaceholder="header"
+          valuePlaceholder="value"
+          descriptionPlaceholder="description"
+          pairs={request.headers}
+          handleGetAutocompleteNameConstants={getCommonHeaderNames}
+          handleGetAutocompleteValueConstants={getCommonHeaderValues}
+          onChange={onChangeHeaders}
+        />
+      </div>
     </div>
-  </div>;
+  );
 };

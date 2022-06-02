@@ -12,16 +12,21 @@ interface Props {
   info?: boolean;
 }
 
-export const HelpTooltip: FC<Props> = props => {
-  const {
-    children,
-    className,
-    style,
-    info,
-    position,
-    delay,
-  } = props;
-  return <Tooltip position={position} delay={delay} className={className} message={children} style={style}>
+export const HelpTooltip: FC<Props> = ({
+  children,
+  className,
+  style,
+  info,
+  position,
+  delay,
+}) => (
+  <Tooltip
+    position={position}
+    delay={delay}
+    className={className}
+    message={children}
+    style={style}
+  >
     {info ? <SvgIcon icon="info" /> : <SvgIcon icon="question" />}
-  </Tooltip>;
-};
+  </Tooltip>
+);

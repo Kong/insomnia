@@ -72,7 +72,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   _nameInput: OneLineEditor | null = null;
-  _valueInput: OneLineEditor | FileInputButton | null = null;
+  _valueInput: OneLineEditor | null = null;
   _descriptionInput: OneLineEditor | null = null;
   state: State = {
     dragDirection: 0,
@@ -129,7 +129,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
 
       // Insert the pasted text into the current selection.
       // Unfortunately, this is the easiest way to do this.
-      // @ts-expect-error -- TSCONVERSION
       const currentValue = this._valueInput?.getValue();
 
       // @ts-expect-error -- TSCONVERSION
@@ -310,9 +309,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     if (pair.type === 'file') {
       return (
         <FileInputButton
-          ref={ref => {
-            this._valueInput = ref;
-          }}
           showFileName
           showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"

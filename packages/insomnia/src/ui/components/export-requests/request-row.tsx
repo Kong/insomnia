@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, SyntheticEvent, useCallback } from 'react';
 
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';
@@ -11,31 +11,26 @@ interface Props {
   request: Request | GrpcRequest;
 }
 
-export const RequestRow: FC<Props> = props => {
-  const handleSelect = (e: React.SyntheticEvent<HTMLInputElement>) => {
-    const el = e.currentTarget;
-    const value = el.checked;
-    const {
-      handleSetItemSelected,
-      request,
-    } = props;
-    return handleSetItemSelected(request._id, value);
-  };
+export const RequestRow: FC<Props> = ({
+  handleSetItemSelected,
+  request,
+  isSelected,
+}) => {
+  const onChange = useCallback((event: SyntheticEvent<HTMLInputElement>) => {
+    handleSetItemSelected(request._id, event?.currentTarget.checked);
+  }, [handleSetItemSelected, request._id]);
 
-  const {
-    request,
-    isSelected,
-  } = props;
-  const isGrpc = isGrpcRequest(request);
-  return <li className="tree__row">
-    <div className="tree__item tree__item--request">
-      <div className="tree__item__checkbox tree__indent">
-        <input type="checkbox" checked={isSelected} onChange={handleSelect} />
+  return (
+    <li className="tree__row">
+      <div className="tree__item tree__item--request">
+        <div className="tree__item__checkbox tree__indent">
+          <input type="checkbox" checked={isSelected} onChange={onChange} />
+        </div>
+        <button className="wide">
+          {isGrpcRequest(request) ? <GrpcTag /> : <MethodTag method={request.method} />}
+          <span className="inline-block">{request.name}</span>
+        </button>
       </div>
-      <button className="wide">
-        {isGrpc ? <GrpcTag /> : <MethodTag method={request.method} />}
-        <span className="inline-block">{request.name}</span>
-      </button>
-    </div>
-  </li>;
+    </li>
+  );
 };

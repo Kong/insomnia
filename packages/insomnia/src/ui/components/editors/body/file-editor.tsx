@@ -1,5 +1,5 @@
 import fs from 'fs';
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 
 import * as misc from '../../../../common/misc';
 import { FileInputButton } from '../../base/file-input-button';
@@ -10,19 +10,16 @@ interface Props {
   path: string;
 }
 
-export const FileEditor: FC<Props> = props => {
-  const _handleResetFile = () => {
-    props.onChange('');
-  };
+export const FileEditor: FC<Props> = ({ onChange, path }) => {
+  const _handleResetFile = useCallback(() => {
+    onChange('');
+  }, [onChange]);
 
-  const _handleChooseFile = (path: string) => {
-    props.onChange(path);
-  };
+  const _handleChooseFile = useCallback((path: string) => {
+    onChange(path);
+  }, [onChange]);
 
-  const {
-    path,
-  } = props; // Replace home path with ~/ to make the path shorter
-
+  // Replace home path with ~/ to make the path shorter
   const homeDirectory = window.app.getPath('home');
   const pathDescription = path.replace(homeDirectory, '~');
   let sizeDescription = '';
@@ -34,22 +31,24 @@ export const FileEditor: FC<Props> = props => {
     sizeDescription = '';
   }
 
-  return <div className="text-center">
-    <div className="pad text-left">
-      <label className="label--small">Selected File</label>
-      {path ? <code className="block txt-sm">
-        <span className="force-wrap selectable" title={path}>
-          {pathDescription}
-        </span>{' '}
-        <span className="no-wrap">({sizeDescription})</span>
-      </code> : <code className="super-faint block txt-sm">No file selected</code>}
-    </div>
-    <div>
-      <PromptButton className="btn btn--super-compact" disabled={!path} onClick={_handleResetFile}>
-        Reset File
-      </PromptButton>
+  return (
+    <div className="text-center">
+      <div className="pad text-left">
+        <label className="label--small">Selected File</label>
+        {path ? <code className="block txt-sm">
+          <span className="force-wrap selectable" title={path}>
+            {pathDescription}
+          </span>{' '}
+          <span className="no-wrap">({sizeDescription})</span>
+        </code> : <code className="super-faint block txt-sm">No file selected</code>}
+      </div>
+      <div>
+        <PromptButton className="btn btn--super-compact" disabled={!path} onClick={_handleResetFile}>
+          Reset File
+        </PromptButton>
           &nbsp;&nbsp;
-      <FileInputButton path={path} className="btn btn--clicky" onChange={_handleChooseFile} />
+        <FileInputButton path={path} className="btn btn--clicky" onChange={_handleChooseFile} />
+      </div>
     </div>
-  </div>;
+  );
 };

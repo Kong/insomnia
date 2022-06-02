@@ -10,15 +10,23 @@ interface Props {
   className?: string;
 }
 
-export const RawEditor: FC<Props> = props => {
-  const {
-    className,
-    content,
-    contentType,
-    onChange,
-    uniquenessKey,
-  } = props;
-  return <Fragment>
-    <CodeEditor manualPrettify uniquenessKey={uniquenessKey} defaultValue={content} className={className} enableNunjucks onChange={onChange} mode={contentType} placeholder="..." />
-  </Fragment>;
-};
+export const RawEditor: FC<Props> = ({
+  className,
+  content,
+  contentType,
+  onChange,
+  uniquenessKey,
+}) => (
+  <Fragment>
+    <CodeEditor
+      manualPrettify
+      uniquenessKey={uniquenessKey}
+      defaultValue={content}
+      className={className}
+      enableNunjucks
+      onChange={onChange}
+      mode={contentType}
+      placeholder="..."
+    />
+  </Fragment>
+);

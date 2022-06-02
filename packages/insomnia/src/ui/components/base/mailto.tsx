@@ -10,31 +10,25 @@ interface Props {
   body?: string;
 }
 
-export const Mailto: FC<Props> = props => {
-  const {
-    email,
-    body,
-    subject,
-    children,
-  } = props;
+export const Mailto: FC<Props> = ({
+  email,
+  body,
+  subject,
+  children,
+}) => {
   const params: {
     name: string;
     value: string;
-  }[] = [];
-
-  if (subject) {
-    params.push({
+  }[] = [
+    ...(subject ? [{
       name: 'subject',
       value: subject,
-    });
-  }
-
-  if (body) {
-    params.push({
+    }] : []),
+    ...(body ? [{
       name: 'body',
       value: body,
-    });
-  }
+    }] : []),
+  ];
 
   const qs = buildQueryStringFromParams(params);
   const href = joinUrlAndQueryString(`mailto:${email}`, qs);
