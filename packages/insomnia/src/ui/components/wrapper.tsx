@@ -56,7 +56,6 @@ import { NunjucksModal } from './modals/nunjucks-modal';
 import ProjectSettingsModal from './modals/project-settings-modal';
 import { PromptModal } from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
-import { RequestCreateModal } from './modals/request-create-modal';
 import { RequestGroupSettingsModal } from './modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 import { RequestSettingsModal } from './modals/request-settings-modal';
@@ -85,14 +84,14 @@ export type WrapperProps = AppProps & {
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleShowSettingsModal: Function;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
-  handleCreateRequest: (id: string) => void;
+  handleCreateRequest: (id: string, requestType?: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleCreateRequestForWorkspace: () => void;
+  handleCreateRequestForWorkspace: (requestType?: string) => void;
   requestPaneRef: Ref<HTMLElement>;
   responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
@@ -391,14 +390,14 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _handleCreateRequestInWorkspace() {
+  _handleCreateRequestInWorkspace(requestType?: string) {
     const { activeWorkspace, handleCreateRequest } = this.props;
 
     if (!activeWorkspace) {
       return;
     }
 
-    handleCreateRequest(activeWorkspace._id);
+    handleCreateRequest(activeWorkspace._id, requestType);
   }
 
   _handleCreateRequestGroupInWorkspace() {
@@ -486,7 +485,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <LoginModal ref={registerModal} />
             <AskModal ref={registerModal} />
             <SelectModal ref={registerModal} />
-            <RequestCreateModal ref={registerModal} />
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} />

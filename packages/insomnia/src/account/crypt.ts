@@ -345,7 +345,8 @@ function _hexToB64Url(h) {
 }
 
 function _b64UrlToBigInt(s: string) {
-  // @ts-expect-error -- TSCONVERSION needs investigation in forge types
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
+  // @ts-ignore -- unfortunately, we must ignore here instead of the usual expect-error because this mondule is being used by two different builds (`insomnia` and `insomnia-send-request`) and in one of them this line is an error (`insomnia-send-request`) and the other it is not ()`insomnia`).
   return new forge.jsbn.BigInteger(_b64UrlToHex(s), 16);
 }
 

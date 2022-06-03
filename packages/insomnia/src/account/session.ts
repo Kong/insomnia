@@ -5,6 +5,39 @@ import * as fetch from './fetch';
 
 type LoginCallback = (isLoggedIn: boolean) => void;
 
+export interface WhoamiResponse {
+  sessionAge: number;
+  accountId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  created: number;
+  publicKey: string;
+  encSymmetricKey: string;
+  encPrivateKey: string;
+  saltEnc: string;
+  isPaymentRequired: boolean;
+  isTrialing: boolean;
+  isVerified: boolean;
+  isAdmin: boolean;
+  trialEnd: string;
+  planName: string;
+  planId: string;
+  canManageTeams: boolean;
+  maxTeamMembers: number;
+}
+
+export interface SessionData {
+  accountId: string;
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  symmetricKey: unknown;
+  publicKey: unknown;
+  encPrivateKey: unknown;
+}
+
 const loginCallbacks: LoginCallback[] = [];
 
 function _callCallbacks() {
@@ -75,7 +108,7 @@ export async function login(rawEmail: string, rawPassphrase: string) {
   // Initialize the Session //
   // ~~~~~~~~~~~~~~~~~~~~~~ //
   // Compute K (used for session ID)
-  const sessionId = c.computeK().toString('hex');
+  const sessionId = (c.computeK() as Buffer).toString('hex');
   // Get and store some extra info (salts and keys)
   const {
     publicKey,
@@ -119,7 +152,7 @@ export async function changePasswordWithToken(rawNewPassphrase, confirmationCode
     .computeVerifier(
       _getSrpParams(),
       Buffer.from(saltAuth, 'hex'),
-      Buffer.from(newEmail, 'utf8'),
+      Buffer.from(newEmail || '', 'utf8'),
       Buffer.from(newAuthSecret, 'hex'),
     )
     .toString('hex');
@@ -145,11 +178,11 @@ export function sendPasswordChangeCode() {
 }
 
 export function getPublicKey() {
-  return _getSessionData().publicKey;
+  return _getSessionData()?.publicKey;
 }
 
 export function getPrivateKey() {
-  const { symmetricKey, encPrivateKey } = _getSessionData();
+  const { symmetricKey, encPrivateKey } = _getSessionData() || {};
 
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr);
@@ -164,19 +197,19 @@ export function getCurrentSessionId() {
 }
 
 export function getAccountId() {
-  return _getSessionData().accountId;
+  return _getSessionData()?.accountId;
 }
 
 export function getEmail() {
-  return _getSessionData().email;
+  return _getSessionData()?.email;
 }
 
 export function getFirstName() {
-  return _getSessionData().firstName;
+  return _getSessionData()?.firstName;
 }
 
 export function getLastName() {
-  return _getSessionData().lastName;
+  return _getSessionData()?.lastName;
 }
 
 export function getFullName() {
@@ -205,16 +238,16 @@ export async function logout() {
 
 /** Set data for the new session and store it encrypted with the sessionId */
 export function setSessionData(
-  sessionId,
-  accountId,
-  firstName,
-  lastName,
-  email,
+  sessionId: string,
+  accountId: string,
+  firstName: string,
+  lastName: string,
+  email: string,
   symmetricKey,
   publicKey,
   encPrivateKey,
 ) {
-  const dataStr = JSON.stringify({
+  const sessionData: SessionData = {
     id: sessionId,
     accountId: accountId,
     symmetricKey: symmetricKey,
@@ -223,7 +256,8 @@ export function setSessionData(
     email: email,
     firstName: firstName,
     lastName: lastName,
-  });
+  };
+  const dataStr = JSON.stringify(sessionData);
   window.localStorage.setItem(_getSessionKey(sessionId), dataStr);
   // NOTE: We're setting this last because the stuff above might fail
   window.localStorage.setItem('currentSessionId', sessionId);
@@ -236,13 +270,11 @@ export async function listTeams() {
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 function _getSymmetricKey() {
-  const sessionData = _getSessionData();
-
-  return sessionData.symmetricKey;
+  return _getSessionData()?.symmetricKey;
 }
 
-function _whoami(sessionId = null) {
-  return fetch.get('/auth/whoami', sessionId || getCurrentSessionId());
+function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
+  return fetch.getJson<WhoamiResponse>('/auth/whoami', sessionId || getCurrentSessionId());
 }
 
 function _getAuthSalts(email) {
@@ -255,7 +287,7 @@ function _getAuthSalts(email) {
   );
 }
 
-const _getSessionData = () => {
+const _getSessionData = (): Partial<SessionData> | null => {
   const sessionId = getCurrentSessionId();
 
   if (!sessionId || !window) {
@@ -266,7 +298,7 @@ const _getSessionData = () => {
   if (dataStr === null) {
     return null;
   }
-  return JSON.parse(dataStr);
+  return JSON.parse(dataStr) as SessionData;
 };
 
 function _unsetSessionData() {

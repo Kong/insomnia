@@ -26,7 +26,7 @@ interface GitCredentialsOAuth {
    * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
    * https://isomorphic-git.org/docs/en/authentication.html
   */
-  oauth2format?: 'github';
+  oauth2format?: 'github' | 'gitlab';
   username: string;
   token: string;
 }

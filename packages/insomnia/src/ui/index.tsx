@@ -4,7 +4,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { SegmentEvent, trackSegmentEvent } from '../common/analytics';
 import { getProductName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
@@ -14,9 +13,11 @@ import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import App from './containers/app';
 import { init as initStore } from './redux/modules';
+import { initializeSentry } from './sentry';
 
 import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
 
+initializeSentry();
 initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -24,7 +25,9 @@ document.title = getProductName();
 
 (async function() {
   await db.initClient();
+
   await initPlugins();
+
   const settings = await models.settings.getOrCreate();
 
   if (settings.clearOAuth2SessionOnRestart) {
@@ -54,18 +57,6 @@ if (isDevelopment()) {
   window.models = models;
   // @ts-expect-error -- TSCONVERSION needs window augmentation
   window.db = db;
-}
-
-// Catch uncaught errors and report them
-if (window && !isDevelopment()) {
-  window.addEventListener('error', e => {
-    console.error('Uncaught Error', e.error || e);
-    trackSegmentEvent(SegmentEvent.criticalError, { detail: e?.message });
-  });
-  window.addEventListener('unhandledrejection', e => {
-    console.error('Unhandled Promise', e.reason);
-    trackSegmentEvent(SegmentEvent.criticalError, { detail: e?.reason });
-  });
 }
 
 function showUpdateNotification() {
