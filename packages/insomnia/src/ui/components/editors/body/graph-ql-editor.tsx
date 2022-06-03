@@ -636,8 +636,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   renderSchemaFetchMessage() {
     let message;
     const { schemaLastFetchTime, schemaIsFetching } = this.state;
-
-    if (schemaIsFetching) {
+    if (!this.props.request.url) {
+      message = '';
+    } else if (schemaIsFetching) {
       message = 'fetching schema...';
     } else if (schemaLastFetchTime > 0) {
       message = (
