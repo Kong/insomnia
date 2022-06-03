@@ -6,7 +6,7 @@ import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugi
 import { OA3Operation, OA3Parameter, OA3RequestBody, OpenApi3Spec } from '../types/openapi3';
 
 /**
- * This is what MDN Doc suggests as a solution for circular dependency as JSON does not support it.
+ * This is what MDN Doc suggests to remove circular dependencies, in order to support JSON format.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value#examples
  * */
 const getCircularReplacer = () => {
