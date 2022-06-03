@@ -3,7 +3,7 @@ import { oas } from '@stoplight/spectral-rulesets';
 
 export const initializeSpectral = () => {
   const spectral = new Spectral();
-  await spectral.setRuleset(oas as RulesetDefinition);
+  spectral.setRuleset(oas as RulesetDefinition);
   return spectral;
 };
 
