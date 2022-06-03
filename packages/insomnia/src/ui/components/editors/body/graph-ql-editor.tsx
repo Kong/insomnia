@@ -634,23 +634,21 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   renderSchemaFetchMessage() {
-    let message;
-    const { schemaLastFetchTime, schemaIsFetching } = this.state;
     if (!this.props.request.url) {
-      message = '';
-    } else if (schemaIsFetching) {
-      message = 'fetching schema...';
-    } else if (schemaLastFetchTime > 0) {
-      message = (
+      return '';
+    }
+    const { schemaLastFetchTime, schemaIsFetching } = this.state;
+    if (schemaIsFetching) {
+      return 'fetching schema...';
+    }
+    if (schemaLastFetchTime > 0) {
+      return (
         <span>
           schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
         </span>
       );
-    } else {
-      message = <span>schema not yet fetched</span>;
     }
-
-    return message;
+    return <span>schema not yet fetched</span>;
   }
 
   static renderMarkdown(text: string) {
