@@ -65,8 +65,5 @@
     "ts-jest": "^28.0.1",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5"
-  },
-  "dependencies": {
-    "immer": "^9.0.6"
   }
 }
