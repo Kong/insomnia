@@ -293,7 +293,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       schemaIsFetching: false,
     };
     let responsePatch: ResponsePatch | null = null;
-
+    if (!rawRequest.url) {
+      return;
+    }
     try {
       const bodyJson = JSON.stringify({
         query: getIntrospectionQuery(),
