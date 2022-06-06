@@ -17,9 +17,8 @@
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {
-    "bootstrap": "npm run build:sr",
     "prebuild": "npm run clean",
-    "build": "npm run build:sr && npm run build:app",
+    "build": "npm run build:app",
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "build:sr": "concurrently --names sr:source,sr:types \"npm run build:sr:source\" \"npm run build:sr:types\"",
@@ -188,6 +187,7 @@
     "react-dom": "^17.0.2",
     "react-hook-form": "^7.12.1",
     "react-redux": "^7.2.6",
+    "react-router-dom": "^6.3.0",
     "react-sortable-hoc": "^2.0.0",
     "react-tabs": "^3.2.3",
     "react-use": "^17.2.4",

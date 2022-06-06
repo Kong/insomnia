@@ -337,3 +337,5 @@ export const WrapperDesign: FC<Props> = ({
     />
   );
 };
+
+export default WrapperDesign;
