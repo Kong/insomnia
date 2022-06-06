@@ -107,7 +107,6 @@ interface BodyOptions {
   allowedContentTypes: string[] | undefined;
 }
 export function generateBodyOptions(operation?: OA3Operation): BodyOptions {
-  console.log(operation);
   let bodySchema;
   let allowedContentTypes;
   const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
