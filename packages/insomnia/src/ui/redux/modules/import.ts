@@ -30,7 +30,7 @@ const handleImportResult = (result: ImportResult, errorMessage: string) => {
   if (error) {
     showError({
       title: 'Import Failed',
-      message: errorMessage,
+      message: error.message ?? errorMessage,
       error,
     });
     return [];

@@ -30,12 +30,15 @@ export function askToSelectExistingWorkspace(workspaces: Workspace[]): SelectExi
 }
 
 async function askToImportIntoNewWorkspace(): Promise<boolean> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     showModal(AskModal, {
       title: 'Import',
       message: `Do you want to import into an existing ${strings.workspace.singular.toLowerCase()} or a new one?`,
       yesText: 'Existing',
       noText: 'New',
+      onCancel: () => {
+        reject(new Error('Import cancelled'));
+      },
       onDone: (yes: boolean) => {
         resolve(yes);
       },
@@ -82,12 +85,15 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
           return null;
         }
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           showModal(AskModal, {
             title: 'Import',
             message: 'Do you want to import into the current workspace or a new one?',
             yesText: 'Current',
             noText: 'New Workspace',
+            onCancel: () => {
+              reject(new Error('Import cancelled'));
+            },
             onDone: (yes: boolean) => {
               resolve(yes ? workspaceId : null);
             },
@@ -107,7 +113,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
         return scope;
 
       default:
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           const message = name
             ? `How would you like to import "${name}"?`
             : 'Do you want to import as a Request Collection or a Design Document?';
@@ -117,6 +123,9 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
             message,
             noText: 'Request Collection',
             yesText: 'Design Document',
+            onCancel: () => {
+              reject(new Error('Import cancelled'));
+            },
             onDone: yes => {
               resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
             },
@@ -129,7 +138,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
 export type SetProjectIdPrompt = () => Promise<string>;
 export function askToImportIntoProject({ projects, activeProject }: { projects: Project[]; activeProject: Project }): SetProjectIdPrompt {
   return function() {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       // If only one project exists, return that
       if (projects.length === 1) {
         return resolve(projects[0]._id);
@@ -143,7 +152,10 @@ export function askToImportIntoProject({ projects, activeProject }: { projects: 
         message: `Select a ${strings.project.singular.toLowerCase()} to import into`,
         options,
         value: defaultValue,
-        noEscape: true,
+        noEscape: false,
+        onCancel: () => {
+          reject(new Error('Import cancelled'));
+        },
         onDone: selectedProjectId => {
           // @ts-expect-error onDone can send null as an argument; why/how?
           resolve(selectedProjectId);

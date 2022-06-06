@@ -13,6 +13,7 @@ interface State {
   yesText: string;
   noText: string;
   loading: boolean;
+  onCancel?: () => void;
 }
 
 interface AskModalOptions {
@@ -21,6 +22,7 @@ interface AskModalOptions {
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;
+  onCancel?: () => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -31,6 +33,7 @@ export class AskModal extends PureComponent<{}, State> {
     yesText: 'Yes',
     noText: 'No',
     loading: false,
+    onCancel: () => {},
   };
 
   modal: Modal | null = null;
@@ -71,7 +74,7 @@ export class AskModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  show({ title, message, onDone, yesText, noText }: AskModalOptions = {}) {
+  show({ title, message, onDone, yesText, noText, onCancel }: AskModalOptions = {}) {
     this._doneCallback = onDone;
     this.setState({
       title: title || 'Confirm',
@@ -79,6 +82,7 @@ export class AskModal extends PureComponent<{}, State> {
       yesText: yesText || 'Yes',
       noText: noText || 'No',
       loading: false,
+      onCancel,
     });
     this.modal?.show();
 
@@ -92,9 +96,9 @@ export class AskModal extends PureComponent<{}, State> {
   }
 
   render() {
-    const { message, title, yesText, noText, loading } = this.state;
+    const { message, title, yesText, noText, loading, onCancel } = this.state;
     return (
-      <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
+      <Modal ref={this._setModalRef} onCancel={onCancel} closeOnKeyCodes={[13]}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>

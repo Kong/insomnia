@@ -117,211 +117,217 @@ export async function importRaw(
   let results: ConvertResult;
 
   try {
-    results = (await convert(rawContent)) as unknown as ConvertResult;
-  } catch (err) {
-    const importResult: ImportResult = {
-      source: 'not found',
-      error: err,
-      summary: {},
-    };
-    return importResult;
-  }
-
-  const { data, type: resultsType } = results;
-  // Generate all the ids we may need
-  const generatedIds: Record<string, string | ((...args: any[]) => any)> = {};
-
-  for (const r of data.resources) {
-    for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
-      generatedIds[key] = generateId(models.MODELS_BY_EXPORT_TYPE[r._type].prefix);
+    try {
+      results = (await convert(rawContent)) as unknown as ConvertResult;
+    } catch (err) {
+      const importResult: ImportResult = {
+        source: 'not found',
+        error: err,
+        summary: {},
+      };
+      return importResult;
     }
-  }
 
-  // Contains the ID of the workspace to be used with the import
-  generatedIds[WORKSPACE_ID_KEY] = async () => {
-    const workspaceId = await getWorkspaceId();
-    // First try getting the workspace to overwrite
-    const workspace = await models.workspace.getById(workspaceId || 'n/a');
-    // Update this fn so it doesn't run again
-    const idToUse = workspace?._id || generateId(models.workspace.prefix);
-    generatedIds[WORKSPACE_ID_KEY] = idToUse;
-    return idToUse;
-  };
+    const { data, type: resultsType } = results;
+    // Generate all the ids we may need
+    const generatedIds: Record<string, string | ((...args: any[]) => any)> = {};
 
-  // Contains the ID of the base environment to be used with the import
-  generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
-    const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
-    const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
-    // Update this fn so it doesn't run again
-    generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
-    return baseEnvironment._id;
-  };
+    for (const r of data.resources) {
+      for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
+        generatedIds[key] = generateId(models.MODELS_BY_EXPORT_TYPE[r._type].prefix);
+      }
+    }
 
-  // NOTE: Although the order of the imported resources is not guaranteed,
-  // all current importers will produce resources in this order:
-  // Workspace > Environment > RequestGroup > Request
-  // Import everything backwards so they get inserted in the correct order
-  data.resources.reverse();
-  const importedDocs = {};
+    // Contains the ID of the workspace to be used with the import
+    generatedIds[WORKSPACE_ID_KEY] = async () => {
+      const workspaceId = await getWorkspaceId();
+      // First try getting the workspace to overwrite
+      const workspace = await models.workspace.getById(workspaceId || 'n/a');
+      // Update this fn so it doesn't run again
+      const idToUse = workspace?._id || generateId(models.workspace.prefix);
+      generatedIds[WORKSPACE_ID_KEY] = idToUse;
+      return idToUse;
+    };
 
-  for (const model of models.all()) {
-    importedDocs[model.type] = [];
-  }
+    // Contains the ID of the base environment to be used with the import
+    generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
+      const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
+      const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
+      // Update this fn so it doesn't run again
+      generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
+      return baseEnvironment._id;
+    };
 
-  // Add a workspace to the resources if it doesn't exist
-  // NOTE: The workspace should be the last item of the resources
-  if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
-    data.resources.push({
-      _id: WORKSPACE_ID_KEY,
-      _type: EXPORT_TYPE_WORKSPACE,
-    });
-  }
+    // NOTE: Although the order of the imported resources is not guaranteed,
+    // all current importers will produce resources in this order:
+    // Workspace > Environment > RequestGroup > Request
+    // Import everything backwards so they get inserted in the correct order
+    data.resources.reverse();
+    const importedDocs = {};
 
-  for (const resource of data.resources) {
+    for (const model of models.all()) {
+      importedDocs[model.type] = [];
+    }
+
+    // Add a workspace to the resources if it doesn't exist
+    // NOTE: The workspace should be the last item of the resources
+    if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
+      data.resources.push({
+        _id: WORKSPACE_ID_KEY,
+        _type: EXPORT_TYPE_WORKSPACE,
+      });
+    }
+
+    for (const resource of data.resources) {
     // Buffer DB changes
     // NOTE: Doing it inside here so it's more "scalable"
-    await db.bufferChanges(100);
+      await db.bufferChanges(100);
 
-    // Replace null parentIds with current workspace
-    if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
-      resource.parentId = WORKSPACE_ID_KEY;
-    }
-
-    // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values
-    for (const key of Object.keys(generatedIds)) {
-      const { parentId, _id } = resource;
-
-      if (parentId?.includes(key)) {
-        resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
+      // Replace null parentIds with current workspace
+      if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
+        resource.parentId = WORKSPACE_ID_KEY;
       }
 
-      if (_id && _id.includes(key)) {
-        resource._id = _id.replace(key, await fnOrString(generatedIds[key]));
+      // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values
+      for (const key of Object.keys(generatedIds)) {
+        const { parentId, _id } = resource;
+
+        if (parentId?.includes(key)) {
+          resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
+        }
+
+        if (_id && _id.includes(key)) {
+          resource._id = _id.replace(key, await fnOrString(generatedIds[key]));
+        }
       }
-    }
 
-    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
+      const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
 
-    if (!model) {
-      console.warn('Unknown doc type for import', resource._type);
-      continue;
-    }
+      if (!model) {
+        console.warn('Unknown doc type for import', resource._type);
+        continue;
+      }
 
-    // Hack to switch to GraphQL based on finding `graphql` in the URL path
-    // TODO: Support this in a better way
-    if (
-      isRequest(model) &&
+      // Hack to switch to GraphQL based on finding `graphql` in the URL path
+      // TODO: Support this in a better way
+      if (
+        isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       typeof resource.url === 'string' &&
       resource.body.text.includes('"query"') &&
       resource.url.includes('graphql')
-    ) {
-      resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
-    }
+      ) {
+        resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
+      }
 
-    // Try adding Content-Type JSON if no Content-Type exists
-    if (
-      isRequest(model) &&
+      // Try adding Content-Type JSON if no Content-Type exists
+      if (
+        isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       Array.isArray(resource.headers) &&
       !resource.headers.find(h => h.name.toLowerCase() === 'content-type')
-    ) {
-      try {
-        JSON.parse(resource.body.text);
-        resource.headers.push({
-          name: 'Content-Type',
-          value: 'application/json',
-        });
-      } catch (err) {
+      ) {
+        try {
+          JSON.parse(resource.body.text);
+          resource.headers.push({
+            name: 'Content-Type',
+            value: 'application/json',
+          });
+        } catch (err) {
         // Not JSON
-      }
-    }
-
-    const existingDoc = await db.get(model.type, resource._id);
-    let newDoc: BaseModel;
-
-    if (existingDoc) {
-      let updateDoc = resource;
-
-      // Do differential patching when enabled
-      if (enableDiffBasedPatching) {
-        updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
+        }
       }
 
-      // Bypass differential update for urls when enabled
-      if (bypassDiffProps?.url && updateDoc.url) {
-        updateDoc.url = resource.url;
-      }
+      const existingDoc = await db.get(model.type, resource._id);
+      let newDoc: BaseModel;
 
-      // If workspace preserve the scope and parentId of the existing workspace while importing
-      if (isWorkspace(model)) {
-        (updateDoc as Workspace).scope = (existingDoc as Workspace).scope;
-        (updateDoc as Workspace).parentId = (existingDoc as Workspace).parentId;
-      }
+      if (existingDoc) {
+        let updateDoc = resource;
 
-      newDoc = await db.docUpdate(existingDoc, updateDoc);
-    } else {
+        // Do differential patching when enabled
+        if (enableDiffBasedPatching) {
+          updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
+        }
+
+        // Bypass differential update for urls when enabled
+        if (bypassDiffProps?.url && updateDoc.url) {
+          updateDoc.url = resource.url;
+        }
+
+        // If workspace preserve the scope and parentId of the existing workspace while importing
+        if (isWorkspace(model)) {
+          (updateDoc as Workspace).scope = (existingDoc as Workspace).scope;
+          (updateDoc as Workspace).parentId = (existingDoc as Workspace).parentId;
+        }
+
+        newDoc = await db.docUpdate(existingDoc, updateDoc);
+      } else {
       // If workspace, check and set the scope and parentId while importing a new workspace
-      if (isWorkspace(model)) {
-        await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
+        if (isWorkspace(model)) {
+          await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
 
-        // If the workspace doesn't have a name, update the default name based on it's scope
-        if (!resource.name) {
-          const name =
+          // If the workspace doesn't have a name, update the default name based on it's scope
+          if (!resource.name) {
+            const name =
             (resource as Workspace).scope === 'collection'
               ? `My ${strings.collection.singular}`
               : `My ${strings.document.singular}`;
 
-          resource.name = name;
+            resource.name = name;
+          }
+
+          await createWorkspaceInProject(resource as Workspace, getProjectId);
         }
 
-        await createWorkspaceInProject(resource as Workspace, getProjectId);
+        newDoc = await db.docCreate(model.type, resource);
+
+        // Mark as not seen if we created a new workspace from sync
+        if (isWorkspace(newDoc)) {
+          const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
+          await models.workspaceMeta.update(workspaceMeta, {
+            hasSeen: false,
+          });
+        }
       }
 
-      newDoc = await db.docCreate(model.type, resource);
+      importedDocs[newDoc.type].push(newDoc);
+    }
 
-      // Mark as not seen if we created a new workspace from sync
-      if (isWorkspace(newDoc)) {
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
-        await models.workspaceMeta.update(workspaceMeta, {
-          hasSeen: false,
+    // Store spec under workspace if it's OpenAPI
+    for (const workspace of importedDocs[models.workspace.type]) {
+      if (isApiSpecImport(resultsType)) {
+        const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+          contents: rawContent,
+          contentType: 'yaml',
         });
+        importedDocs[spec.type].push(spec);
+      }
+
+      // Set active environment when none is currently selected and one exists
+      const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+      const envs = importedDocs[models.environment.type];
+
+      if (!meta.activeEnvironmentId && envs.length > 0) {
+        meta.activeEnvironmentId = envs[0]._id;
+        await models.workspaceMeta.update(meta);
       }
     }
 
-    importedDocs[newDoc.type].push(newDoc);
+    await db.flushChanges();
+    trackSegmentEvent(SegmentEvent.dataImport, { type: resultsType.id });
+    const importRequest: ImportResult = {
+      source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
+      summary: importedDocs,
+      error: null,
+    };
+    return importRequest;
+  } catch (e) {
+    return {
+      error: e,
+    };
   }
-
-  // Store spec under workspace if it's OpenAPI
-  for (const workspace of importedDocs[models.workspace.type]) {
-    if (isApiSpecImport(resultsType)) {
-      const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
-        contents: rawContent,
-        contentType: 'yaml',
-      });
-      importedDocs[spec.type].push(spec);
-    }
-
-    // Set active environment when none is currently selected and one exists
-    const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-    const envs = importedDocs[models.environment.type];
-
-    if (!meta.activeEnvironmentId && envs.length > 0) {
-      meta.activeEnvironmentId = envs[0]._id;
-      await models.workspaceMeta.update(meta);
-    }
-  }
-
-  await db.flushChanges();
-  trackSegmentEvent(SegmentEvent.dataImport, { type: resultsType.id });
-  const importRequest: ImportResult = {
-    source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
-    summary: importedDocs,
-    error: null,
-  };
-  return importRequest;
 }
 
 async function updateWorkspaceScope(
