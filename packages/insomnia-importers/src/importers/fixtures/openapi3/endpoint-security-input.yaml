@@ -127,28 +127,36 @@ paths:
   /oauth2/authorization-code:
     get:
       security:
-        - OAuth2-AuthorizationCode: []
+        - OAuth2-AuthorizationCode:
+            - read:something
+            - write:something
       responses:
         '200':
           description: OK
   /oauth2/implicit:
     get:
       security:
-        - OAuth2-Implicit: []
+        - OAuth2-Implicit:
+            - read:something
+            - write:something
       responses:
         '200':
           description: OK
   /oauth2/client-credentials:
     get:
       security:
-        - OAuth2-ClientCredentials: []
+        - OAuth2-ClientCredentials:
+            - read:something
+            - write:something
       responses:
         '200':
           description: OK
   /oauth2/password:
     get:
       security:
-        - OAuth2-Password: []
+        - OAuth2-Password:
+            - read:something
+            - write:something
       responses:
         '200':
           description: OK
@@ -160,10 +168,18 @@ paths:
         - Key-Query: []
         - Key-Header: []
         - Key-Cookie: []
-        - OAuth2-AuthorizationCode: []
-        - OAuth2-Implicit: []
-        - OAuth2-ClientCredentials: []
-        - OAuth2-Password: []
+        - OAuth2-AuthorizationCode:
+            - read:something
+            - write:something
+        - OAuth2-Implicit:
+            - read:something
+            - write:something
+        - OAuth2-ClientCredentials:
+            - read:something
+            - write:something
+        - OAuth2-Password:
+            - read:something
+            - write:something
       responses:
         '200':
           description: OK
