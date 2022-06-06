@@ -9,7 +9,9 @@
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.5-0",
     "@hapi/hawk": "^8.0.0",
-    "@stoplight/spectral": "^5.9.0",
+    "@stoplight/spectral-core": "^1.12.2",
+    "@stoplight/spectral-formats": "^1.2.0",
+    "@stoplight/spectral-rulesets": "^1.9.0",
     "analytics-node": "^6.0.0",
     "aws4": "^1.10.0",
     "axios": "^0.21.2",

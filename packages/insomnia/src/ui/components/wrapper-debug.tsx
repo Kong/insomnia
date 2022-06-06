@@ -348,4 +348,4 @@ const mapStateToProps = (state: RootState) => ({
   sidebarFilter: selectSidebarFilter(state),
 });
 
-export const WrapperDebug = connect(mapStateToProps)(UnconnectedWrapperDebug);
+export default connect(mapStateToProps)(UnconnectedWrapperDebug);

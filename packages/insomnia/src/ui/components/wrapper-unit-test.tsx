@@ -595,3 +595,5 @@ const mapStateToProps = (state: RootState) => ({
 });
 
 export const WrapperUnitTest = connect(mapStateToProps)(UnconnectedWrapperUnitTest);
+
+export default WrapperUnitTest;

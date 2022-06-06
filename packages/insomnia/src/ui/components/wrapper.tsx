@@ -1,6 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
-import React, { Fragment, PureComponent, Ref } from 'react';
+import React, { Fragment, lazy, PureComponent, Ref, Suspense } from 'react';
+import { useSelector } from 'react-redux';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 
 import type { GlobalActivity } from '../../common/constants';
 import {
@@ -31,6 +33,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
+import { selectActiveActivity } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -72,10 +75,51 @@ import { WorkspaceDuplicateModal } from './modals/workspace-duplicate-modal';
 import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from './modals/workspace-settings-modal';
 import { WrapperModal } from './modals/wrapper-modal';
-import { WrapperDebug } from './wrapper-debug';
-import { WrapperDesign } from './wrapper-design';
-import WrapperHome from './wrapper-home';
-import { WrapperUnitTest } from './wrapper-unit-test';
+
+const lazyWithPreload = (
+  importFn: () => Promise<{ default: React.ComponentType<any> }>
+): [
+  React.LazyExoticComponent<React.ComponentType<any>>,
+  () => Promise<{
+    default: React.ComponentType<any>;
+  }>
+] => {
+  const LazyComponent = lazy(importFn);
+  const preload = () => importFn();
+
+  return [LazyComponent, preload];
+};
+
+const [WrapperHome, preloadWrapperHome] = lazyWithPreload(
+  () => import('./wrapper-home')
+);
+const [WrapperDebug, preloadWrapperDebug] = lazyWithPreload(
+  () => import('./wrapper-debug')
+);
+const [WrapperDesign, preloadWrapperDesign] = lazyWithPreload(
+  () => import('./wrapper-design')
+);
+const [WrapperUnitTest, preloadWrapperUnitTest] = lazyWithPreload(
+  () => import('./wrapper-unit-test')
+);
+
+preloadWrapperHome();
+preloadWrapperDebug();
+preloadWrapperDesign();
+preloadWrapperUnitTest();
+
+const ActivityRouter = () => {
+  const activity = useSelector(selectActiveActivity);
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (activity) {
+      navigate(activity);
+    }
+  }, [activity, navigate]);
+
+  return null;
+};
 
 const spectral = initializeSpectral();
 
@@ -442,7 +486,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       activeWorkspace,
       activeApiSpec,
       activeWorkspaceClientCertificates,
-      activeActivity,
       gitVCS,
       handleActivateRequest,
       handleExportRequestsToFile,
@@ -589,63 +632,100 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             </GrpcDispatchModalWrapper>
           </ErrorBoundary>
         </div>
-        <Fragment key={`views::${this.state.activeGitBranch}`}>
-          {(activeActivity === ACTIVITY_HOME || !activeWorkspace) && (
-            <WrapperHome
-              wrapperProps={this.props}
-            />
-          )}
 
-          {activeActivity === ACTIVITY_SPEC && (
-            <WrapperDesign
-              gitSyncDropdown={gitSyncDropdown}
-              handleActivityChange={this._handleWorkspaceActivityChange}
-              wrapperProps={this.props}
-            />
-          )}
-
-          {activeActivity === ACTIVITY_UNIT_TEST && (
-            <WrapperUnitTest
-              gitSyncDropdown={gitSyncDropdown}
-              wrapperProps={this.props}
-              handleActivityChange={this._handleWorkspaceActivityChange}
-            >
-              {sidebarChildren}
-            </WrapperUnitTest>
-          )}
-
-          {activeActivity === ACTIVITY_DEBUG && (
-            <WrapperDebug
-              forceRefreshKey={this.state.forceRefreshKey}
-              gitSyncDropdown={gitSyncDropdown}
-              handleActivityChange={this._handleWorkspaceActivityChange}
-              handleChangeEnvironment={this._handleChangeEnvironment}
-              handleDeleteResponse={this._handleDeleteResponse}
-              handleDeleteResponses={this._handleDeleteResponses}
-              handleForceUpdateRequest={this._handleForceUpdateRequest}
-              handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
-              handleImport={this._handleImport}
-              handleRequestCreate={this._handleCreateRequestInWorkspace}
-              handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
-              handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
-              handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
-              handleSetActiveResponse={this._handleSetActiveResponse}
-              handleSetPreviewMode={this._handleSetPreviewMode}
-              handleSetResponseFilter={this._handleSetResponseFilter}
-              handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
-              handleSidebarSort={handleSidebarSort}
-              handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-              handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
-              handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-              handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
-              handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
-              handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-              handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-              handleUpdateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
-              wrapperProps={this.props}
-            />
-          )}
-        </Fragment>
+        <Routes>
+          <Route
+            path="*"
+            element={
+              <Suspense fallback={<div />}>
+                <WrapperHome wrapperProps={this.props} />
+              </Suspense>
+            }
+          />
+          <Route
+            path={ACTIVITY_UNIT_TEST}
+            element={
+              <Suspense fallback={<div />}>
+                <WrapperUnitTest
+                  gitSyncDropdown={gitSyncDropdown}
+                  wrapperProps={this.props}
+                  handleActivityChange={this._handleWorkspaceActivityChange}
+                >
+                  {sidebarChildren}
+                </WrapperUnitTest>
+              </Suspense>
+            }
+          />
+          <Route
+            path={ACTIVITY_SPEC}
+            element={
+              <Suspense fallback={<div />}>
+                <WrapperDesign
+                  gitSyncDropdown={gitSyncDropdown}
+                  handleActivityChange={this._handleWorkspaceActivityChange}
+                  wrapperProps={this.props}
+                />
+              </Suspense>
+            }
+          />
+          <Route
+            path={ACTIVITY_DEBUG}
+            element={
+              <Suspense fallback={<div />}>
+                <WrapperDebug
+                  forceRefreshKey={this.state.forceRefreshKey}
+                  gitSyncDropdown={gitSyncDropdown}
+                  handleActivityChange={this._handleWorkspaceActivityChange}
+                  handleChangeEnvironment={this._handleChangeEnvironment}
+                  handleDeleteResponse={this._handleDeleteResponse}
+                  handleDeleteResponses={this._handleDeleteResponses}
+                  handleForceUpdateRequest={this._handleForceUpdateRequest}
+                  handleForceUpdateRequestHeaders={
+                    this._handleForceUpdateRequestHeaders
+                  }
+                  handleImport={this._handleImport}
+                  handleRequestCreate={this._handleCreateRequestInWorkspace}
+                  handleRequestGroupCreate={
+                    this._handleCreateRequestGroupInWorkspace
+                  }
+                  handleSendAndDownloadRequestWithActiveEnvironment={
+                    this._handleSendAndDownloadRequestWithActiveEnvironment
+                  }
+                  handleSendRequestWithActiveEnvironment={
+                    this._handleSendRequestWithActiveEnvironment
+                  }
+                  handleSetActiveResponse={this._handleSetActiveResponse}
+                  handleSetPreviewMode={this._handleSetPreviewMode}
+                  handleSetResponseFilter={this._handleSetResponseFilter}
+                  handleShowRequestSettingsModal={
+                    this._handleShowRequestSettingsModal
+                  }
+                  handleSidebarSort={handleSidebarSort}
+                  handleUpdateRequestAuthentication={
+                    Wrapper._handleUpdateRequestAuthentication
+                  }
+                  handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
+                  handleUpdateRequestHeaders={
+                    Wrapper._handleUpdateRequestHeaders
+                  }
+                  handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
+                  handleUpdateRequestParameters={
+                    Wrapper._handleUpdateRequestParameters
+                  }
+                  handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
+                  handleUpdateSettingsUseBulkHeaderEditor={
+                    this._handleUpdateSettingsUseBulkHeaderEditor
+                  }
+                  handleUpdateSettingsUseBulkParametersEditor={
+                    this._handleUpdateSettingsUseBulkParametersEditor
+                  }
+                  wrapperProps={this.props}
+                />
+              </Suspense>
+            }
+          />
+        </Routes>
+        <ActivityRouter />
       </Fragment>
     );
   }

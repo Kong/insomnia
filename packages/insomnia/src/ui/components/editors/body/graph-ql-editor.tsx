@@ -293,7 +293,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       schemaIsFetching: false,
     };
     let responsePatch: ResponsePatch | null = null;
-
+    if (!rawRequest.url) {
+      return;
+    }
     try {
       const bodyJson = JSON.stringify({
         query: getIntrospectionQuery(),
@@ -632,22 +634,21 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   renderSchemaFetchMessage() {
-    let message;
+    if (!this.props.request.url) {
+      return '';
+    }
     const { schemaLastFetchTime, schemaIsFetching } = this.state;
-
     if (schemaIsFetching) {
-      message = 'fetching schema...';
-    } else if (schemaLastFetchTime > 0) {
-      message = (
+      return 'fetching schema...';
+    }
+    if (schemaLastFetchTime > 0) {
+      return (
         <span>
           schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
         </span>
       );
-    } else {
-      message = <span>schema not yet fetched</span>;
     }
-
-    return message;
+    return <span>schema not yet fetched</span>;
   }
 
   static renderMarkdown(text: string) {
