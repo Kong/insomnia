@@ -482,7 +482,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       tabWidth: editorIndentSize,
     });
 
-    const indentChars = (editorIndentWithTabs) ? '\t' : ' '.repeat(editorIndentSize);
+    const indentChars = editorIndentWithTabs ? '\t' : ' '.repeat(editorIndentSize);
     const prettyVariables = jsonPrettify(variables, indentChars);
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
@@ -563,7 +563,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _handleVariablesChange(variables: string) {
     try {
       this._handleBodyChange(this.state.body.query, variables, this.state.body.operationName);
-      JSON.parse(variables || 'null');
+      if (variables) {
+        JSON.parse(variables);
+      }
     } catch (err) {
       this.setState({
         variablesSyntaxError: err.message,
