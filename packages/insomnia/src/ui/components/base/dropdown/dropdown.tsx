@@ -444,7 +444,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             </div>
           </div>,
           // @ts-expect-error -- TSCONVERSION
-          dropdownsContainer,
+          document.querySelector('#dropdowns-container'),
         ),
       ];
     }
