@@ -14,6 +14,7 @@ import type { GitRepository } from '../../../models/git-repository';
 import type { Workspace } from '../../../models/workspace';
 import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
+import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import type {
   SetupGitRepositoryCallback,
@@ -126,10 +127,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     const bufferId = await db.bufferChanges();
-
+    const providerName = getOauth2FormatName(gitRepository.credentials);
     try {
       await vcs.pull(gitRepository.credentials);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
     } catch (err) {
       showError({
         title: 'Error Pulling Repository',
@@ -184,10 +185,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     const bufferId = await db.bufferChanges();
-
+    const providerName = getOauth2FormatName(gitRepository.credentials);
     try {
       await vcs.push(gitRepository.credentials, force);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'), providerName });
     } catch (err) {
       if (err.code === 'PushRejectedError') {
         this._dropdown?.hide();
@@ -205,7 +206,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
           title: 'Error Pushing Repository',
           error: err,
         });
-        trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message));
+        trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message), providerName });
       }
     }
 
@@ -235,8 +236,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleCommit() {
+    const { gitRepository } = this.props;
     showModal(GitStagingModal, {
       onCommit: this._refreshState,
+      gitRepository,
     });
   }
 

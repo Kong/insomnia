@@ -14,7 +14,7 @@ import { isWorkspace, Workspace, WorkspaceScopeKeys } from '../../../models/work
 import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-scope-to-design';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
 import { shallowClone } from '../../../sync/git/shallow-clone';
-import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
+import { addDotGit, getOauth2FormatName, translateSSHtoHTTP } from '../../../sync/git/utils';
 import { showAlert, showError, showModal } from '../../components/modals';
 import { GitRepositorySettingsModal } from '../../components/modals/git-repository-settings-modal';
 import { selectActiveProject } from '../selectors';
@@ -28,13 +28,14 @@ export type UpdateGitRepositoryCallback = (arg0: { gitRepository: GitRepository 
  * Update git repository settings
  * */
 export const updateGitRepository: UpdateGitRepositoryCallback = ({ gitRepository }) => {
+  const providerName  = getOauth2FormatName(gitRepository.credentials);
   return () => {
-    trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'update'));
+    trackSegmentEvent(SegmentEvent.vcsSyncStart, { ...vcsSegmentEventProperties('git', 'update'), providerName });
     showModal(GitRepositorySettingsModal, {
       gitRepository,
       onSubmitEdits: async gitRepoPatch => {
         await models.gitRepository.update(gitRepository, gitRepoPatch);
-        trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'update'));
+        trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'update'), providerName });
       },
     });
   };
@@ -52,7 +53,9 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'setup'));
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
-      onSubmitEdits: async gitRepoPatch => {
+      onSubmitEdits: async (gitRepoPatch: GitRepository) => {
+        const providerName  = getOauth2FormatName(gitRepoPatch.credentials);
+
         dispatch(loadStart());
 
         try {
@@ -70,7 +73,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
               message: err.message,
               error: err,
             });
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'setup', err.message));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'setup', err.message), providerName });
             return;
           }
 
@@ -85,15 +88,15 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
                 message:
                   'This repository is already connected to Insomnia; try creating a clone from the dashboard instead.',
               });
-              trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'setup', 'existing insomnia data'));
+              trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'setup', 'existing insomnia data'), providerName });
               return;
             }
           }
 
           await createGitRepository(workspace._id, gitRepoPatch);
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'setup'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'setup'), providerName });
         } catch (err) {
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'setup', err.message));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'setup', err.message), providerName });
         } finally {
           dispatch(loadStop());
         }
@@ -166,6 +169,7 @@ export const cloneGitRepository = ({ createFsClient }: {
         repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
         let fsClient = createFsClient();
 
+        const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
         try {
           await shallowClone({
             fsClient,
@@ -178,7 +182,7 @@ export const cloneGitRepository = ({ createFsClient }: {
               message: originalUriError.message,
             });
             dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', originalUriError.message));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', originalUriError.message), providerName });
             return;
           }
 
@@ -198,7 +202,7 @@ export const cloneGitRepository = ({ createFsClient }: {
               message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUriError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUri}): ${dotGitError.message}`,
             });
             dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', dotGitError.message));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', dotGitError.message), providerName });
             return;
           }
         }
@@ -207,7 +211,7 @@ export const cloneGitRepository = ({ createFsClient }: {
         if (!(await containsInsomniaWorkspaceDir(fsClient))) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no directory found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'no directory found'), providerName });
           return;
         }
 
@@ -217,14 +221,14 @@ export const cloneGitRepository = ({ createFsClient }: {
         if (workspaces.length === 0) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no workspaces found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'), providerName });
           return;
         }
 
         if (workspaces.length > 1) {
           cloneProblem('Multiple workspaces found in repository; expected one.');
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'), providerName });
           return;
         }
 
@@ -243,7 +247,7 @@ export const cloneGitRepository = ({ createFsClient }: {
             </>,
           );
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'workspace already exists'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'workspace already exists'), providerName });
           return;
         }
 
@@ -286,7 +290,7 @@ export const cloneGitRepository = ({ createFsClient }: {
             // Flush DB changes
             await db.flushChanges(bufferId);
             dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone'));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone'), providerName });
           },
         });
       },

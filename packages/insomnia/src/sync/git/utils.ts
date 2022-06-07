@@ -1,5 +1,6 @@
 import { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
+import { OauthProviderName } from '../../models/git-repository';
 import type { GitCredentials } from './git-vcs';
 import { getAccessToken as getGitHubAccessToken } from './github-oauth-provider';
 import { getAccessToken as getGitlabAccessToken, refreshToken as refreshGitlabToken } from './gitlab-oauth-provider';
@@ -93,6 +94,14 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
     // @ts-expect-error -- TSCONVERSION this needs to be handled better if credentials is undefined or which union type
     password: credentials.password || credentials.token,
   };
+};
+
+export const getOauth2FormatName = (credentials?: GitCredentials | null): OauthProviderName | undefined => {
+  if (credentials && 'oauth2format' in credentials) {
+    return credentials.oauth2format;
+  }
+
+  return;
 };
 
 export const gitCallbacks = (credentials?: GitCredentials | null) => ({

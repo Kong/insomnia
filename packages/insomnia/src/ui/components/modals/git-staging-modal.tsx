@@ -10,10 +10,12 @@ import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { isApiSpec } from '../../../models/api-spec';
+import { GitRepository } from '../../../models/git-repository';
 import type { Workspace } from '../../../models/workspace';
 import { gitRollback } from '../../../sync/git/git-rollback';
 import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
 import parseGitPath from '../../../sync/git/parse-git-path';
+import { getOauth2FormatName } from '../../../sync/git/utils';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -34,6 +36,7 @@ interface Item {
 interface Props {
   workspace: Workspace;
   vcs: GitVCS;
+  gitRepository: GitRepository | null;
 }
 
 interface State {
@@ -78,7 +81,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
   }
 
   async _handleCommit() {
-    const { vcs } = this.props;
+    const { vcs, gitRepository } = this.props;
     const { items, message } = this.state;
 
     // Set the stage
@@ -97,7 +100,8 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     await vcs.commit(message);
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'commit'));
+    const providerName = getOauth2FormatName(gitRepository?.credentials);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
     this.modal?.hide();
 
     if (typeof this.onCommit === 'function') {
@@ -122,7 +126,8 @@ export class GitStagingModal extends PureComponent<Props, State> {
       newItems[p].staged = doStage || forceAdd;
     }
 
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'));
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'), providerName });
     this.setState({
       items: newItems,
     });
@@ -137,7 +142,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     newItems[gitPath].staged = !newItems[gitPath].staged;
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'));
+
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'), providerName });
     this.setState({
       items: newItems,
     });
@@ -312,12 +319,16 @@ export class GitStagingModal extends PureComponent<Props, State> {
 
   async _handleRollbackSingle(item: Item) {
     await this._handleRollback([item]);
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'rollback'));
+
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback'), providerName });
   }
 
   async _handleRollbackAll(items: Item[]) {
     await this._handleRollback(items);
-    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'rollback_all'));
+
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback_all'), providerName });
   }
 
   renderItem(item: Item) {
