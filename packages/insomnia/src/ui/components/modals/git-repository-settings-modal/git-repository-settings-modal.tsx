@@ -4,7 +4,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { docsGitSync } from '../../../../common/documentation';
-import type { GitRepository } from '../../../../models/git-repository';
+import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
 import { deleteGitRepository } from '../../../../models/helpers/git-repository-operations';
 import { Link } from '../../base/link';
 import { Modal } from '../../base/modal';
@@ -88,7 +88,7 @@ interface Props {
   onReset: () => void;
 }
 
-const oauth2Formats = ['github', 'gitlab', 'custom'];
+const oauth2Formats: OauthProviderName[] = ['github', 'gitlab', 'custom'];
 
 const ModalForm = (props: Props) => {
   const { gitRepository, onSubmit, onReset } = props;
@@ -102,7 +102,7 @@ const ModalForm = (props: Props) => {
 
   const initialTab = !gitRepository ? 'github' : oauth2format;
 
-  const [selectedTab, setTab] = useState(initialTab);
+  const [selectedTab, setTab] = useState<OauthProviderName>(initialTab);
 
   const selectedTabIndex = oauth2Formats.indexOf(selectedTab);
   return (
