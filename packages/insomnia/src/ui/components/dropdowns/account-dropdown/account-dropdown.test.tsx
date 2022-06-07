@@ -36,42 +36,8 @@ describe('<AccountDropdownButton />', () => {
     expect(screen.getByText('Log In')).toBeDefined();
   });
 
-  test('renders test case 1', async () => {
-    const container = getDropdownContainer();
-    const store = await createMockStore({ disablePaidFeatureAds: true });
-
-    render(
-      <Provider store={store}>
-        <AccountDropdownButton />
-      </Provider>, { container }
-    );
-
-    expect(screen.getByText('Log In')).toBeDefined();
-  });
-
-  test('renders test case 2', async () => {
-    const container = getDropdownContainer();
-    const store = await createMockStore({ disablePaidFeatureAds: true });
-
-    render(
-      <Provider store={store}>
-        <AccountDropdownButton />
-      </Provider>, { container }
-    );
-
-    expect(screen.getByText('Log In')).toBeDefined();
-  });
-
-  test('renders test case 3', async () => {
-    const container = getDropdownContainer();
-    const store = await createMockStore({ disablePaidFeatureAds: true });
-
-    render(
-      <Provider store={store}>
-        <AccountDropdownButton />
-      </Provider>, { container }
-    );
-
-    expect(screen.getByText('Log In')).toBeDefined();
-  });
+  // TODO: try to define test cases of how this component should behave
+  test.todo('renders test case 1');
+  test.todo('renders test case 2');
+  test.todo('renders test case 3');
 });
