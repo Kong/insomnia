@@ -101,7 +101,7 @@ export const getOauth2FormatName = (credentials?: GitCredentials | null): OauthP
     return credentials.oauth2format;
   }
 
-  return undefined;
+  return;
 };
 
 export const gitCallbacks = (credentials?: GitCredentials | null) => ({
