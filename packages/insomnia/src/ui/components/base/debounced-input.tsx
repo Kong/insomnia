@@ -6,8 +6,8 @@ import { debounce } from '../../../common/misc';
 
 interface Props {
   onChange: (value: string) => void;
-  onFocus?: Function;
-  onBlur?: Function;
+  onFocus?: (e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
   textarea?: boolean;
   delay?: number;
   placeholder?: string;
