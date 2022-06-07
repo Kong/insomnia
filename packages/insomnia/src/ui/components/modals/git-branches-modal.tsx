@@ -7,6 +7,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import type { GitRepository } from '../../../models/git-repository';
 import { GitVCS } from '../../../sync/git/git-vcs';
+import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -111,10 +112,11 @@ export class GitBranchesModal extends PureComponent<Props, State> {
   async _handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     await this._errorHandler(async () => {
-      const { vcs } = this.props;
+      const { vcs, gitRepository } = this.props;
       const { newBranchName } = this.state;
+      const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.checkout(newBranchName);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'create_branch'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
       await this._refreshState({
         newBranchName: '',
       });
@@ -123,19 +125,21 @@ export class GitBranchesModal extends PureComponent<Props, State> {
 
   async _handleMerge(branch: string) {
     await this._errorHandler(async () => {
-      const { vcs } = this.props;
+      const { vcs, gitRepository } = this.props;
+      const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.merge(branch);
       // Apparently merge doesn't update the working dir so need to checkout too
       await this._handleCheckout(branch);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'merge_branch'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
     });
   }
 
   async _handleDelete(branch: string) {
     await this._errorHandler(async () => {
-      const { vcs } = this.props;
+      const { vcs, gitRepository } = this.props;
+      const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.deleteBranch(branch);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'delete_branch'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
       await this._refreshState();
     });
   }
@@ -151,10 +155,11 @@ export class GitBranchesModal extends PureComponent<Props, State> {
 
   async _handleCheckout(branch: string) {
     await this._errorHandler(async () => {
-      const { vcs, handleInitializeEntities } = this.props;
+      const { vcs, gitRepository, handleInitializeEntities } = this.props;
       const bufferId = await db.bufferChanges();
+      const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.checkout(branch);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'checkout_branch'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
       await db.flushChanges(bufferId, true);
       await handleInitializeEntities();
       await this._refreshState();

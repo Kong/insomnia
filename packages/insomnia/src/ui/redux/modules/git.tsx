@@ -169,6 +169,7 @@ export const cloneGitRepository = ({ createFsClient }: {
         repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
         let fsClient = createFsClient();
 
+        const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
         try {
           await shallowClone({
             fsClient,
@@ -181,7 +182,7 @@ export const cloneGitRepository = ({ createFsClient }: {
               message: originalUriError.message,
             });
             dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', originalUriError.message));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', originalUriError.message), providerName });
             return;
           }
 
@@ -201,7 +202,7 @@ export const cloneGitRepository = ({ createFsClient }: {
               message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUriError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUri}): ${dotGitError.message}`,
             });
             dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', dotGitError.message));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', dotGitError.message), providerName });
             return;
           }
         }
@@ -210,7 +211,7 @@ export const cloneGitRepository = ({ createFsClient }: {
         if (!(await containsInsomniaWorkspaceDir(fsClient))) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no directory found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'no directory found'), providerName });
           return;
         }
 
@@ -220,14 +221,14 @@ export const cloneGitRepository = ({ createFsClient }: {
         if (workspaces.length === 0) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'no workspaces found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'), providerName });
           return;
         }
 
         if (workspaces.length > 1) {
           cloneProblem('Multiple workspaces found in repository; expected one.');
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'), providerName });
           return;
         }
 
@@ -246,7 +247,7 @@ export const cloneGitRepository = ({ createFsClient }: {
             </>,
           );
           dispatch(loadStop());
-          trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone', 'workspace already exists'));
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', 'workspace already exists'), providerName });
           return;
         }
 
@@ -289,7 +290,7 @@ export const cloneGitRepository = ({ createFsClient }: {
             // Flush DB changes
             await db.flushChanges(bufferId);
             dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, vcsSegmentEventProperties('git', 'clone'));
+            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone'), providerName });
           },
         });
       },
