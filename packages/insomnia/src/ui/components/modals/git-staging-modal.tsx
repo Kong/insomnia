@@ -36,7 +36,7 @@ interface Item {
 interface Props {
   workspace: Workspace;
   vcs: GitVCS;
-  gitRepository: GitRepository;
+  gitRepository: GitRepository | null;
 }
 
 interface State {
@@ -100,7 +100,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     await vcs.commit(message);
-    const providerName = getOauth2FormatName(gitRepository.credentials);
+    const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
     this.modal?.hide();
 
@@ -126,7 +126,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
       newItems[p].staged = doStage || forceAdd;
     }
 
-    const providerName = getOauth2FormatName(this.props.gitRepository.credentials);
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'), providerName });
     this.setState({
       items: newItems,
@@ -143,7 +143,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
 
     newItems[gitPath].staged = !newItems[gitPath].staged;
 
-    const providerName = getOauth2FormatName(this.props.gitRepository.credentials);
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'), providerName });
     this.setState({
       items: newItems,
@@ -320,14 +320,14 @@ export class GitStagingModal extends PureComponent<Props, State> {
   async _handleRollbackSingle(item: Item) {
     await this._handleRollback([item]);
 
-    const providerName = getOauth2FormatName(this.props.gitRepository.credentials);
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback'), providerName });
   }
 
   async _handleRollbackAll(items: Item[]) {
     await this._handleRollback(items);
 
-    const providerName = getOauth2FormatName(this.props.gitRepository.credentials);
+    const providerName = getOauth2FormatName(this.props.gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback_all'), providerName });
   }
 
