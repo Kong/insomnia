@@ -11,7 +11,6 @@ import { KeydownBinder } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
-const dropdownsContainer = document.querySelector('#dropdowns-container');
 
 export interface DropdownProps {
   children: ReactNode;
@@ -444,7 +443,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             </div>
           </div>,
           // @ts-expect-error -- TSCONVERSION
-          dropdownsContainer,
+          document.querySelector('#dropdowns-container'),
         ),
       ];
     }
