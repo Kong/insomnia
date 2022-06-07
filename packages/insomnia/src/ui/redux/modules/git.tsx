@@ -8,7 +8,7 @@ import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
-import type { GitProviderName, GitRepository } from '../../../models/git-repository';
+import type { GitRepository } from '../../../models/git-repository';
 import { createGitRepository } from '../../../models/helpers/git-repository-operations';
 import { isWorkspace, Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
 import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-scope-to-design';
