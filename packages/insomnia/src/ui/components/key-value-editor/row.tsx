@@ -2,7 +2,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
-import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
+import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget, DropTargetMonitor } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -18,32 +18,39 @@ import { OneLineEditor } from '../codemirror/one-line-editor';
 import { CodePromptModal } from '../modals/code-prompt-modal';
 import { showModal } from '../modals/index';
 
+export interface Pair {
+  id: string;
+  name: string;
+  value: string;
+  description: string;
+  fileName?: string;
+  type?: string;
+  disabled?: boolean;
+  multiline?: boolean | string;
+}
+
+export type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[]>;
+
+type DragDirection = 0 | 1 | -1;
+
 interface Props {
-  onChange: Function;
-  onDelete: Function;
-  onFocusName: Function;
-  onFocusValue: Function;
-  onFocusDescription: Function;
+  onChange: (pair: Pair) => void;
+  onDelete: (pair: Pair) => void;
+  onFocusName: (pair: Pair, e: FocusEvent) => void;
+  onFocusValue: (pair: Pair, e: FocusEvent) => void;
+  onFocusDescription: (pair: Pair, e: FocusEvent) => void;
   displayDescription: boolean;
   index: number;
-  pair: {
-    id: string;
-    name: string;
-    value: string;
-    description: string;
-    fileName: string;
-    type: string;
-    disabled: boolean;
-  };
+  pair: Pair;
   readOnly?: boolean;
-  onMove?: Function;
-  onKeyDown?: Function;
-  onBlurName?: Function;
-  onBlurValue?: Function;
-  onBlurDescription?: Function;
+  onMove?: (pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) => void;
+  onKeyDown?: (pair: Pair, e: KeyboardEvent, value?: any) => void;
+  onBlurName?: (pair: Pair, e: FocusEvent) => void;
+  onBlurValue?: (pair: Pair, e: FocusEvent) => void;
+  onBlurDescription?: (pair: Pair, e: FocusEvent) => void;
   enableNunjucks?: boolean;
-  handleGetAutocompleteNameConstants?: Function;
-  handleGetAutocompleteValueConstants?: Function;
+  handleGetAutocompleteNameConstants?: AutocompleteHandler;
+  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   namePlaceholder?: string;
   valuePlaceholder?: string;
   descriptionPlaceholder?: string;
@@ -66,7 +73,7 @@ interface Props {
 }
 
 interface State {
-  dragDirection: number;
+  dragDirection: DragDirection;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -94,7 +101,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     this._descriptionInput?.focusEnd();
   }
 
-  setDragDirection(dragDirection) {
+  setDragDirection(dragDirection: DragDirection) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({
         dragDirection,
@@ -106,23 +113,23 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     this._descriptionInput = n;
   }
 
-  _sendChange(patch) {
+  _sendChange(patch: Partial<Pair>) {
     const pair = Object.assign({}, this.props.pair, patch);
     this.props.onChange?.(pair);
   }
 
-  _handleNameChange(name) {
+  _handleNameChange(name: string) {
     this._sendChange({
       name,
     });
   }
 
-  _handleValuePaste(e) {
+  _handleValuePaste(e: ClipboardEvent) {
     if (!this.props.allowMultiline) {
       return;
     }
 
-    const value = e.clipboardData.getData('text/plain');
+    const value = e.clipboardData?.getData('text/plain');
 
     if (value?.includes('\n')) {
       e.preventDefault();
@@ -147,25 +154,25 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     }
   }
 
-  _handleValueChange(value) {
+  _handleValueChange(value: string) {
     this._sendChange({
       value,
     });
   }
 
-  _handleFileNameChange(fileName) {
+  _handleFileNameChange(fileName: string) {
     this._sendChange({
       fileName,
     });
   }
 
-  _handleDescriptionChange(description) {
+  _handleDescriptionChange(description: string) {
     this._sendChange({
       description,
     });
   }
 
-  _handleTypeChange(def) {
+  _handleTypeChange(def: Partial<Pair>) {
     // Remove newlines if converting to text
     // WARNING: props should never be overwritten!
     let value = this.props.pair.value || '';
@@ -181,31 +188,31 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDisableChange(disabled) {
+  _handleDisableChange(disabled: boolean) {
     this._sendChange({
       disabled,
     });
   }
 
-  _handleFocusName(e) {
+  _handleFocusName(e: FocusEvent) {
     this.props.onFocusName(this.props.pair, e);
   }
 
-  _handleFocusValue(e) {
+  _handleFocusValue(e: FocusEvent) {
     this.props.onFocusValue(this.props.pair, e);
   }
 
-  _handleFocusDescription(e) {
+  _handleFocusDescription(e: FocusEvent) {
     this.props.onFocusDescription(this.props.pair, e);
   }
 
-  _handleBlurName(e) {
+  _handleBlurName(e: FocusEvent) {
     if (this.props.onBlurName) {
       this.props.onBlurName(this.props.pair, e);
     }
   }
 
-  _handleBlurValue(e) {
+  _handleBlurValue(e: FocusEvent) {
     if (this.props.onBlurName) {
       this.props.onBlurValue?.(this.props.pair, e);
     }
@@ -223,7 +230,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     }
   }
 
-  _handleKeyDown(e, value) {
+  _handleKeyDown(e: KeyboardEvent, value?: any) {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(this.props.pair, e, value);
     }
@@ -235,6 +242,8 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     if (handleGetAutocompleteNameConstants) {
       return handleGetAutocompleteNameConstants(this.props.pair);
     }
+
+    return [];
   }
 
   _handleAutocompleteValues() {
@@ -243,6 +252,8 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     if (handleGetAutocompleteValueConstants) {
       return handleGetAutocompleteValueConstants(this.props.pair);
     }
+
+    return [];
   }
 
   _handleEditMultiline() {
@@ -253,9 +264,8 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
       defaultValue: pair.value,
       onChange: this._handleValueChange,
       enableRender: enableNunjucks,
-      // @ts-expect-error -- TSCONVERSION
       mode: pair.multiline || 'text/plain',
-      onModeChange: mode => {
+      onModeChange: (mode: string) => {
         this._handleTypeChange(
           Object.assign({}, pair, {
             multiline: mode,
@@ -316,7 +326,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
           onChange={this._handleFileNameChange}
         />
       );
-      // @ts-expect-error -- TSCONVERSION
     } else if (pair.type === 'text' && pair.multiline) {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
@@ -543,27 +552,27 @@ const dragSource = {
   },
 };
 
-function isAbove(monitor, component) {
+function isAbove(monitor: DropTargetMonitor, component: any) {
   const hoveredNode = ReactDOM.findDOMNode(component);
   // @ts-expect-error -- TSCONVERSION
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
   // @ts-expect-error -- TSCONVERSION
   const height = hoveredNode.clientHeight;
-  const draggedTop = monitor.getSourceClientOffset().y;
+  const draggedTop = monitor.getSourceClientOffset()?.y;
   // NOTE: Not quite sure why it's height / 3 (seems to work)
-  return hoveredTop > draggedTop - height / 3;
+  return draggedTop !== undefined ? hoveredTop > draggedTop - height / 3 : false;
 }
 
 const dragTarget = {
-  drop(props, monitor, component) {
+  drop(props: Props, monitor: DropTargetMonitor, component: any) {
     if (isAbove(monitor, component)) {
-      props.onMove(monitor.getItem().pair, props.pair, 1);
+      props.onMove?.(monitor.getItem().pair, props.pair, 1);
     } else {
-      props.onMove(monitor.getItem().pair, props.pair, -1);
+      props.onMove?.(monitor.getItem().pair, props.pair, -1);
     }
   },
 
-  hover(_props, monitor, component) {
+  hover(_props: Props, monitor: DropTargetMonitor, component: any) {
     if (isAbove(monitor, component)) {
       component.setDragDirection(1);
     } else {

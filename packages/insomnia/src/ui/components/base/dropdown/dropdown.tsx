@@ -60,7 +60,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     this._node = n;
   }
 
-  _handleCheckFilterSubmit(e) {
+  _handleCheckFilterSubmit(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
@@ -232,7 +232,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _handleClick(e) {
+  _handleClick(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
     e.stopPropagation();
     this.toggle();
@@ -256,7 +256,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _getFlattenedChildren(children) {
+  // TODO: children should not be 'any'.
+  _getFlattenedChildren(children: any) {
     let newChildren: ReactNode[] = [];
     // Ensure children is an array
     children = Array.isArray(children) ? children : [children];
