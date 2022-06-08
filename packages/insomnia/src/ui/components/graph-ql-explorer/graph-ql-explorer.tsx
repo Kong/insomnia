@@ -184,8 +184,8 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
         <a
           href="#"
           className="graphql-explorer__header__back-btn"
-          onClick={e => {
-            e.preventDefault();
+          onClick={event => {
+            event.preventDefault();
 
             this._handlePopHistory();
           }}
@@ -216,8 +216,8 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
       <a
         href="#"
         className="graphql-explorer__header__back-btn"
-        onClick={e => {
-          e.preventDefault();
+        onClick={event => {
+          event.preventDefault();
 
           this._handlePopHistory();
         }}

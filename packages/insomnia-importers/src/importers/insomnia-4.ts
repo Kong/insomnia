@@ -16,7 +16,7 @@ export const convert: Converter = rawData => {
 
   try {
     data = YAML.parse(rawData);
-  } catch (e) {
+  } catch (error) {
     return null;
   }
 

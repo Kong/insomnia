@@ -65,8 +65,8 @@ export const SidebarHeader: FunctionComponent<SidebarHeaderProps> = ({
 }) => {
   const handleFilterClick: React.MouseEventHandler<HTMLSpanElement> | undefined =
     sectionVisible && toggleFilter // only handle a click if the section is open
-      ? e => {
-        e.stopPropagation(); // Prevent a parent from also handling the click
+      ? event => {
+        event.stopPropagation(); // Prevent a parent from also handling the click
 
         toggleFilter();
       }

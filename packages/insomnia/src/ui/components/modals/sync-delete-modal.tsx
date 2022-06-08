@@ -39,22 +39,22 @@ export class UnconnectedSyncDeleteModal extends PureComponent<Props, State> {
     this.state = INITIAL_STATE;
   }
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setInputRef(m: HTMLInputElement) {
-    this.input = m;
+  _setInputRef(input: HTMLInputElement) {
+    this.input = input;
   }
 
-  _updateWorkspaceName(e: React.SyntheticEvent<HTMLInputElement>) {
+  _updateWorkspaceName(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      workspaceName: e.currentTarget.value,
+      workspaceName: event.currentTarget.value,
     });
   }
 
-  async _handleDelete(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleDelete(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
     const { vcs } = this.props;
     const { workspaceName } = this.state;
 

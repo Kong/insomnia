@@ -74,8 +74,8 @@ export class FilterHelpModal extends PureComponent<{}, State> {
 
   modal: Modal | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   show(isJSON: boolean) {

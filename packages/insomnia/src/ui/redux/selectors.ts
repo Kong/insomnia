@@ -48,16 +48,16 @@ export const selectEntitiesLists = createSelector(
 export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
   const parentLookupMap = {};
 
-  for (const k of Object.keys(entities)) {
-    for (const e of entities[k]) {
-      if (!e.parentId) {
+  for (const key of Object.keys(entities)) {
+    for (const entity of entities[key]) {
+      if (!entity.parentId) {
         continue;
       }
 
-      if (parentLookupMap[e.parentId]) {
-        parentLookupMap[e.parentId].push(e);
+      if (parentLookupMap[entity.parentId]) {
+        parentLookupMap[entity.parentId].push(entity);
       } else {
-        parentLookupMap[e.parentId] = [e];
+        parentLookupMap[entity.parentId] = [entity];
       }
     }
   }
@@ -331,7 +331,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      e => isRequest(e) || isGrpcRequest(e) || isRequestGroup(e),
+      entity => isRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
     ) as (Request | GrpcRequest | RequestGroup)[];
   },
 );

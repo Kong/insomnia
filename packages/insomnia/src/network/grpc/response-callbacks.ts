@@ -12,8 +12,8 @@ interface IResponseCallbacks {
 export class ResponseCallbacks implements IResponseCallbacks {
   _event: IpcMainEvent;
 
-  constructor(e: IpcMainEvent) {
-    this._event = e;
+  constructor(event: IpcMainEvent) {
+    this._event = event;
   }
 
   sendData(requestId, val) {

@@ -53,16 +53,16 @@ export class Plugins extends PureComponent<Props, State> {
     this.setState({ error: null });
   }
 
-  _handleAddNpmPluginChange(e: ChangeEvent<HTMLInputElement>) {
-    if (e.target instanceof HTMLInputElement) {
+  _handleAddNpmPluginChange(event: ChangeEvent<HTMLInputElement>) {
+    if (event.target instanceof HTMLInputElement) {
       this.setState({
-        npmPluginValue: e.target.value,
+        npmPluginValue: event.target.value,
       });
     }
   }
 
-  async _handleAddFromNpm(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleAddFromNpm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     this.setState({
       isInstallingFromNpm: true,
     });

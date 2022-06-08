@@ -208,7 +208,7 @@ export class MemClient {
       const nextPath = path.join(currentPath, pathSegment);
 
       // Create dir if it doesn't exist yet
-      if (!dirEntry.children.find(e => e.name === pathSegment)) {
+      if (!dirEntry.children.find(child => child.name === pathSegment)) {
         dirEntry.children.push({
           type: 'dir',
           ino: this.__ino++,

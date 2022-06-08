@@ -23,8 +23,8 @@ interface Props {
 export class MethodDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   _handleSetCustomMethod() {

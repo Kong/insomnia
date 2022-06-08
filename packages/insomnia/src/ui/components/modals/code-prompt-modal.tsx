@@ -54,8 +54,8 @@ export class CodePromptModal extends PureComponent<{}, State> {
   _onModeChange: Function = () => {};
   _onChange: Function = () => {};
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleChange(value) {

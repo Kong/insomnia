@@ -65,10 +65,10 @@ export class PromptButton extends PureComponent<Props> {
   }
 
   _ask(...args) {
-    const e = args[args.length - 1];
+    const event = args[args.length - 1];
     // Prevent events (ex. won't close dropdown if it's in one)
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     // Toggle the confirmation notice
     this.setState({
       state: STATE_ASK,

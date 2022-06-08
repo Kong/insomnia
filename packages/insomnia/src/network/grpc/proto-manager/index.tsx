@@ -93,21 +93,19 @@ export async function addDirectory(workspaceId: string) {
     for (const file of loadedFiles) {
       try {
         await protoLoader.loadMethods(file);
-      } catch (e) {
+      } catch (error) {
         showError({
           title: 'Invalid Proto File',
           message: `The file ${file.name} could not be parsed`,
-          error: e,
+          error,
         });
         rollback = true;
         return;
       }
     }
-  } catch (e) {
+  } catch (error) {
     rollback = true;
-    showError({
-      error: e,
-    });
+    showError({ error });
   } finally {
     // Fake flushing changes (or, rollback) only prevents change notifications being sent to the UI
     // It does NOT revert changes written to the database, as is typical of a db transaction rollback
@@ -139,11 +137,11 @@ async function _readFile() {
     // Try parse proto file to make sure the file is valid
     try {
       await protoLoader.loadMethodsFromPath(filePath);
-    } catch (e) {
+    } catch (error) {
       showError({
         title: 'Invalid Proto File',
         message: `The file ${filePath} and could not be parsed`,
-        error: e,
+        error,
       });
       return;
     }
@@ -155,10 +153,8 @@ async function _readFile() {
       fileName: name,
       fileContents: contents,
     };
-  } catch (e) {
-    showError({
-      error: e,
-    });
+  } catch (error) {
+    showError({ error });
   }
   return undefined;
 }

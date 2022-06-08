@@ -33,20 +33,20 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
     this._modal = modal;
   }
 
-  _handleKeyDown(e: KeyboardEvent) {
-    e.preventDefault();
-    e.stopPropagation();
+  _handleKeyDown(event: KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
 
     // Handle keypress without modifiers.
-    if (!e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
+    if (!event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
       // esc key is for closing dialog, don't record it.
-      if (e.keyCode === keyboardKeys.esc.keyCode) {
+      if (event.keyCode === keyboardKeys.esc.keyCode) {
         // Hiding modal is already handled by underlying modal.
         return;
       }
 
       // enter key is for saving previously entered key combination, don't record it.
-      if (e.keyCode === keyboardKeys.enter.keyCode) {
+      if (event.keyCode === keyboardKeys.enter.keyCode) {
         const {
           hotKeyRefId,
           checkKeyCombinationDuplicate,
@@ -79,11 +79,11 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
     }
 
     const pressed: KeyCombination = {
-      ctrl: e.ctrlKey,
-      alt: e.altKey,
-      shift: e.shiftKey,
-      meta: e.metaKey,
-      keyCode: e.keyCode,
+      ctrl: event.ctrlKey,
+      alt: event.altKey,
+      shift: event.shiftKey,
+      meta: event.metaKey,
+      keyCode: event.keyCode,
     };
     this.setState({
       pressedKeyCombination: pressed,

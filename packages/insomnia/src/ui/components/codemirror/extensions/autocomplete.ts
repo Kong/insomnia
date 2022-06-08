@@ -187,21 +187,21 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
   }
 
   let keydownTimeoutHandle: NodeJS.Timeout | null = null;
-  cm.on('keydown', (cm: CodeMirror.EditorFromTextArea, e) => {
+  cm.on('keydown', (cm: CodeMirror.EditorFromTextArea, event) => {
     // Close autocomplete on Escape if it's open
-    if (cm.isHintDropdownActive() && e.key === 'Escape') {
+    if (cm.isHintDropdownActive() && event.key === 'Escape') {
       if (!cm.state.completionActive) {
         return;
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
       cm.state.completionActive.close();
     }
 
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
-    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
+    if (event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1) {
       return;
     }
 

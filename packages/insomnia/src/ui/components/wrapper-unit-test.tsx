@@ -217,9 +217,9 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
 
   async _handleSetActiveRequest(
     unitTest: UnitTest,
-    e: React.SyntheticEvent<HTMLSelectElement>,
+    event: React.SyntheticEvent<HTMLSelectElement>,
   ) {
-    const requestId = e.currentTarget.value === '__NULL__' ? null : e.currentTarget.value;
+    const requestId = event.currentTarget.value === '__NULL__' ? null : event.currentTarget.value;
     await models.unitTest.update(unitTest, {
       requestId,
     });

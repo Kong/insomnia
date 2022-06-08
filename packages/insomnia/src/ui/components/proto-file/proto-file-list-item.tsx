@@ -36,8 +36,8 @@ export const ProtoFileListItem: FunctionComponent<Props> = ({
   // Don't re-instantiate the callbacks if the dependencies have not changed
   const handleSelectCallback = useCallback(() => handleSelect(_id), [handleSelect, _id]);
   const handleDeleteCallback = useCallback(
-    async (e: React.SyntheticEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
+    async (event: React.SyntheticEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
       await handleDelete(protoFile);
     },
     [handleDelete, protoFile],
@@ -49,8 +49,8 @@ export const ProtoFileListItem: FunctionComponent<Props> = ({
     [handleRename, protoFile],
   );
   const handleUpdateCallback = useCallback(
-    async (e: React.SyntheticEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
+    async (event: React.SyntheticEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
       await handleUpdate(protoFile);
     },
     [handleUpdate, protoFile],

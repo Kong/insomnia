@@ -39,8 +39,8 @@ export class EnvironmentsDropdown extends PureComponent<Props> {
     showModal(WorkspaceEnvironmentsEditModal, this.props.workspace);
   }
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   renderEnvironmentItem(environment: Environment) {
@@ -79,9 +79,9 @@ export class EnvironmentsDropdown extends PureComponent<Props> {
       ...other
     } = this.props;
     // NOTE: Base environment might not exist if the users hasn't managed environments yet.
-    const baseEnvironment = environments.find(e => e.parentId === workspace._id);
+    const baseEnvironment = environments.find(environment => environment.parentId === workspace._id);
     const subEnvironments = environments
-      .filter(e => e.parentId === (baseEnvironment && baseEnvironment._id))
+      .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
       .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
     let description;
 

@@ -60,26 +60,26 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
   textarea: HTMLTextAreaElement | null = null;
   state = _initialState;
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setTextAreaRef(m: HTMLTextAreaElement) {
-    this.textarea = m;
+  _setTextAreaRef(textarea: HTMLTextAreaElement) {
+    this.textarea = textarea;
   }
 
   _handleClearError() {
     this.setState({ error: '' });
   }
 
-  _handleMessageChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    this.setState({ message: e.currentTarget.value });
+  _handleMessageChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    this.setState({ message: event.currentTarget.value });
   }
 
-  async _handleStageToggle(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _handleStageToggle(event: React.SyntheticEvent<HTMLInputElement>) {
     const { vcs } = this.props;
     const { status } = this.state;
-    const id = e.currentTarget.name;
+    const id = event.currentTarget.name;
     const isStaged = !!status.stage[id];
     const newStage = isStaged
       ? await vcs.unstage(status.stage, [status.stage[id]])

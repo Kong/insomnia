@@ -225,10 +225,10 @@ export function isLoggedIn() {
 export async function logout() {
   try {
     await fetch.post('/auth/logout', null, getCurrentSessionId());
-  } catch (e) {
+  } catch (error) {
     // Not a huge deal if this fails, but we don't want it to prevent the
     // user from signing out.
-    console.warn('Failed to logout', e);
+    console.warn('Failed to logout', error);
   }
 
   _unsetSessionData();

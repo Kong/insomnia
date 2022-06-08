@@ -33,8 +33,8 @@ export class AlertModal extends PureComponent<{}, State> {
   _okCallback: (value: void | PromiseLike<void>) => void;
   _okCallback2: AlertModalOptions['onConfirm'];
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleOk() {
@@ -51,12 +51,12 @@ export class AlertModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  setCancelRef(n: HTMLButtonElement) {
-    this._cancel = n;
+  setCancelRef(cancel: HTMLButtonElement) {
+    this._cancel = cancel;
   }
 
-  setOkRef(n: HTMLButtonElement) {
-    this._ok = n;
+  setOkRef(ok: HTMLButtonElement) {
+    this._ok = ok;
   }
 
   show({ title, message, addCancel, onConfirm, okLabel }: AlertModalOptions) {

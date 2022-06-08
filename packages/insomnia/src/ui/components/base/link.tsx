@@ -22,9 +22,9 @@ export const Link: FC<Props> = ({
   noTheme,
   ...other
 }) => {
-  const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-    e?.preventDefault();
-    onClick?.(e); // Also call onClick that was passed to us if there was one
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+    event?.preventDefault();
+    onClick?.(event); // Also call onClick that was passed to us if there was one
     clickLink(href);
   }, [onClick, href]);
 

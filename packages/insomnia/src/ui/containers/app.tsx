@@ -940,7 +940,7 @@ class App extends PureComponent<AppProps, State> {
     setTimeout(() => this._handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
   }
 
-  _handleMouseMove(e) {
+  _handleMouseMove(event) {
     if (this.state.draggingPaneHorizontal) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.paneWidth - this.state.paneWidth;
@@ -962,7 +962,7 @@ class App extends PureComponent<AppProps, State> {
         const requestPaneWidth = requestPane.offsetWidth;
         const responsePaneWidth = responsePane.offsetWidth;
 
-        const pixelOffset = e.clientX - requestPane.offsetLeft;
+        const pixelOffset = event.clientX - requestPane.offsetLeft;
         let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
         paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
 
@@ -988,7 +988,7 @@ class App extends PureComponent<AppProps, State> {
       if (requestPane && responsePane) {
         const requestPaneHeight = requestPane.offsetHeight;
         const responsePaneHeight = responsePane.offsetHeight;
-        const pixelOffset = e.clientY - requestPane.offsetTop;
+        const pixelOffset = event.clientY - requestPane.offsetTop;
         let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
         paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
 
@@ -1013,7 +1013,7 @@ class App extends PureComponent<AppProps, State> {
       if (sidebar) {
         const currentPixelWidth = sidebar.offsetWidth;
 
-        const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
+        const ratio = (event.clientX - sidebar.offsetLeft) / currentPixelWidth;
         const width = this.state.sidebarWidth * ratio;
         let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
 
@@ -1064,8 +1064,8 @@ class App extends PureComponent<AppProps, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(n: Wrapper) {
-    this._wrapper = n;
+  _setWrapperRef(wrapper: Wrapper) {
+    this._wrapper = wrapper;
   }
 
   async _handleReloadPlugins() {
@@ -1367,15 +1367,15 @@ class App extends PureComponent<AppProps, State> {
     // NOTE: This is required for "drop" event to trigger.
     document.addEventListener(
       'dragover',
-      e => {
-        e.preventDefault();
+      event => {
+        event.preventDefault();
       },
       false,
     );
     document.addEventListener(
       'drop',
-      async e => {
-        e.preventDefault();
+      async event => {
+        event.preventDefault();
         const { activeWorkspace, handleImportUri } = this.props;
 
         if (!activeWorkspace) {
@@ -1383,13 +1383,13 @@ class App extends PureComponent<AppProps, State> {
         }
 
         // @ts-expect-error -- TSCONVERSION
-        if (e.dataTransfer.files.length === 0) {
+        if (event.dataTransfer.files.length === 0) {
           console.log('[drag] Ignored drop event because no files present');
           return;
         }
 
         // @ts-expect-error -- TSCONVERSION
-        const file = e.dataTransfer.files[0];
+        const file = event.dataTransfer.files[0];
         const { path } = file;
         const uri = `file://${path}`;
         await showAlert({
@@ -1434,7 +1434,7 @@ class App extends PureComponent<AppProps, State> {
       return;
     }
 
-    const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
+    const baseEnvironments = environments.filter(environment => environment.parentId === activeWorkspace._id);
 
     // Nothing to do
     if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {

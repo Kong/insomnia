@@ -25,8 +25,8 @@ type Props = ReduxProps;
 class ProjectSettingsModal extends PureComponent<Props> {
   modal: Modal | null = null;
 
-  _handleSetModalRef(n: Modal) {
-    this.modal = n;
+  _handleSetModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleRemoveProject() {

@@ -32,8 +32,8 @@ export class SyncHistoryModal extends PureComponent<Props, State> {
     history: [],
   };
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   async _handleClickRollback(snapshot: Snapshot) {

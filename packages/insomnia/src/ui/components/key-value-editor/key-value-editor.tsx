@@ -186,28 +186,28 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._addPair();
   }
 
-  _handleKeyDown(_pair: Pair, e: KeyboardEvent, value?: any) {
-    if (e.metaKey || e.ctrlKey) {
+  _handleKeyDown(_pair: Pair, event: KeyboardEvent, value?: any) {
+    if (event.metaKey || event.ctrlKey) {
       return;
     }
 
-    if (e.keyCode === ENTER) {
+    if (event.keyCode === ENTER) {
       this._focusNext(true);
-    } else if (e.keyCode === BACKSPACE) {
+    } else if (event.keyCode === BACKSPACE) {
       if (!value) {
         this._focusPrevious(true);
       }
-    } else if (e.keyCode === DOWN) {
-      e.preventDefault();
+    } else if (event.keyCode === DOWN) {
+      event.preventDefault();
 
       this._focusNextPair();
-    } else if (e.keyCode === UP) {
-      e.preventDefault();
+    } else if (event.keyCode === UP) {
+      event.preventDefault();
 
       this._focusPreviousPair();
-    } else if (e.keyCode === LEFT) {
+    } else if (event.keyCode === LEFT) {
       // TODO: Implement this
-    } else if (e.keyCode === RIGHT) {
+    } else if (event.keyCode === RIGHT) {
       // TODO: Implement this
     }
   }

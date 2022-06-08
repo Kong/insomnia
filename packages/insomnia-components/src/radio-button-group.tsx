@@ -53,12 +53,12 @@ export const RadioButtonGroup: FunctionComponent<RadioButtonGroupProps> = ({
   className,
   selectedValue,
 }) => {
-  const handleChange = useCallback(e => {
+  const handleChange = useCallback(event => {
     if (typeof onChange !== 'function') {
       return;
     }
 
-    onChange(e.currentTarget.value);
+    onChange(event.currentTarget.value);
   }, [onChange]);
 
   return (

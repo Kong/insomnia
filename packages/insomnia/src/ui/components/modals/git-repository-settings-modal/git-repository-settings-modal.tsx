@@ -30,8 +30,8 @@ export class GitRepositorySettingsModal extends PureComponent<{}, State> {
     gitRepository: null,
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   show(options: {

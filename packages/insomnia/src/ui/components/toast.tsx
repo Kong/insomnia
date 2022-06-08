@@ -161,7 +161,7 @@ export class Toast extends PureComponent<{}, State> {
       }
 
       return JSON.parse(storedKeys) as SeenNotifications || {};
-    } catch (e) {
+    } catch (error) {
       return {};
     }
   }

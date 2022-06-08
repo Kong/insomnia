@@ -51,11 +51,11 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     // Load preferences from localStorage
     try {
       target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
-    } catch (e) {}
+    } catch (error) {}
 
     try {
       client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
-    } catch (e) {}
+    } catch (error) {}
 
     this.state = {
       cmd: '',
@@ -68,12 +68,12 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: UnconnectedCodeEditor | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
+  _setEditorRef(editor: UnconnectedCodeEditor) {
+    this._editor = editor;
   }
 
   hide() {
