@@ -94,13 +94,13 @@ export type CodeEditorOnChange = (value: string) => void;
 interface RawProps {
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
-  onFocus?: (e: FocusEvent) => void;
-  onBlur?: (e: FocusEvent) => void;
+  onFocus?: (event: FocusEvent) => void;
+  onBlur?: (event: FocusEvent) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
-  onKeyDown?: (e: KeyboardEvent, value: string) => void;
+  onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
-  onPaste?: (e: ClipboardEvent) => void;
+  onPaste?: (event: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
@@ -516,8 +516,8 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _setFilterInputRef(n: HTMLInputElement) {
-    this._filterInput = n;
+  _setFilterInputRef(filterInput: HTMLInputElement) {
+    this._filterInput = filterInput;
   }
 
   _handleInitTextarea(textarea: HTMLTextAreaElement) {
@@ -559,7 +559,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         try {
           const parsed = JSON.parse(toParse);
           count = Object.keys(parsed).length;
-        } catch (e) { }
+        } catch (error) { }
 
         return count ? `\u21A4 ${count} \u21A6` : '\u2194';
       },
@@ -714,7 +714,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       }
 
       return jsonPrettify(jsonString, this._indentChars(), this.props.autoPrettify);
-    } catch (e) {
+    } catch (error) {
       // That's Ok, just leave it
       return code;
     }
@@ -733,7 +733,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
     try {
       return vkBeautify.xml(code, this._indentChars());
-    } catch (e) {
+    } catch (error) {
       // Failed to parse so just return original
       return code;
     }
@@ -973,14 +973,14 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, e: KeyboardEvent & {codemirrorIgnore: boolean}) {
+  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, event: KeyboardEvent & {codemirrorIgnore: boolean}) {
     // Use default tab behaviour if we're told
-    if (this.props.defaultTabBehavior && e.code === 'Tab') {
-      e.codemirrorIgnore = true;
+    if (this.props.defaultTabBehavior && event.code === 'Tab') {
+      event.codemirrorIgnore = true;
     }
 
     if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
-      this.props.onKeyDown(e, doc.getValue());
+      this.props.onKeyDown(event, doc.getValue());
     }
   }
 
@@ -990,12 +990,12 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.EditorFromTextArea, e: KeyboardEvent) {
+  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.EditorFromTextArea, event: KeyboardEvent) {
     // Enable graphql completion if we're in that mode
     if (doc.getOption('mode') === 'graphql') {
       // Only operate on one-letter keys. This will filter out
       // any special keys (Backspace, Enter, etc)
-      if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1) {
         return;
       }
 
@@ -1015,18 +1015,14 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorFocus(_doc: CodeMirror.EditorFromTextArea, e: FocusEvent) {
-    if (this.props.onFocus) {
-      this.props.onFocus(e);
-    }
+  _codemirrorFocus(_doc: CodeMirror.EditorFromTextArea, event: FocusEvent) {
+    this.props.onFocus?.(event);
   }
 
-  _codemirrorBlur(_doc: CodeMirror.EditorFromTextArea, e: FocusEvent) {
+  _codemirrorBlur(_doc: CodeMirror.EditorFromTextArea, event: FocusEvent) {
     this._persistState();
 
-    if (this.props.onBlur) {
-      this.props.onBlur(e);
-    }
+    this.props.onBlur?.(event);
   }
 
   _codemirrorScroll() {
@@ -1075,17 +1071,15 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorPaste(_cm: CodeMirror.EditorFromTextArea, e: ClipboardEvent) {
-    if (this.props.onPaste) {
-      this.props.onPaste(e);
-    }
+  _codemirrorPaste(_cm: CodeMirror.EditorFromTextArea, event: ClipboardEvent) {
+    this.props.onPaste?.(event);
   }
 
-  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.EditorFromTextArea, e: Event) {
+  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.EditorFromTextArea, event: Event) {
     const { type } = this.props;
 
     if (type && type.toLowerCase() === 'password') {
-      e.preventDefault();
+      event.preventDefault();
     }
   }
 
@@ -1152,8 +1146,8 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     this._setFilter(filter);
   }
 
-  _handleFilterChange(e) {
-    this._setFilter(e.target.value);
+  _handleFilterChange(event) {
+    this._setFilter(event.target.value);
   }
 
   _setFilter(filter = '') {

@@ -88,8 +88,8 @@ export const generateConfig = async (
       logger.trace(`Generating config from file \`${fileName}\``);
       result = await generate(fileName, conversionType, generationTags);
     }
-  } catch (e) {
-    throw new InsoError('There was an error while generating configuration', e);
+  } catch (error) {
+    throw new InsoError('There was an error while generating configuration', error);
   }
 
   if (!result?.documents || !Array.isArray(result.documents)) {

@@ -61,12 +61,12 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
   _urlUpdateInterval: NodeJS.Timeout | null = null;
   _requestActionsDropdown: RequestActionsDropdown | null = null;
 
-  _setRequestActionsDropdownRef(n: RequestActionsDropdown) {
-    this._requestActionsDropdown = n;
+  _setRequestActionsDropdownRef(requestActionsDropdown: RequestActionsDropdown) {
+    this._requestActionsDropdown = requestActionsDropdown;
   }
 
-  _handleShowRequestActions(e) {
-    e.preventDefault();
+  _handleShowRequestActions(event) {
+    event.preventDefault();
 
     this._requestActionsDropdown?.show();
   }
@@ -144,7 +144,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
     try {
       // @ts-expect-error -- TSCONVERSION skip this if request is undefined or grpc
       renderedUrl = await props.handleRender(props.request.url);
-    } catch (e) {
+    } catch (error) {
       // Certain things, such as invalid variable tags and Prompts
       // without titles will result in a failure to parse. Can't do
       // much else, so let's just give them the unrendered URL

@@ -40,8 +40,8 @@ export class MarkdownEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
+  _setEditorRef(editor: UnconnectedCodeEditor) {
+    this._editor = editor;
   }
 
   focusEnd() {

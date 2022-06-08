@@ -45,26 +45,26 @@ class UnconnectedAccount extends PureComponent<Props, State> {
     }));
   }
 
-  _handleChangeCode(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChangeCode(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      code: e.currentTarget.value,
+      code: event.currentTarget.value,
     });
   }
 
-  _handleChangePassword(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChangePassword(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      password: e.currentTarget.value,
+      password: event.currentTarget.value,
     });
   }
 
-  _handleChangePassword2(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChangePassword2(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      password2: e.currentTarget.value,
+      password2: event.currentTarget.value,
     });
   }
 
-  async _handleSubmitPasswordChange(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleSubmitPasswordChange(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
     this.setState({
       error: '',
     });
@@ -105,8 +105,8 @@ class UnconnectedAccount extends PureComponent<Props, State> {
     this.forceUpdate();
   }
 
-  static _handleLogin(e: React.SyntheticEvent<HTMLAnchorElement>) {
-    e.preventDefault();
+  static _handleLogin(event: React.SyntheticEvent<HTMLAnchorElement>) {
+    event.preventDefault();
     hideAllModals();
     showModal(LoginModal);
   }
@@ -126,8 +126,8 @@ class UnconnectedAccount extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSendCode(e: React.SyntheticEvent<HTMLAnchorElement>) {
-    e.preventDefault();
+  async _handleSendCode(event: React.SyntheticEvent<HTMLAnchorElement>) {
+    event.preventDefault();
     await this._sendCode();
   }
 

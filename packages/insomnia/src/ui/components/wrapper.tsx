@@ -253,7 +253,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
           parameters: r.parameters,
         });
       }
-    } catch (e) {
+    } catch (error) {
       // Import failed, that's alright
     }
 

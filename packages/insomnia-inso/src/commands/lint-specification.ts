@@ -38,15 +38,15 @@ export async function lintSpecification(
 
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
-      } catch (e) {
-        throw new InsoError(`Failed to read "${fileName}"`, e);
+      } catch (error) {
+        throw new InsoError(`Failed to read "${fileName}"`, error);
       }
     } else {
       logger.fatal('Specification not found.');
       return false;
     }
-  } catch (e) {
-    logger.fatal(e.message);
+  } catch (error) {
+    logger.fatal(error.message);
     return false;
   }
 

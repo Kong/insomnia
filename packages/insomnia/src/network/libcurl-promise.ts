@@ -337,11 +337,11 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
     });
     curl.perform();
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     const patch = {
       statusMessage: 'Error',
-      error: e.message || 'Something went wrong',
+      error: error.message || 'Something went wrong',
       elapsedTime: 0,
     };
     resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });

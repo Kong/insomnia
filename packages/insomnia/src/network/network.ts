@@ -492,8 +492,8 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
 }
 
 if (global.document) {
-  document.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) {
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
 

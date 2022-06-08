@@ -119,8 +119,8 @@ if (defaultProtocolSuccessful) {
   }
 }
 
-function _addUrlToOpen(e: Electron.Event, url: string) {
-  e.preventDefault();
+function _addUrlToOpen(event: Electron.Event, url: string) {
+  event.preventDefault();
   commandLineArgs.push(url);
 }
 
@@ -137,7 +137,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
   if (!hasVisibleWindows) {
     try {
       windowUtils.createWindow();
-    } catch (e) {
+    } catch (error) {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
       console.log('[main] App not ready to "activate" yet');

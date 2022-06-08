@@ -6,12 +6,12 @@ import { GrpcIpcRequestParams } from '../network/grpc/prepare';
 import { ResponseCallbacks } from '../network/grpc/response-callbacks';
 
 export function init() {
-  ipcMain.on(GrpcRequestEventEnum.start, (e, params: GrpcIpcRequestParams) =>
-    grpc.start(params, new ResponseCallbacks(e)),
+  ipcMain.on(GrpcRequestEventEnum.start, (event, params: GrpcIpcRequestParams) =>
+    grpc.start(params, new ResponseCallbacks(event)),
   );
-  ipcMain.on(GrpcRequestEventEnum.sendMessage, (e, params: GrpcIpcRequestParams) =>
+  ipcMain.on(GrpcRequestEventEnum.sendMessage, (event, params: GrpcIpcRequestParams) =>
     // @ts-expect-error -- TSCONVERSION
-    grpc.sendMessage(params, new ResponseCallbacks(e)),
+    grpc.sendMessage(params, new ResponseCallbacks(event)),
   );
   ipcMain.on(GrpcRequestEventEnum.commit, (_, requestId) => grpc.commit(requestId));
   ipcMain.on(GrpcRequestEventEnum.cancel, (_, requestId) => grpc.cancel(requestId));

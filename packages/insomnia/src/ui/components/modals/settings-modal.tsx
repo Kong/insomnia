@@ -43,8 +43,8 @@ export class UnconnectedSettingsModal extends PureComponent<Props, State> {
 
   modal: Modal | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {

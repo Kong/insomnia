@@ -15,7 +15,7 @@ export async function writeFileWithCliOptions(
     await mkdirp.sync(path.dirname(outputPath));
     await fs.promises.writeFile(outputPath, contents);
     return outputPath;
-  } catch (e) {
-    throw new InsoError(`Failed to write to "${outputPath}"`, e);
+  } catch (error) {
+    throw new InsoError(`Failed to write to "${outputPath}"`, error);
   }
 }

@@ -62,8 +62,8 @@ interface Props {
 export class ResponsePane extends PureComponent<Props> {
   _responseViewer: ResponseViewer | null = null;
 
-  _setResponseViewerRef(n: ResponseViewer) {
-    this._responseViewer = n;
+  _setResponseViewerRef(responseViewer: ResponseViewer) {
+    this._responseViewer = responseViewer;
   }
 
   _handleGetResponseBody(): Buffer | null {

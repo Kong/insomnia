@@ -496,7 +496,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _setDocumentAST(query: string) {
     try {
       this._documentAST = parse(query);
-    } catch (e) {
+    } catch (error) {
       this._documentAST = null;
     }
   }

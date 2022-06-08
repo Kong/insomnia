@@ -214,8 +214,8 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
         this.off('drop', dropCb);
       });
       // Don't allow dropping on itself
-      el.addEventListener('drop', e => {
-        e.stopPropagation();
+      el.addEventListener('drop', event => {
+        event.stopPropagation();
       });
     }
   }

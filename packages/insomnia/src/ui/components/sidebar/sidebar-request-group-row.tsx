@@ -61,8 +61,8 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
   }
 
-  _handleShowActions(e) {
-    e.preventDefault();
+  _handleShowActions(event) {
+    event.preventDefault();
 
     this.dropdownRef.current?.show();
   }

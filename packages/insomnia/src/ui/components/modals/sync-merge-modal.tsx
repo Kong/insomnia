@@ -31,8 +31,8 @@ export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
     conflicts: [],
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleOk() {
@@ -41,13 +41,13 @@ export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
     this.hide();
   }
 
-  _handleToggleSelect(key: DocumentKey, e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleToggleSelect(key: DocumentKey, event: React.SyntheticEvent<HTMLInputElement>) {
     const conflicts = this.state.conflicts.map(c => {
       if (c.key !== key) {
         return c;
       }
 
-      return { ...c, choose: e.currentTarget.value || null };
+      return { ...c, choose: event.currentTarget.value || null };
     });
     this.setState({
       conflicts,

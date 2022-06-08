@@ -36,18 +36,18 @@ type DragDirection = 0 | 1 | -1;
 interface Props {
   onChange: (pair: Pair) => void;
   onDelete: (pair: Pair) => void;
-  onFocusName: (pair: Pair, e: FocusEvent) => void;
-  onFocusValue: (pair: Pair, e: FocusEvent) => void;
-  onFocusDescription: (pair: Pair, e: FocusEvent) => void;
+  onFocusName: (pair: Pair, event: FocusEvent) => void;
+  onFocusValue: (pair: Pair, event: FocusEvent) => void;
+  onFocusDescription: (pair: Pair, event: FocusEvent) => void;
   displayDescription: boolean;
   index: number;
   pair: Pair;
   readOnly?: boolean;
   onMove?: (pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) => void;
-  onKeyDown?: (pair: Pair, e: KeyboardEvent, value?: any) => void;
-  onBlurName?: (pair: Pair, e: FocusEvent) => void;
-  onBlurValue?: (pair: Pair, e: FocusEvent) => void;
-  onBlurDescription?: (pair: Pair, e: FocusEvent) => void;
+  onKeyDown?: (pair: Pair, event: KeyboardEvent, value?: any) => void;
+  onBlurName?: (pair: Pair, event: FocusEvent) => void;
+  onBlurValue?: (pair: Pair, event: FocusEvent) => void;
+  onBlurDescription?: (pair: Pair, event: FocusEvent) => void;
   enableNunjucks?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
@@ -109,8 +109,8 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     }
   }
 
-  _setDescriptionInputRef(n: OneLineEditor) {
-    this._descriptionInput = n;
+  _setDescriptionInputRef(descriptionInput: OneLineEditor) {
+    this._descriptionInput = descriptionInput;
   }
 
   _sendChange(patch: Partial<Pair>) {
@@ -124,15 +124,15 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleValuePaste(e: ClipboardEvent) {
+  _handleValuePaste(event: ClipboardEvent) {
     if (!this.props.allowMultiline) {
       return;
     }
 
-    const value = e.clipboardData?.getData('text/plain');
+    const value = event.clipboardData?.getData('text/plain');
 
     if (value?.includes('\n')) {
-      e.preventDefault();
+      event.preventDefault();
 
       // Insert the pasted text into the current selection.
       // Unfortunately, this is the easiest way to do this.
@@ -194,46 +194,36 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleFocusName(e: FocusEvent) {
-    this.props.onFocusName(this.props.pair, e);
+  _handleFocusName(event: FocusEvent) {
+    this.props.onFocusName(this.props.pair, event);
   }
 
-  _handleFocusValue(e: FocusEvent) {
-    this.props.onFocusValue(this.props.pair, e);
+  _handleFocusValue(event: FocusEvent) {
+    this.props.onFocusValue(this.props.pair, event);
   }
 
-  _handleFocusDescription(e: FocusEvent) {
-    this.props.onFocusDescription(this.props.pair, e);
+  _handleFocusDescription(event: FocusEvent) {
+    this.props.onFocusDescription(this.props.pair, event);
   }
 
-  _handleBlurName(e: FocusEvent) {
-    if (this.props.onBlurName) {
-      this.props.onBlurName(this.props.pair, e);
-    }
+  _handleBlurName(event: FocusEvent) {
+    this.props.onBlurName?.(this.props.pair, event);
   }
 
-  _handleBlurValue(e: FocusEvent) {
-    if (this.props.onBlurName) {
-      this.props.onBlurValue?.(this.props.pair, e);
-    }
+  _handleBlurValue(event: FocusEvent) {
+    this.props.onBlurValue?.(this.props.pair, event);
   }
 
-  _handleBlurDescription(e: FocusEvent) {
-    if (this.props.onBlurDescription) {
-      this.props.onBlurDescription(this.props.pair, e);
-    }
+  _handleBlurDescription(event: FocusEvent) {
+    this.props.onBlurDescription?.(this.props.pair, event);
   }
 
   _handleDelete() {
-    if (this.props.onDelete) {
-      this.props.onDelete(this.props.pair);
-    }
+    this.props.onDelete?.(this.props.pair);
   }
 
-  _handleKeyDown(e: KeyboardEvent, value?: any) {
-    if (this.props.onKeyDown) {
-      this.props.onKeyDown(this.props.pair, e, value);
-    }
+  _handleKeyDown(event: KeyboardEvent, value?: any) {
+    this.props.onKeyDown?.(this.props.pair, event, value);
   }
 
   _handleAutocompleteNames() {

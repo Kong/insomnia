@@ -14,7 +14,7 @@ export const convert: Converter = rawData => {
 
   try {
     data = JSON.parse(rawData) as Insomnia3Data;
-  } catch (e) {
+  } catch (error) {
     return null;
   }
 

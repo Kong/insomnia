@@ -218,8 +218,8 @@ const GitHubRepositoryForm = ({
             }
           }
         })
-        .catch((e: unknown) => {
-          if (e instanceof Error) {
+        .catch((error: unknown) => {
+          if (error instanceof Error) {
             setError(
               'Something went wrong when trying to fetch info from GitHub.'
             );
@@ -237,9 +237,9 @@ const GitHubRepositoryForm = ({
       id="github"
       className="form-group"
       style={{ height: '100%' }}
-      onSubmit={e =>
+      onSubmit={event =>
         onSubmit({
-          uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
+          uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
           author: {
             name: user?.login ?? '',
             email: user?.email ?? '',
@@ -289,9 +289,9 @@ const GitHubRepositoryForm = ({
           </Details>
         </AccountDetails>
         <Button
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
+          onClick={event => {
+            event.preventDefault();
+            event.stopPropagation();
             showAlert({
               title: 'Sign out of GitHub',
               message:
@@ -352,16 +352,16 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
 
       {isAuthenticating && (
         <form
-          onSubmit={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            const formData = new FormData(e.currentTarget);
+          onSubmit={event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const formData = new FormData(event.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
               let parsedURL: URL;
               try {
                 parsedURL = new URL(link);
-              } catch (e) {
+              } catch (error) {
                 setError('Invalid URL');
                 return;
               }

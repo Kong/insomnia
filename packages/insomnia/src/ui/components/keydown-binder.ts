@@ -15,39 +15,39 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class KeydownBinder extends PureComponent<Props> {
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown(event: KeyboardEvent) {
     const { stopMetaPropagation, onKeydown, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
+    const isMeta = isMac() ? event.metaKey : event.ctrlKey;
 
     if (stopMetaPropagation && isMeta) {
-      e.stopPropagation();
+      event.stopPropagation();
     }
 
     if (onKeydown) {
-      onKeydown(e);
+      onKeydown(event);
     }
   }
 
-  _handleKeyup(e: KeyboardEvent) {
+  _handleKeyup(event: KeyboardEvent) {
     const { stopMetaPropagation, onKeyup, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
+    const isMeta = isMac() ? event.metaKey : event.ctrlKey;
 
     if (stopMetaPropagation && isMeta) {
-      e.stopPropagation();
+      event.stopPropagation();
     }
 
     if (onKeyup) {
-      onKeyup(e);
+      onKeyup(event);
     }
   }
 

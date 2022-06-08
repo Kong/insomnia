@@ -12,8 +12,8 @@ interface Props extends HTMLAttributes<HTMLInputElement> {
 export class IndeterminateCheckbox extends PureComponent<Props> {
   input: HTMLInputElement | null = null;
 
-  _setRef(n: HTMLInputElement) {
-    this.input = n;
+  _setRef(input: HTMLInputElement) {
+    this.input = input;
   }
 
   _update() {

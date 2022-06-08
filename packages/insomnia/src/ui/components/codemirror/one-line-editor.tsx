@@ -16,11 +16,11 @@ interface Props {
   id?: string;
   type?: string;
   mode?: string;
-  onBlur?: (e: FocusEvent | React.FocusEvent) => void;
-  onKeyDown?: (e: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
-  onFocus?: (e: FocusEvent | React.FocusEvent) => void;
+  onBlur?: (event: FocusEvent | React.FocusEvent) => void;
+  onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
+  onFocus?: (event: FocusEvent | React.FocusEvent) => void;
   onChange?: CodeEditorOnChange;
-  onPaste?: (e: ClipboardEvent) => void;
+  onPaste?: (event: ClipboardEvent) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
@@ -161,9 +161,9 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this._convertToInputIfNotFocused();
   }
 
-  _handleEditorFocus(e: FocusEvent) {
+  _handleEditorFocus(event: FocusEvent) {
     // TODO: unclear why this is missing in TypeScript DOM.
-    const focusedFromTabEvent = !!(e as any).sourceCapabilities;
+    const focusedFromTabEvent = !!(event as any).sourceCapabilities;
 
     if (focusedFromTabEvent) {
       this._editor?.focusEnd();
@@ -177,17 +177,17 @@ export class OneLineEditor extends PureComponent<Props, State> {
     // Set focused state
     this._editor?.setAttribute('data-focused', 'on');
 
-    this.props.onFocus?.(e);
+    this.props.onFocus?.(event);
   }
 
-  _handleInputFocus(e: React.FocusEvent<HTMLInputElement>) {
+  _handleInputFocus(event: React.FocusEvent<HTMLInputElement>) {
     // If we're focusing the whole thing, blur the input. This happens when
     // the user tabs to the field.
     const start = this._input?.getSelectionStart();
 
     const end = this._input?.getSelectionEnd();
 
-    const focusedFromTabEvent = start === 0 && end === e.target.value.length;
+    const focusedFromTabEvent = start === 0 && end === event.target.value.length;
 
     if (focusedFromTabEvent) {
       this._input?.focusEnd();
@@ -201,7 +201,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this._input?.setAttribute('data-focused', 'on');
 
     // Also call the regular callback
-    this.props.onFocus?.(e);
+    this.props.onFocus?.(event);
   }
 
   _handleInputChange(value: string) {
@@ -216,14 +216,14 @@ export class OneLineEditor extends PureComponent<Props, State> {
     }
   }
 
-  _handleInputBlur(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
+  _handleInputBlur(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     // Set focused state
     this._input?.removeAttribute('data-focused');
 
-    this.props.onBlur?.(e);
+    this.props.onBlur?.(event);
   }
 
-  _handleEditorBlur(e: FocusEvent) {
+  _handleEditorBlur(event: FocusEvent) {
     // Editor was already removed from the DOM, so do nothing
     if (!this._editor) {
       return;
@@ -242,7 +242,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
       }, 2000);
     }
 
-    this.props.onBlur?.(e);
+    this.props.onBlur?.(event);
   }
 
   // @TODO Refactor this event handler. The way we search for a parent form node is not stable.
@@ -322,12 +322,12 @@ export class OneLineEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
+  _setEditorRef(editor: UnconnectedCodeEditor) {
+    this._editor = editor;
   }
 
-  _setInputRef(n: DebouncedInput) {
-    this._input = n;
+  _setInputRef(input: DebouncedInput) {
+    this._input = input;
   }
 
   _mayContainNunjucks(text: string) {
