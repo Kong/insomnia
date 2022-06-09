@@ -37,7 +37,29 @@ describe('<AccountDropdownButton />', () => {
   });
 
   // TODO: try to define test cases of how this component should behave
-  test.todo('renders test case 1');
-  test.todo('renders test case 2');
-  test.todo('renders test case 3');
+  test('renders "Log In" label without paid feature ads', async () => {
+    const container = getDropdownContainer();
+    const store = await createMockStore({ disablePaidFeatureAds: true });
+    render(
+      <Provider store={store}>
+        <AccountDropdownButton />
+      </Provider>, { container }
+    );
+    expect(screen.getByText('Log In')).toBeDefined();
+    expect(screen.queryByText('Upgrde Now')).toBeNull();
+  });
+  test('renders "Log In" label with paid feature ads', async () => {
+    const container = getDropdownContainer();
+    const store = await createMockStore({ disablePaidFeatureAds: false });
+
+    render(
+      <Provider store={store}>
+        <AccountDropdownButton />
+      </Provider>, { container }
+    );
+    expect(screen.getByText('Log In')).toBeDefined();
+    expect(screen.getByText('Upgrade Now')).toBeDefined();
+  });
+
+  test.todo('renders "Log Out" label');
 });
