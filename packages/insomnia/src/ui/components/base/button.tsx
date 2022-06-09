@@ -7,8 +7,8 @@ export interface ButtonProps<T> {
   children: ReactNode;
   value?: T;
   className?: string;
-  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void);
-  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void);
+  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, event: React.MouseEvent<HTMLButtonElement>) => void);
+  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, event: React.MouseEvent<HTMLButtonElement>) => void);
   disabled?: boolean;
   tabIndex?: number;
   type?: ButtonHTMLAttributes<HTMLButtonElement>['type'];
@@ -19,16 +19,16 @@ export interface ButtonProps<T> {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class Button<T> extends PureComponent<ButtonProps<T>> {
-  _handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+  _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     const { onClick, onDisabledClick, disabled, value } = this.props;
     const fn = disabled ? onDisabledClick : onClick;
 
     if (this.props.hasOwnProperty('value')) {
       // @ts-expect-error -- TSCONVERSION we really need to make the `value` argument come second
-      fn?.(value, e);
+      fn?.(value, event);
     } else {
       // @ts-expect-error -- TSCONVERSION we really need to make the `value` argument come second
-      fn?.(e);
+      fn?.(event);
     }
   }
 

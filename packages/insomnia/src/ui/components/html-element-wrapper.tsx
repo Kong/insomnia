@@ -14,14 +14,14 @@ interface Props {
  */
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class HtmlElementWrapper extends Component<Props> {
-  _setRef(n: HTMLDivElement | null | undefined) {
-    if (!n) {
+  _setRef(element: HTMLDivElement | null | undefined) {
+    if (!element) {
       return;
     }
 
     // Add the element directly to the React ref
-    n.innerHTML = '';
-    n.appendChild(this.props.el);
+    element.innerHTML = '';
+    element.appendChild(this.props.el);
   }
 
   componentWillUnmount() {

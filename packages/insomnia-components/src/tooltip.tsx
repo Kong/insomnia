@@ -71,8 +71,8 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
     movedToBody: false,
   };
 
-  _handleStopClick(e: MouseEvent) {
-    e.stopPropagation();
+  _handleStopClick(event: MouseEvent) {
+    event.stopPropagation();
   }
 
   _handleMouseEnter() {

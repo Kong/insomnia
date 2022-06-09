@@ -15,19 +15,42 @@ export function onCommand(callback: Function) {
   _commandListeners.push(callback);
 }
 
-export async function post(path, obj, sessionId, compressBody = false) {
-  return _fetch('POST', path, obj, sessionId, compressBody);
+export async function post<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T | string> {
+  return _fetch<T>('POST', path, obj, sessionId, compressBody);
 }
 
-export async function put(path, obj, sessionId, compressBody = false) {
-  return _fetch('PUT', path, obj, sessionId, compressBody);
+export async function postJson<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T> {
+  const response = await post<T>(path, obj, sessionId, compressBody);
+  if (typeof response === 'string') {
+    throw new Error('Unexpected plaintext response');
+  }
+  return response;
 }
 
-export async function get(path, sessionId) {
-  return _fetch('GET', path, null, sessionId);
+export async function put<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T | string> {
+  return _fetch<T>('PUT', path, obj, sessionId, compressBody);
 }
 
-async function _fetch(method, path, obj, sessionId, compressBody = false, retries = 0) {
+export async function get<T = any>(path: string, sessionId: string | null): Promise<T | string> {
+  return _fetch<T>('GET', path, null, sessionId);
+}
+
+export async function getJson<T = any>(path: string, sessionId: string | null): Promise<T> {
+  const response = await get<T>(path, sessionId);
+  if (typeof response === 'string') {
+    throw new Error('Unexpected plaintext response');
+  }
+  return response;
+}
+
+async function _fetch<T = any>(
+  method: 'POST' | 'PUT' | 'GET',
+  path: string,
+  obj: unknown,
+  sessionId: string | null,
+  compressBody = false,
+  retries = 0
+): Promise<T | string> {
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
@@ -59,7 +82,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
     config.headers['X-Session-Id'] = sessionId;
   }
 
-  let response;
+  let response: Response | undefined;
 
   const url = _getUrl(path);
 

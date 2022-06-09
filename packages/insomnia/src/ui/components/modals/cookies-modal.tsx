@@ -38,12 +38,12 @@ class CookiesModal extends PureComponent<Props, State> {
     visibleCookieIndexes: null,
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setFilterInputRef(n: HTMLInputElement) {
-    this.filterInput = n;
+  _setFilterInputRef(filterInput: HTMLInputElement) {
+    this.filterInput = filterInput;
   }
 
   async _saveChanges() {
@@ -84,8 +84,8 @@ class CookiesModal extends PureComponent<Props, State> {
     await this._saveChanges();
   }
 
-  async _handleFilterChange(e: ChangeEvent<HTMLInputElement>) {
-    if (!(e.target instanceof HTMLInputElement)) {
+  async _handleFilterChange(event: ChangeEvent<HTMLInputElement>) {
+    if (!(event.target instanceof HTMLInputElement)) {
       return;
     }
     const { activeCookieJar } = this.props;
@@ -93,7 +93,7 @@ class CookiesModal extends PureComponent<Props, State> {
       return;
     }
 
-    const filter = e.target.value;
+    const filter = event.target.value;
 
     this._applyFilter(filter, activeCookieJar.cookies);
   }

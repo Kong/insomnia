@@ -55,22 +55,22 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     justMoved: false,
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setEditorRef(n: MarkdownEditor) {
-    this._editor = n;
+  _setEditorRef(editor: MarkdownEditor) {
+    this._editor = editor;
   }
 
-  async _updateRequestSettingBoolean(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _updateRequestSettingBoolean(event: React.SyntheticEvent<HTMLInputElement>) {
     if (!this.state.request) {
       // Should never happen
       return;
     }
 
-    const value = e.currentTarget.checked;
-    const setting = e.currentTarget.name;
+    const value = event.currentTarget.checked;
+    const setting = event.currentTarget.name;
     // @ts-expect-error -- TSCONVERSION request settings only exist for regular requests, the types should filter down and exit if grpc
     const request = await models.request.update(this.state.request, {
       [setting]: value,
@@ -78,14 +78,14 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     this.setState({ request });
   }
 
-  async _updateRequestSettingString(e: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
+  async _updateRequestSettingString(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     if (!this.state.request) {
       // Should never happen
       return;
     }
 
-    const value = e.currentTarget.value;
-    const setting = e.currentTarget.name;
+    const value = event.currentTarget.value;
+    const setting = event.currentTarget.name;
     // @ts-expect-error -- TSCONVERSION request settings only exist for regular requests, the types should filter down and exit if grpc
     const request = await models.request.update(this.state.request, {
       [setting]: value,
@@ -128,8 +128,8 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     this.setState({ showDescription: true });
   }
 
-  _handleUpdateMoveCopyWorkspace(e: React.SyntheticEvent<HTMLSelectElement>) {
-    const { value } = e.currentTarget;
+  _handleUpdateMoveCopyWorkspace(event: React.SyntheticEvent<HTMLSelectElement>) {
+    const { value } = event.currentTarget;
     const workspaceId = value === '__NULL__' ? null : value;
     this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
   }

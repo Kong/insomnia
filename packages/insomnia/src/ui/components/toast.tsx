@@ -145,7 +145,7 @@ export class Toast extends PureComponent<{}, State> {
         updatesNotSupported: !updatesSupported(),
         version: getAppVersion(),
       };
-      notification = await fetch.post('/notification', data, session.getCurrentSessionId());
+      notification = await fetch.postJson<ToastNotification>('/notification', data, session.getCurrentSessionId());
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
@@ -161,7 +161,7 @@ export class Toast extends PureComponent<{}, State> {
       }
 
       return JSON.parse(storedKeys) as SeenNotifications || {};
-    } catch (e) {
+    } catch (error) {
       return {};
     }
   }

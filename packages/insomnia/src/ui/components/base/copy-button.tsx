@@ -24,9 +24,9 @@ export class CopyButton extends PureComponent<Props, State> {
 
   _triggerTimeout: NodeJS.Timeout | null = null;
 
-  async _handleClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  async _handleClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
     const content =
       typeof this.props.content === 'string' ? this.props.content : await this.props.content();
 

@@ -10,7 +10,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Lazy } from '../base/lazy';
 import { PromptButton } from '../base/prompt-button';
-import { Row } from './row';
+import { AutocompleteHandler, Pair, Row } from './row';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -25,8 +25,8 @@ const RIGHT = 39;
 interface Props {
   onChange: Function;
   pairs: any[];
-  handleGetAutocompleteNameConstants?: Function;
-  handleGetAutocompleteValueConstants?: Function;
+  handleGetAutocompleteNameConstants?: AutocompleteHandler;
+  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   allowFile?: boolean;
   allowMultiline?: boolean;
   sortable?: boolean;
@@ -83,10 +83,10 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     }
   }
 
-  _handlePairChange(pair) {
+  _handlePairChange(pair: Pair) {
     const i = this._getPairIndex(pair);
 
-    const pairs = [
+    const pairs: Pair[] = [
       ...this.state.pairs.slice(0, i),
       Object.assign({}, pair),
       ...this.state.pairs.slice(i + 1),
@@ -99,7 +99,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._onChange([]);
   }
 
-  _handleMove(pairToMove, pairToTarget, targetOffset) {
+  _handleMove(pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) {
     if (pairToMove.id === pairToTarget.id) {
       // Nothing to do
       return;
@@ -122,7 +122,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._onChange(pairs);
   }
 
-  _handlePairDelete(pair) {
+  _handlePairDelete(pair: Pair) {
     const i = this.state.pairs.findIndex(p => p.id === pair.id);
 
     this._deletePair(i, true);
@@ -140,28 +140,31 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._focusedField = null;
   }
 
-  _handleFocusName(pair) {
+  _handleFocusName(pair: Pair) {
     this._setFocusedPair(pair);
 
     this._focusedField = NAME;
 
-    this._rows[pair.id].focusNameEnd();
+    // TODO: this may be a bug; pair.id is not an index into _rows
+    this._rows[pair.id as any].focusNameEnd();
   }
 
-  _handleFocusValue(pair) {
+  _handleFocusValue(pair: Pair) {
     this._setFocusedPair(pair);
 
     this._focusedField = VALUE;
 
-    this._rows[pair.id].focusValueEnd();
+    // TODO: this may be a bug; pair.id is not an index into _rows
+    this._rows[pair.id as any].focusValueEnd();
   }
 
-  _handleFocusDescription(pair) {
+  _handleFocusDescription(pair: Pair) {
     this._setFocusedPair(pair);
 
     this._focusedField = DESCRIPTION;
 
-    this._rows[pair.id].focusDescriptionEnd();
+    // TODO: this may be a bug; pair.id is not an index into _rows
+    this._rows[pair.id as any].focusDescriptionEnd();
   }
 
   _handleAddFromName() {
@@ -183,33 +186,33 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._addPair();
   }
 
-  _handleKeyDown(_pair, e, value) {
-    if (e.metaKey || e.ctrlKey) {
+  _handleKeyDown(_pair: Pair, event: KeyboardEvent, value?: any) {
+    if (event.metaKey || event.ctrlKey) {
       return;
     }
 
-    if (e.keyCode === ENTER) {
+    if (event.keyCode === ENTER) {
       this._focusNext(true);
-    } else if (e.keyCode === BACKSPACE) {
+    } else if (event.keyCode === BACKSPACE) {
       if (!value) {
         this._focusPrevious(true);
       }
-    } else if (e.keyCode === DOWN) {
-      e.preventDefault();
+    } else if (event.keyCode === DOWN) {
+      event.preventDefault();
 
       this._focusNextPair();
-    } else if (e.keyCode === UP) {
-      e.preventDefault();
+    } else if (event.keyCode === UP) {
+      event.preventDefault();
 
       this._focusPreviousPair();
-    } else if (e.keyCode === LEFT) {
+    } else if (event.keyCode === LEFT) {
       // TODO: Implement this
-    } else if (e.keyCode === RIGHT) {
+    } else if (event.keyCode === RIGHT) {
       // TODO: Implement this
     }
   }
 
-  _onChange(pairs) {
+  _onChange(pairs: Pair[]) {
     this.setState(
       {
         pairs,
@@ -235,7 +238,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     }
 
     position = position === undefined ? numPairs : position;
-    const pair = {
+    const pair: Pair = {
       id: '',
       name: '',
       value: '',
@@ -260,7 +263,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this.props.onCreate?.();
   }
 
-  _deletePair(position, breakFocus = false) {
+  _deletePair(position: number, breakFocus = false) {
     if (this.props.disableDelete) {
       return;
     }
@@ -385,7 +388,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     }
   }
 
-  _getPairIndex(pair) {
+  _getPairIndex(pair: Pair) {
     if (pair) {
       return this.state.pairs.findIndex(p => p.id === pair.id);
     } else {
@@ -401,7 +404,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     return this.state.pairs.find(p => p.id === this._focusedPairId) || null;
   }
 
-  _setFocusedPair(pair) {
+  _setFocusedPair(pair: Pair) {
     if (pair) {
       this._focusedPairId = pair.id;
     } else {

@@ -101,12 +101,12 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     event.preventDefault();
   }
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _setInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
   _setActiveIndex(activeIndex: number) {
@@ -174,8 +174,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
-    this._handleChangeValue(e.currentTarget.value);
+  _handleChange(event: React.SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeValue(event.currentTarget.value);
   }
 
   /** Return array of path segments for given request or folder */
@@ -377,12 +377,12 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleKeyup(e: KeyboardEvent) {
+  async _handleKeyup(event: KeyboardEvent) {
     const { selectOnKeyup } = this.state;
     // Handle selection if unpresses all modifier keys. Ideally this would trigger once
     // the user unpresses the hotkey that triggered this modal but we currently do not
     // have the facilities to do that.
-    const isMetaKeyDown = e.ctrlKey || e.shiftKey || e.metaKey || e.altKey;
+    const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
     const isActive = this.modal?.isOpen();
 
     if (selectOnKeyup && isActive && !isMetaKeyDown) {

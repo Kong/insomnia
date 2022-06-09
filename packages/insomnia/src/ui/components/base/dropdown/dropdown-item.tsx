@@ -19,11 +19,11 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class DropdownItem extends PureComponent<Props> {
-  _handleClick(e) {
+  _handleClick(event: React.MouseEvent) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
     if (stayOpenAfterClick) {
-      e.stopPropagation();
+      event.stopPropagation();
     }
 
     if (!onClick || disabled) {
@@ -31,9 +31,9 @@ export class DropdownItem extends PureComponent<Props> {
     }
 
     if (this.props.hasOwnProperty('value')) {
-      onClick(this.props.value, e);
+      onClick(this.props.value, event);
     } else {
-      onClick(e);
+      onClick(event);
     }
   }
 

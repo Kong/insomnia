@@ -32,15 +32,15 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirro
   el.addEventListener('mousedown', () => {
     movedDuringClick = false;
   });
-  el.addEventListener('mouseup', e => {
+  el.addEventListener('mouseup', event => {
     if (movedDuringClick) {
       return;
     }
 
-    const cls = e.target.className;
+    const cls = event.target.className;
 
     if (cls.indexOf('cm-clickable') >= 0) {
-      handleClick(entities.decode(e.target.innerHTML));
+      handleClick(entities.decode(event.target.innerHTML));
     }
   });
 });

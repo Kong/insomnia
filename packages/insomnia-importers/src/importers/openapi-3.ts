@@ -290,30 +290,33 @@ const parseSecurity = (
   const supportedSchemes = security
     .map(securityPolicy => {
       const securityName = Object.keys(securityPolicy)[0];
-      // @ts-expect-error the base types do not include an index but from what I can tell, they should
-      return securitySchemes[securityName];
+      return {
+        // @ts-expect-error the base types do not include an index but from what I can tell, they should
+        schemeDetails: securitySchemes[securityName],
+        securityScopes: securityPolicy[securityName],
+      };
     })
-    .filter(schemeDetails => (
+    .filter(({ schemeDetails }) => (
       schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type)
     ));
   const apiKeySchemes = supportedSchemes.filter(scheme => (
-    scheme.type === SECURITY_TYPE.API_KEY
+    scheme.schemeDetails.type === SECURITY_TYPE.API_KEY
   ));
   const apiKeyHeaders = apiKeySchemes
-    .filter(scheme => scheme.in === 'header')
+    .filter(scheme => scheme.schemeDetails.in === 'header')
     .map(scheme => {
-      const variableName = camelCase(scheme.name);
+      const variableName = camelCase(scheme.schemeDetails.name);
       return {
-        name: scheme.name,
+        name: scheme.schemeDetails.name,
         disabled: false,
         value: `{{ ${variableName} }}`,
       };
     });
   const apiKeyCookies = apiKeySchemes
-    .filter(scheme => scheme.in === 'cookie')
+    .filter(scheme => scheme.schemeDetails.in === 'cookie')
     .map(scheme => {
-      const variableName = camelCase(scheme.name);
-      return `${scheme.name}={{ ${variableName} }}`;
+      const variableName = camelCase(scheme.schemeDetails.name);
+      return `${scheme.schemeDetails.name}={{ ${variableName} }}`;
     });
   const apiKeyCookieHeader = {
     name: 'Cookie',
@@ -321,11 +324,11 @@ const parseSecurity = (
     value: apiKeyCookies.join('; '),
   };
   const apiKeyParams = apiKeySchemes
-    .filter(scheme => scheme.in === 'query')
+    .filter(scheme => scheme.schemeDetails.in === 'query')
     .map(scheme => {
-      const variableName = camelCase(scheme.name);
+      const variableName = camelCase(scheme.schemeDetails.name);
       return {
-        name: scheme.name,
+        name: scheme.schemeDetails.name,
         disabled: false,
         value: `{{ ${variableName} }}`,
       };
@@ -338,22 +341,22 @@ const parseSecurity = (
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
       scheme =>
-        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
-        (scheme.type === SECURITY_TYPE.OAUTH || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme)),
+        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.schemeDetails.type) &&
+        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
     );
 
     if (!authScheme) {
       return {};
     }
 
-    switch (authScheme.type) {
+    switch (authScheme.schemeDetails.type) {
       case SECURITY_TYPE.HTTP:
         return parseHttpAuth(
-          (authScheme as OpenAPIV3.HttpSecurityScheme).scheme,
+          (authScheme.schemeDetails as OpenAPIV3.HttpSecurityScheme).scheme,
         );
 
       case SECURITY_TYPE.OAUTH:
-        return parseOAuth2(authScheme as OpenAPIV3.OAuth2SecurityScheme);
+        return parseOAuth2(authScheme.schemeDetails as OpenAPIV3.OAuth2SecurityScheme, authScheme.securityScopes);
 
       default:
         return {};
@@ -615,13 +618,14 @@ const parseHttpAuth = (scheme: string) => {
 
 const parseOAuth2Scopes = (
   flow: OpenAPIV3.OAuth2SecurityScheme['flows'][keyof OpenAPIV3.OAuth2SecurityScheme['flows']],
+  selectedScopes: string[]
 ) => {
   if (!flow?.scopes) {
     return '';
   }
 
   const scopes = Object.keys(flow.scopes || {});
-  return scopes.join(' ');
+  return scopes.filter(scope => selectedScopes.includes(scope)).join(' ');
 };
 
 const mapOAuth2GrantType = (
@@ -636,7 +640,7 @@ const mapOAuth2GrantType = (
   return types[grantType];
 };
 
-const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme) => {
+const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: string[]) => {
   const flows = Object.keys(
     scheme.flows,
   ) as (keyof OpenAPIV3.OAuth2SecurityScheme['flows'])[];
@@ -655,7 +659,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme) => {
   const base = {
     clientId: '{{ oauth2ClientId }}',
     grantType: mapOAuth2GrantType(grantType),
-    scope: parseOAuth2Scopes(flow),
+    scope: parseOAuth2Scopes(flow, selectedScopes),
     type: 'oauth2',
   };
 

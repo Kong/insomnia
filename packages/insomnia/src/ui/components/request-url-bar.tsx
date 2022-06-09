@@ -54,26 +54,26 @@ export class RequestUrlBar extends PureComponent<Props, State> {
 
   _lastPastedText?: string;
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
-  _setMethodDropdownRef(n: MethodDropdown) {
-    this._methodDropdown = n;
+  _setMethodDropdownRef(methodDropdown: MethodDropdown) {
+    this._methodDropdown = methodDropdown;
   }
 
-  _setInputRef(n: OneLineEditor) {
-    this._input = n;
+  _setInputRef(input: OneLineEditor) {
+    this._input = input;
   }
 
-  _handleMetaClickSend(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
+  _handleMetaClickSend(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
     this._dropdown?.show();
   }
 
-  _handleFormSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
-    e.stopPropagation();
+  _handleFormSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    event.stopPropagation();
 
     this._handleSend();
   }
@@ -107,9 +107,9 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     }, DEBOUNCE_MILLIS);
   }
 
-  _handleUrlPaste(e: ClipboardEvent) {
+  _handleUrlPaste(event: ClipboardEvent) {
     // NOTE: We're not actually doing the import here to avoid races with onChange
-    this._lastPastedText = e.clipboardData?.getData('text/plain');
+    this._lastPastedText = event.clipboardData?.getData('text/plain');
   }
 
   _handleGenerateCode() {
@@ -244,8 +244,8 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     this._handleStopInterval();
   }
 
-  _handleClickSend(e: React.MouseEvent<HTMLButtonElement>) {
-    const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
+  _handleClickSend(event: React.MouseEvent<HTMLButtonElement>) {
+    const metaPressed = isMac() ? event.metaKey : event.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open
     if (metaPressed) {
@@ -253,7 +253,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     }
 
     // If we're not pressing a meta key, cancel dropdown and send the request
-    e.stopPropagation(); // Don't trigger the dropdown
+    event.stopPropagation(); // Don't trigger the dropdown
 
     this._handleSend();
   }

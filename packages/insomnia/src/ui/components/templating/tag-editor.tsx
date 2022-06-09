@@ -271,8 +271,8 @@ class TagEditorInternal extends PureComponent<Props, State> {
     return this._updateArg(path, argIndex);
   }
 
-  _handleChange(e: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
-    const parent = e.currentTarget.parentNode;
+  _handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
+    const parent = event.currentTarget.parentNode;
     let argIndex = -1;
 
     if (parent instanceof HTMLElement) {
@@ -281,37 +281,37 @@ class TagEditorInternal extends PureComponent<Props, State> {
     }
 
     // Handle special types
-    if (e.currentTarget.getAttribute('data-encoding') === 'base64') {
+    if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
       return this._updateArg(
-        templateUtils.encodeEncoding(e.currentTarget.value, 'base64'),
+        templateUtils.encodeEncoding(event.currentTarget.value, 'base64'),
         argIndex,
       );
     }
 
     // Handle normal types
-    if (e.currentTarget.type === 'number') {
-      return this._updateArg(parseFloat(e.currentTarget.value), argIndex);
-    } else if (e.currentTarget.type === 'checkbox') {
+    if (event.currentTarget.type === 'number') {
+      return this._updateArg(parseFloat(event.currentTarget.value), argIndex);
+    } else if (event.currentTarget.type === 'checkbox') {
       // @ts-expect-error -- TSCONVERSION .checked doesn't exist on HTMLSelectElement
-      return this._updateArg(e.currentTarget.checked, argIndex);
+      return this._updateArg(event.currentTarget.checked, argIndex);
     } else {
-      return this._updateArg(e.currentTarget.value, argIndex);
+      return this._updateArg(event.currentTarget.value, argIndex);
     }
   }
 
-  _handleChangeCustomArg(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChangeCustomArg(event: React.SyntheticEvent<HTMLInputElement>) {
     const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
     const tagData: NunjucksParsedTag | null = clone(activeTagData);
 
     if (tagData) {
-      tagData.rawValue = e.currentTarget.value;
+      tagData.rawValue = event.currentTarget.value;
     }
 
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  async _handleChangeTag(e: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
-    const name = e.currentTarget.value;
+  async _handleChangeTag(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
+    const name = event.currentTarget.value;
     const tagDefinitions = await templating.getTagDefinitions();
     const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
 
@@ -329,8 +329,8 @@ class TagEditorInternal extends PureComponent<Props, State> {
     return this._handleRefresh();
   }
 
-  _setSelectRef(n: HTMLSelectElement) {
-    this._select = n;
+  _setSelectRef(select: HTMLSelectElement) {
+    this._select = select;
     // Let it render, then focus the input
     setTimeout(() => {
       if (this._select instanceof HTMLSelectElement) {

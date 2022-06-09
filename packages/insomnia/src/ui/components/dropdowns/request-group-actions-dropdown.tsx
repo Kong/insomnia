@@ -52,8 +52,8 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
     loadingActions: {},
   };
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   async _handleRequestCreate() {

@@ -306,10 +306,10 @@ const _parseMessage = (
 ): Record<string, any> | undefined => {
   try {
     return JSON.parse(bodyText);
-  } catch (e) {
+  } catch (error) {
     // TODO: How do we want to handle this case, where the message cannot be parsed?
     //  Currently an error will be shown, but the stream will not be cancelled.
-    respond.sendError(requestId, e);
+    respond.sendError(requestId, error);
     return undefined;
   }
 };

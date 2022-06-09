@@ -92,7 +92,7 @@ export class SpecEditorSidebar extends Component<Props, State> {
 
     try {
       JSON.parse(contents);
-    } catch (e) {
+    } catch (error) {
       this.setState({
         specContentJSON: false,
       });

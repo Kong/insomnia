@@ -20,7 +20,7 @@
     "publish": "lerna publish from-package",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules **/*.tsbuildinfo",
     "test": "lerna run --stream --parallel test",
-    "inso-start": "npm start --prefix packages/insomnia-inso",
+    "inso-start": "npm run build:sr --prefix packages/insomnia && npm start --prefix packages/insomnia-inso",
     "inso-package": "npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --prefix packages/insomnia-inso",
     "watch:app": "npm run build:main.min.js --prefix packages/insomnia && npm run start:dev-server --prefix packages/insomnia",
@@ -55,6 +55,7 @@
     "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
+    "esbuild-runner": "^2.2.1",
     "jest": "^28.1.0",
     "lerna": "^4.0.0",
     "markdownlint-cli2": "^0.2.0",
@@ -64,8 +65,5 @@
     "ts-jest": "^28.0.1",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5"
-  },
-  "dependencies": {
-    "immer": "^9.0.6"
   }
 }

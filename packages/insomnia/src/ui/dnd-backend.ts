@@ -2,7 +2,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
 class DNDBackend extends HTML5Backend {
-  handleTopDragEndCapture(e) {
+  handleTopDragEndCapture(event) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       setTimeout(() => {
@@ -12,39 +12,39 @@ class DNDBackend extends HTML5Backend {
       return;
     }
 
-    super.handleTopDragEndCapture(e);
+    super.handleTopDragEndCapture(event);
   }
 
-  handleTopDragOver(e) {
+  handleTopDragOver(event) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       return;
     }
-    super.handleTopDragOver(e);
+    super.handleTopDragOver(event);
   }
 
-  handleTopDragLeaveCapture(e) {
+  handleTopDragLeaveCapture(event) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       return;
     }
-    super.handleTopDragLeaveCapture(e);
+    super.handleTopDragLeaveCapture(event);
   }
 
-  handleTopDropCapture(e) {
+  handleTopDropCapture(event) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       return;
     }
-    super.handleTopDropCapture(e);
+    super.handleTopDropCapture(event);
   }
 
-  handleTopDrop(e) {
+  handleTopDrop(event) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (!this.monitor.isDragging() || this.isDraggingNativeItem()) {
       return;
     }
-    super.handleTopDrop(e);
+    super.handleTopDrop(event);
   }
 }
 

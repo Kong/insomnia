@@ -14,7 +14,7 @@ function isPromise(obj: unknown) {
 }
 
 export interface AsyncButtonProps<T> extends ButtonProps {
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => Promise<T> | undefined;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<T> | undefined;
   loadingNode?: ReactNode;
 }
 

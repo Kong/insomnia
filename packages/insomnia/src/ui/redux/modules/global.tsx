@@ -577,7 +577,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
       let exportPrivateEnvironments = false;
 
       if (privateEnvironments.length) {
-        const names = privateEnvironments.map(e => e.name).join(', ');
+        const names = privateEnvironments.map(privateEnvironment => privateEnvironment.name).join(', ');
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
@@ -640,7 +640,7 @@ export function initActiveProject() {
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     projectId = JSON.parse(item);
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -657,7 +657,7 @@ export function initDashboardSortOrder() {
     if (stringifiedDashboardSortOrder) {
       dashboardSortOrder = JSON.parse(stringifiedDashboardSortOrder);
     }
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -672,7 +672,7 @@ export function initActiveWorkspace() {
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     workspaceId = JSON.parse(item);
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -703,7 +703,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     activeActivity = JSON.parse(item);
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 

@@ -45,8 +45,8 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
     activeTab: 0,
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec) {

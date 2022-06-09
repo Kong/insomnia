@@ -15,6 +15,7 @@
     "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
     "production": "4l7QUfACrIcqvC913hiIwAA2BDYP2OJ1"
   },
+  "sentryDsn": "https://aaec2e800e644070a8daba5b7ad02c16@o1147619.ingest.sentry.io/6311804",
   "plugins": [
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",

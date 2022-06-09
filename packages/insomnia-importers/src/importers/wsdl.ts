@@ -96,7 +96,7 @@ export const convert: Converter = async rawData => {
       const postmanJson = JSON.stringify(postmanData);
       return postman.convert(postmanJson);
     }
-  } catch (e) {
+  } catch (error) {
     // Nothing
   }
 

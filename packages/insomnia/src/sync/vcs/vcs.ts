@@ -869,7 +869,7 @@ export class VCS {
       // the user created snapshots while not logged in
       for (const snapshot of snapshots) {
         if (snapshot.author === '') {
-          snapshot.author = accountId;
+          snapshot.author = accountId || '';
         }
       }
 

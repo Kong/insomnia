@@ -30,16 +30,16 @@ class LocalStorage {
 
     try {
       contents = String(fs.readFileSync(path));
-    } catch (e) {
-      if (e.code === 'ENOENT') {
+    } catch (error) {
+      if (error.code === 'ENOENT') {
         this.setItem(key, defaultObj);
       }
     }
 
     try {
       return JSON.parse(contents);
-    } catch (e) {
-      console.error(`[localstorage] Failed to parse item from LocalStorage: ${e}`);
+    } catch (error) {
+      console.error(`[localstorage] Failed to parse item from LocalStorage: ${error}`);
       return defaultObj;
     }
   }
@@ -60,8 +60,8 @@ class LocalStorage {
 
       try {
         fs.writeFileSync(path, contents);
-      } catch (e) {
-        console.error(`[localstorage] Failed to save to LocalStorage: ${e}`);
+      } catch (error) {
+        console.error(`[localstorage] Failed to save to LocalStorage: ${error}`);
       }
     }
   }

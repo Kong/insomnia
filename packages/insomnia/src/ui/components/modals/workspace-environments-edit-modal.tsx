@@ -153,12 +153,12 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this.modal?.hide();
   }
 
-  _setEditorRef(n: EnvironmentEditor) {
-    this.environmentEditorRef = n;
+  _setEditorRef(environmentEditor: EnvironmentEditor) {
+    this.environmentEditorRef = environmentEditor;
   }
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   async show(workspace: Workspace) {
@@ -318,7 +318,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
       return rootEnvironment;
     } else {
-      return subEnvironments.find(e => e._id === selectedEnvironmentId) || null;
+      return subEnvironments.find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
     }
   }
 

@@ -107,8 +107,8 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     });
   }
 
-  _handleSetModalRef(n: Modal) {
-    this.modal = n;
+  _handleSetModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleRemoveWorkspace() {
@@ -155,9 +155,9 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     }
   }
 
-  _handleCreateHostChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleCreateHostChange(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      host: e.currentTarget.value,
+      host: event.currentTarget.value,
     });
   }
 
@@ -179,20 +179,20 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     });
   }
 
-  _handleCreatePassphraseChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleCreatePassphraseChange(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      passphrase: e.currentTarget.value,
+      passphrase: event.currentTarget.value,
     });
   }
 
-  _handleCreateIsPrivateChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleCreateIsPrivateChange(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      isPrivate: e.currentTarget.checked,
+      isPrivate: event.currentTarget.checked,
     });
   }
 
-  async _handleCreateCertificate(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleCreateCertificate(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
     const { workspace } = this.props;
     const { pfxPath, crtPath, keyPath, host, passphrase, isPrivate } = this.state;
     const certificate = {
