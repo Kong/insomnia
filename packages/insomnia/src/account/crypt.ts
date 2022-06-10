@@ -5,6 +5,13 @@ import srp from 'srp-js';
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
 
+export interface AESMessage {
+  iv: string;
+  t: string;
+  d: string;
+  ad: string;
+}
+
 /**
  * Generate hex signing key used for AES encryption
  *
@@ -12,7 +19,7 @@ const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
  * @param email
  * @param salt
  */
-export async function deriveKey(pass, email, salt) {
+export async function deriveKey(pass: string, email: string, salt: string) {
   const combinedSalt = await _hkdfSalt(salt, email);
   return _pbkdf2Passphrase(pass, combinedSalt);
 }
@@ -24,13 +31,15 @@ export async function deriveKey(pass, email, salt) {
  * @param plaintext
  * @return String
  */
-export function encryptRSAWithJWK(publicKeyJWK, plaintext) {
+export function encryptRSAWithJWK(publicKeyJWK: JsonWebKey, plaintext: string) {
   if (publicKeyJWK.alg !== 'RSA-OAEP-256') {
     throw new Error('Public key algorithm was not RSA-OAEP-256');
   } else if (publicKeyJWK.kty !== 'RSA') {
     throw new Error('Public key type was not RSA');
-  } else if (!publicKeyJWK.key_ops.find(o => o === 'encrypt')) {
+  } else if (!publicKeyJWK.key_ops || !publicKeyJWK.key_ops.find(o => o === 'encrypt')) {
     throw new Error('Public key does not have "encrypt" op');
+  } else if (!publicKeyJWK.n || !publicKeyJWK.e) {
+    throw new Error('Public key is missing parameters');
   }
 
   const encodedPlaintext = encodeURIComponent(plaintext);
@@ -47,21 +56,19 @@ export function encryptRSAWithJWK(publicKeyJWK, plaintext) {
   return forge.util.bytesToHex(encrypted);
 }
 
-export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
+export function decryptRSAWithJWK(privateJWK: JsonWebKey, encryptedBlob: string) {
+  if (!privateJWK.n || !privateJWK.e || !privateJWK.d || !privateJWK.p ||
+      !privateJWK.q || !privateJWK.dp || !privateJWK.dq || !privateJWK.qi) {
+    throw new Error('Private key is missing parameters');
+  }
+
   const n = _b64UrlToBigInt(privateJWK.n);
-
   const e = _b64UrlToBigInt(privateJWK.e);
-
   const d = _b64UrlToBigInt(privateJWK.d);
-
   const p = _b64UrlToBigInt(privateJWK.p);
-
   const q = _b64UrlToBigInt(privateJWK.q);
-
   const dP = _b64UrlToBigInt(privateJWK.dp);
-
   const dQ = _b64UrlToBigInt(privateJWK.dq);
-
   const qInv = _b64UrlToBigInt(privateJWK.qi);
 
   // @ts-expect-error -- TSCONVERSION appears not to be exported for some reason
@@ -81,9 +88,9 @@ export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
  * @param additionalData any additional public data to attach
  * @returns {{iv, t, d, ad}}
  */
-export function encryptAESBuffer(jwkOrKey, buff, additionalData = '') {
+export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, additionalData = ''): AESMessage {
   // TODO: Add assertion checks for JWK
-  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
   const key = forge.util.hexToBytes(rawKey);
   const iv = forge.random.getBytesSync(12);
   const cipher = forge.cipher.createCipher('AES-GCM', key);
@@ -112,9 +119,9 @@ export function encryptAESBuffer(jwkOrKey, buff, additionalData = '') {
  * @param additionalData any additional public data to attach
  * @returns {{iv, t, d, ad}}
  */
-export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
+export function encryptAES(jwkOrKey: string | JsonWebKey, plaintext: string, additionalData = ''): AESMessage {
   // TODO: Add assertion checks for JWK
-  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
   const key = forge.util.hexToBytes(rawKey);
   const iv = forge.random.getBytesSync(12);
   const cipher = forge.cipher.createCipher('AES-GCM', key);
@@ -144,9 +151,9 @@ export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
  * @param encryptedResult encryption data
  * @returns String
  */
-export function decryptAES(jwkOrKey, encryptedResult) {
+export function decryptAES(jwkOrKey: string | JsonWebKey, encryptedResult: AESMessage) {
   // TODO: Add assertion checks for JWK
-  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
   const key = forge.util.hexToBytes(rawKey);
   // ~~~~~~~~~~~~~~~~~~~~ //
   // Decrypt with AES-GCM //
@@ -174,9 +181,9 @@ export function decryptAES(jwkOrKey, encryptedResult) {
  * @param encryptedResult
  * @returns {string}
  */
-export function decryptAESToBuffer(jwkOrKey, encryptedResult) {
+export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResult: AESMessage) {
   // TODO: Add assertion checks for JWK
-  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k || '');
   const key = forge.util.hexToBytes(rawKey);
   // ~~~~~~~~~~~~~~~~~~~~ //
   // Decrypt with AES-GCM //
@@ -321,7 +328,7 @@ export async function generateKeyPairJWK() {
  * @param rawEmail
  * @returns {Promise}
  */
-async function _hkdfSalt(rawSalt, rawEmail) {
+async function _hkdfSalt(rawSalt: string, rawEmail: string): Promise<string> {
   return new Promise<string>(resolve => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
     hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));
@@ -335,11 +342,12 @@ async function _hkdfSalt(rawSalt, rawEmail) {
  * @param n BigInteger
  * @returns {string}
  */
-function _bigIntToB64Url(n) {
-  return _hexToB64Url(n.toString(16));
+function _bigIntToB64Url(n: forge.jsbn.BigInteger) {
+  // HACK: The node-forge typings are fairly inaccurate.
+  return _hexToB64Url((n as any).toString(16));
 }
 
-function _hexToB64Url(h) {
+function _hexToB64Url(h: string) {
   const bytes = forge.util.hexToBytes(h);
   return window.btoa(bytes).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
@@ -361,7 +369,7 @@ function _b64UrlToHex(s: string) {
  * @param passphrase
  * @param salt hex representation of salt
  */
-async function _pbkdf2Passphrase(passphrase, salt) {
+async function _pbkdf2Passphrase(passphrase: string, salt: string) {
   if (window.crypto && window.crypto.subtle) {
     console.log('[crypt] Using native PBKDF2');
     const k = await window.crypto.subtle.importKey(

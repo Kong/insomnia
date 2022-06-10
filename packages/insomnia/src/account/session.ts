@@ -33,9 +33,9 @@ export interface SessionData {
   email: string;
   firstName: string;
   lastName: string;
-  symmetricKey: unknown;
-  publicKey: unknown;
-  encPrivateKey: unknown;
+  symmetricKey: JsonWebKey;
+  publicKey: JsonWebKey;
+  encPrivateKey: crypt.AESMessage;
 }
 
 const loginCallbacks: LoginCallback[] = [];
@@ -136,11 +136,15 @@ export async function login(rawEmail: string, rawPassphrase: string) {
   _callCallbacks();
 }
 
-export async function changePasswordWithToken(rawNewPassphrase, confirmationCode) {
+export async function changePasswordWithToken(rawNewPassphrase: string, confirmationCode: string) {
   // Sanitize inputs
   const newPassphrase = _sanitizePassphrase(rawNewPassphrase);
 
   const newEmail = getEmail(); // Use the same one
+
+  if (!newEmail) {
+    throw new Error('Session e-mail unexpectedly not set');
+  }
 
   // Fetch some things
   const { saltEnc, encSymmetricKey } = await _whoami();
@@ -182,7 +186,17 @@ export function getPublicKey() {
 }
 
 export function getPrivateKey() {
-  const { symmetricKey, encPrivateKey } = _getSessionData() || {};
+  const sessionData = _getSessionData();
+
+  if (!sessionData) {
+    throw new Error("Can't get private key: session is blank.");
+  }
+
+  const { symmetricKey, encPrivateKey } = sessionData;
+
+  if (!symmetricKey || !encPrivateKey) {
+    throw new Error("Can't get private key: session is missing keys.");
+  }
 
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr);
@@ -243,9 +257,9 @@ export function setSessionData(
   firstName: string,
   lastName: string,
   email: string,
-  symmetricKey,
-  publicKey,
-  encPrivateKey,
+  symmetricKey: JsonWebKey,
+  publicKey: JsonWebKey,
+  encPrivateKey: crypt.AESMessage,
 ) {
   const sessionData: SessionData = {
     id: sessionId,
@@ -277,7 +291,7 @@ function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
   return fetch.getJson<WhoamiResponse>('/auth/whoami', sessionId || getCurrentSessionId());
 }
 
-function _getAuthSalts(email) {
+function _getAuthSalts(email: string) {
   return fetch.post(
     '/auth/login-s',
     {
