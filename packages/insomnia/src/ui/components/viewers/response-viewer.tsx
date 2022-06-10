@@ -120,8 +120,8 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
 
   shouldComponentUpdate(nextProps: ResponseViewerProps, nextState: State) {
     for (const k of Object.keys(nextProps)) {
-      const next = nextProps[k];
-      const current = this.props[k];
+      const next = nextProps[k as keyof ResponseViewerProps];
+      const current = this.props[k as keyof ResponseViewerProps];
 
       if (typeof next === 'function') {
         continue;
@@ -141,8 +141,8 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     }
 
     for (const k of Object.keys(nextState)) {
-      const next = nextState[k];
-      const current = this.state[k];
+      const next = nextState[k as keyof State];
+      const current = this.state[k as keyof State];
 
       if (typeof next === 'function') {
         continue;

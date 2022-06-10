@@ -27,7 +27,7 @@ const recursiveRender = (
   { dir, files, subDirs }: ExpandedProtoDirectory,
   props: Props,
   indent: number,
-) => {
+): React.ReactNode => {
   const {
     handleDelete,
     handleDeleteDirectory,

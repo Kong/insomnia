@@ -4,10 +4,17 @@
 //
 // The major modifications are marked in comments starting with "CHANGED ---"
 import CodeMirror from 'codemirror';
-import { JSHINT } from 'jshint';
+import { type LintError, JSHINT, LintOptions } from 'jshint';
 CodeMirror.registerHelper('lint', 'javascript', validator);
 
-function validator(text, options) {
+interface ValidationError {
+  message: string;
+  severity: string;
+  from: CodeMirror.Position;
+  to: CodeMirror.Position;
+}
+
+function validator(text: string, options: LintOptions): ValidationError[] {
   if (!options.indent) {
     // JSHint error.character actually is a column index, this fixes underlining on lines using tabs for indentation
     options.indent = 1;
@@ -18,8 +25,8 @@ function validator(text, options) {
   // Wrap text with async function to "enable" top-level await
   const textWithWrapper = `async function asyncWrapper() {\n${text}\n}`;
   JSHINT(textWithWrapper, options, options.globals);
-  const errors = JSHINT.data().errors;
-  const result = [];
+  const errors = JSHINT.data()?.errors;
+  const result: ValidationError[] = [];
 
   if (errors) {
     parseErrors(errors, result);
@@ -28,7 +35,7 @@ function validator(text, options) {
   return result;
 }
 
-function parseErrors(errors, output) {
+function parseErrors(errors: LintError[], output: ValidationError[]) {
   for (let i = 0; i < errors.length; i++) {
     const error = errors[i];
 
