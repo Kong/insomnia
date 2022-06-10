@@ -242,7 +242,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   _handleChangeValue(searchString: string) {
     const { workspace, workspaceRequestsAndRequestGroups, workspacesForActiveProject, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
-    const lastActiveMap: {[key: string]: number} = {};
+    const lastActiveMap: Record<string, number> = {};
 
     for (const meta of requestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
@@ -489,7 +489,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 });
                 return (
                   <li key={w._id}>
-                    <Button onClick={(_e, w) => this._activateWorkspace(w)} value={w} className={buttonClasses}>
+                    <Button onClick={(_e, value) => this._activateWorkspace(value)} value={w} className={buttonClasses}>
                       <i className="fa fa-random" />
                       &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
                     </Button>

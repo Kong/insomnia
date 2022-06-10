@@ -7,7 +7,7 @@ export interface ButtonProps<T> {
   children: ReactNode;
   value?: T;
   className?: string;
-  onDisabledClick?: (event: React.MouseEvent<HTMLButtonElement>, value: T) => void;
+  onDisabledClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
   disabled?: boolean;
   tabIndex?: number;
