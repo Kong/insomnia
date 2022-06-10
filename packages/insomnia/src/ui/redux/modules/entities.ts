@@ -1,6 +1,7 @@
 import clone from 'clone';
 
-import { type ChangeBufferEvent, database as db } from '../../../common/database';
+import { database as db } from '../../../common/database';
+import { ChangeBufferEvent } from '../../../common/dbtypes';
 import { pluralize } from '../../../common/misc';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';

@@ -18,7 +18,9 @@ export async function init(): Promise<Store> {
   // Link DB changes to entities reducer/actions
   const docs = await entities.allDocs();
   initEntities(docs);
-  db.onChange(addChanges);
+  db.onChange(changes => {
+    addChanges(changes);
+  });
   // Initialize login state
   loginStateChange(isLoggedIn());
   onLoginLogout(loggedIn => {

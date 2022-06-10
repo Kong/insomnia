@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import { MemoryRouter as Router } from 'react-router-dom';
 
 import { getProductName, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
@@ -12,11 +13,13 @@ import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import App from './containers/app';
+import { DatabaseClient } from './database';
 import { init as initStore } from './redux/modules';
 import { initializeSentry } from './sentry';
-import { MemoryRouter as Router } from 'react-router-dom';
 
 import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
+
+DatabaseClient.init();
 
 initializeSentry();
 initializeLogging();
@@ -25,8 +28,6 @@ document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
 (async function() {
-  await db.initClient();
-
   await initPlugins();
 
   const settings = await models.settings.getOrCreate();

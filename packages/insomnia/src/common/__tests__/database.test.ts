@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { globalBeforeEach } from '../../__jest__/before-each';
+import { globalBeforeEach, hostDB } from '../../__jest__/before-each';
+import { DatabaseHost } from '../../main/database';
 import * as models from '../../models';
 import { data as fixtures } from '../__fixtures__/nestedfolders';
-import { _repairDatabase, database as db } from '../database';
+import { database as db } from '../database';
+import { ChangeBufferEvent } from '../dbtypes';
 
 function loadFixture() {
   const promises: Promise<models.BaseModel>[] = [];
@@ -20,10 +22,10 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('handles being initialized twice', async () => {
-    await db.init(models.types(), {
+    await DatabaseHost.init(models.types(), {
       inMemoryOnly: true,
     });
-    await db.init(models.types(), {
+    await DatabaseHost.init(models.types(), {
       inMemoryOnly: true,
     });
     expect((await db.all(models.request.type)).length).toBe(0);
@@ -39,9 +41,9 @@ describe('onChange()', () => {
       parentId: 'nothing',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -70,9 +72,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -107,9 +109,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -134,9 +136,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -164,9 +166,9 @@ describe('bufferChangesIndefinitely()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -383,7 +385,7 @@ describe('_repairDatabase()', () => {
     ]);
 
     // Run the fix algorithm
-    await _repairDatabase();
+    await hostDB._repairDatabase();
 
     // Make sure things get adjusted
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
@@ -542,7 +544,7 @@ describe('_repairDatabase()', () => {
       }),
     ]);
     // Run the fix algorithm
-    await _repairDatabase();
+    await hostDB._repairDatabase();
     // Make sure things get adjusted
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
@@ -612,7 +614,7 @@ describe('_repairDatabase()', () => {
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
     expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
-    await _repairDatabase();
+    await hostDB._repairDatabase();
     // Make sure things get adjusted
     expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
@@ -634,7 +636,7 @@ describe('_repairDatabase()', () => {
     const newRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
-    await _repairDatabase();
+    await hostDB._repairDatabase();
     expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',

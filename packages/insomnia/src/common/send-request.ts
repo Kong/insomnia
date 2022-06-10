@@ -1,3 +1,4 @@
+import { DatabaseHost } from '../main/database';
 import { BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import { getBodyBuffer } from '../models/response';
@@ -12,12 +13,12 @@ type SettingsOverride = Pick<Settings, 'validateSSL'>;
 
 export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride) {
   // Initialize the DB in-memory and fill it with data if we're given one
-  await database.init(
+  database.clearListeners();
+  await DatabaseHost.init(
     modelTypes(),
     {
       inMemoryOnly: true,
     },
-    true,
     () => { },
   );
   const docs: BaseModel[] = [];

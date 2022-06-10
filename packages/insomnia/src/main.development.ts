@@ -7,10 +7,10 @@ import path from 'path';
 import appConfig from '../config/config.json';
 import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
+import { DatabaseHost } from './main/database';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -84,7 +84,7 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init(models.types());
+  await DatabaseHost.init(models.types());
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
   windowUtils.init();
