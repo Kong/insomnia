@@ -152,6 +152,7 @@ export const NoticeTable = <T extends Notice>({
         <Button onClick={onCollapse}>
           {collapsed ? 'Show' : 'Hide'} Details
           <SvgIcon
+            style={{ marginLeft: 'var(--padding-xs)' }}
             icon={collapsed ? IconEnum.chevronUp : IconEnum.chevronDown}
           />
         </Button>
@@ -182,7 +183,7 @@ export const NoticeTable = <T extends Notice>({
             </TableHead>
             <TableBody>
               {notices.map(notice => (
-                <NoticeRow<typeof notice>
+                <NoticeRow
                   key={`${notice.line}${notice.message}`}
                   notice={notice}
                   onClick={onClick}
