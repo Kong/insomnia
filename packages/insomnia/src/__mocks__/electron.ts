@@ -68,6 +68,7 @@ const electron = {
   dialog,
   ipcMain: {
     on: jest.fn(),
+    handle: jest.fn(),
 
     once() {},
   },
@@ -78,6 +79,7 @@ const electron = {
     once() {},
 
     send: jest.fn(),
+    invoke: jest.fn(),
   },
   shell: {
     openExternal: jest.fn(),
