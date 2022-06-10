@@ -100,11 +100,11 @@ export class PromptModal extends PureComponent<{}, State> {
     this.modal = modal;
   }
 
-  _handleSelectHint(hint: string) {
+  _handleSelectHint(_event: React.MouseEvent, hint: string) {
     this._done(hint);
   }
 
-  _handleDeleteHint(hint: string) {
+  _handleDeleteHint(_event: React.MouseEvent, hint: string) {
     const { onDeleteHint } = this.state;
     onDeleteHint?.(hint);
     const hints = this.state.hints.filter(h => h !== hint);

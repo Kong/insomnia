@@ -188,7 +188,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDisableChange(disabled: boolean) {
+  _handleDisableChange(_event: React.MouseEvent, disabled: boolean) {
     this._sendChange({
       disabled,
     });
