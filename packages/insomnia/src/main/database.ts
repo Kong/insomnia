@@ -74,7 +74,7 @@ export class DatabaseHost extends DatabaseCommon implements Database {
       this.db[modelType] = collection;
     }
 
-    electron.ipcMain.on('db.fn', this.handleIpc);
+    electron.ipcMain.handle('db.fn', this.handleIpc);
 
     // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
     // TODO: Figure out why this makes tests hang
@@ -150,22 +150,13 @@ export class DatabaseHost extends DatabaseCommon implements Database {
   allTypes = () => Object.keys(this.db);
 
   private readonly handleIpc = async<T extends keyof Database>(
-    event: Electron.IpcMainEvent,
+    _event: Electron.IpcMainEvent,
     fnName: T,
-    replyChannel: string,
     ...args: Parameters<Database[T]>
-  ) => {
-    try {
-      // Need apply to bind this.
-      // eslint-disable-next-line prefer-spread
-      const result = await this[fnName].apply(this, args);
-      event.sender.send(replyChannel, null, result);
-    } catch (err) {
-      event.sender.send(replyChannel, {
-        message: err.message,
-        stack: err.stack,
-      });
-    }
+  ): Promise<Awaited<ReturnType<Database[T]>>> => {
+    // Need apply to bind this.
+    // eslint-disable-next-line prefer-spread
+    return await this[fnName].apply(this, args);
   };
 
   async all<T extends BaseModel = BaseModel>(type: string): Promise<T[]> {

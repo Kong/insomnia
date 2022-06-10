@@ -106,16 +106,6 @@ export class DatabaseClient extends DatabaseCommon implements Database {
   // Helpers //
   // ~~~~~~~ //
   private _send<T extends keyof Database, Fn extends Database[T]>(fnName: T, ...args: Parameters<Fn>): Promise<Awaited<ReturnType<Fn>>> {
-    return new Promise((resolve, reject) => {
-      const replyChannel = `db.fn.reply:${uuidv4()}`;
-      electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-      electron.ipcRenderer.once(replyChannel, (_e, err: Error | null, result: Awaited<ReturnType<Fn>>) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
+    return electron.ipcRenderer.invoke('db.fn', fnName, ...args);
   }
 }
