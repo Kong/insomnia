@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { PropsWithChildren, PureComponent, useCallback } from 'react';
 import styled from 'styled-components';
 
 import { Button } from './button';
@@ -13,7 +13,7 @@ export interface Notice {
 
 export interface NoticeTableProps<T extends Notice> {
   notices: T[];
-  onClick?: (notice: T, event: React.SyntheticEvent<HTMLElement>) => any;
+  onClick: (notice: T) => void;
   onVisibilityToggle?: (expanded: boolean) => any;
   compact?: boolean;
   className?: string;
@@ -94,12 +94,39 @@ const Header = styled.header`
   padding-left: var(--padding-md);
 `;
 
+const NoticeRow = <T extends Notice>({
+  notice,
+  onClick: propsOnClick,
+}: PropsWithChildren<{
+  notice: T;
+  onClick:(notice: T) => void;
+}>) => {
+  const onClick = useCallback(() => {
+    propsOnClick?.(notice);
+  }, [notice, propsOnClick]);
+
+  return (
+    <TableRow key={`${notice.line}:${notice.type}:${notice.message}`}>
+      <TableData align="center">
+        <SvgIcon icon={notice.type} />
+      </TableData>
+      <TableData align="center">
+        {notice.line}
+        <JumpButton onClick={onClick}>
+          <SvgIcon icon={IconEnum.arrowRight} />
+        </JumpButton>
+      </TableData>
+      <TableData align="left">{notice.message}</TableData>
+    </TableRow>
+  );
+};
+
 export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProps<T>, State> {
   state: State = {
     collapsed: false,
   };
 
-  collapse() {
+  collapse = () => {
     const { onVisibilityToggle } = this.props;
     this.setState(
       state => ({
@@ -111,15 +138,10 @@ export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProp
         }
       },
     );
-  }
-
-  onClick(notice: T, event: React.SyntheticEvent<HTMLButtonElement>) {
-    const { onClick } = this.props;
-    onClick?.(notice, event);
-  }
+  };
 
   render() {
-    const { notices, compact } = this.props;
+    const { notices, compact, onClick } = this.props;
     const { collapsed } = this.state;
     const caret = collapsed ? (
       <SvgIcon icon={IconEnum.chevronUp} />
@@ -143,8 +165,7 @@ export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProp
               </ErrorCount>
             )}
           </div>
-          {/* @ts-expect-error TSCONVERSION */}
-          <Button onClick={this.collapse.bind(this)} noOutline>
+          <Button onClick={this.collapse}>
             {collapsed ? 'Show' : 'Hide'} Details{caret}
           </Button>
         </Header>
@@ -174,18 +195,11 @@ export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProp
               </TableHead>
               <TableBody>
                 {notices.map(notice => (
-                  <TableRow key={`${notice.line}:${notice.type}:${notice.message}`}>
-                    <TableData align="center">
-                      <SvgIcon icon={notice.type} />
-                    </TableData>
-                    <TableData align="center">
-                      {notice.line}
-                      <JumpButton onClick={this.onClick.bind(this, notice)}>
-                        <SvgIcon icon={IconEnum.arrowRight} />
-                      </JumpButton>
-                    </TableData>
-                    <TableData align="left">{notice.message}</TableData>
-                  </TableRow>
+                  <NoticeRow<typeof notice>
+                    key={`${notice.line}${notice.message}`}
+                    notice={notice}
+                    onClick={onClick}
+                  />
                 ))}
               </TableBody>
             </Table>
