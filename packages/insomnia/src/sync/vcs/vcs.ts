@@ -1247,6 +1247,11 @@ export class VCS {
       }
     } else {
       const { publicKey } = this._assertSession();
+
+      if (!publicKey) {
+        throw new Error('Session does not have publicKey');
+      }
+
       // Encrypt the symmetric key with the account public key
       encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
     }
