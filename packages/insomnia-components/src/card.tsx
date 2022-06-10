@@ -11,8 +11,8 @@ export interface CardProps {
   docVersion?: ReactNode;
   tagLabel: ReactNode;
   docFormat?: ReactNode;
-  onChange?: (e: React.SyntheticEvent<HTMLInputElement>) => any;
-  onClick?: (e: React.SyntheticEvent<HTMLDivElement>) => any;
+  onChange?: (event: React.SyntheticEvent<HTMLInputElement>) => any;
+  onClick?: (event: React.SyntheticEvent<HTMLDivElement>) => any;
   selectable?: boolean;
 }
 
@@ -234,13 +234,13 @@ export class Card extends PureComponent<CardProps, State> {
     selectable: false,
   };
 
-  _handleOnChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleOnChange(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
       selected: !this.state.selected,
     });
 
     if (this.props.onChange) {
-      this.props.onChange(e);
+      this.props.onChange(event);
     }
   }
 

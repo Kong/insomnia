@@ -110,8 +110,8 @@ export class EnvironmentEditor extends PureComponent<Props, State> {
     }
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
+  _setEditorRef(editor: UnconnectedCodeEditor) {
+    this._editor = editor;
   }
 
   getValue(): EnvironmentInfo | null {

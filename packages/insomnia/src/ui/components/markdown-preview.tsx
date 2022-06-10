@@ -61,13 +61,13 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
     );
   }
 
-  _setPreviewRef(n: HTMLDivElement) {
-    this._preview = n;
+  _setPreviewRef(preview: HTMLDivElement) {
+    this._preview = preview;
   }
 
-  _handleClickLink(e) {
-    e.preventDefault();
-    clickLink(e.target.getAttribute('href'));
+  _handleClickLink(event) {
+    event.preventDefault();
+    clickLink(event.target.getAttribute('href'));
   }
 
   _highlightCodeBlocks() {

@@ -55,8 +55,8 @@ export class RequestActionsDropdown extends PureComponent<Props, State> {
     loadingActions: {},
   };
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   _handleDuplicate() {

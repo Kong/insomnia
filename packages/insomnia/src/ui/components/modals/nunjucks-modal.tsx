@@ -29,16 +29,16 @@ export class NunjucksModal extends PureComponent<Props, State> {
   _currentTemplate: string | null = null;
   modal: Modal | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleTemplateChange(template: string | null) {
     this._currentTemplate = template;
   }
 
-  _handleSubmit(e) {
-    e.preventDefault();
+  _handleSubmit(event) {
+    event.preventDefault();
     this.hide();
   }
 

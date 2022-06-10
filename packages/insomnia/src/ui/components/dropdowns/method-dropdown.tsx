@@ -12,7 +12,7 @@ const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
 interface Props {
-  onChange: Function;
+  onChange: (method: string) => void;
   method: string;
   right?: boolean;
   showGrpc?: boolean;
@@ -23,17 +23,16 @@ interface Props {
 export class MethodDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   _handleSetCustomMethod() {
-    let recentMethods;
+    let recentMethods: string[];
 
     try {
       const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
-      // @ts-expect-error -- TSCONVERSION don't try parse if no item found
-      recentMethods = JSON.parse(v) || [];
+      recentMethods = v ? JSON.parse(v) || [] : [];
     } catch (err) {
       recentMethods = [];
     }
@@ -74,7 +73,7 @@ export class MethodDropdown extends PureComponent<Props> {
     });
   }
 
-  _handleChange(method) {
+  _handleChange(method: string) {
     this.props.onChange(method);
   }
 

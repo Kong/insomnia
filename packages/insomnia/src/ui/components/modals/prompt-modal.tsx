@@ -92,12 +92,12 @@ export class PromptModal extends PureComponent<{}, State> {
     onCancel?.();
   }
 
-  _setInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _setInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleSelectHint(hint: string) {
@@ -113,7 +113,7 @@ export class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  async _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+  async _handleSubmit(event: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
     if (this.state.loading) {
       return;
     }
@@ -122,7 +122,7 @@ export class PromptModal extends PureComponent<{}, State> {
       loading: true,
     });
 
-    e.preventDefault();
+    event.preventDefault();
 
     if (this._input) {
       const result =
@@ -136,12 +136,12 @@ export class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChange(event: React.SyntheticEvent<HTMLInputElement>) {
     const { validate } = this.state;
 
     if (validate) {
-      const errorMessage = validate(e.currentTarget.value);
-      e.currentTarget.setCustomValidity(errorMessage);
+      const errorMessage = validate(event.currentTarget.value);
+      event.currentTarget.setCustomValidity(errorMessage);
     }
   }
 

@@ -47,9 +47,8 @@ const onAuthFailure =
               },
             };
           }
-        } catch (e) {
-          console.warn('[git-event] Failed to refresh token', e);
-
+        } catch (error) {
+          console.warn('[git-event] Failed to refresh token', error);
           return;
         }
       }

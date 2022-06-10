@@ -166,13 +166,13 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _filterInput: HTMLInputElement | null = null;
 
-  _setFilterInputRef(n: HTMLInputElement) {
-    this._filterInput = n;
+  _setFilterInputRef(filterInput: HTMLInputElement) {
+    this._filterInput = filterInput;
   }
 
-  _handleFilterChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleFilterChange(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      filter: e.currentTarget.value,
+      filter: event.currentTarget.value,
     });
   }
 

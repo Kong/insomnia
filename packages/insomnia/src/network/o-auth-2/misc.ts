@@ -143,9 +143,9 @@ export function authorizeUserInWindow({
 
     try {
       await child.loadURL(url);
-    } catch (e) {
+    } catch (error) {
       // Reject with error to show result in OAuth2 tab
-      reject(e);
+      reject(error);
       // Need to close child window here since an exception in loadURL precludes normal call in
       // _parseUrl
       child.close();

@@ -39,8 +39,8 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     rawValue: '',
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   async show(cookie: Cookie) {

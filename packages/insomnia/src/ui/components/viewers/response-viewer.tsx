@@ -164,8 +164,8 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends typeof ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
-    this._selectableView = n;
+  _setSelectableViewRef<T extends typeof ResponseRawViewer | UnconnectedCodeEditor | null>(selectableView: T) {
+    this._selectableView = selectableView;
   }
 
   _isViewSelectable() {
@@ -216,7 +216,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
         JSON.parse(bodyBuffer.toString('utf8'));
         return 'application/json';
       }
-    } catch (e) {
+    } catch (error) {
       // Nothing
     }
 
@@ -233,7 +233,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         return 'text/html';
       }
-    } catch (e) {
+    } catch (error) {
       // Nothing
     }
 

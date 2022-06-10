@@ -25,8 +25,8 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
 
   modal: Modal | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleShowRequestSettings() {

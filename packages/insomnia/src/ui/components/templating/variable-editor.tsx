@@ -47,9 +47,8 @@ class VariableEditorInternal extends PureComponent<Props, State> {
     this._resize();
   }
 
-  _handleChange(e) {
-    const name = e.target.value;
-
+  _handleChange(event) {
+    const name = event.target.value;
     this._update(name);
   }
 
@@ -63,8 +62,8 @@ class VariableEditorInternal extends PureComponent<Props, State> {
     }, 200);
   }
 
-  _setSelectRef(n: HTMLSelectElement) {
-    this._select = n;
+  _setSelectRef(select: HTMLSelectElement) {
+    this._select = select;
     // Let it render, then focus the input
     setTimeout(() => {
       this._select?.focus();

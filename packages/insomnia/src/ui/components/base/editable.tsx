@@ -43,8 +43,8 @@ export class Editable extends PureComponent<Props, State> {
 
   _input: HTMLInputElement | null = null;
 
-  _handleSetInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _handleSetInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
   _handleSingleClickEditStart() {

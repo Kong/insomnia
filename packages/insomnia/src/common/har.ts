@@ -526,8 +526,8 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | und
   if (renderedRequest.body.fileName) {
     try {
       body = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
-    } catch (e) {
-      console.warn('[code gen] Failed to read file', e);
+    } catch (error) {
+      console.warn('[code gen] Failed to read file', error);
       return;
     }
   } else {

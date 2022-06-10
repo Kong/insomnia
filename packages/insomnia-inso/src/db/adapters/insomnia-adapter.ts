@@ -85,8 +85,8 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   } | undefined;
   try {
     parsed = YAML.parse(content);
-  } catch (e) {
-    throw new InsoError(`Failed to parse ${fileName}.`, e);
+  } catch (error) {
+    throw new InsoError(`Failed to parse ${fileName}.`, error);
   }
 
   // We are supporting only v4 files

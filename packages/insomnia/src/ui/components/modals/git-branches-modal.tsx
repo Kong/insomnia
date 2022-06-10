@@ -109,8 +109,8 @@ export class GitBranchesModal extends PureComponent<Props, State> {
     }
   }
 
-  async _handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleCreate(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
     await this._errorHandler(async () => {
       const { vcs, gitRepository } = this.props;
       const { newBranchName } = this.state;
@@ -166,9 +166,9 @@ export class GitBranchesModal extends PureComponent<Props, State> {
     });
   }
 
-  _updateNewBranchName(e: React.SyntheticEvent<HTMLInputElement>) {
+  _updateNewBranchName(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      newBranchName: e.currentTarget.value,
+      newBranchName: event.currentTarget.value,
     });
   }
 

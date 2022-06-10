@@ -74,9 +74,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
     this.textarea = ref;
   }
 
-  async _handleMessageChange(e: React.SyntheticEvent<HTMLTextAreaElement>) {
+  async _handleMessageChange(event: React.SyntheticEvent<HTMLTextAreaElement>) {
     this.setState({
-      message: e.currentTarget.value,
+      message: event.currentTarget.value,
     });
   }
 
@@ -133,9 +133,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleToggleOne(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _handleToggleOne(event: React.SyntheticEvent<HTMLInputElement>) {
     const newItems = { ...this.state.items };
-    const gitPath = e.currentTarget.name;
+    const gitPath = event.currentTarget.name;
 
     if (!newItems[gitPath] || !newItems[gitPath].editable) {
       return;

@@ -32,7 +32,7 @@ interface State {
   filterVisible: boolean;
   filterItems?: number[] | null;
   filterActiveIndex: number;
-  forcedPosition?: {x: number; y: number} | null;
+  forcedPosition?: { x: number; y: number } | null;
   uniquenessKey: number;
 }
 
@@ -56,12 +56,12 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     uniquenessKey: 0,
   };
 
-  _setRef(n: HTMLDivElement) {
-    this._node = n;
+  _setRef(node: HTMLDivElement) {
+    this._node = node;
   }
 
-  _handleCheckFilterSubmit(e) {
-    if (e.key === 'Enter') {
+  _handleCheckFilterSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
 
@@ -232,9 +232,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _handleClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  _handleClick(event: React.MouseEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
     this.toggle();
   }
 
@@ -243,12 +243,12 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     event.preventDefault();
   }
 
-  _addDropdownListRef(n: HTMLDivElement) {
-    this._dropdownList = n;
+  _addDropdownListRef(dropdownList: HTMLDivElement) {
+    this._dropdownList = dropdownList;
   }
 
-  _addFilterRef(n: HTMLInputElement) {
-    this._filter = n;
+  _addFilterRef(filter: HTMLInputElement) {
+    this._filter = filter;
 
     // Automatically focus the filter element when mounted so we can start typing
     if (this._filter) {
@@ -256,7 +256,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _getFlattenedChildren(children) {
+  // TODO: children should not be 'any'.
+  _getFlattenedChildren(children: any) {
     let newChildren: ReactNode[] = [];
     // Ensure children is an array
     children = Array.isArray(children) ? children : [children];

@@ -250,18 +250,18 @@ export function getDeployToPortalComponent(options: {
       }
     };
 
-    _handleKongPortalApiUrlChange = async (e: SyntheticEvent<HTMLInputElement>) => {
-      this.setState({ kongPortalApiUrl: e.currentTarget.value });
+    _handleKongPortalApiUrlChange = async (event: SyntheticEvent<HTMLInputElement>) => {
+      this.setState({ kongPortalApiUrl: event.currentTarget.value });
     };
 
-    _handleRBACKTokenChange = async (e: SyntheticEvent<HTMLInputElement>) => {
-      this.setState({ kongPortalRbacToken: e.currentTarget.value });
+    _handleRBACKTokenChange = async (event: SyntheticEvent<HTMLInputElement>) => {
+      this.setState({ kongPortalRbacToken: event.currentTarget.value });
     };
 
     _handleKongPortalUserWorkspaceChange = async (
-      e: SyntheticEvent<HTMLInputElement>
+      event: SyntheticEvent<HTMLInputElement>
     ) => {
-      this.setState({ kongPortalUserWorkspace: e.currentTarget.value });
+      this.setState({ kongPortalUserWorkspace: event.currentTarget.value });
     };
 
     render() {
