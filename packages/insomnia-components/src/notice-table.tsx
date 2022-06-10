@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, PureComponent, useCallback } from 'react';
+import React, { PropsWithChildren, useCallback, useState } from 'react';
 import styled from 'styled-components';
 
 import { Button } from './button';
@@ -17,10 +17,6 @@ export interface NoticeTableProps<T extends Notice> {
   onVisibilityToggle?: (expanded: boolean) => any;
   compact?: boolean;
   className?: string;
-}
-
-interface State {
-  collapsed: boolean;
 }
 
 const Wrapper = styled.div`
@@ -121,91 +117,81 @@ const NoticeRow = <T extends Notice>({
   );
 };
 
-export class NoticeTable<T extends Notice> extends PureComponent<NoticeTableProps<T>, State> {
-  state: State = {
-    collapsed: false,
-  };
+export const NoticeTable = <T extends Notice>({
+  notices,
+  compact,
+  onClick,
+  onVisibilityToggle,
+}: PropsWithChildren<NoticeTableProps<T>>) => {
+  const [collapsed, setCollapsed] = useState(false);
 
-  collapse = () => {
-    const { onVisibilityToggle } = this.props;
-    this.setState(
-      state => ({
-        collapsed: !state.collapsed,
-      }),
-      () => {
-        if (onVisibilityToggle) {
-          onVisibilityToggle(!this.state.collapsed);
-        }
-      },
-    );
-  };
+  const onCollapse = useCallback(() => {
+    setCollapsed(!collapsed);
+    if (onVisibilityToggle) {
+      onVisibilityToggle(!collapsed);
+    }
+  }, [onVisibilityToggle, collapsed]);
 
-  render() {
-    const { notices, compact, onClick } = this.props;
-    const { collapsed } = this.state;
-    const caret = collapsed ? (
-      <SvgIcon icon={IconEnum.chevronUp} />
-    ) : (
-      <SvgIcon icon={IconEnum.chevronDown} />
-    );
-    const errors = notices.filter(n => n.type === 'error');
-    const warnings = notices.filter(n => n.type === 'warning');
-    return (
-      <Wrapper>
-        <Header>
-          <div>
-            {errors.length > 0 && (
-              <ErrorCount>
-                <SvgIcon icon={IconEnum.error} label={errors.length} />
-              </ErrorCount>
-            )}
-            {warnings.length > 0 && (
-              <ErrorCount>
-                <SvgIcon icon={IconEnum.warning} label={warnings.length} />
-              </ErrorCount>
-            )}
-          </div>
-          <Button onClick={this.collapse}>
-            {collapsed ? 'Show' : 'Hide'} Details{caret}
-          </Button>
-        </Header>
-        {!collapsed && (
-          <ScrollWrapperStyled>
-            <Table striped compact={compact}>
-              <TableHead>
-                <TableRow>
-                  <TableHeader align="center">Type</TableHeader>
-                  <TableHeader
-                    style={{
-                      minWidth: '3em',
-                    }}
-                    align="center"
-                  >
-                    Line
-                  </TableHeader>
-                  <TableHeader
-                    style={{
-                      width: '100%',
-                    }}
-                    align="left"
-                  >
-                    Message
-                  </TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {notices.map(notice => (
-                  <NoticeRow<typeof notice>
-                    key={`${notice.line}${notice.message}`}
-                    notice={notice}
-                    onClick={onClick}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollWrapperStyled>
-        )}
-      </Wrapper>
-    );
-  }
-}
+  const errors = notices.filter(notice => notice.type === 'error');
+  const warnings = notices.filter(notice => notice.type === 'warning');
+  return (
+    <Wrapper>
+      <Header>
+        <div>
+          {errors.length > 0 && (
+            <ErrorCount>
+              <SvgIcon icon={IconEnum.error} label={errors.length} />
+            </ErrorCount>
+          )}
+          {warnings.length > 0 && (
+            <ErrorCount>
+              <SvgIcon icon={IconEnum.warning} label={warnings.length} />
+            </ErrorCount>
+          )}
+        </div>
+        <Button onClick={onCollapse}>
+          {collapsed ? 'Show' : 'Hide'} Details
+          <SvgIcon
+            icon={collapsed ? IconEnum.chevronUp : IconEnum.chevronDown}
+          />
+        </Button>
+      </Header>
+      {!collapsed && (
+        <ScrollWrapperStyled>
+          <Table striped compact={compact}>
+            <TableHead>
+              <TableRow>
+                <TableHeader align="center">Type</TableHeader>
+                <TableHeader
+                  style={{
+                    minWidth: '3em',
+                  }}
+                  align="center"
+                >
+                  Line
+                </TableHeader>
+                <TableHeader
+                  style={{
+                    width: '100%',
+                  }}
+                  align="left"
+                >
+                  Message
+                </TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {notices.map(notice => (
+                <NoticeRow<typeof notice>
+                  key={`${notice.line}${notice.message}`}
+                  notice={notice}
+                  onClick={onClick}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollWrapperStyled>
+      )}
+    </Wrapper>
+  );
+};
