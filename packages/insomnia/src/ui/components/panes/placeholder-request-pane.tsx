@@ -1,6 +1,7 @@
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useCreateRequestForActiveWorkspace } from '../../../common/create-request';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importFile } from '../../redux/modules/import';
@@ -8,17 +9,15 @@ import { selectActiveWorkspace, selectSettings } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
-interface Props {
-  handleCreateRequest: () => void;
-}
-
-export const PlaceholderRequestPane: FC<Props> = ({
-  handleCreateRequest,
-}) => {
+export const PlaceholderRequestPane: FC = () => {
   const dispatch = useDispatch();
   const { hotKeyRegistry } = useSelector(selectSettings);
   const workspaceId = useSelector(selectActiveWorkspace)?._id;
   const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId, forceToWorkspace: ForceToWorkspace.current })), [workspaceId, dispatch]);
+
+  const createHttpRequest = useCallback(() => {
+    useCreateRequestForActiveWorkspace('HTTP');
+  }, []);
 
   return (
     <Pane type="request">
@@ -67,8 +66,8 @@ export const PlaceholderRequestPane: FC<Props> = ({
             <button className="btn inline-block btn--clicky" onClick={handleImportFile}>
               Import from File
             </button>
-            <button className="btn inline-block btn--clicky" onClick={() => handleCreateRequest()}>
-              New Request
+            <button className="btn inline-block btn--clicky" onClick={createHttpRequest}>
+              New HTTP Request
             </button>
           </div>
         </div>

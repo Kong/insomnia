@@ -30,7 +30,6 @@ interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleActivateRequest: Function;
-  handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
   filter: string;
   isActive: boolean;
@@ -90,7 +89,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
       requestGroup,
       isCollapsed,
       isActive,
-      handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
       isDragging,
@@ -145,7 +143,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
               ref={this.dropdownRef}
-              handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleShowSettings={this._handleShowRequestGroupSettings}
@@ -172,7 +169,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               handleSetRequestPinned={noop}
               isActive={false}
               requestGroup={requestGroup}
-              requestCreate={handleCreateRequest}
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false} // Necessary so that plugin actions work

@@ -111,7 +111,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
     const {
       handleActivateRequest,
       handleCopyAsCurl,
-      handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
@@ -156,7 +155,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
         <SidebarChildren
           childObjects={sidebarChildren}
           handleActivateRequest={handleActivateRequest}
-          handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleSetRequestPinned={handleSetRequestPinned}
@@ -194,7 +192,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
       settings,
     } = this.props;
     const {
-      handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
@@ -229,7 +226,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
           forceRefreshCounter={forceRefreshKey}
           forceUpdateRequest={handleForceUpdateRequest}
           forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-          handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleImport={handleImport}
           handleSend={handleSendRequestWithActiveEnvironment}

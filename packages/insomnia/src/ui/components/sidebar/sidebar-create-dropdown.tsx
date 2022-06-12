@@ -1,6 +1,7 @@
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
 
+import { useCreateRequestForActiveWorkspace } from '../../../common/create-request';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RequestGroup } from '../../../models/request-group';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -9,21 +10,19 @@ import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 interface Props {
-  handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
   hotKeyRegistry: HotKeyRegistry;
   right?: boolean;
 }
 
 export const SidebarCreateDropdown: FC<Props> = ({
-  handleCreateRequest,
   handleCreateRequestGroup,
   hotKeyRegistry,
   right,
 }) => {
   const create = useCallback((value: string) => {
-    handleCreateRequest(value);
-  }, [handleCreateRequest]);
+    useCreateRequestForActiveWorkspace(value);
+  }, []);
 
   return (
     <Dropdown right={right}>

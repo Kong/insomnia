@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { CreateRequestType, useCreateRequest } from '../../../common/create-request';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
@@ -33,7 +34,6 @@ const mapStateToProps = (state: RootState) => ({
 interface Props extends ReduxProps, Partial<DropdownProps> {
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  handleCreateRequest: (id: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
@@ -56,8 +56,8 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
     this._dropdown = dropdown;
   }
 
-  async _handleRequestCreate() {
-    this.props.handleCreateRequest(this.props.requestGroup._id);
+  _handleRequestCreate(requestType: CreateRequestType) {
+    useCreateRequest(this.props.requestGroup._id, requestType);
   }
 
   _handleRequestGroupDuplicate() {
@@ -135,24 +135,39 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        <DropdownItem onClick={() => this._handleRequestCreate()}>
-          <i className="fa fa-plus-circle" /> New Request
+
+        <DropdownItem value="HTTP" onClick={this._handleRequestCreate}>
+          <i className="fa fa-plus-circle" />New HTTP Request
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
         </DropdownItem>
+
+        <DropdownItem value="GraphQL" onClick={this._handleRequestCreate}>
+          <i className="fa fa-plus-circle" />New GraphQL Request
+        </DropdownItem>
+
+        <DropdownItem value="gRPC" onClick={this._handleRequestCreate}>
+          <i className="fa fa-plus-circle" />New gRPC Request
+        </DropdownItem>
+
         <DropdownItem onClick={this._handleRequestGroupCreate}>
           <i className="fa fa-folder" /> New Folder
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
         </DropdownItem>
+
         <DropdownDivider />
+
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate
         </DropdownItem>
+
         <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code" /> Environment
         </DropdownItem>
+
         <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o" /> Delete
         </DropdownItem>
+
         {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
         {actionPlugins.map((p: RequestGroupAction) => (
           <DropdownItem key={p.label} onClick={() => this._handlePluginClick(p)} stayOpenAfterClick>

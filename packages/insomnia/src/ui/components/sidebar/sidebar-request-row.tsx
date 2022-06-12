@@ -6,6 +6,7 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dn
 import { useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { useCreateRequest } from '../../../common/create-request';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -31,7 +32,6 @@ interface RawProps {
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  requestCreate: Function;
   filter: string;
   isActive: boolean;
   isPinned: boolean;
@@ -91,7 +91,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
 
   _handleRequestCreateFromEmpty() {
     const parentId = this.props.requestGroup?._id;
-    this.props.requestCreate(parentId);
+    useCreateRequest(parentId, 'HTTP');
   }
 
   _handleRequestActivate() {
