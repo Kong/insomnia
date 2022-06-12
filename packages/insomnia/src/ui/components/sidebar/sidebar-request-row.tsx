@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { FC, PureComponent } from 'react';
+import React, { createRef, FC, MouseEvent, PureComponent } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
 
@@ -58,35 +58,30 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
     renderedUrl: '',
   };
 
-  _urlUpdateInterval: NodeJS.Timeout | null = null;
-  _requestActionsDropdown: RequestActionsDropdown | null = null;
+  requestActionsDropdown = createRef<RequestActionsDropdown>();
 
-  _setRequestActionsDropdownRef(requestActionsDropdown: RequestActionsDropdown) {
-    this._requestActionsDropdown = requestActionsDropdown;
-  }
-
-  _handleShowRequestActions(event) {
+  _handleShowRequestActions(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
 
-    this._requestActionsDropdown?.show();
+    this.requestActionsDropdown.current?.show();
   }
 
-  _handleEditStart() {
-    this.setState({
-      isEditing: true,
-    });
+  startEditing() {
+    this.setState({ isEditing: true });
   }
 
-  async _handleRequestUpdateName(name) {
+  stopEditing() {
+    this.setState({ isEditing: false });
+  }
+
+  async _handleRequestUpdateName(name: string) {
     const { request } = this.props;
-    const patch = {
-      name,
-    };
-    // @ts-expect-error -- TSCONVERSION skip this if request is undefined
-    await requestOperations.update(request, patch);
-    this.setState({
-      isEditing: false,
-    });
+    if (!request) {
+      return;
+    }
+
+    await requestOperations.update(request, { name });
+    this.stopEditing();
   }
 
   _handleRequestCreateFromEmpty() {
@@ -106,36 +101,31 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
   }
 
   _handleShowRequestSettings() {
-    showModal(RequestSettingsModal, {
-      request: this.props.request,
-    });
+    const { request } = this.props;
+    showModal(RequestSettingsModal, { request });
   }
 
   _getMethodOverrideHeaderValue() {
     const { request } = this.props;
-    // @ts-expect-error -- TSCONVERSION skip this if request is undefined or grpc
-    const header = getMethodOverrideHeader(request.headers);
+    if (!request) {
+      return;
+    }
 
+    if (isGrpcRequest(request)) {
+      return;
+    }
+
+    const header = getMethodOverrideHeader(request.headers);
     if (header) {
       return header.value;
     }
 
-    // If no override, use GraphQL as override if it's a gql request
-    // @ts-expect-error -- TSCONVERSION skip this if request is undefined or grpc
+    // If no override, use GraphQL as override if it's a GraphQL request
     if (request.body && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
       return 'GQL';
     }
 
     return null;
-  }
-
-  async _debouncedUpdateRenderedUrl(props: Props) {
-    if (this._urlUpdateInterval !== null) {
-      clearTimeout(this._urlUpdateInterval);
-    }
-    this._urlUpdateInterval = setTimeout(() => {
-      this._updateRenderedUrl(props);
-    }, 300);
   }
 
   async _updateRenderedUrl(props: Props) {
@@ -152,16 +142,12 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
       renderedUrl = props.request.url;
     }
 
-    this.setState({
-      renderedUrl,
-    });
+    this.setState({ renderedUrl });
   }
 
-  setDragDirection(dragDirection) {
+  setDragDirection(dragDirection: number) {
     if (dragDirection !== this.state.dragDirection) {
-      this.setState({
-        dragDirection,
-      });
+      this.setState({ dragDirection });
     }
   }
 
@@ -169,12 +155,12 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
     const { request } = this.props;
 
     if (request && !request.name) {
-      this._debouncedUpdateRenderedUrl(this.props);
+      this._updateRenderedUrl(this.props);
     }
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate(nextProps) {
+  UNSAFE_componentWillUpdate(nextProps: Props) {
     if (!nextProps.request) {
       return;
     }
@@ -182,13 +168,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
     const requestUrl = this.props.request ? this.props.request.url : '';
 
     if (nextProps.request.url !== requestUrl) {
-      this._debouncedUpdateRenderedUrl(nextProps);
-    }
-  }
-
-  componentWillUnmount() {
-    if (this._urlUpdateInterval !== null) {
-      clearTimeout(this._urlUpdateInterval);
+      this._updateRenderedUrl(nextProps);
     }
   }
 
@@ -256,7 +236,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
                   fallbackValue={this.state.renderedUrl}
                   blankValue="Empty"
                   className="inline-block"
-                  onEditStart={this._handleEditStart}
+                  onEditStart={this.startEditing}
                   onSubmit={this._handleRequestUpdateName}
                   renderReadView={(value, props) => (
                     <Highlight
@@ -273,7 +253,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
             <div className="sidebar__actions">
               <RequestActionsDropdown
                 right
-                ref={this._setRequestActionsDropdownRef}
+                ref={this.requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleSetRequestPinned={handleSetRequestPinned}
                 handleGenerateCode={handleGenerateCode}
@@ -308,23 +288,19 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
 }
 
 const dragSource: DragSourceSpec<Props, DragObject> = {
-  beginDrag(props) {
+  beginDrag({ request }) {
     return {
-      item: props.request,
+      item: request,
     };
   },
 };
 
-const dropHandle = dropHandleCreator<Props>({
-  getParentId: props => props.requestGroup?._id || props.request?.parentId,
-  getTargetId: props => props.request?._id,
-});
-
-const hoverHandle = hoverHandleCreator<Props>();
-
 const dragTarget: DropTargetSpec<Props> = {
-  drop: dropHandle,
-  hover: hoverHandle,
+  drop: dropHandleCreator<Props>({
+    getParentId: props => props.requestGroup?._id || props.request?.parentId,
+    getTargetId: props => props.request?._id,
+  }),
+  hover: hoverHandleCreator<Props>(),
 };
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
