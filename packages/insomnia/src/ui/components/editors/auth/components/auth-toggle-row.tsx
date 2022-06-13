@@ -27,7 +27,10 @@ export const AuthToggleRow: FC<Props> = ({
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
   const databaseValue = Boolean(authentication[property]);
-  const toggle = useCallback((value: boolean) => patchAuth({ [property]: value }), [patchAuth, property]);
+  const toggle = useCallback(
+    (_event: React.MouseEvent, value: boolean) =>
+      patchAuth({ [property]: value }), [patchAuth, property]
+  );
 
   const isActuallyOn = invert ? !databaseValue : databaseValue;
 

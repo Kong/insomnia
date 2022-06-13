@@ -53,7 +53,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
   handleActivateEnvironment,
   selectedEnvironment,
   showEnvironment,
-}) => {
+}: SidebarListItemProps) => {
   const classes = classnames({
     'env-modal__sidebar-item': true,
     'env-modal__sidebar-item--active': selectedEnvironment === environment,
@@ -113,7 +113,7 @@ const SidebarList = SortableContainer<SidebarListProps>(
     handleActivateEnvironment,
     selectedEnvironment,
     showEnvironment,
-  }) => (
+  }: SidebarListProps) => (
     <ul>
       {environments.map((environment, index) => (
         <SidebarListItem
@@ -220,7 +220,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     await this._load(workspace, environment);
   }
 
-  _handleShowEnvironment(environment: Environment) {
+  _handleShowEnvironment(_event: React.MouseEvent, environment?: Environment) {
     // Don't allow switching if the current one has errors
     if (this.environmentEditorRef && !this.environmentEditorRef.isValid()) {
       return;
@@ -234,13 +234,13 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._load(workspace, environment);
   }
 
-  async _handleDuplicateEnvironment(environment: Environment) {
+  async _handleDuplicateEnvironment(_event: React.MouseEvent, environment: Environment) {
     const { workspace } = this.state;
     const newEnvironment = await models.environment.duplicate(environment);
     await this._load(workspace, newEnvironment);
   }
 
-  async _handleDeleteEnvironment(environment: Environment) {
+  async _handleDeleteEnvironment(_event: React.MouseEvent, environment: Environment) {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
@@ -377,12 +377,12 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
       return;
     }
 
-    let patch;
+    let patch: Partial<Environment>;
 
     try {
       const data = this.environmentEditorRef.getValue();
       patch = {
-        data: data && data.object,
+        data: data?.object,
         dataPropertyOrder: data && data.propertyOrder,
       };
     } catch (err) {
@@ -410,15 +410,19 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._handleChangeEnvironmentColor(environment, null);
   }
 
-  _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (environment: Environment) => {
+  _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (event, environment) => {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
+
+    if (!environment) {
+      return;
+    }
 
     if (environment._id === activeEnvironmentId) {
       return;
     }
 
     handleChangeEnvironment(environment._id);
-    this._handleShowEnvironment(environment);
+    this._handleShowEnvironment(event, environment);
   };
 
   render() {
