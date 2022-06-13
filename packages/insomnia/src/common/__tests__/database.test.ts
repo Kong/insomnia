@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { globalBeforeEach, hostDB } from '../../__jest__/before-each';
-import { DatabaseHost } from '../../main/database';
+import { globalBeforeEach } from '../../__jest__/before-each';
+import { database as db } from '../../main/database';
 import * as models from '../../models';
 import { data as fixtures } from '../__fixtures__/nestedfolders';
-import { database as db } from '../database';
+import { offChange, onChange } from '../database';
 import { ChangeBufferEvent } from '../dbtypes';
 
 function loadFixture() {
@@ -22,10 +22,10 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('handles being initialized twice', async () => {
-    await DatabaseHost.init(models.types(), {
+    await db.init(models.types(), {
       inMemoryOnly: true,
     });
-    await DatabaseHost.init(models.types(), {
+    await db.init(models.types(), {
       inMemoryOnly: true,
     });
     expect((await db.all(models.request.type)).length).toBe(0);
@@ -47,7 +47,7 @@ describe('onChange()', () => {
       changesSeen.push(change);
     };
 
-    db.onChange(callback);
+    onChange(callback);
     const newDoc = await models.request.create(doc);
     const updatedDoc = await models.request.update(newDoc, {
       name: 'bar',
@@ -57,7 +57,7 @@ describe('onChange()', () => {
       [[db.CHANGE_INSERT, newDoc, false]],
       [[db.CHANGE_UPDATE, updatedDoc, false]],
     ]);
-    db.offChange(callback);
+    offChange(callback);
     await models.request.create(doc);
     expect(changesSeen.length).toBe(2);
   });
@@ -78,7 +78,7 @@ describe('bufferChanges()', () => {
       changesSeen.push(change);
     };
 
-    db.onChange(callback);
+    onChange(callback);
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -115,7 +115,7 @@ describe('bufferChanges()', () => {
       changesSeen.push(change);
     };
 
-    db.onChange(callback);
+    onChange(callback);
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -142,7 +142,7 @@ describe('bufferChanges()', () => {
       changesSeen.push(change);
     };
 
-    db.onChange(callback);
+    onChange(callback);
     await db.bufferChanges(500);
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -172,7 +172,7 @@ describe('bufferChangesIndefinitely()', () => {
       changesSeen.push(change);
     };
 
-    db.onChange(callback);
+    onChange(callback);
     await db.bufferChangesIndefinitely();
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -385,7 +385,7 @@ describe('_repairDatabase()', () => {
     ]);
 
     // Run the fix algorithm
-    await hostDB._repairDatabase();
+    await db._repairDatabase();
 
     // Make sure things get adjusted
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
@@ -544,7 +544,7 @@ describe('_repairDatabase()', () => {
       }),
     ]);
     // Run the fix algorithm
-    await hostDB._repairDatabase();
+    await db._repairDatabase();
     // Make sure things get adjusted
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
@@ -614,7 +614,7 @@ describe('_repairDatabase()', () => {
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
     expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
-    await hostDB._repairDatabase();
+    await db._repairDatabase();
     // Make sure things get adjusted
     expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
     expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
@@ -636,7 +636,7 @@ describe('_repairDatabase()', () => {
     const newRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
-    await hostDB._repairDatabase();
+    await db._repairDatabase();
     expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',

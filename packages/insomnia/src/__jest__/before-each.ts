@@ -1,16 +1,19 @@
 import * as fetch from '../account/fetch';
-import { database as db } from '../common/database';
-import { DatabaseHost } from '../main/database';
+import { clearChangeListeners, setDatabase } from '../common/database';
+import { resetDatabase } from '../main/database';
+import { database } from '../main/database';
 import * as models from '../models';
 
-export let hostDB: DatabaseHost;
+setDatabase(database);
 
 export async function globalBeforeEach() {
   // Setup the local database in case it's used
   fetch.setup('insomnia-tests', 'http://localhost:8000');
 
-  db.clearListeners();
-  hostDB = await DatabaseHost.init(
+  resetDatabase();
+  clearChangeListeners();
+  setDatabase(database);
+  await database.init(
     models.types(),
     {
       inMemoryOnly: true,

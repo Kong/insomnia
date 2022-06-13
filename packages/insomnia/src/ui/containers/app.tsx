@@ -28,7 +28,8 @@ import {
   PreviewMode,
   SortOrder,
 } from '../../common/constants';
-import { type ChangeBufferEvent, database as db } from '../../common/database';
+import { database as db, offChange, onChange } from '../../common/database';
+import { ChangeBufferEvent } from '../../common/dbtypes';
 import { getDataDirectory } from '../../common/electron-helpers';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -1236,7 +1237,7 @@ class App extends PureComponent<AppProps, State> {
     // Update VCS
     await this._updateVCS();
     await this._updateGitVCS();
-    db.onChange(this._handleDbChange);
+    onChange(this._handleDbChange);
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
@@ -1359,7 +1360,7 @@ class App extends PureComponent<AppProps, State> {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
-    db.offChange(this._handleDbChange);
+    offChange(this._handleDbChange);
   }
 
   async _ensureWorkspaceChildren() {

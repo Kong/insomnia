@@ -3,8 +3,8 @@ import NeDB from 'nedb';
 import path from 'path';
 
 import { DB_PERSIST_INTERVAL } from '../common/constants';
-import { database } from '../common/database';
-import { ChangeBufferEvent, Database, docUpdate, ModelQuery, Operation, Query, Sort } from '../common/dbtypes';
+import { notifyChange, onChange } from '../common/database';
+import { ChangeBufferEvent, Database, docCreate, docUpdate, ModelQuery, Operation, Query, Sort } from '../common/dbtypes';
 import { ChangeType, DatabaseCommon } from '../common/dbtypes';
 import { getDataDirectory } from '../common/electron-helpers';
 import { generateId } from '../common/misc';
@@ -23,29 +23,20 @@ interface DB {
 }
 
 export class DatabaseHost extends DatabaseCommon implements Database {
-  private readonly db: DB = {};
+  bufferingChanges = false;
+  bufferChangesId = 1;
+  changeBuffer: ChangeBufferEvent[] = [];
 
-  private constructor() {
-    super();
-  }
+  private readonly db: DB = {};
 
   private static getDBFilePath(modelType: string): string {
     // NOTE: Do not EVER change this. EVER!
     return path.join(getDataDirectory(), `insomnia.${modelType}.db`);
   }
 
-  static async init(
-    types: string[],
-    config: NeDB.DataStoreOptions = {},
-    consoleLog: typeof console.log = console.log
-  ): Promise<DatabaseHost> {
-    const host = new DatabaseHost();
-    database.setImplementation(host);
-    await host.init(types, config, consoleLog);
-    return host;
-  }
+  allTypes = () => Object.keys(this.db);
 
-  private async init(
+  async init(
     types: string[],
     config: NeDB.DataStoreOptions = {},
     consoleLog: typeof console.log = console.log,
@@ -85,7 +76,7 @@ export class DatabaseHost extends DatabaseCommon implements Database {
 
     // This isn't the best place for this but w/e
     // Listen for response deletions and delete corresponding response body files
-    this.onChange(async changes => {
+    onChange(async changes => {
       for (const [type, doc] of changes) {
         // TODO(TSCONVERSION) what's returned here is the entire model implementation, not just a model
         // The type definition will be a little confusing
@@ -146,8 +137,6 @@ export class DatabaseHost extends DatabaseCommon implements Database {
       await this._fixOldGitURIs(gitRepository);
     }
   }
-
-  allTypes = () => Object.keys(this.db);
 
   private readonly handleIpc = async<T extends keyof Database>(
     _event: Electron.IpcMainEvent,
@@ -317,9 +306,7 @@ export class DatabaseHost extends DatabaseCommon implements Database {
     }
 
     // Notify local listeners too
-    for (const fn of this.changeListeners) {
-      await fn(changes);
-    }
+    notifyChange(changes);
     // Notify remote listeners
     const isMainContext = process.type === 'browser';
     if (isMainContext) {
@@ -549,13 +536,17 @@ export class DatabaseHost extends DatabaseCommon implements Database {
     return next([doc]);
   }
 
+  async docCreate<T extends BaseModel>(type: string, ...patches: Partial<T>[]): Promise<T> {
+    return docCreate(this, type, ...patches);
+  }
+
+  async docUpdate<T extends BaseModel>(originalDoc: T, ...patches: Partial<T>[]) {
+    return docUpdate(this, originalDoc, ...patches);
+  }
+
   // ~~~~~~~~~~~~~~~~ //
   // Change Listeners //
   // ~~~~~~~~~~~~~~~~ //
-  bufferingChanges = false;
-  bufferChangesId = 1;
-
-  changeBuffer: ChangeBufferEvent[] = [];
 
   async notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSync: boolean) {
     let updatedDoc = doc;
@@ -691,4 +682,10 @@ export class DatabaseHost extends DatabaseCommon implements Database {
     await this.update(doc);
     console.log(`[fix] Fixed git URI for ${doc._id}`);
   }
+}
+
+export let database = new DatabaseHost();
+
+export function resetDatabase() {
+  database = new DatabaseHost();
 }

@@ -1,25 +1,16 @@
 import electron from 'electron';
-import { v4 as uuidv4 } from 'uuid';
 
-import { database } from '../common/database';
-import { ChangeBufferEvent, Database, DatabaseCommon, Operation, Query, Sort, SpecificQuery } from '../common/dbtypes';
+import { notifyChange } from '../common/database';
+import { ChangeBufferEvent, Database, DatabaseCommon, docCreate, docUpdate, Operation, Query, Sort, SpecificQuery } from '../common/dbtypes';
 import { BaseModel } from '../models';
 
 export class DatabaseClient extends DatabaseCommon implements Database {
-  private constructor() {
-    super();
-
+  init() {
     electron.ipcRenderer.on('db.changes', async (_e, changes: ChangeBufferEvent[]) => {
-      for (const fn of this.changeListeners) {
-        await fn(changes);
-      }
+      notifyChange(changes);
     });
 
     console.log('[db] Initialized DB client');
-  }
-
-  static init() {
-    database.setImplementation(new DatabaseClient);
   }
 
   all<T extends BaseModel = BaseModel>(type: string): Promise<T[]> {
@@ -108,4 +99,14 @@ export class DatabaseClient extends DatabaseCommon implements Database {
   private _send<T extends keyof Database, Fn extends Database[T]>(fnName: T, ...args: Parameters<Fn>): Promise<Awaited<ReturnType<Fn>>> {
     return electron.ipcRenderer.invoke('db.fn', fnName, ...args);
   }
+
+  async docCreate<T extends BaseModel>(type: string, ...patches: Partial<T>[]): Promise<T> {
+    return docCreate(this, type, ...patches);
+  }
+
+  async docUpdate<T extends BaseModel>(originalDoc: T, ...patches: Partial<T>[]) {
+    return docUpdate(this, originalDoc, ...patches);
+  }
 }
+
+export const database = new DatabaseClient();

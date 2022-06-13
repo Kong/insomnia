@@ -4,7 +4,7 @@ import React, { Fragment, PureComponent } from 'react';
 import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
-import { database as db } from '../../../common/database';
+import { database as db, onChange } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -323,7 +323,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   }
 
   componentDidMount() {
-    db.onChange(async changes => {
+    onChange(async changes => {
       const { selectedEnvironmentId } = this.state;
 
       for (const change of changes) {

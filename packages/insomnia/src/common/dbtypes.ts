@@ -60,20 +60,12 @@ export interface Database {
   upsert<T extends BaseModel = BaseModel>(doc: T, fromSync?: boolean): Promise<T>;
   withAncestors<T extends BaseModel = BaseModel>(doc: T | null, types?: string[]): Promise<T[]>;
   withDescendants<T extends BaseModel = BaseModel>(doc: T | null, stopType?: string | null): Promise<BaseModel[]>;
-  onChange(callback: ChangeListener): void;
-  offChange(callback: ChangeListener): void;
 }
 
 export class DatabaseCommon {
-  protected changeListeners: ChangeListener[] = [];
-
-  onChange(callback: ChangeListener) {
-    this.changeListeners.push(callback);
-  }
-
-  offChange(callback: ChangeListener) {
-    this.changeListeners = this.changeListeners.filter(l => l !== callback);
-  }
+  readonly CHANGE_INSERT = ChangeType.INSERT;
+  readonly CHANGE_UPDATE = ChangeType.UPDATE;
+  readonly CHANGE_REMOVE = ChangeType.REMOVE;
 }
 
 export async function docCreate<T extends BaseModel>(database: Database, type: string, ...patches: Partial<T>[]): Promise<T> {

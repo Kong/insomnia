@@ -3,7 +3,7 @@ import { bindActionCreators, combineReducers, Store } from 'redux';
 import * as fetch from '../../../account/fetch';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
 import { getApiBaseURL, getClientString } from '../../../common/constants';
-import { database as db } from '../../../common/database';
+import { onChange } from '../../../common/database';
 import configureStore from '../create';
 import * as entities from './entities';
 import * as global from './global';
@@ -18,7 +18,7 @@ export async function init(): Promise<Store> {
   // Link DB changes to entities reducer/actions
   const docs = await entities.allDocs();
   initEntities(docs);
-  db.onChange(changes => {
+  onChange(changes => {
     addChanges(changes);
   });
   // Initialize login state
