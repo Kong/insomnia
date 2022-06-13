@@ -1,4 +1,3 @@
-/* eslint-disable no-trailing-spaces */
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import type ReactLib from 'react';
 import { type SyntheticEvent } from 'react';
@@ -432,11 +431,11 @@ export function getDeployToPortalComponent(options: {
         return (
           <div className="pad">
             <p className="no-pad no-margin-top">
-              The Document is now available on 
+              The Document is now available on
               {kongPortalLegacyMode ? (
-                'Dev Portal'
+                ' Dev Portal'
               ) : (
-                <a href={kongPortalUrl}>Dev Portal</a>
+                <a href={kongPortalUrl}> Dev Portal</a>
               )}
             </p>
             <div>
