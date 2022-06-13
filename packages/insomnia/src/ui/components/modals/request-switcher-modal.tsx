@@ -456,7 +456,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 );
                 return (
                   <li key={r._id}>
-                    <Button onClick={(_e, r) => this._activateRequest(r)} value={r} className={buttonClasses}>
+                    <Button onClick={(_e, request) => this._activateRequest(request)} value={r} className={buttonClasses}>
                       <div>
                         {requestGroup ? (
                           <div className="pull-right faint italic">
