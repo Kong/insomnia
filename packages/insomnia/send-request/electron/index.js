@@ -7,6 +7,7 @@ module.exports = {
     on: () => {
       // Don't need this yet
     },
+    handle: () => {},
   },
   BrowserWindow: {
     getAllWindows: () => [],
