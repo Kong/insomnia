@@ -70,7 +70,7 @@ export function remove(token: OAuth2Token) {
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<OAuth2Token>(type, { parentId });
+  return db.getWhere<OAuth2Token>(type, { parentId: normaliseRequestId(parentId) });
 }
 
 export async function getOrCreateByParentId(parentId: string) {
@@ -89,4 +89,12 @@ export async function getOrCreateByParentId(parentId: string) {
 
 export function all() {
   return db.all<OAuth2Token>(type);
+}
+
+function normaliseRequestId(requestId: string) {
+  // HACK: GraphQL requests use a child request to fetch the schema with an
+  // ID of "{{request_id}}.graphql". Here we are removing the .graphql suffix and
+  // pretending we are fetching a token for the original request. This makes sure
+  // the same tokens are used for schema fetching. See issue #835 on GitHub.
+  return requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
 }
