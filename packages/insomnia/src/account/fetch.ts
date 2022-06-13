@@ -6,7 +6,7 @@ let _userAgent = '';
 let _baseUrl = '';
 const _commandListeners: Function[] = [];
 
-export function setup(userAgent, baseUrl) {
+export function setup(userAgent: string, baseUrl: string) {
   _userAgent = userAgent;
   _baseUrl = baseUrl;
 }
@@ -57,7 +57,7 @@ async function _fetch<T = any>(
 
   const config: {
     method: string;
-    headers: HeadersInit;
+    headers: Record<string, string>;
     body?: string | Buffer;
   } = {
     method: method,
@@ -117,7 +117,7 @@ async function _fetch<T = any>(
   }
 }
 
-function _getUrl(path) {
+function _getUrl(path: string) {
   if (!_baseUrl) {
     throw new Error('API base URL not configured!');
   }
@@ -125,7 +125,7 @@ function _getUrl(path) {
   return `${_baseUrl}${path}`;
 }
 
-function _notifyCommandListeners(uri) {
+function _notifyCommandListeners(uri: string) {
   const parsed = urlParse(uri, true);
   const command = `${parsed.hostname}${parsed.pathname}`;
   const args = JSON.parse(JSON.stringify(parsed.query));

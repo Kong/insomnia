@@ -127,6 +127,7 @@
     "@types/fs-extra": "^5.1.0",
     "@types/hapi__hawk": "^8.0.2",
     "@types/js-yaml": "^4.0.1",
+    "@types/jshint": "^2.12.1",
     "@types/license-checker": "^25.0.1",
     "@types/marked": "^4.0.2",
     "@types/mime-types": "^2.1.1",
