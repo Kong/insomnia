@@ -21,6 +21,13 @@ type EntitiesLists = {
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
+/**
+ * @deprecated
+ * DO NOT use this unless ABSOLUTELY necessary.
+ * Using this couples state tree shape to components.
+ */
+export const selectRootState = (state: RootState) => state;
+
 export const selectEntities = createSelector(
   (state: RootState) => state.entities,
   entities => entities,

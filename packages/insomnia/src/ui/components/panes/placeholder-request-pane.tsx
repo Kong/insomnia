@@ -1,11 +1,11 @@
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { useCreateRequestForActiveWorkspace } from '../../../common/create-request';
+import { createRequestForActiveWorkspace } from '../../../common/create-request';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importFile } from '../../redux/modules/import';
-import { selectActiveWorkspace, selectSettings } from '../../redux/selectors';
+import { selectActiveWorkspace, selectRootState, selectSettings } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
@@ -13,11 +13,12 @@ export const PlaceholderRequestPane: FC = () => {
   const dispatch = useDispatch();
   const { hotKeyRegistry } = useSelector(selectSettings);
   const workspaceId = useSelector(selectActiveWorkspace)?._id;
+  const reduxState = useSelector(selectRootState);
   const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId, forceToWorkspace: ForceToWorkspace.current })), [workspaceId, dispatch]);
 
   const createHttpRequest = useCallback(() => {
-    useCreateRequestForActiveWorkspace('HTTP');
-  }, []);
+    createRequestForActiveWorkspace(reduxState)('HTTP');
+  }, [reduxState]);
 
   return (
     <Pane type="request">

@@ -35,7 +35,6 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleRequestCreate: () => void;
   handleRequestGroupCreate: () => void;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
@@ -101,7 +100,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
       activeWorkspace,
       environments,
       handleChangeEnvironment,
-      handleRequestCreate,
       handleRequestGroupCreate,
       handleSidebarSort,
       settings,
@@ -145,7 +143,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
         <SidebarFilter
           key={`${activeWorkspace._id}::filter`}
           onChange={handleSetSidebarFilter}
-          requestCreate={handleRequestCreate}
           requestGroupCreate={handleRequestGroupCreate}
           sidebarSort={handleSidebarSort}
           filter={sidebarFilter || ''}

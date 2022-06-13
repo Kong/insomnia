@@ -1,9 +1,11 @@
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
-import { useCreateRequestForActiveWorkspace } from '../../../common/create-request';
+import { createRequestForActiveWorkspace, CreateRequestType } from '../../../common/create-request';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RequestGroup } from '../../../models/request-group';
+import { selectRootState } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -20,9 +22,10 @@ export const SidebarCreateDropdown: FC<Props> = ({
   hotKeyRegistry,
   right,
 }) => {
-  const create = useCallback((value: string) => {
-    useCreateRequestForActiveWorkspace(value);
-  }, []);
+  const rootState = useSelector(selectRootState);
+  const create = useCallback((value: CreateRequestType) => {
+    createRequestForActiveWorkspace(rootState)(value);
+  }, [rootState]);
 
   return (
     <Dropdown right={right}>

@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import * as models from '../models';
@@ -9,12 +7,13 @@ import { RequestMeta } from '../models/request-meta';
 import { WorkspaceMeta } from '../models/workspace-meta';
 import { showModal } from '../ui/components/modals';
 import ProtoFilesModal from '../ui/components/modals/proto-files-modal';
+import { RootState } from '../ui/redux/modules';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../ui/redux/selectors';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from './constants';
 
-export const useUpdateActiveWorkspaceMeta = async (patch: Partial<WorkspaceMeta>) => {
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+export const updateActiveWorkspaceMeta = (state: RootState) => async (patch: Partial<WorkspaceMeta>) => {
+  const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
 
   if (activeWorkspaceMeta) {
     await models.workspaceMeta.update(activeWorkspaceMeta, patch);
@@ -33,15 +32,15 @@ export const updateRequestMetaByParentId = async (
   await models.requestMeta.updateOrCreateByParentId(requestId, patch);
 };
 
-export const useSetActiveRequest = async (activeRequestId: string) => {
-  await useUpdateActiveWorkspaceMeta({ activeRequestId });
+export const setActiveRequest = (state: RootState) => async (activeRequestId: string) => {
+  await updateActiveWorkspaceMeta(state)({ activeRequestId });
   await updateRequestMetaByParentId(activeRequestId, { lastActive: Date.now() });
 };
 
 export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL';
 type RequestCreator = (parentId: string, requestType: CreateRequestType) => Promise<void>;
 
-export const useCreateRequest: RequestCreator = async (parentId, requestType) => {
+export const createRequest = (state: RootState): RequestCreator => async (parentId, requestType) => {
   let requestId = '';
 
   switch (requestType) {
@@ -95,15 +94,13 @@ export const useCreateRequest: RequestCreator = async (parentId, requestType) =>
   }
 
   trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
-  useSetActiveRequest(requestId);
+  setActiveRequest(state)(requestId);
 };
 
-export const useCreateRequestForActiveWorkspace = async (requestType: CreateRequestType) => {
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  useEffect(() => {
-    if (!activeWorkspace) {
-      return;
-    }
-    useCreateRequest(activeWorkspace._id, requestType);
-  }, [activeWorkspace, requestType]);
+export const createRequestForActiveWorkspace = (state: RootState) => async (requestType: CreateRequestType) => {
+  const activeWorkspace = selectActiveWorkspace(state);
+  if (!activeWorkspace) {
+    return;
+  }
+  createRequest(state)(activeWorkspace._id, requestType);
 };

@@ -5,7 +5,7 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dn
 import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
-import { useCreateRequest } from '../../../common/create-request';
+import { createRequest } from '../../../common/create-request';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -57,7 +57,7 @@ const dragTarget: DropTargetSpec<Props> = {
   hover: hoverHandleCreator<Props>(),
 };
 
-export const SidebarRequestRow: FC<Props> = ({
+export const Target: FC<Props> = ({
   connectDragSource,
   connectDropTarget,
   disableDragAndDrop,
@@ -114,7 +114,7 @@ export const SidebarRequestRow: FC<Props> = ({
     if (!requestGroup) {
       return;
     }
-    useCreateRequest(requestGroup?._id, 'HTTP');
+    createRequest(requestGroup?._id, 'HTTP');
   }, [requestGroup?._id]);
 
   const handleRequestActivate = useCallback(() => {
@@ -276,5 +276,5 @@ export const SidebarRequestRow: FC<Props> = ({
   }
 };
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
-const Target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(Target);
+export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
