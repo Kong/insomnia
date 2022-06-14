@@ -3,7 +3,6 @@ import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { createRequest, CreateRequestType } from '../../../common/create-request';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
@@ -11,7 +10,8 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { selectActiveEnvironment, selectActiveProject, selectRootState } from '../../redux/selectors';
+import { createRequest, CreateRequestType } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -43,11 +43,14 @@ export const RequestGroupActionsDropdown: FC<Props> = forwardRef(({
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const rootState = useSelector(selectRootState);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceId = activeWorkspace?._id;
 
   const create = useCallback((requestType: CreateRequestType) => {
-    createRequest(rootState)(requestGroup._id, requestType);
-  }, [requestGroup._id, rootState]);
+    if (activeWorkspaceId) {
+      createRequest({ parentId: requestGroup._id, requestType, workspaceId: activeWorkspaceId });
+    }
+  }, [activeWorkspaceId, requestGroup._id]);
 
   useImperativeHandle(ref, () => ({
     show: () => {

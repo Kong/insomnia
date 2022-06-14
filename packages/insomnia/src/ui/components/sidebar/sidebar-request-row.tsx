@@ -5,14 +5,14 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dn
 import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
-import { createRequest } from '../../../common/create-request';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
+import { createRequest } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
@@ -78,7 +78,8 @@ export const Target: FC<Props> = ({
   const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceId = activeWorkspace?._id;
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -111,11 +112,15 @@ export const Target: FC<Props> = ({
   }, [request, stopEditing]);
 
   const handleRequestCreateFromEmpty = useCallback(() => {
-    if (!requestGroup) {
+    if (!requestGroup?._id || !activeWorkspaceId) {
       return;
     }
-    createRequest(requestGroup?._id, 'HTTP');
-  }, [requestGroup?._id]);
+    createRequest({
+      requestType: 'HTTP',
+      parentId: requestGroup?._id,
+      workspaceId: activeWorkspaceId,
+    });
+  }, [requestGroup?._id, activeWorkspaceId]);
 
   const handleRequestActivate = useCallback(() => {
     if (isActive) {
