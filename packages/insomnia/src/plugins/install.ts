@@ -216,7 +216,7 @@ async function _installPluginToTmpDir(lookupName: string) {
   });
 }
 
-export function containsOnlyDeprecationWarnings(stderr) {
+export function containsOnlyDeprecationWarnings(stderr: string) {
   // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
   const arr = stderr.split(/\r?\n/).filter(error => error);
   // Retrieve all matching deprecated dependency warning
@@ -258,7 +258,7 @@ function _getYarnPath() {
   }
 }
 
-function escape(p) {
+function escape(p: string) {
   if (isWindows()) {
     // Quote for Windows paths
     return `"${p}"`;

@@ -73,8 +73,8 @@ interface CurlRequestOutput {
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
-const cancelCurlRequestHandlers = {};
-export const cancelCurlRequest = id => cancelCurlRequestHandlers[id]();
+const cancelCurlRequestHandlers: Record<string, () => void> = {};
+export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]();
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
@@ -208,7 +208,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const requestBody = parseRequestBody({ body, method });
     const requestBodyPath = await parseRequestBodyPath(body);
     const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
-    let requestFileDescriptor;
+    let requestFileDescriptor: number;
     const { authentication } = req;
     if (requestBodyPath) {
       // AWS IAM file upload not supported
@@ -358,7 +358,7 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
 };
 
 // Because node-libcurl changed some names that we used in the timeline
-const LIBCURL_DEBUG_MIGRATION_MAP = {
+const LIBCURL_DEBUG_MIGRATION_MAP: Record<string, string> = {
   HeaderIn: 'HEADER_IN',
   DataIn: 'DATA_IN',
   SslDataIn: 'SSL_DATA_IN',
@@ -416,13 +416,13 @@ async function waitForStreamToFinish(stream: Readable | Writable) {
     });
   });
 }
-const parseRequestBody = ({ body, method }) => {
+const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
   const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
   const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
   const hasMimetypeAndUpdateMethod = typeof body.mimeType === 'string' || expectsBody;
   if (isUrlEncodedForm) {
     const urlSearchParams = new URLSearchParams();
-    (body.params || []).map(p => urlSearchParams.append(p.name, p?.value || ''));
+    (body.params || []).map((p: { name: string; value: any }) => urlSearchParams.append(p.name, p?.value || ''));
     return urlSearchParams.toString();
   }
 
@@ -432,7 +432,7 @@ const parseRequestBody = ({ body, method }) => {
 
   return undefined;
 };
-const parseRequestBodyPath = async body => {
+const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (!isMultipartForm) {
     return body.fileName;
@@ -441,7 +441,7 @@ const parseRequestBodyPath = async body => {
   return filePath;
 };
 
-export const getHttpVersion = preferredHttpVersion => {
+export const getHttpVersion = (preferredHttpVersion: string) => {
   switch (preferredHttpVersion) {
     case 'V1_0':
       return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };

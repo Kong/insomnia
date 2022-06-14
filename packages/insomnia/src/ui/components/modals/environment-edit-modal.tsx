@@ -69,7 +69,7 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
     }
   }
 
-  show(requestGroup) {
+  show(requestGroup: RequestGroup) {
     this.setState({ requestGroup });
     this.modal?.show();
   }

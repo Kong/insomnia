@@ -11,7 +11,7 @@ import {
 } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
 
@@ -404,7 +404,7 @@ const mapStateToProps = (state: RootState) => ({
   workspacesForActiveProject: selectWorkspacesForActiveProject(state),
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const bound = bindActionCreators(
     {
       createWorkspace,

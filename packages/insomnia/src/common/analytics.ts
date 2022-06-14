@@ -3,7 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId } from '../account/session';
-import { database as db } from '../common/database';
+import { ChangeBufferEvent, database as db } from '../common/database';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 import {
@@ -195,7 +195,7 @@ function _getOsName() {
 
 // Monitor database changes to see if analytics gets enabled.
 // If analytics become enabled, flush any queued events.
-db.onChange(async changes => {
+db.onChange(async (changes: ChangeBufferEvent[]) => {
   for (const change of changes) {
     const [event, doc] = change;
     const isUpdatingSettings = isSettings(doc) && event === 'update';

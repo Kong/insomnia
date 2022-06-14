@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
@@ -105,7 +105,7 @@ const mapStateToProps = (state: RootState) => ({
   project: selectActiveProject(state),
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const boundProjectActions = bindActionCreators(projectActions, dispatch);
   return {
     handleRemoveProject: boundProjectActions.removeProject,

@@ -37,7 +37,7 @@ export class NunjucksModal extends PureComponent<Props, State> {
     this._currentTemplate = template;
   }
 
-  _handleSubmit(event) {
+  _handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     this.hide();
   }
@@ -52,7 +52,7 @@ export class NunjucksModal extends PureComponent<Props, State> {
     }
   }
 
-  show({ template, onDone }) {
+  show({ template, onDone }: any) {
     this._onDone = onDone;
     this._currentTemplate = template;
     this.setState({

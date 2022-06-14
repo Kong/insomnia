@@ -460,7 +460,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  _handleGitBranchChanged(branch) {
+  _handleGitBranchChanged(branch: string) {
     this.setState({
       activeGitBranch: branch || 'no-vcs',
     });

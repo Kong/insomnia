@@ -173,7 +173,7 @@ function getThemeBlockCSS(block?: ThemeBlock) {
     css += `${indent}--${variable}: ${value};\n`;
   };
 
-  const addComment = comment => {
+  const addComment = (comment: string) => {
     css += `${indent}/* ${comment} */\n`;
   };
 

@@ -42,7 +42,7 @@ interface Props {
   handleDeleteResponses: Function;
   handleDeleteResponse: Function;
   handleShowRequestSettings: Function;
-  previewMode: string;
+  previewMode: 'friendly' | 'source' | 'raw';
   filter: string;
   filterHistory: string[];
   disableHtmlPreviewJs: boolean;

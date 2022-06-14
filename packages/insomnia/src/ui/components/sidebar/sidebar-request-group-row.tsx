@@ -66,7 +66,7 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
     this.dropdownRef.current?.show();
   }
 
-  setDragDirection(dragDirection) {
+  setDragDirection(dragDirection: number) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({
         dragDirection,

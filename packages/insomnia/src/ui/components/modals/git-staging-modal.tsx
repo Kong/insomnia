@@ -207,7 +207,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     // Create status items
-    const items = {};
+    const items: Record<string, Item> = {};
     const log = (await vcs.log(1)) || [];
 
     for (const gitPath of allPaths) {
@@ -255,7 +255,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
       }
 
       items[gitPath] = {
-        type,
+        type: type as any,
         staged,
         editable,
         status,

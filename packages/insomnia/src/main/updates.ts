@@ -64,7 +64,7 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   return fullUrl;
 }
 
-function _sendUpdateStatus(status) {
+function _sendUpdateStatus(status: string) {
   const windows = BrowserWindow.getAllWindows();
 
   for (const window of windows) {

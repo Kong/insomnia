@@ -16,23 +16,23 @@ export class ResponseCallbacks implements IResponseCallbacks {
     this._event = event;
   }
 
-  sendData(requestId, val) {
+  sendData(requestId: string, val: Record<string, any>) {
     this._event.reply(GrpcResponseEventEnum.data, requestId, val);
   }
 
-  sendError(requestId, err) {
+  sendError(requestId: string, err: Error) {
     this._event.reply(GrpcResponseEventEnum.error, requestId, err);
   }
 
-  sendStart(requestId) {
+  sendStart(requestId: string) {
     this._event.reply(GrpcResponseEventEnum.start, requestId);
   }
 
-  sendEnd(requestId) {
+  sendEnd(requestId: string) {
     this._event.reply(GrpcResponseEventEnum.end, requestId);
   }
 
-  sendStatus(requestId, status) {
+  sendStatus(requestId: string, status: StatusObject) {
     this._event.reply(GrpcResponseEventEnum.status, requestId, status);
   }
 }

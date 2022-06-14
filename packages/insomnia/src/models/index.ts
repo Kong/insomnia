@@ -196,6 +196,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
     if (!objectDefaults.hasOwnProperty(key)) {
+      // @ts-expect-error -- mapping unsoundness
       delete migratedDoc[key];
     }
   }
@@ -204,7 +205,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   return migratedDoc;
 }
 
-export const MODELS_BY_EXPORT_TYPE = {
+export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_REQUEST]: request,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,

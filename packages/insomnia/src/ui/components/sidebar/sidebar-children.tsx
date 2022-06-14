@@ -91,7 +91,7 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
       // We have a RequestGroup!
       const requestGroup = child.doc;
 
-      function hasActiveChild(children) {
+      function hasActiveChild(children: Child[]) {
         for (const c of children) {
           if (hasActiveChild(c.children || [])) {
             return true;

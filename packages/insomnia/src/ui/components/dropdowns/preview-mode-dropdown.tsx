@@ -12,7 +12,7 @@ interface Props {
   exportAsHAR: () => void;
   copyToClipboard: () => any;
   updatePreviewMode: Function;
-  previewMode: string;
+  previewMode: 'friendly' | 'source' | 'raw';
   showPrettifyOption?: boolean;
 }
 

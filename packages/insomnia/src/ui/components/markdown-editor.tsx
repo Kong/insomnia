@@ -33,7 +33,7 @@ export class MarkdownEditor extends PureComponent<Props, State> {
     };
   }
 
-  _handleChange(markdown) {
+  _handleChange(markdown: string) {
     this.props.onChange(markdown);
     this.setState({
       markdown,

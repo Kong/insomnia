@@ -358,7 +358,7 @@ function hint(cm: CodeMirror.EditorFromTextArea, options: ShowHintOptions) {
  * @param self
  * @param data
  */
-async function replaceHintMatch(cm: CodeMirror.EditorFromTextArea, _self, data) {
+async function replaceHintMatch(cm: CodeMirror.EditorFromTextArea, _self: any, data: any) {
   if (typeof data.text === 'function') {
     data.text = await data.text();
   }

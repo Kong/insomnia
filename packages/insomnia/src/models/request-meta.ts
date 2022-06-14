@@ -12,7 +12,7 @@ export type RequestAccordionKeys = 'OAuth2AdvancedOptions';
 
 export interface BaseRequestMeta {
   parentId: string;
-  previewMode: string;
+  previewMode: 'friendly' | 'source' | 'raw';
   responseFilter: string;
   responseFilterHistory: string[];
   activeResponseId: string | null;
