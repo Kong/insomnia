@@ -255,7 +255,7 @@ export const oauthRoutes = (port: number) => {
 function allowLocalhostImplicit(oidc: Provider) {
   const { invalidate: orig } = (oidc.Client as any).Schema.prototype;
 
-  (oidc.Client as any).Schema.prototype.invalidate = function invalidate(message, code) {
+  (oidc.Client as any).Schema.prototype.invalidate = function invalidate(message: any, code: any) {
     if (code === 'implicit-force-https' || code === 'implicit-forbid-localhost') {
       return;
     }
