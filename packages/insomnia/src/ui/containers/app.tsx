@@ -25,6 +25,7 @@ import {
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
+  PreviewMode,
   SortOrder,
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
@@ -584,7 +585,7 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _handleSetResponsePreviewMode(requestId: string, previewMode: 'friendly' | 'source' | 'raw') {
+  _handleSetResponsePreviewMode(requestId: string, previewMode: PreviewMode) {
     updateRequestMetaByParentId(requestId, {
       previewMode,
     });

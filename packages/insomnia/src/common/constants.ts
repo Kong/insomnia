@@ -362,7 +362,9 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
   [SORT_MODIFIED_DESC]: 'Last Modified',
 };
 
-export function getPreviewModeName(previewMode: 'friendly' | 'source' | 'raw', useLong = false) {
+export type PreviewMode = 'friendly' | 'source' | 'raw';
+
+export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
   } else {
