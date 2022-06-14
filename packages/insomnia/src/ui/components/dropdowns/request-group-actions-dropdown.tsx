@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { FC, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -29,7 +29,11 @@ interface Props extends Partial<DropdownProps> {
   handleCreateRequestGroup: (requestGroup: string) => any;
 }
 
-export const RequestGroupActionsDropdown: FC<Props> = forwardRef(({
+interface RequestGroupActionsDropdownHandle {
+    show: () => void;
+}
+
+export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
   requestGroup,
   hotKeyRegistry,
   handleShowSettings,

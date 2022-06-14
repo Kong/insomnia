@@ -137,13 +137,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     );
   }
 
-  _handleCreateRequest() {
-    const { handleCreateRequest, workspace } = this.props;
-    if (workspace) {
-      handleCreateRequest(workspace._id);
-    }
-  }
-
   _handleCreateRequestGroup() {
     const { handleCreateRequestGroup, workspace } = this.props;
     if (workspace) {
@@ -157,7 +150,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     const contextMenuPortal = ReactDOM.createPortal(
       <div className="hide">
         <SidebarCreateDropdown
-          handleCreateRequest={this._handleCreateRequest}
           handleCreateRequestGroup={this._handleCreateRequestGroup}
           hotKeyRegistry={hotKeyRegistry}
         />

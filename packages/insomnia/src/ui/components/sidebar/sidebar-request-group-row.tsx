@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
 import { noop } from 'ramda-adjunct';
-import React, { MouseEvent, PureComponent } from 'react';
+import React, { ElementRef, MouseEvent, PureComponent } from 'react';
 import { PropsWithChildren } from 'react';
 import { createRef } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
@@ -48,7 +48,7 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
     dragDirection: 0,
   };
 
-  private dropdownRef = createRef<typeof RequestGroupActionsDropdown>();
+  private dropdownRef = createRef<ElementRef<typeof RequestGroupActionsDropdown>>();
   private expandTagRef = createRef<HTMLDivElement>();
 
   getExpandTag() {
