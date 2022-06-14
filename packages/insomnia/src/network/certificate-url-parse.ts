@@ -19,7 +19,6 @@ export default function certificateUrlParse(url: string) {
 
 function _reinstateWildcards(string: string): string;
 function _reinstateWildcards(string: string | null): string | null;
-
 function _reinstateWildcards(string: string | null) {
   if (string) {
     return string.replace(WILDCARD_SUBSTITUTION_PATTERN, WILDCARD_CHARACTER);
