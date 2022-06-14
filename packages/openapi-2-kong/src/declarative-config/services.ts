@@ -20,7 +20,7 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import { appendUpstreamToName } from './upstreams';
 
-export function generateServices(api: OpenApi3Spec, tags: string[]) {
+export async function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
 
   if (servers.length === 0) {
@@ -28,11 +28,11 @@ export function generateServices(api: OpenApi3Spec, tags: string[]) {
   }
 
   // only support one service for now
-  const service = generateService(servers[0], api, tags);
+  const service = await generateService(servers[0], api, tags);
   return [service];
 }
 
-export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
+export async function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
@@ -43,7 +43,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
   }
 
   // Service plugins
-  const globalPlugins = generateGlobalPlugins(api, tags);
+  const globalPlugins = await generateGlobalPlugins(api, tags);
   const serviceDefaults = api[xKongServiceDefaults] || {};
 
   if (typeof serviceDefaults !== 'object') {
@@ -128,11 +128,12 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
       // Path plugin takes precedence over global
       const parentValidatorPlugin = pathValidatorPlugin || globalPlugins.requestValidatorPlugin;
 
-      const regularPlugins = generateOperationPlugins({
+      const regularPlugins = await generateOperationPlugins({
         operation,
         pathPlugins,
         parentValidatorPlugin,
         tags,
+        api,
       });
 
       const plugins = [...regularPlugins, ...securityPlugins];

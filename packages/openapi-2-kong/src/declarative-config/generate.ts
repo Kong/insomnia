@@ -5,14 +5,14 @@ import { DeclarativeConfigResult } from '../types/outputs';
 import { generateServices } from './services';
 import { generateUpstreams } from './upstreams';
 
-export function generateDeclarativeConfigFromSpec(
+export async function generateDeclarativeConfigFromSpec(
   api: OpenApi3Spec,
   tags: string[],
 ) {
   try {
     const document: DeclarativeConfig = {
       _format_version: '1.1',
-      services: generateServices(api, tags),
+      services: await generateServices(api, tags),
     };
 
     if (hasUpstreams(api)) {

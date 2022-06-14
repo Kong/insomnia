@@ -52,6 +52,7 @@ export interface OA3Parameter {
   schema?: Record<string, any> | string;
   content?: Record<string, any>;
   explode?: boolean;
+  $ref?: string;
 }
 
 /** see: https://swagger.io/specification/#request-body-object */
@@ -59,6 +60,7 @@ export interface OA3RequestBody {
   content?: Record<string, any>; // TODO
   description?: string;
   required?: boolean;
+  $ref?: string;
 }
 
 export type OA3SecurityRequirement = Record<string, any>;

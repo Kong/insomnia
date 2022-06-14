@@ -1,3 +1,4 @@
+import SwaggerParser from '@apidevtools/swagger-parser';
 import { Entry } from 'type-fest';
 
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
@@ -44,15 +45,21 @@ const DEFAULT_PARAM_STYLE = {
   path: 'simple',
 };
 
-const generateParameterSchema = (operation?: OA3Operation) => {
+const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
   if (!operation?.parameters?.length) {
     return undefined;
   }
 
+  // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
+  const refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
   const parameterSchemas: ParameterSchema[] = [];
-  for (const parameter of operation.parameters as OA3Parameter[]) {
+  for (let parameter of operation.parameters as OA3Parameter[]) {
     // The following is valid config to allow all content to pass, in the case where schema is not defined
     let schema = '';
+
+    if (parameter.$ref && refs) {
+      parameter = refs.get(parameter.$ref);
+    }
 
     if (parameter.schema) {
       schema = JSON.stringify(parameter.schema);
@@ -85,10 +92,18 @@ const generateParameterSchema = (operation?: OA3Operation) => {
   return parameterSchemas;
 };
 
-export function generateBodyOptions(operation?: OA3Operation) {
+export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Operation) {
+  // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
+  const refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
   let bodySchema;
   let allowedContentTypes;
+  if (operation?.requestBody?.$ref) {
+    (operation.requestBody as OA3RequestBody) = refs.get(operation.requestBody.$ref);
+  }
   const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
+  console.log('operation', operation);
+  console.log('requestBody', operation?.requestBody);
+  console.log('bodyContent', bodyContent);
 
   if (bodyContent) {
     const jsonContentType = 'application/json';
@@ -96,14 +111,18 @@ export function generateBodyOptions(operation?: OA3Operation) {
 
     if (allowedContentTypes.includes(jsonContentType)) {
       const item = bodyContent[jsonContentType];
-      const schema = item.schema;
+      let schema = item.schema;
+
+      if (item.schema.$ref) {
+        schema = refs.get(item.schema.$ref);
+      }
       for (const key in schema.properties) {
         // Append 'null' to property type if nullable true, see FTI-3278
         if (schema.properties[key].nullable === true) {
           schema.properties[key].type = [schema.properties[key].type, 'null'];
         }
       }
-      bodySchema = JSON.stringify(item.schema);
+      bodySchema = JSON.stringify(schema);
     }
   }
 
@@ -113,13 +132,15 @@ export function generateBodyOptions(operation?: OA3Operation) {
   };
 }
 
-export function generateRequestValidatorPlugin({
-  plugin = { name: 'request-validator' },
+export async function generateRequestValidatorPlugin({
   tags,
+  api,
+  plugin = { name: 'request-validator' },
   operation,
 }: {
-  plugin?: Partial<RequestValidatorPlugin>;
   tags: string[];
+  api: OpenApi3Spec;
+  plugin?: Partial<RequestValidatorPlugin>;
   operation?: OA3Operation;
 }) {
   const config: Partial<RequestValidatorPlugin['config']> = {
@@ -127,9 +148,9 @@ export function generateRequestValidatorPlugin({
   };
 
   // // Use original or generated parameter_schema
-  const parameterSchema = isParameterSchema(plugin.config) ? plugin.config.parameter_schema : generateParameterSchema(operation);
+  const parameterSchema = isParameterSchema(plugin.config) ? plugin.config.parameter_schema : await generateParameterSchema(api, operation);
 
-  const generated = generateBodyOptions(operation);
+  const generated = await generateBodyOptions(api, operation);
 
   // Use original or generated body_schema
   let bodySchema = isBodySchema(plugin.config) ? plugin.config.body_schema : generated.bodySchema;
@@ -174,12 +195,12 @@ export function generateRequestValidatorPlugin({
   return requestValidatorPlugin;
 }
 
-export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
+export async function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
   const globalPlugins = generatePlugins(api, tags);
   const plugin = getRequestValidatorPluginDirective(api);
 
   if (plugin) {
-    globalPlugins.push(generateRequestValidatorPlugin({ plugin, tags }));
+    globalPlugins.push(await generateRequestValidatorPlugin({ plugin, tags, api }));
   }
 
   return {
@@ -189,22 +210,24 @@ export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
   };
 }
 
-export const generateOperationPlugins = ({ operation, pathPlugins, parentValidatorPlugin, tags }: {
+export const generateOperationPlugins = async ({ operation, pathPlugins, parentValidatorPlugin, tags, api }: {
   operation: OA3Operation;
   pathPlugins: DCPlugin[];
   parentValidatorPlugin?: RequestValidatorPlugin | null;
   tags: string[];
+  api: OpenApi3Spec;
 }) => {
   const operationPlugins = generatePlugins(operation, tags);
-
+  console.log('operationPlugins', operationPlugins);
   // Check if validator plugin exists on the operation, even if the value of the plugin is undefined
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
 
+  console.log('parentValidatorPlugin', parentValidatorPlugin);
   // Use the operation or parent validator plugin, or skip if neither exist
   const plugin = operationValidatorPlugin || parentValidatorPlugin;
 
   if (plugin) {
-    operationPlugins.push(generateRequestValidatorPlugin({ plugin, tags, operation }));
+    operationPlugins.push(await generateRequestValidatorPlugin({ plugin, tags, operation, api }));
   }
 
   // Operation plugins take precedence over path plugins
