@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { FC, MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
 
@@ -57,7 +57,7 @@ const dragTarget: DropTargetSpec<Props> = {
   hover: hoverHandleCreator<Props>(),
 };
 
-export const Target: FC<Props> = ({
+export const _SidebarRequestRow: FC<Props> = forwardRef(({
   connectDragSource,
   connectDropTarget,
   disableDragAndDrop,
@@ -74,7 +74,7 @@ export const Target: FC<Props> = ({
   isPinned,
   request,
   requestGroup,
-}) => {
+}, ref) => {
   const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -82,6 +82,12 @@ export const Target: FC<Props> = ({
   const activeWorkspaceId = activeWorkspace?._id;
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+
+  const nodeRef = useRef<HTMLLIElement>(null);
+  useImperativeHandle(ref, () => ({
+    setDragDirection,
+    node: nodeRef.current,
+  }));
 
   const startEditing = useCallback(() => {
     setIsEditing(true);
@@ -188,7 +194,7 @@ export const Target: FC<Props> = ({
 
   }, [handleRender, request, request?.url]);
 
-  let node;
+  let node: ReactElement<HTMLLIElement> | null = null;
   const classes = classnames('sidebar__row', {
     'sidebar__row--dragging': isDragging,
     'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
@@ -197,7 +203,7 @@ export const Target: FC<Props> = ({
 
   if (!request) {
     node = (
-      <li className={classes}>
+      <li ref={nodeRef} className={classes}>
         <div className="sidebar__item">
           <button className="sidebar__clickable" onClick={handleRequestCreateFromEmpty}>
             <em className="faded">click to add first request...</em>
@@ -213,7 +219,7 @@ export const Target: FC<Props> = ({
         <MethodTag method={request.method} override={methodOverrideValue} />
       );
     node = (
-      <li className={classes}>
+      <li ref={nodeRef} className={classes}>
         <div
           className={classnames('sidebar__item', 'sidebar__item--request', {
             'sidebar__item--active': isActive,
@@ -279,7 +285,9 @@ export const Target: FC<Props> = ({
   } else {
     return connectDropTarget(node);
   }
-};
+});
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(Target);
+_SidebarRequestRow.displayName = 'SidebarRequestRow';
+
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(_SidebarRequestRow);
 export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
