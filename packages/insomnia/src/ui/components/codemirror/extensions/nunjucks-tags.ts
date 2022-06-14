@@ -159,7 +159,7 @@ async function _highlightNunjucksTags(render: any, renderContext: any, showVaria
         // Define the dialog HTML
         showModal(NunjucksModal, {
           template: mark.__template,
-          onDone: (template: any) => {
+          onDone: (template: string | null) => {
             const pos = mark.find();
 
             if (pos) {

@@ -117,7 +117,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
             message,
             noText: 'Request Collection',
             yesText: 'Design Document',
-            onDone: (yes: any) => {
+            onDone: (yes: boolean) => {
               resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
             },
           });

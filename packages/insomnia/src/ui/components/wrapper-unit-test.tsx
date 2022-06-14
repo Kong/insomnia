@@ -130,7 +130,7 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
                   value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
-              onDone: (value: any) => resolve(value),
+              onDone: (value: string | null) => resolve(value),
             });
           });
         },
