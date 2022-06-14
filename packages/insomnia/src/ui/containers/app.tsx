@@ -301,7 +301,7 @@ class App extends PureComponent<AppProps, State> {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: async (confirmed: any) => {
+            onDone: async (confirmed: boolean) => {
               if (!confirmed) {
                 return;
               }
@@ -1273,7 +1273,7 @@ class App extends PureComponent<AppProps, State> {
           message: 'Are you sure you want to clear all models? This operation cannot be undone.',
           yesText: 'Yes',
           noText: 'No',
-          onDone: async (yes: any) => {
+          onDone: async (yes: boolean) => {
             if (yes) {
               const bufferId = await db.bufferChanges();
               const promises = models
