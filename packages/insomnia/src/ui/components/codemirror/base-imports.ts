@@ -38,6 +38,11 @@ import 'codemirror/addon/selection/selection-pointer';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 
+declare global {
+  // eslint-disable-next-line no-var -- necessary, let will not work here
+  var jsonlint: unknown;
+}
+
 /**/
 /**
  * Unfortunately, the CodeMirror addon for linting makes use of a pattern whereby linting dependencies are required to be attached to `window` (i.e. `global`) at runtime.
@@ -46,7 +51,7 @@ import 'codemirror/addon/lint/lint';
 /**/
 // for the code that uses this json parser, see https://github.com/codemirror/CodeMirror/blob/master/addon/lint/json-lint.js
 import * as jsonlint from 'jsonlint-mod-fixed';
-(global as any).jsonlint = jsonlint;
+global.jsonlint = jsonlint;
 import 'codemirror/addon/lint/json-lint';
 
 // for the code that uses this yaml parser, see https://github.com/codemirror/CodeMirror/blob/master/addon/lint/yaml-lint.js
