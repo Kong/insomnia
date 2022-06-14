@@ -14,8 +14,6 @@ import {
   ACTIVITY_HOME,
   AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
-  CONTENT_TYPE_GRAPHQL,
-  CONTENT_TYPE_JSON,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
@@ -24,8 +22,6 @@ import {
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
-  METHOD_GET,
-  METHOD_POST,
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
@@ -70,7 +66,6 @@ import { AskModal } from '../components/modals/ask-modal';
 import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import ProtoFilesModal from '../components/modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
@@ -200,19 +195,13 @@ class App extends PureComponent<AppProps, State> {
     };
 
     this._savePaneWidth = debounce(paneWidth =>
-      this._updateActiveWorkspaceMeta({
-        paneWidth,
-      }),
+      this._updateActiveWorkspaceMeta({ paneWidth }),
     );
     this._savePaneHeight = debounce(paneHeight =>
-      this._updateActiveWorkspaceMeta({
-        paneHeight,
-      }),
+      this._updateActiveWorkspaceMeta({ paneHeight }),
     );
     this._saveSidebarWidth = debounce(sidebarWidth =>
-      this._updateActiveWorkspaceMeta({
-        sidebarWidth,
-      }),
+      this._updateActiveWorkspaceMeta({ sidebarWidth }),
     );
     this._globalKeyMap = null;
     this._updateVCSLock = null;
@@ -398,51 +387,6 @@ class App extends PureComponent<AppProps, State> {
         });
       },
     });
-  }
-
-  async _requestCreate(parentId: string, requestType?: string) {
-    if (requestType === 'gRPC') {
-      showModal(ProtoFilesModal, {
-        onSave: async (protoFileId: string) => {
-          const createdRequest = await models.grpcRequest.create({
-            parentId,
-            name: 'New Request',
-            protoFileId,
-          });
-          models.stats.incrementCreatedRequests();
-          trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
-          this._handleSetActiveRequest(createdRequest._id);
-        },
-      });
-      return;
-    }
-    if (requestType === 'GraphQL') {
-      const request = await models.request.create({
-        parentId,
-        method: METHOD_POST,
-        headers:[{
-          name: 'Content-Type',
-          value: CONTENT_TYPE_JSON,
-        }],
-        body:{
-          mimeType: CONTENT_TYPE_GRAPHQL,
-          text: '',
-        },
-        name: 'New Request',
-      });
-      models.stats.incrementCreatedRequests();
-      trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
-      this._handleSetActiveRequest(request._id);
-      return;
-    }
-    const request = await models.request.create({
-      parentId,
-      method: METHOD_GET,
-      name: 'New Request',
-    });
-    models.stats.incrementCreatedRequests();
-    trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
-    this._handleSetActiveRequest(request._id);
   }
 
   async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
@@ -898,12 +842,6 @@ class App extends PureComponent<AppProps, State> {
       setTimeout(() => this._wrapper?._forceRequestPaneRefresh(), 500);
     } else {
       // Couldn't restore request. That's okay
-    }
-  }
-
-  _requestCreateForWorkspace(requestType?: string) {
-    if (this.props.activeWorkspace) {
-      this._requestCreate(this.props.activeWorkspace._id, requestType);
     }
   }
 
@@ -1508,7 +1446,6 @@ class App extends PureComponent<AppProps, State> {
                   paneWidth={paneWidth}
                   paneHeight={paneHeight}
                   sidebarWidth={sidebarWidth}
-                  handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
                   handleSetRequestPinned={this._handleSetRequestPinned}
                   handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
                   handleActivateRequest={this._handleSetActiveRequest}
@@ -1521,7 +1458,6 @@ class App extends PureComponent<AppProps, State> {
                   handleStartDragPaneVertical={this._startDragPaneVertical}
                   handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
                   handleResetDragPaneVertical={this._resetDragPaneVertical}
-                  handleCreateRequest={this._requestCreate}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleDuplicateRequestGroup={App._requestGroupDuplicate}
                   handleCreateRequestGroup={this._requestGroupCreate}

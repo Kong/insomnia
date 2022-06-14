@@ -35,7 +35,6 @@ const mapStateToProps = (state: RootState) => ({
 
 interface Props extends ReduxProps {
   handleActivateRequest: Function;
-  handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (parentId: string) => void;
   handleSetRequestPinned: Function;
   handleSetRequestGroupCollapsed: Function;
@@ -53,7 +52,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
   _renderChildren(children: Child[], isInPinnedList: boolean) {
     const {
       filter,
-      handleCreateRequest,
       handleCreateRequestGroup,
       handleSetRequestPinned,
       handleSetRequestGroupCollapsed,
@@ -81,7 +79,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
-            requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
             isPinned={child.pinned}
             disableDragAndDrop={isInPinnedList}
@@ -120,7 +117,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           isCollapsed={child.collapsed}
-          handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
@@ -141,13 +137,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     );
   }
 
-  _handleCreateRequest() {
-    const { handleCreateRequest, workspace } = this.props;
-    if (workspace) {
-      handleCreateRequest(workspace._id);
-    }
-  }
-
   _handleCreateRequestGroup() {
     const { handleCreateRequestGroup, workspace } = this.props;
     if (workspace) {
@@ -161,7 +150,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     const contextMenuPortal = ReactDOM.createPortal(
       <div className="hide">
         <SidebarCreateDropdown
-          handleCreateRequest={this._handleCreateRequest}
           handleCreateRequestGroup={this._handleCreateRequestGroup}
           hotKeyRegistry={hotKeyRegistry}
         />

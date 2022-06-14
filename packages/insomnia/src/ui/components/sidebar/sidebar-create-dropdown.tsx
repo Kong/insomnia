@@ -1,29 +1,38 @@
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RequestGroup } from '../../../models/request-group';
+import { createRequest, CreateRequestType } from '../../hooks/create-request';
+import { selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 interface Props {
-  handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
   hotKeyRegistry: HotKeyRegistry;
   right?: boolean;
 }
 
 export const SidebarCreateDropdown: FC<Props> = ({
-  handleCreateRequest,
   handleCreateRequestGroup,
   hotKeyRegistry,
   right,
 }) => {
-  const create = useCallback((value: string) => {
-    handleCreateRequest(value);
-  }, [handleCreateRequest]);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceId = activeWorkspace?._id;
+  const create = useCallback((value: CreateRequestType) => {
+    if (activeWorkspaceId) {
+      createRequest({
+        requestType: value,
+        parentId: activeWorkspaceId,
+        workspaceId: activeWorkspaceId,
+      });
+    }
+  }, [activeWorkspaceId]);
 
   return (
     <Dropdown right={right}>
