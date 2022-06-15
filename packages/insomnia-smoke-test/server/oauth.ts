@@ -1,9 +1,6 @@
 import express, { urlencoded } from 'express';
 import { Configuration, Provider } from 'oidc-provider';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- this is something that only errors when playwright runs
-// @ts-ignore
-// Due to a problem with playwright (https://github.com/microsoft/playwright/issues/7121) where it does not use our tsconfig.
-// Another solution to this problem would be to precompile our code, but we are not doing that at this time.
+// @ts-expect-error no typings available for this module
 import { InvalidGrant } from 'oidc-provider/lib/helpers/errors';
 
 export const oauthRoutes = (port: number) => {
