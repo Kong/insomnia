@@ -32,12 +32,6 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
-      - name: Install and login to snapcraft
-        if: ${{ env.IS_PRERELEASE == 'false' }}
-        run: |
-          sudo snap install snapcraft --classic
-          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
-
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -135,7 +129,12 @@ jobs:
 
       - name: Upload to snapcraft (stable only)
         if: ${{ env.IS_PRERELEASE == 'false' }}
-        run: snapcraft upload --release stable artifacts/ubuntu-latest-artifacts/insomnia/dist/*.snap
+        uses: snapcore/action-publish@7fe468c9de12396a9c8964af5d0dfd1d5b493bd7
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
+        with:
+          snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
+          release: stable
 
       - name: Publish npm packages
         run: |
