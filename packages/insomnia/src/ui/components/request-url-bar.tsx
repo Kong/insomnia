@@ -364,7 +364,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     const { url, method } = request;
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
+      <KeydownBinder onKeydown={this._handleKeyDown} scoped>
         <div className="urlbar">
           <MethodDropdown
             ref={this._setMethodDropdownRef}
