@@ -74,6 +74,7 @@ export default async function(
     credentialsInBody,
     clientId,
     clientSecret,
+    // @ts-expect-error -- unsound typing
     authorizeResults[c.P_CODE],
     redirectUri,
     state,
@@ -85,8 +86,8 @@ export default async function(
 }
 
 async function _authorize(
-  url,
-  clientId,
+  url: string,
+  clientId: string,
   redirectUri = '',
   scope = '',
   state = '',

@@ -147,7 +147,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
     this.setState({
       loadingDocs: true,
     });
-    const allDocs = {};
+    const allDocs: Record<string, models.BaseModel[]> = {};
 
     for (const type of models.types()) {
       allDocs[type] = [];
@@ -160,6 +160,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
     const requests = allDocs[models.request.type] || [];
     const requestGroups = allDocs[models.requestGroup.type] || [];
 
+    // @ts-expect-error -- type unsoundness
     const sortedReqs = this._sortRequests(requests.concat(requestGroups), this.props.workspace._id);
 
     allDocs[models.request.type] = sortedReqs;

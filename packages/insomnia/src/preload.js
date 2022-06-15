@@ -2,23 +2,23 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 const main = {
   restart: () => ipcRenderer.send('restart'),
-  authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
-  setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
-  installPlugin: options => ipcRenderer.invoke('installPlugin', options),
-  curlRequest: options => ipcRenderer.invoke('curlRequest', options),
-  cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
-  writeFile: options => ipcRenderer.invoke('writeFile', options),
+  authorizeUserInWindow: (/** @type {any} */ options) => ipcRenderer.invoke('authorizeUserInWindow', options),
+  setMenuBarVisibility: (/** @type {any} */ options) => ipcRenderer.send('setMenuBarVisibility', options),
+  installPlugin: (/** @type {any} */ options) => ipcRenderer.invoke('installPlugin', options),
+  curlRequest: (/** @type {any} */ options) => ipcRenderer.invoke('curlRequest', options),
+  cancelCurlRequest: (/** @type {any} */ options) => ipcRenderer.send('cancelCurlRequest', options),
+  writeFile: (/** @type {any} */ options) => ipcRenderer.invoke('writeFile', options),
 };
 const dialog = {
-  showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
-  showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),
+  showOpenDialog: (/** @type {any} */ options) => ipcRenderer.invoke('showOpenDialog', options),
+  showSaveDialog: (/** @type {any} */ options) => ipcRenderer.invoke('showSaveDialog', options),
 };
 const app = {
-  getPath: options => ipcRenderer.sendSync('getPath', options),
-  getAppPath: options => ipcRenderer.sendSync('getAppPath', options),
+  getPath: (/** @type {any} */ options) => ipcRenderer.sendSync('getPath', options),
+  getAppPath: (/** @type {any} */ options) => ipcRenderer.sendSync('getAppPath', options),
 };
 const shell = {
-  showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
+  showItemInFolder: (/** @type {any} */ options) => ipcRenderer.send('showItemInFolder', options),
 };
 
 if (process.contextIsolated) {

@@ -111,7 +111,7 @@ export class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   createNode(item: Record<string, any>): Node {
-    const children: Node[] = item.children.map(child => this.createNode(child));
+    const children: Node[] = item.children.map((child: Record<string, any>) => this.createNode(child));
     let totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);

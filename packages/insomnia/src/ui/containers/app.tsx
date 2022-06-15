@@ -25,9 +25,10 @@ import {
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
+  PreviewMode,
   SortOrder,
 } from '../../common/constants';
-import { database as db } from '../../common/database';
+import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -46,6 +47,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
 import { isWorkspace } from '../../models/workspace';
@@ -58,6 +60,7 @@ import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../..
 import { NeDBClient } from '../../sync/git/ne-db-client';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -298,7 +301,7 @@ class App extends PureComponent<AppProps, State> {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: async confirmed => {
+            onDone: async (confirmed: boolean) => {
               if (!confirmed) {
                 return;
               }
@@ -347,7 +350,7 @@ class App extends PureComponent<AppProps, State> {
             ? entities.grpcRequestMetas
             : entities.requestMetas;
           const meta = Object.values<GrpcRequestMeta | RequestMeta>(entitiesToCheck).find(m => m.parentId === activeRequest._id);
-          await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
+          await this._handleSetRequestPinned(activeRequest, !meta?.pinned);
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -390,7 +393,7 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
-    function __updateDoc(doc, metaSortKey) {
+    function __updateDoc(doc: RequestGroup | Request | GrpcRequest, metaSortKey: number) {
       // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
       // Which all have the .update method. How do we better filter types?
       return models.getModel(doc.type)?.update(doc, {
@@ -486,7 +489,7 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
+  static async _updateRequestGroupMetaByParentId(requestGroupId: string, patch: Partial<RequestGroupMeta>) {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
 
     if (requestGroupMeta) {
@@ -576,25 +579,25 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _handleSetRequestPinned(request, pinned) {
+  async _handleSetRequestPinned(request: Request | GrpcRequest, pinned: boolean) {
     updateRequestMetaByParentId(request._id, {
       pinned,
     });
   }
 
-  _handleSetResponsePreviewMode(requestId, previewMode) {
+  _handleSetResponsePreviewMode(requestId: string, previewMode: PreviewMode) {
     updateRequestMetaByParentId(requestId, {
       previewMode,
     });
   }
 
-  _handleUpdateDownloadPath(requestId, downloadPath) {
+  _handleUpdateDownloadPath(requestId: string, downloadPath: string) {
     updateRequestMetaByParentId(requestId, {
       downloadPath,
     });
   }
 
-  async _handleSetResponseFilter(requestId, responseFilter) {
+  async _handleSetResponseFilter(requestId: string, responseFilter: string) {
     await updateRequestMetaByParentId(requestId, {
       responseFilter,
     });
@@ -706,7 +709,7 @@ class App extends PureComponent<AppProps, State> {
         const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename;
+        let filename: string | null;
 
         if (dir) {
           filename = path.join(dir, name);
@@ -763,7 +766,7 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _handleSendRequestWithEnvironment(requestId, environmentId) {
+  async _handleSendRequestWithEnvironment(requestId: string, environmentId?: string) {
     const { handleStartLoading, handleStopLoading, settings } = this.props;
     const request = await models.request.getById(requestId);
 
@@ -878,7 +881,7 @@ class App extends PureComponent<AppProps, State> {
     setTimeout(() => this._handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
   }
 
-  _handleMouseMove(event) {
+  _handleMouseMove(event: MouseEvent) {
     if (this.state.draggingPaneHorizontal) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.paneWidth - this.state.paneWidth;
@@ -1166,7 +1169,7 @@ class App extends PureComponent<AppProps, State> {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {
             conflicts,
-            handleDone: conflicts => resolve(conflicts),
+            handleDone: (conflicts: MergeConflict[]) => resolve(conflicts),
           });
         });
       });
@@ -1186,7 +1189,7 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _handleDbChange(changes) {
+  async _handleDbChange(changes: ChangeBufferEvent[]) {
     let needsRefresh = false;
 
     for (const change of changes) {
@@ -1270,7 +1273,7 @@ class App extends PureComponent<AppProps, State> {
           message: 'Are you sure you want to clear all models? This operation cannot be undone.',
           yesText: 'Yes',
           noText: 'No',
-          onDone: async yes => {
+          onDone: async (yes: boolean) => {
             if (yes) {
               const bufferId = await db.bufferChanges();
               const promises = models

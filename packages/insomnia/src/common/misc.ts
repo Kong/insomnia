@@ -361,7 +361,7 @@ export function pluralize(text: string) {
   return `${text.slice(0, text.length - chop)}${trailer}`;
 }
 
-export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false) {
+export function diffPatchObj(baseObj: any, patchObj: any, deep = false) {
   const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
 
   for (const prop in baseObj) {

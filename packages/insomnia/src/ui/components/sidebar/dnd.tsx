@@ -101,7 +101,7 @@ const moveDoc = async ({
     }
   }
 
-  function __updateDoc(doc, patch) {
+  function __updateDoc(doc: BaseModel, patch: any) {
     // @ts-expect-error -- TSCONVERSION
     return models.getModel(docToMove.type).update(doc, patch);
   }

@@ -34,10 +34,10 @@ export const selectGlobal = createSelector(
 export const selectEntitiesLists = createSelector(
   selectEntities,
   entities => {
-    const entitiesLists = {};
+    const entitiesLists: any = {};
 
     for (const k of Object.keys(entities)) {
-      const entityMap = entities[k];
+      const entityMap = (entities as any)[k];
       entitiesLists[k] = Object.keys(entityMap).map(id => entityMap[id]);
     }
 
@@ -46,10 +46,10 @@ export const selectEntitiesLists = createSelector(
 );
 
 export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
-  const parentLookupMap = {};
+  const parentLookupMap: any = {};
 
   for (const key of Object.keys(entities)) {
-    for (const entity of entities[key]) {
+    for (const entity of (entities as any)[key]) {
       if (!entity.parentId) {
         continue;
       }
@@ -289,7 +289,7 @@ export const selectActiveWorkspaceEntities = createSelector(
 
     const descendants: BaseModel[] = [activeWorkspace];
 
-    const addChildrenOf = parent => {
+    const addChildrenOf = (parent: any) => {
       // Don't add children of requests (eg. auth requests)
       if (isRequest(parent)) {
         return;

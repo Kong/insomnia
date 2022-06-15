@@ -69,7 +69,7 @@ export const COMMAND_GITLAB_OAUTH_AUTHENTICATE = 'oauth/gitlab/authenticate';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
-const isFinishedBootingReducer = (state = false, action) => {
+const isFinishedBootingReducer = (state = false, action: any) => {
   switch (action.type) {
     case SET_IS_FINISHED_BOOTING:
       return action.payload;
@@ -79,7 +79,7 @@ const isFinishedBootingReducer = (state = false, action) => {
   }
 };
 
-function activeActivityReducer(state: string | null = null, action) {
+function activeActivityReducer(state: string | null = null, action: any) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
       return action.activity;
@@ -89,7 +89,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action) {
+function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action: any) {
   switch (action.type) {
     case SET_ACTIVE_PROJECT:
       return action.projectId;
@@ -99,7 +99,7 @@ function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action) {
   }
 }
 
-function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', action) {
+function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', action: any) {
   switch (action.type) {
     case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
@@ -109,7 +109,7 @@ function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', 
   }
 }
 
-function activeWorkspaceReducer(state: string | null = null, action) {
+function activeWorkspaceReducer(state: string | null = null, action: any) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
       return action.workspaceId;
@@ -119,7 +119,7 @@ function activeWorkspaceReducer(state: string | null = null, action) {
   }
 }
 
-function loadingReducer(state = false, action) {
+function loadingReducer(state = false, action: any) {
   switch (action.type) {
     case LOAD_START:
       return true;
@@ -132,7 +132,7 @@ function loadingReducer(state = false, action) {
   }
 }
 
-function loadingRequestsReducer(state: Record<string, number> = {}, action) {
+function loadingRequestsReducer(state: Record<string, number> = {}, action: any) {
   switch (action.type) {
     case LOAD_REQUEST_START:
       return Object.assign({}, state, {
@@ -149,7 +149,7 @@ function loadingRequestsReducer(state: Record<string, number> = {}, action) {
   }
 }
 
-function loginStateChangeReducer(state = false, action) {
+function loginStateChangeReducer(state = false, action: any) {
   switch (action.type) {
     case LOGIN_STATE_CHANGE:
       return action.loggedIn;
@@ -455,7 +455,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
+export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) => {
   dispatch(loadStart());
   const state = getState();
   const activeProjectName = selectActiveProjectName(state);
@@ -546,7 +546,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
     onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request)[] = [];
       const privateEnvironments: Environment[] = [];
-      const workspaceLookup = {};
+      const workspaceLookup: any = {};
 
       for (const requestId of requestIds) {
         const request = await requestOperations.getById(requestId);
@@ -693,7 +693,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   Initialize with the cached active activity, and navigate to the next activity if necessary
   This will also decide whether to start with the migration
  */
-export const initActiveActivity = () => (dispatch, getState) => {
+export const initActiveActivity = () => (dispatch: any, getState: any) => {
   const state = getState();
   // Default to home
   let activeActivity = ACTIVITY_HOME;
@@ -715,7 +715,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
   dispatch(setActiveActivity(initializeToActivity));
 };
 
-export const initFirstLaunch = () => async (dispatch, getState) => {
+export const initFirstLaunch = () => async (dispatch: any, getState: any) => {
   const state = getState();
 
   const stats = selectStats(state);

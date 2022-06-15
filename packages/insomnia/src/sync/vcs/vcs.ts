@@ -914,7 +914,7 @@ export class VCS {
       );
       // Store them in case something has changed
       await this._storeSnapshots(snapshotsCreate);
-      console.log('[sync] Pushed snapshots', snapshotsCreate.map(s => s.id).join(', '));
+      console.log('[sync] Pushed snapshots', snapshotsCreate.map((s: any) => s.id).join(', '));
     }
   }
 

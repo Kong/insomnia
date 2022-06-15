@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -145,7 +145,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handlePush(_e, force = false) {
+  async _handlePush(_e: unknown, force = false) {
     this.setState({
       loadingPush: true,
     });
@@ -398,7 +398,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
   const boundGitActions = bindActionCreators(gitActions, dispatch);
   return {
     setupGitRepository: boundGitActions.setupGitRepository,

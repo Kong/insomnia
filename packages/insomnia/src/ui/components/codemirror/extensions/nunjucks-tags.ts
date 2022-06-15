@@ -25,7 +25,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   );
 
   const debouncedRefreshFn = misc.debounce(refreshFn);
-  this.on('change', (_cm, change) => {
+  this.on('change', (_cm: any, change: any) => {
     const origin = change.origin || 'unknown';
 
     if (!origin.match(/^[+*]/)) {
@@ -44,10 +44,10 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(render, renderContext, showVariableSourceAndValue: boolean) {
+async function _highlightNunjucksTags(render: any, renderContext: any, showVariableSourceAndValue: boolean) {
   const renderCacheKey = Math.random() + '';
 
-  const renderString = text => render(text, renderCacheKey);
+  const renderString = (text: any) => render(text, renderCacheKey);
 
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();
@@ -57,7 +57,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({ type }) => type?.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(({ type }: any) => type?.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
     const newTokens: Token[] = [];
@@ -159,7 +159,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
         // Define the dialog HTML
         showModal(NunjucksModal, {
           template: mark.__template,
-          onDone: template => {
+          onDone: (template: string | null) => {
             const pos = mark.find();
 
             if (pos) {
@@ -177,7 +177,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
       let droppedInSameEditor = false;
 
       // Modify paste events so we can merge into them
-      const beforeChangeCb = (_cm, change) => {
+      const beforeChangeCb = (_cm: any, change: any) => {
         if (change.origin === 'paste') {
           change.origin = '+dnd';
         }
@@ -255,7 +255,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
   }
 }
 
-async function _updateElementText(render, mark, text, renderContext, showVariableSourceAndValue: boolean) {
+async function _updateElementText(render: any, mark: any, text: any, renderContext: any, showVariableSourceAndValue: boolean) {
   const el = mark.replacedWith;
   let innerHTML = '';
   let title = '';

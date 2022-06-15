@@ -26,7 +26,7 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
     this.refreshTimeline();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     const { response } = this.props;
 
     if (response._id !== prevProps.response._id) {

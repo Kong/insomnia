@@ -182,7 +182,7 @@ export class Toast extends PureComponent<{}, State> {
     }, 1000);
   }
 
-  _listenerShowNotification(_e, notification: ToastNotification) {
+  _listenerShowNotification(_e: Electron.IpcRendererEvent, notification: ToastNotification) {
     this._handleNotification(notification);
   }
 

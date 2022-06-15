@@ -41,8 +41,16 @@ import { shouldIndentWithTabs } from './should-indent-with-tabs';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
+interface EditorState {
+  scroll: CodeMirror.ScrollInfo;
+  selections: CodeMirror.Range[];
+  cursor: CodeMirror.Position;
+  history: any;
+  marks: Partial<CodeMirror.MarkerRange>[];
+}
+
 // Global object used for storing and persisting editor states
-const editorStates = {};
+const editorStates: Record<string, EditorState> = {};
 const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
@@ -254,9 +262,9 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps: CodeEditorProps) {
     // Update if any properties changed, except value. We ignore value.
-    for (const key of Object.keys(nextProps)) {
+    for (const key of Object.keys(nextProps) as (keyof CodeEditorProps)[]) {
       if (key === 'defaultValue') {
         continue;
       }
@@ -468,7 +476,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     const marks = this.codeMirror
       .getAllMarks()
       .filter(mark => mark.__isFold)
-      .map(mark => {
+      .map((mark): Partial<CodeMirror.MarkerRange> => {
         const result = mark.find();
 
         if (isMarkerRange(result)) {
@@ -512,6 +520,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
+      // @ts-expect-error -- type unsoundness
       this.codeMirror.foldCode(from, to);
     }
   }
@@ -904,7 +913,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     Object.keys(options).map(key =>
       this._codemirrorSmartSetOption(
         key as keyof CodeMirror.EditorConfiguration,
-        options[key]
+        options[key as keyof CodeMirror.EditorConfiguration]
       )
     );
   }
@@ -1146,7 +1155,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     this._setFilter(filter);
   }
 
-  _handleFilterChange(event) {
+  _handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     this._setFilter(event.target.value);
   }
 

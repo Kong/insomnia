@@ -244,7 +244,7 @@ const previewModeMap = {
   [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
   [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data'],
 };
-export const PREVIEW_MODES = Object.keys(previewModeMap);
+export const PREVIEW_MODES = Object.keys(previewModeMap) as (keyof typeof previewModeMap)[];
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
@@ -257,7 +257,7 @@ export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
 export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
-const contentTypesMap = {
+const contentTypesMap: Record<string, string[]> = {
   [CONTENT_TYPE_EDN]: ['EDN', 'EDN'],
   [CONTENT_TYPE_FILE]: ['File', 'Binary File'],
   [CONTENT_TYPE_FORM_DATA]: ['Multipart', 'Multipart Form'],
@@ -289,7 +289,7 @@ export const HAWK_ALGORITHM_SHA1 = 'sha1';
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
 
-const authTypesMap = {
+const authTypesMap: Record<string, string[]> = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
   [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],
@@ -300,7 +300,7 @@ const authTypesMap = {
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
-} as const;
+};
 
 // Sort Orders
 export type SortOrder =
@@ -346,7 +346,7 @@ export type DashboardSortOrder =
   | 'created-desc'
   | 'modified-desc';
 
-export const DASHBOARD_SORT_ORDERS = [
+export const DASHBOARD_SORT_ORDERS: DashboardSortOrder[] = [
   SORT_MODIFIED_DESC,
   SORT_NAME_ASC,
   SORT_NAME_DESC,
@@ -362,7 +362,9 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
   [SORT_MODIFIED_DESC]: 'Last Modified',
 };
 
-export function getPreviewModeName(previewMode, useLong = false) {
+export type PreviewMode = 'friendly' | 'source' | 'raw';
+
+export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
   } else {
@@ -382,7 +384,7 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
 
-export function getAuthTypeName(authType, useLong = false) {
+export function getAuthTypeName(authType: string, useLong = false) {
   if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
@@ -390,7 +392,7 @@ export function getAuthTypeName(authType, useLong = false) {
   }
 }
 
-export function getContentTypeFromHeaders(headers, defaultValue: string | null = null) {
+export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {
   if (!Array.isArray(headers)) {
     return null;
   }
@@ -400,7 +402,7 @@ export function getContentTypeFromHeaders(headers, defaultValue: string | null =
 }
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-export const RESPONSE_CODE_DESCRIPTIONS = {
+export const RESPONSE_CODE_DESCRIPTIONS: Record<number, string> = {
   // Special
   [STATUS_CODE_PLUGIN_ERROR]:
     'An Insomnia plugin threw an error which prevented the request from sending',
@@ -471,7 +473,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
 };
 
-export const RESPONSE_CODE_REASONS = {
+export const RESPONSE_CODE_REASONS: Record<number, string> = {
   // Special
   [STATUS_CODE_PLUGIN_ERROR]: 'Plugin Error',
   // 100s

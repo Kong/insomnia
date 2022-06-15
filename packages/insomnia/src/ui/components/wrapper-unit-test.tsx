@@ -19,7 +19,7 @@ import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
-import { isRequest } from '../../models/request';
+import { isRequest, Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
@@ -33,7 +33,7 @@ import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
 import { EmptyStatePane } from './panes/empty-state-pane';
-import type { SidebarChildObjects } from './sidebar/sidebar-children';
+import type { Child, SidebarChildObjects } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
@@ -127,11 +127,10 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
                 ...this.buildSelectableRequests().map(({ name, request }) => ({
                   name: name,
                   displayValue: '',
-                  // @ts-expect-error -- TSCONVERSION
                   value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
-              onDone: value => resolve(value),
+              onDone: (value: string | null) => resolve(value),
             });
           });
         },
@@ -329,7 +328,7 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
       request: Request;
     }[] = [];
 
-    const next = (p, children) => {
+    const next = (p: string, children: Child[]) => {
       for (const c of children) {
         if (isRequest(c.doc)) {
           selectableRequests.push({
@@ -399,7 +398,7 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
                 )}
               </div>
               <ListGroup>
-                {tests.map((t, i) => (
+                {tests.map((t: any, i: number) => (
                   <UnitTestResultItem key={i} item={t} />
                 ))}
               </ListGroup>

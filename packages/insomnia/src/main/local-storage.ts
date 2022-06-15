@@ -66,7 +66,7 @@ class LocalStorage {
     }
   }
 
-  _getKeyPath(key) {
+  _getKeyPath(key: string) {
     // @ts-expect-error -- TSCONVERSION this appears to be a genuine error
     return path.join(this._basePath, key);
   }
