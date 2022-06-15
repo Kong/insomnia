@@ -45,24 +45,30 @@ const DEFAULT_PARAM_STYLE = {
   path: 'simple',
 };
 
-const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
-  if (!operation?.parameters?.length) {
-    return undefined;
+const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OA3Parameter): OA3Parameter => {
+  if (parameter.$ref) {
+    return { ...parameter, definitions: $refs.values() } as OA3Parameter;
   }
 
+  // TODO: avoid using casting
+  return parameter.schema as OA3Parameter;
+};
+
+const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
+  if (!operation?.parameters?.length) {
+    return;
+  }
   // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
   const refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
   const parameterSchemas: ParameterSchema[] = [];
-  for (let parameter of operation.parameters as OA3Parameter[]) {
+  for (const parameter of operation.parameters as OA3Parameter[]) {
     // The following is valid config to allow all content to pass, in the case where schema is not defined
     let schema = '';
 
-    if (parameter.$ref && refs) {
-      parameter = refs.get(parameter.$ref);
-    }
+    const schemaRef = resolveParameterSchema(refs, parameter);
 
-    if (parameter.schema) {
-      schema = JSON.stringify(parameter.schema);
+    if (schemaRef) {
+      schema = JSON.stringify(schemaRef);
     } else if (parameter.content) {
       // only parameters defined with a schema (not content) are supported
       schema = ALLOW_ALL_SCHEMA;
@@ -71,18 +77,15 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
       schema = ALLOW_ALL_SCHEMA;
     }
 
-    const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[parameter.in];
+    const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[schemaRef.in || refs.get(`${schemaRef?.$ref}`)?.in];
 
     if (typeof paramStyle === 'undefined') {
       const name = parameter.name;
       throw new Error(`invalid 'in' property (parameter '${name}')`);
     }
 
+    // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
     const parameterSchema: ParameterSchema = {
-      in: parameter.in,
-      explode: !!parameter.explode,
-      required: !!parameter.required,
-      name: parameter.name,
       schema,
       style: paramStyle,
     };
@@ -101,10 +104,6 @@ export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Oper
     (operation.requestBody as OA3RequestBody) = refs.get(operation.requestBody.$ref);
   }
   const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
-  console.log('operation', operation);
-  console.log('requestBody', operation?.requestBody);
-  console.log('bodyContent', bodyContent);
-
   if (bodyContent) {
     const jsonContentType = 'application/json';
     allowedContentTypes = Object.keys(bodyContent);
@@ -114,7 +113,7 @@ export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Oper
       let schema = item.schema;
 
       if (item.schema.$ref) {
-        schema = refs.get(item.schema.$ref);
+        schema = { ...item.schema, definitions: refs.values() };
       }
       for (const key in schema.properties) {
         // Append 'null' to property type if nullable true, see FTI-3278
