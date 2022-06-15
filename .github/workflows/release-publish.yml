@@ -133,7 +133,7 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
         with:
-          snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/*.snap
+          snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
           release: stable
 
       - name: Publish npm packages
