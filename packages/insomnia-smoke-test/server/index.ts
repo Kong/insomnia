@@ -1,10 +1,14 @@
 import express from 'express';
+import { graphqlHTTP } from 'express-graphql';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
+import { root, schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
+
+console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 
 const app = express();
 const port = 4010;
@@ -45,6 +49,12 @@ app.use('/oidc', oauthRoutes(port));
 app.get('/', (_req, res) => {
   res.status(200).send();
 });
+
+app.use('/graphql', graphqlHTTP({
+  schema: schema,
+  rootValue: root,
+  graphiql: true,
+}));
 
 startGRPCServer(grpcPort).then(() => {
   app.listen(port, () => {
