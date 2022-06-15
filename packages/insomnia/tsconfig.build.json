@@ -4,7 +4,7 @@
     "outDir": "./build",
     "rootDir": ".",
     "resolveJsonModule": true,
-    "strict": false,
+    "strict": true,
     "noImplicitAny": true,
     "isolatedModules": true,
     "strictNullChecks": true,

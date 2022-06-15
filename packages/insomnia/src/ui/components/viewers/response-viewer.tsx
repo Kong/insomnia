@@ -51,7 +51,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ResponseViewer extends Component<ResponseViewerProps, State> {
-  _selectableView: typeof ResponseRawViewer | UnconnectedCodeEditor | null;
+  _selectableView: typeof ResponseRawViewer | UnconnectedCodeEditor | null = null;
 
   state: State = {
     blockingBecauseTooLarge: false,

@@ -25,7 +25,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class SyncHistoryModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  handleRollback: (arg0: Snapshot) => Promise<void>;
+  handleRollback?: (arg0: Snapshot) => Promise<void>;
 
   state: State = {
     branch: '',
@@ -37,7 +37,9 @@ export class SyncHistoryModal extends PureComponent<Props, State> {
   }
 
   async _handleClickRollback(snapshot: Snapshot) {
-    await this.handleRollback(snapshot);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await this.handleRollback!(snapshot);
     await this.refreshState();
   }
 

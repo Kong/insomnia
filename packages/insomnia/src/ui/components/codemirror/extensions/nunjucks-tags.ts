@@ -8,6 +8,7 @@ import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
 
 CodeMirror.defineExtension('enableNunjucksTags', function(
+  this: CodeMirror.Editor,
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
   showVariableSourceAndValue = false,
@@ -44,7 +45,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(render: any, renderContext: any, showVariableSourceAndValue: boolean) {
+async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, renderContext: any, showVariableSourceAndValue: boolean) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = (text: any) => render(text, renderCacheKey);
@@ -127,6 +128,7 @@ async function _highlightNunjucksTags(render: any, renderContext: any, showVaria
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
       const mark = this.markText(start, end, {
+        // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
         // Mark that we created it
         __template: tok.string,
@@ -158,13 +160,16 @@ async function _highlightNunjucksTags(render: any, renderContext: any, showVaria
       el.addEventListener('click', async () => {
         // Define the dialog HTML
         showModal(NunjucksModal, {
+          // @ts-expect-error not a known property of TextMarkerOptions
           template: mark.__template,
           onDone: (template: string | null) => {
             const pos = mark.find();
 
             if (pos) {
               const { from, to } = pos;
-              this.replaceRange(template, from, to);
+              // TODO: unsound non-null assertion
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              this.replaceRange(template!, from, to);
             } else {
               console.warn('Tried to replace mark that did not exist', mark);
             }
@@ -205,7 +210,9 @@ async function _highlightNunjucksTags(render: any, renderContext: any, showVaria
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
         if (droppedInSameEditor) {
-          const { from, to } = mark.find();
+          // TODO: unsound non-null assertion
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const { from, to } = mark.find()!;
           this.replaceRange('', from, to, '+dnd');
         }
 

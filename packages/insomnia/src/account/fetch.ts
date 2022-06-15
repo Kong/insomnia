@@ -93,7 +93,7 @@ async function _fetch<T = any>(
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 200);
-      return this._fetch(method, path, obj, sessionId, compressBody, retries);
+      return _fetch(method, path, obj, sessionId, compressBody, retries);
     }
   } catch (err) {
     throw new Error(`Failed to fetch '${url}'`);

@@ -34,7 +34,7 @@ interface State {
 export class GitBranchesModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
-  _onHide: (() => void) | null;
+  _onHide?: (() => void) | null;
 
   state: State = {
     error: '',

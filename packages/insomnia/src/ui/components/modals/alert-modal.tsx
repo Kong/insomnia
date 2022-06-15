@@ -30,7 +30,7 @@ export class AlertModal extends PureComponent<{}, State> {
   _cancel: HTMLButtonElement | null = null;
   _ok: HTMLButtonElement | null = null;
 
-  _okCallback: (value: void | PromiseLike<void>) => void;
+  _okCallback?: (value: void | PromiseLike<void>) => void;
   _okCallback2: AlertModalOptions['onConfirm'];
 
   _setModalRef(modal: Modal) {
@@ -40,7 +40,9 @@ export class AlertModal extends PureComponent<{}, State> {
   _handleOk() {
     this.hide();
 
-    this._okCallback();
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this._okCallback!();
 
     if (typeof this._okCallback2 === 'function') {
       this._okCallback2();

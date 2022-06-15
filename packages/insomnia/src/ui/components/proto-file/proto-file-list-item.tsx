@@ -43,7 +43,7 @@ export const ProtoFileListItem: FunctionComponent<Props> = ({
     [handleDelete, protoFile],
   );
   const handleRenameCallback = useCallback(
-    async (newName: string) => {
+    async (newName?: string) => {
       await handleRename(protoFile, newName);
     },
     [handleRename, protoFile],

@@ -25,7 +25,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  _handleDone: (arg0: MergeConflict[]) => void;
+  _handleDone?: (arg0: MergeConflict[]) => void;
 
   state: State = {
     conflicts: [],
@@ -36,7 +36,9 @@ export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
   }
 
   _handleOk() {
-    this._handleDone(this.state.conflicts);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this._handleDone!(this.state.conflicts);
 
     this.hide();
   }
