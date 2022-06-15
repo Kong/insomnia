@@ -138,11 +138,11 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   }
 
   async _handleKeyDown(event: KeyboardEvent) {
-    if (!this._input || !this.props.request.url) {
+    if (!this._input) {
       return;
     }
 
-    if (event.code === 'Enter') {
+    if (event.code === 'Enter' && this.props.request.url) {
       this._handleSend();
       return;
     }
