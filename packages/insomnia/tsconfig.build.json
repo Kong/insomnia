@@ -4,8 +4,6 @@
     "outDir": "./build",
     "rootDir": ".",
     "resolveJsonModule": true,
-    "strict": true,
-    "noImplicitAny": true,
     "isolatedModules": true,
     "strictNullChecks": true,
     "jsx": "react",
