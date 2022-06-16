@@ -58,10 +58,6 @@ const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OA3Parame
   return parameter.schema as OA3Parameter;
 };
 
-// const getParamStyle = (refs: SwaggerParser.$Refs, parameter: OA3Parameter) => {
-//   const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[schemaRef.in || refs.get(`${schemaRef?.$ref}`)?.in];
-// }
-
 const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
   if (!operation?.parameters?.length) {
     return;
@@ -84,8 +80,6 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
       // no schema or content property on a parameter is in violation with the OpenAPI spec
       schema = ALLOW_ALL_SCHEMA;
     }
-
-    console.log(schemaRef);
 
     const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[parameter.in || schemaRef.in];
 
