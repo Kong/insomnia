@@ -8,10 +8,10 @@ export const queryAllWorkspaceUrls = async (
   reqType: typeof RequestType | typeof GrpcRequestType,
   reqId = 'n/a',
 ): Promise<string[]> => {
-  const docs = await db.withDescendants(workspace, reqType);
+  const docs = await db.withDescendants(workspace, reqType) as (Request | GrpcRequest)[];
   const urls = docs
     .filter(
-      (d: Request | GrpcRequest) =>
+      d =>
         d.type === reqType &&
         d._id !== reqId && // Not current request
         (d.url || ''), // Only ones with non-empty URLs

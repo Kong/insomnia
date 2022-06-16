@@ -17,7 +17,7 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class RequestGroupRow extends PureComponent<Props> {
-  checkbox: HTMLInputElement;
+  checkbox?: HTMLInputElement;
 
   setCheckboxRef(checkbox: HTMLInputElement) {
     this.checkbox = checkbox;

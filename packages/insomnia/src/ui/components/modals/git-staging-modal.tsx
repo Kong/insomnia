@@ -56,7 +56,7 @@ const INITIAL_STATE: State = {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GitStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  statusNames: Record<string, string>;
+  statusNames?: Record<string, string>;
   textarea: HTMLTextAreaElement | null = null;
   onCommit: null | (() => void);
 
@@ -333,7 +333,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
 
   renderItem(item: Item) {
     const { path: gitPath, staged, editable } = item;
-    const docName = this.statusNames[gitPath] || 'n/a';
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const docName = this.statusNames![gitPath] || 'n/a';
     return (
       <tr key={gitPath} className="table--no-outline-row">
         <td>

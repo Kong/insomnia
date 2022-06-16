@@ -252,13 +252,13 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  async _handleChangeTestName(unitTest: UnitTest, name: string) {
+  async _handleChangeTestName(unitTest: UnitTest, name?: string) {
     await models.unitTest.update(unitTest, {
       name,
     });
   }
 
-  async _handleChangeActiveSuiteName(name: string) {
+  async _handleChangeActiveSuiteName(name?: string) {
     const { activeUnitTestSuite } = this.props;
     if (!activeUnitTestSuite) {
       return;

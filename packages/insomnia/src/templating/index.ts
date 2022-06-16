@@ -7,15 +7,17 @@ import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 
 export class RenderError extends Error {
-  message: string;
-  path: string | null;
-  location: {
+  // TODO: unsound definite assignment assertions
+  // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
+  message!: string;
+  path!: string | null;
+  location!: {
     line: number;
     column: number;
   };
 
-  type: string;
-  reason: string;
+  type!: string;
+  reason!: string;
 }
 
 // Some constants

@@ -42,7 +42,7 @@ const ICONS = {
   },
 };
 
-CodeMirror.defineExtension('isHintDropdownActive', function() {
+CodeMirror.defineExtension('isHintDropdownActive', function(this: CodeMirror.Editor) {
   return (
     this.state.completionActive &&
     this.state.completionActive.data &&
@@ -51,16 +51,16 @@ CodeMirror.defineExtension('isHintDropdownActive', function() {
   );
 });
 
-CodeMirror.defineExtension('closeHintDropdown', function() {
+CodeMirror.defineExtension('closeHintDropdown', function(this: CodeMirror.Editor) {
   this.state.completionActive?.close();
 });
 
-CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorFromTextArea, options: EnvironmentAutocompleteOptions) => {
+CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor, options: EnvironmentAutocompleteOptions) => {
   if (!options) {
     return;
   }
 
-  async function completeAfter(cm: CodeMirror.EditorFromTextArea, callback?: () => boolean, showAllOnNoMatch = false) {
+  async function completeAfter(cm: CodeMirror.Editor, callback?: () => boolean, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (callback && !callback()) {
       return;
@@ -114,7 +114,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     });
   }
 
-  function completeIfInVariableName(cm: CodeMirror.EditorFromTextArea) {
+  function completeIfInVariableName(cm: CodeMirror.Editor) {
     completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
@@ -125,7 +125,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
-  function completeIfAfterTagOrVarOpen(cm: CodeMirror.EditorFromTextArea) {
+  function completeIfAfterTagOrVarOpen(cm: CodeMirror.Editor) {
     completeAfter(
       cm,
       () => {
@@ -140,22 +140,22 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
-  function completeForce(cm: CodeMirror.EditorFromTextArea) {
+  function completeForce(cm: CodeMirror.Editor) {
     completeAfter(cm, undefined, true);
     return CodeMirror.Pass;
   }
 
   function setupKeyMap(
-    cm: CodeMirror.EditorFromTextArea,
+    cm: CodeMirror.Editor,
     {
       completeIfAfterTagOrVarOpen,
       completeForce,
     }: {
       completeIfAfterTagOrVarOpen: (
-        cm: CodeMirror.EditorFromTextArea
+        cm: CodeMirror.Editor
       ) => void | typeof CodeMirror.Pass;
       completeForce: (
-        cm: CodeMirror.EditorFromTextArea
+        cm: CodeMirror.Editor
       ) => void | typeof CodeMirror.Pass;
     }
   ) {
@@ -187,7 +187,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
   }
 
   let keydownTimeoutHandle: NodeJS.Timeout | null = null;
-  cm.on('keydown', (cm: CodeMirror.EditorFromTextArea, event) => {
+  cm.on('keydown', (cm: CodeMirror.Editor, event) => {
     // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && event.key === 'Escape') {
       if (!cm.state.completionActive) {
@@ -232,7 +232,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
  * @param options
  * @returns {Promise.<{list: Array, from, to}>}
  */
-function hint(cm: CodeMirror.EditorFromTextArea, options: ShowHintOptions) {
+function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   // Add type to all things (except constants, which need to convert to an object)
   const variablesToMatch: VariableCompletionItem[] = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
   const snippetsToMatch: SnippetCompletionItem[] = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
@@ -358,7 +358,7 @@ function hint(cm: CodeMirror.EditorFromTextArea, options: ShowHintOptions) {
  * @param self
  * @param data
  */
-async function replaceHintMatch(cm: CodeMirror.EditorFromTextArea, _self: any, data: any) {
+async function replaceHintMatch(cm: CodeMirror.Editor, _self: any, data: any) {
   if (typeof data.text === 'function') {
     data.text = await data.text();
   }

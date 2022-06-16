@@ -151,7 +151,7 @@ export type WrapperProps = AppProps & {
   handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
-  handleUpdateRequestMimeType: (mimeType: string) => Promise<Request | null>;
+  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   handleUpdateDownloadPath: Function;
 
   paneWidth: number;

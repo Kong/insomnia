@@ -36,18 +36,18 @@ type DragDirection = 0 | 1 | -1;
 interface Props {
   onChange: (pair: Pair) => void;
   onDelete: (pair: Pair) => void;
-  onFocusName: (pair: Pair, event: FocusEvent) => void;
-  onFocusValue: (pair: Pair, event: FocusEvent) => void;
-  onFocusDescription: (pair: Pair, event: FocusEvent) => void;
+  onFocusName: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onFocusValue: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onFocusDescription: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
   displayDescription: boolean;
   index: number;
   pair: Pair;
   readOnly?: boolean;
   onMove?: (pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) => void;
-  onKeyDown?: (pair: Pair, event: KeyboardEvent, value?: any) => void;
-  onBlurName?: (pair: Pair, event: FocusEvent) => void;
-  onBlurValue?: (pair: Pair, event: FocusEvent) => void;
-  onBlurDescription?: (pair: Pair, event: FocusEvent) => void;
+  onKeyDown?: (pair: Pair, event: KeyboardEvent | React.KeyboardEvent<Element>, value?: any) => void;
+  onBlurName?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onBlurValue?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onBlurDescription?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
   enableNunjucks?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
@@ -188,33 +188,33 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDisableChange(_event: React.MouseEvent, disabled: boolean) {
+  _handleDisableChange(_event: React.MouseEvent, disabled?: boolean) {
     this._sendChange({
       disabled,
     });
   }
 
-  _handleFocusName(event: FocusEvent) {
+  _handleFocusName(event: FocusEvent | React.FocusEvent<Element, Element>) {
     this.props.onFocusName(this.props.pair, event);
   }
 
-  _handleFocusValue(event: FocusEvent) {
+  _handleFocusValue(event: FocusEvent | React.FocusEvent<Element, Element>) {
     this.props.onFocusValue(this.props.pair, event);
   }
 
-  _handleFocusDescription(event: FocusEvent) {
+  _handleFocusDescription(event: FocusEvent | React.FocusEvent<Element, Element>) {
     this.props.onFocusDescription(this.props.pair, event);
   }
 
-  _handleBlurName(event: FocusEvent) {
+  _handleBlurName(event: FocusEvent | React.FocusEvent<Element, Element>) {
     this.props.onBlurName?.(this.props.pair, event);
   }
 
-  _handleBlurValue(event: FocusEvent) {
+  _handleBlurValue(event: FocusEvent | React.FocusEvent<Element, Element>) {
     this.props.onBlurValue?.(this.props.pair, event);
   }
 
-  _handleBlurDescription(event: FocusEvent) {
+  _handleBlurDescription(event: FocusEvent | React.FocusEvent<Element, Element>) {
     this.props.onBlurDescription?.(this.props.pair, event);
   }
 
@@ -222,7 +222,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     this.props.onDelete?.(this.props.pair);
   }
 
-  _handleKeyDown(event: KeyboardEvent, value?: any) {
+  _handleKeyDown(event: KeyboardEvent | React.KeyboardEvent<Element>, value?: any) {
     this.props.onKeyDown?.(this.props.pair, event, value);
   }
 

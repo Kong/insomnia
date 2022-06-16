@@ -543,7 +543,7 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _handleSetActiveEnvironment(activeEnvironmentId: string) {
+  async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
     await this._updateActiveWorkspaceMeta({
       activeEnvironmentId,
     });

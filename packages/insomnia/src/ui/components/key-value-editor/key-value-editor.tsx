@@ -186,7 +186,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._addPair();
   }
 
-  _handleKeyDown(_pair: Pair, event: KeyboardEvent, value?: any) {
+  _handleKeyDown(_pair: Pair, event: KeyboardEvent | React.KeyboardEvent<Element>, value?: any) {
     if (event.metaKey || event.ctrlKey) {
       return;
     }

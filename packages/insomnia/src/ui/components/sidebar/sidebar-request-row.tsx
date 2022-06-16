@@ -107,7 +107,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     requestActionsDropdown.current?.show();
   }, [requestActionsDropdown]);
 
-  const handleRequestUpdateName = useCallback((name: string) => {
+  const handleRequestUpdateName = useCallback((name?: string) => {
     if (!request) {
       return;
     }

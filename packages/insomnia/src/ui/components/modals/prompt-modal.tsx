@@ -26,7 +26,7 @@ interface State {
   onComplete?: (arg0: string) => Promise<void> | void;
   onCancel?: (() => void) | null;
   onHide?: () => void;
-  onDeleteHint?: ((arg0: string) => void) | null;
+  onDeleteHint?: ((arg0?: string) => void) | null;
   currentValue: string;
   loading: boolean;
 }
@@ -46,7 +46,7 @@ export interface PromptModalOptions {
   hints?: string[];
   onComplete?: (arg0: string) => Promise<void> | void;
   onHide?: () => void;
-  onDeleteHint?: (arg0: string) => void;
+  onDeleteHint?: (arg0?: string) => void;
   onCancel?: () => void;
 }
 
@@ -76,10 +76,14 @@ export class PromptModal extends PureComponent<{}, State> {
     loading: false,
   };
 
-  async _done(rawValue: string) {
+  async _done(rawValue?: string) {
     const { onComplete, upperCase } = this.state;
-    const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    await onComplete?.(value);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const value = upperCase ? rawValue!.toUpperCase() : rawValue;
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await onComplete?.(value!);
     this.hide();
   }
 
@@ -100,11 +104,11 @@ export class PromptModal extends PureComponent<{}, State> {
     this.modal = modal;
   }
 
-  _handleSelectHint(_event: React.MouseEvent, hint: string) {
+  _handleSelectHint(_event: React.MouseEvent, hint?: string) {
     this._done(hint);
   }
 
-  _handleDeleteHint(_event: React.MouseEvent, hint: string) {
+  _handleDeleteHint(_event: React.MouseEvent, hint?: string) {
     const { onDeleteHint } = this.state;
     onDeleteHint?.(hint);
     const hints = this.state.hints.filter(h => h !== hint);

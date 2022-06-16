@@ -159,6 +159,7 @@ export function debounce<T extends Function>(
   milliseconds: number = DEBOUNCE_MILLIS,
 ): T {
   // For regular debounce, just use a keyed debounce with a fixed key
+  // @ts-expect-error -- unsound contravariance
   return keyedDebounce(results => {
     // eslint-disable-next-line prefer-spread -- don't know if there was a "this binding" reason for this being this way so I'm leaving it alone
     callback.apply(null, results.__key__);

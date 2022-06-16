@@ -234,13 +234,15 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._load(workspace, environment);
   }
 
-  async _handleDuplicateEnvironment(_event: React.MouseEvent, environment: Environment) {
+  async _handleDuplicateEnvironment(_event: React.MouseEvent, environment?: Environment) {
     const { workspace } = this.state;
-    const newEnvironment = await models.environment.duplicate(environment);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const newEnvironment = await models.environment.duplicate(environment!);
     await this._load(workspace, newEnvironment);
   }
 
-  async _handleDeleteEnvironment(_event: React.MouseEvent, environment: Environment) {
+  async _handleDeleteEnvironment(_event: React.MouseEvent, environment?: Environment) {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
@@ -250,12 +252,16 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     }
 
     // Unset active environment if it's being deleted
-    if (activeEnvironmentId === environment._id) {
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (activeEnvironmentId === environment!._id) {
       handleChangeEnvironment(null);
     }
 
     // Delete the current one
-    await models.environment.remove(environment);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await models.environment.remove(environment!);
     await this._load(workspace, rootEnvironment);
   }
 
@@ -284,7 +290,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     }
   }
 
-  async _handleChangeEnvironmentName(environment: Environment, name: string) {
+  async _handleChangeEnvironmentName(environment: Environment, name?: string) {
     await this._updateEnvironment(environment, {
       name,
     });
@@ -452,7 +458,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                 'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
               })}
             >
-              <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
+              <Button onClick={this._handleShowEnvironment} value={rootEnvironment ?? undefined}>
                 {ROOT_ENVIRONMENT_NAME}
                 <HelpTooltip className="space-left">
                   The variables in this environment are always available, regardless of which
