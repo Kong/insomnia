@@ -39,7 +39,7 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
 
   let host = parsedUrl.hostname;
   if (hasUpstreams(api)) {
-    host =  appendUpstreamToName(name);
+    host = appendUpstreamToName(name);
   }
 
   // Service plugins

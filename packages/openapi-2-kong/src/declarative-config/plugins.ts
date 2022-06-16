@@ -47,12 +47,20 @@ const DEFAULT_PARAM_STYLE = {
 
 const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OA3Parameter): OA3Parameter => {
   if (parameter.$ref) {
-    return { ...parameter, definitions: $refs.values() } as OA3Parameter;
+    const components = $refs.get('#/components');
+    const selfRef = $refs.get(parameter.$ref);
+    const param = parameter;
+    delete param.$ref;
+    return { ...param, ...selfRef, components } as OA3Parameter;
   }
 
   // TODO: avoid using casting
   return parameter.schema as OA3Parameter;
 };
+
+// const getParamStyle = (refs: SwaggerParser.$Refs, parameter: OA3Parameter) => {
+//   const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[schemaRef.in || refs.get(`${schemaRef?.$ref}`)?.in];
+// }
 
 const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
   if (!operation?.parameters?.length) {
@@ -77,15 +85,20 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
       schema = ALLOW_ALL_SCHEMA;
     }
 
-    const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[schemaRef.in || refs.get(`${schemaRef?.$ref}`)?.in];
+    console.log(schemaRef);
+
+    const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[parameter.in || schemaRef.in];
 
     if (typeof paramStyle === 'undefined') {
       const name = parameter.name;
       throw new Error(`invalid 'in' property (parameter '${name}')`);
     }
 
-    // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
     const parameterSchema: ParameterSchema = {
+      in: parameter.in,
+      explode: !!parameter.explode,
+      required: !!parameter.required,
+      name: parameter.name,
       schema,
       style: paramStyle,
     };
@@ -109,12 +122,16 @@ export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Oper
     allowedContentTypes = Object.keys(bodyContent);
 
     if (allowedContentTypes.includes(jsonContentType)) {
-      const item = bodyContent[jsonContentType];
-      let schema = item.schema;
+      let item = bodyContent[jsonContentType];
 
       if (item.schema.$ref) {
-        schema = { ...item.schema, definitions: refs.values() };
+        const selfRef = refs.get(item.schema.$ref);
+        item = { ...selfRef };
+        item.components = refs.get('#/components');
+        item.$schema = 'http://json-schema.org/schema';
       }
+
+      const schema = item;
       for (const key in schema.properties) {
         // Append 'null' to property type if nullable true, see FTI-3278
         if (schema.properties[key].nullable === true) {
@@ -217,11 +234,9 @@ export const generateOperationPlugins = async ({ operation, pathPlugins, parentV
   api: OpenApi3Spec;
 }) => {
   const operationPlugins = generatePlugins(operation, tags);
-  console.log('operationPlugins', operationPlugins);
   // Check if validator plugin exists on the operation, even if the value of the plugin is undefined
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
 
-  console.log('parentValidatorPlugin', parentValidatorPlugin);
   // Use the operation or parent validator plugin, or skip if neither exist
   const plugin = operationValidatorPlugin || parentValidatorPlugin;
 
