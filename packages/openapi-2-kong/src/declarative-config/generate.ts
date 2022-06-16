@@ -26,8 +26,15 @@ export async function generateDeclarativeConfigFromSpec(
       warnings: [],
     };
 
-    // This removes any circular references or weirdness that might result from the JS objects used.
-    // see: https://github.com/Kong/studio/issues/93
+    /**
+     * There was an [issue](https://github.com/Kong/studio/issues/93) that required us to stringify and parse the declarative config object containing circular dependencies.
+     * However, that fix didn't seem to clear the issue of the circular dependencies completely.
+     *
+     * It is attempted to resolve the circular issue by bundling the openapi spec using SwaggerParser.bundle() method, which resolves all the schemas into $ref instead of dereferencing them.
+     * Then, we would just dump the components part of it with $schema property, so any JSON parsing logic can refer to the components object.
+     *
+     * Therefore, JSON.parse(JSON.stringify(result)) doesn't seem to be needed any more.
+     */
     const result: DeclarativeConfigResult = declarativeConfigResult;
     return result;
   } catch (err) {
