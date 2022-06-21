@@ -9,7 +9,7 @@ export const schema = buildSchema(`
   }
   type Query {
     hello: String,
-    lordOfTheRings: LordOfTheRings!
+    exampleEnum: LordOfTheRings!
   }
 `);
 
@@ -18,7 +18,7 @@ export const root = {
   hello: () => {
     return 'Hello world!';
   },
-  lordOfTheRings: () => {
+  exampleEnum: () => {
     return 'FELLOWSHIPOFTHERING';
   },
 };
