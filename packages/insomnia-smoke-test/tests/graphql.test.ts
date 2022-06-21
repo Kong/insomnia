@@ -18,7 +18,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
 
   await page.click('[data-testid="request-pane"] button:has-text("schema")');
   await page.click('button:has-text("Show Documentation")');
-  await page.click('a:has-text("Query")'),
+  await page.click('a:has-text("Query")');
   await page.locator('a:has-text("LordOfTheRings")').click();
   const graphqlDoc = page.locator('.graphql-explorer');
   await expect(graphqlDoc).toContainText('This is a long paragraph that is a description for the enum value THETWOTOWERS');
