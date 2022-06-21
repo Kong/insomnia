@@ -1,10 +1,12 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
+import { OpenAPIV3 } from 'openapi-types';
+import { omit } from 'ramda';
 import { Entry } from 'type-fest';
 
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
-import { OA3Operation, OA3Parameter, OA3RequestBody, OpenApi3Spec } from '../types/openapi3';
+import type { OA3Operation, OpenApi3Spec } from '../types/openapi3';
 
 export const isRequestValidatorPluginKey = (property: string): property is typeof xKongPluginRequestValidator => (
   property.match(/-request-validator$/) != null
@@ -37,7 +39,7 @@ const generatePlugin = (tags: string[]) => ([key, value]: Entry<PluginItem>): DC
  * See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
  */
 export const ALLOW_ALL_SCHEMA = '{}';
-
+const $schema = 'http://json-schema.org/schema#';
 const DEFAULT_PARAM_STYLE = {
   header: 'simple',
   cookie: 'form',
@@ -45,27 +47,25 @@ const DEFAULT_PARAM_STYLE = {
   path: 'simple',
 };
 
-const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OA3Parameter): OA3Parameter => {
-  if (parameter.$ref) {
+const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): OpenAPIV3.SchemaObject | undefined => {
+  if ('$ref' in parameter) {
     const components = $refs.get('#/components');
     const selfRef = $refs.get(parameter.$ref);
-    const param = parameter;
-    delete param.$ref;
-    return { ...param, ...selfRef, components } as OA3Parameter;
+    const param = omit(['$ref'], parameter);
+    return { ...param, ...selfRef, components, $schema };
   }
 
-  // TODO: avoid using casting
-  return parameter.schema as OA3Parameter;
+  return parameter.schema as OpenAPIV3.SchemaObject;
 };
 
 const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
   if (!operation?.parameters?.length) {
     return;
   }
-  // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
+
   const refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
   const parameterSchemas: ParameterSchema[] = [];
-  for (const parameter of operation.parameters as OA3Parameter[]) {
+  for (const parameter of operation.parameters) {
     // The following is valid config to allow all content to pass, in the case where schema is not defined
     let schema = '';
 
@@ -73,7 +73,7 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
 
     if (schemaRef) {
       schema = JSON.stringify(schemaRef);
-    } else if (parameter.content) {
+    } else if ('content' in parameter) {
       // only parameters defined with a schema (not content) are supported
       schema = ALLOW_ALL_SCHEMA;
     } else {
@@ -81,17 +81,23 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
       schema = ALLOW_ALL_SCHEMA;
     }
 
-    const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[parameter.in || schemaRef.in];
+    // @ts-expect-error fix this
+    const paramStyle = (parameter as OpenAPIV3.ParameterObject).style ?? DEFAULT_PARAM_STYLE[parameter.in || schemaRef.in];
 
     if (typeof paramStyle === 'undefined') {
+      // @ts-expect-error fix this
       const name = parameter.name;
       throw new Error(`invalid 'in' property (parameter '${name}')`);
     }
 
     const parameterSchema: ParameterSchema = {
+      // @ts-expect-error fix this
       in: parameter.in,
+      // @ts-expect-error fix this
       explode: !!parameter.explode,
+      // @ts-expect-error fix this
       required: !!parameter.required,
+      // @ts-expect-error fix this
       name: parameter.name,
       schema,
       style: paramStyle,
@@ -102,37 +108,60 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
   return parameterSchemas;
 };
 
+function resolveRequestBodyContent($refs: SwaggerParser.$Refs, operation?: OA3Operation): OpenAPIV3.RequestBodyObject | undefined {
+  if (!operation || !operation?.requestBody) {
+    return;
+  }
+
+  if ('$ref' in operation.requestBody) {
+    return $refs.get(operation.requestBody.$ref);
+  }
+
+  return operation.requestBody;
+}
+
+function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): OpenAPIV3.SchemaObject {
+  if (item?.schema && '$ref' in item.schema) {
+    const resolved: OpenAPIV3.NonArraySchemaObject & { $schema: string; components: Record<string, unknown> } = { ...$refs.get(item.schema.$ref) };
+    resolved.components = $refs.get('#/components');
+    resolved.$schema = 'http://json-schema.org/schema';
+  }
+
+  return item;
+}
+
+function serializeSchema(schema: OpenAPIV3.SchemaObject): string {
+  for (const key in schema.properties) {
+    // Append 'null' to property type if nullable true, see FTI-3278
+    // TODO: this does not conform to the OpenAPI 3 spec typings. We may need to investifate further why this was needed
+
+    // @ts-expect-error this needs a casting perhaps. schema can be either ArraySchemaObject or NonArraySchemaObject. Only the later has 'properties'
+    if (schema.properties[key].nullable === true) {
+      // @ts-expect-error this needs some further investigation. 'type' is merely an string enum, not an array according to the OpenAPI 3 typings.
+      schema.properties[key].type = [schema.properties[key].type, 'null'];
+    }
+  }
+
+  return JSON.stringify(schema);
+}
+
 export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Operation) {
-  // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
-  const refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
+  const $refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
   let bodySchema;
   let allowedContentTypes;
-  if (operation?.requestBody?.$ref) {
-    (operation.requestBody as OA3RequestBody) = refs.get(operation.requestBody.$ref);
-  }
-  const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
+
+  const requestBody = resolveRequestBodyContent($refs, operation);
+  const bodyContent = requestBody?.content;
+
   if (bodyContent) {
     const jsonContentType = 'application/json';
     allowedContentTypes = Object.keys(bodyContent);
 
     if (allowedContentTypes.includes(jsonContentType)) {
-      let item = bodyContent[jsonContentType];
+      const item: OpenAPIV3.MediaTypeObject = bodyContent[jsonContentType];
 
-      if (item.schema.$ref) {
-        const selfRef = refs.get(item.schema.$ref);
-        item = { ...selfRef };
-        item.components = refs.get('#/components');
-        item.$schema = 'http://json-schema.org/schema';
-      }
-
-      const schema = item;
-      for (const key in schema.properties) {
-        // Append 'null' to property type if nullable true, see FTI-3278
-        if (schema.properties[key].nullable === true) {
-          schema.properties[key].type = [schema.properties[key].type, 'null'];
-        }
-      }
-      bodySchema = JSON.stringify(schema);
+      const schema = resolveItemSchema($refs, item);
+      bodySchema = serializeSchema(schema);
     }
   }
 

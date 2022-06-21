@@ -4,13 +4,12 @@ import {
   getAllServers,
   getName,
   hasUpstreams,
-  HttpMethod,
   parseUrl,
   pathVariablesToRegex,
 } from '../common';
 import { DCRoute, DCService } from '../types/declarative-config';
 import { xKongName, xKongServiceDefaults } from '../types/kong';
-import { OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
+import { HttpMethods, OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateGlobalPlugins,
   generateOperationPlugins,
@@ -152,7 +151,7 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
 export function generateRouteName(
   api: OpenApi3Spec,
   routePath: string,
-  method: keyof typeof HttpMethod,
+  method: HttpMethods
 ) {
   const name = getName(api);
   const pathItem = api.paths[routePath];

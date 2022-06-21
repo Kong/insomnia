@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "openapi-types": "^8.0.0",
+    "ramda": "^0.28.0",
     "slugify": "1.6.5",
     "swagger-parser": "^10.0.3",
     "url-join": "^4.0.1",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
+    "@types/ramda": "^0.28.14",
     "@types/url-join": "^4.0.1",
     "@types/yaml": "^1.9.7",
     "jest": "^28.1.0",
