@@ -15,7 +15,7 @@ import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 import { MarkdownEditor } from '../markdown-editor';
 
-const MODES = {
+const MODES: Record<string, string> = {
   'text/plain': 'Plain Text',
   'application/json': 'JSON',
   'application/xml': 'XML',
@@ -58,11 +58,11 @@ export class CodePromptModal extends PureComponent<{}, State> {
     this.modal = modal;
   }
 
-  _handleChange(value) {
+  _handleChange(value: any) {
     this._onChange(value);
   }
 
-  _handleChangeMode(mode) {
+  _handleChangeMode(mode: any) {
     this.setState({ mode });
     this._onModeChange?.(mode);
   }
@@ -71,7 +71,7 @@ export class CodePromptModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  show(options) {
+  show(options: any) {
     const {
       title,
       defaultValue,

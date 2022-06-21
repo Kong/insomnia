@@ -72,7 +72,9 @@ export class SpecEditorSidebar extends Component<Props, State> {
     );
     const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
     const isServersSection = itemPath[0] === 'servers';
-    scrollPosition.start.line += itemMappedPosition.start.line;
+    // TODO: remove non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    scrollPosition.start.line += itemMappedPosition!.start.line;
 
     if (!isServersSection) {
       scrollPosition.start.line -= 1;
@@ -83,7 +85,7 @@ export class SpecEditorSidebar extends Component<Props, State> {
     this._handleScrollEditor(scrollPosition);
   }
 
-  _handleItemClick = (...itemPath): void => {
+  _handleItemClick = (...itemPath: any[]): void => {
     this._mapPosition(itemPath);
   };
 

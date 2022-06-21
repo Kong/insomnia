@@ -24,7 +24,7 @@ const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
 };
 
 const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
-  return async dispatch => {
+  return async (dispatch: any) => {
     const workspace = await createWorkspaceAndChildren(patch);
 
     if (onCreate) {
@@ -41,7 +41,7 @@ export const createWorkspace = ({ scope, onCreate }: {
   scope: WorkspaceScope;
   onCreate?: OnWorkspaceCreateCallback;
 }) => {
-  return (dispatch, getState) => {
+  return (dispatch: any, getState: any) => {
     const activeProject = selectActiveProject(getState());
 
     const design = isDesign({

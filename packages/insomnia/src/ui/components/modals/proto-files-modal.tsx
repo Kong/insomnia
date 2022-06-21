@@ -137,7 +137,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     return protoManager.addDirectory(workspace._id);
   }
 
-  _handleRename(protoFile: ProtoFile, name: string) {
+  _handleRename(protoFile: ProtoFile, name?: string) {
     return protoManager.renameFile(protoFile, name);
   }
 

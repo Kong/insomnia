@@ -2,7 +2,7 @@ import { axiosRequest } from '../../network/axios-request';
 
 /** This is a client for isomorphic-git {@link https://isomorphic-git.org/docs/en/http} */
 export const httpClient = {
-  request: async config => {
+  request: async (config: any) => {
     let response;
     let body: Buffer | null = null;
 

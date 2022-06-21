@@ -169,7 +169,7 @@ export async function buildRenderContext(
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
   // Render recursive references and tags.
-  const skipNextTime = {};
+  const skipNextTime: Record<string, boolean> = {};
 
   for (let i = 0; i < 3; i++) {
     for (const key of keys) {
@@ -273,9 +273,11 @@ export async function render<T>(
 
       for (const key of keys) {
         if (first && key.indexOf('_') === 0) {
+          // @ts-expect-error -- mapping unsoundness
           x[key] = await next(x[key], path);
         } else {
           const pathPrefix = path ? path + '.' : '';
+          // @ts-expect-error -- mapping unsoundness
           x[key] = await next(x[key], `${pathPrefix}${key}`);
         }
       }
@@ -322,10 +324,10 @@ export async function getRenderContext(
     workspace ? workspace._id : 'n/a',
   );
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
-  const keySource = {};
+  const keySource: Record<string, string> = {};
 
   // Function that gets Keys and stores their Source location
-  function getKeySource(subObject, inKey, inSource) {
+  function getKeySource(subObject: string | Record<string, any>, inKey: string, inSource: string) {
     // Add key to map if it's not root
     if (inKey) {
       keySource[templatingUtils.normalizeToDotAndBracketNotation(inKey)] = inSource;
@@ -336,10 +338,12 @@ export async function getRenderContext(
 
     if (typeStr === '[object Object]') {
       for (const key of Object.keys(subObject)) {
+        // @ts-expect-error -- mapping unsoundness
         getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource);
       }
     } else if (typeStr === '[object Array]') {
       for (let i = 0; i < subObject.length; i++) {
+        // @ts-expect-error -- mapping unsoundness
         getKeySource(subObject[i], templatingUtils.forceBracketNotation(inKey, i), inSource);
       }
     }
@@ -539,7 +543,7 @@ export async function getRenderedRequestAndContext(
  * @param v
  * @returns {number}
  */
-function _nunjucksSortValue(v) {
+function _nunjucksSortValue(v: string) {
   return v?.match?.(/({{|{%)/) ? 2 : 1;
 }
 

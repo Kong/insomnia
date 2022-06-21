@@ -33,7 +33,7 @@ export const updateGitRepository: UpdateGitRepositoryCallback = ({ gitRepository
     trackSegmentEvent(SegmentEvent.vcsSyncStart, { ...vcsSegmentEventProperties('git', 'update'), providerName });
     showModal(GitRepositorySettingsModal, {
       gitRepository,
-      onSubmitEdits: async gitRepoPatch => {
+      onSubmitEdits: async (gitRepoPatch: Partial<GitRepository>) => {
         await models.gitRepository.update(gitRepository, gitRepoPatch);
         trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'update'), providerName });
       },
@@ -49,7 +49,7 @@ export type SetupGitRepositoryCallback = (arg0: {
  * Setup a git repository against a document
  * */
 export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient, workspace }) => {
-  return dispatch => {
+  return (dispatch: any) => {
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'setup'));
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
@@ -120,7 +120,7 @@ const containsInsomniaWorkspaceDir = async (fsClient: Record<string, any>): Prom
 };
 
 const createWorkspaceWithGitRepo = (gitRepo: GitRepository) => {
-  return dispatch =>
+  return (dispatch: any) =>
     dispatch(
       createWorkspace({
         scope: WorkspaceScopeKeys.design,
@@ -139,7 +139,7 @@ const cloneProblem = (message: ReactNode) => {
 };
 
 const noDocumentFound = (gitRepo: GitRepository) => {
-  return dispatch => {
+  return (dispatch: any) => {
     showAlert({
       title: `No ${strings.document.singular.toLowerCase()} found`,
       okLabel: 'Yes',
@@ -156,14 +156,14 @@ const noDocumentFound = (gitRepo: GitRepository) => {
 export const cloneGitRepository = ({ createFsClient }: {
   createFsClient: () => git.PromiseFsClient;
 }) => {
-  return (dispatch, getState: () => RootState) => {
+  return (dispatch: any, getState: () => RootState) => {
     // TODO: in the future we should ask which project to clone into...?
     const activeProject = selectActiveProject(getState());
 
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
-      onSubmitEdits: async repoSettingsPatch => {
+      onSubmitEdits: async (repoSettingsPatch: any) => {
         dispatch(loadStart());
         repoSettingsPatch.needsFullClone = true;
         repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);

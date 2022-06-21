@@ -8,7 +8,7 @@ import { extension as mimeExtension } from 'mime-types';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
-import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
@@ -42,7 +42,7 @@ interface Props {
   handleDeleteResponses: Function;
   handleDeleteResponse: Function;
   handleShowRequestSettings: Function;
-  previewMode: string;
+  previewMode: PreviewMode;
   filter: string;
   filterHistory: string[];
   disableHtmlPreviewJs: boolean;

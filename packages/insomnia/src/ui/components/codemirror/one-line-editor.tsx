@@ -120,7 +120,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
   }
 
-  _handleDocumentMousedown(event: KeyboardEvent) {
+  _handleDocumentMousedown(event: MouseEvent) {
     if (!this._editor) {
       return;
     }
@@ -180,7 +180,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this.props.onFocus?.(event);
   }
 
-  _handleInputFocus(event: React.FocusEvent<HTMLInputElement>) {
+  _handleInputFocus(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement, Element>) {
     // If we're focusing the whole thing, blur the input. This happens when
     // the user tabs to the field.
     const start = this._input?.getSelectionStart();

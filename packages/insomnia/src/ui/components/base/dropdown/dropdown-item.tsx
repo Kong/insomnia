@@ -7,7 +7,7 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 interface Props {
   addIcon?: boolean; // TODO(TSCONVERSION) some consumers are passing this prop but it appears to be unused
   title?: string;
-  buttonClass?: React.ComponentType;
+  buttonClass?: React.ElementType;
   stayOpenAfterClick?: boolean;
   value?: any;
   disabled?: boolean;
@@ -66,7 +66,6 @@ export class DropdownItem extends PureComponent<Props> {
       onClick: this._handleClick,
       ...props,
     };
-    // @ts-expect-error -- TSCONVERSION
     return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }

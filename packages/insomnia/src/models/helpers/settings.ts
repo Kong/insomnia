@@ -291,8 +291,9 @@ export const omitControlledSettings = <
   T extends Settings,
   U extends Partial<Settings>
 >(settings: T, patch: U) => {
-  return omitBy((_value, setting: keyof Settings) => (
-    getControlledStatus(settings)(setting).isControlled
+  return omitBy((_value, setting: string) => (
+    // TODO: unsound type casting
+    getControlledStatus(settings)(setting as keyof Settings).isControlled
   ), patch);
 };
 

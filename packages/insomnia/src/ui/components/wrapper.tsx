@@ -33,7 +33,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { selectActiveActivity } from '../redux/selectors';
+import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -109,7 +109,10 @@ preloadWrapperDesign();
 preloadWrapperUnitTest();
 
 const ActivityRouter = () => {
-  const activity = useSelector(selectActiveActivity);
+  const selectedActivity = useSelector(selectActiveActivity);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  // If there is no active workspace, we want to navigate to home no matter what the previous activity was
+  const activity = activeWorkspace ? selectedActivity : ACTIVITY_HOME;
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -128,14 +131,12 @@ export type WrapperProps = AppProps & {
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleShowSettingsModal: Function;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
-  handleCreateRequest: (id: string, requestType?: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleCreateRequestForWorkspace: (requestType?: string) => void;
   requestPaneRef: Ref<HTMLElement>;
   responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
@@ -153,7 +154,7 @@ export type WrapperProps = AppProps & {
   handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
-  handleUpdateRequestMimeType: (mimeType: string) => Promise<Request | null>;
+  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   handleUpdateDownloadPath: Function;
 
   paneWidth: number;
@@ -371,7 +372,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleRemoveActiveWorkspace() {
-    const { workspacesForActiveProject, activeWorkspace, handleSetActiveActivity } = this.props;
+    const { activeWorkspace, handleSetActiveActivity } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -380,9 +381,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
     await models.workspace.remove(activeWorkspace);
 
-    if (workspacesForActiveProject.length <= 1) {
-      handleSetActiveActivity(ACTIVITY_HOME);
-    }
+    handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   async _handleActiveWorkspaceClearAllResponses() {
@@ -434,16 +433,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _handleCreateRequestInWorkspace(requestType?: string) {
-    const { activeWorkspace, handleCreateRequest } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    handleCreateRequest(activeWorkspace._id, requestType);
-  }
-
   _handleCreateRequestGroupInWorkspace() {
     const { activeWorkspace, handleCreateRequestGroup } = this.props;
 
@@ -472,7 +461,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  _handleGitBranchChanged(branch) {
+  _handleGitBranchChanged(branch: string) {
     this.setState({
       activeGitBranch: branch || 'no-vcs',
     });
@@ -680,45 +669,24 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   handleDeleteResponse={this._handleDeleteResponse}
                   handleDeleteResponses={this._handleDeleteResponses}
                   handleForceUpdateRequest={this._handleForceUpdateRequest}
-                  handleForceUpdateRequestHeaders={
-                    this._handleForceUpdateRequestHeaders
-                  }
+                  handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
-                  handleRequestCreate={this._handleCreateRequestInWorkspace}
-                  handleRequestGroupCreate={
-                    this._handleCreateRequestGroupInWorkspace
-                  }
-                  handleSendAndDownloadRequestWithActiveEnvironment={
-                    this._handleSendAndDownloadRequestWithActiveEnvironment
-                  }
-                  handleSendRequestWithActiveEnvironment={
-                    this._handleSendRequestWithActiveEnvironment
-                  }
+                  handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+                  handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
+                  handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
                   handleSetActiveResponse={this._handleSetActiveResponse}
                   handleSetPreviewMode={this._handleSetPreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleShowRequestSettingsModal={
-                    this._handleShowRequestSettingsModal
-                  }
+                  handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
                   handleSidebarSort={handleSidebarSort}
-                  handleUpdateRequestAuthentication={
-                    Wrapper._handleUpdateRequestAuthentication
-                  }
+                  handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
                   handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
-                  handleUpdateRequestHeaders={
-                    Wrapper._handleUpdateRequestHeaders
-                  }
+                  handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
                   handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
-                  handleUpdateRequestParameters={
-                    Wrapper._handleUpdateRequestParameters
-                  }
+                  handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
                   handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-                  handleUpdateSettingsUseBulkHeaderEditor={
-                    this._handleUpdateSettingsUseBulkHeaderEditor
-                  }
-                  handleUpdateSettingsUseBulkParametersEditor={
-                    this._handleUpdateSettingsUseBulkParametersEditor
-                  }
+                  handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+                  handleUpdateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
                   wrapperProps={this.props}
                 />
               </Suspense>

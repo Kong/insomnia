@@ -7,22 +7,23 @@ import { ascendingNameSort } from '../../../common/sorting';
 import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
 import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
+import { type GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
-  onNavigateType: (type: Record<string, any>) => void;
-  onNavigateField: (field: Record<string, any>) => void;
+  onNavigateType: (type: GraphQLType) => void;
+  onNavigateField: (field: GraphQLFieldWithParentName) => void;
   type: GraphQLType;
   schema: GraphQLSchema | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GraphQLExplorerType extends PureComponent<Props> {
-  _handleNavigateType(type: Record<string, any>) {
+  _handleNavigateType(type: GraphQLType) {
     const { onNavigateType } = this.props;
     onNavigateType(type);
   }
 
-  _handleNavigateField(field: Record<string, any>) {
+  _handleNavigateField(field: GraphQLFieldWithParentName) {
     const { onNavigateField } = this.props;
     onNavigateField(field);
   }

@@ -38,7 +38,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class Plugins extends PureComponent<Props, State> {
-  _isMounted: boolean;
+  _isMounted = false;
 
   state: State = {
     plugins: [],

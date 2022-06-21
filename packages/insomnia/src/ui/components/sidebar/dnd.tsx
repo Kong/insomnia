@@ -27,8 +27,14 @@ export const targetCollect = (connect: DropTargetConnector, monitor: DropTargetM
 });
 
 export const isAbove = (monitor: DropTargetMonitor, component: any) => {
-  const hoveredNode = ReactDOM.findDOMNode(component);
-  // @ts-expect-error -- TSCONVERSION
+  let hoveredNode;
+  try {
+    // Try to find the node if it's a class component
+    hoveredNode = ReactDOM.findDOMNode(component);
+  } catch (error: unknown) {
+    // Try to find the component if it's a function component
+    hoveredNode = component.node;
+  }
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
   const draggedTop = monitor.getSourceClientOffset()?.y;
   return draggedTop && hoveredTop > draggedTop;
@@ -95,7 +101,7 @@ const moveDoc = async ({
     }
   }
 
-  function __updateDoc(doc, patch) {
+  function __updateDoc(doc: BaseModel, patch: any) {
     // @ts-expect-error -- TSCONVERSION
     return models.getModel(docToMove.type).update(doc, patch);
   }
