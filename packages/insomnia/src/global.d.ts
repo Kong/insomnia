@@ -42,15 +42,7 @@ interface Window {
       headerResults: HeaderResult[];
     }>;
   };
-  dialog: {
-    showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;
-    showSaveDialog: (options: Electron.SaveDialogOptions) => Promise<Electron.SaveDialogReturnValue>;
-  };
-  app: {
-    getPath: (name: string) => string;
-    getAppPath: () => string;
-  };
-  shell: {
-    showItemInFolder: (fullPath: string) => void;
-  };
+  dialog: Partial<Electron.Dialog>;
+  app: Partial<Electron.App>;
+  shell: Partial<Electron.Shell>;
 }

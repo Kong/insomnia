@@ -32,6 +32,16 @@ export default async function build(options: Options) {
       'process.env.BUILD_DATE': JSON.stringify(new Date()),
     };
 
+  esbuild.build({
+    entryPoints: ['./src/preload.ts'],
+    outfile: path.join(outdir, 'preload.js'),
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    external: ['electron'],
+  });
+
   return esbuild.build({
     entryPoints: ['./src/main.development.ts'],
     outfile: path.join(outdir, 'main.min.js'),
