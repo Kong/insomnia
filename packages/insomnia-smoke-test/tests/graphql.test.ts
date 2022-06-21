@@ -16,16 +16,9 @@ test('can send GraphQL requests', async ({ app, page }) => {
   await page.click('text=CollectionSmoke GraphQLjust now');
   await page.locator('button:has-text("POSTGQLGraphQL request")').click();
   await page.locator('[data-testid="request-pane"] button:has-text("schema")').click();
-  // FIXME: flaky when not run on PWDEBUG
   await page.locator('button:has-text("Show Documentation")').click();
-  await Promise.all([
-    page.waitForNavigation({ url: 'http://localhost:3334/index.html#' }),
-    page.locator('a:has-text("Query")').click(),
-  ]);
-  await Promise.all([
-    page.waitForNavigation({ url: 'http://localhost:3334/index.html#' }),
-    page.locator('text=LordOfTheRings').nth(2).click(),
-  ]);
+  await page.locator('a:has-text("Query")').click(),
+  await page.locator('text=LordOfTheRings').nth(2).click(),
   await page.locator('text=This is a long paragraph that is a description for the enum value THETWOTOWERS').click();
   await page.locator('text=QueryLordOfTheRings >> button').click();
   await page.locator('[data-testid="request-pane"] >> text=Send').click();
