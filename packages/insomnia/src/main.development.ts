@@ -10,9 +10,9 @@ import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
+import { init as electronMainBridge } from './main/ipc/electron';
 import { init as gRPCMainBridge } from './main/ipc/grpc';
-import { init as electronMainBridge } from './main/ipc/grpc';
-import { init as mainBridge } from './main/ipc/grpc';
+import { init as mainBridge } from './main/ipc/main';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -21,8 +21,6 @@ import * as models from './models/index';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
-electronMainBridge();
-mainBridge();
 initializeSentry();
 
 // Handle potential auto-update
@@ -91,6 +89,8 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
+  electronMainBridge();
+  mainBridge();
   gRPCMainBridge();
 });
 
