@@ -33,7 +33,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { selectActiveActivity } from '../redux/selectors';
+import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -109,7 +109,10 @@ preloadWrapperDesign();
 preloadWrapperUnitTest();
 
 const ActivityRouter = () => {
-  const activity = useSelector(selectActiveActivity);
+  const selectedActivity = useSelector(selectActiveActivity);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  // If there is no active workspace, we want to navigate to home no matter what the previous activity was
+  const activity = activeWorkspace ? selectedActivity : ACTIVITY_HOME;
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -369,7 +372,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleRemoveActiveWorkspace() {
-    const { workspacesForActiveProject, activeWorkspace, handleSetActiveActivity } = this.props;
+    const { activeWorkspace, handleSetActiveActivity } = this.props;
 
     if (!activeWorkspace) {
       return;
@@ -378,9 +381,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
     await models.workspace.remove(activeWorkspace);
 
-    if (workspacesForActiveProject.length <= 1) {
-      handleSetActiveActivity(ACTIVITY_HOME);
-    }
+    handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   async _handleActiveWorkspaceClearAllResponses() {
