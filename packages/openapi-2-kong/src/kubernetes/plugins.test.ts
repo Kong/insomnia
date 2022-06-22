@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { OpenAPIV3 } from 'openapi-types';
 
 import { HttpMethod } from '../common';
 import { dummyPluginDoc, pluginDummy } from '../declarative-config/jest/test-helpers';
@@ -61,7 +62,6 @@ describe('plugins', () => {
 
   const components: OA3Components = {
     securitySchemes: {
-      // @ts-expect-error -- TSCONVERSION
       really_basic: {
         type: 'http',
         scheme: 'basic',
@@ -78,7 +78,6 @@ describe('plugins', () => {
       },
       petstore_oauth2: {
         type: 'oauth2',
-        // @ts-expect-error -- TSCONVERSION
         flows: {
           clientCredentials: {
             tokenUrl: 'http://example.org/api/oauth/dialog',
@@ -89,7 +88,6 @@ describe('plugins', () => {
           },
         },
       },
-      // @ts-expect-error -- TSCONVERSION
       petstore_openid: {
         type: 'openIdConnect',
         openIdConnectUrl: 'http://example.org/oid-discovery',
@@ -362,24 +360,24 @@ describe('plugins', () => {
 
     it('should return plugins for all operations on path', () => {
       const pathItem: OA3PathItem = {
-        [HttpMethod.get]: {},
-        [HttpMethod.put]: { ...pluginKeyAuth, ...pluginDummy },
-        [HttpMethod.post]: pluginDummy as OA3Operation,
+        get: {},
+        put: { ...pluginKeyAuth, ...pluginDummy },
+        post: pluginDummy as OA3Operation,
       };
       const result = getOperationPlugins(pathItem, increment, spec);
       expect(result).toHaveLength(3);
       const get = result[0];
-      expect(get.method).toBe(HttpMethod.get);
+      expect(get.method).toBe('get');
       expect(get.plugins).toHaveLength(0);
       const put = result[1];
-      expect(put.method).toBe(HttpMethod.put);
+      expect(put.method).toBe('put');
       expect(put.plugins).toEqual([keyAuthPluginDoc('m0'), dummyPluginDoc('m1')]);
       const post = result[2];
-      expect(post.method).toBe(HttpMethod.post);
+      expect(post.method).toBe('post');
       expect(post.plugins).toEqual([dummyPluginDoc('m2')]);
     });
 
-    it.each(Object.values(HttpMethod))(
+    it.each(Object.values(OpenAPIV3.HttpMethods))(
       'should extract method plugins for %o from path item',
       methodName => {
         const pathItem = {
@@ -396,7 +394,7 @@ describe('plugins', () => {
     it('should return security plugin from operation', () => {
       const api: OpenApi3Spec = { ...spec, components };
       const pathItem: OA3PathItem = {
-        [HttpMethod.get]: {
+        'get': {
           security: [
             {
               really_basic: [],

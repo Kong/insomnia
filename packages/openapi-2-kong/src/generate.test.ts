@@ -16,7 +16,8 @@ const firstK8sDocument = {
   },
   route: {
     methods: [
-      'get',
+      // There was some discrepency how we "generate" mock data and how we implemented it
+      'GET',
     ],
   },
 };
@@ -150,9 +151,7 @@ describe('top-level API exports', () => {
           post: {
             responses: {
               200: {
-                name: {
-                  type: 'string',
-                },
+                '$ref': '#/components/schemas/dog',
               } as OpenAPIV3.SchemaObject,
             } as OpenAPIV3.ResponsesObject,
           },

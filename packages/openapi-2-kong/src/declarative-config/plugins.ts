@@ -125,6 +125,7 @@ function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaType
     const resolved: OpenAPIV3.NonArraySchemaObject & { $schema: string; components: Record<string, unknown> } = { ...$refs.get(item.schema.$ref) };
     resolved.components = $refs.get('#/components');
     resolved.$schema = 'http://json-schema.org/schema';
+    return resolved;
   }
 
   return item;
