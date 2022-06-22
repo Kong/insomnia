@@ -32,9 +32,10 @@ import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
-import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
+import type { ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
+import type { CurlRequest, ResponseTimelineEntry } from '../network/libcurl-promise';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
@@ -95,8 +96,8 @@ export async function _actuallySend(
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
           ? window.main.cancelCurlRequest
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          : require('./libcurl-promise').cancelCurlRequest;
+          :  (await import('./libcurl-promise')).cancelCurlRequest;
+
         nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
           elapsedTime: 0,
@@ -135,10 +136,10 @@ export async function _actuallySend(
       const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-      const nodejsCurlRequest = process.type === 'renderer'
+      const nodejsCurlRequest: CurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        : require('./libcurl-promise').curlRequest;
+        : (await import('./libcurl-promise')).curlRequest;
+
       const requestOptions = {
         requestId: renderedRequest._id,
         req: renderedRequest,

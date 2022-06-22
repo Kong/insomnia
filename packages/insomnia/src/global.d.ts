@@ -22,27 +22,4 @@ declare namespace NodeJS {
 
 interface Window {
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: Function;
-  main: {
-    restart: () => void;
-    authorizeUserInWindow: (options: { url: string; urlSuccessRegex?: RegExp; urlFailureRegex?: RegExp; sessionId: string }) => Promise<string>;
-    setMenuBarVisibility: (visible: boolean) => void;
-    installPlugin: (url: string) => void;
-    writeFile: (options: {path: string; content: string}) => Promise<string>;
-    cancelCurlRequest: (requestId: string) => void;
-    curlRequest: (options: {
-      curlOptions: CurlOpt[];
-      responseBodyPath: string;
-      maxTimelineDataSizeKB: number;
-      requestId: string;
-      requestBodyPath?: string;
-      isMultipart: boolean;
-    }) => Promise<{
-      patch: ResponsePatch;
-      debugTimeline: ResponseTimelineEntry[];
-      headerResults: HeaderResult[];
-    }>;
-  };
-  dialog: Partial<Electron.Dialog>;
-  app: Partial<Electron.App>;
-  shell: Partial<Electron.Shell>;
 }
