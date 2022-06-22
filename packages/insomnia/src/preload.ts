@@ -31,7 +31,6 @@ const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
 };
 
-// NOTE: this will only be true if/when we enable contextIsolation ./packages/insomnia/src/main/window-utils.ts#L86
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);

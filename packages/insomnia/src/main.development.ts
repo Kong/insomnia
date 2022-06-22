@@ -1,4 +1,4 @@
-import * as electron from 'electron';
+import electron, { app, ipcMain, session } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
@@ -21,6 +21,8 @@ import * as models from './models/index';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
+electronMainBridge();
+mainBridge();
 initializeSentry();
 
 // Handle potential auto-update
@@ -29,7 +31,6 @@ if (checkIfRestartNeeded()) {
 }
 
 initializeLogging();
-const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
 log.info(`Running version ${getAppVersion()}`);
 
@@ -91,8 +92,6 @@ app.on('ready', async () => {
   // Init the rest
   await updates.init();
   gRPCMainBridge();
-  electronMainBridge();
-  mainBridge();
 });
 
 // Set as default protocol

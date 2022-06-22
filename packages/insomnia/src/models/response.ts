@@ -24,7 +24,7 @@ export interface ResponseHeader {
 }
 
 export interface ResponseTimelineEntry {
-  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
+  name: string;
   timestamp: number;
   value: string;
 }

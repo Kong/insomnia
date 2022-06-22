@@ -58,7 +58,7 @@ interface SettingsUsedHere {
   noProxy: string;
 }
 export interface ResponseTimelineEntry {
-  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
+  name: string;
   timestamp: number;
   value: string;
 }
@@ -75,7 +75,6 @@ const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.ge
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
 export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]();
-export type CurlRequest = typeof curlRequest;
 export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequestOutput>(async resolve => {
   try {
     const responsesDir = path.join(getDataDirectory(), 'responses');
