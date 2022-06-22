@@ -13,7 +13,7 @@ resources:
     method: POST
     body:
       mimeType: application/graphql
-      text: '{"query":"query {\n\thello,\n\texampleEnum\n}"}'
+      text: '{"query":"query {\n\thello,\n\tbearer\n}"}'
     parameters: []
     headers:
       - name: Content-Type

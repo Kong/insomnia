@@ -8,8 +8,6 @@ import { root, schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
 
-console.log('Running a GraphQL API server at http://localhost:4000/graphql');
-
 const app = express();
 const port = 4010;
 const grpcPort = 50051;
