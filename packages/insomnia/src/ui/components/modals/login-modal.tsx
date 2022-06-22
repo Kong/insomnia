@@ -42,7 +42,7 @@ export class LoginModal extends PureComponent<{}, State> {
     this._emailInput = emailInput;
   }
 
-  async _handleLogin(event) {
+  async _handleLogin(event: React.FormEvent) {
     event.preventDefault();
     this.setState({
       error: '',

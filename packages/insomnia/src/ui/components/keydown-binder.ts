@@ -53,7 +53,8 @@ export class KeydownBinder extends PureComponent<Props> {
 
   componentDidMount() {
     if (this.props.scoped) {
-      const el = ReactDOM.findDOMNode(this);
+      // TODO: unsound casting
+      const el = ReactDOM.findDOMNode(this) as HTMLElement | null;
       el?.addEventListener('keydown', this._handleKeydown, { capture: true });
       el?.addEventListener('keyup', this._handleKeyup, { capture: true });
     } else {
@@ -64,7 +65,8 @@ export class KeydownBinder extends PureComponent<Props> {
 
   componentWillUnmount() {
     if (this.props.scoped) {
-      const el = ReactDOM.findDOMNode(this);
+      // TODO: unsound casting
+      const el = ReactDOM.findDOMNode(this) as HTMLElement | null;
       el?.removeEventListener('keydown', this._handleKeydown, { capture: true });
       el?.removeEventListener('keyup', this._handleKeyup, { capture: true });
     } else {

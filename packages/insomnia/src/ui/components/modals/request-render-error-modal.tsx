@@ -36,7 +36,7 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
     });
   }
 
-  show({ request, error }) {
+  show({ request, error }: Pick<State, 'request' | 'error'>) {
     this.setState({ request, error });
     this.modal?.show();
   }
@@ -45,7 +45,7 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  renderModalBody(request, error) {
+  renderModalBody(request: any, error: any) {
     const fullPath = `Request.${error.path}`;
     const result = JSONPath({ json: request, path: `$.${error.path}` });
     const template = result && result.length ? result[0] : null;

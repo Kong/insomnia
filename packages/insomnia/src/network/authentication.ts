@@ -1,4 +1,4 @@
-import * as Hawk from '@hapi/hawk';
+import * as Hawk from 'hawk';
 import jwtAuthentication from 'jwt-authentication';
 
 import {

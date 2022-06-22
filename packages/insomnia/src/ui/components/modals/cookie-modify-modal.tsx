@@ -45,6 +45,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
 
   async show(cookie: Cookie) {
     // Dunno why this is sent as an array
+    // @ts-expect-error -- type unsoundness
     cookie = cookie[0] || cookie;
     const { activeCookeJar } = this.props;
     const prevCookie = activeCookeJar?.cookies.find(c => c.id === cookie.id);
@@ -73,7 +74,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
     this._rawTimeout = setTimeout(async () => {
       const prevCookie = this.state.cookie;
-      let cookie;
+      let cookie: Cookie;
 
       try {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
@@ -181,6 +182,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
       return null;
     }
 
+    // @ts-expect-error -- mapping unsoundness
     const val = (cookie[field] || '').toString();
     return (
       <div className="form-control form-control--outlined">
@@ -230,6 +232,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
                 </div>
                 <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                   {checkFields.map((field, i) => {
+                    // @ts-expect-error -- mapping unsoundness
                     const checked = !!cookie[field];
                     return (
                       <label key={i}>

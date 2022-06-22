@@ -26,7 +26,7 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
 
     function addFile(path: string) {
       return new Promise<void>((resolve, reject) => {
-        let size;
+        let size: number | undefined;
 
         try {
           size = fs.statSync(path).size;
@@ -44,7 +44,9 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
         stream.pipe(writeStream, {
           end: false,
         });
-        totalSize += size;
+        // TODO: remove non-null assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        totalSize += size!;
       });
     }
 

@@ -1,6 +1,7 @@
 import type { BaseDriver } from './base';
 export default class MemoryDriver implements BaseDriver {
-  _db: Record<string, Buffer>;
+  // TODO: unsound definite property assignment assertion
+  _db!: Record<string, Buffer>;
 
   constructor() {
     this._init();

@@ -13,14 +13,14 @@ type States =
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
-interface Props {
-  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: any, event: React.MouseEvent<HTMLButtonElement>) => void);
+interface Props<T> {
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
   addIcon?: boolean;
   children?: ReactNode;
   disabled?: boolean;
   confirmMessage?: string;
   doneMessage?: string;
-  value?: any;
+  value?: T;
   tabIndex?: number;
   className?: string;
   // TODO(TSCONVERSION) this is linked to Button not using title
@@ -32,22 +32,21 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class PromptButton extends PureComponent<Props> {
+export class PromptButton<T> extends PureComponent<Props<T>> {
   _doneTimeout: NodeJS.Timeout | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
   state: State = {
     state: STATE_DEFAULT,
   };
 
-  _confirm(...args) {
+  _confirm(event: React.MouseEvent<HTMLButtonElement>, value?: T) {
     if (this._triggerTimeout !== null) {
       // Clear existing timeouts
       clearTimeout(this._triggerTimeout);
     }
 
     // Fire the click handler
-    // @ts-expect-error -- TSCONVERSION
-    this.props.onClick?.(...args);
+    this.props.onClick?.(event, value);
     // Set the state to done (but delay a bit to not alarm user)
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
     this._doneTimeout = global.setTimeout(() => {
@@ -64,8 +63,7 @@ export class PromptButton extends PureComponent<Props> {
     }, 2000);
   }
 
-  _ask(...args) {
-    const event = args[args.length - 1];
+  _ask(event: React.MouseEvent<HTMLButtonElement>) {
     // Prevent events (ex. won't close dropdown if it's in one)
     event.preventDefault();
     event.stopPropagation();
@@ -82,13 +80,13 @@ export class PromptButton extends PureComponent<Props> {
     }, 2000);
   }
 
-  _handleClick(...args) {
+  _handleClick(event: React.MouseEvent<HTMLButtonElement>, value?: T) {
     const { state } = this.state;
 
     if (state === STATE_ASK) {
-      this._confirm(...args);
+      this._confirm(event, value);
     } else if (state === STATE_DEFAULT) {
-      this._ask(...args);
+      this._ask(event);
     } else {
       // Do nothing
     }
