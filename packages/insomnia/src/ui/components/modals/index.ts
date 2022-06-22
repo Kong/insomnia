@@ -3,9 +3,9 @@ import { AlertModal, AlertModalOptions } from './alert-modal';
 import { ErrorModal, ErrorModalOptions } from './error-modal';
 import { PromptModal, PromptModalOptions } from './prompt-modal';
 
-const modals = {};
+const modals: Record<string, any> = {};
 
-export function registerModal(instance) {
+export function registerModal(instance: any) {
   if (instance === null) {
     // Modal was unmounted
     return;
@@ -14,7 +14,7 @@ export function registerModal(instance) {
   modals[instance.constructor.name] = instance;
 }
 
-export function showModal(modalCls, ...args) {
+export function showModal(modalCls: any, ...args: any[]) {
   trackPageView(modalCls.name);
   return _getModal(modalCls).show(...args);
 }
@@ -42,7 +42,7 @@ export function hideAllModals() {
   }
 }
 
-function _getModal(modalCls) {
+function _getModal(modalCls: any) {
   const m = modals[modalCls.name || modalCls.WrappedComponent?.name];
 
   if (!m) {

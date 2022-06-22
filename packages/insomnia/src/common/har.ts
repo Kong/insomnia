@@ -535,7 +535,7 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | und
     body = renderedRequest.body;
   }
 
-  let params = [];
+  let params: any[] = [];
 
   if (body.params) {
     params = body.params.map(param => {

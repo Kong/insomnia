@@ -1,4 +1,4 @@
-const getCreds = (user, pass, encoding) => ({
+const getCreds = (user: string, pass: string, encoding: BufferEncoding) => ({
   raw: { user, pass },
   encoded: {
     user: Buffer.from(user, encoding).toString(),

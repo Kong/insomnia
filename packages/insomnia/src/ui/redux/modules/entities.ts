@@ -1,6 +1,6 @@
 import clone from 'clone';
 
-import { database as db } from '../../../common/database';
+import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { pluralize } from '../../../common/misc';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
@@ -36,7 +36,7 @@ const ENTITY_INITIALIZE = 'entities/initialize';
 // ~~~~~~~~ //
 // Reducers //
 // ~~~~~~~~ //
-function getReducerName(type) {
+function getReducerName(type: string) {
   // Lowercase first letter (camel case)
   const lowerFirstLetter = `${type.slice(0, 1).toLowerCase()}${type.slice(1)}`;
   return pluralize(lowerFirstLetter);
@@ -100,7 +100,7 @@ export const initialEntitiesState: EntitiesState = {
   grpcRequestMetas: {},
 };
 
-export function reducer(state = initialEntitiesState, action) {
+export function reducer(state = initialEntitiesState, action: any) {
   switch (action.type) {
     case ENTITY_INITIALIZE:
       const freshState = clone(initialEntitiesState);
@@ -108,7 +108,7 @@ export function reducer(state = initialEntitiesState, action) {
 
       for (const doc of docs) {
         const referenceName = getReducerName(doc.type);
-        freshState[referenceName][doc._id] = doc;
+        (freshState as any)[referenceName][doc._id] = doc;
       }
 
       return freshState;
@@ -125,10 +125,12 @@ export function reducer(state = initialEntitiesState, action) {
         switch (event) {
           case db.CHANGE_INSERT:
           case db.CHANGE_UPDATE:
+            // @ts-expect-error -- mapping unsoundness
             newState[referenceName][doc._id] = doc;
             break;
 
           case db.CHANGE_REMOVE:
+            // @ts-expect-error -- mapping unsoundness
             delete newState[referenceName][doc._id];
             break;
 
@@ -146,19 +148,19 @@ export function reducer(state = initialEntitiesState, action) {
 // ~~~~~~~ //
 // Actions //
 // ~~~~~~~ //
-export function addChanges(changes) {
+export function addChanges(changes: ChangeBufferEvent[]) {
   return {
     type: ENTITY_CHANGES,
     changes,
   };
 }
 export function initialize() {
-  return async dispatch => {
+  return async (dispatch: any) => {
     const docs = await allDocs();
     dispatch(initializeWith(docs));
   };
 }
-export function initializeWith(docs) {
+export function initializeWith(docs: models.BaseModel[]) {
   return {
     type: ENTITY_INITIALIZE,
     docs,

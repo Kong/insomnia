@@ -7,15 +7,17 @@ import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 
 export class RenderError extends Error {
-  message: string;
-  path: string | null;
-  location: {
+  // TODO: unsound definite assignment assertions
+  // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
+  message!: string;
+  path!: string | null;
+  location!: {
     line: number;
     column: number;
   };
 
-  type: string;
-  reason: string;
+  type!: string;
+  reason!: string;
 }
 
 // Some constants
@@ -62,7 +64,7 @@ export function render(
     // NOTE: this is added as a breadcrumb because renderString sometimes hangs
     const id = setTimeout(() => console.log('Warning: nunjucks failed to respond within 5 seconds'), 5000);
     const nj = await getNunjucks(renderMode);
-    nj?.renderString(text, templatingContext, (err, result) => {
+    nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (err) {
         const sanitizedMsg = err.message
@@ -190,7 +192,7 @@ async function getNunjucks(renderMode: string) {
     nj.addExtension(instance.getTag(), instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
-    nj.addFilter('debug', o => o);
+    nj.addFilter('debug', (o: any) => o);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //

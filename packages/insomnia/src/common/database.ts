@@ -351,6 +351,7 @@ export const database = {
     delete db._empty;
     electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
       try {
+        // @ts-expect-error -- mapping unsoundness
         const result = await database[fnName](...args);
         e.sender.send(replyChannel, null, result);
       } catch (err) {
@@ -370,7 +371,7 @@ export const database = {
 
     // This isn't the best place for this but w/e
     // Listen for response deletions and delete corresponding response body files
-    database.onChange(async changes => {
+    database.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const [type, doc] of changes) {
         // TODO(TSCONVERSION) what's returned here is the entire model implementation, not just a model
         // The type definition will be a little confusing
@@ -684,7 +685,7 @@ function getDBFilePath(modelType: string) {
 let bufferingChanges = false;
 let bufferChangesId = 1;
 
-type ChangeBufferEvent = [
+export type ChangeBufferEvent = [
   event: string,
   doc: BaseModel,
   fromSync: boolean
@@ -692,7 +693,7 @@ type ChangeBufferEvent = [
 
 let changeBuffer: ChangeBufferEvent[] = [];
 
-type ChangeListener = Function;
+type ChangeListener = (changes: ChangeBufferEvent[]) => void;
 
 let changeListeners: ChangeListener[] = [];
 

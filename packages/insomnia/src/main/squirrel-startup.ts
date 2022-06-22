@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import { app } from 'electron';
 import path from 'path';
 
-function run(args, done) {
+function run(args: readonly string[] | undefined, done: (...args: any[]) => void) {
   const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
   spawn(updateExe, args, {
     detached: true,

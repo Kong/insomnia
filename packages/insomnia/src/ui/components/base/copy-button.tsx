@@ -24,7 +24,7 @@ export class CopyButton extends PureComponent<Props, State> {
 
   _triggerTimeout: NodeJS.Timeout | null = null;
 
-  async _handleClick(event) {
+  async _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
     const content =

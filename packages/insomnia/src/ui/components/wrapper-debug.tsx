@@ -35,7 +35,6 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleRequestCreate: () => void;
   handleRequestGroupCreate: () => void;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
@@ -101,7 +100,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
       activeWorkspace,
       environments,
       handleChangeEnvironment,
-      handleRequestCreate,
       handleRequestGroupCreate,
       handleSidebarSort,
       settings,
@@ -111,7 +109,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
     const {
       handleActivateRequest,
       handleCopyAsCurl,
-      handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
@@ -146,7 +143,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
         <SidebarFilter
           key={`${activeWorkspace._id}::filter`}
           onChange={handleSetSidebarFilter}
-          requestCreate={handleRequestCreate}
           requestGroupCreate={handleRequestGroupCreate}
           sidebarSort={handleSidebarSort}
           filter={sidebarFilter || ''}
@@ -156,7 +152,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
         <SidebarChildren
           childObjects={sidebarChildren}
           handleActivateRequest={handleActivateRequest}
-          handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleSetRequestPinned={handleSetRequestPinned}
@@ -194,7 +189,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
       settings,
     } = this.props;
     const {
-      handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
       handleUpdateDownloadPath,
       handleUpdateRequestMimeType,
@@ -229,7 +223,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
           forceRefreshCounter={forceRefreshKey}
           forceUpdateRequest={handleForceUpdateRequest}
           forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-          handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleImport={handleImport}
           handleSend={handleSendRequestWithActiveEnvironment}

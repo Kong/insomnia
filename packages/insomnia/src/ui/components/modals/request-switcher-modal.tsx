@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -39,7 +39,7 @@ const mapStateToProps = (state: RootState) => ({
   workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
   return {
     handleActivateWorkspace: bound.activateWorkspace,
@@ -159,13 +159,17 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this._activateRequest(request);
   }
 
-  async _activateWorkspace(workspace: Workspace) {
+  async _activateWorkspace(workspace?: Workspace) {
+    if (!workspace) {
+      return;
+    }
+
     await this.props.handleActivateWorkspace({ workspace });
 
     this.modal?.hide();
   }
 
-  _activateRequest(request: Request | GrpcRequest) {
+  _activateRequest(request?: Request | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -238,7 +242,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   _handleChangeValue(searchString: string) {
     const { workspace, workspaceRequestsAndRequestGroups, workspacesForActiveProject, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
-    const lastActiveMap = {};
+    const lastActiveMap: Record<string, number> = {};
 
     for (const meta of requestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
@@ -442,7 +446,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
               </div>
             )}
             <ul>
-              {matchedRequests.map((r, i) => {
+              {matchedRequests.map((r: Request | GrpcRequest, i) => {
                 const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
                 const buttonClasses = classnames(
                   'btn btn--expandable-small wide text-left pad-bottom',
@@ -452,7 +456,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 );
                 return (
                   <li key={r._id}>
-                    <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
+                    <Button onClick={(_e, request) => this._activateRequest(request)} value={r} className={buttonClasses}>
                       <div>
                         {requestGroup ? (
                           <div className="pull-right faint italic">
@@ -485,7 +489,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 });
                 return (
                   <li key={w._id}>
-                    <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
+                    <Button onClick={(_e, value) => this._activateWorkspace(value)} value={w} className={buttonClasses}>
                       <i className="fa fa-random" />
                       &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
                     </Button>

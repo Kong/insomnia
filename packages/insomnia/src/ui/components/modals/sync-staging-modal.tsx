@@ -24,20 +24,19 @@ interface Props extends ReduxProps {
   vcs: VCS;
 }
 
+type LookupMap = Record<string, {
+  entry: StageEntry;
+  changes: null | string[];
+  type: string;
+  checked: boolean;
+}>;
+
 interface State {
   status: Status;
   message: string;
   error: string;
   branch: string;
-  lookupMap: Record<
-    string,
-    {
-      entry: StageEntry;
-      changes: null | string[];
-      type: string;
-      checked: boolean;
-    }
-  >;
+  lookupMap: LookupMap;
 }
 
 const _initialState: State = {
@@ -154,7 +153,7 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
     const { vcs, syncItems } = this.props;
     const branch = await vcs.getBranch();
     const status = await vcs.status(syncItems, newStage);
-    const lookupMap = {};
+    const lookupMap: LookupMap = {};
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
 
     for (const key of allKeys) {

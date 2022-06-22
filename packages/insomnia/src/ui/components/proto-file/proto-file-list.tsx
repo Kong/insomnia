@@ -11,7 +11,7 @@ export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type DeleteProtoDirectoryHandler = (protoDirectory: ProtoDirectory) => Promise<void>;
 export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
-export type RenameProtoFileHandler = (protoFile: ProtoFile, name: string) => Promise<void>;
+export type RenameProtoFileHandler = (protoFile: ProtoFile, name?: string) => Promise<void>;
 
 interface Props {
   protoDirectories: ExpandedProtoDirectory[];

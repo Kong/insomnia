@@ -1,4 +1,4 @@
-import { PREVIEW_MODE_FRIENDLY } from '../common/constants';
+import { PREVIEW_MODE_FRIENDLY, PreviewMode } from '../common/constants';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -12,7 +12,7 @@ export type RequestAccordionKeys = 'OAuth2AdvancedOptions';
 
 export interface BaseRequestMeta {
   parentId: string;
-  previewMode: string;
+  previewMode: PreviewMode;
   responseFilter: string;
   responseFilterHistory: string[];
   activeResponseId: string | null;

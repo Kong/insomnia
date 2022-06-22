@@ -142,6 +142,11 @@ export class RequestUrlBar extends PureComponent<Props, State> {
       return;
     }
 
+    if (event.code === 'Enter' && this.props.request.url) {
+      this._handleSend();
+      return;
+    }
+
     executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       this._input?.focus();
       this._input?.selectAll();
@@ -359,7 +364,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     const { url, method } = request;
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
+      <KeydownBinder onKeydown={this._handleKeyDown} scoped>
         <div className="urlbar">
           <MethodDropdown
             ref={this._setMethodDropdownRef}

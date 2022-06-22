@@ -109,7 +109,7 @@ function _diffRequests(rOld: Request | null, rNew: Request) {
     return true;
   }
 
-  for (const key of Object.keys(rOld)) {
+  for (const key of Object.keys(rOld) as (keyof Request)[]) {
     // Skip fields that aren't useful
     if (FIELDS_TO_IGNORE.includes(key)) {
       continue;

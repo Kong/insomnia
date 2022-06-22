@@ -274,8 +274,8 @@ const _setupServerStreamListeners = (call: Call, requestId: string, respond: Res
 
 // This function returns a function
 const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => (
-  err: ServiceError,
-  value: Record<string, any>,
+  err: ServiceError | null,
+  value?: Record<string, any>,
 ) => {
   if (err) {
     // Don't do anything if cancelled
@@ -284,7 +284,9 @@ const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => 
       respond.sendError(requestId, err);
     }
   } else {
-    respond.sendData(requestId, value);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    respond.sendData(requestId, value!);
   }
 
   respond.sendEnd(requestId);

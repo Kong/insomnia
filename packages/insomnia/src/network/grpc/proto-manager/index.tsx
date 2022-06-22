@@ -184,7 +184,7 @@ export async function updateFile(protoFile: ProtoFile, callback: (arg0: string) 
   }
 }
 
-export async function renameFile(protoFile: ProtoFile, name: string) {
+export async function renameFile(protoFile: ProtoFile, name?: string) {
   await models.protoFile.update(protoFile, {
     name,
   });

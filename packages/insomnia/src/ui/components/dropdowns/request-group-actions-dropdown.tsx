@@ -1,10 +1,8 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
@@ -12,8 +10,8 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { RootState } from '../../redux/modules';
-import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
+import { createRequest, CreateRequestType } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -23,154 +21,160 @@ import { PromptButton } from '../base/prompt-button';
 import { showError, showModal } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-const mapStateToProps = (state: RootState) => ({
-  activeProject: selectActiveProject(state),
-  activeEnvironment: selectActiveEnvironment(state),
-});
-
-interface Props extends ReduxProps, Partial<DropdownProps> {
+interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  handleCreateRequest: (id: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
 }
 
-interface State {
-  actionPlugins: RequestGroupAction[];
-  loadingActions: Record<string, boolean>;
+interface RequestGroupActionsDropdownHandle {
+    show: () => void;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props, State> {
-  _dropdown: Dropdown | null = null;
-  state: State = {
-    actionPlugins: [],
-    loadingActions: {},
-  };
+export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
+  requestGroup,
+  hotKeyRegistry,
+  handleShowSettings,
+  handleDuplicateRequestGroup,
+  handleCreateRequestGroup,
+  ...other
+}, ref) => {
+  const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
+  const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
+  const dropdownRef = useRef<Dropdown | null>(null);
 
-  _setDropdownRef(dropdown: Dropdown) {
-    this._dropdown = dropdown;
-  }
+  const activeProject = useSelector(selectActiveProject);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceId = activeWorkspace?._id;
 
-  async _handleRequestCreate() {
-    this.props.handleCreateRequest(this.props.requestGroup._id);
-  }
-
-  _handleRequestGroupDuplicate() {
-    this.props.handleDuplicateRequestGroup(this.props.requestGroup);
-  }
-
-  async _handleRequestGroupCreate() {
-    this.props.handleCreateRequestGroup(this.props.requestGroup._id);
-  }
-
-  async _handleDeleteFolder() {
-    await models.stats.incrementDeletedRequestsForDescendents(this.props.requestGroup);
-    models.requestGroup.remove(this.props.requestGroup);
-  }
-
-  _handleEditEnvironment() {
-    showModal(EnvironmentEditModal, this.props.requestGroup);
-  }
-
-  async onOpen() {
-    const plugins = await getRequestGroupActions();
-    this.setState({
-      actionPlugins: plugins,
-    });
-  }
-
-  async show() {
-    this._dropdown?.show();
-  }
-
-  async _handlePluginClick(p: RequestGroupAction) {
-    this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [p.label]: true },
-    }));
-
-    try {
-      const { activeEnvironment, requestGroup, activeProject } = this.props;
-      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-      const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(activeProject._id),
-        ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
-        ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
-      };
-      const requests = await models.request.findByParentId(requestGroup._id);
-      requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
-      await p.action(context, {
-        requestGroup,
-        requests,
-      });
-    } catch (err) {
-      showError({
-        title: 'Plugin Action Failed',
-        error: err,
-      });
+  const create = useCallback((requestType: CreateRequestType) => {
+    if (activeWorkspaceId) {
+      createRequest({ parentId: requestGroup._id, requestType, workspaceId: activeWorkspaceId });
     }
+  }, [activeWorkspaceId, requestGroup._id]);
 
-    this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [p.label]: false },
-    }));
-    this._dropdown?.hide();
-  }
+  useImperativeHandle(ref, () => ({
+    show: () => {
+      dropdownRef.current?.show();
+    },
+  }));
 
-  render() {
-    const {
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      requestGroup,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      hotKeyRegistry,
-      ...other
-    } = this.props;
-    const { actionPlugins, loadingActions } = this.state;
-    return (
-      <Dropdown ref={this._setDropdownRef} onOpen={this.onOpen} {...other}>
-        <DropdownButton>
-          <i className="fa fa-caret-down" />
-        </DropdownButton>
-        <DropdownItem onClick={() => this._handleRequestCreate()}>
-          <i className="fa fa-plus-circle" /> New Request
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
-        </DropdownItem>
-        <DropdownItem onClick={this._handleRequestGroupCreate}>
-          <i className="fa fa-folder" /> New Folder
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
-        </DropdownItem>
-        <DropdownDivider />
-        <DropdownItem onClick={this._handleRequestGroupDuplicate}>
-          <i className="fa fa-copy" /> Duplicate
-        </DropdownItem>
-        <DropdownItem onClick={this._handleEditEnvironment}>
-          <i className="fa fa-code" /> Environment
-        </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
-          <i className="fa fa-trash-o" /> Delete
-        </DropdownItem>
-        {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-        {actionPlugins.map((p: RequestGroupAction) => (
-          <DropdownItem key={p.label} onClick={() => this._handlePluginClick(p)} stayOpenAfterClick>
-            {loadingActions[p.label] ? (
-              <i className="fa fa-refresh fa-spin" />
-            ) : (
-              <i className={classnames('fa', p.icon || 'fa-code')} />
-            )}
-            {p.label}
-          </DropdownItem>
-        ))}
-        <DropdownDivider />
-        <DropdownItem onClick={this.props.handleShowSettings}>
-          <i className="fa fa-wrench" /> Settings
-        </DropdownItem>
-      </Dropdown>
-    );
-  }
-}
+  const onOpen = useCallback(() => {
+    getRequestGroupActions().then(actionPlugins => {
+      setActionPlugins(actionPlugins);
+    });
+  }, []);
 
-export const RequestGroupActionsDropdown = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedRequestGroupActionsDropdown);
+  const handleRequestGroupDuplicate = useCallback(() => {
+    handleDuplicateRequestGroup(requestGroup);
+  }, [requestGroup, handleDuplicateRequestGroup]);
+
+  const handleRequestGroupCreate = useCallback(() => {
+    handleCreateRequestGroup(requestGroup._id);
+  }, [handleCreateRequestGroup, requestGroup._id]);
+
+  const handleDeleteFolder = useCallback(() => {
+    models.stats.incrementDeletedRequestsForDescendents(requestGroup).then(() => {
+      models.requestGroup.remove(requestGroup);
+    });
+  }, [requestGroup]);
+
+  const handleEditEnvironment = useCallback(() => {
+    showModal(EnvironmentEditModal, requestGroup);
+  }, [requestGroup]);
+
+  const handlePluginClick = useCallback(({ label, plugin, action }: RequestGroupAction) => {
+    const fn = async () => {
+      setLoadingActions({ ...loadingActions, [label]: true });
+
+      try {
+        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+        const context = {
+          ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+          ...pluginContexts.data.init(activeProject._id),
+          ...(pluginContexts.store.init(plugin) as Record<string, any>),
+          ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
+        };
+        const requests = await models.request.findByParentId(requestGroup._id);
+        requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
+        await action(context, {
+          requestGroup,
+          requests,
+        });
+      } catch (err) {
+        showError({
+          title: 'Plugin Action Failed',
+          error: err,
+        });
+      }
+
+      setLoadingActions({
+        ...loadingActions,
+        [label]: false,
+      });
+
+      dropdownRef.current?.hide();
+    };
+    fn();
+  }, [dropdownRef, loadingActions,  activeEnvironment, requestGroup, activeProject]);
+
+  return (
+    <Dropdown ref={dropdownRef} onOpen={onOpen} {...other}>
+      <DropdownButton>
+        <i className="fa fa-caret-down" />
+      </DropdownButton>
+
+      <DropdownItem value="HTTP" onClick={create}>
+        <i className="fa fa-plus-circle" />New HTTP Request
+        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
+      </DropdownItem>
+
+      <DropdownItem value="GraphQL" onClick={create}>
+        <i className="fa fa-plus-circle" />New GraphQL Request
+      </DropdownItem>
+
+      <DropdownItem value="gRPC" onClick={create}>
+        <i className="fa fa-plus-circle" />New gRPC Request
+      </DropdownItem>
+
+      <DropdownItem onClick={handleRequestGroupCreate}>
+        <i className="fa fa-folder" /> New Folder
+        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
+      </DropdownItem>
+
+      <DropdownDivider />
+
+      <DropdownItem onClick={handleRequestGroupDuplicate}>
+        <i className="fa fa-copy" /> Duplicate
+      </DropdownItem>
+
+      <DropdownItem onClick={handleEditEnvironment}>
+        <i className="fa fa-code" /> Environment
+      </DropdownItem>
+
+      <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteFolder}>
+        <i className="fa fa-trash-o" /> Delete
+      </DropdownItem>
+
+      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
+      {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
+        <DropdownItem key={requestGroupAction.label} onClick={() => handlePluginClick(requestGroupAction)} stayOpenAfterClick>
+          {loadingActions[requestGroupAction.label] ? (
+            <i className="fa fa-refresh fa-spin" />
+          ) : (
+            <i className={classnames('fa', requestGroupAction.icon || 'fa-code')} />
+          )}
+          {requestGroupAction.label}
+        </DropdownItem>
+      ))}
+      <DropdownDivider />
+      <DropdownItem onClick={handleShowSettings}>
+        <i className="fa fa-wrench" /> Settings
+      </DropdownItem>
+    </Dropdown>
+  );
+});
+RequestGroupActionsDropdown.displayName = 'RequestGroupActionsDropdown';
