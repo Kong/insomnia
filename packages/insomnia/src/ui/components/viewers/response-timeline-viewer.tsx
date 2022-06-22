@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
-import { LIBCURL_DEBUG_MIGRATION_MAP } from '../../../common/misc';
 import * as models from '../../../models';
-import { Response, ResponseTimelineEntry } from '../../../models/response';
+import type { Response } from '../../../models/response';
+import type { ResponseTimelineEntry } from '../../../network/libcurl-promise';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
@@ -50,31 +50,31 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
     let prefix: string | null = null;
 
     switch (name) {
-      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderIn:
+      case 'HEADER_IN':
         prefix = '< ';
         break;
 
-      case LIBCURL_DEBUG_MIGRATION_MAP.DataIn:
+      case 'DATA_IN':
         prefix = '| ';
         break;
 
-      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataIn:
+      case 'SSL_DATA_IN':
         prefix = '<< ';
         break;
 
-      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderOut:
+      case 'HEADER_OUT':
         prefix = '> ';
         break;
 
-      case LIBCURL_DEBUG_MIGRATION_MAP.DataOut:
+      case 'DATA_OUT':
         prefix = '| ';
         break;
 
-      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataOut:
+      case 'SSL_DATA_OUT':
         prefix = '>> ';
         break;
 
-      case LIBCURL_DEBUG_MIGRATION_MAP.Text:
+      case 'TEXT':
         prefix = '* ';
         break;
 

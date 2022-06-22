@@ -11,7 +11,6 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import tls from 'tls';
-import { ValueOf } from 'type-fest';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -57,8 +56,9 @@ interface SettingsUsedHere {
   httpsProxy: string;
   noProxy: string;
 }
+type TimelineFormat = 'HEADER_IN' | 'DATA_IN' | 'SSL_DATA_IN' | 'HEADER_OUT' | 'DATA_OUT' | 'SSL_DATA_OUT' | 'TEXT';
 export interface ResponseTimelineEntry {
-  name: string;
+  name: TimelineFormat;
   timestamp: number;
   value: string;
 }
@@ -288,7 +288,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       }
 
       debugTimeline.push({
-        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : LIBCURL_DEBUG_MIGRATION_MAP[CurlInfoDebug[infoType]],
+        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : curlInfoTypeToName(infoType),
         value: timelineMessage || buffer.toString('utf8'),
         timestamp: Date.now(),
       });
@@ -358,6 +358,12 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
 };
 
 // Because node-libcurl changed some names that we used in the timeline
+const curlInfoTypeToName = infoType => {
+  const infoDebug = CurlInfoDebug[infoType];
+  const mapped = LIBCURL_DEBUG_MIGRATION_MAP[infoDebug];
+  console.log('test me', { infoType, infoDebug, mapped });
+  return mapped;
+};
 const LIBCURL_DEBUG_MIGRATION_MAP: Record<string, string> = {
   HeaderIn: 'HEADER_IN',
   DataIn: 'DATA_IN',

@@ -32,12 +32,13 @@ import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
-import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
+import type { ResponseHeader } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
+import type { ResponseTimelineEntry } from './libcurl-promise';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export interface ResponsePatch {
