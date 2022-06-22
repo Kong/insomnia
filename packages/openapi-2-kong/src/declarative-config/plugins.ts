@@ -1,6 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
+import omit from 'lodash.omit';
 import { OpenAPIV3 } from 'openapi-types';
-import { omit } from 'ramda';
 import { Entry } from 'type-fest';
 
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
@@ -51,7 +51,7 @@ const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3
   if ('$ref' in parameter) {
     const components = $refs.get('#/components');
     const selfRef = $refs.get(parameter.$ref);
-    const param = omit(['$ref'], parameter);
+    const param = omit(parameter, ['$ref']);
     return { ...param, ...selfRef, components, $schema };
   }
 
