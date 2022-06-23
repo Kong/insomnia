@@ -1,7 +1,7 @@
 import type { OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 
-export function init() {
+export function registerElectronHandlers() {
   ipcMain.on('setMenuBarVisibility', (_, visible: boolean) => {
     BrowserWindow.getAllWindows()
       .forEach(window => {

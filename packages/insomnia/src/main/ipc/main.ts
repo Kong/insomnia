@@ -5,7 +5,7 @@ import { cancelCurlRequest, curlRequest } from '../../network/libcurl-promise';
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
 import installPlugin from '../install-plugin';
 
-export interface MainIPC {
+export interface MainBridgeAPI {
   restart: () => void;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
@@ -14,7 +14,7 @@ export interface MainIPC {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
 }
-export function init() {
+export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });

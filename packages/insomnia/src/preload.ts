@@ -1,10 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { MainIPC } from './main/ipc/main';
+import { MainBridgeAPI } from './main/ipc/main';
 
 declare global {
   interface Window {
-    main: MainIPC;
+    main: MainBridgeAPI;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
     shell: Pick<Electron.Shell, 'showItemInFolder'>;

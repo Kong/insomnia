@@ -5,7 +5,7 @@ import * as grpc from '../../network/grpc';
 import { GrpcIpcRequestParams } from '../../network/grpc/prepare';
 import { ResponseCallbacks } from '../../network/grpc/response-callbacks';
 
-export function init() {
+export function registergRPCHandlers() {
   ipcMain.on(GrpcRequestEventEnum.start, (event, params: GrpcIpcRequestParams) =>
     grpc.start(params, new ResponseCallbacks(event)),
   );

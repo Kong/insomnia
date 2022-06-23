@@ -10,9 +10,9 @@ import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
-import { init as electronMainBridge } from './main/ipc/electron';
-import { init as gRPCMainBridge } from './main/ipc/grpc';
-import { init as mainBridge } from './main/ipc/main';
+import { registerElectronHandlers } from './main/ipc/electron';
+import { registergRPCHandlers } from './main/ipc/grpc';
+import { registerMainHandlers } from './main/ipc/main';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -58,6 +58,7 @@ app.on('web-contents-created', (_, contents) => {
 
 // When the app is first launched
 app.on('ready', async () => {
+
   const { error } = validateInsomniaConfig();
 
   if (error) {
@@ -66,6 +67,9 @@ app.on('ready', async () => {
     app.exit(1);
     return;
   }
+  registerElectronHandlers();
+  registerMainHandlers();
+  registergRPCHandlers();
 
   disableSpellcheckerDownload();
 
@@ -89,9 +93,6 @@ app.on('ready', async () => {
 
   // Init the rest
   await updates.init();
-  electronMainBridge();
-  mainBridge();
-  gRPCMainBridge();
 });
 
 // Set as default protocol
