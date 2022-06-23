@@ -90,7 +90,7 @@ const generateK8sMethodDocuments = (method: HttpMethodType): K8sKongIngress => (
     name: getMethodAnnotationName(method),
   },
   route: {
-    methods: [method.toUpperCase() as HttpMethodType],
+    methods: [method],
   },
 });
 

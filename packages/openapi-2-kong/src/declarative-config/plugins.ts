@@ -47,15 +47,42 @@ const DEFAULT_PARAM_STYLE = {
   path: 'simple',
 };
 
-const resolveParameterSchema = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): OpenAPIV3.SchemaObject | undefined => {
+const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): OpenAPIV3.ParameterObject => {
   if ('$ref' in parameter) {
     const components = $refs.get('#/components');
-    const selfRef = $refs.get(parameter.$ref);
+    const dereferenced = $refs.get(parameter.$ref);
     const param = omit(parameter, ['$ref']);
-    return { ...param, ...selfRef, components, $schema };
+
+    let schema = dereferenced?.schema || {};
+    if ('$ref' in schema) {
+      schema = $refs.get(schema.$ref);
+    }
+
+    return {
+      ...param,
+      ...dereferenced,
+      schema: {
+        ...schema,
+        components,
+        $schema,
+      },
+    };
   }
 
-  return parameter.schema as OpenAPIV3.SchemaObject;
+  if (parameter.schema && '$ref' in parameter.schema) {
+    const components = $refs.get('#/components');
+    const dereferenced = $refs.get(parameter.schema.$ref);
+    return {
+      ...parameter,
+      schema: {
+        ...dereferenced,
+        components,
+        $schema,
+      },
+    };
+  }
+
+  return parameter;
 };
 
 const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
@@ -69,10 +96,10 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
     // The following is valid config to allow all content to pass, in the case where schema is not defined
     let schema = '';
 
-    const schemaRef = resolveParameterSchema(refs, parameter);
+    const resolvedParam = resolveParameter(refs, parameter);
 
-    if (schemaRef) {
-      schema = JSON.stringify(schemaRef);
+    if (resolvedParam.schema) {
+      schema = JSON.stringify(resolvedParam.schema);
     } else if ('content' in parameter) {
       // only parameters defined with a schema (not content) are supported
       schema = ALLOW_ALL_SCHEMA;
@@ -82,23 +109,18 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
     }
 
     // @ts-expect-error fix this
-    const paramStyle = (parameter as OpenAPIV3.ParameterObject).style ?? DEFAULT_PARAM_STYLE[parameter.in || schemaRef.in];
+    const paramStyle = (parameter as OpenAPIV3.ParameterObject).style ?? DEFAULT_PARAM_STYLE[resolvedParam.in];
 
     if (typeof paramStyle === 'undefined') {
-      // @ts-expect-error fix this
-      const name = parameter.name;
+      const name = resolvedParam.name;
       throw new Error(`invalid 'in' property (parameter '${name}')`);
     }
 
     const parameterSchema: ParameterSchema = {
-      // @ts-expect-error fix this
-      in: parameter.in,
-      // @ts-expect-error fix this
-      explode: !!parameter.explode,
-      // @ts-expect-error fix this
-      required: !!parameter.required,
-      // @ts-expect-error fix this
-      name: parameter.name,
+      in: resolvedParam.in,
+      explode: !!resolvedParam.explode,
+      required: !!resolvedParam.required,
+      name: resolvedParam.name,
       schema,
       style: paramStyle,
     };
