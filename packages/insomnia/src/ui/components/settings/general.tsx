@@ -138,11 +138,12 @@ export const General: FC = () => {
         />
 
         <NumberSetting
-          label="Autocomplete popup delay"
+          label="Autocomplete popup delay (ms)"
           setting="autocompleteDelay"
           help="Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay."
           min={0}
           max={3000}
+          step={100}
         />
       </div>
 
