@@ -238,6 +238,7 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
       <input
         type="checkbox"
         name={setting}
+        // @ts-expect-error -- mapping unsoundness
         checked={request[setting]}
         onChange={this._updateRequestSettingBoolean}
       />

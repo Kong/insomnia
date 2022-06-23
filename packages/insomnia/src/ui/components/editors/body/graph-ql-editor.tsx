@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { EditorFromTextArea, LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
+import CodeMirror, { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { OpenDialogOptions } from 'electron';
@@ -101,7 +101,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
-  _queryEditor: null | EditorFromTextArea = null;
+  _queryEditor: null | CodeMirror.Editor = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -272,7 +272,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleQueryEditorInit(codeMirror: EditorFromTextArea) {
+  _handleQueryEditorInit(codeMirror: CodeMirror.Editor) {
     this._queryEditor = codeMirror;
     // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
     window.cm = this._queryEditor;

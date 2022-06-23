@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 export interface UnitTestRequestSelectorProps {
-  onSetActiveRequest: () => void;
+  onSetActiveRequest: React.ChangeEventHandler<HTMLSelectElement>;
   selectedRequestId?: string | null;
   selectableRequests: {
     name: string;

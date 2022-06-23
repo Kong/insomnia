@@ -145,7 +145,10 @@ export class Toast extends PureComponent<{}, State> {
         updatesNotSupported: !updatesSupported(),
         version: getAppVersion(),
       };
-      notification = await fetch.postJson<ToastNotification>('/notification', data, session.getCurrentSessionId());
+      const notificationOrEmpty = await fetch.post<ToastNotification>('/notification', data, session.getCurrentSessionId());
+      if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
+        notification = notificationOrEmpty;
+      }
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
@@ -182,7 +185,7 @@ export class Toast extends PureComponent<{}, State> {
     }, 1000);
   }
 
-  _listenerShowNotification(_e, notification: ToastNotification) {
+  _listenerShowNotification(_e: Electron.IpcRendererEvent, notification: ToastNotification) {
     this._handleNotification(notification);
   }
 

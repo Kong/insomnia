@@ -31,8 +31,12 @@ export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange 
   const activeActivity = useSelector(selectActiveActivity);
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
-  const onChange = useCallback((nextActivity: GlobalActivity) => {
-    handleActivityChange({ workspaceId: activeWorkspace?._id, nextActivity });
+  const onChange = useCallback((nextActivity: string) => {
+    handleActivityChange({
+      workspaceId: activeWorkspace?._id,
+      // TODO: unsound cast
+      nextActivity: nextActivity as GlobalActivity,
+    });
   }, [handleActivityChange, activeWorkspace]);
 
   if (!activeActivity) {

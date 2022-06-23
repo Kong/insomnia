@@ -23,14 +23,14 @@ export class CheckForUpdatesButton extends PureComponent<Props, State> {
     updateAvailable: false,
   };
 
-  _listenerCheckComplete(_e, updateAvailable: true, status: string) {
+  _listenerCheckComplete(_e: Electron.IpcRendererEvent, updateAvailable: true, status: string) {
     this.setState({
       status,
       updateAvailable,
     });
   }
 
-  _listenerCheckStatus(_e, status: string) {
+  _listenerCheckStatus(_e: Electron.IpcRendererEvent, status: string) {
     if (this.state.checking) {
       this.setState({
         status,

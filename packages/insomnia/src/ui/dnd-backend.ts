@@ -2,7 +2,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
 class DNDBackend extends HTML5Backend {
-  handleTopDragEndCapture(event) {
+  handleTopDragEndCapture(event: any) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       setTimeout(() => {
@@ -15,7 +15,7 @@ class DNDBackend extends HTML5Backend {
     super.handleTopDragEndCapture(event);
   }
 
-  handleTopDragOver(event) {
+  handleTopDragOver(event: any) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       return;
@@ -23,7 +23,7 @@ class DNDBackend extends HTML5Backend {
     super.handleTopDragOver(event);
   }
 
-  handleTopDragLeaveCapture(event) {
+  handleTopDragLeaveCapture(event: any) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       return;
@@ -31,7 +31,7 @@ class DNDBackend extends HTML5Backend {
     super.handleTopDragLeaveCapture(event);
   }
 
-  handleTopDropCapture(event) {
+  handleTopDropCapture(event: any) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (this.isDraggingNativeItem()) {
       return;
@@ -39,7 +39,7 @@ class DNDBackend extends HTML5Backend {
     super.handleTopDropCapture(event);
   }
 
-  handleTopDrop(event) {
+  handleTopDrop(event: any) {
     // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
     if (!this.monitor.isDragging() || this.isDraggingNativeItem()) {
       return;
@@ -48,7 +48,7 @@ class DNDBackend extends HTML5Backend {
   }
 }
 
-export default function(manager) {
+export default function(manager: any) {
   // @ts-expect-error -- TSCONVERSION ignoring until we can update react-dnd-html5-backend to get accurate upstream types
   return new DNDBackend(manager);
 }

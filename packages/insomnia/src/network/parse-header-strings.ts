@@ -86,8 +86,8 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
     headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
   }
 
-  return headers.filter(h => h.name)
-    .map(({ name, value }) =>
+  return headers.filter((h: any) => h.name)
+    .map(({ name, value }: any) =>
       value === '' ? `${name};` // Curl needs a semicolon suffix to send empty header values
         : value === DISABLE_HEADER_VALUE ? `${name}:` // Tell Curl NOT to send the header if value is null
           : `${name}: ${value}`);

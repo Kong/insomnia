@@ -37,7 +37,6 @@ interface Props {
   forceRefreshCounter: number;
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleCreateRequest: () => void;
   handleGenerateCode: Function;
   handleImport: Function;
   handleSend: () => void;
@@ -64,7 +63,6 @@ export const RequestPane: FC<Props> = ({
   forceRefreshCounter,
   forceUpdateRequest,
   forceUpdateRequestHeaders,
-  handleCreateRequest,
   handleGenerateCode,
   handleImport,
   handleSend,
@@ -145,9 +143,7 @@ export const RequestPane: FC<Props> = ({
 
   if (!request) {
     return (
-      <PlaceholderRequestPane
-        handleCreateRequest={handleCreateRequest}
-      />
+      <PlaceholderRequestPane />
     );
   }
 

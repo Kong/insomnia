@@ -1,6 +1,6 @@
 import React, { FC, useCallback } from 'react';
 
-import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
+import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -12,7 +12,7 @@ interface Props {
   exportAsHAR: () => void;
   copyToClipboard: () => any;
   updatePreviewMode: Function;
-  previewMode: string;
+  previewMode: PreviewMode;
   showPrettifyOption?: boolean;
 }
 

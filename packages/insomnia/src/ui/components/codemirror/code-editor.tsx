@@ -41,8 +41,16 @@ import { shouldIndentWithTabs } from './should-indent-with-tabs';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
+interface EditorState {
+  scroll: CodeMirror.ScrollInfo;
+  selections: CodeMirror.Range[];
+  cursor: CodeMirror.Position;
+  history: any;
+  marks: Partial<CodeMirror.MarkerRange>[];
+}
+
 // Global object used for storing and persisting editor states
-const editorStates = {};
+const editorStates: Record<string, EditorState> = {};
 const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
@@ -93,7 +101,7 @@ export type CodeEditorOnChange = (value: string) => void;
 
 interface RawProps {
   onChange?: CodeEditorOnChange;
-  onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
+  onCursorActivity?: (cm: CodeMirror.Editor) => void;
   onFocus?: (event: FocusEvent) => void;
   onBlur?: (event: FocusEvent) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
@@ -101,7 +109,7 @@ interface RawProps {
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   onPaste?: (event: ClipboardEvent) => void;
-  onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
+  onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   mode?: string;
@@ -211,7 +219,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   private _previousUniquenessKey?: string;
   private _originalCode: string;
   codeMirror?: CodeMirror.EditorFromTextArea;
-  private _filterInput: HTMLInputElement;
+  private _filterInput?: HTMLInputElement;
   private _autocompleteDebounce: NodeJS.Timeout | null = null;
   private _filterTimeout: NodeJS.Timeout | null = null;
 
@@ -254,9 +262,9 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps: CodeEditorProps) {
     // Update if any properties changed, except value. We ignore value.
-    for (const key of Object.keys(nextProps)) {
+    for (const key of Object.keys(nextProps) as (keyof CodeEditorProps)[]) {
       if (key === 'defaultValue') {
         continue;
       }
@@ -468,7 +476,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     const marks = this.codeMirror
       .getAllMarks()
       .filter(mark => mark.__isFold)
-      .map(mark => {
+      .map((mark): Partial<CodeMirror.MarkerRange> => {
         const result = mark.find();
 
         if (isMarkerRange(result)) {
@@ -512,6 +520,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
+      // @ts-expect-error -- type unsoundness
       this.codeMirror.foldCode(from, to);
     }
   }
@@ -904,7 +913,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     Object.keys(options).map(key =>
       this._codemirrorSmartSetOption(
         key as keyof CodeMirror.EditorConfiguration,
-        options[key]
+        options[key as keyof CodeMirror.EditorConfiguration]
       )
     );
   }
@@ -967,15 +976,16 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorCursorActivity(instance: CodeMirror.EditorFromTextArea) {
+  _codemirrorCursorActivity(instance: CodeMirror.Editor) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
   }
 
-  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, event: KeyboardEvent & {codemirrorIgnore: boolean}) {
+  async _codemirrorKeyDown(doc: CodeMirror.Editor, event: KeyboardEvent) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && event.code === 'Tab') {
+      // @ts-expect-error -- unsound property assignment
       event.codemirrorIgnore = true;
     }
 
@@ -990,7 +1000,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.EditorFromTextArea, event: KeyboardEvent) {
+  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.Editor, event: KeyboardEvent) {
     // Enable graphql completion if we're in that mode
     if (doc.getOption('mode') === 'graphql') {
       // Only operate on one-letter keys. This will filter out
@@ -1015,11 +1025,11 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorFocus(_doc: CodeMirror.EditorFromTextArea, event: FocusEvent) {
+  _codemirrorFocus(_doc: CodeMirror.Editor, event: FocusEvent) {
     this.props.onFocus?.(event);
   }
 
-  _codemirrorBlur(_doc: CodeMirror.EditorFromTextArea, event: FocusEvent) {
+  _codemirrorBlur(_doc: CodeMirror.Editor, event: FocusEvent) {
     this._persistState();
 
     this.props.onBlur?.(event);
@@ -1033,8 +1043,9 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     this._persistState();
   }
 
-  _codemirrorKeyHandled(_codeMirror: CodeMirror.EditorFromTextArea, _keyName: string, event: KeyboardEvent) {
+  _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: Event) {
     const { keyMap } = this.props;
+    // @ts-expect-error -- unsound property access
     const { keyCode } = event;
     const isVimKeyMap = keyMap === EditorKeyMap.vim;
     const pressedEscape = keyCode === keyCodes.esc.keyCode;
@@ -1044,7 +1055,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorValueBeforeChange(doc: CodeMirror.EditorFromTextArea, change: CodeMirror.EditorChangeCancellable) {
+  _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
     const value = this.codeMirror?.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
@@ -1071,11 +1082,11 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  _codemirrorPaste(_cm: CodeMirror.EditorFromTextArea, event: ClipboardEvent) {
+  _codemirrorPaste(_cm: CodeMirror.Editor, event: ClipboardEvent) {
     this.props.onPaste?.(event);
   }
 
-  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.EditorFromTextArea, event: Event) {
+  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.Editor, event: Event) {
     const { type } = this.props;
 
     if (type && type.toLowerCase() === 'password') {
@@ -1141,12 +1152,14 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   _handleFilterHistorySelect(filter = '') {
-    this._filterInput.value = filter;
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this._filterInput!.value = filter;
 
     this._setFilter(filter);
   }
 
-  _handleFilterChange(event) {
+  _handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     this._setFilter(event.target.value);
   }
 

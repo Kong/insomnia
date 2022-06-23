@@ -28,7 +28,7 @@ export const AuthToggleRow: FC<Props> = ({
 
   const databaseValue = Boolean(authentication[property]);
   const toggle = useCallback(
-    (_event: React.MouseEvent, value: boolean) =>
+    (_event: React.MouseEvent<HTMLButtonElement>, value?: boolean) =>
       patchAuth({ [property]: value }), [patchAuth, property]
   );
 

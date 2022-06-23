@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
@@ -49,7 +49,7 @@ const mapStateToProps = (state: RootState) => ({
   remoteProjects: selectRemoteProjects(state),
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
   return {
     handleActivateWorkspace: bound.activateWorkspace,

@@ -1,4 +1,4 @@
-export const keyboardKeys = {
+export const keyboardKeys: Record<string, { keyCode: number; label: string }> = {
   backspace: {
     keyCode: 8,
     label: 'Backspace',
@@ -399,7 +399,7 @@ export const keyboardKeys = {
     keyCode: 222,
     label: "'",
   },
-} as const;
+};
 
 type KeyName = keyof typeof keyboardKeys;
 

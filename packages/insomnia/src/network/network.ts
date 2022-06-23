@@ -64,11 +64,11 @@ export interface ResponsePatch {
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
-const cancelRequestFunctionMap = {};
+const cancelRequestFunctionMap: Record<string, () => void> = {};
 
 let lastUserInteraction = Date.now();
 
-export async function cancelRequestById(requestId) {
+export async function cancelRequestById(requestId: string) {
   const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
   if (hasCancelFunction) {
     return cancelRequestFunctionMap[requestId]();
@@ -154,7 +154,7 @@ export async function _actuallySend(
       // add set-cookie headers to file(cookiejar) and database
       if (settingStoreCookies) {
         // supports many set-cookies over many redirects
-        const redirects: string[][] = headerResults.map(({ headers }) => getSetCookiesFromResponseHeaders(headers));
+        const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
         const setCookieStrings: string[] = redirects.flat();
         const totalSetCookies = setCookieStrings.length;
         if (totalSetCookies) {
@@ -206,9 +206,9 @@ export async function _actuallySend(
   });
 }
 
-export const getSetCookiesFromResponseHeaders = headers => getSetCookieHeaders(headers).map(h => h.value);
+export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
 
-export const getCurrentUrl = ({ headerResults, finalUrl }) => {
+export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any; finalUrl: string }): string => {
   if (!headerResults || !headerResults.length) {
     return finalUrl;
   }
@@ -224,7 +224,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }) => {
   }
 };
 
-const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }) => {
+const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
   const rejectedCookies: string[] = [];
   const jar = jarFromCookies(cookieJar.cookies);
   for (const setCookieStr of setCookieStrings) {

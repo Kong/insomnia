@@ -18,7 +18,7 @@ import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
 const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
-const MODE_MAP = {
+const MODE_MAP: Record<string, string> = {
   c: 'clike',
   java: 'clike',
   csharp: 'clike',
@@ -26,7 +26,7 @@ const MODE_MAP = {
   objc: 'clike',
   ocaml: 'mllike',
 };
-const TO_ADD_CONTENT_LENGTH = {
+const TO_ADD_CONTENT_LENGTH: Record<string, string[]> = {
   node: ['native'],
 };
 
@@ -80,7 +80,7 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _handleClientChange(client) {
+  _handleClientChange(client: HTTPSnippetClient) {
     const { target, request } = this.state;
 
     if (!request) {
@@ -89,7 +89,7 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     this._generateCode(request, target, client);
   }
 
-  _handleTargetChange(target) {
+  _handleTargetChange(target: HTTPSnippetTarget) {
     const { target: currentTarget, request } = this.state;
 
     if (currentTarget.key === target.key) {
@@ -102,12 +102,14 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     if (!request) {
       return;
     }
-    this._generateCode(request, target, client);
+    // TODO: remove non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this._generateCode(request, target, client!);
   }
 
   async _generateCode(request: Request, target: HTTPSnippetTarget, client: HTTPSnippetClient) {
     // Some clients need a content-length for the request to succeed
-    const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
+    const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key));
     const { environmentId } = this.props;
     const har = await exportHarRequest(request._id, environmentId, addContentLength);
     // @TODO Should we throw instead?

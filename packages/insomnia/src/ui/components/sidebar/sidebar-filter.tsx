@@ -11,7 +11,6 @@ import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
   onChange: (value: string) => Promise<void>;
-  requestCreate: (requestType?: string) => void;
   requestGroupCreate: () => void;
   sidebarSort: (sortOrder: SortOrder) => void;
   filter: string;
@@ -51,10 +50,6 @@ export class SidebarFilter extends PureComponent<Props> {
     this.props.requestGroupCreate();
   }
 
-  _handleRequestCreate(requestType?: string) {
-    this.props.requestCreate(requestType);
-  }
-
   _handleKeydown(event: KeyboardEvent) {
     executeHotKey(event, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
       this._input?.focus();
@@ -82,7 +77,6 @@ export class SidebarFilter extends PureComponent<Props> {
           </div>
           <SidebarSortDropdown handleSort={sidebarSort} />
           <SidebarCreateDropdown
-            handleCreateRequest={this._handleRequestCreate}
             handleCreateRequestGroup={this._handleRequestGroupCreate}
             hotKeyRegistry={hotKeyRegistry}
           />

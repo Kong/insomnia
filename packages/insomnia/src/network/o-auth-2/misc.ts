@@ -22,18 +22,22 @@ export function initNewOAuthSession() {
   return authWindowSessionId;
 }
 
-export function responseToObject(body, keys, defaults = {}) {
+export function responseToObject(body: string | null, keys: string[], defaults: Record<string, string | string[]> = {}) {
   let data: querystring.ParsedUrlQuery | null = null;
 
   try {
-    data = JSON.parse(body);
+    // TODO: remove non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    data = JSON.parse(body!);
   } catch (err) {}
 
   if (!data) {
     try {
       // NOTE: parse does not return a JS Object, so
       //   we cannot use hasOwnProperty on it
-      data = querystring.parse(body);
+      // TODO: remove non-null assertion
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      data = querystring.parse(body!);
     } catch (err) {}
   }
 
@@ -42,7 +46,7 @@ export function responseToObject(body, keys, defaults = {}) {
     data = {};
   }
 
-  const results = {};
+  const results: Record<string, string | string[] | null | undefined> = {};
 
   for (const key of keys) {
     if (data[key] !== undefined) {
@@ -62,7 +66,12 @@ export function authorizeUserInWindow({
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
   sessionId,
-}) {
+}: {
+  url: string;
+  urlSuccessRegex: RegExp;
+  urlFailureRegex: RegExp;
+  sessionId: string;
+}): Promise<string> {
   return new Promise<string>(async (resolve, reject) => {
     let finalUrl: string | null = null;
 
