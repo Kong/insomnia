@@ -13,6 +13,7 @@ interface Props {
   max?: InputHTMLAttributes<HTMLInputElement>['max'];
   min: InputHTMLAttributes<HTMLInputElement>['min'];
   setting: SettingsOfType<number>;
+  step?: InputHTMLAttributes<HTMLInputElement>['step'];
 }
 
 export const NumberSetting: FC<Props> = ({
@@ -21,6 +22,7 @@ export const NumberSetting: FC<Props> = ({
   max,
   min,
   setting,
+  step = 1,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -54,6 +56,7 @@ export const NumberSetting: FC<Props> = ({
           name={setting}
           onChange={handleOnChange}
           type={'number'}
+          step={step}
         />
       </label>
     </div>
