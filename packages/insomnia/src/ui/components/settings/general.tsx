@@ -138,11 +138,12 @@ export const General: FC = () => {
         />
 
         <NumberSetting
-          label="Autocomplete popup delay"
+          label="Autocomplete popup delay (ms)"
           setting="autocompleteDelay"
           help="Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay."
           min={0}
           max={3000}
+          step={100}
         />
       </div>
 
@@ -286,10 +287,11 @@ export const General: FC = () => {
           min={-1}
         />
         <NumberSetting
-          label="Request timeout"
+          label="Request timeout (ms)"
           setting="timeout"
-          help="Enter the maximum seconds allotted before a request will timeout. Enter -1 to disable timeouts. "
-          min={-1}
+          help="Enter the maximum milliseconds allotted before a request will timeout. Enter 0 to disable timeouts. "
+          min={0}
+          step={100}
         />
       </div>
 
