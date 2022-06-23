@@ -22,7 +22,7 @@ export const NumberSetting: FC<Props> = ({
   max,
   min,
   setting,
-  step = 0,
+  step = 1,
 }) => {
   const settings = useSelector(selectSettings);
 
