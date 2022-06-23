@@ -10,7 +10,7 @@ export interface MainIPC {
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
-  writeFile: (options: {path: string; content: string}) => Promise<string>;
+  writeFile: (options: { path: string; content: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
 }
@@ -20,7 +20,7 @@ export function init() {
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
   });
 
-  ipcMain.handle('writeFile', async (_, options) => {
+  ipcMain.handle('writeFile', async (_, options: { path: string; content: string }) => {
     try {
       await writeFile(options.path, options.content);
       return options.path;

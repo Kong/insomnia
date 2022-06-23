@@ -227,7 +227,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
     const timeline = JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
     const body: ResponseTimelineEntry[] = showBody ? [
       {
-        name: 'DATA_OUT',
+        name: 'DataOut',
         timestamp: Date.now(),
         value: fs.readFileSync(bodyPath).toString(),
       },

@@ -123,12 +123,12 @@ export async function _actuallySend(
         const socketUrl = (match && match[3]) || '';
         finalUrl = `${protocol}//${socketUrl}`;
       }
-      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'TEXT', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'TEXT', timestamp: Date.now() });
-      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'TEXT', timestamp: Date.now() });
+      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
 
       if (!renderedRequest.settingSendCookies) {
-        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'TEXT', timestamp: Date.now() });
+        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
       }
 
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
@@ -161,11 +161,11 @@ export async function _actuallySend(
         if (totalSetCookies) {
           const currentUrl = getCurrentUrl({ headerResults, finalUrl });
           const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'TEXT', timestamp: Date.now() }));
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
             await models.cookieJar.update(cookieJar, { cookies });
-            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'TEXT', timestamp: Date.now() });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }
       }

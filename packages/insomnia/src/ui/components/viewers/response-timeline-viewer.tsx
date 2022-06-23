@@ -47,40 +47,16 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   renderRow(row: ResponseTimelineEntry, i: number, all: ResponseTimelineEntry[]) {
     const { name, value } = row;
     const previousName = i > 0 ? all[i - 1].name : '';
-    let prefix: string | null = null;
-
-    switch (name) {
-      case 'HEADER_IN':
-        prefix = '< ';
-        break;
-
-      case 'DATA_IN':
-        prefix = '| ';
-        break;
-
-      case 'SSL_DATA_IN':
-        prefix = '<< ';
-        break;
-
-      case 'HEADER_OUT':
-        prefix = '> ';
-        break;
-
-      case 'DATA_OUT':
-        prefix = '| ';
-        break;
-
-      case 'SSL_DATA_OUT':
-        prefix = '>> ';
-        break;
-
-      case 'TEXT':
-        prefix = '* ';
-        break;
-
-      default:
-        return null;
-    }
+    const prefixLookup: Record<ResponseTimelineEntry['name'], string> = {
+      HeaderIn: '< ',
+      DataIn: '| ',
+      SslDataIn: '<< ',
+      HeaderOut: '> ',
+      DataOut: '<< ',
+      SslDataOut: '>> ',
+      Text: '* ',
+    };
+    const prefix: string = prefixLookup[name] || '* ';
 
     const lines = (value + '').replace(/\n$/, '').split('\n');
     const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);

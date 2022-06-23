@@ -56,9 +56,9 @@ interface SettingsUsedHere {
   httpsProxy: string;
   noProxy: string;
 }
-type TimelineFormat = 'HEADER_IN' | 'DATA_IN' | 'SSL_DATA_IN' | 'HEADER_OUT' | 'DATA_OUT' | 'SSL_DATA_OUT' | 'TEXT';
+
 export interface ResponseTimelineEntry {
-  name: TimelineFormat;
+  name: keyof typeof CurlInfoDebug;
   timestamp: number;
   value: string;
 }
@@ -99,23 +99,23 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       if (cert) {
         curl.setOpt(Curl.option.SSLCERT, cert);
         curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-        debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
       }
       if (pfx) {
         curl.setOpt(Curl.option.SSLCERT, pfx);
         curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
-        debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
       }
       if (key) {
         curl.setOpt(Curl.option.SSLKEY, key);
-        debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
       }
       if (passphrase) {
         curl.setOpt(Curl.option.KEYPASSWD, passphrase);
       }
     });
     const httpVersion = getHttpVersion(settings.preferredHttpVersion);
-    debugTimeline.push({ value: httpVersion.log, name: 'TEXT', timestamp: Date.now() });
+    debugTimeline.push({ value: httpVersion.log, name: 'Text', timestamp: Date.now() });
 
     if (httpVersion.curlHttpVersion) {
       curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
@@ -134,7 +134,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       const { httpProxy, httpsProxy, noProxy } = settings;
       const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
       const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-      debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'TEXT', timestamp: Date.now() });
+      debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
       if (proxy) {
         curl.setOpt(Curl.option.PROXY, proxy);
         curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
@@ -148,14 +148,14 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.TIMEOUT_MS, 0);
     } else {
       curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
-      debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'TEXT', timestamp: Date.now() });
+      debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'Text', timestamp: Date.now() });
     }
     const { validateSSL } = settings;
     if (!validateSSL) {
       curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
       curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
     }
-    debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'TEXT', timestamp: Date.now() });
+    debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
 
     if (req.settingFollowRedirects === 'off') {
       curl.setOpt(Curl.option.FOLLOWLOCATION, false);
@@ -178,7 +178,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       }
       // set-cookies from previous redirects
       if (cookieJar.cookies.length) {
-        debugTimeline.push({ value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`, name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`, name: 'Text', timestamp: Date.now() });
         for (const cookie of cookieJar.cookies) {
           const setCookie = [
             cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
@@ -288,7 +288,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       }
 
       debugTimeline.push({
-        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : curlInfoTypeToName(infoType),
+        name: infoType === CurlInfoDebug.DataIn ? 'Text' : CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug,
         value: timelineMessage || buffer.toString('utf8'),
         timestamp: Date.now(),
       });
@@ -355,24 +355,6 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
   if (isMultipart && path) {
     fs.unlink(path, () => { });
   }
-};
-
-// Because node-libcurl changed some names that we used in the timeline
-const curlInfoTypeToName = infoType => {
-  const infoDebug = CurlInfoDebug[infoType];
-  const mapped = LIBCURL_DEBUG_MIGRATION_MAP[infoDebug];
-  console.log('test me', { infoType, infoDebug, mapped });
-  return mapped;
-};
-const LIBCURL_DEBUG_MIGRATION_MAP: Record<string, string> = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-  '': '',
 };
 
 interface HeaderResult {
