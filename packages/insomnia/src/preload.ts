@@ -1,15 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { MainBridgeAPI } from './main/ipc/main';
-
-declare global {
-  interface Window {
-    main: MainBridgeAPI;
-    dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
-    app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
-    shell: Pick<Electron.Shell, 'showItemInFolder'>;
-  }
-}
 const main: Window['main'] = {
   restart: () => ipcRenderer.send('restart'),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
