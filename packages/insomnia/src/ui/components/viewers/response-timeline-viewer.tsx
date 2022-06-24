@@ -52,7 +52,7 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
       DataIn: '| ',
       SslDataIn: '<< ',
       HeaderOut: '> ',
-      DataOut: '<< ',
+      DataOut: '| ',
       SslDataOut: '>> ',
       Text: '* ',
     };
