@@ -106,9 +106,9 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
 
     const cookie = clone(nextCookie);
     // Sanitize expires field
-    const expires = new Date(cookie.expires || '').getTime();
-
-    if (isNaN(expires)) {
+    const expires = new Date(Number(cookie.expires))?.getTime();
+    const isInValidExpires = (val: Cookie['expires']) => val === null || val === '' || new Date(Number(val)).toString() === 'Invalid Date';
+    if (isInValidExpires(cookie.expires)) {
       cookie.expires = null;
     } else {
       cookie.expires = expires;
@@ -227,7 +227,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
                   </div>
                   {this._renderInputField(
                     'expires',
-                    isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null,
+                    cookie.expires !== null && new Date(Number(cookie.expires)).toString() === 'Invalid Date' ? 'Invalid Date' : null,
                   )}
                 </div>
                 <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
