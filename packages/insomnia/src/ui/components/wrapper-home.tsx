@@ -1,6 +1,5 @@
 import 'swagger-ui-react/swagger-ui.css';
 
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   Button,
   CardContainer,
@@ -9,7 +8,7 @@ import {
   DropdownItem,
   SvgIcon,
 } from 'insomnia-components';
-import React, { PureComponent } from 'react';
+import React, { useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 import styled from 'styled-components';
@@ -17,7 +16,6 @@ import { unreachableCase } from 'ts-assert-unreachable';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
-  AUTOBIND_CFG,
   DashboardSortOrder,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -54,14 +52,9 @@ const CreateButton = styled(Button)({
   },
 });
 
-interface Props
-  extends ReturnType<typeof mapDispatchToProps>,
-    ReturnType<typeof mapStateToProps> {
+interface Props extends ReturnType<typeof mapDispatchToProps>,
+ReturnType<typeof mapStateToProps> {
   wrapperProps: WrapperProps;
-}
-
-interface State {
-  filter: string;
 }
 
 function orderDashboardCards(orderBy: DashboardSortOrder) {
@@ -158,241 +151,162 @@ const mapWorkspaceToWorkspaceCard = ({
   };
 };
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperHome extends PureComponent<Props, State> {
-  state: State = {
-    filter: '',
-  };
+const WrapperHome: React.FC<Props> = (({
+  activeProject,
+  isLoading,
+  isLoggedIn,
+  sortOrder,
+  handleSetDashboardSortOrder,
+  wrapperProps,
+  apiSpecs,
+  workspacesForActiveProject,
+  handleActivateWorkspace,
+  workspaceMetas,
+  handleGitCloneWorkspace,
+  handleImportClipboard,
+  handleImportUri,
+  handleCreateWorkspace,
+  handleImportFile,
+}) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [filter, setFilter] = useState('');
 
-  _filterInput: HTMLInputElement | null = null;
-
-  _setFilterInputRef(filterInput: HTMLInputElement) {
-    this._filterInput = filterInput;
-  }
-
-  _handleFilterChange(event: React.SyntheticEvent<HTMLInputElement>) {
-    this.setState({
-      filter: event.currentTarget.value,
-    });
-  }
-
-  _handleDocumentCreate() {
-    this.props.handleCreateWorkspace({
-      scope: WorkspaceScopeKeys.design,
-    });
-  }
-
-  _handleCollectionCreate() {
-    const {
-      activeProject,
-      isLoggedIn,
-      handleCreateWorkspace,
-      wrapperProps: { vcs },
-    } = this.props;
-
-    handleCreateWorkspace({
-      scope: WorkspaceScopeKeys.collection,
-      onCreate: async workspace => {
-        // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
-          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
-        }
-      },
-    });
-  }
-
-  _handleImportFile() {
-    this.props.handleImportFile({
-      forceToWorkspace: ForceToWorkspace.existing,
-    });
-  }
-
-  _handleImportClipBoard() {
-    this.props.handleImportClipboard({
-      forceToWorkspace: ForceToWorkspace.existing,
-    });
-  }
-
-  _handleImportUri() {
-    showPrompt({
-      title: 'Import document from URL',
-      submitName: 'Fetch and Import',
-      label: 'URL',
-      placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: uri => {
-        this.props.handleImportUri(uri, {
-          forceToWorkspace: ForceToWorkspace.existing,
-        });
-      },
-    });
-  }
-
-  _handleWorkspaceClone() {
-    this.props.handleGitCloneWorkspace({
-      createFsClient: MemClient.createClient,
-    });
-  }
-
-  _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => {
-      if (this._filterInput) {
-        this._filterInput.focus();
-      }
-    });
-  }
-
-  renderCreateMenu() {
-    const button = (
-      <CreateButton variant="contained" bg="surprise">
-        Create <i className="fa fa-caret-down pad-left-sm" />
-      </CreateButton>
-    );
-    return (
-      <Dropdown renderButton={button}>
-        <DropdownDivider>New</DropdownDivider>
-        <DropdownItem
-          icon={<i className="fa fa-file-o" />}
-          onClick={this._handleDocumentCreate}
-        >
-          Design Document
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-bars" />}
-          onClick={this._handleCollectionCreate}
-        >
-          Request Collection
-        </DropdownItem>
-        <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem
-          icon={<i className="fa fa-plus" />}
-          onClick={this._handleImportFile}
-        >
-          File
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-link" />}
-          onClick={this._handleImportUri}
-        >
-          URL
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-clipboard" />}
-          onClick={this._handleImportClipBoard}
-        >
-          Clipboard
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-code-fork" />}
-          onClick={this._handleWorkspaceClone}
-        >
-          Git Clone
-        </DropdownItem>
-      </Dropdown>
-    );
-  }
-
-  renderDashboardMenu() {
-    const { wrapperProps: { vcs }, handleSetDashboardSortOrder, sortOrder } = this.props;
-    return (
-      <div className="row row--right pad-left wide">
-        <div
-          className="form-control form-control--outlined no-margin"
-          style={{
-            maxWidth: '400px',
-          }}
-        >
-          <KeydownBinder onKeydown={this._handleKeyDown}>
-            <input
-              ref={this._setFilterInputRef}
-              type="text"
-              placeholder="Filter..."
-              onChange={this._handleFilterChange}
-              className="no-margin"
-            />
-            <span className="fa fa-search filter-icon" />
-          </KeydownBinder>
-        </div>
-        <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
-        <RemoteWorkspacesDropdown vcs={vcs} />
-        {this.renderCreateMenu()}
-      </div>
-    );
-  }
-
-  render() {
-    const {
-      activeProject,
-      isLoading,
-      sortOrder,
-      wrapperProps,
-      apiSpecs,
-      workspacesForActiveProject,
-      handleActivateWorkspace,
-      workspaceMetas,
-    } = this.props;
-    const { vcs } = wrapperProps;
-    const { filter } = this.state;
-    // Render each card, removing all the ones that don't match the filter
-    const cards = workspacesForActiveProject
-      .map(
-        mapWorkspaceToWorkspaceCard({
-          workspaceMetas,
-          apiSpecs,
-        })
-      )
-      .filter(isNotNullOrUndefined)
-      .sort(orderDashboardCards(sortOrder))
-      .map(props => (
-        <WorkspaceCard
-          {...props}
-          key={props.apiSpec._id}
-          activeProject={activeProject}
-          onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
-          filter={filter}
-        />
-      ));
-
-    return (
-      <PageLayout
-        wrapperProps={wrapperProps}
-        renderPageHeader={() => (
-          <AppHeader
-            breadcrumbProps={{
-              crumbs: [
-                {
-                  id: 'project',
-                  node: <ProjectDropdown vcs={vcs || undefined} />,
-                },
-              ],
-              isLoading,
-            }}
-          />
-        )}
-        renderPageBody={() => (
-          <div className="document-listing theme--pane layout-body">
-            <div className="document-listing__body pad-bottom">
-              <div className="row-spaced margin-top margin-bottom-sm">
-                <h2 className="no-margin">Dashboard</h2>
-                {this.renderDashboardMenu()}
-              </div>
-              <CardContainer>{cards}</CardContainer>
-              {filter && cards.length === 0 && (
-                <Notice color="subtle">
-                  No documents found for <strong>{filter}</strong>
-                </Notice>
-              )}
-            </div>
-            <div className="document-listing__footer vertically-center">
-              <a className="made-with-love" href="https://github.com/Kong/insomnia">
-                Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
-              </a>
-            </div>
-          </div>
-        )}
+  const { vcs } = wrapperProps;
+  // Render each card, removing all the ones that don't match the filter
+  const cards = workspacesForActiveProject
+    .map(mapWorkspaceToWorkspaceCard({ workspaceMetas, apiSpecs }))
+    .filter(isNotNullOrUndefined)
+    .sort(orderDashboardCards(sortOrder))
+    .map(props => (
+      <WorkspaceCard
+        {...props}
+        key={props.apiSpec._id}
+        activeProject={activeProject}
+        onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
+        filter={filter}
       />
-    );
-  }
-}
+    ));
+
+  return (
+    <PageLayout
+      wrapperProps={wrapperProps}
+      renderPageHeader={() => (
+        <AppHeader
+          breadcrumbProps={{
+            crumbs: [
+              {
+                id: 'project',
+                node: <ProjectDropdown vcs={vcs || undefined} />,
+              },
+            ],
+            isLoading,
+          }}
+        />
+      )}
+      renderPageBody={() => (
+        <div className="document-listing theme--pane layout-body">
+          <div className="document-listing__body pad-bottom">
+            <div className="row-spaced margin-top margin-bottom-sm">
+              <h2 className="no-margin">Dashboard</h2>
+              <div className="row row--right pad-left wide">
+                <div
+                  className="form-control form-control--outlined no-margin"
+                  style={{
+                    maxWidth: '400px',
+                  }}
+                >
+                  <KeydownBinder onKeydown={event => executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus())}>
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      placeholder="Filter..."
+                      onChange={event => setFilter(event.currentTarget.value)}
+                      className="no-margin"
+                    />
+                    <span className="fa fa-search filter-icon" />
+                  </KeydownBinder>
+                </div>
+                <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
+                <RemoteWorkspacesDropdown vcs={vcs} />
+                <Dropdown
+                  renderButton={<CreateButton variant="contained" bg="surprise">
+                    Create <i className="fa fa-caret-down pad-left-sm" />
+                  </CreateButton>}
+                >
+                  <DropdownDivider>New</DropdownDivider>
+                  <DropdownItem
+                    icon={<i className="fa fa-file-o" />}
+                    onClick={() => handleCreateWorkspace({ scope: WorkspaceScopeKeys.design })}
+                  >
+                    Design Document
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-bars" />}
+                    onClick={() => handleCreateWorkspace({
+                      scope: WorkspaceScopeKeys.collection,
+                      onCreate: async workspace => {
+                        // Don't mark for sync if not logged in at the time of creation
+                        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
+                          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+                        }
+                      },
+                    })}
+                  >
+                    Request Collection
+                  </DropdownItem>
+                  <DropdownDivider>Import From</DropdownDivider>
+                  <DropdownItem
+                    icon={<i className="fa fa-plus" />}
+                    onClick={() => handleImportFile({ forceToWorkspace: ForceToWorkspace.existing })}
+                  >
+                    File
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-link" />}
+                    onClick={() => showPrompt({
+                      title: 'Import document from URL',
+                      submitName: 'Fetch and Import',
+                      label: 'URL',
+                      placeholder: 'https://website.com/insomnia-import.json',
+                      onComplete: uri => {
+                        handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
+                      },
+                    })}
+                  >
+                    URL
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-clipboard" />}
+                    onClick={() => handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing })}
+                  >
+                    Clipboard
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-code-fork" />}
+                    onClick={() => handleGitCloneWorkspace({ createFsClient: MemClient.createClient })}
+                  >
+                    Git Clone
+                  </DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+            <CardContainer>{cards}</CardContainer>
+            {filter && cards.length === 0 && (
+              <Notice color="subtle">
+                No documents found for <strong>{filter}</strong>
+              </Notice>
+            )}
+          </div>
+          <div className="document-listing__footer vertically-center">
+            <a className="made-with-love" href="https://github.com/Kong/insomnia">
+              Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
+            </a>
+          </div>
+        </div>
+      )}
+    />
+  );
+});
 
 const mapStateToProps = (state: RootState) => ({
   sortOrder: selectDashboardSortOrder(state),
