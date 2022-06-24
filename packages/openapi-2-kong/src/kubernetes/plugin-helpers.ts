@@ -40,10 +40,10 @@ export const methodDoc = (method: HttpMethodType | Lowercase<HttpMethodType>): K
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongIngress',
   metadata: {
-    name: `${method}-method`,
+    name: `${method}-method`.toLowerCase(),
   },
   route: {
-    methods: [method.toUpperCase() as HttpMethodType],
+    methods: [method],
   },
 });
 
