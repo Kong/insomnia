@@ -1,5 +1,5 @@
 import React, { Fragment, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
@@ -7,7 +7,6 @@ import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
-import { RootState } from '../redux/modules';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
 import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
@@ -24,7 +23,7 @@ import { SidebarFilter } from './sidebar/sidebar-filter';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
 
-interface Props extends ReturnType<typeof mapStateToProps> {
+interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
@@ -52,26 +51,24 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   wrapperProps: WrapperProps;
 }
-
-const WrapperDebug: React.FC<Props> = ({
+export const WrapperDebug: React.FC<Props> = ({
+  forceRefreshKey,
   gitSyncDropdown,
   handleActivityChange,
-  wrapperProps,
-  activeEnvironment,
-  activeWorkspace,
-  environments,
   handleChangeEnvironment,
-  handleRequestGroupCreate,
-  handleSidebarSort,
-  sidebarChildren,
-  sidebarFilter,
-  activeRequest,
-  forceRefreshKey,
+  handleDeleteResponse,
+  handleDeleteResponses,
   handleForceUpdateRequest,
   handleForceUpdateRequestHeaders,
   handleImport,
+  handleRequestGroupCreate,
   handleSendAndDownloadRequestWithActiveEnvironment,
   handleSendRequestWithActiveEnvironment,
+  handleSetActiveResponse,
+  handleSetPreviewMode,
+  handleSetResponseFilter,
+  handleShowRequestSettingsModal,
+  handleSidebarSort,
   handleUpdateRequestAuthentication,
   handleUpdateRequestBody,
   handleUpdateRequestHeaders,
@@ -80,43 +77,48 @@ const WrapperDebug: React.FC<Props> = ({
   handleUpdateRequestUrl,
   handleUpdateSettingsUseBulkHeaderEditor,
   handleUpdateSettingsUseBulkParametersEditor,
-  responseDownloadPath,
-  handleDeleteResponse,
-  handleDeleteResponses,
-  handleSetActiveResponse,
-  handleSetPreviewMode,
-  handleSetResponseFilter,
-  handleShowRequestSettingsModal,
-  activeRequestResponses,
-  activeResponse,
-  activeUnitTestResult,
-  loadStartTime,
-  requestVersions,
-  responseFilter,
-  responseFilterHistory,
-  responsePreviewMode,
-  settings,
+  wrapperProps,
+
 }) => {
-  const { vcs,
-    activeWorkspaceMeta,
+  const {
     activeProject,
-    syncItems,
-    isLoggedIn,
+    activeWorkspaceMeta,
     handleActivateRequest,
     handleCopyAsCurl,
     handleCreateRequestGroup,
     handleDuplicateRequest,
     handleDuplicateRequestGroup,
     handleGenerateCode,
+    handleGenerateCodeForActiveRequest,
     handleSetRequestGroupCollapsed,
     handleSetRequestPinned,
     handleSetSidebarFilter,
-    handleGenerateCodeForActiveRequest,
     handleUpdateDownloadPath,
     handleUpdateRequestMimeType,
     headerEditorKey,
+    isLoggedIn,
+    syncItems,
+    vcs,
   } = wrapperProps;
-  const isTeamSync = isLoggedIn && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
+
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequestResponses = useSelector(selectActiveRequestResponses);
+  const activeResponse = useSelector(selectActiveResponse);
+  const activeUnitTestResult = useSelector(selectActiveUnitTestResult);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const environments = useSelector(selectEnvironments);
+  const loadStartTime = useSelector(selectLoadStartTime);
+  const requestVersions = useSelector(selectRequestVersions);
+  const responseDownloadPath = useSelector(selectResponseDownloadPath);
+  const responseFilter = useSelector(selectResponseFilter);
+  const responseFilterHistory = useSelector(selectResponseFilterHistory);
+  const responsePreviewMode = useSelector(selectResponsePreviewMode);
+  const settings = useSelector(selectSettings);
+  const sidebarChildren = useSelector(selectSidebarChildren);
+  const sidebarFilter = useSelector(selectSidebarFilter);
+
+  const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
 
   return (
     <PageLayout
@@ -130,7 +132,7 @@ const WrapperDebug: React.FC<Props> = ({
             project={activeProject}
             vcs={vcs}
             syncItems={syncItems}
-          /> : isDesign(activeWorkspace) && gitSyncDropdown}
+          /> : isDesign(activeWorkspace) ? gitSyncDropdown : null}
         />
         : null}
       renderPageSidebar={() => activeWorkspace ? <Fragment>
@@ -246,23 +248,4 @@ const WrapperDebug: React.FC<Props> = ({
   );
 };
 
-const mapStateToProps = (state: RootState) => ({
-  activeEnvironment: selectActiveEnvironment(state),
-  activeRequest: selectActiveRequest(state),
-  activeRequestResponses: selectActiveRequestResponses(state),
-  activeResponse: selectActiveResponse(state),
-  activeUnitTestResult: selectActiveUnitTestResult(state),
-  activeWorkspace: selectActiveWorkspace(state),
-  environments: selectEnvironments(state),
-  loadStartTime: selectLoadStartTime(state),
-  requestVersions: selectRequestVersions(state),
-  responseDownloadPath: selectResponseDownloadPath(state),
-  responseFilter: selectResponseFilter(state),
-  responseFilterHistory: selectResponseFilterHistory(state),
-  responsePreviewMode: selectResponsePreviewMode(state),
-  settings: selectSettings(state),
-  sidebarChildren: selectSidebarChildren(state),
-  sidebarFilter: selectSidebarFilter(state),
-});
-
-export default connect(mapStateToProps)(WrapperDebug);
+export default WrapperDebug;
