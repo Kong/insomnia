@@ -111,7 +111,7 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
     const { resolvedParam, components } = resolveParameter(refs, parameter);
 
     if (resolvedParam.schema) {
-      const kongSchema: KongSchema = resolvedParam.schema;
+      const kongSchema: KongSchema = { ...resolvedParam.schema };
       // The $schema property should only exist if components exist with a $ref path
       if (components) {
         kongSchema.components = components;
