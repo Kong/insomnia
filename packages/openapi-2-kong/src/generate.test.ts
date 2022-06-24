@@ -17,7 +17,7 @@ const firstK8sDocument = {
   route: {
     methods: [
       // There was some discrepency how we "generate" mock data and how we implemented it
-      'GET',
+      'get',
     ],
   },
 };

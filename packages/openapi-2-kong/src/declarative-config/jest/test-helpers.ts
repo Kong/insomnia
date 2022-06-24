@@ -58,7 +58,7 @@ export type UserXKongPlugin = XKongPlugin<Plugin> | XKongPlugin<DummyPlugin>;
 export const getSpec = (overrides: Partial<OpenApi3Spec> = {}): OpenApi3Spec =>
   JSON.parse(
     JSON.stringify({
-      openapi: '3.0',
+      openapi: '3.0.0',
       info: {
         version: '1.0',
         title: 'My API',

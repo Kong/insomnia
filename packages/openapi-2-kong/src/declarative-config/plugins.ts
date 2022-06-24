@@ -53,7 +53,7 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
     const dereferenced = $refs.get(parameter.$ref);
     const param = omit(parameter, ['$ref']);
 
-    let schema = dereferenced?.schema || {};
+    let schema = dereferenced?.schema;
     if ('$ref' in schema) {
       schema = $refs.get(schema.$ref);
     }
@@ -62,7 +62,7 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
       ...param,
       ...dereferenced,
       schema: {
-        ...schema,
+        ...(schema ?? {}),
         components,
         $schema,
       },
@@ -136,21 +136,25 @@ function resolveRequestBodyContent($refs: SwaggerParser.$Refs, operation?: OA3Op
   }
 
   if ('$ref' in operation.requestBody) {
-    return $refs.get(operation.requestBody.$ref);
+    return $refs.get(operation.requestBody.$ref) || {};
   }
 
   return operation.requestBody;
 }
 
 function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): OpenAPIV3.SchemaObject {
-  if (item?.schema && '$ref' in item.schema) {
+  if (item.schema && '$ref' in item.schema) {
     const resolved: OpenAPIV3.NonArraySchemaObject & { $schema: string; components: Record<string, unknown> } = { ...$refs.get(item.schema.$ref) };
     resolved.components = $refs.get('#/components');
     resolved.$schema = 'http://json-schema.org/schema';
     return resolved;
   }
 
-  return item;
+  if (!item.schema) {
+    return {};
+  }
+
+  return item.schema;
 }
 
 function serializeSchema(schema: OpenAPIV3.SchemaObject): string {

@@ -123,7 +123,7 @@ describe('plugins', () => {
       style: 'form',
     };
 
-    it('should retain config properties', () => {
+    it('should retain config properties', async () => {
       const plugin: RequestValidatorPlugin = {
         name: 'request-validator',
         enabled: true,
@@ -134,7 +134,7 @@ describe('plugins', () => {
           allowed_content_types: ['application/json'],
         },
       };
-      const generated = generateRequestValidatorPlugin({ plugin, tags, api });
+      const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
@@ -147,7 +147,7 @@ describe('plugins', () => {
       });
     });
 
-    it('should not add config properties if they are not defined', () => {
+    it('should not add config properties if they are not defined', async () => {
       const plugin: RequestValidatorPlugin = {
         name: 'request-validator',
         enabled: true,
@@ -159,7 +159,7 @@ describe('plugins', () => {
           // allowed_content_types: ['application/json'],
         },
       };
-      const generated = generateRequestValidatorPlugin({ plugin, tags, api });
+      const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
@@ -333,16 +333,17 @@ describe('plugins', () => {
         const op1: OpenAPIV3.OperationObject = {};
         const op2: OpenAPIV3.OperationObject = {
           requestBody: {
-            $ref: 'non-existent',
+            $ref: '#/components/non-existent',
           },
         };
-        expect((await generateRequestValidatorPlugin({ operation: op1, tags, api })).config).toStrictEqual(
+        const apiWithNoComponents = { ...api, components: {} };
+        expect((await generateRequestValidatorPlugin({ operation: op1, tags, api: apiWithNoComponents })).config).toStrictEqual(
           defaultReqVal,
         );
-        expect((await generateRequestValidatorPlugin({ operation: op2, tags, api })).config).toStrictEqual(
+        expect((await generateRequestValidatorPlugin({ operation: op2, tags, api: apiWithNoComponents })).config).toStrictEqual(
           defaultReqVal,
         );
-        expect((await generateRequestValidatorPlugin({ tags, api })).config).toStrictEqual(
+        expect((await generateRequestValidatorPlugin({ tags, api: apiWithNoComponents })).config).toStrictEqual(
           defaultReqVal,
         );
       });
