@@ -14,7 +14,7 @@ describe('grpcIpcMain', () => {
   };
   const id = 'abc';
   beforeEach(() => {
-    grpcIpcMain.init(); // ipcMain is mocked
+    grpcIpcMain.registergRPCHandlers(); // ipcMain is mocked
   });
 
   it.each(Object.values(GrpcRequestEventEnum))('should add listener for channel: %s', channel => {
