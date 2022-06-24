@@ -296,21 +296,22 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         return 0;
       }
 
+      // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
+      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
       let timelineMessage;
-      if (infoType === CurlInfoDebug.DataOut) {
+      const isRequestData = infoType === CurlInfoDebug.DataOut;
+      if (isRequestData) {
         // Ignore large post data messages
         const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
         timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
-      if (infoType === CurlInfoDebug.DataIn) {
+      const isResponseData = infoType === CurlInfoDebug.DataIn;
+      if (isResponseData) {
         timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+        name = 'Text';
       }
-
-      debugTimeline.push({
-        name: infoType === CurlInfoDebug.DataIn ? 'Text' : CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug,
-        value: timelineMessage || buffer.toString('utf8'),
-        timestamp: Date.now(),
-      });
+      const value = timelineMessage || buffer.toString('utf8');
+      debugTimeline.push({ name, value, timestamp: Date.now() });
       return 0;
     });
 
@@ -319,7 +320,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.enable(CurlFeature.Raw);
     // NOTE: legacy write end callback
     curl.on('end', () => responseBodyWriteStream.end());
-    curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
+    curl.on('end', async (_1: any, _2: any, rawHeaders: Buffer) => {
       const patch = {
         bytesContent: responseBodyBytes,
         bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
