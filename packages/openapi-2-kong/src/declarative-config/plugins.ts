@@ -1,5 +1,4 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
-import omit from 'lodash.omit';
 import { OpenAPIV3 } from 'openapi-types';
 import { Entry } from 'type-fest';
 
@@ -47,42 +46,55 @@ const DEFAULT_PARAM_STYLE = {
   path: 'simple',
 };
 
-const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): OpenAPIV3.ParameterObject => {
-  if ('$ref' in parameter) {
-    const components = $refs.get('#/components');
-    const dereferenced = $refs.get(parameter.$ref);
-    const param = omit(parameter, ['$ref']);
+interface ResolvedParameter {
+  resolvedParam: OpenAPIV3.ParameterObject;
+  components: OpenAPIV3.ComponentsObject | undefined;
+}
 
-    let schema = dereferenced?.schema;
-    if ('$ref' in schema) {
-      schema = $refs.get(schema.$ref);
+const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): ResolvedParameter => {
+  if ('$ref' in parameter) {
+    const components = getOperationRef<OpenAPIV3.ComponentsObject>($refs, '#/components');
+    const dereferenced = getOperationRef<OpenAPIV3.ParameterObject>($refs, parameter.$ref);
+    const { $ref, ...param } = parameter;
+
+    let schema: OpenAPIV3.ParameterObject['schema'] = dereferenced?.schema;
+    if (schema && '$ref' in schema) {
+      schema = getOperationRef<OpenAPIV3.ParameterObject['schema']>($refs, schema.$ref);
     }
 
-    return {
+    const resolvedParam: OpenAPIV3.ParameterObject = {
       ...param,
       ...dereferenced,
-      schema: {
-        ...(schema ?? {}),
-        components,
-        $schema,
-      },
+      name: dereferenced?.name || '',
+      in: dereferenced?.in || '',
+      schema,
+    };
+
+    return {
+      resolvedParam,
+      components,
     };
   }
 
   if (parameter.schema && '$ref' in parameter.schema) {
-    const components = $refs.get('#/components');
-    const dereferenced = $refs.get(parameter.schema.$ref);
+    const components = getOperationRef<OpenAPIV3.ComponentsObject>($refs, '#/components');
+    const schema = getOperationRef<OpenAPIV3.ParameterObject['schema']>($refs, parameter.schema.$ref);
+
     return {
-      ...parameter,
-      schema: {
-        ...dereferenced,
-        components,
-        $schema,
+      resolvedParam: {
+        ...parameter,
+        schema,
       },
+      components,
     };
   }
 
-  return parameter;
+  return { resolvedParam: parameter, components: undefined };
+};
+
+type KongSchema = (OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject) & {
+  components?: OpenAPIV3.ComponentsObject;
+  $schema?: string;
 };
 
 const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operation) => {
@@ -96,10 +108,16 @@ const generateParameterSchema = async (api: OpenApi3Spec, operation?: OA3Operati
     // The following is valid config to allow all content to pass, in the case where schema is not defined
     let schema = '';
 
-    const resolvedParam = resolveParameter(refs, parameter);
+    const { resolvedParam, components } = resolveParameter(refs, parameter);
 
     if (resolvedParam.schema) {
-      schema = JSON.stringify(resolvedParam.schema);
+      const kongSchema: KongSchema = resolvedParam.schema;
+      // The $schema property should only exist if components exist with a $ref path
+      if (components) {
+        kongSchema.components = components;
+        kongSchema.$schema = $schema;
+      }
+      schema = JSON.stringify(kongSchema);
     } else if ('content' in parameter) {
       // only parameters defined with a schema (not content) are supported
       schema = ALLOW_ALL_SCHEMA;
@@ -136,10 +154,18 @@ function resolveRequestBodyContent($refs: SwaggerParser.$Refs, operation?: OA3Op
   }
 
   if ('$ref' in operation.requestBody) {
-    return $refs.get(operation.requestBody.$ref) || {};
+    return getOperationRef($refs, operation.requestBody.$ref);
   }
 
   return operation.requestBody;
+}
+
+function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerParser.$Refs, refPath: OpenAPIV3.ReferenceObject['$ref']): RefType | undefined {
+  if ($refs.exists(refPath)) {
+    return $refs.get(refPath);
+  }
+
+  return;
 }
 
 function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): OpenAPIV3.SchemaObject {
