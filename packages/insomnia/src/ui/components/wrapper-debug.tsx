@@ -1,8 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { Fragment, PureComponent, ReactNode } from 'react';
+import React, { Fragment, ReactNode } from 'react';
 import { connect } from 'react-redux';
 
-import { AUTOBIND_CFG, SortOrder } from '../../common/constants';
+import { SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
@@ -54,76 +53,87 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   wrapperProps: WrapperProps;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class UnconnectedWrapperDebug extends PureComponent<Props> {
-  _renderPageHeader() {
-    const { gitSyncDropdown, handleActivityChange, wrapperProps: {
-      vcs,
-      activeWorkspace,
-      activeWorkspaceMeta,
-      activeProject,
-      syncItems,
-      isLoggedIn,
-    } } = this.props;
+const WrapperDebug: React.FC<Props> = ({
+  gitSyncDropdown,
+  handleActivityChange,
+  wrapperProps,
+  activeEnvironment,
+  activeWorkspace,
+  environments,
+  handleChangeEnvironment,
+  handleRequestGroupCreate,
+  handleSidebarSort,
+  sidebarChildren,
+  sidebarFilter,
+  activeRequest,
+  forceRefreshKey,
+  handleForceUpdateRequest,
+  handleForceUpdateRequestHeaders,
+  handleImport,
+  handleSendAndDownloadRequestWithActiveEnvironment,
+  handleSendRequestWithActiveEnvironment,
+  handleUpdateRequestAuthentication,
+  handleUpdateRequestBody,
+  handleUpdateRequestHeaders,
+  handleUpdateRequestMethod,
+  handleUpdateRequestParameters,
+  handleUpdateRequestUrl,
+  handleUpdateSettingsUseBulkHeaderEditor,
+  handleUpdateSettingsUseBulkParametersEditor,
+  responseDownloadPath,
+  handleDeleteResponse,
+  handleDeleteResponses,
+  handleSetActiveResponse,
+  handleSetPreviewMode,
+  handleSetResponseFilter,
+  handleShowRequestSettingsModal,
+  activeRequestResponses,
+  activeResponse,
+  activeUnitTestResult,
+  loadStartTime,
+  requestVersions,
+  responseFilter,
+  responseFilterHistory,
+  responsePreviewMode,
+  settings,
+}) => {
+  const { vcs,
+    activeWorkspaceMeta,
+    activeProject,
+    syncItems,
+    isLoggedIn,
+    handleActivateRequest,
+    handleCopyAsCurl,
+    handleCreateRequestGroup,
+    handleDuplicateRequest,
+    handleDuplicateRequestGroup,
+    handleGenerateCode,
+    handleSetRequestGroupCollapsed,
+    handleSetRequestPinned,
+    handleSetSidebarFilter,
+    handleGenerateCodeForActiveRequest,
+    handleUpdateDownloadPath,
+    handleUpdateRequestMimeType,
+    headerEditorKey,
+  } = wrapperProps;
+  const isTeamSync = isLoggedIn && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
 
-    if (!activeWorkspace) {
-      return null;
-    }
-
-    const collection = isCollection(activeWorkspace);
-
-    let insomniaSync: ReactNode = null;
-    if (isLoggedIn && collection && isRemoteProject(activeProject) && vcs) {
-      insomniaSync = <SyncDropdown
-        workspace={activeWorkspace}
-        workspaceMeta={activeWorkspaceMeta}
-        project={activeProject}
-        vcs={vcs}
-        syncItems={syncItems}
-      />;
-    }
-
-    const gitSync = isDesign(activeWorkspace) && gitSyncDropdown;
-    const sync = insomniaSync || gitSync;
-
-    return (
-      <WorkspacePageHeader
-        handleActivityChange={handleActivityChange}
-        gridRight={sync}
-      />
-    );
-  }
-
-  _renderPageSidebar() {
-    const {
-      activeEnvironment,
-      activeWorkspace,
-      environments,
-      handleChangeEnvironment,
-      handleRequestGroupCreate,
-      handleSidebarSort,
-      settings,
-      sidebarChildren,
-      sidebarFilter,
-    } = this.props;
-    const {
-      handleActivateRequest,
-      handleCopyAsCurl,
-      handleCreateRequestGroup,
-      handleDuplicateRequest,
-      handleDuplicateRequestGroup,
-      handleGenerateCode,
-      handleSetRequestGroupCollapsed,
-      handleSetRequestPinned,
-      handleSetSidebarFilter,
-    } = this.props.wrapperProps;
-
-    if (!activeWorkspace) {
-      return null;
-    }
-
-    return (
-      <Fragment>
+  return (
+    <PageLayout
+      wrapperProps={wrapperProps}
+      renderPageHeader={() => activeWorkspace ?
+        <WorkspacePageHeader
+          handleActivityChange={handleActivityChange}
+          gridRight={isTeamSync ? <SyncDropdown
+            workspace={activeWorkspace}
+            workspaceMeta={activeWorkspaceMeta}
+            project={activeProject}
+            vcs={vcs}
+            syncItems={syncItems}
+          /> : isDesign(activeWorkspace) && gitSyncDropdown}
+        />
+        : null}
+      renderPageSidebar={() => activeWorkspace ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             handleChangeEnvironment={handleChangeEnvironment}
@@ -163,164 +173,78 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
           hotKeyRegistry={settings.hotKeyRegistry}
         />
       </Fragment>
-    );
-  }
-
-  _renderRequestPane() {
-    const {
-      activeEnvironment,
-      activeRequest,
-      activeWorkspace,
-      forceRefreshKey,
-      handleForceUpdateRequest,
-      handleForceUpdateRequestHeaders,
-      handleImport,
-      handleSendAndDownloadRequestWithActiveEnvironment,
-      handleSendRequestWithActiveEnvironment,
-      handleUpdateRequestAuthentication,
-      handleUpdateRequestBody,
-      handleUpdateRequestHeaders,
-      handleUpdateRequestMethod,
-      handleUpdateRequestParameters,
-      handleUpdateRequestUrl,
-      handleUpdateSettingsUseBulkHeaderEditor,
-      handleUpdateSettingsUseBulkParametersEditor,
-      responseDownloadPath,
-      settings,
-    } = this.props;
-    const {
-      handleGenerateCodeForActiveRequest,
-      handleUpdateDownloadPath,
-      handleUpdateRequestMimeType,
-      headerEditorKey,
-    } = this.props.wrapperProps;
-
-    if (!activeWorkspace) {
-      return null;
-    }
-
-    // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
-    // The RequestPane and ResponsePane components already handle the case where activeRequest is null
-    if (activeRequest && isGrpcRequest(activeRequest)) {
-      return (
+        : null}
+      renderPaneOne={() => activeWorkspace ?
         <ErrorBoundary showAlert>
-          <GrpcRequestPane
-            activeRequest={activeRequest}
-            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            workspaceId={activeWorkspace._id}
-            forceRefreshKey={forceRefreshKey}
-            settings={settings}
-          />
+          {activeRequest && isGrpcRequest(activeRequest) ?
+            <GrpcRequestPane
+              activeRequest={activeRequest}
+              environmentId={activeEnvironment ? activeEnvironment._id : ''}
+              workspaceId={activeWorkspace._id}
+              forceRefreshKey={forceRefreshKey}
+              settings={settings}
+            />
+            :
+            <RequestPane
+              downloadPath={responseDownloadPath}
+              environmentId={activeEnvironment ? activeEnvironment._id : ''}
+              forceRefreshCounter={forceRefreshKey}
+              forceUpdateRequest={handleForceUpdateRequest}
+              forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
+              handleGenerateCode={handleGenerateCodeForActiveRequest}
+              handleImport={handleImport}
+              handleSend={handleSendRequestWithActiveEnvironment}
+              handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
+              handleUpdateDownloadPath={handleUpdateDownloadPath}
+              headerEditorKey={headerEditorKey}
+              request={activeRequest}
+              settings={settings}
+              updateRequestAuthentication={handleUpdateRequestAuthentication}
+              updateRequestBody={handleUpdateRequestBody}
+              updateRequestHeaders={handleUpdateRequestHeaders}
+              updateRequestMethod={handleUpdateRequestMethod}
+              updateRequestMimeType={handleUpdateRequestMimeType}
+              updateRequestParameters={handleUpdateRequestParameters}
+              updateRequestUrl={handleUpdateRequestUrl}
+              updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
+              updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
+              workspace={activeWorkspace}
+            />}
         </ErrorBoundary>
-      );
-    }
-
-    return (
-      <ErrorBoundary showAlert>
-        <RequestPane
-          downloadPath={responseDownloadPath}
-          environmentId={activeEnvironment ? activeEnvironment._id : ''}
-          forceRefreshCounter={forceRefreshKey}
-          forceUpdateRequest={handleForceUpdateRequest}
-          forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-          handleGenerateCode={handleGenerateCodeForActiveRequest}
-          handleImport={handleImport}
-          handleSend={handleSendRequestWithActiveEnvironment}
-          handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
-          handleUpdateDownloadPath={handleUpdateDownloadPath}
-          headerEditorKey={headerEditorKey}
-          request={activeRequest}
-          settings={settings}
-          updateRequestAuthentication={handleUpdateRequestAuthentication}
-          updateRequestBody={handleUpdateRequestBody}
-          updateRequestHeaders={handleUpdateRequestHeaders}
-          updateRequestMethod={handleUpdateRequestMethod}
-          updateRequestMimeType={handleUpdateRequestMimeType}
-          updateRequestParameters={handleUpdateRequestParameters}
-          updateRequestUrl={handleUpdateRequestUrl}
-          updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
-          updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
-          workspace={activeWorkspace}
-        />
-      </ErrorBoundary>
-    );
-  }
-
-  _renderResponsePane() {
-    const {
-      forceRefreshKey,
-      handleDeleteResponse,
-      handleDeleteResponses,
-      handleSetActiveResponse,
-      handleSetPreviewMode,
-      handleSetResponseFilter,
-      handleShowRequestSettingsModal,
-      activeEnvironment,
-      activeRequest,
-      activeRequestResponses,
-      activeResponse,
-      activeUnitTestResult,
-      loadStartTime,
-      requestVersions,
-      responseFilter,
-      responseFilterHistory,
-      responsePreviewMode,
-      settings,
-    } = this.props;
-
-    // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
-    // The RequestPane and ResponsePane components already handle the case where activeRequest is null
-    if (activeRequest && isGrpcRequest(activeRequest)) {
-      return (
-        <ErrorBoundary showAlert>
+        : null}
+      renderPaneTwo={() => <ErrorBoundary showAlert>
+        {activeRequest && isGrpcRequest(activeRequest) ?
           <GrpcResponsePane
             activeRequest={activeRequest}
             forceRefreshKey={forceRefreshKey}
           />
-        </ErrorBoundary>
-      );
-    }
-
-    return (
-      <ErrorBoundary showAlert>
-        <ResponsePane
-          disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-          disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-          editorFontSize={settings.editorFontSize}
-          environment={activeEnvironment}
-          filter={responseFilter}
-          filterHistory={responseFilterHistory}
-          handleDeleteResponse={handleDeleteResponse}
-          handleDeleteResponses={handleDeleteResponses}
-          handleSetActiveResponse={handleSetActiveResponse}
-          handleSetFilter={handleSetResponseFilter}
-          handleSetPreviewMode={handleSetPreviewMode}
-          handleShowRequestSettings={handleShowRequestSettingsModal}
-          hotKeyRegistry={settings.hotKeyRegistry}
-          loadStartTime={loadStartTime}
-          previewMode={responsePreviewMode}
-          request={activeRequest}
-          requestVersions={requestVersions}
-          response={activeResponse}
-          responses={activeRequestResponses}
-          unitTestResult={activeUnitTestResult}
-        />
-      </ErrorBoundary>
-    );
-  }
-
-  render() {
-    return (
-      <PageLayout
-        wrapperProps={this.props.wrapperProps}
-        renderPageHeader={this._renderPageHeader}
-        renderPageSidebar={this._renderPageSidebar}
-        renderPaneOne={this._renderRequestPane}
-        renderPaneTwo={this._renderResponsePane}
-      />
-    );
-  }
-}
+          :
+          <ResponsePane
+            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+            disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
+            editorFontSize={settings.editorFontSize}
+            environment={activeEnvironment}
+            filter={responseFilter}
+            filterHistory={responseFilterHistory}
+            handleDeleteResponse={handleDeleteResponse}
+            handleDeleteResponses={handleDeleteResponses}
+            handleSetActiveResponse={handleSetActiveResponse}
+            handleSetFilter={handleSetResponseFilter}
+            handleSetPreviewMode={handleSetPreviewMode}
+            handleShowRequestSettings={handleShowRequestSettingsModal}
+            hotKeyRegistry={settings.hotKeyRegistry}
+            loadStartTime={loadStartTime}
+            previewMode={responsePreviewMode}
+            request={activeRequest}
+            requestVersions={requestVersions}
+            response={activeResponse}
+            responses={activeRequestResponses}
+            unitTestResult={activeUnitTestResult}
+          />}
+      </ErrorBoundary>}
+    />
+  );
+};
 
 const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
@@ -341,4 +265,4 @@ const mapStateToProps = (state: RootState) => ({
   sidebarFilter: selectSidebarFilter(state),
 });
 
-export default connect(mapStateToProps)(UnconnectedWrapperDebug);
+export default connect(mapStateToProps)(WrapperDebug);
