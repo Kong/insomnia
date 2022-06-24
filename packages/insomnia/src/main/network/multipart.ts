@@ -7,7 +7,7 @@ import { lookup } from 'mime-types';
 import os from 'os';
 import path from 'path';
 
-import type { RequestBodyParameter } from '../models/request';
+import type { RequestBodyParameter } from '../../models/request';
 
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 

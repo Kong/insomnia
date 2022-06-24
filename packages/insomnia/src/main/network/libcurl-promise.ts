@@ -14,13 +14,12 @@ import tls from 'tls';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import { version } from '../../package.json';
-import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
-import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
-import { ClientCertificate } from '../models/client-certificate';
-import { ResponseHeader } from '../models/response';
+import { version } from '../../../package.json';
+import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../../common/misc';
+import { ClientCertificate } from '../../models/client-certificate';
+import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
-import { ResponsePatch } from './network';
 import { parseHeaderStrings } from './parse-header-strings';
 
 interface CurlRequestOptions {
@@ -70,6 +69,26 @@ interface CurlRequestOutput {
   responseBodyPath?: string;
 }
 
+export interface ResponsePatch {
+  bodyCompression?: 'zip' | null;
+  bodyPath?: string;
+  bytesContent?: number;
+  bytesRead?: number;
+  contentType?: string;
+  elapsedTime: number;
+  environmentId?: string | null;
+  error?: string;
+  headers?: ResponseHeader[];
+  httpVersion?: string;
+  message?: string;
+  parentId?: string;
+  settingSendCookies?: boolean;
+  settingStoreCookies?: boolean;
+  statusCode?: number;
+  statusMessage?: string;
+  timelinePath?: string;
+  url?: string;
+}
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners

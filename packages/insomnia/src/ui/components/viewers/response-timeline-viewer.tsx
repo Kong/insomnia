@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
+import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
-import type { ResponseTimelineEntry } from '../../../network/libcurl-promise';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {

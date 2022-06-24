@@ -3,7 +3,7 @@ import { Readable } from 'stream';
 import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
-import type { ResponseTimelineEntry } from '../network/libcurl-promise';
+import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import type { BaseModel } from './index';
 import * as models from './index';
 

@@ -17,12 +17,12 @@ import {
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
+import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
+import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
-import { _parseHeaders, getHttpVersion } from '../libcurl-promise';
-import { DEFAULT_BOUNDARY } from '../multipart';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
-import { _getAwsAuthHeaders } from '../parse-header-strings';
 
 window.app = electron.app;
 
