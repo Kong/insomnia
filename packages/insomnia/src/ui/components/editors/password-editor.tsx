@@ -55,7 +55,6 @@ export class PasswordEditor extends PureComponent<Props, State> {
           <Button
             className="btn btn--super-duper-compact pointer"
             onClick={this._handleShowPassword}
-            value={showPassword}
           >
             {showPassword ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
           </Button>

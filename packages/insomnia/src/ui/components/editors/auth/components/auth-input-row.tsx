@@ -27,7 +27,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
   // this handler is needed to ignore the parameters sent by button into onClick...
   const onClick = useCallback(() => toggleMask(), [toggleMask]);
 
-  const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
+  const onChange = useCallback(() => patchAuth({ [property]: isMasked }), [patchAuth, property, isMasked]);
 
   const id = toKebabCase(label);
 
@@ -46,7 +46,6 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
         <Button
           className="btn btn--super-duper-compact pointer"
           onClick={onClick}
-          value={isMasked}
         >
           {isMasked ? <i className="fa fa-eye" data-testid="reveal-password-icon" /> : <i className="fa fa-eye-slash" data-testid="mask-password-icon" />}
         </Button>

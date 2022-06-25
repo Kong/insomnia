@@ -41,9 +41,9 @@ interface State {
 interface SidebarListItemProps extends Pick<Props, 'activeEnvironmentId'> {
   changeEnvironmentName: (environment: Environment, name?: string) => void;
   environment: Environment;
-  handleActivateEnvironment: ButtonProps<Environment>['onClick'];
+  handleActivateEnvironment: ButtonProps['onClick'];
   selectedEnvironment: Environment | null;
-  showEnvironment: ButtonProps<Environment>['onClick'];
+  showEnvironment: ButtonProps['onClick'];
 }
 
 const SidebarListItem = SortableElement<SidebarListItemProps>(({
@@ -62,7 +62,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
   });
   return (
     <li key={environment._id} className={classes}>
-      <Button onClick={showEnvironment} value={environment}>
+      <Button onClick={showEnvironment}>
         <i className="fa fa-drag-handle drag-handle" />
         {environment.color ? (
           <i
@@ -91,7 +91,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
         {environment._id === activeEnvironmentId ? (
           <i className="fa fa-square active" title="Active Environment" />
         ) : (
-          <Button onClick={handleActivateEnvironment} value={environment}>
+          <Button onClick={handleActivateEnvironment}>
             <i className="fa fa-square-o inactive" title="Click to activate Environment" />
           </Button>
         )}
@@ -220,11 +220,12 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     await this._load(workspace, environment);
   }
 
-  _handleShowEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  _handleShowEnvironment() {
     // Don't allow switching if the current one has errors
     if (this.environmentEditorRef && !this.environmentEditorRef.isValid()) {
       return;
     }
+    const environment = this.state.rootEnvironment;
 
     if (environment === this._getSelectedEnvironment()) {
       return;
@@ -234,18 +235,20 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._load(workspace, environment);
   }
 
-  async _handleDuplicateEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  async _handleDuplicateEnvironment() {
     const { workspace } = this.state;
+    const environment = this._getSelectedEnvironment();
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const newEnvironment = await models.environment.duplicate(environment!);
     await this._load(workspace, newEnvironment);
   }
 
-  async _handleDeleteEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  async _handleDeleteEnvironment() {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
+    const environment = this._getSelectedEnvironment();
     // Don't delete the root environment
     if (environment === rootEnvironment) {
       return;
@@ -416,8 +419,9 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._handleChangeEnvironmentColor(environment, null);
   }
 
-  _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (event, environment) => {
+  _handleActivateEnvironment = () => {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
+    const environment = this._getSelectedEnvironment();
 
     if (!environment) {
       return;
@@ -428,7 +432,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     }
 
     handleChangeEnvironment(environment._id);
-    this._handleShowEnvironment(event, environment);
+    this._handleShowEnvironment();
   };
 
   render() {
@@ -458,7 +462,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                 'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
               })}
             >
-              <Button onClick={this._handleShowEnvironment} value={rootEnvironment ?? undefined}>
+              <Button onClick={this._handleShowEnvironment}>
                 {ROOT_ENVIRONMENT_NAME}
                 <HelpTooltip className="space-left">
                   The variables in this environment are always available, regardless of which
@@ -563,7 +567,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                   </Dropdown>
 
                   <Button
-                    value={selectedEnvironment}
                     onClick={this._handleDuplicateEnvironment}
                     className="btn btn--clicky space-right"
                   >
@@ -571,7 +574,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                   </Button>
 
                   <PromptButton
-                    value={selectedEnvironment}
                     onClick={this._handleDeleteEnvironment}
                     className="btn btn--clicky"
                   >

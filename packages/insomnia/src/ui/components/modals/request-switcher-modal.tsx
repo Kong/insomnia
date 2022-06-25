@@ -456,7 +456,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 );
                 return (
                   <li key={r._id}>
-                    <Button onClick={(_e, request) => this._activateRequest(request)} value={r} className={buttonClasses}>
+                    <Button onClick={() => this._activateRequest(r)} className={buttonClasses}>
                       <div>
                         {requestGroup ? (
                           <div className="pull-right faint italic">
@@ -489,7 +489,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 });
                 return (
                   <li key={w._id}>
-                    <Button onClick={(_e, value) => this._activateWorkspace(value)} value={w} className={buttonClasses}>
+                    <Button onClick={() => this._activateWorkspace(w)} className={buttonClasses}>
                       <i className="fa fa-random" />
                       &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
                     </Button>

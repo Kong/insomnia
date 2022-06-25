@@ -27,9 +27,8 @@ export const AuthToggleRow: FC<Props> = ({
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
   const databaseValue = Boolean(authentication[property]);
-  const toggle = useCallback(
-    (_event: React.MouseEvent<HTMLButtonElement>, value?: boolean) =>
-      patchAuth({ [property]: value }), [patchAuth, property]
+  const toggle = useCallback(() =>
+    patchAuth({ [property]: !databaseValue }), [patchAuth, property, databaseValue]
   );
 
   const isActuallyOn = invert ? !databaseValue : databaseValue;
@@ -43,7 +42,6 @@ export const AuthToggleRow: FC<Props> = ({
         className="btn btn--super-duper-compact"
         id={id}
         onClick={toggle}
-        value={!databaseValue}
         title={title}
       >
         <ToggleIcon isOn={isActuallyOn} />

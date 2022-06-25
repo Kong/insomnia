@@ -188,7 +188,8 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDisableChange(_event: React.MouseEvent, disabled?: boolean) {
+  _handleDisableChange() {
+    const disabled = !this.props.pair.disabled;
     this._sendChange({
       disabled,
     });
@@ -488,7 +489,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
           {!hideButtons ? (
             <Button
               onClick={this._handleDisableChange}
-              value={!pair.disabled}
               title={pair.disabled ? 'Enable item' : 'Disable item'}
             >
               {pair.disabled ? (
