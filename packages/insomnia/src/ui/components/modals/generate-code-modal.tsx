@@ -80,8 +80,8 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _handleClientChange(client: HTTPSnippetClient) {
-    const { target, request } = this.state;
+  _handleClientChange() {
+    const { target, request, client } = this.state;
 
     if (!request) {
       return;
@@ -167,7 +167,7 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
                 <i className="fa fa-caret-down" />
               </DropdownButton>
               {targets.map(target => (
-                <DropdownItem key={target.key} onClick={this._handleTargetChange} value={target}>
+                <DropdownItem key={target.key} onClick={() => this._handleTargetChange(target)}>
                   {target.title}
                 </DropdownItem>
               ))}
@@ -182,7 +182,6 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
                 <DropdownItem
                   key={client.key}
                   onClick={this._handleClientChange}
-                  value={client}
                 >
                   {client.title}
                 </DropdownItem>

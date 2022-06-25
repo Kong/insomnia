@@ -80,7 +80,7 @@ export class ContentTypeDropdown extends PureComponent<Props> {
       typeof this.props.contentType === 'string' ? this.props.contentType : EMPTY_MIME_TYPE;
     const iconClass = mimeType === contentType ? 'fa-check' : 'fa-empty';
     return (
-      <DropdownItem onClick={this._handleChangeMimeType} value={mimeType}>
+      <DropdownItem onClick={() => this._handleChangeMimeType(mimeType)}>
         <i className={`fa ${iconClass}`} />
         {forcedName || getContentTypeName(mimeType, true)}
       </DropdownItem>

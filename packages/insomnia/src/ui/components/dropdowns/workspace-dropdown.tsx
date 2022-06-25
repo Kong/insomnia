@@ -191,8 +191,7 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
             {configGeneratorPlugins.map((p: ConfigGenerator) => (
               <DropdownItem
                 key="generateConfig"
-                onClick={this._handleGenerateConfig}
-                value={p.label}
+                onClick={() => this._handleGenerateConfig(p.label)}
               >
                 <i className="fa fa-code" />
                 {p.label}

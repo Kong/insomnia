@@ -31,7 +31,7 @@ interface Props {
 export class EnvironmentsDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
-  _handleActivateEnvironment(environmentId: string) {
+  _handleActivateEnvironment(environmentId?: string) {
     this.props.handleChangeEnvironment(environmentId);
   }
 
@@ -47,8 +47,7 @@ export class EnvironmentsDropdown extends PureComponent<Props> {
     return (
       <DropdownItem
         key={environment._id}
-        value={environment._id}
-        onClick={this._handleActivateEnvironment}
+        onClick={() => this._handleActivateEnvironment(environment._id)}
       >
         <i
           className="fa fa-random"
@@ -127,7 +126,7 @@ export class EnvironmentsDropdown extends PureComponent<Props> {
           <DropdownDivider>Activate Environment</DropdownDivider>
           {subEnvironments.map(this.renderEnvironmentItem)}
 
-          <DropdownItem value={null} onClick={this._handleActivateEnvironment}>
+          <DropdownItem onClick={this._handleActivateEnvironment}>
             <i className="fa fa-empty" /> No Environment
           </DropdownItem>
 

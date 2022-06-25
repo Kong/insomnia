@@ -371,8 +371,10 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     });
   };
 
-  _handleClickColorChange(environment: Environment) {
-    if (!environment.color) {
+  _handleClickColorChange() {
+    const environment = this._getSelectedEnvironment();
+
+    if (!environment?.color) {
       // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
       this._handleChangeEnvironmentColor(environment, '#7d69cb');
     }
@@ -415,7 +417,8 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._handleChangeEnvironmentColor(this._getSelectedEnvironment(), event.target.value);
   }
 
-  unsetColor(environment: Environment) {
+  unsetColor() {
+    const environment = this._getSelectedEnvironment();
     this._handleChangeEnvironmentColor(environment, null);
   }
 
@@ -477,12 +480,11 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                   <i className="fa fa-plus-circle" />
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
-                <DropdownItem onClick={this._handleAddEnvironment} value={false}>
+                <DropdownItem onClick={() => this._handleAddEnvironment(false)}>
                   <i className="fa fa-eye" /> Environment
                 </DropdownItem>
                 <DropdownItem
-                  onClick={this._handleAddEnvironment}
-                  value={true}
+                  onClick={() => this._handleAddEnvironment(true)}
                   title="Environment will not be exported or synced"
                 >
                   <i className="fa fa-eye-slash" /> Private Environment
@@ -546,7 +548,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                       Color <i className="fa fa-caret-down" />
                     </DropdownButton>
 
-                    <DropdownItem value={selectedEnvironment} onClick={this._handleClickColorChange}>
+                    <DropdownItem onClick={this._handleClickColorChange}>
                       <i
                         className="fa fa-circle"
                         style={{
@@ -557,7 +559,6 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                     </DropdownItem>
 
                     <DropdownItem
-                      value={selectedEnvironment}
                       onClick={this.unsetColor}
                       disabled={!selectedEnvironment.color}
                     >

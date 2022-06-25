@@ -101,8 +101,7 @@ export class MethodDropdown extends PureComponent<Props> {
           <DropdownItem
             key={method}
             className={`http-method-${method}`}
-            onClick={this._handleChange}
-            value={method}
+            onClick={() => this._handleChange(method)}
           >
             {method}
           </DropdownItem>
@@ -110,7 +109,7 @@ export class MethodDropdown extends PureComponent<Props> {
         {showGrpc && (
           <>
             <DropdownDivider />
-            <DropdownItem className="method-grpc" onClick={this._handleChange} value={METHOD_GRPC}>
+            <DropdownItem className="method-grpc" onClick={() => this._handleChange(METHOD_GRPC)}>
               {GRPC_LABEL}
             </DropdownItem>
           </>
@@ -119,7 +118,6 @@ export class MethodDropdown extends PureComponent<Props> {
         <DropdownItem
           className="http-method-custom"
           onClick={this._handleSetCustomMethod}
-          value={method}
         >
           Custom Method
         </DropdownItem>

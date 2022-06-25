@@ -127,7 +127,7 @@ export class Shortcuts extends PureComponent<Props> {
             <DropdownButton className="btn btn--clicky-small">
               <i className="fa fa-gear" />
             </DropdownButton>
-            <DropdownItem value={def.id} onClick={this.handleAddKeyCombination}>
+            <DropdownItem onClick={() => this.handleAddKeyCombination(def.id)}>
               <i className="fa fa-plus-circle" />
               Add keyboard shortcut
             </DropdownItem>
@@ -140,12 +140,11 @@ export class Shortcuts extends PureComponent<Props> {
                 return (
                   <DropdownItem
                     key={display}
-                    value={{
+                    buttonClass={PromptButton}
+                    onClick={() => this.handleRemoveKeyCombination({
                       hotKeyRefId: def.id,
                       keyComb: keyComb,
-                    }}
-                    buttonClass={PromptButton}
-                    onClick={this.handleRemoveKeyCombination}
+                    })}
                   >
                     <i className="fa fa-trash-o" /> {display}
                   </DropdownItem>
@@ -156,9 +155,8 @@ export class Shortcuts extends PureComponent<Props> {
             {hasResetItems && <DropdownDivider />}
             {hasResetItems && (
               <DropdownItem
-                value={def.id}
                 buttonClass={PromptButton}
-                onClick={this.handleResetKeyBindings}
+                onClick={() => this.handleResetKeyBindings(def.id)}
               >
                 <i className="fa fa-empty" /> Reset keyboard shortcuts
               </DropdownItem>

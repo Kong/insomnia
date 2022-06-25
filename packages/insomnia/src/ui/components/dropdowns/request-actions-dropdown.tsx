@@ -177,8 +177,7 @@ export class RequestActionsDropdown extends PureComponent<Props, State> {
         {actionPlugins.map((plugin: RequestAction) => (
           <DropdownItem
             key={`${plugin.plugin.name}::${plugin.label}`}
-            value={plugin}
-            onClick={this._handlePluginClick}
+            onClick={() => this._handlePluginClick(plugin)}
             stayOpenAfterClick
           >
             {loadingActions[plugin.label] ? (

@@ -30,7 +30,7 @@ interface Props extends Partial<DropdownProps> {
 }
 
 interface RequestGroupActionsDropdownHandle {
-    show: () => void;
+  show: () => void;
 }
 
 export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
@@ -42,7 +42,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   ...other
 }, ref) => {
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
-  const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<Dropdown | null>(null);
 
   const activeProject = useSelector(selectActiveProject);
@@ -119,7 +119,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       dropdownRef.current?.hide();
     };
     fn();
-  }, [dropdownRef, loadingActions,  activeEnvironment, requestGroup, activeProject]);
+  }, [dropdownRef, loadingActions, activeEnvironment, requestGroup, activeProject]);
 
   return (
     <Dropdown ref={dropdownRef} onOpen={onOpen} {...other}>
@@ -127,16 +127,16 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         <i className="fa fa-caret-down" />
       </DropdownButton>
 
-      <DropdownItem value="HTTP" onClick={create}>
+      <DropdownItem onClick={() => create('HTTP')}>
         <i className="fa fa-plus-circle" />New HTTP Request
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
       </DropdownItem>
 
-      <DropdownItem value="GraphQL" onClick={create}>
+      <DropdownItem onClick={() => create('GraphQL')}>
         <i className="fa fa-plus-circle" />New GraphQL Request
       </DropdownItem>
 
-      <DropdownItem value="gRPC" onClick={create}>
+      <DropdownItem onClick={() => create('gRPC')}>
         <i className="fa fa-plus-circle" />New gRPC Request
       </DropdownItem>
 
