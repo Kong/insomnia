@@ -1,5 +1,4 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 import {
   AUTH_ASAP,
@@ -13,7 +12,6 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-  AUTOBIND_CFG,
   getAuthTypeName,
 } from '../../../common/constants';
 import * as models from '../../../models';
@@ -26,18 +24,24 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
 interface Props {
+  children?: ReactNode;
+  className?: string;
   onChange: (r: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
-  className?: string;
-  children?: ReactNode;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class AuthDropdown extends PureComponent<Props> {
-  async _handleTypeChange(type: string) {
-    const { request, onChange } = this.props;
-    const { authentication } = request;
-
+export const AuthDropdown: React.FC<Props> = ({ children, className, onChange, request }) => {
+  const { authentication } = request;
+  const renderAuthType = (type: string, nameOverride: string | null = null) => {
+    const currentType = authentication.type || AUTH_NONE;
+    return (
+      <DropdownItem onClick={() => handleTypeChange(type)}>
+        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
+        {nameOverride || getAuthTypeName(type, true)}
+      </DropdownItem>
+    );
+  };
+  const handleTypeChange = async (type: string) => {
     if (type === authentication.type) {
       // Type didn't change
       return;
@@ -65,44 +69,29 @@ export class AuthDropdown extends PureComponent<Props> {
         break;
       }
     }
-
+    console.log(request, newAuthentication);
     onChange(request, newAuthentication);
-  }
-
-  renderAuthType(type: string, nameOverride: string | null = null) {
-    const { authentication } = this.props.request;
-    const currentType = authentication.type || AUTH_NONE;
-    return (
-      <DropdownItem onClick={this._handleTypeChange} value={type}>
-        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
-        {nameOverride || getAuthTypeName(type, true)}
-      </DropdownItem>
-    );
-  }
-
-  render() {
-    const { children, className } = this.props;
-    return (
-      <Dropdown
-        beside
-        // @ts-expect-error -- TSCONVERSION appears to be genuine
-        debug="true"
-      >
-        <DropdownDivider>Auth Types</DropdownDivider>
-        <DropdownButton className={className}>{children}</DropdownButton>
-        {this.renderAuthType(AUTH_BASIC)}
-        {this.renderAuthType(AUTH_DIGEST)}
-        {this.renderAuthType(AUTH_OAUTH_1)}
-        {this.renderAuthType(AUTH_OAUTH_2)}
-        {this.renderAuthType(AUTH_NTLM)}
-        {this.renderAuthType(AUTH_AWS_IAM)}
-        {this.renderAuthType(AUTH_BEARER)}
-        {this.renderAuthType(AUTH_HAWK)}
-        {this.renderAuthType(AUTH_ASAP)}
-        {this.renderAuthType(AUTH_NETRC)}
-        <DropdownDivider>Other</DropdownDivider>
-        {this.renderAuthType(AUTH_NONE, 'No Authentication')}
-      </Dropdown>
-    );
-  }
-}
+  };
+  return (
+    <Dropdown
+      beside
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
+      debug="true"
+    >
+      <DropdownDivider>Auth Types</DropdownDivider>
+      <DropdownButton className={className}>{children}</DropdownButton>
+      {renderAuthType(AUTH_BASIC)}
+      {renderAuthType(AUTH_DIGEST)}
+      {renderAuthType(AUTH_OAUTH_1)}
+      {renderAuthType(AUTH_OAUTH_2)}
+      {renderAuthType(AUTH_NTLM)}
+      {renderAuthType(AUTH_AWS_IAM)}
+      {renderAuthType(AUTH_BEARER)}
+      {renderAuthType(AUTH_HAWK)}
+      {renderAuthType(AUTH_ASAP)}
+      {renderAuthType(AUTH_NETRC)}
+      <DropdownDivider>Other</DropdownDivider>
+      {renderAuthType(AUTH_NONE, 'No Authentication')}
+    </Dropdown>
+  );
+};

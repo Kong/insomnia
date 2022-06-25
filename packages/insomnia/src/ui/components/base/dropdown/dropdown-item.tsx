@@ -6,7 +6,6 @@ interface Props {
   title?: string;
   buttonClass?: React.ElementType;
   stayOpenAfterClick?: boolean;
-  value?: any;
   disabled?: boolean;
   onClick: Function;
   children: ReactNode;
