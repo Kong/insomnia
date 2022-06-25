@@ -1,8 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { createElement, PureComponent, ReactNode } from 'react';
-
-import { AUTOBIND_CFG } from '../../../../common/constants';
+import React, { createElement, ReactNode } from 'react';
 
 interface Props {
   addIcon?: boolean; // TODO(TSCONVERSION) some consumers are passing this prop but it appears to be unused
@@ -17,11 +14,18 @@ interface Props {
   color?: string;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class DropdownItem extends PureComponent<Props> {
-  _handleClick(event: React.MouseEvent) {
-    const { stayOpenAfterClick, onClick, disabled } = this.props;
+export const DropdownItem: React.FC<Props> = ({
+  buttonClass,
+  children,
+  className,
+  color,
+  onClick,
+  stayOpenAfterClick,
+  disabled,
+  ...props
+}) => {
 
+  const handleClick = (event: React.MouseEvent) => {
     if (stayOpenAfterClick) {
       event.stopPropagation();
     }
@@ -29,43 +33,17 @@ export class DropdownItem extends PureComponent<Props> {
     if (!onClick || disabled) {
       return;
     }
-
-    if (this.props.hasOwnProperty('value')) {
-      onClick(this.props.value, event);
-    } else {
-      onClick(event);
-    }
-  }
-
-  render() {
-    const {
-      buttonClass,
-      children,
-      className,
-      color,
-      onClick,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      stayOpenAfterClick,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      ...props
-    } = this.props;
-    const styles = color
-      ? {
-        color,
-      }
-      : {};
-    const inner = (
-      <div className={classnames('dropdown__inner', className)}>
-        <div className="dropdown__text" style={styles}>
-          {children}
-        </div>
+    onClick(event);
+  };
+  const buttonProps = {
+    type: 'button',
+    onClick: handleClick,
+    ...props,
+  };
+  return createElement(buttonClass || 'button', buttonProps,
+    <div className={classnames('dropdown__inner', className)}>
+      <div className="dropdown__text" style={color ? { color } : {}}>
+        {children}
       </div>
-    );
-    const buttonProps = {
-      type: 'button',
-      onClick: this._handleClick,
-      ...props,
-    };
-    return createElement(buttonClass || 'button', buttonProps, inner);
-  }
-}
+    </div>);
+};
