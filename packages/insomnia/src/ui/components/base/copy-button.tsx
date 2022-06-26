@@ -1,76 +1,54 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { clipboard } from 'electron';
 import { Button, ButtonProps } from 'insomnia-components';
-import React, { PureComponent, ReactNode } from 'react';
-
-import { AUTOBIND_CFG } from '../../../common/constants';
+import React, { ReactNode, useEffect, useState } from 'react';
 
 interface Props extends ButtonProps {
-  content: string | Function;
   children?: ReactNode;
-  title?: string;
   confirmMessage?: string;
+  content: string | Function;
+  title?: string;
 }
 
-interface State {
-  showConfirmation: boolean;
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class CopyButton extends PureComponent<Props, State> {
-  state: State = {
-    showConfirmation: false,
-  };
-
-  _triggerTimeout: NodeJS.Timeout | null = null;
-
-  async _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+export const CopyButton: React.FC<Props> = ({
+  children,
+  confirmMessage,
+  content,
+  title,
+  ...other
+}) => {
+  const [showConfirmation, setshowConfirmation] = useState(false);
+  const onClick = async (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    const content =
-      typeof this.props.content === 'string' ? this.props.content : await this.props.content();
+    const toCopy = typeof content === 'string' ? content : await content();
 
-    if (content) {
-      clipboard.writeText(content);
+    if (toCopy) {
+      clipboard.writeText(toCopy);
     }
+    setshowConfirmation(true);
 
-    this.setState({
-      showConfirmation: true,
-    });
-    this._triggerTimeout = setTimeout(() => {
-      this.setState({
-        showConfirmation: false,
-      });
+  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setshowConfirmation(false);
     }, 2000);
-  }
+    return () => clearTimeout(timer);
+  }, [showConfirmation]);
 
-  componentWillUnmount() {
-    if (this._triggerTimeout === null) {
-      return;
-    }
-    clearTimeout(this._triggerTimeout);
-  }
-
-  render() {
-    const {
-      content,
-      children,
-      title,
-      confirmMessage,
-      ...other
-    } = this.props;
-    const { showConfirmation } = this.state;
-    const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
-    return (
-      <Button {...other} title={title} onClick={this._handleClick}>
-        {showConfirmation ? (
-          <span>
-            {confirm} <i className="fa fa-check-circle-o" />
-          </span>
-        ) : (
-          children || 'Copy to Clipboard'
-        )}
-      </Button>
-    );
-  }
-}
+  const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
+  return (
+    <Button
+      {...other}
+      title={title}
+      onClick={onClick}
+    >
+      {showConfirmation ? (
+        <span>
+          {confirm} <i className="fa fa-check-circle-o" />
+        </span>
+      ) : (
+        children || 'Copy to Clipboard'
+      )}
+    </Button>
+  );
+};
