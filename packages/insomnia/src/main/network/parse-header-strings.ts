@@ -7,7 +7,7 @@ import {
   AUTH_DIGEST,
   AUTH_NTLM,
   CONTENT_TYPE_FORM_DATA,
-} from '../common/constants';
+} from '../../common/constants';
 import {
   getContentTypeHeader,
   getHostHeader,
@@ -15,7 +15,7 @@ import {
   hasAcceptHeader,
   hasAuthHeader,
   hasContentTypeHeader,
-} from '../common/misc';
+} from '../../common/misc';
 import { DEFAULT_BOUNDARY } from './multipart';
 
 // Special header value that will prevent the header being sent

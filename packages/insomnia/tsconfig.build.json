@@ -9,7 +9,7 @@
     "jsx": "react",
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": ["node", "vite/client"],
   },
   "include": [
     "**/*.d.ts",

@@ -11,17 +11,15 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import tls from 'tls';
-import { ValueOf } from 'type-fest';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import { version } from '../../package.json';
-import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../common/constants';
-import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../common/misc';
-import { ClientCertificate } from '../models/client-certificate';
-import { ResponseHeader } from '../models/response';
+import { version } from '../../../package.json';
+import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../../common/misc';
+import { ClientCertificate } from '../../models/client-certificate';
+import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
-import { ResponsePatch } from './network';
 import { parseHeaderStrings } from './parse-header-strings';
 
 interface CurlRequestOptions {
@@ -57,8 +55,9 @@ interface SettingsUsedHere {
   httpsProxy: string;
   noProxy: string;
 }
-interface ResponseTimelineEntry {
-  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
+
+export interface ResponseTimelineEntry {
+  name: keyof typeof CurlInfoDebug;
   timestamp: number;
   value: string;
 }
@@ -70,6 +69,26 @@ interface CurlRequestOutput {
   responseBodyPath?: string;
 }
 
+export interface ResponsePatch {
+  bodyCompression?: 'zip' | null;
+  bodyPath?: string;
+  bytesContent?: number;
+  bytesRead?: number;
+  contentType?: string;
+  elapsedTime: number;
+  environmentId?: string | null;
+  error?: string;
+  headers?: ResponseHeader[];
+  httpVersion?: string;
+  message?: string;
+  parentId?: string;
+  settingSendCookies?: boolean;
+  settingStoreCookies?: boolean;
+  statusCode?: number;
+  statusMessage?: string;
+  timelinePath?: string;
+  url?: string;
+}
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
@@ -99,23 +118,23 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       if (cert) {
         curl.setOpt(Curl.option.SSLCERT, cert);
         curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-        debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
       }
       if (pfx) {
         curl.setOpt(Curl.option.SSLCERT, pfx);
         curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
-        debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
       }
       if (key) {
         curl.setOpt(Curl.option.SSLKEY, key);
-        debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
       }
       if (passphrase) {
         curl.setOpt(Curl.option.KEYPASSWD, passphrase);
       }
     });
     const httpVersion = getHttpVersion(settings.preferredHttpVersion);
-    debugTimeline.push({ value: httpVersion.log, name: 'TEXT', timestamp: Date.now() });
+    debugTimeline.push({ value: httpVersion.log, name: 'Text', timestamp: Date.now() });
 
     if (httpVersion.curlHttpVersion) {
       curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
@@ -134,7 +153,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       const { httpProxy, httpsProxy, noProxy } = settings;
       const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
       const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-      debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'TEXT', timestamp: Date.now() });
+      debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
       if (proxy) {
         curl.setOpt(Curl.option.PROXY, proxy);
         curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
@@ -148,14 +167,14 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.TIMEOUT_MS, 0);
     } else {
       curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
-      debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'TEXT', timestamp: Date.now() });
+      debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'Text', timestamp: Date.now() });
     }
     const { validateSSL } = settings;
     if (!validateSSL) {
       curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
       curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
     }
-    debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'TEXT', timestamp: Date.now() });
+    debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
 
     if (req.settingFollowRedirects === 'off') {
       curl.setOpt(Curl.option.FOLLOWLOCATION, false);
@@ -178,7 +197,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       }
       // set-cookies from previous redirects
       if (cookieJar.cookies.length) {
-        debugTimeline.push({ value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`, name: 'TEXT', timestamp: Date.now() });
+        debugTimeline.push({ value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`, name: 'Text', timestamp: Date.now() });
         for (const cookie of cookieJar.cookies) {
           const setCookie = [
             cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
@@ -277,21 +296,22 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         return 0;
       }
 
+      // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
+      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
       let timelineMessage;
-      if (infoType === CurlInfoDebug.DataOut) {
+      const isRequestData = infoType === CurlInfoDebug.DataOut;
+      if (isRequestData) {
         // Ignore large post data messages
         const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
         timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
-      if (infoType === CurlInfoDebug.DataIn) {
+      const isResponseData = infoType === CurlInfoDebug.DataIn;
+      if (isResponseData) {
         timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+        name = 'Text';
       }
-
-      debugTimeline.push({
-        name: infoType === CurlInfoDebug.DataIn ? 'TEXT' : LIBCURL_DEBUG_MIGRATION_MAP[CurlInfoDebug[infoType]],
-        value: timelineMessage || buffer.toString('utf8'),
-        timestamp: Date.now(),
-      });
+      const value = timelineMessage || buffer.toString('utf8');
+      debugTimeline.push({ name, value, timestamp: Date.now() });
       return 0;
     });
 
@@ -300,7 +320,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.enable(CurlFeature.Raw);
     // NOTE: legacy write end callback
     curl.on('end', () => responseBodyWriteStream.end());
-    curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
+    curl.on('end', async (_1: any, _2: any, rawHeaders: Buffer) => {
       const patch = {
         bytesContent: responseBodyBytes,
         bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
@@ -355,18 +375,6 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
   if (isMultipart && path) {
     fs.unlink(path, () => { });
   }
-};
-
-// Because node-libcurl changed some names that we used in the timeline
-const LIBCURL_DEBUG_MIGRATION_MAP: Record<string, string> = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-  '': '',
 };
 
 interface HeaderResult {

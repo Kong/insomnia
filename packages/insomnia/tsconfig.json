@@ -13,7 +13,7 @@
     "package.json",
     "scripts",
     "send-request",
-    "vite.config.ts",
+    "vite.config.ts"
   ],
   "exclude": [
     "**/@types/mocha",
