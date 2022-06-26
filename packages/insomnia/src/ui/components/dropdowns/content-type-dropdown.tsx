@@ -1,9 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
-  AUTOBIND_CFG,
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
@@ -32,9 +30,8 @@ interface Props extends DropdownProps {
 }
 const EMPTY_MIME_TYPE = null;
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ContentTypeDropdown extends PureComponent<Props> {
-  async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
+export const ContentTypeDropdown: React.FC<Props> = ({ children, className, request, contentType, onChange, ...extraProps }) => {
+  const _checkMimeTypeChange = async (body: RequestBody, mimeType: string | null) => {
     // Nothing to do
     if (body.mimeType === mimeType) {
       return;
@@ -62,63 +59,56 @@ export class ContentTypeDropdown extends PureComponent<Props> {
         addCancel: true,
       });
     }
-  }
+  };
 
-  async _handleChangeMimeType(mimeType: string | null) {
-    const { request } = this.props;
-
+  const _handleChangeMimeType = async (mimeType: string | null) => {
     if (request) {
-      await this._checkMimeTypeChange(request.body, mimeType);
+      await _checkMimeTypeChange(request.body, mimeType);
     }
 
-    this.props.onChange(mimeType);
-    trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type:mimeType });
-  }
-
-  _renderDropdownItem(mimeType: string | null, forcedName = '') {
-    const contentType =
-      typeof this.props.contentType === 'string' ? this.props.contentType : EMPTY_MIME_TYPE;
-    const iconClass = mimeType === contentType ? 'fa-check' : 'fa-empty';
+    onChange(mimeType);
+    trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
+  };
+  const _renderDropdownItem = (mimeType: string | null, forcedName = '') => {
+    const contentTypeFallback =
+      typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
+    const iconClass = mimeType === contentTypeFallback ? 'fa-check' : 'fa-empty';
     return (
-      <DropdownItem onClick={this._handleChangeMimeType} value={mimeType}>
+      <DropdownItem onClick={_handleChangeMimeType} value={mimeType}>
         <i className={`fa ${iconClass}`} />
         {forcedName || getContentTypeName(mimeType, true)}
       </DropdownItem>
     );
-  }
-
-  render() {
-    const { children, className, ...extraProps } = this.props;
-    return (
-      <Dropdown beside {...extraProps}>
-        <DropdownButton className={className}>{children}</DropdownButton>
-        <DropdownDivider>
-          <span>
-            <i className="fa fa-bars" /> Structured
-          </span>
-        </DropdownDivider>
-        {this._renderDropdownItem(CONTENT_TYPE_FORM_DATA)}
-        {this._renderDropdownItem(CONTENT_TYPE_FORM_URLENCODED)}
-        {this._renderDropdownItem(CONTENT_TYPE_GRAPHQL)}
-        <DropdownDivider>
-          <span>
-            <i className="fa fa-code" /> Text
-          </span>
-        </DropdownDivider>
-        {this._renderDropdownItem(CONTENT_TYPE_JSON)}
-        {this._renderDropdownItem(CONTENT_TYPE_XML)}
-        {this._renderDropdownItem(CONTENT_TYPE_YAML)}
-        {this._renderDropdownItem(CONTENT_TYPE_EDN)}
-        {this._renderDropdownItem(CONTENT_TYPE_PLAINTEXT)}
-        {this._renderDropdownItem(CONTENT_TYPE_OTHER)}
-        <DropdownDivider>
-          <span>
-            <i className="fa fa-ellipsis-h" /> Other
-          </span>
-        </DropdownDivider>
-        {this._renderDropdownItem(CONTENT_TYPE_FILE)}
-        {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
-      </Dropdown>
-    );
-  }
-}
+  };
+  return (
+    <Dropdown beside {...extraProps}>
+      <DropdownButton className={className}>{children}</DropdownButton>
+      <DropdownDivider>
+        <span>
+          <i className="fa fa-bars" /> Structured
+        </span>
+      </DropdownDivider>
+      {_renderDropdownItem(CONTENT_TYPE_FORM_DATA)}
+      {_renderDropdownItem(CONTENT_TYPE_FORM_URLENCODED)}
+      {_renderDropdownItem(CONTENT_TYPE_GRAPHQL)}
+      <DropdownDivider>
+        <span>
+          <i className="fa fa-code" /> Text
+        </span>
+      </DropdownDivider>
+      {_renderDropdownItem(CONTENT_TYPE_JSON)}
+      {_renderDropdownItem(CONTENT_TYPE_XML)}
+      {_renderDropdownItem(CONTENT_TYPE_YAML)}
+      {_renderDropdownItem(CONTENT_TYPE_EDN)}
+      {_renderDropdownItem(CONTENT_TYPE_PLAINTEXT)}
+      {_renderDropdownItem(CONTENT_TYPE_OTHER)}
+      <DropdownDivider>
+        <span>
+          <i className="fa fa-ellipsis-h" /> Other
+        </span>
+      </DropdownDivider>
+      {_renderDropdownItem(CONTENT_TYPE_FILE)}
+      {_renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
+    </Dropdown>
+  );
+};
