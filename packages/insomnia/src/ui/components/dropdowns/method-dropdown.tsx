@@ -1,8 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 
 import * as constants from '../../../common/constants';
-import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
+import { METHOD_GRPC } from '../../../common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -18,16 +17,22 @@ interface Props {
   showGrpc?: boolean;
   className?: string;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class MethodDropdown extends PureComponent<Props> {
-  _dropdown: Dropdown | null = null;
-
-  _setDropdownRef(dropdown: Dropdown) {
-    this._dropdown = dropdown;
-  }
-
-  _handleSetCustomMethod() {
+export const MethodDropdown = forwardRef<{toggle:()=>void}, Props>(({
+  method,
+  right,
+  onChange,
+  showGrpc,
+  className,
+}, ref) => {
+  const dropdownRef = useRef<Dropdown>(null);
+  const toggle = useCallback(() => {
+    if (dropdownRef.current) {
+      dropdownRef.current.toggle();
+    }
+  }, [dropdownRef]);
+  useImperativeHandle(ref, () => ({ toggle }), [toggle]
+  );
+  const _handleSetCustomMethod = () => {
     let recentMethods: string[];
 
     try {
@@ -39,7 +44,7 @@ export class MethodDropdown extends PureComponent<Props> {
 
     // Prompt user for the method
     showPrompt({
-      defaultValue: this.props.method,
+      defaultValue: method,
       title: 'HTTP Method',
       submitName: 'Done',
       upperCase: true,
@@ -68,60 +73,43 @@ export class MethodDropdown extends PureComponent<Props> {
         recentMethods.unshift(method);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
         // Invoke callback
-        this.props.onChange(method);
+        onChange(method);
       },
     });
-  }
+  };
 
-  _handleChange(method: string) {
-    this.props.onChange(method);
-  }
-
-  toggle() {
-    this._dropdown?.toggle(true);
-  }
-
-  render() {
-    const {
-      method,
-      right,
-      onChange,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      showGrpc,
-      ...extraProps
-    } = this.props;
-    const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
-    return (
-      <Dropdown ref={this._setDropdownRef} className="method-dropdown" right={right}>
-        <DropdownButton {...extraProps}>
-          <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
-          <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
-        {constants.HTTP_METHODS.map(method => (
-          <DropdownItem
-            key={method}
-            className={`http-method-${method}`}
-            onClick={() => this._handleChange(method)}
-          >
-            {method}
-          </DropdownItem>
-        ))}
-        {showGrpc && (
-          <>
-            <DropdownDivider />
-            <DropdownItem className="method-grpc" onClick={() => this._handleChange(METHOD_GRPC)}>
-              {GRPC_LABEL}
-            </DropdownItem>
-          </>
-        )}
-        <DropdownDivider />
+  const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
+  return (
+    <Dropdown ref={dropdownRef} className="method-dropdown" right={right}>
+      <DropdownButton className={className}>
+        <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
+        <i className="fa fa-caret-down space-left" />
+      </DropdownButton>
+      {constants.HTTP_METHODS.map(method => (
         <DropdownItem
-          className="http-method-custom"
-          onClick={this._handleSetCustomMethod}
+          key={method}
+          className={`http-method-${method}`}
+          onClick={() => onChange(method)}
         >
-          Custom Method
+          {method}
         </DropdownItem>
-      </Dropdown>
-    );
-  }
-}
+      ))}
+      {showGrpc && (
+        <>
+          <DropdownDivider />
+          <DropdownItem className="method-grpc" onClick={() => onChange(METHOD_GRPC)}>
+            {GRPC_LABEL}
+          </DropdownItem>
+        </>
+      )}
+      <DropdownDivider />
+      <DropdownItem
+        className="http-method-custom"
+        onClick={_handleSetCustomMethod}
+      >
+        Custom Method
+      </DropdownItem>
+    </Dropdown>
+  );
+});
+MethodDropdown.displayName = 'MethodDropdown';
