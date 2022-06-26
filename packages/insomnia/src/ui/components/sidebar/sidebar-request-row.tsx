@@ -15,7 +15,7 @@ import { createRequest } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
-import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
+import { RequestActionsDropdown, RequestActionsDropdownHandle } from '../dropdowns/request-actions-dropdown';
 import { GrpcSpinner } from '../grpc-spinner';
 import { showModal } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -99,7 +99,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   const [renderedUrl, setRenderedUrl] = useState('');
 
-  const requestActionsDropdown = useRef<RequestActionsDropdown | null>(null);
+  const requestActionsDropdown = useRef<RequestActionsDropdownHandle>(null);
 
   const handleShowRequestActions = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

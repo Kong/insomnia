@@ -36,8 +36,11 @@ interface Props extends Pick<DropdownProps, 'right'> {
   request: Request | GrpcRequest;
   requestGroup?: RequestGroup;
 }
-
-export const RequestActionsDropdown: React.FC<Props> = forwardRef<{show:()=>void; hide:()=>void}, Props>(({
+export interface RequestActionsDropdownHandle {
+  show:()=>void;
+  hide:()=>void;
+}
+export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, Props>(({
   activeEnvironment,
   activeProject,
   handleCopyAsCurl,

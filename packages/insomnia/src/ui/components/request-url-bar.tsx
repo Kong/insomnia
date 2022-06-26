@@ -14,7 +14,7 @@ import { DropdownHint } from './base/dropdown/dropdown-hint';
 import { DropdownItem } from './base/dropdown/dropdown-item';
 import { PromptButton } from './base/prompt-button';
 import { OneLineEditor } from './codemirror/one-line-editor';
-import { MethodDropdown } from './dropdowns/method-dropdown';
+import { MethodDropdown, MethodDropdownHandle } from './dropdowns/method-dropdown';
 import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals/index';
 
@@ -45,7 +45,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
   _dropdown: Dropdown | null = null;
-  _methodDropdown: MethodDropdown | null = null;
+  _methodDropdown: MethodDropdownHandle | null = null;
   _input: OneLineEditor | null = null;
   state: State = {
     currentInterval: null,
@@ -58,7 +58,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     this._dropdown = dropdown;
   }
 
-  _setMethodDropdownRef(methodDropdown: MethodDropdown) {
+  _setMethodDropdownRef(methodDropdown: MethodDropdownHandle) {
     this._methodDropdown = methodDropdown;
   }
 
@@ -370,9 +370,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
             method={method}
-          >
-            {method} <i className="fa fa-caret-down" />
-          </MethodDropdown>
+          />
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor
               key={uniquenessKey}

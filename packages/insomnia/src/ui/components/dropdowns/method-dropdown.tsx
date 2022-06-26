@@ -17,7 +17,10 @@ interface Props {
   showGrpc?: boolean;
   className?: string;
 }
-export const MethodDropdown = forwardRef<{toggle:()=>void}, Props>(({
+export interface MethodDropdownHandle {
+  toggle:()=>void;
+}
+export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
   method,
   right,
   onChange,

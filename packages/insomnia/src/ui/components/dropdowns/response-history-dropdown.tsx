@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { Fragment, PureComponent, useRef } from 'react';
+import React, { Fragment, useRef } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
@@ -83,7 +81,7 @@ export const ResponseHistoryDropdown: React.FC<Props> = ({
         key={response._id}
         disabled={active}
         value={response}
-        onClick={_handleSetActiveResponse}
+        onClick={handleSetActiveResponse}
       >
         {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
         <StatusTag
