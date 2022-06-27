@@ -2,14 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "emitDeclarationOnly": true,
+    "experimentalDecorators": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "lib": ["DOM"],
     "outDir": "dist",
     "rootDir": "src",
-    "jsx": "react",
-    "isolatedModules": true,
-    "lib": ["DOM"],
-    "experimentalDecorators": true,
-    "emitDeclarationOnly": true,
-    "resolveJsonModule": true
   },
   "include": [
     "src"
@@ -17,6 +16,6 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx",
-    "src/jest"
-  ]
+    "src/jest",
+  ],
 }

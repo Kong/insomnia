@@ -1,15 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "isolatedModules": false,
+    "jsx": "react",
     "outDir": "dist",
     "rootDir": "src",
-    "resolveJsonModule": true,
-    "strict": true,
-    "jsx": "react",
-    "isolatedModules": false,
-    "emitDeclarationOnly": true,
-    "sourceMap": false,
     "skipLibCheck": true,
+    "sourceMap": false,
   },
-  "include": ["src"]
+  "include": ["src"],
 }

@@ -31,8 +31,16 @@ export default async function build(options: Options) {
       'process.env.INSOMNIA_ENV': JSON.stringify('production'),
       'process.env.BUILD_DATE': JSON.stringify(new Date()),
     };
-
-  return esbuild.build({
+  const preload = esbuild.build({
+    entryPoints: ['./src/preload.ts'],
+    outfile: path.join(outdir, 'preload.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    format: 'cjs',
+    external: ['electron'],
+  });
+  const main = esbuild.build({
     entryPoints: ['./src/main.development.ts'],
     outfile: path.join(outdir, 'main.min.js'),
     bundle: true,
@@ -47,6 +55,7 @@ export default async function build(options: Options) {
       ...Object.keys(builtinModules),
     ],
   });
+  return Promise.all([main, preload]);
 }
 
 // Build if ran as a cli script

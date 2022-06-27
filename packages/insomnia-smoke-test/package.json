@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "3.3.0-beta.0",
+  "version": "3.3.1-beta.0",
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -34,7 +34,9 @@
     "@playwright/test": "^1.20.2",
     "@types/concurrently": "^6.0.1",
     "@types/express": "^4.17.11",
+    "@types/express-graphql": "^0.9.0",
     "@types/faker": "^5.5.5",
+    "@types/graphql": "^14.5.0",
     "@types/mkdirp": "^1.0.1",
     "@types/oidc-provider": "^7.8.1",
     "@types/ramda": "^0.27.45",
@@ -44,8 +46,10 @@
     "execa": "^5.0.0",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
+    "express-graphql": "^0.12.0",
     "faker": "^5.1.0",
     "get-bin-path": "^5.1.0",
+    "graphql": "^15.8.0",
     "jest": "^28.1.0",
     "mkdirp": "^1.0.4",
     "oidc-provider": "^7.10.6",

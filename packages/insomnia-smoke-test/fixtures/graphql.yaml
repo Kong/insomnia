@@ -1,0 +1,65 @@
+_type: export
+__export_format: 4
+__export_date: 2022-06-15T10:44:33.319Z
+__export_source: insomnia.desktop.app:v2022.4.0-beta.1
+resources:
+  - _id: req_63e5c8a8d1674bb39ba6df1d0eb452a0
+    parentId: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    modified: 1655289849596
+    created: 1655289826760
+    url: localhost:4010/graphql
+    name: GraphQL request
+    description: ""
+    method: POST
+    body:
+      mimeType: application/graphql
+      text: '{"query":"query {\n\thello,\n\tbearer\n}"}'
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/json
+        id: pair_91da32f74847489ab06da669db0b425f
+    authentication: {}
+    metaSortKey: -1655289826760
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    parentId: null
+    modified: 1655289816535
+    created: 1655289816535
+    name: Smoke GraphQL
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_4da443f9b94cc634b24ccbeb89a3b99ad9a073c7
+    parentId: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    modified: 1655289816558
+    created: 1655289816558
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1655289816558
+    _type: environment
+  - _id: jar_4da443f9b94cc634b24ccbeb89a3b99ad9a073c7
+    parentId: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    modified: 1655289816559
+    created: 1655289816559
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_93316b5a703d4f65a7e82328c0284835
+    parentId: wrk_d8bfe72fd18b42daa55d2ccc08c9eecb
+    modified: 1655289816545
+    created: 1655289816545
+    fileName: Smoke GraphQL
+    contents: ""
+    contentType: yaml
+    _type: api_spec

@@ -2,15 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "module": "CommonJS",
     "outDir": "dist",
     "rootDir": "src",
-    "resolveJsonModule": true
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
-    "**/*.test.ts"
-  ]
+    "**/*.test.ts",
+  ],
 }

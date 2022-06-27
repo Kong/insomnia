@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-common",
-  "version": "3.3.0-beta.0",
+  "version": "3.3.1-beta.0",
   "homepage": "https://insomnia.rest",
   "description": "Top-level entities and utilities for Insomnia",
   "author": "Kong <office@konghq.com>",

@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-plugin-response",
-  "version": "3.3.0-beta.0",
+  "version": "3.3.1-beta.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia response template tag",
   "license": "MIT",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "iconv-lite": "^0.6.3",
-    "insomnia-xpath": "3.3.0-beta.0",
+    "insomnia-xpath": "3.3.1-beta.0",
     "jsonpath-plus": "^6.0.1"
   }
 }

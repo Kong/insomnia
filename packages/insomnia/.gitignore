@@ -3,3 +3,6 @@ build
 
 # Generated
 src/main.min.js
+src/main.min.js.map
+src/preload.js
+src/preload.js.map

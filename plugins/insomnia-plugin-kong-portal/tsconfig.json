@@ -4,10 +4,10 @@
     "rootDir": ".",
   },
   "include": [
-    "src",
     ".eslintrc.js",
-    "package.json",
     "esbuild.ts",
+    "package.json",
+    "src",
   ],
   "exclude": [
     "dist",

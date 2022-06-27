@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
+import { OpenAPIV3 } from 'openapi-types';
 
-import { OA3SecurityScheme, OA3SecuritySchemeOpenIdConnect } from '../types/openapi3';
+import { OA3SecurityScheme } from '../types/openapi3';
 import { tags } from './jest/test-helpers';
 import { generateSecurityPlugin } from './security-plugins';
 
@@ -35,7 +36,7 @@ describe('security-plugins', () => {
           enabled: true,
           protocols: ['http', 'https'],
         },
-      } as OA3SecuritySchemeOpenIdConnect;
+      } as OpenAPIV3.OpenIdSecurityScheme;
 
       const scopesRequired = ['required_scope', 'ziltoid_omniscient_power'];
       const result = generateSecurityPlugin(scheme, scopesRequired, tags);

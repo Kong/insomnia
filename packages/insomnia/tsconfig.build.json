@@ -1,21 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "isolatedModules": true,
+    "jsx": "react",
     "outDir": "./build",
     "rootDir": ".",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "strictNullChecks": true,
-    "jsx": "react",
-    "experimentalDecorators": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    "strictNullChecks": true,
+    "types": ["node", "vite/client"],
   },
   "include": [
     "**/*.d.ts",
-    "src",
     "**/insomnia.config.json",
-    "package.json"
+    "package.json",
+    "src",
   ],
   "exclude": [
     "**/*.test.ts",
@@ -26,12 +25,12 @@
     "**/__snapshots__",
     "**/__tests__",
     "**/main.min.js",
-    "src/coverage",
     "__jest__",
     "assets",
     "bin",
     "config",
     "jest.config.js",
     "node_modules",
-  ]
+    "src/coverage",
+  ],
 }
