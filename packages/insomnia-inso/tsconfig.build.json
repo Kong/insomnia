@@ -2,12 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": [
     "src",
     "package.json",
-    "**/*.d.ts"
+    "**/*.d.ts",
   ],
   "exclude": [
     "node_modules",
@@ -17,10 +17,9 @@
     "bin",
     "assets",
     "scripts",
-    
     "**/@types/mocha",
     "**/*.test.ts",
     "**/__snapshots__/**",
-    "**/__mocks__/*"
-  ]
+    "**/__mocks__/*",
+  ],
 }

@@ -15,7 +15,7 @@
     "**/*.d.ts",
     "src",
     "**/insomnia.config.json",
-    "package.json"
+    "package.json",
   ],
   "exclude": [
     "**/*.test.ts",
@@ -33,5 +33,5 @@
     "config",
     "jest.config.js",
     "node_modules",
-  ]
+  ],
 }

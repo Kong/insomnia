@@ -5,12 +5,12 @@
     "module": "CommonJS",
     "outDir": "dist",
     "rootDir": "src",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
-    "**/*.test.ts"
-  ]
+    "**/*.test.ts",
+  ],
 }

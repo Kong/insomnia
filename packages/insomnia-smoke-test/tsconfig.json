@@ -2,7 +2,7 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": false,
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": [
     "__jest__",
@@ -17,6 +17,6 @@
     "**/*.d.ts",
   ],
   "exclude": [
-    "dist"
-  ]
+    "dist",
+  ],
 }

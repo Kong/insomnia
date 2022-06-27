@@ -9,7 +9,7 @@
     "lib": ["DOM"],
     "experimentalDecorators": true,
     "emitDeclarationOnly": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   },
   "include": [
     "src"
@@ -17,6 +17,6 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx",
-    "src/jest"
-  ]
+    "src/jest",
+  ],
 }

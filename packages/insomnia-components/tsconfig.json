@@ -8,9 +8,9 @@
     "jest.config.js",
     ".eslintrc.js",
     "vite.config.ts",
-    "svgr.config.js"
+    "svgr.config.js",
   ],
   "exclude": [
-    "dist"
-  ]
+    "dist",
+  ],
 }

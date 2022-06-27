@@ -7,10 +7,10 @@
     "resolveJsonModule": true,
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
     "**/*.test.ts",
-    "jest"
-  ]
+    "jest",
+  ],
 }

@@ -5,7 +5,7 @@
     "outDir": "dist",
     "rootDir": ".",
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
   },
   "include": [
     "cli",
@@ -18,5 +18,5 @@
   "exclude": [
     "dist",
     "**/*.test.ts",
-  ]
+  ],
 }

@@ -9,7 +9,7 @@
   "include": [
     "src",
     "**/*.schema.json",
-    "**/*.d.ts"
+    "**/*.d.ts",
   ],
   "exclude": [
     "dist",

@@ -8,11 +8,10 @@
     "src",
     "jest.config.js",
     ".eslintrc.js",
-    "package.json"
-
+    "package.json",
   ],
   "exclude": [
     "bin",
-    "dist"
-  ]
+    "dist",
+  ],
 }

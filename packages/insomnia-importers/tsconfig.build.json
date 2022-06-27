@@ -5,15 +5,15 @@
     "outDir": "dist",
     "rootDir": ".",
     "lib": ["ES2019"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   },
   "include": [
     "src",
-    "package.json"
+    "package.json",
   ],
   "exclude": [
     "**/*.test.ts",
     "bin",
-    "dist"
-  ]
+    "dist",
+  ],
 }

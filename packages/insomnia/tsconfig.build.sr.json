@@ -7,6 +7,6 @@
   "include": [
     "**/*.d.ts",
     "package.json",
-    "send-request"
-  ]
+    "send-request",
+  ],
 }

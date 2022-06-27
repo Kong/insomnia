@@ -8,7 +8,7 @@
     "src",
     "jest.config.js",
     ".eslintrc.js",
-    "**/*.d.ts"
+    "**/*.d.ts",
   ],
   "exclude": [
     "dist",
