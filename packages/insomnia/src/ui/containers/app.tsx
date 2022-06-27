@@ -82,6 +82,7 @@ import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
@@ -321,7 +322,7 @@ class App extends PureComponent<AppProps, State> {
           }
 
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestGroupCreate(parentId);
+          createRequestGroup(parentId);
         },
       ],
       [
@@ -370,26 +371,6 @@ class App extends PureComponent<AppProps, State> {
       activeRequest ? activeRequest._id : 'n/a',
       activeEnvironment ? activeEnvironment._id : 'n/a',
     );
-  }
-
-  _requestGroupCreate(parentId: string) {
-    showPrompt({
-      title: 'New Folder',
-      defaultValue: 'My Folder',
-      submitName: 'Create',
-      label: 'Name',
-      selectText: true,
-      onComplete: async name => {
-        const requestGroup = await models.requestGroup.create({
-          parentId,
-          name,
-        });
-        await models.requestGroupMeta.create({
-          parentId: requestGroup._id,
-          collapsed: false,
-        });
-      },
-    });
   }
 
   async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
@@ -1463,7 +1444,6 @@ class App extends PureComponent<AppProps, State> {
                   handleResetDragPaneVertical={this._resetDragPaneVertical}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                  handleCreateRequestGroup={this._requestGroupCreate}
                   handleGenerateCode={App._handleGenerateCode}
                   handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
                   handleCopyAsCurl={this._handleCopyAsCurl}
