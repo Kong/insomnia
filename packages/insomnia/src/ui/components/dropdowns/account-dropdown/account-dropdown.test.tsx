@@ -1,10 +1,13 @@
 import { describe, expect, test } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Provider } from 'react-redux';
 import configureMockStore, { MockStoreEnhanced } from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
+import { registerModal } from '../../modals';
+import { LoginModal } from '../../modals/login-modal';
 import { AccountDropdownButton } from './account-dropdown';
 
 const middlewares = [thunk];
@@ -36,7 +39,6 @@ describe('<AccountDropdownButton />', () => {
     expect(screen.getByText('Log In')).toBeDefined();
   });
 
-  // TODO: try to define test cases of how this component should behave
   test('renders "Log In" label without paid feature ads', async () => {
     const container = getDropdownContainer();
     const store = await createMockStore({ disablePaidFeatureAds: true });
@@ -48,6 +50,7 @@ describe('<AccountDropdownButton />', () => {
     expect(screen.getByText('Log In')).toBeDefined();
     expect(screen.queryByText('Upgrde Now')).toBeNull();
   });
+
   test('renders "Log In" label with paid feature ads', async () => {
     const container = getDropdownContainer();
     const store = await createMockStore({ disablePaidFeatureAds: false });
@@ -61,5 +64,43 @@ describe('<AccountDropdownButton />', () => {
     expect(screen.getByText('Upgrade Now')).toBeDefined();
   });
 
-  test.todo('renders "Log Out" label');
+  test('opens a Login modal when "Log In" button is clicked', async () => {
+    const user = userEvent.setup();
+    const container = getDropdownContainer();
+    const store = await createMockStore({ disablePaidFeatureAds: true });
+
+    render(
+      <Provider store={store}>
+        <AccountDropdownButton />
+        <LoginModal ref={registerModal} />
+      </Provider>, { container }
+    );
+
+    const loginBtn = screen.getByText('Log In');
+    expect(loginBtn).toBeDefined();
+
+    await user.click(loginBtn);
+
+    expect(await screen.findByTestId('LoginModal__form')).toBeDefined();
+    expect(await screen.getByText('Email')).toBeDefined();
+    expect(await screen.getByText('Password')).toBeDefined();
+  });
+
+  test('renders "Logout" label when session is logged in', async () => {
+    global.localStorage.setItem('currentSessionId', 'sessionIdForTesting');
+    const container = getDropdownContainer();
+    const store = await createMockStore({ disablePaidFeatureAds: true });
+
+    render(
+      <Provider store={store}>
+        <AccountDropdownButton />
+      </Provider>, { container }
+    );
+
+    expect(screen.getByText('Logout')).toBeDefined();
+    global.localStorage.clear();
+  });
+
+  // only test the presentation behaviour without testing the session logic (should be tested over there)
+  test.todo('calls session.logout callback when "Logout" button is clicked');
 });

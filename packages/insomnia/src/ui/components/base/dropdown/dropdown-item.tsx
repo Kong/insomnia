@@ -21,6 +21,7 @@ interface Props {
 export class DropdownItem extends PureComponent<Props> {
   _handleClick(event: React.MouseEvent) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
+    console.log('clicked', onClick);
 
     if (stayOpenAfterClick) {
       event.stopPropagation();
@@ -33,6 +34,7 @@ export class DropdownItem extends PureComponent<Props> {
     if (this.props.hasOwnProperty('value')) {
       onClick(this.props.value, event);
     } else {
+      console.log('?????...');
       onClick(event);
     }
   }
