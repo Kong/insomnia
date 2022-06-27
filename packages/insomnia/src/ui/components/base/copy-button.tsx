@@ -1,9 +1,8 @@
 import { clipboard } from 'electron';
 import { Button, ButtonProps } from 'insomnia-components';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface Props extends ButtonProps {
-  children?: ReactNode;
   confirmMessage?: string;
   content: string | Function;
   title?: string;
@@ -14,7 +13,7 @@ export const CopyButton: React.FC<Props> = ({
   confirmMessage,
   content,
   title,
-  ...other
+  ...buttonProps
 }) => {
   const [showConfirmation, setshowConfirmation] = useState(false);
   const onClick = async (event: React.MouseEvent) => {
@@ -38,7 +37,7 @@ export const CopyButton: React.FC<Props> = ({
   const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
   return (
     <Button
-      {...other}
+      {...buttonProps}
       title={title}
       onClick={onClick}
     >

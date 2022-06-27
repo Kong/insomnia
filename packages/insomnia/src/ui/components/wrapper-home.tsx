@@ -8,9 +8,8 @@ import {
   DropdownItem,
   SvgIcon,
 } from 'insomnia-components';
-import React, { useRef, useState } from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, bindActionCreators, Dispatch } from 'redux';
+import React, { useCallback, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
 
@@ -28,7 +27,6 @@ import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace'
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import { RootState } from '../redux/modules';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
@@ -52,8 +50,7 @@ const CreateButton = styled(Button)({
   },
 });
 
-interface Props extends ReturnType<typeof mapDispatchToProps>,
-ReturnType<typeof mapStateToProps> {
+interface Props {
   wrapperProps: WrapperProps;
 }
 
@@ -151,23 +148,25 @@ const mapWorkspaceToWorkspaceCard = ({
   };
 };
 
-const WrapperHome: React.FC<Props> = (({
-  activeProject,
-  isLoading,
-  isLoggedIn,
-  sortOrder,
-  handleSetDashboardSortOrder,
-  wrapperProps,
-  apiSpecs,
-  workspacesForActiveProject,
-  handleActivateWorkspace,
-  workspaceMetas,
-  handleGitCloneWorkspace,
-  handleImportClipboard,
-  handleImportUri,
-  handleCreateWorkspace,
-  handleImportFile,
-}) => {
+const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
+  const sortOrder = useSelector(selectDashboardSortOrder);
+  const activeProject = useSelector(selectActiveProject);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const isLoading = useSelector(selectIsLoading);
+  const apiSpecs = useSelector(selectApiSpecs);
+  const workspaceMetas = useSelector(selectWorkspaceMetas);
+  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
+
+  const dispatch = useDispatch();
+
+  const handleCreateWorkspace = useCallback(({ scope, onCreate }) => dispatch(createWorkspace({ scope, onCreate })), [dispatch]);
+  const handleGitCloneWorkspace = useCallback(({ createFsClient }) => dispatch(cloneGitRepository({ createFsClient })), [dispatch]);
+  const handleImportFile = useCallback(({ forceToWorkspace }) => dispatch(importFile({ forceToWorkspace })), [dispatch]);
+  const handleImportUri = useCallback((uri, { forceToWorkspace }) => dispatch(importUri(uri, { forceToWorkspace })), [dispatch]);
+  const handleImportClipboard = useCallback(({ forceToWorkspace }) => dispatch(importClipBoard({ forceToWorkspace })), [dispatch]);
+  const handleSetDashboardSortOrder = useCallback(sortOrder => dispatch(setDashboardSortOrder(sortOrder)), [dispatch]);
+  const handleActivateWorkspace = useCallback(({ workspace }) => dispatch(activateWorkspace({ workspace })), [dispatch]);
+
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [filter, setFilter] = useState('');
 
@@ -177,12 +176,12 @@ const WrapperHome: React.FC<Props> = (({
     .map(mapWorkspaceToWorkspaceCard({ workspaceMetas, apiSpecs }))
     .filter(isNotNullOrUndefined)
     .sort(orderDashboardCards(sortOrder))
-    .map(props => (
+    .map(card => (
       <WorkspaceCard
-        {...props}
-        key={props.apiSpec._id}
+        {...card}
+        key={card.apiSpec._id}
         activeProject={activeProject}
-        onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
+        onSelect={() => handleActivateWorkspace({ workspace: card.workspace })}
         filter={filter}
       />
     ));
@@ -244,7 +243,7 @@ const WrapperHome: React.FC<Props> = (({
                     icon={<i className="fa fa-bars" />}
                     onClick={() => handleCreateWorkspace({
                       scope: WorkspaceScopeKeys.collection,
-                      onCreate: async workspace => {
+                      onCreate: async (workspace: Workspace) => {
                         // Don't mark for sync if not logged in at the time of creation
                         if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
                           await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
@@ -308,39 +307,4 @@ const WrapperHome: React.FC<Props> = (({
   );
 });
 
-const mapStateToProps = (state: RootState) => ({
-  sortOrder: selectDashboardSortOrder(state),
-  activeProject: selectActiveProject(state),
-  isLoggedIn: selectIsLoggedIn(state),
-  isLoading: selectIsLoading(state),
-  apiSpecs: selectApiSpecs(state),
-  workspaceMetas: selectWorkspaceMetas(state),
-  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
-  const bound = bindActionCreators(
-    {
-      createWorkspace,
-      cloneGitRepository,
-      importFile,
-      importClipBoard,
-      importUri,
-      setDashboardSortOrder,
-      activateWorkspace,
-    },
-    dispatch
-  );
-
-  return ({
-    handleCreateWorkspace: bound.createWorkspace,
-    handleGitCloneWorkspace: bound.cloneGitRepository,
-    handleImportFile: bound.importFile,
-    handleImportUri: bound.importUri,
-    handleImportClipboard: bound.importClipBoard,
-    handleSetDashboardSortOrder: bound.setDashboardSortOrder,
-    handleActivateWorkspace: bound.activateWorkspace,
-  });
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(WrapperHome);
+export default WrapperHome;

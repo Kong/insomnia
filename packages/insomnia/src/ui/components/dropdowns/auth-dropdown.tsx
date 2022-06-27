@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 
 import {
   AUTH_ASAP,
@@ -24,7 +24,6 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
 interface Props {
-  children?: ReactNode;
   className?: string;
   onChange: (r: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
@@ -35,8 +34,8 @@ export const AuthDropdown: React.FC<Props> = ({ children, className, onChange, r
   const renderAuthType = (type: string, nameOverride: string | null = null) => {
     const currentType = authentication.type || AUTH_NONE;
     return (
-      <DropdownItem onClick={() => handleTypeChange(type)}>
-        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
+      <DropdownItem onClick={handleTypeChange} value={type}>
+        {<i className={`fa fa-${currentType === type ? 'check' : 'empty'}`} />}{' '}
         {nameOverride || getAuthTypeName(type, true)}
       </DropdownItem>
     );

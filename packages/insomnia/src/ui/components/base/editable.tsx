@@ -39,17 +39,13 @@ export const Editable: React.FC<Props> = ({
   renderReadView,
   singleClick,
   value,
-  ...extra
+  ...childProps
 }) => {
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const _handleSingleClickEditStart = () => {
-    if (singleClick) {
-      _handleEditStart();
-    }
-  };
+  const onSingleClick = () => singleClick && handleEditStart();
 
-  const _handleEditStart = () => {
+  const handleEditStart = () => {
     setEditing(true);
 
     setTimeout(() => {
@@ -62,7 +58,7 @@ export const Editable: React.FC<Props> = ({
     }
   };
 
-  const _handleEditEnd = () => {
+  const handleEditEnd = () => {
     if (shouldSave(value, inputRef.current?.value.trim(), preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
       onSubmit(inputRef.current?.value.trim());
@@ -73,10 +69,10 @@ export const Editable: React.FC<Props> = ({
     setTimeout(() => setEditing(false), 100);
   };
 
-  const _handleEditKeyDown = (event: KeyboardEvent) => {
+  const handleEditKeyDown = (event: KeyboardEvent) => {
     if (event.keyCode === 13) {
       // Pressed Enter
-      _handleEditEnd();
+      handleEditEnd();
     }
     if (event.keyCode === 27) {
       // Pressed Escape
@@ -87,7 +83,7 @@ export const Editable: React.FC<Props> = ({
         // Set the input to the original value
         inputRef.current.value = value;
 
-        _handleEditEnd();
+        handleEditEnd();
       }
     }
   };
@@ -96,14 +92,14 @@ export const Editable: React.FC<Props> = ({
     return (
       // KeydownBinder must be used here to properly stop propagation
       // from reaching other scoped KeydownBinders
-      <KeydownBinder onKeydown={_handleEditKeyDown} scoped>
+      <KeydownBinder onKeydown={handleEditKeyDown} scoped>
         <input
-          {...extra}
+          {...childProps}
           className={`editable ${className || ''}`}
           type="text"
           ref={inputRef}
           defaultValue={initialValue}
-          onBlur={_handleEditEnd}
+          onBlur={handleEditEnd}
         />
       </KeydownBinder>
     );
@@ -111,9 +107,9 @@ export const Editable: React.FC<Props> = ({
   const readViewProps = {
     className: `editable ${className} ${!initialValue && 'empty'}`,
     title: singleClick ? 'Click to edit' : 'Double click to edit',
-    onClick: _handleSingleClickEditStart,
-    onDoubleClick: _handleEditStart,
-    ...extra,
+    onClick: onSingleClick,
+    onDoubleClick: handleEditStart,
+    ...childProps,
   };
   return renderReadView ?
     renderReadView(initialValue, readViewProps)

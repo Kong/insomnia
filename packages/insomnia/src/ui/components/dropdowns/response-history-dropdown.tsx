@@ -71,7 +71,7 @@ export const ResponseHistoryDropdown: React.FC<Props> = ({
 
     categories.other.push(response);
   });
-  const renderDropdownItem = (response: Response) => {
+  const renderResponseRow = (response: Response) => {
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(v => v._id === response.requestVersionId);
@@ -113,7 +113,7 @@ export const ResponseHistoryDropdown: React.FC<Props> = ({
     );
   };
 
-  const _handleKeydown = (event: KeyboardEvent) => {
+  const handleKeydown = (event: KeyboardEvent) => {
     executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
       dropdownRef.current?.toggle(true);
     });
@@ -121,7 +121,7 @@ export const ResponseHistoryDropdown: React.FC<Props> = ({
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
   return (
-    <KeydownBinder onKeydown={_handleKeydown}>
+    <KeydownBinder onKeydown={handleKeydown}>
       <Dropdown
         ref={dropdownRef}
         key={activeResponse ? activeResponse._id : 'n/a'}
@@ -148,15 +148,15 @@ export const ResponseHistoryDropdown: React.FC<Props> = ({
         </DropdownItem>
         <Fragment>
           <DropdownDivider>Just Now</DropdownDivider>
-          {categories.minutes.map(renderDropdownItem)}
+          {categories.minutes.map(renderResponseRow)}
           <DropdownDivider>Less Than Two Hours Ago</DropdownDivider>
-          {categories.hours.map(renderDropdownItem)}
+          {categories.hours.map(renderResponseRow)}
           <DropdownDivider>Today</DropdownDivider>
-          {categories.today.map(renderDropdownItem)}
+          {categories.today.map(renderResponseRow)}
           <DropdownDivider>This Week</DropdownDivider>
-          {categories.week.map(renderDropdownItem)}
+          {categories.week.map(renderResponseRow)}
           <DropdownDivider>Older Than This Week</DropdownDivider>
-          {categories.other.map(renderDropdownItem)}
+          {categories.other.map(renderResponseRow)}
         </Fragment>
       </Dropdown>
     </KeydownBinder>

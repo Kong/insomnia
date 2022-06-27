@@ -67,11 +67,11 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
   useImperativeHandle(ref, () => ({ show, hide }), [show, hide]);
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
-  const _onOpen = async () => {
+  const onOpen = async () => {
     const actionPlugins = await getRequestActions();
     setActionPlugins(actionPlugins);
   };
-  const _handlePluginClick = async (p: RequestAction) => {
+  const handlePluginClick = async (p: RequestAction) => {
     setLoadingActions({ ...loadingActions, [p.label]: true });
 
     try {
@@ -98,7 +98,7 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown ref={dropdownRef} onOpen={_onOpen}>
+    <Dropdown ref={dropdownRef} onOpen={onOpen}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
@@ -145,7 +145,7 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
         <DropdownItem
           key={`${plugin.plugin.name}::${plugin.label}`}
           value={plugin}
-          onClick={_handlePluginClick}
+          onClick={handlePluginClick}
           stayOpenAfterClick
         >
           {loadingActions[plugin.label] ? (

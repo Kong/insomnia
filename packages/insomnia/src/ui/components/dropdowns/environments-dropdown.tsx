@@ -32,13 +32,10 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
   handleChangeEnvironment,
   hotKeyRegistry,
   workspace,
-  ...other
+  ...dropdownProps
 }) => {
   const dropdownRef = useRef<Dropdown>(null);
-  const _handleActivateEnvironment = (environmentId?: string) => {
-    handleChangeEnvironment(environmentId);
-  };
-  const _handleShowEnvironmentModal = () => {
+  const handleShowEnvironmentModal = () => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);
   };
   const _handleKeydown = (event: KeyboardEvent) => {
@@ -57,7 +54,7 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
     <KeydownBinder onKeydown={_handleKeydown}>
       <Dropdown
         ref={dropdownRef}
-        {...(other as Record<string, any>)}
+        {...(dropdownProps as Record<string, any>)}
         className={className}
       >
         <DropdownButton className="btn btn--super-compact no-wrap">
@@ -91,7 +88,7 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
           <DropdownItem
             key={environment._id}
             value={environment._id}
-            onClick={_handleActivateEnvironment}
+            onClick={handleChangeEnvironment}
           >
             <i
               className="fa fa-random"
@@ -104,13 +101,13 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
           </DropdownItem>
         ))}
 
-        <DropdownItem onClick={_handleActivateEnvironment}>
+        <DropdownItem onClick={handleChangeEnvironment}>
           <i className="fa fa-empty" /> No Environment
         </DropdownItem>
 
         <DropdownDivider>General</DropdownDivider>
 
-        <DropdownItem onClick={_handleShowEnvironmentModal}>
+        <DropdownItem onClick={handleShowEnvironmentModal}>
           <i className="fa fa-wrench" /> Manage Environments
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
         </DropdownItem>

@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import * as constants from '../../../common/constants';
 import { METHOD_GRPC } from '../../../common/constants';
@@ -11,41 +11,32 @@ const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
 interface Props {
-  onChange: (method: string) => void;
+  className?: string;
   method: string;
+  onChange: (method: string) => void;
   right?: boolean;
   showGrpc?: boolean;
-  className?: string;
 }
 export interface MethodDropdownHandle {
-  toggle:()=>void;
+  toggle: () => void;
 }
 export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
-  method,
-  right,
-  onChange,
-  showGrpc,
   className,
+  method,
+  onChange,
+  right,
+  showGrpc,
 }, ref) => {
+  const [recent, setRecent] = useState<string[]>(JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY) || '[]'));
+
   const dropdownRef = useRef<Dropdown>(null);
   const toggle = useCallback(() => {
     if (dropdownRef.current) {
       dropdownRef.current.toggle();
     }
   }, [dropdownRef]);
-  useImperativeHandle(ref, () => ({ toggle }), [toggle]
-  );
-  const _handleSetCustomMethod = () => {
-    let recentMethods: string[];
-
-    try {
-      const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
-      recentMethods = v ? JSON.parse(v) || [] : [];
-    } catch (err) {
-      recentMethods = [];
-    }
-
-    // Prompt user for the method
+  useImperativeHandle(ref, () => ({ toggle }), [toggle]);
+  const handleSetCustomMethod = () => {
     showPrompt({
       defaultValue: method,
       title: 'HTTP Method',
@@ -55,28 +46,30 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
       hint: 'Common examples are LINK, UNLINK, FIND, PURGE',
       label: 'Name',
       placeholder: 'CUSTOM',
-      hints: recentMethods,
-      onDeleteHint: method => {
-        recentMethods = recentMethods.filter(m => m !== method);
-        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
+      hints: recent,
+      onDeleteHint: methodToDelete => {
+        setRecent(recent.filter(m => m !== methodToDelete));
+        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recent.filter(m => m !== methodToDelete)));
       },
-      onComplete: method => {
+      onComplete: methodToAdd => {
         // Don't add empty methods
-        if (!method) {
+        if (!methodToAdd) {
           return;
         }
 
         // Don't add base methods
-        if (constants.HTTP_METHODS.includes(method)) {
+        if (constants.HTTP_METHODS.includes(methodToAdd)) {
           return;
         }
 
         // Save method as recent
-        recentMethods = recentMethods.filter(m => m !== method);
-        recentMethods.unshift(method);
-        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
-        // Invoke callback
-        onChange(method);
+        if (recent.includes(methodToAdd)) {
+          return;
+        }
+        setRecent([...recent, methodToAdd]);
+        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recent));
+        onChange(methodToAdd);
+
       },
     });
   };
@@ -109,7 +102,7 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
       <DropdownDivider />
       <DropdownItem
         className="http-method-custom"
-        onClick={_handleSetCustomMethod}
+        onClick={handleSetCustomMethod}
       >
         Custom Method
       </DropdownItem>
