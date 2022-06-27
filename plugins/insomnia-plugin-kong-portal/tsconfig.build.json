@@ -5,7 +5,6 @@
     "isolatedModules": false,
     "jsx": "react",
     "outDir": "dist",
-    "resolveJsonModule": true,
     "rootDir": "src",
     "skipLibCheck": true,
     "sourceMap": false,

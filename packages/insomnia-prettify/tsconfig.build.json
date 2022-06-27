@@ -4,7 +4,6 @@
     "composite": true,
     "module": "CommonJS",
     "outDir": "dist",
-    "resolveJsonModule": true,
     "rootDir": "src",
   },
   "include": [

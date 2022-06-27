@@ -4,7 +4,6 @@
     "composite": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "resolveJsonModule": true,
     "rootDir": ".",
   },
   "include": [

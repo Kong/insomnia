@@ -8,7 +8,6 @@
     "jsx": "react",
     "lib": ["DOM"],
     "outDir": "dist",
-    "resolveJsonModule": true,
     "rootDir": "src",
   },
   "include": [

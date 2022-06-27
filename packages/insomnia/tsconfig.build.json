@@ -5,7 +5,6 @@
     "isolatedModules": true,
     "jsx": "react",
     "outDir": "./build",
-    "resolveJsonModule": true,
     "rootDir": ".",
     "skipLibCheck": true,
     "strictNullChecks": true,

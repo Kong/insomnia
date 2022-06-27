@@ -4,7 +4,6 @@
     "composite": true,
     "lib": ["ES2019"],
     "outDir": "dist",
-    "resolveJsonModule": true,
     "rootDir": ".",
   },
   "include": [
