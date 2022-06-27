@@ -36,7 +36,7 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
   /**
    * Debounce and compile the markdown (won't debounce first render)
    */
-  _compileMarkdown(markdown) {
+  _compileMarkdown(markdown: string) {
     if (this._compileTimeout !== null) {
       clearTimeout(this._compileTimeout);
     }
@@ -61,13 +61,13 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
     );
   }
 
-  _setPreviewRef(n: HTMLDivElement) {
-    this._preview = n;
+  _setPreviewRef(preview: HTMLDivElement) {
+    this._preview = preview;
   }
 
-  _handleClickLink(e) {
-    e.preventDefault();
-    clickLink(e.target.getAttribute('href'));
+  _handleClickLink(event: any) {
+    event.preventDefault();
+    clickLink(event.target.getAttribute('href'));
   }
 
   _highlightCodeBlocks() {

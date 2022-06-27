@@ -361,7 +361,7 @@ export class GitVCS {
     }
   }
 
-  async undoPendingChanges(fileFilter?: String[]) {
+  async undoPendingChanges(fileFilter?: string[]) {
     console.log('[git] Undo pending changes');
     await git.checkout({
       ...this._baseOpts,

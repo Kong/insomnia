@@ -19,7 +19,7 @@ export interface UnitTestItemProps {
   onRunTest?: () => void;
   testNameEditable?: ReactNode;
   testsRunning?: TestItem[] | null;
-  onSetActiveRequest: () => void;
+  onSetActiveRequest: React.ChangeEventHandler<HTMLSelectElement>;
   selectedRequestId?: string | null;
   selectableRequests: {
     name: string;

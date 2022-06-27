@@ -143,7 +143,7 @@ export const deconstructQueryStringToParams = (
     let name = '';
     try {
       name = decodeURIComponent(encodedName || '');
-    } catch (e) {
+    } catch (error) {
       // Just leave it
       name = encodedName;
     }
@@ -151,7 +151,7 @@ export const deconstructQueryStringToParams = (
     let value = '';
     try {
       value = decodeURIComponent(encodedValue || '');
-    } catch (e) {
+    } catch (error) {
       // Just leave it
       value = encodedValue;
     }

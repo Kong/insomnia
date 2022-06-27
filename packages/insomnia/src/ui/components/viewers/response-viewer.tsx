@@ -51,7 +51,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ResponseViewer extends Component<ResponseViewerProps, State> {
-  _selectableView: typeof ResponseRawViewer | UnconnectedCodeEditor | null;
+  _selectableView: typeof ResponseRawViewer | UnconnectedCodeEditor | null = null;
 
   state: State = {
     blockingBecauseTooLarge: false,
@@ -120,8 +120,8 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
 
   shouldComponentUpdate(nextProps: ResponseViewerProps, nextState: State) {
     for (const k of Object.keys(nextProps)) {
-      const next = nextProps[k];
-      const current = this.props[k];
+      const next = nextProps[k as keyof ResponseViewerProps];
+      const current = this.props[k as keyof ResponseViewerProps];
 
       if (typeof next === 'function') {
         continue;
@@ -141,8 +141,8 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     }
 
     for (const k of Object.keys(nextState)) {
-      const next = nextState[k];
-      const current = this.state[k];
+      const next = nextState[k as keyof State];
+      const current = this.state[k as keyof State];
 
       if (typeof next === 'function') {
         continue;
@@ -164,8 +164,8 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends typeof ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
-    this._selectableView = n;
+  _setSelectableViewRef<T extends typeof ResponseRawViewer | UnconnectedCodeEditor | null>(selectableView: T) {
+    this._selectableView = selectableView;
   }
 
   _isViewSelectable() {
@@ -216,7 +216,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
         JSON.parse(bodyBuffer.toString('utf8'));
         return 'application/json';
       }
-    } catch (e) {
+    } catch (error) {
       // Nothing
     }
 
@@ -233,7 +233,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         return 'text/html';
       }
-    } catch (e) {
+    } catch (error) {
       // Nothing
     }
 

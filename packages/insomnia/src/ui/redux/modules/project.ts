@@ -6,7 +6,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject, Project } from '../../../models/pr
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveProject } from './global';
 
-export const createProject = () => dispatch => {
+export const createProject = () => (dispatch: any) => {
   const defaultValue = `My ${strings.project.singular}`;
 
   showPrompt({
@@ -25,7 +25,7 @@ export const createProject = () => dispatch => {
   });
 };
 
-export const removeProject = (project: Project) => dispatch => {
+export const removeProject = (project: Project) => (dispatch: any) => {
   const message = isRemoteProject(project)
     ? `Deleting a ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will continue to exist remotely. Deleting this ${strings.project.singular.toLowerCase()} locally cannot be undone. Are you sure you want to delete ${project.name}?`
     : `Deleting a ${strings.project.singular.toLowerCase()} will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${project.name}?`;

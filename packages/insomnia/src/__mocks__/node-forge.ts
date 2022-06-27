@@ -32,10 +32,10 @@ module.exports = {
     },
   },
   random: {
-    getBytesSync(n: number) {
+    getBytesSync(num: number) {
       let s = '';
 
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < num; i++) {
         s += 'a';
       }
 

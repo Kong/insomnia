@@ -56,7 +56,7 @@ const INITIAL_STATE: State = {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GitStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  statusNames: Record<string, string>;
+  statusNames?: Record<string, string>;
   textarea: HTMLTextAreaElement | null = null;
   onCommit: null | (() => void);
 
@@ -74,9 +74,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
     this.textarea = ref;
   }
 
-  async _handleMessageChange(e: React.SyntheticEvent<HTMLTextAreaElement>) {
+  async _handleMessageChange(event: React.SyntheticEvent<HTMLTextAreaElement>) {
     this.setState({
-      message: e.currentTarget.value,
+      message: event.currentTarget.value,
     });
   }
 
@@ -133,9 +133,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleToggleOne(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _handleToggleOne(event: React.SyntheticEvent<HTMLInputElement>) {
     const newItems = { ...this.state.items };
-    const gitPath = e.currentTarget.name;
+    const gitPath = event.currentTarget.name;
 
     if (!newItems[gitPath] || !newItems[gitPath].editable) {
       return;
@@ -207,7 +207,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
 
     // Create status items
-    const items = {};
+    const items: Record<string, Item> = {};
     const log = (await vcs.log(1)) || [];
 
     for (const gitPath of allPaths) {
@@ -255,7 +255,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
       }
 
       items[gitPath] = {
-        type,
+        type: type as any,
         staged,
         editable,
         status,
@@ -333,7 +333,9 @@ export class GitStagingModal extends PureComponent<Props, State> {
 
   renderItem(item: Item) {
     const { path: gitPath, staged, editable } = item;
-    const docName = this.statusNames[gitPath] || 'n/a';
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const docName = this.statusNames![gitPath] || 'n/a';
     return (
       <tr key={gitPath} className="table--no-outline-row">
         <td>

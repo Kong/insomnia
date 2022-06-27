@@ -57,7 +57,7 @@ const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcStat
 
   switch (action.type) {
     case GrpcActionTypeEnum.invalidateMany: {
-      const newStates = {};
+      const newStates: GrpcState = {};
       requestIds.forEach(id => {
         const oldState = findGrpcRequestState(state, id);
         const newState: GrpcRequestState = { ...oldState, reloadMethods: true };

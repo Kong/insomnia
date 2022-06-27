@@ -26,7 +26,7 @@ function _nunjucksMode() {
       };
     },
 
-    token(stream, state) {
+    token(stream: any, state: any) {
       let m;
       // This makes sure that adjacent tags still have unique types
       ticker *= -1;

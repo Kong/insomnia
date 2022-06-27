@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const ResponseCookiesViewer: FC<Props> = props => {
-  const renderRow = (h, i) => {
+  const renderRow = (h: any, i: number) => {
     let cookie: Cookie | undefined | null = null;
 
     try {

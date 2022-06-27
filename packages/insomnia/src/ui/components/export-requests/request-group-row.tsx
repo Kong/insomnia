@@ -17,7 +17,7 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class RequestGroupRow extends PureComponent<Props> {
-  checkbox: HTMLInputElement;
+  checkbox?: HTMLInputElement;
 
   setCheckboxRef(checkbox: HTMLInputElement) {
     this.checkbox = checkbox;
@@ -28,8 +28,8 @@ export class RequestGroupRow extends PureComponent<Props> {
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
   }
 
-  handleSelect(e: React.SyntheticEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
+  handleSelect(event: React.SyntheticEvent<HTMLInputElement>) {
+    const el = event.currentTarget;
     const value = el.checked;
     const { handleSetItemSelected, requestGroup } = this.props;
     return handleSetItemSelected(requestGroup._id, value);

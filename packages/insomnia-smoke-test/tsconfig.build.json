@@ -5,15 +5,15 @@
     "outDir": "dist",
     "rootDir": ".",
     "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "noImplicitAny": false
+    "esModuleInterop": true
   },
   "include": [
     "cli",
     "core",
     "fixtures",
     "modules",
-    "server"
+    "server",
+    "**/*.d.ts",
   ],
   "exclude": [
     "dist",

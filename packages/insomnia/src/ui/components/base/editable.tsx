@@ -4,9 +4,9 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { KeydownBinder } from '../keydown-binder';
 
-export const shouldSave = (oldValue, newValue, preventBlank = false) => {
+export const shouldSave = (oldValue: string, newValue: string | undefined, preventBlank = false) => {
   // Should not save if length = 0 and we want to prevent blank
-  if (preventBlank && !newValue.length) {
+  if (preventBlank && !newValue?.length) {
     return false;
   }
 
@@ -43,8 +43,8 @@ export class Editable extends PureComponent<Props, State> {
 
   _input: HTMLInputElement | null = null;
 
-  _handleSetInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _handleSetInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
   _handleSingleClickEditStart() {

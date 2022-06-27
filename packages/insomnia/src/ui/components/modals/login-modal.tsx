@@ -30,20 +30,20 @@ export class LoginModal extends PureComponent<{}, State> {
   _passwordInput: HTMLInputElement | null = null;
   _emailInput: HTMLInputElement | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setPasswordInputRef(n: HTMLInputElement) {
-    this._passwordInput = n;
+  _setPasswordInputRef(passwordInput: HTMLInputElement) {
+    this._passwordInput = passwordInput;
   }
 
-  _setEmailInputRef(n: HTMLInputElement) {
-    this._emailInput = n;
+  _setEmailInputRef(emailInput: HTMLInputElement) {
+    this._emailInput = emailInput;
   }
 
-  async _handleLogin(e) {
-    e.preventDefault();
+  async _handleLogin(event: React.FormEvent) {
+    event.preventDefault();
     this.setState({
       error: '',
       loading: true,
@@ -55,9 +55,9 @@ export class LoginModal extends PureComponent<{}, State> {
       // @ts-expect-error -- TSCONVERSION this needs to explicitly handle the case where email or password is undefined
       await session.login(email, password);
       this.hide();
-    } catch (e) {
+    } catch (error) {
       this.setState({
-        error: e.message,
+        error: error.message,
         loading: false,
       });
     }
@@ -83,7 +83,7 @@ export class LoginModal extends PureComponent<{}, State> {
   render() {
     const { title, message, loading, error } = this.state;
     return (
-      <form onSubmit={this._handleLogin}>
+      <form onSubmit={this._handleLogin} data-testid="LoginModal__form">
         <Modal ref={this._setModalRef} {...this.props}>
           <ModalHeader>{title || 'Log Into Your Account'}</ModalHeader>
           <ModalBody className="pad">

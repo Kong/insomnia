@@ -11,7 +11,7 @@ import {
 } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
 
@@ -166,13 +166,13 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _filterInput: HTMLInputElement | null = null;
 
-  _setFilterInputRef(n: HTMLInputElement) {
-    this._filterInput = n;
+  _setFilterInputRef(filterInput: HTMLInputElement) {
+    this._filterInput = filterInput;
   }
 
-  _handleFilterChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleFilterChange(event: React.SyntheticEvent<HTMLInputElement>) {
     this.setState({
-      filter: e.currentTarget.value,
+      filter: event.currentTarget.value,
     });
   }
 
@@ -404,7 +404,7 @@ const mapStateToProps = (state: RootState) => ({
   workspacesForActiveProject: selectWorkspacesForActiveProject(state),
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const bound = bindActionCreators(
     {
       createWorkspace,

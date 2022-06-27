@@ -172,13 +172,13 @@ const GitLabRepositoryForm = ({
       }).then(({ data }) => {
         setUser(data);
       })
-        .catch((e: unknown) => {
-          if (axios.isAxiosError(e) && e.response?.status === 401) {
+        .catch((error: unknown) => {
+          if (axios.isAxiosError(error) && error.response?.status === 401) {
             refreshToken();
           } else {
-            const errorMessage = (e instanceof Error) ? e.message : 'Something went wrong when trying to fetch info from GitLab.';
+            const errorMessage = (error instanceof Error) ? error.message : 'Something went wrong when trying to fetch info from GitLab.';
             setError(errorMessage);
-            console.log(`[gitlab oauth]: ${e}`);
+            console.log(`[gitlab oauth]: ${error}`);
           }
         });
     }
@@ -189,9 +189,9 @@ const GitLabRepositoryForm = ({
       id="gitlab"
       className="form-group"
       style={{ height: '100%' }}
-      onSubmit={e =>
+      onSubmit={event =>
         onSubmit({
-          uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
+          uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
           author: {
             name: (user?.username || user?.name) ?? '',
             email: user?.commit_email ?? user?.public_email ?? user?.email ?? '',
@@ -241,9 +241,9 @@ const GitLabRepositoryForm = ({
           </Details>
         </AccountDetails>
         <Button
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
+          onClick={event => {
+            event.preventDefault();
+            event.stopPropagation();
             showAlert({
               title: 'Sign out of GitLab',
               message:
@@ -310,10 +310,10 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
 
       {isAuthenticating && (
         <form
-          onSubmit={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            const formData = new FormData(e.currentTarget);
+          onSubmit={event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const formData = new FormData(event.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
               const parsedURL = new URL(link);

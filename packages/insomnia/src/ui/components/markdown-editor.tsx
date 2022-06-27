@@ -33,15 +33,15 @@ export class MarkdownEditor extends PureComponent<Props, State> {
     };
   }
 
-  _handleChange(markdown) {
+  _handleChange(markdown: string) {
     this.props.onChange(markdown);
     this.setState({
       markdown,
     });
   }
 
-  _setEditorRef(n: UnconnectedCodeEditor) {
-    this._editor = n;
+  _setEditorRef(editor: UnconnectedCodeEditor) {
+    this._editor = editor;
   }
 
   focusEnd() {

@@ -29,7 +29,6 @@ export function diff(source: string, target: string, blockSize: number): Operati
     const targetBlock = getBlock(target, targetPosition, blockSize);
     const sourceBlocks = sourceBlockMap[targetBlock.hash] || [];
 
-    // @ts-expect-error -- TSCONVERSION appears to be a genuine error
     if (sourceBlocks.length === 0) {
       targetPosition++;
       continue;
@@ -101,8 +100,8 @@ function getBlock(value: string, start: number, blockSize: number): Block {
   };
 }
 
-function getBlockMap(value: string, blockSize: number): Record<string, Block> {
-  const map = {};
+function getBlockMap(value: string, blockSize: number): Record<string, Block[]> {
+  const map: Record<string, Block[]> = {};
 
   for (let i = 0; i < value.length;) {
     const block = getBlock(value, i, blockSize);

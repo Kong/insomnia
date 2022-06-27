@@ -28,12 +28,12 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _envEditor: EnvironmentEditor | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setEditorRef(n: EnvironmentEditor) {
-    this._envEditor = n;
+  _setEditorRef(envEditor: EnvironmentEditor) {
+    this._envEditor = envEditor;
   }
 
   _saveChanges() {
@@ -69,7 +69,7 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
     }
   }
 
-  show(requestGroup) {
+  show(requestGroup: RequestGroup) {
     this.setState({ requestGroup });
     this.modal?.show();
   }

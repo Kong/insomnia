@@ -52,11 +52,11 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
         },
       };
     }
-  } catch (e) {
+  } catch (error) {
     // Report fatal error when loading from explicitly defined config file
     if (configFile) {
       console.log(`Could not find config file at ${configFile}.`);
-      console.error(e);
+      console.error(error);
     }
   }
 

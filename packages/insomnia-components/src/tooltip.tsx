@@ -71,8 +71,8 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
     movedToBody: false,
   };
 
-  _handleStopClick(e: MouseEvent) {
-    e.stopPropagation();
+  _handleStopClick(event: MouseEvent) {
+    event.stopPropagation();
   }
 
   _handleMouseEnter() {
@@ -183,7 +183,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
   _removeBubbleFromBody() {
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
-      el && this._getContainer().removeChild(el);
+      if (this._getContainer().contains(el)) {
+        el && this._getContainer().removeChild(el);
+      }
       this.setState({
         movedToBody: false,
       });

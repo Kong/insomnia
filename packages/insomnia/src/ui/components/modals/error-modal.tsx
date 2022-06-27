@@ -26,8 +26,8 @@ export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
     addCancel: false,
   };
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleOk() {

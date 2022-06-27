@@ -13,8 +13,8 @@ interface Props {
 
 export const ProtoDirectoryListItem: FunctionComponent<Props> = ({ dir, indentLevel, handleDeleteDirectory }) => {
   const handleDeleteCallback = useCallback(
-    async (e: React.SyntheticEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
+    async (event: React.SyntheticEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
       await handleDeleteDirectory(dir);
     },
     [handleDeleteDirectory, dir],

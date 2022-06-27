@@ -8,6 +8,7 @@ import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
 
 CodeMirror.defineExtension('enableNunjucksTags', function(
+  this: CodeMirror.Editor,
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
   showVariableSourceAndValue = false,
@@ -25,7 +26,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   );
 
   const debouncedRefreshFn = misc.debounce(refreshFn);
-  this.on('change', (_cm, change) => {
+  this.on('change', (_cm: any, change: any) => {
     const origin = change.origin || 'unknown';
 
     if (!origin.match(/^[+*]/)) {
@@ -44,10 +45,10 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 },
 );
 
-async function _highlightNunjucksTags(render, renderContext, showVariableSourceAndValue: boolean) {
+async function _highlightNunjucksTags(this: CodeMirror.Editor, render: any, renderContext: any, showVariableSourceAndValue: boolean) {
   const renderCacheKey = Math.random() + '';
 
-  const renderString = text => render(text, renderCacheKey);
+  const renderString = (text: any) => render(text, renderCacheKey);
 
   const activeMarks: CodeMirror.TextMarker[] = [];
   const doc: CodeMirror.Doc = this.getDoc();
@@ -57,7 +58,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({ type }) => type?.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(({ type }: any) => type?.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
     const newTokens: Token[] = [];
@@ -127,6 +128,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
       const mark = this.markText(start, end, {
+        // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
         // Mark that we created it
         __template: tok.string,
@@ -158,13 +160,16 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
       el.addEventListener('click', async () => {
         // Define the dialog HTML
         showModal(NunjucksModal, {
+          // @ts-expect-error not a known property of TextMarkerOptions
           template: mark.__template,
-          onDone: template => {
+          onDone: (template: string | null) => {
             const pos = mark.find();
 
             if (pos) {
               const { from, to } = pos;
-              this.replaceRange(template, from, to);
+              // TODO: unsound non-null assertion
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              this.replaceRange(template!, from, to);
             } else {
               console.warn('Tried to replace mark that did not exist', mark);
             }
@@ -177,7 +182,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
       let droppedInSameEditor = false;
 
       // Modify paste events so we can merge into them
-      const beforeChangeCb = (_cm, change) => {
+      const beforeChangeCb = (_cm: any, change: any) => {
         if (change.origin === 'paste') {
           change.origin = '+dnd';
         }
@@ -205,7 +210,9 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
         if (droppedInSameEditor) {
-          const { from, to } = mark.find();
+          // TODO: unsound non-null assertion
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const { from, to } = mark.find()!;
           this.replaceRange('', from, to, '+dnd');
         }
 
@@ -214,8 +221,8 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
         this.off('drop', dropCb);
       });
       // Don't allow dropping on itself
-      el.addEventListener('drop', e => {
-        e.stopPropagation();
+      el.addEventListener('drop', event => {
+        event.stopPropagation();
       });
     }
   }
@@ -255,7 +262,7 @@ async function _highlightNunjucksTags(render, renderContext, showVariableSourceA
   }
 }
 
-async function _updateElementText(render, mark, text, renderContext, showVariableSourceAndValue: boolean) {
+async function _updateElementText(render: any, mark: any, text: any, renderContext: any, showVariableSourceAndValue: boolean) {
   const el = mark.replacedWith;
   let innerHTML = '';
   let title = '';

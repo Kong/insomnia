@@ -40,7 +40,7 @@ document.title = getProductName();
   // Create Redux store
   const store = await initStore();
 
-  const render = App => {
+  const render = (App: React.ComponentType<any>) => {
     ReactDOM.render(
       <Provider store={store}>
         <Router>

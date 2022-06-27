@@ -41,8 +41,8 @@ export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
     currentBranch: '',
   };
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   async _handleCheckout(branch: string) {
@@ -105,8 +105,8 @@ export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
     }
   }
 
-  async _handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async _handleCreate(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
     const { vcs, syncItems } = this.props;
 
     try {
@@ -129,8 +129,8 @@ export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
     }
   }
 
-  _updateNewBranchName(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this.setState({ newBranchName: e.currentTarget.value });
+  _updateNewBranchName(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    this.setState({ newBranchName: event.currentTarget.value });
   }
 
   _handleClearError() {

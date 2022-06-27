@@ -1,4 +1,5 @@
 build
 bin
 send-request
+coverage
 **/main.min.js

@@ -3,7 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId } from '../account/session';
-import { database as db } from '../common/database';
+import { ChangeBufferEvent, database as db } from '../common/database';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 import {
@@ -32,15 +32,17 @@ const getDeviceId = async () => {
   return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
 
-const sendSegment = async (segmentType: 'track' | 'page', options) => {
+const sendSegment = async function sendSegment<T extends 'track' | 'page'>(segmentType: T, options: Parameters<Analytics[T]>[0]) {
   try {
-    const anonymousId = await getDeviceId();
+    const anonymousId = await getDeviceId() ?? undefined;
     const userId = getAccountId();
     const context = {
       app: { name: getProductName(), version: getAppVersion() },
       os: { name: _getOsName(), version: process.getSystemVersion() },
     };
-    segmentClient?.[segmentType]({ ...options, context, anonymousId, userId }, error => {
+    // HACK: TypeScript isn't capable (yet) of correlating Analytics[T] here with Parameters<Analytics[T]> in the arguments. Technically, the typing is correct here, TypeScript is just unable to check it.
+    // See related issue microsoft/TypeScript#30581
+    segmentClient?.[segmentType]({ ...options as {event: string}, context, anonymousId, userId }, error => {
       if (error) {
         console.warn('[analytics] Error sending segment event', error);
       }
@@ -181,12 +183,19 @@ export async function trackPageView(name: string) {
 // ~~~~~~~~~~~~~~~~~ //
 function _getOsName() {
   const platform = getAppPlatform();
-  return { darwin: 'mac', win32: 'windows' }[platform] || platform;
+  switch (platform) {
+    case 'darwin':
+      return 'mac';
+    case 'win32':
+      return 'windows';
+    default:
+      return platform;
+  }
 }
 
 // Monitor database changes to see if analytics gets enabled.
 // If analytics become enabled, flush any queued events.
-db.onChange(async changes => {
+db.onChange(async (changes: ChangeBufferEvent[]) => {
   for (const change of changes) {
     const [event, doc] = change;
     const isUpdatingSettings = isSettings(doc) && event === 'update';

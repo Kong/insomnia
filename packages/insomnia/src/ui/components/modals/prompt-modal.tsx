@@ -26,7 +26,7 @@ interface State {
   onComplete?: (arg0: string) => Promise<void> | void;
   onCancel?: (() => void) | null;
   onHide?: () => void;
-  onDeleteHint?: ((arg0: string) => void) | null;
+  onDeleteHint?: ((arg0?: string) => void) | null;
   currentValue: string;
   loading: boolean;
 }
@@ -46,7 +46,7 @@ export interface PromptModalOptions {
   hints?: string[];
   onComplete?: (arg0: string) => Promise<void> | void;
   onHide?: () => void;
-  onDeleteHint?: (arg0: string) => void;
+  onDeleteHint?: (arg0?: string) => void;
   onCancel?: () => void;
 }
 
@@ -76,10 +76,14 @@ export class PromptModal extends PureComponent<{}, State> {
     loading: false,
   };
 
-  async _done(rawValue: string) {
+  async _done(rawValue?: string) {
     const { onComplete, upperCase } = this.state;
-    const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    await onComplete?.(value);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const value = upperCase ? rawValue!.toUpperCase() : rawValue;
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await onComplete?.(value!);
     this.hide();
   }
 
@@ -92,19 +96,19 @@ export class PromptModal extends PureComponent<{}, State> {
     onCancel?.();
   }
 
-  _setInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _setInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _handleSelectHint(hint: string) {
+  _handleSelectHint(_event: React.MouseEvent, hint?: string) {
     this._done(hint);
   }
 
-  _handleDeleteHint(hint: string) {
+  _handleDeleteHint(_event: React.MouseEvent, hint?: string) {
     const { onDeleteHint } = this.state;
     onDeleteHint?.(hint);
     const hints = this.state.hints.filter(h => h !== hint);
@@ -113,7 +117,7 @@ export class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  async _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+  async _handleSubmit(event: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
     if (this.state.loading) {
       return;
     }
@@ -122,7 +126,7 @@ export class PromptModal extends PureComponent<{}, State> {
       loading: true,
     });
 
-    e.preventDefault();
+    event.preventDefault();
 
     if (this._input) {
       const result =
@@ -136,12 +140,12 @@ export class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChange(event: React.SyntheticEvent<HTMLInputElement>) {
     const { validate } = this.state;
 
     if (validate) {
-      const errorMessage = validate(e.currentTarget.value);
-      e.currentTarget.setCustomValidity(errorMessage);
+      const errorMessage = validate(event.currentTarget.value);
+      event.currentTarget.setCustomValidity(errorMessage);
     }
   }
 

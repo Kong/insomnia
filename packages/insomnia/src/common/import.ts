@@ -162,7 +162,7 @@ export async function importRaw(
   // Workspace > Environment > RequestGroup > Request
   // Import everything backwards so they get inserted in the correct order
   data.resources.reverse();
-  const importedDocs = {};
+  const importedDocs: Record<string, any[]> = {};
 
   for (const model of models.all()) {
     importedDocs[model.type] = [];

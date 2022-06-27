@@ -53,12 +53,12 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
     justMoved: false,
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setEditorRef(n: MarkdownEditor) {
-    this._editor = n;
+  _setEditorRef(ediotr: MarkdownEditor) {
+    this._editor = ediotr;
   }
 
   async _handleNameChange(name: string) {
@@ -93,8 +93,8 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
     this.setState({ showDescription: true });
   }
 
-  _handleUpdateMoveCopyWorkspace(e: React.SyntheticEvent<HTMLSelectElement>) {
-    const { value } = e.currentTarget;
+  _handleUpdateMoveCopyWorkspace(event: React.SyntheticEvent<HTMLSelectElement>) {
+    const { value } = event.currentTarget;
     const workspaceId = value === '__NULL__' ? null : value;
     this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
   }

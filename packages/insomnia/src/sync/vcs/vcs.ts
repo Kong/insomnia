@@ -914,7 +914,7 @@ export class VCS {
       );
       // Store them in case something has changed
       await this._storeSnapshots(snapshotsCreate);
-      console.log('[sync] Pushed snapshots', snapshotsCreate.map(s => s.id).join(', '));
+      console.log('[sync] Pushed snapshots', snapshotsCreate.map((s: any) => s.id).join(', '));
     }
   }
 
@@ -1247,6 +1247,11 @@ export class VCS {
       }
     } else {
       const { publicKey } = this._assertSession();
+
+      if (!publicKey) {
+        throw new Error('Session does not have publicKey');
+      }
+
       // Encrypt the symmetric key with the account public key
       encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
     }

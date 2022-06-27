@@ -28,8 +28,8 @@ export const jarFromCookies = (cookies: Cookie[]) => {
     // Create a copy first just to be sure.
     const copy = JSON.stringify({ cookies });
     jar = CookieJar.fromJSON(copy);
-  } catch (e) {
-    console.log('[cookies] Failed to initialize cookie jar', e);
+  } catch (error) {
+    console.log('[cookies] Failed to initialize cookie jar', error);
     jar = new CookieJar() as CookieJar;
   }
 

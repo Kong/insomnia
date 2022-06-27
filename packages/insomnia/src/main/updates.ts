@@ -64,7 +64,7 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   return fullUrl;
 }
 
-function _sendUpdateStatus(status) {
+function _sendUpdateStatus(status: string) {
   const windows = BrowserWindow.getAllWindows();
 
   for (const window of windows) {
@@ -84,8 +84,8 @@ function _sendUpdateComplete(success: boolean, msg: string) {
 
 let hasPromptedForUpdates = false;
 export async function init() {
-  autoUpdater.on('error', e => {
-    console.warn(`[updater] Error: ${e.message}`);
+  autoUpdater.on('error', error => {
+    console.warn(`[updater] Error: ${error.message}`);
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');

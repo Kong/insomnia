@@ -31,7 +31,7 @@ export function generateStateMap(state: SnapshotState | null): SnapshotStateMap 
     return {};
   }
 
-  const map = {};
+  const map: SnapshotStateMap = {};
 
   for (const entry of state) {
     map[entry.key] = entry;
@@ -41,7 +41,7 @@ export function generateStateMap(state: SnapshotState | null): SnapshotStateMap 
 }
 
 export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandidateMap {
-  const map = {};
+  const map: StatusCandidateMap = {};
 
   for (const candidate of candidates) {
     map[candidate.key] = candidate;
@@ -53,7 +53,7 @@ export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandi
 export function combinedMapKeys<T extends SnapshotStateMap | StatusCandidateMap>(
   ...maps: T[]
 ): DocumentKey[] {
-  const keyMap = {};
+  const keyMap: Record<string, unknown> = {};
 
   for (const map of maps) {
     for (const key of Object.keys(map)) {
@@ -524,7 +524,7 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   }
 
   const changes: string[] = [];
-  const allKeys = [...Object.keys({ ...a, ...b })];
+  const allKeys = [...Object.keys({ ...a, ...b })] as (keyof T)[];
 
   for (const key of allKeys) {
     if (shouldIgnoreKey(key as keyof T, a)) {
@@ -547,6 +547,7 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
     }
 
     if (aStr !== bStr) {
+      // @ts-expect-error -- type unsoundness
       changes.push(key);
     }
   }

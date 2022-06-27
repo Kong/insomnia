@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, { MouseEvent, ReactNode, useCallback, useState } from 'react';
 
 import type { ButtonProps } from './button';
 import { Button } from './button';
@@ -14,7 +14,7 @@ function isPromise(obj: unknown) {
 }
 
 export interface AsyncButtonProps<T> extends ButtonProps {
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => Promise<T> | undefined;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => Promise<T> | undefined;
   loadingNode?: ReactNode;
 }
 
@@ -26,7 +26,7 @@ export const AsyncButton = <T extends unknown>({
   ...props
 }: AsyncButtonProps<T>) => {
   const [loading, setLoading] = useState(false);
-  const asyncHandler = useCallback(async event => {
+  const asyncHandler = useCallback(async (event: MouseEvent<HTMLButtonElement>) => {
     const result = onClick(event);
 
     if (isPromise(result)) {

@@ -15,45 +15,46 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class KeydownBinder extends PureComponent<Props> {
-  _handleKeydown(e: KeyboardEvent) {
+  _handleKeydown(event: KeyboardEvent) {
     const { stopMetaPropagation, onKeydown, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
+    const isMeta = isMac() ? event.metaKey : event.ctrlKey;
 
     if (stopMetaPropagation && isMeta) {
-      e.stopPropagation();
+      event.stopPropagation();
     }
 
     if (onKeydown) {
-      onKeydown(e);
+      onKeydown(event);
     }
   }
 
-  _handleKeyup(e: KeyboardEvent) {
+  _handleKeyup(event: KeyboardEvent) {
     const { stopMetaPropagation, onKeyup, disabled } = this.props;
 
     if (disabled) {
       return;
     }
 
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
+    const isMeta = isMac() ? event.metaKey : event.ctrlKey;
 
     if (stopMetaPropagation && isMeta) {
-      e.stopPropagation();
+      event.stopPropagation();
     }
 
     if (onKeyup) {
-      onKeyup(e);
+      onKeyup(event);
     }
   }
 
   componentDidMount() {
     if (this.props.scoped) {
-      const el = ReactDOM.findDOMNode(this);
+      // TODO: unsound casting
+      const el = ReactDOM.findDOMNode(this) as HTMLElement | null;
       el?.addEventListener('keydown', this._handleKeydown, { capture: true });
       el?.addEventListener('keyup', this._handleKeyup, { capture: true });
     } else {
@@ -64,7 +65,8 @@ export class KeydownBinder extends PureComponent<Props> {
 
   componentWillUnmount() {
     if (this.props.scoped) {
-      const el = ReactDOM.findDOMNode(this);
+      // TODO: unsound casting
+      const el = ReactDOM.findDOMNode(this) as HTMLElement | null;
       el?.removeEventListener('keydown', this._handleKeydown, { capture: true });
       el?.removeEventListener('keyup', this._handleKeyup, { capture: true });
     } else {

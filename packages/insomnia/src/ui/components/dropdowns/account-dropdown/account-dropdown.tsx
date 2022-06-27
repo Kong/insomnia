@@ -4,14 +4,14 @@ import React, { Fragment, FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import * as session from '../../../account/session';
-import { selectSettings } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { Link } from '../base/link';
-import { PromptButton } from '../base/prompt-button';
-import { showLoginModal } from '../modals/login-modal';
+import * as session from '../../../../account/session';
+import { selectSettings } from '../../../redux/selectors';
+import { Dropdown } from '../../base/dropdown/dropdown';
+import { DropdownButton } from '../../base/dropdown/dropdown-button';
+import { DropdownItem } from '../../base/dropdown/dropdown-item';
+import { Link } from '../../base/link';
+import { PromptButton } from '../../base/prompt-button';
+import { showLoginModal } from '../../modals/login-modal';
 
 const Wrapper = styled.div({
   display: 'flex',

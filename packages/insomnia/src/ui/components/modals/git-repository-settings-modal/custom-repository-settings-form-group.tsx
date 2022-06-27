@@ -25,9 +25,9 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
     <form
       id="custom"
       className='form-group'
-      onSubmit={e => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
+      onSubmit={event => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
         onSubmit({
           uri: formData.get('uri') as string || '',
           credentials: {

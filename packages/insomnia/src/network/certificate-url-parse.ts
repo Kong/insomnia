@@ -4,7 +4,7 @@ const WILDCARD_CHARACTER = '*';
 const WILDCARD_SUBSTITUTION = Math.random().toString().split('.')[1];
 const WILDCARD_SUBSTITUTION_PATTERN = new RegExp(`${WILDCARD_SUBSTITUTION}`, 'g');
 
-export default function certificateUrlParse(url) {
+export default function certificateUrlParse(url: string) {
   if (url.indexOf(WILDCARD_CHARACTER) === -1) {
     return urlParse(url);
   } else {
@@ -17,7 +17,9 @@ export default function certificateUrlParse(url) {
   }
 }
 
-function _reinstateWildcards(string) {
+function _reinstateWildcards(string: string): string;
+function _reinstateWildcards(string: string | null): string | null;
+function _reinstateWildcards(string: string | null) {
   if (string) {
     return string.replace(WILDCARD_SUBSTITUTION_PATTERN, WILDCARD_CHARACTER);
   } else {

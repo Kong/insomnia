@@ -25,8 +25,8 @@ export class ResponseDebugModal extends PureComponent<{}, State> {
     title: '',
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   hide() {

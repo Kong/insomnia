@@ -63,8 +63,8 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     this.modal?.show();
   }
 
-  async _handleSave(e: React.SyntheticEvent<HTMLButtonElement>) {
-    e.preventDefault();
+  async _handleSave(event: React.SyntheticEvent<HTMLButtonElement>) {
+    event.preventDefault();
     this.hide();
 
     if (typeof this.onSave === 'function' && this.state.selectedProtoFileId) {
@@ -137,7 +137,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     return protoManager.addDirectory(workspace._id);
   }
 
-  _handleRename(protoFile: ProtoFile, name: string) {
+  _handleRename(protoFile: ProtoFile, name?: string) {
     return protoManager.renameFile(protoFile, name);
   }
 
