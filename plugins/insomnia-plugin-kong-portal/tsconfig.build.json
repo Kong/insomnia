@@ -4,7 +4,6 @@
     "outDir": "dist",
     "rootDir": "src",
     "resolveJsonModule": true,
-    "strict": true,
     "jsx": "react",
     "isolatedModules": false,
     "emitDeclarationOnly": true,
