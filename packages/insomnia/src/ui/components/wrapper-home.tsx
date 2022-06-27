@@ -185,7 +185,30 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
         filter={filter}
       />
     ));
-
+  const createRequestCollection = useCallback(() => handleCreateWorkspace({
+    scope: WorkspaceScopeKeys.collection,
+    onCreate: async (workspace: Workspace) => {
+    // Don't mark for sync if not logged in at the time of creation
+      if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
+        await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+      }
+    },
+  }), [activeProject, handleCreateWorkspace, isLoggedIn, vcs]);
+  const createDesignDocument = useCallback(() => handleCreateWorkspace({ scope: WorkspaceScopeKeys.design }), [handleCreateWorkspace]);
+  const importFromURL = useCallback(() => showPrompt({
+    title: 'Import document from URL',
+    submitName: 'Fetch and Import',
+    label: 'URL',
+    placeholder: 'https://website.com/insomnia-import.json',
+    onComplete: uri => {
+      handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
+    },
+  }), [handleImportUri]);
+  const importFromClipboard = useCallback(() => handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing }), [handleImportClipboard]);
+  const importFromFile = useCallback(() => handleImportFile({ forceToWorkspace: ForceToWorkspace.existing }), [handleImportFile]);
+  const importFromGit = useCallback(() => handleGitCloneWorkspace({ createFsClient: MemClient.createClient }), [handleGitCloneWorkspace]);
+  const onChangeFilter = useCallback(event => setFilter(event.currentTarget.value), []);
+  const onKeydown = useCallback(event => executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus()), []);
   return (
     <PageLayout
       wrapperProps={wrapperProps}
@@ -214,12 +237,12 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
                     maxWidth: '400px',
                   }}
                 >
-                  <KeydownBinder onKeydown={event => executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus())}>
+                  <KeydownBinder onKeydown={onKeydown}>
                     <input
                       ref={inputRef}
                       type="text"
                       placeholder="Filter..."
-                      onChange={event => setFilter(event.currentTarget.value)}
+                      onChange={onChangeFilter}
                       className="no-margin"
                     />
                     <span className="fa fa-search filter-icon" />
@@ -235,54 +258,38 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
                   <DropdownDivider>New</DropdownDivider>
                   <DropdownItem
                     icon={<i className="fa fa-file-o" />}
-                    onClick={() => handleCreateWorkspace({ scope: WorkspaceScopeKeys.design })}
+                    onClick={createDesignDocument}
                   >
                     Design Document
                   </DropdownItem>
                   <DropdownItem
                     icon={<i className="fa fa-bars" />}
-                    onClick={() => handleCreateWorkspace({
-                      scope: WorkspaceScopeKeys.collection,
-                      onCreate: async (workspace: Workspace) => {
-                        // Don't mark for sync if not logged in at the time of creation
-                        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
-                          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
-                        }
-                      },
-                    })}
+                    onClick={createRequestCollection}
                   >
                     Request Collection
                   </DropdownItem>
                   <DropdownDivider>Import From</DropdownDivider>
                   <DropdownItem
                     icon={<i className="fa fa-plus" />}
-                    onClick={() => handleImportFile({ forceToWorkspace: ForceToWorkspace.existing })}
+                    onClick={importFromFile}
                   >
                     File
                   </DropdownItem>
                   <DropdownItem
                     icon={<i className="fa fa-link" />}
-                    onClick={() => showPrompt({
-                      title: 'Import document from URL',
-                      submitName: 'Fetch and Import',
-                      label: 'URL',
-                      placeholder: 'https://website.com/insomnia-import.json',
-                      onComplete: uri => {
-                        handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
-                      },
-                    })}
+                    onClick={importFromURL}
                   >
                     URL
                   </DropdownItem>
                   <DropdownItem
                     icon={<i className="fa fa-clipboard" />}
-                    onClick={() => handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing })}
+                    onClick={importFromClipboard}
                   >
                     Clipboard
                   </DropdownItem>
                   <DropdownItem
                     icon={<i className="fa fa-code-fork" />}
-                    onClick={() => handleGitCloneWorkspace({ createFsClient: MemClient.createClient })}
+                    onClick={importFromGit}
                   >
                     Git Clone
                   </DropdownItem>
