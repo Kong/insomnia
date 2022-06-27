@@ -4,9 +4,9 @@
     "rootDir": ".",
   },
   "include": [
-    "src",
     ".eslintrc.js",
     "jest.config.js",
+    "src",
   ],
   "exclude": [
     "dist",

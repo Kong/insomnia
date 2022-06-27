@@ -2,21 +2,21 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "dist",
-    "rootDir": ".",
-    "resolveJsonModule": true,
     "esModuleInterop": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "rootDir": ".",
   },
   "include": [
+    "**/*.d.ts",
     "cli",
     "core",
     "fixtures",
     "modules",
     "server",
-    "**/*.d.ts",
   ],
   "exclude": [
-    "dist",
     "**/*.test.ts",
+    "dist",
   ],
 }

@@ -4,8 +4,8 @@
     "composite": true,
     "module": "CommonJS",
     "outDir": "dist",
-    "rootDir": "src",
     "resolveJsonModule": true,
+    "rootDir": "src",
   },
   "include": [
     "src",

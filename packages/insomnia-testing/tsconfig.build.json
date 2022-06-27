@@ -9,8 +9,8 @@
     "src",
   ],
   "exclude": [
+    "**/*.test.ts",
     "**/fixtures",
     "**/test-helpers",
-    "**/*.test.ts",
   ],
 }

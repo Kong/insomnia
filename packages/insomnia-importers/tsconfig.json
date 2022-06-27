@@ -5,10 +5,10 @@
     "rootDir": ".",
   },
   "include": [
-    "src",
-    "jest.config.js",
     ".eslintrc.js",
+    "jest.config.js",
     "package.json",
+    "src",
   ],
   "exclude": [
     "bin",

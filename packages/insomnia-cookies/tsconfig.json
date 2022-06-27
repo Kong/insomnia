@@ -5,8 +5,8 @@
     "rootDir": ".",
   },
   "include": [
-    "src",
     "jest.config.js",
+    "src",
   ],
   "exclude": [
     "dist",

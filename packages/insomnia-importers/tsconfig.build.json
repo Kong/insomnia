@@ -2,14 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "dist",
-    "rootDir": ".",
     "lib": ["ES2019"],
+    "outDir": "dist",
     "resolveJsonModule": true,
+    "rootDir": ".",
   },
   "include": [
-    "src",
     "package.json",
+    "src",
   ],
   "exclude": [
     "**/*.test.ts",

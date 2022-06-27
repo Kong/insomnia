@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "useUnknownInCatchVariables": false,
-    "allowJs": true,
     "checkJs": true,
     "declaration": true,
     "declarationMap": true,
@@ -21,5 +20,6 @@
     "strict": true,
     "target": "ES2019",
     "types": ["node"],
+    "useUnknownInCatchVariables": false,
   },
 }

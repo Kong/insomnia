@@ -4,11 +4,11 @@
     "rootDir": "."
   },
   "include": [
-    "src",
-    "jest.config.js",
     ".eslintrc.js",
-    "vite.config.ts",
+    "jest.config.js",
+    "src",
     "svgr.config.js",
+    "vite.config.ts",
   ],
   "exclude": [
     "dist",

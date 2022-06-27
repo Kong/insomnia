@@ -3,8 +3,8 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
-    "rootDir": "src",
     "resolveJsonModule": true,
+    "rootDir": "src",
   },
   "include": [
     "src",

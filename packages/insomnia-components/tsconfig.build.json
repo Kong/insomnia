@@ -2,14 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "jsx": "react",
-    "isolatedModules": true,
-    "lib": ["DOM"],
-    "experimentalDecorators": true,
     "emitDeclarationOnly": true,
+    "experimentalDecorators": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "lib": ["DOM"],
+    "outDir": "dist",
     "resolveJsonModule": true,
+    "rootDir": "src",
   },
   "include": [
     "src"
