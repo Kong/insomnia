@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
@@ -31,7 +31,7 @@ interface Props extends DropdownProps {
 const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: React.FC<Props> = ({ children, className, request, contentType, onChange, ...extraProps }) => {
-  const handleChangeMimeType = async (mimeType: string | null) => {
+  const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
     if (request) {
       // Nothing to do
       const { body } = request;
@@ -65,7 +65,7 @@ export const ContentTypeDropdown: React.FC<Props> = ({ children, className, requ
 
     onChange(mimeType);
     trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
-  };
+  }, [onChange, request]);
   const renderMimeType = (mimeType: string | null, forcedName = '') => {
     const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
     const iconClass = mimeType === contentTypeFallback ? 'fa-check' : 'fa-empty';

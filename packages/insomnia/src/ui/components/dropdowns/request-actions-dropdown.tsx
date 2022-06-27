@@ -71,7 +71,7 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
     const actionPlugins = await getRequestActions();
     setActionPlugins(actionPlugins);
   };
-  const handlePluginClick = async (p: RequestAction) => {
+  const handlePluginClick = useCallback(async (p: RequestAction) => {
     setLoadingActions({ ...loadingActions, [p.label]: true });
 
     try {
@@ -94,7 +94,15 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
     }
     setLoadingActions({ ...loadingActions, [p.label]: false });
     hide();
-  };
+  }, [request, activeEnvironment, hide, requestGroup, loadingActions, activeProject._id]);
+  const duplicate = useCallback(() => handleDuplicateRequest(request), [handleDuplicateRequest, request]);
+  const generateCode = useCallback(() => handleGenerateCode(request), [handleGenerateCode, request]);
+  const copyAsCurl = useCallback(() => handleCopyAsCurl(request), [handleCopyAsCurl, request]);
+  const togglePin = useCallback(() => handleSetRequestPinned(request, !isPinned), [handleSetRequestPinned, isPinned, request]);
+  const deleteRequest = useCallback(() => {
+    incrementDeletedRequests();
+    requestOperations.remove(request);
+  }, [request]);
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
@@ -103,13 +111,13 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
         <i className="fa fa-caret-down" />
       </DropdownButton>
 
-      <DropdownItem onClick={() => handleDuplicateRequest(request)}>
+      <DropdownItem onClick={duplicate}>
         <i className="fa fa-copy" /> Duplicate
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
       </DropdownItem>
 
       {canGenerateCode && (
-        <DropdownItem onClick={() => handleGenerateCode(request)}>
+        <DropdownItem onClick={generateCode}>
           <i className="fa fa-code" /> Generate Code
           <DropdownHint
             keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]}
@@ -117,23 +125,20 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
         </DropdownItem>
       )}
 
-      <DropdownItem onClick={() => handleSetRequestPinned(request, !isPinned)}>
+      <DropdownItem onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
       </DropdownItem>
 
       {canGenerateCode && (
-        <DropdownItem onClick={() => handleCopyAsCurl(request)}>
+        <DropdownItem onClick={copyAsCurl}>
           <i className="fa fa-copy" /> Copy as Curl
         </DropdownItem>
       )}
 
       <DropdownItem
         buttonClass={PromptButton}
-        onClick={() => {
-          incrementDeletedRequests();
-          return requestOperations.remove(request);
-        }}
+        onClick={deleteRequest}
         addIcon
       >
         <i className="fa fa-trash-o" /> Delete

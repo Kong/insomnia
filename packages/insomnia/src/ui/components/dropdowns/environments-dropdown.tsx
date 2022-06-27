@@ -35,7 +35,7 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
   ...dropdownProps
 }) => {
   const dropdownRef = useRef<Dropdown>(null);
-  const handleShowEnvironmentModal = () => {
+  const _handleShowEnvironmentModal = () => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);
   };
   const _handleKeydown = (event: KeyboardEvent) => {
@@ -107,7 +107,7 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
 
         <DropdownDivider>General</DropdownDivider>
 
-        <DropdownItem onClick={handleShowEnvironmentModal}>
+        <DropdownItem onClick={_handleShowEnvironmentModal}>
           <i className="fa fa-wrench" /> Manage Environments
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
         </DropdownItem>

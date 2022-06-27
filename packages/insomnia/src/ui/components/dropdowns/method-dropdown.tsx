@@ -36,7 +36,7 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
     }
   }, [dropdownRef]);
   useImperativeHandle(ref, () => ({ toggle }), [toggle]);
-  const handleSetCustomMethod = () => {
+  const handleSetCustomMethod = useCallback(() => {
     showPrompt({
       defaultValue: method,
       title: 'HTTP Method',
@@ -72,7 +72,7 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
 
       },
     });
-  };
+  }, [method, onChange, recent]);
 
   const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
   return (

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { KeydownBinder } from '../keydown-binder';
 
@@ -58,7 +58,7 @@ export const Editable: React.FC<Props> = ({
     }
   };
 
-  const handleEditEnd = () => {
+  const handleEditEnd = useCallback(() => {
     if (shouldSave(value, inputRef.current?.value.trim(), preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
       onSubmit(inputRef.current?.value.trim());
@@ -67,9 +67,9 @@ export const Editable: React.FC<Props> = ({
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
     setTimeout(() => setEditing(false), 100);
-  };
+  }, [onSubmit, preventBlank, value]);
 
-  const handleEditKeyDown = (event: KeyboardEvent) => {
+  const handleEditKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.keyCode === 13) {
       // Pressed Enter
       handleEditEnd();
@@ -86,7 +86,7 @@ export const Editable: React.FC<Props> = ({
         handleEditEnd();
       }
     }
-  };
+  }, [value, handleEditEnd]);
   const initialValue = value || fallbackValue;
   if (editing) {
     return (

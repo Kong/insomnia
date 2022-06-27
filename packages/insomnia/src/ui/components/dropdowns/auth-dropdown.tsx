@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import {
   AUTH_ASAP,
@@ -40,7 +40,7 @@ export const AuthDropdown: React.FC<Props> = ({ children, className, onChange, r
       </DropdownItem>
     );
   };
-  const handleTypeChange = async (type: string) => {
+  const handleTypeChange = useCallback(async (type: string) => {
     if (type === authentication.type) {
       // Type didn't change
       return;
@@ -69,7 +69,7 @@ export const AuthDropdown: React.FC<Props> = ({ children, className, onChange, r
       }
     }
     onChange(request, newAuthentication);
-  };
+  }, [authentication, onChange, request]);
   return (
     <Dropdown
       beside
