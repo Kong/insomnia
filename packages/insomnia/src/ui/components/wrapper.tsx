@@ -76,37 +76,21 @@ import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-
 import { WorkspaceSettingsModal } from './modals/workspace-settings-modal';
 import { WrapperModal } from './modals/wrapper-modal';
 
-const lazyWithPreload = (
-  importFn: () => Promise<{ default: React.ComponentType<any> }>
-): [
-  React.LazyExoticComponent<React.ComponentType<any>>,
-  () => Promise<{
-    default: React.ComponentType<any>;
-  }>
-] => {
-  const LazyComponent = lazy(importFn);
-  const preload = () => importFn();
-
-  return [LazyComponent, preload];
-};
-
-const [WrapperHome, preloadWrapperHome] = lazyWithPreload(
+const WrapperHome = lazy(
   () => import('./wrapper-home')
 );
-const [WrapperDebug, preloadWrapperDebug] = lazyWithPreload(
+
+const WrapperDebug = lazy(
   () => import('./wrapper-debug')
 );
-const [WrapperDesign, preloadWrapperDesign] = lazyWithPreload(
+
+const WrapperDesign = lazy(
   () => import('./wrapper-design')
 );
-const [WrapperUnitTest, preloadWrapperUnitTest] = lazyWithPreload(
+
+const WrapperUnitTest = lazy(
   () => import('./wrapper-unit-test')
 );
-
-preloadWrapperHome();
-preloadWrapperDebug();
-preloadWrapperDesign();
-preloadWrapperUnitTest();
 
 const ActivityRouter = () => {
   const selectedActivity = useSelector(selectActiveActivity);

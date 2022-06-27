@@ -1,10 +1,38 @@
 import react from '@vitejs/plugin-react';
 import { builtinModules } from 'module';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import commonjsExternals from 'vite-plugin-commonjs-externals';
 
 import pkg from './package.json';
+
+// Preload all the dynamic chunks for the app
+const chunkPreloadPlugin = (): Plugin => {
+  return {
+    name: 'chunk-preload-transform',
+    transformIndexHtml(html, context) {
+      // Add modulepreload links to the html if the module is imported dynamically
+      const { bundle } = context;
+
+      if (bundle) {
+        const modules = Object.keys(bundle).filter(fileName => bundle[fileName].type === 'chunk');
+
+        const makePreloadLink = (module: string) => {
+          return `<link rel="modulepreload" href="./${module}">`;
+        };
+
+        const links = modules.map(makePreloadLink);
+
+        return html.replace(
+          '</head>',
+          `${links.join('\n')}</head>`
+        );
+      } else {
+        return html;
+      }
+    },
+  };
+};
 
 // The list of packages we want to keep as commonJS require().
 // Must be resolvable import paths, cannot be globs
@@ -55,6 +83,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [
+      chunkPreloadPlugin(),
       commonjsExternals({ externals: commonjsPackages }),
       react({
         fastRefresh: __DEV__,
