@@ -100,7 +100,4 @@ describe('<AccountDropdownButton />', () => {
     expect(screen.getByText('Logout')).toBeDefined();
     global.localStorage.clear();
   });
-
-  // only test the presentation behaviour without testing the session logic (should be tested over there)
-  test.todo('calls session.logout callback when "Logout" button is clicked');
 });
