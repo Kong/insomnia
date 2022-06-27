@@ -3,14 +3,14 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
+    "**/*.test.ts",
     "**/fixtures",
     "**/test-helpers",
-    "**/*.test.ts"
-  ]
+  ],
 }
