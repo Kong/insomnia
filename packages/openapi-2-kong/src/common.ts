@@ -166,20 +166,25 @@ export const hasUpstreams = (api: OpenApi3Spec) => {
   return hasUpstreamDefaults || hasMoreThanOneServer;
 };
 
-export function resolveAllRefValueRecursively(obj: unknown, path = '$ref'): string[] {
-  if (typeof obj !== 'object' || Array.isArray(obj) || !obj) {
+export function resolveObjectPathRecursively(unknownObject: unknown, path = '$ref'): string[] {
+  if (typeof unknownObject !== 'object' || Array.isArray(unknownObject) || !unknownObject) {
     return [];
   }
 
-  return Object.entries(obj).reduce((acc: string[], entry: [string, unknown]) => {
+  return Object.entries(unknownObject).reduce((acc: string[], entry: [string, unknown]) => {
     const [currentPath, value] = entry;
     if ((currentPath === path) && typeof value === 'string') {
       return acc.concat(value);
     }
 
     // do the recursion only if its an object
-    if (typeof value === 'object') {
-      return acc.concat(resolveAllRefValueRecursively(value, path));
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      return acc.concat(resolveObjectPathRecursively(value, path));
+    }
+
+    if (Array.isArray(value)) {
+      const valueMapped = value.reduce((paths, item) => paths.concat(resolveObjectPathRecursively(item, path)), []);
+      return acc.concat(valueMapped);
     }
 
     return acc;

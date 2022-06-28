@@ -2,7 +2,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
 import { Entry } from 'type-fest';
 
-import { distinctByProperty, getPluginNameFromKey, isPluginKey, resolveAllRefValueRecursively } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey, resolveObjectPathRecursively } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
 import type { OA3Operation, OpenApi3Spec } from '../types/openapi3';
@@ -164,25 +164,31 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
   return;
 }
 
-function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject): OpenAPIV3.ComponentsObject | undefined {
-  const everyReference = resolveAllRefValueRecursively(schema, '$ref');
-  if (!everyReference?.length) {
-    return;
+function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>(schema: T, $refs: SwaggerParser.$Refs, hash = new Map<string, T>()): Map<string, unknown> {
+  const paths = resolveObjectPathRecursively(schema);
+  if (!paths?.length) {
+    return hash;
   }
 
-  const components = everyReference.reduce((acc: Record<string, unknown>, $refPath: string) => {
-    const resolvedPath = getOperationRef($refs, $refPath);
-    const itemKey = $refPath?.split('/').pop();
-    if (resolvedPath && itemKey) {
-      acc[itemKey] = resolvedPath;
+  return paths.reduce((acc: Map<string, T>, $refPath: string) => {
+    const path = $refPath?.split('/').pop();
+    if (path && !acc.has(path)) {
+      const pathResolved = getOperationRef<T>($refs, $refPath);
+      if (pathResolved) {
+        acc.set(path, pathResolved);
+        resolveRefSchemaRecursively(pathResolved, $refs, acc);
+      }
     }
     return acc;
-  }, {});
+  }, hash);
+}
 
-  if (Object.entries(components).length === 0) {
+function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject): OpenAPIV3.ComponentsObject | undefined {
+  const componentsIterable = resolveRefSchemaRecursively(schema, $refs);
+  if (!componentsIterable.size) {
     return;
   }
-
+  const components = Object.fromEntries(componentsIterable);
   return components;
 }
 
