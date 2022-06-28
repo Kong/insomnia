@@ -13,9 +13,10 @@ import { RequestGroup } from '../../../models/request-group';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
+import { Dropdown } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
-import { RequestActionsDropdown, RequestActionsDropdownHandle } from '../dropdowns/request-actions-dropdown';
+import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
 import { GrpcSpinner } from '../grpc-spinner';
 import { showModal } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -24,19 +25,18 @@ import { MethodTag } from '../tags/method-tag';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 interface RawProps {
-  handleActivateRequest: Function;
-  handleSetRequestPinned: Function;
-  handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
-  handleCopyAsCurl: Function;
+  disableDragAndDrop?: boolean;
   filter: string;
+  handleActivateRequest: (requestId?: string) => void;
+  handleCopyAsCurl: (reqeust: Request | GrpcRequest) => void;
+  handleDuplicateRequest: (reqeust: Request | GrpcRequest) => void;
+  handleGenerateCode: (reqeust: Request | GrpcRequest) => void;
+  handleSetRequestPinned: (reqeust: Request | GrpcRequest, isPinned: boolean) => void;
+  hotKeyRegistry: HotKeyRegistry;
   isActive: boolean;
   isPinned: boolean;
-  hotKeyRegistry: HotKeyRegistry;
-  requestGroup?: RequestGroup;
-  /** can be Request or GrpcRequest */
   request?: Request | GrpcRequest;
-  disableDragAndDrop?: boolean;
+  requestGroup?: RequestGroup;
 }
 
 type Props = RawProps & DnDProps;
@@ -99,7 +99,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   const [renderedUrl, setRenderedUrl] = useState('');
 
-  const requestActionsDropdown = useRef<RequestActionsDropdownHandle>(null);
+  const requestActionsDropdown = useRef<Dropdown>(null);
 
   const handleShowRequestActions = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
