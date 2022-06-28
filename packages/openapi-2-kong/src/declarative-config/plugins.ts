@@ -164,27 +164,50 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
   return;
 }
 
-function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>(schema: T, $refs: SwaggerParser.$Refs, hash = new Map<string, T>()): Map<string, unknown> {
+/**
+ * Resolves all of the reference paths mentioned in the given OpenAPIV3 schema object into right schemas
+ * @param $refs Swagger.$Refs object to get a OpenAPI schema resolving method for free
+ * @param schema schema object to be recursively resolved
+ * @param hash a hash map used to search and add
+ * @returns a hash map that has resolved all ref schema items recursively with its size property
+ */
+function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>($refs: SwaggerParser.$Refs, schema: T, hash = new Map<string, T>()): Map<string, unknown> {
+  // let's get all the $ref paths first recursively
   const paths = resolveObjectPathRecursively(schema);
   if (!paths?.length) {
+    // If it's empty, terminate it right away
     return hash;
   }
 
-  return paths.reduce((acc: Map<string, T>, $refPath: string) => {
+  // resolve the reference object recursively here
+  return paths.reduce((components: Map<string, T>, $refPath: string) => {
+    // build the key from a JSON path as with the last split string item
     const path = $refPath?.split('/').pop();
-    if (path && !acc.has(path)) {
+
+    // if this path was never resolved, then try to resolve it
+    if (path && !components.has(path)) {
       const pathResolved = getOperationRef<T>($refs, $refPath);
+
+      // if a schema for the given path is resolved, then add it to the hash map
       if (pathResolved) {
-        acc.set(path, pathResolved);
-        resolveRefSchemaRecursively(pathResolved, $refs, acc);
+        components.set(path, pathResolved);
+
+        // recursively check if the resolved schema also contains $ref path and resolve it
+        resolveRefSchemaRecursively($refs, pathResolved, components);
       }
     }
-    return acc;
+    return components;
   }, hash);
 }
 
+/**
+ * Resolves a set of components used in the given schema recursively
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param schema schema object to be recursively resolved
+ * @returns OpenAPIV3 component objects completely dereferenced for all paths mentioned in the given schema
+ */
 function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject): OpenAPIV3.ComponentsObject | undefined {
-  const componentsIterable = resolveRefSchemaRecursively(schema, $refs);
+  const componentsIterable = resolveRefSchemaRecursively($refs, schema);
   if (!componentsIterable.size) {
     return;
   }
@@ -194,6 +217,8 @@ function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaO
 
 function serializeSchemaForKong(schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject, components: OpenAPIV3.ComponentsObject | undefined): string {
   const kongSchema: KongSchema = { ...schema };
+
+  // we probably want to include 'components' and '$schema' only if 'components' exists
   if (components) {
     kongSchema.components = components;
     kongSchema.$schema = $schema;
