@@ -232,12 +232,14 @@ interface ResolvedItemSchema {
 }
 function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): ResolvedItemSchema {
   if (item.schema && '$ref' in item.schema) {
-    const schema: OpenAPIV3.NonArraySchemaObject = { ...$refs.get(item.schema.$ref) };
-    const components = resolveComponents($refs, schema);
-    return { schema, components };
+    const schema = getOperationRef<OpenAPIV3.SchemaObject>($refs, item.schema.$ref);
+    if (schema) {
+      const components = resolveComponents($refs, schema);
+      return { schema, components };
+    }
   }
 
-  const hasNoRef = { schema: item.schema ?? {}, components: undefined };
+  const hasNoRef = { schema: item.schema as OpenAPIV3.SchemaObject ?? {}, components: undefined };
   return hasNoRef;
 }
 
