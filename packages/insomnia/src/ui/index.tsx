@@ -40,6 +40,7 @@ document.title = getProductName();
   // Create Redux store
   const store = await initStore();
 
+  console.log(store);
   const render = (App: React.ComponentType<any>) => {
     ReactDOM.render(
       <Provider store={store}>
