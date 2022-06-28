@@ -241,19 +241,21 @@ const WrapperUnitTest: FC<Props> = ({
   }, []);
 
   const handleDeleteUnitTestSuite = useCallback((unitTestSuite: UnitTestSuite) => {
-    showAlert({
-      title: `Delete ${unitTestSuite.name}`,
-      message: (
-        <span>
-          Really delete <strong>{unitTestSuite.name}</strong>?
-        </span>
-      ),
-      addCancel: true,
-      onConfirm: async () => {
-        await models.unitTestSuite.remove(unitTestSuite);
-        trackSegmentEvent(SegmentEvent.testSuiteDelete);
-      },
-    });
+    return () => {
+      showAlert({
+        title: `Delete ${unitTestSuite.name}`,
+        message: (
+          <span>
+            Really delete <strong>{unitTestSuite.name}</strong>?
+          </span>
+        ),
+        addCancel: true,
+        onConfirm: async () => {
+          await models.unitTestSuite.remove(unitTestSuite);
+          trackSegmentEvent(SegmentEvent.testSuiteDelete);
+        },
+      });
+    };
   }, []);
 
   const handleChangeTestName = useCallback((unitTest: UnitTest, name?: string) => {
@@ -348,7 +350,7 @@ const WrapperUnitTest: FC<Props> = ({
                     >
                       {testsRunning ? 'Running... ' : 'Run Tests'}
                     </DropdownItem>
-                    <DropdownItem onClick={handleDeleteUnitTestSuite.bind(this, suite)}>
+                    <DropdownItem onClick={handleDeleteUnitTestSuite(suite)}>
                       Delete Suite
                     </DropdownItem>
                   </Dropdown>
