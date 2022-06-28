@@ -2,7 +2,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
 import { Entry } from 'type-fest';
 
-import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey, resolveAllRefValueRecursively } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
 import type { OA3Operation, OpenApi3Spec } from '../types/openapi3';
@@ -50,10 +50,8 @@ interface ResolvedParameter {
   resolvedParam: OpenAPIV3.ParameterObject;
   components: OpenAPIV3.ComponentsObject | undefined;
 }
-
 const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): ResolvedParameter => {
   if ('$ref' in parameter) {
-    const components = getOperationRef<OpenAPIV3.ComponentsObject>($refs, '#/components');
     const dereferenced = getOperationRef<OpenAPIV3.ParameterObject>($refs, parameter.$ref);
     const { $ref, ...param } = parameter;
 
@@ -70,6 +68,7 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
       schema,
     };
 
+    const components = resolveComponents($refs, resolvedParam);
     return {
       resolvedParam,
       components,
@@ -77,14 +76,11 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
   }
 
   if (parameter.schema && '$ref' in parameter.schema) {
-    const components = getOperationRef<OpenAPIV3.ComponentsObject>($refs, '#/components');
     const schema = getOperationRef<OpenAPIV3.ParameterObject['schema']>($refs, parameter.schema.$ref);
-
+    const resolvedParam = { ...parameter, schema };
+    const components = resolveComponents($refs, resolvedParam);
     return {
-      resolvedParam: {
-        ...parameter,
-        schema,
-      },
+      resolvedParam,
       components,
     };
   }
@@ -168,22 +164,53 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
   return;
 }
 
-function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): OpenAPIV3.SchemaObject {
-  if (item.schema && '$ref' in item.schema) {
-    const resolved: OpenAPIV3.NonArraySchemaObject & { $schema: string; components: Record<string, unknown> } = { ...$refs.get(item.schema.$ref) };
-    resolved.components = $refs.get('#/components');
-    resolved.$schema = 'http://json-schema.org/schema';
-    return resolved;
+function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject): OpenAPIV3.ComponentsObject | undefined {
+  const everyReference = resolveAllRefValueRecursively(schema, '$ref');
+  if (!everyReference?.length) {
+    return;
   }
 
-  if (!item.schema) {
-    return {};
+  const components = everyReference.reduce((acc: Record<string, unknown>, $refPath: string) => {
+    const resolvedPath = getOperationRef($refs, $refPath);
+    const itemKey = $refPath?.split('/').pop();
+    if (resolvedPath && itemKey) {
+      acc[itemKey] = resolvedPath;
+    }
+    return acc;
+  }, {});
+
+  if (Object.entries(components).length === 0) {
+    return;
   }
 
-  return item.schema;
+  return components;
 }
 
-function serializeSchema(schema: OpenAPIV3.SchemaObject): string {
+function serializeSchemaForKong(schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject, components: OpenAPIV3.ComponentsObject | undefined): string {
+  const kongSchema: KongSchema = { ...schema };
+  if (components) {
+    kongSchema.components = components;
+    kongSchema.$schema = $schema;
+  }
+  return JSON.stringify(kongSchema);
+}
+
+interface ResolvedItemSchema {
+  schema: OpenAPIV3.SchemaObject;
+  components: OpenAPIV3.ComponentsObject | undefined;
+}
+function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): ResolvedItemSchema {
+  if (item.schema && '$ref' in item.schema) {
+    const schema: OpenAPIV3.NonArraySchemaObject = { ...$refs.get(item.schema.$ref) };
+    const components = resolveComponents($refs, schema);
+    return { schema, components };
+  }
+
+  const hasNoRef = { schema: item.schema ?? {}, components: undefined };
+  return hasNoRef;
+}
+
+function processSchema(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
   for (const key in schema.properties) {
     // Append 'null' to property type if nullable true, see FTI-3278
     // TODO: this does not conform to the OpenAPI 3 spec typings. We may need to investifate further why this was needed
@@ -195,7 +222,7 @@ function serializeSchema(schema: OpenAPIV3.SchemaObject): string {
     }
   }
 
-  return JSON.stringify(schema);
+  return schema;
 }
 
 export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Operation) {
@@ -212,9 +239,9 @@ export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Oper
 
     if (allowedContentTypes.includes(jsonContentType)) {
       const item: OpenAPIV3.MediaTypeObject = bodyContent[jsonContentType];
-
-      const schema = resolveItemSchema($refs, item);
-      bodySchema = serializeSchema(schema);
+      const { schema: rawSchema, components } = resolveItemSchema($refs, item);
+      const schema = processSchema(rawSchema);
+      bodySchema = serializeSchemaForKong(schema, components);
     }
   }
 

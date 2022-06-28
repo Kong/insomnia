@@ -165,3 +165,23 @@ export const hasUpstreams = (api: OpenApi3Spec) => {
   const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
   return hasUpstreamDefaults || hasMoreThanOneServer;
 };
+
+export function resolveAllRefValueRecursively(obj: unknown, path = '$ref'): string[] {
+  if (typeof obj !== 'object' || Array.isArray(obj) || !obj) {
+    return [];
+  }
+
+  return Object.entries(obj).reduce((acc: string[], entry: [string, unknown]) => {
+    const [currentPath, value] = entry;
+    if ((currentPath === path) && typeof value === 'string') {
+      return acc.concat(value);
+    }
+
+    // do the recursion only if its an object
+    if (typeof value === 'object') {
+      return acc.concat(resolveAllRefValueRecursively(value, path));
+    }
+
+    return acc;
+  }, []);
+}
