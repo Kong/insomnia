@@ -167,7 +167,7 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
   const handleSetDashboardSortOrder = useCallback(sortOrder => dispatch(setDashboardSortOrder(sortOrder)), [dispatch]);
   const handleActivateWorkspace = useCallback(({ workspace }) => dispatch(activateWorkspace({ workspace })), [dispatch]);
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('');
 
   const { vcs } = wrapperProps;

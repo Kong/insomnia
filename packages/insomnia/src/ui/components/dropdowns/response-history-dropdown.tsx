@@ -30,6 +30,7 @@ interface Props {
   requestVersions: RequestVersion[];
   responses: Response[];
 }
+
 export const ResponseHistoryDropdown: FC<Props> = ({
   activeEnvironment,
   activeResponse,
@@ -44,7 +45,13 @@ export const ResponseHistoryDropdown: FC<Props> = ({
   const dropdownRef = useRef<Dropdown>(null);
 
   const now = new Date();
-  const categories: Record<string, Response[]> = { minutes: [], hours: [], today: [], week: [], other: [] };
+  const categories: Record<string, Response[]> = {
+    minutes: [],
+    hours: [],
+    today: [],
+    week: [],
+    other: [],
+  };
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
@@ -71,10 +78,11 @@ export const ResponseHistoryDropdown: FC<Props> = ({
 
     categories.other.push(response);
   });
+
   const renderResponseRow = (response: Response) => {
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
-    const requestVersion = requestVersions.find(v => v._id === response.requestVersionId);
+    const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
     const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
     return (
       <DropdownItem

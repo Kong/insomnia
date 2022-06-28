@@ -130,7 +130,7 @@ export const RequestPane: FC<Props> = ({
     }
   }, [request, forceUpdateRequest]);
 
-  const requestUrlBarRef = useRef<RequestUrlBar | null>(null);
+  const requestUrlBarRef = useRef<RequestUrlBar>(null);
   useMount(() => {
     requestUrlBarRef.current?.focusInput();
   });

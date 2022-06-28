@@ -74,7 +74,7 @@ const ActionButtons = styled.div({
 
 export const AnalyticsModal: FC = () => {
   const { hasPromptedAnalytics } = useSelector(selectSettings);
-  const ref = useRef<Modal | null>(null);
+  const ref = useRef<Modal>(null);
 
   const onEnable = useCallback(async () => {
     await models.settings.patch({

@@ -32,7 +32,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   hotKeyRegistry,
   workspace,
 }) => {
-  const dropdownRef = useRef<Dropdown | null>(null);
+  const dropdownRef = useRef<Dropdown>(null);
   const handleShowEnvironmentModal = useCallback(() => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);
   }, [workspace]);
