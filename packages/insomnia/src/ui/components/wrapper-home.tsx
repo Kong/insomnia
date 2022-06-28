@@ -8,7 +8,7 @@ import {
   DropdownItem,
   SvgIcon,
 } from 'insomnia-components';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { FC, useCallback, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
@@ -148,7 +148,7 @@ const mapWorkspaceToWorkspaceCard = ({
   };
 };
 
-const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
+const WrapperHome: FC<Props> = (({ wrapperProps }) => {
   const sortOrder = useSelector(selectDashboardSortOrder);
   const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);

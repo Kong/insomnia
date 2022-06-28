@@ -41,7 +41,7 @@ interface Props {
   request: Request;
 }
 
-export const AuthDropdown: React.FC<Props> = ({ children, className, onChange, request }) => {
+export const AuthDropdown: FC<Props> = ({ children, className, onChange, request }) => {
   const { authentication } = request;
 
   const onClick = useCallback((type: string) => {

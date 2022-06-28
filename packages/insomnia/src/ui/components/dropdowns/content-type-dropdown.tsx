@@ -88,7 +88,7 @@ const MimeTypeItem: FC<{
   );
 };
 
-export const ContentTypeDropdown: React.FC<Props> = ({
+export const ContentTypeDropdown: FC<Props> = ({
   children,
   className,
   onChange,

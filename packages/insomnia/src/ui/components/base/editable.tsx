@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useRef, useState } from 'react';
+import React, { FC, ReactElement, useCallback, useRef, useState } from 'react';
 
 import { KeydownBinder } from '../keydown-binder';
 import { HighlightProps } from './highlight';
@@ -30,7 +30,7 @@ interface Props {
   value: string;
 }
 
-export const Editable: React.FC<Props> = ({
+export const Editable: FC<Props> = ({
   blankValue,
   className,
   fallbackValue,

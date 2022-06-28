@@ -1,5 +1,5 @@
 import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
-import React, { useCallback, useRef } from 'react';
+import React, { FC, useCallback, useRef } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
@@ -24,7 +24,7 @@ interface Props {
   workspace: Workspace;
 }
 
-export const EnvironmentsDropdown: React.FC<Props> = ({
+export const EnvironmentsDropdown: FC<Props> = ({
   activeEnvironment,
   environmentHighlightColorStyle,
   environments,

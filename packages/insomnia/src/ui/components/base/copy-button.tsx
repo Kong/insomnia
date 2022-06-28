@@ -1,6 +1,6 @@
 import { clipboard } from 'electron';
 import { Button, ButtonProps } from 'insomnia-components';
-import React, { useCallback, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { useInterval } from 'react-use';
 
 interface Props extends ButtonProps {
@@ -9,7 +9,7 @@ interface Props extends ButtonProps {
   title?: string;
 }
 
-export const CopyButton: React.FC<Props> = ({
+export const CopyButton: FC<Props> = ({
   children,
   confirmMessage,
   content,

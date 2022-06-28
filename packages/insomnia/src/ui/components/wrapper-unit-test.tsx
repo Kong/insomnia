@@ -10,7 +10,7 @@ import {
 } from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, { FC, ReactNode, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -48,7 +48,7 @@ interface Props {
   wrapperProps: WrapperProps;
 }
 
-const WrapperUnitTest: React.FC<Props> = ({
+const WrapperUnitTest: FC<Props> = ({
   sidebarChildren,
   wrapperProps,
   gitSyncDropdown,
@@ -440,7 +440,7 @@ interface TestRunStatusProps{
   testsRunning:UnitTest[] | null;
   resultsError:string | null;
 }
-const TestRunStatus: React.FC<TestRunStatusProps> = ({ testsRunning, resultsError }) => {
+const TestRunStatus: FC<TestRunStatusProps> = ({ testsRunning, resultsError }) => {
   const activeUnitTestResult = useSelector(selectActiveUnitTestResult);
 
   if (resultsError) {

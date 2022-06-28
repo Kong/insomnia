@@ -1,11 +1,11 @@
 import Papa from 'papaparse';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 
 interface Props {
   body: Buffer;
 }
 
-export const ResponseCSVViewer: React.FC<Props> = ({ body }) => {
+export const ResponseCSVViewer: FC<Props> = ({ body }) => {
   const [csv, setCSV] = useState<{ data: string[][] } | null>(null);
   const parse = useCallback(() =>
     Papa.parse<string[]>(body.toString('utf8'), {

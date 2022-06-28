@@ -1,4 +1,4 @@
-import React, { Fragment, ReactNode } from 'react';
+import React, { FC, Fragment, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../common/constants';
@@ -50,7 +50,7 @@ interface Props {
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   wrapperProps: WrapperProps;
 }
-export const WrapperDebug: React.FC<Props> = ({
+export const WrapperDebug: FC<Props> = ({
   forceRefreshKey,
   gitSyncDropdown,
   handleActivityChange,
