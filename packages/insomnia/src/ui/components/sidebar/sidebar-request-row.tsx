@@ -239,7 +239,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                 className="inline-block"
                 onEditStart={startEditing}
                 onSubmit={handleRequestUpdateName}
-                renderReadView={(value: string, props: any) => (
+                renderReadView={(value, props) => (
                   <Highlight
                     search={filter}
                     text={value}
