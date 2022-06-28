@@ -427,7 +427,7 @@ const WrapperUnitTest: React.FC<Props> = ({
               selectableRequests={selectableRequests}
               testNameEditable={
                 <UnitTestEditable
-                  onSubmit={() => _handleChangeTestName(unitTest)}
+                  onSubmit={name => _handleChangeTestName(unitTest, name)}
                   value={unitTest.name}
                 />
               }
