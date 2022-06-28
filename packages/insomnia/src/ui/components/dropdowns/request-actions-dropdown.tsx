@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useState } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -26,21 +26,18 @@ import { showError } from '../modals';
 interface Props extends Pick<DropdownProps, 'right'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
-  handleCopyAsCurl: Function;
-  handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
-  handleSetRequestPinned: Function;
-  handleShowSettings: Function;
+  handleCopyAsCurl: (reqeust: Request | GrpcRequest) => void;
+  handleDuplicateRequest: (reqeust: Request | GrpcRequest) => void;
+  handleGenerateCode: (reqeust: Request | GrpcRequest) => void;
+  handleSetRequestPinned: (reqeust: Request | GrpcRequest, isPinned: boolean) => void;
+  handleShowSettings: () => void;
   hotKeyRegistry: HotKeyRegistry;
   isPinned: Boolean;
   request: Request | GrpcRequest;
   requestGroup?: RequestGroup;
 }
-export interface RequestActionsDropdownHandle {
-  show:()=>void;
-  hide:()=>void;
-}
-export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, Props>(({
+
+export const RequestActionsDropdown = forwardRef<Dropdown, Props>(({
   activeEnvironment,
   activeProject,
   handleCopyAsCurl,
@@ -53,60 +50,72 @@ export const RequestActionsDropdown = forwardRef<RequestActionsDropdownHandle, P
   request,
   requestGroup,
 }, ref) => {
-  const dropdownRef = useRef<Dropdown>(null);
-  const show = useCallback(() => {
-    if (dropdownRef.current) {
-      dropdownRef.current.show();
-    }
-  }, [dropdownRef]);
-  const hide = useCallback(() => {
-    if (dropdownRef.current) {
-      dropdownRef.current.show();
-    }
-  }, [dropdownRef]);
-  useImperativeHandle(ref, () => ({ show, hide }), [show, hide]);
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
-  const onOpen = async () => {
-    const actionPlugins = await getRequestActions();
-    setActionPlugins(actionPlugins);
-  };
-  const handlePluginClick = useCallback(async (p: RequestAction) => {
-    setLoadingActions({ ...loadingActions, [p.label]: true });
 
-    try {
-      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-      const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(activeProject._id),
-        ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
-        ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
-      };
-      await p.action(context, {
-        request,
-        requestGroup,
-      });
-    } catch (err) {
-      showError({
-        title: 'Plugin Action Failed',
-        error: err,
-      });
-    }
-    setLoadingActions({ ...loadingActions, [p.label]: false });
-    hide();
-  }, [request, activeEnvironment, hide, requestGroup, loadingActions, activeProject._id]);
-  const duplicate = useCallback(() => handleDuplicateRequest(request), [handleDuplicateRequest, request]);
-  const generateCode = useCallback(() => handleGenerateCode(request), [handleGenerateCode, request]);
-  const copyAsCurl = useCallback(() => handleCopyAsCurl(request), [handleCopyAsCurl, request]);
-  const togglePin = useCallback(() => handleSetRequestPinned(request, !isPinned), [handleSetRequestPinned, isPinned, request]);
+  const onOpen = useCallback(() => {
+    const fn = async () => {
+      const actionPlugins = await getRequestActions();
+      setActionPlugins(actionPlugins);
+    };
+    fn();
+  }, []);
+
+  const handlePluginClick = useCallback(({ plugin, action, label }: RequestAction) => {
+    const fn = async () => {
+      setLoadingActions({ ...loadingActions, [label]: true });
+
+      try {
+        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+        const context = {
+          ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
+          ...pluginContexts.data.init(activeProject._id),
+          ...(pluginContexts.store.init(plugin)),
+          ...(pluginContexts.network.init(activeEnvironmentId)),
+        };
+        await action(context, {
+          request,
+          requestGroup,
+        });
+      } catch (error) {
+        showError({
+          title: 'Plugin Action Failed',
+          error,
+        });
+      }
+      setLoadingActions({ ...loadingActions, [label]: false });
+      if (ref && 'current' in ref) { // this `in` operator statement type-narrows to `MutableRefObject`
+        ref.current?.hide();
+      }
+    };
+    fn();
+  }, [request, activeEnvironment, requestGroup, loadingActions, activeProject._id, ref]);
+
+  const duplicate = useCallback(() => {
+    handleDuplicateRequest(request);
+  }, [handleDuplicateRequest, request]);
+
+  const generateCode = useCallback(() => {
+    handleGenerateCode(request);
+  }, [handleGenerateCode, request]);
+
+  const copyAsCurl = useCallback(() => {
+    handleCopyAsCurl(request);
+  }, [handleCopyAsCurl, request]);
+
+  const togglePin = useCallback(() => {
+    handleSetRequestPinned(request, !isPinned);
+  }, [handleSetRequestPinned, isPinned, request]);
+
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();
     requestOperations.remove(request);
   }, [request]);
+
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown ref={dropdownRef} onOpen={onOpen}>
+    <Dropdown ref={ref} onOpen={onOpen}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
