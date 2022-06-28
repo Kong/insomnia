@@ -102,9 +102,7 @@ const mapWorkspaceToWorkspaceCard = ({
   }
 
   // Get cached branch from WorkspaceMeta
-  const workspaceMeta = workspaceMetas?.find(
-    wm => wm.parentId === workspace._id
-  );
+  const workspaceMeta = workspaceMetas?.find(({ parentId }) => parentId === workspace._id);
 
   const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
@@ -159,13 +157,33 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
 
   const dispatch = useDispatch();
 
-  const handleCreateWorkspace = useCallback(({ scope, onCreate }) => dispatch(createWorkspace({ scope, onCreate })), [dispatch]);
-  const handleGitCloneWorkspace = useCallback(({ createFsClient }) => dispatch(cloneGitRepository({ createFsClient })), [dispatch]);
-  const handleImportFile = useCallback(({ forceToWorkspace }) => dispatch(importFile({ forceToWorkspace })), [dispatch]);
-  const handleImportUri = useCallback((uri, { forceToWorkspace }) => dispatch(importUri(uri, { forceToWorkspace })), [dispatch]);
-  const handleImportClipboard = useCallback(({ forceToWorkspace }) => dispatch(importClipBoard({ forceToWorkspace })), [dispatch]);
-  const handleSetDashboardSortOrder = useCallback(sortOrder => dispatch(setDashboardSortOrder(sortOrder)), [dispatch]);
-  const handleActivateWorkspace = useCallback(({ workspace }) => dispatch(activateWorkspace({ workspace })), [dispatch]);
+  const handleCreateWorkspace = useCallback(({ scope, onCreate }) => {
+    dispatch(createWorkspace({ scope, onCreate }));
+  }, [dispatch]);
+
+  const handleGitCloneWorkspace = useCallback(({ createFsClient }) => {
+    dispatch(cloneGitRepository({ createFsClient }));
+  }, [dispatch]);
+
+  const handleImportFile = useCallback(({ forceToWorkspace }) => {
+    dispatch(importFile({ forceToWorkspace }));
+  }, [dispatch]);
+
+  const handleImportUri = useCallback((uri, { forceToWorkspace }) => {
+    dispatch(importUri(uri, { forceToWorkspace }));
+  }, [dispatch]);
+
+  const handleImportClipboard = useCallback(({ forceToWorkspace }) => {
+    dispatch(importClipBoard({ forceToWorkspace }));
+  }, [dispatch]);
+
+  const handleSetDashboardSortOrder = useCallback(sortOrder => {
+    dispatch(setDashboardSortOrder(sortOrder));
+  }, [dispatch]);
+
+  const handleActivateWorkspace = useCallback(({ workspace }) => {
+    dispatch(activateWorkspace({ workspace }));
+  }, [dispatch]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('');
@@ -185,30 +203,55 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
         filter={filter}
       />
     ));
-  const createRequestCollection = useCallback(() => handleCreateWorkspace({
-    scope: WorkspaceScopeKeys.collection,
-    onCreate: async (workspace: Workspace) => {
+
+  const createRequestCollection = useCallback(() => {
+    handleCreateWorkspace({
+      scope: WorkspaceScopeKeys.collection,
+      onCreate: async (workspace: Workspace) => {
       // Don't mark for sync if not logged in at the time of creation
-      if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
-        await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
-      }
-    },
-  }), [activeProject, handleCreateWorkspace, isLoggedIn, vcs]);
-  const createDesignDocument = useCallback(() => handleCreateWorkspace({ scope: WorkspaceScopeKeys.design }), [handleCreateWorkspace]);
-  const importFromURL = useCallback(() => showPrompt({
-    title: 'Import document from URL',
-    submitName: 'Fetch and Import',
-    label: 'URL',
-    placeholder: 'https://website.com/insomnia-import.json',
-    onComplete: uri => {
-      handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
-    },
-  }), [handleImportUri]);
-  const importFromClipboard = useCallback(() => handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing }), [handleImportClipboard]);
-  const importFromFile = useCallback(() => handleImportFile({ forceToWorkspace: ForceToWorkspace.existing }), [handleImportFile]);
-  const importFromGit = useCallback(() => handleGitCloneWorkspace({ createFsClient: MemClient.createClient }), [handleGitCloneWorkspace]);
-  const onChangeFilter = useCallback(event => setFilter(event.currentTarget.value), []);
-  const onKeydown = useCallback(event => executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus()), []);
+        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
+          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+        }
+      },
+    });
+  }, [activeProject, handleCreateWorkspace, isLoggedIn, vcs]);
+
+  const createDesignDocument = useCallback(() => {
+    handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });
+  }, [handleCreateWorkspace]);
+
+  const importFromURL = useCallback(() => {
+    showPrompt({
+      title: 'Import document from URL',
+      submitName: 'Fetch and Import',
+      label: 'URL',
+      placeholder: 'https://website.com/insomnia-import.json',
+      onComplete: uri => {
+        handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
+      },
+    });
+  }, [handleImportUri]);
+
+  const importFromClipboard = useCallback(() => {
+    handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing });
+  }, [handleImportClipboard]);
+
+  const importFromFile = useCallback(() => {
+    handleImportFile({ forceToWorkspace: ForceToWorkspace.existing });
+  }, [handleImportFile]);
+
+  const importFromGit = useCallback(() => {
+    handleGitCloneWorkspace({ createFsClient: MemClient.createClient });
+  }, [handleGitCloneWorkspace]);
+
+  const onChangeFilter = useCallback(event => {
+    setFilter(event.currentTarget.value);
+  }, []);
+
+  const onKeydown = useCallback(event => {
+    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus());
+  }, []);
+
   return (
     <PageLayout
       wrapperProps={wrapperProps}

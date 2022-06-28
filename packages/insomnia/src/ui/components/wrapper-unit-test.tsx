@@ -79,10 +79,7 @@ const WrapperUnitTest: FC<Props> = ({
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
 
-  const buildSelectableRequests = useCallback((): {
-    name: string;
-    request: Request;
-  }[] => {
+  const buildSelectableRequests = useCallback(() => {
     const selectableRequests: {
       name: string;
       request: Request;
@@ -107,35 +104,41 @@ const WrapperUnitTest: FC<Props> = ({
 
   const selectableRequests = buildSelectableRequests();
 
-  const handleSetActiveUnitTestSuite = useCallback(async (unitTestSuite: UnitTestSuite) => {
-    if (!activeWorkspace) {
-      return;
-    }
+  const handleSetActiveUnitTestSuite = useCallback((unitTestSuite: UnitTestSuite) => {
+    const fn = async () => {
+      if (!activeWorkspace) {
+        return;
+      }
 
-    await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
-      activeUnitTestSuiteId: unitTestSuite._id,
-    });
+      await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
+        activeUnitTestSuiteId: unitTestSuite._id,
+      });
+    };
+    fn();
   }, [activeWorkspace]);
 
-  const handleCreateTestSuite = useCallback(async () => {
-    if (!activeWorkspace) {
-      return;
-    }
-    showPrompt({
-      title: 'New Test Suite',
-      defaultValue: 'New Suite',
-      submitName: 'Create Suite',
-      label: 'Test Suite Name',
-      selectText: true,
-      onComplete: async name => {
-        const unitTestSuite = await models.unitTestSuite.create({
-          parentId: activeWorkspace._id,
-          name,
-        });
-        await handleSetActiveUnitTestSuite(unitTestSuite);
-        trackSegmentEvent(SegmentEvent.testSuiteCreate);
-      },
-    });
+  const handleCreateTestSuite = useCallback(() => {
+    const fn = async () => {
+      if (!activeWorkspace) {
+        return;
+      }
+      showPrompt({
+        title: 'New Test Suite',
+        defaultValue: 'New Suite',
+        submitName: 'Create Suite',
+        label: 'Test Suite Name',
+        selectText: true,
+        onComplete: async name => {
+          const unitTestSuite = await models.unitTestSuite.create({
+            parentId: activeWorkspace._id,
+            name,
+          });
+          await handleSetActiveUnitTestSuite(unitTestSuite);
+          trackSegmentEvent(SegmentEvent.testSuiteCreate);
+        },
+      });
+    };
+    fn();
   }, [handleSetActiveUnitTestSuite, activeWorkspace]);
 
   const generateSendReqSnippet = useCallback((existingCode: string, requestId: string) => {
@@ -209,8 +212,8 @@ const WrapperUnitTest: FC<Props> = ({
     });
   }, [activeUnitTestSuite?._id, generateSendReqSnippet]);
 
-  const handleUnitTestCodeChange = useCallback(async (unitTest: UnitTest, code: string) => {
-    await models.unitTest.update(unitTest, { code });
+  const handleUnitTestCodeChange = useCallback((unitTest: UnitTest, code: string) => {
+    models.unitTest.update(unitTest, { code });
   }, []);
 
   const handleDeleteTest = useCallback((unitTest: UnitTest) => {
@@ -229,12 +232,12 @@ const WrapperUnitTest: FC<Props> = ({
     });
   }, []);
 
-  const handleSetActiveRequest = useCallback(async (
+  const handleSetActiveRequest = useCallback((
     unitTest: UnitTest,
     event: React.SyntheticEvent<HTMLSelectElement>,
   ) => {
     const requestId = event.currentTarget.value === '__NULL__' ? null : event.currentTarget.value;
-    await models.unitTest.update(unitTest, { requestId });
+    models.unitTest.update(unitTest, { requestId });
   }, []);
 
   const handleDeleteUnitTestSuite = useCallback((unitTestSuite: UnitTestSuite) => {
@@ -253,54 +256,59 @@ const WrapperUnitTest: FC<Props> = ({
     });
   }, []);
 
-  const handleChangeTestName = useCallback(async (unitTest: UnitTest, name?: string) => {
-    await models.unitTest.update(unitTest, { name });
+  const handleChangeTestName = useCallback((unitTest: UnitTest, name?: string) => {
+    models.unitTest.update(unitTest, { name });
   }, []);
 
-  const handleChangeActiveSuiteName = useCallback(async (name?: string) => {
+  const handleChangeActiveSuiteName = useCallback((name?: string) => {
     if (!activeUnitTestSuite) {
       return;
     }
 
-    await models.unitTestSuite.update(activeUnitTestSuite, { name });
+    models.unitTestSuite.update(activeUnitTestSuite, { name });
   }, [activeUnitTestSuite]);
 
-  const _runTests = useCallback(async (unitTests: UnitTest[]) => {
-    if (!activeWorkspace) {
-      return;
-    }
-    setTestsRunning(unitTests);
-    setResultsError(null);
-    const tests: Test[] = unitTests.map(t => ({ name: t.name, code: t.code, defaultRequestId: t.requestId }));
-    const src = await generate([{ name: 'My Suite', suites: [], tests }]);
-    const sendRequest = getSendRequestCallback(activeEnvironment?._id);
+  const _runTests = useCallback((unitTests: UnitTest[]) => {
+    const fn = async () => {
+      if (!activeWorkspace) {
+        return;
+      }
+      setTestsRunning(unitTests);
+      setResultsError(null);
+      const tests: Test[] = unitTests.map(t => ({ name: t.name, code: t.code, defaultRequestId: t.requestId }));
+      const src = await generate([{ name: 'My Suite', suites: [], tests }]);
+      const sendRequest = getSendRequestCallback(activeEnvironment?._id);
 
-    try {
-      const results = await runTests(src, { sendRequest });
-      await models.unitTestResult.create({
-        results,
-        parentId: activeWorkspace._id,
-      });
-      setTestsRunning(null);
-
-    } catch (err) {
-      // Set the state after a timeout so the user still sees the loading state
-      setTimeout(() => {
+      try {
+        const results = await runTests(src, { sendRequest });
+        await models.unitTestResult.create({
+          results,
+          parentId: activeWorkspace._id,
+        });
         setTestsRunning(null);
-        setResultsError(err.message);
-      }, 400);
-      return;
-    }
+
+      } catch (err) {
+        // Set the state after a timeout so the user still sees the loading state
+        setTimeout(() => {
+          setTestsRunning(null);
+          setResultsError(err.message);
+        }, 400);
+        return;
+      }
+    };
+    return fn();
   }, [activeEnvironment?._id, activeWorkspace]);
 
-  const handleRunTests = useCallback(async () => {
-    await _runTests(activeUnitTests);
-    trackSegmentEvent(SegmentEvent.unitTestRunAll);
+  const handleRunTests = useCallback(() => {
+    _runTests(activeUnitTests).then(() => {
+      trackSegmentEvent(SegmentEvent.unitTestRunAll);
+    });
   }, [_runTests, activeUnitTests]);
 
   const handleRunTest = useCallback(async (unitTest: UnitTest) => {
-    await _runTests([unitTest]);
-    trackSegmentEvent(SegmentEvent.unitTestRun);
+    _runTests([unitTest]).then(() => {
+      trackSegmentEvent(SegmentEvent.unitTestRun);
+    });
   }, [_runTests]);
 
   return (
@@ -389,35 +397,37 @@ const WrapperUnitTest: FC<Props> = ({
                 secondaryAction="You can run these tests in CI with Inso CLI"
               />
             </div> : null}
-          <ListGroup>{activeUnitTests.map(unitTest =>
-            <UnitTestItem
-              item={unitTest}
-              key={unitTest._id}
-              onSetActiveRequest={event => handleSetActiveRequest(unitTest, event)}
-              onDeleteTest={() => handleDeleteTest(unitTest)}
-              onRunTest={() => handleRunTest(unitTest)}
-              testsRunning={testsRunning}
-              selectedRequestId={unitTest.requestId}
-              // @ts-expect-error -- TSCONVERSION
-              selectableRequests={selectableRequests}
-              testNameEditable={
-                <UnitTestEditable
-                  onSubmit={name => handleChangeTestName(unitTest, name)}
-                  value={unitTest.name}
+          <ListGroup>
+            {activeUnitTests.map(unitTest =>
+              <UnitTestItem
+                item={unitTest}
+                key={unitTest._id}
+                onSetActiveRequest={event => handleSetActiveRequest(unitTest, event)}
+                onDeleteTest={() => handleDeleteTest(unitTest)}
+                onRunTest={() => handleRunTest(unitTest)}
+                testsRunning={testsRunning}
+                selectedRequestId={unitTest.requestId}
+                // @ts-expect-error -- TSCONVERSION
+                selectableRequests={selectableRequests}
+                testNameEditable={
+                  <UnitTestEditable
+                    onSubmit={name => handleChangeTestName(unitTest, name)}
+                    value={unitTest.name}
+                  />
+                }
+              >
+                <CodeEditor
+                  dynamicHeight
+                  manualPrettify
+                  defaultValue={unitTest ? unitTest.code : ''}
+                  getAutocompleteSnippets={() => autocompleteSnippets(unitTest)}
+                  lintOptions={lintOptions}
+                  onChange={code => handleUnitTestCodeChange(unitTest, code)}
+                  mode="javascript"
+                  placeholder=""
                 />
-              }
-            >
-              <CodeEditor
-                dynamicHeight
-                manualPrettify
-                defaultValue={unitTest ? unitTest.code : ''}
-                getAutocompleteSnippets={() => autocompleteSnippets(unitTest)}
-                lintOptions={lintOptions}
-                onChange={code => handleUnitTestCodeChange(unitTest, code)}
-                mode="javascript"
-                placeholder=""
-              />
-            </UnitTestItem>)}</ListGroup>
+              </UnitTestItem>)}
+          </ListGroup>
         </div>
           : <div className="unit-tests pad theme--pane__body">No test suite selected</div>
       }
