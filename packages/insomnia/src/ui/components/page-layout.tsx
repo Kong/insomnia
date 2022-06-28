@@ -20,11 +20,11 @@ const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
 
 interface Props {
   wrapperProps: WrapperProps;
-  renderPageSidebar?: () => ReactNode;
-  renderPageHeader?: () => ReactNode;
-  renderPageBody?: () => ReactNode;
-  renderPaneOne?: () => ReactNode;
-  renderPaneTwo?: () => ReactNode;
+  renderPageSidebar?: ReactNode;
+  renderPageHeader?: ReactNode;
+  renderPageBody?: ReactNode;
+  renderPaneOne?: ReactNode;
+  renderPaneTwo?: ReactNode;
 }
 
 export const PageLayout: FC<Props> = ({
@@ -68,13 +68,12 @@ export const PageLayout: FC<Props> = ({
   }, [handleStartDragSidebar]);
 
   const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-  const paneTwo = renderPaneTwo?.();
-  const gridRows = paneTwo
+  const gridRows = renderPaneTwo
     ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
     : 'auto 1fr';
   const gridColumns =
-      `auto ${realSidebarWidth}rem 0 ` +
-      `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
+    `auto ${realSidebarWidth}rem 0 ` +
+    `${renderPaneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
   return (
     <div
       key="wrapper"
@@ -87,32 +86,32 @@ export const PageLayout: FC<Props> = ({
         gridTemplateRows: gridRows,
         boxSizing: 'border-box',
         borderTop:
-            activeEnvironment &&
+          activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-top'
-              ? '5px solid ' + activeEnvironment.color
-              : undefined,
+            ? '5px solid ' + activeEnvironment.color
+            : undefined,
         borderBottom:
-            activeEnvironment &&
+          activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-bottom'
-              ? '5px solid ' + activeEnvironment.color
-              : undefined,
+            ? '5px solid ' + activeEnvironment.color
+            : undefined,
         borderLeft:
-            activeEnvironment &&
+          activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-left'
-              ? '5px solid ' + activeEnvironment.color
-              : undefined,
+            ? '5px solid ' + activeEnvironment.color
+            : undefined,
         borderRight:
-            activeEnvironment &&
+          activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-right'
-              ? '5px solid ' + activeEnvironment.color
-              : undefined,
+            ? '5px solid ' + activeEnvironment.color
+            : undefined,
       }}
     >
-      {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader()}</ErrorBoundary>}
+      {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader}</ErrorBoundary>}
 
       {renderPageSidebar && (
         <ErrorBoundary showAlert>
@@ -132,7 +131,7 @@ export const PageLayout: FC<Props> = ({
             width={sidebarWidth}
             workspacesForActiveProject={workspacesForActiveProject}
           >
-            {renderPageSidebar()}
+            {renderPageSidebar}
           </Sidebar>
 
           <div className="drag drag--sidebar">
@@ -144,7 +143,7 @@ export const PageLayout: FC<Props> = ({
         </ErrorBoundary>
       )}
       {renderPageBody ? (
-        <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>
+        <ErrorBoundary showAlert>{renderPageBody}</ErrorBoundary>
       ) : (
         <>
           {renderPaneOne && (
@@ -153,11 +152,11 @@ export const PageLayout: FC<Props> = ({
                 position="one"
                 ref={requestPaneRef}
               >
-                {renderPaneOne()}
+                {renderPaneOne}
               </Pane>
             </ErrorBoundary>
           )}
-          {paneTwo && (
+          {renderPaneTwo && (
             <>
               <div className="drag drag--pane-horizontal">
                 <div
@@ -178,7 +177,7 @@ export const PageLayout: FC<Props> = ({
                   position="two"
                   ref={responsePaneRef}
                 >
-                  {paneTwo}
+                  {renderPaneTwo}
                 </Pane>
               </ErrorBoundary>
             </>

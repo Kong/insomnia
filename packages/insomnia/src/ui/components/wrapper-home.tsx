@@ -188,7 +188,7 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
   const createRequestCollection = useCallback(() => handleCreateWorkspace({
     scope: WorkspaceScopeKeys.collection,
     onCreate: async (workspace: Workspace) => {
-    // Don't mark for sync if not logged in at the time of creation
+      // Don't mark for sync if not logged in at the time of creation
       if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
         await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
       }
@@ -212,7 +212,7 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
   return (
     <PageLayout
       wrapperProps={wrapperProps}
-      renderPageHeader={() => (
+      renderPageHeader={
         <AppHeader
           breadcrumbProps={{
             crumbs: [
@@ -224,8 +224,8 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
             isLoading,
           }}
         />
-      )}
-      renderPageBody={() => (
+      }
+      renderPageBody={
         <div className="document-listing theme--pane layout-body">
           <div className="document-listing__body pad-bottom">
             <div className="row-spaced margin-top margin-bottom-sm">
@@ -309,7 +309,7 @@ const WrapperHome: React.FC<Props> = (({ wrapperProps }) => {
             </a>
           </div>
         </div>
-      )}
+      }
     />
   );
 });

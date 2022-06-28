@@ -120,7 +120,7 @@ export const WrapperDebug: React.FC<Props> = ({
   return (
     <PageLayout
       wrapperProps={wrapperProps}
-      renderPageHeader={() => activeWorkspace ?
+      renderPageHeader={activeWorkspace ?
         <WorkspacePageHeader
           handleActivityChange={handleActivityChange}
           gridRight={isTeamSync ? <SyncDropdown
@@ -132,7 +132,7 @@ export const WrapperDebug: React.FC<Props> = ({
           /> : isDesign(activeWorkspace) ? gitSyncDropdown : null}
         />
         : null}
-      renderPageSidebar={() => activeWorkspace ? <Fragment>
+      renderPageSidebar={activeWorkspace ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             handleChangeEnvironment={handleChangeEnvironment}
@@ -171,7 +171,7 @@ export const WrapperDebug: React.FC<Props> = ({
         />
       </Fragment>
         : null}
-      renderPaneOne={() => activeWorkspace ?
+      renderPaneOne={activeWorkspace ?
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) ?
             <GrpcRequestPane
@@ -209,7 +209,7 @@ export const WrapperDebug: React.FC<Props> = ({
             />}
         </ErrorBoundary>
         : null}
-      renderPaneTwo={() => <ErrorBoundary showAlert>
+      renderPaneTwo={<ErrorBoundary showAlert>
         {activeRequest && isGrpcRequest(activeRequest) ?
           <GrpcResponsePane
             activeRequest={activeRequest}
