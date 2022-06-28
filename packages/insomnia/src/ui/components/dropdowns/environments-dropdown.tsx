@@ -1,5 +1,5 @@
 import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
@@ -17,32 +17,32 @@ import { Tooltip } from '../tooltip';
 
 interface Props {
   activeEnvironment?: Environment | null;
-  className?: string;
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   environments: Environment[];
   handleChangeEnvironment: Function;
   hotKeyRegistry: HotKeyRegistry;
   workspace: Workspace;
 }
+
 export const EnvironmentsDropdown: React.FC<Props> = ({
   activeEnvironment,
-  className,
   environmentHighlightColorStyle,
   environments,
   handleChangeEnvironment,
   hotKeyRegistry,
   workspace,
-  ...dropdownProps
 }) => {
-  const dropdownRef = useRef<Dropdown>(null);
-  const _handleShowEnvironmentModal = () => {
+  const dropdownRef = useRef<Dropdown | null>(null);
+  const handleShowEnvironmentModal = useCallback(() => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);
-  };
-  const _handleKeydown = (event: KeyboardEvent) => {
+  }, [workspace]);
+
+  const onKeydown = useCallback((event: KeyboardEvent) => {
     executeHotKey(event, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
       dropdownRef.current?.toggle(true);
     });
-  };
+  }, []);
+
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.
   const baseEnvironment = environments.find(environment => environment.parentId === workspace._id);
   const subEnvironments = environments
@@ -51,12 +51,8 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
   const description =  (!activeEnvironment || activeEnvironment === baseEnvironment) ? 'No Environment' : activeEnvironment.name;
 
   return (
-    <KeydownBinder onKeydown={_handleKeydown}>
-      <Dropdown
-        ref={dropdownRef}
-        {...(dropdownProps as Record<string, any>)}
-        className={className}
-      >
+    <KeydownBinder onKeydown={onKeydown}>
+      <Dropdown ref={dropdownRef}>
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
             {!activeEnvironment && subEnvironments.length > 0 && (
@@ -93,8 +89,7 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
             <i
               className="fa fa-random"
               style={{
-              // @ts-expect-error -- TSCONVERSION don't set color if undefined
-                color: environment.color,
+                ...(environment.color ? { color: environment.color } : {}),
               }}
             />
             Use <strong>{environment.name}</strong>
@@ -107,7 +102,7 @@ export const EnvironmentsDropdown: React.FC<Props> = ({
 
         <DropdownDivider>General</DropdownDivider>
 
-        <DropdownItem onClick={_handleShowEnvironmentModal}>
+        <DropdownItem onClick={handleShowEnvironmentModal}>
           <i className="fa fa-wrench" /> Manage Environments
           <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
         </DropdownItem>

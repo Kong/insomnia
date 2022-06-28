@@ -135,12 +135,12 @@ export const WrapperDebug: React.FC<Props> = ({
       renderPageSidebar={activeWorkspace ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
-            handleChangeEnvironment={handleChangeEnvironment}
             activeEnvironment={activeEnvironment}
-            environments={environments}
-            workspace={activeWorkspace}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
+            environments={environments}
+            handleChangeEnvironment={handleChangeEnvironment}
             hotKeyRegistry={settings.hotKeyRegistry}
+            workspace={activeWorkspace}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
