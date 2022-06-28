@@ -37,6 +37,7 @@ export default async function build(options: Options) {
     target: 'esnext',
     bundle: true,
     platform: 'node',
+    sourcemap: true,
     format: 'cjs',
     external: ['electron'],
   });
