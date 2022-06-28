@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      sourcemap: __DEV__,
+      sourcemap: true,
       outDir: path.join(__dirname, 'build'),
       assetsDir: './',
       brotliSize: false,

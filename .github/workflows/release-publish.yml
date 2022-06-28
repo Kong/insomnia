@@ -170,6 +170,19 @@ jobs:
           DOCKER_IMAGE: kong/inso
           DOCKER_LATEST_TAG: ${{ env.IS_PRERELEASE == 'false' && 'latest' || contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }}
 
+      - name: Upload sourcemaps to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
+          SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
+          SENTRY_PROJECT: '${{ secrets.SENTRY_PROJECT }}'
+        run: |
+          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
+
+          sentry-cli releases new ${{ env.RELEASE_VERSION }}
+          sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
+
+          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@master
         with:
