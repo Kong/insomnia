@@ -1,6 +1,6 @@
 import { clipboard } from 'electron';
 import { Button, ButtonProps } from 'insomnia-components';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface Props extends ButtonProps {
   confirmMessage?: string;
@@ -16,17 +16,20 @@ export const CopyButton: React.FC<Props> = ({
   ...buttonProps
 }) => {
   const [showConfirmation, setshowConfirmation] = useState(false);
-  const onClick = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const toCopy = typeof content === 'string' ? content : await content();
+  const onClick = useCallback((event: React.MouseEvent) => {
+    const fn = async () => {
+      event.preventDefault();
+      event.stopPropagation();
+      const toCopy = typeof content === 'string' ? content : await content();
 
-    if (toCopy) {
-      clipboard.writeText(toCopy);
-    }
-    setshowConfirmation(true);
+      if (toCopy) {
+        clipboard.writeText(toCopy);
+      }
+      setshowConfirmation(true);
+    };
+    fn();
+  }, [content]);
 
-  };
   useEffect(() => {
     const timer = setTimeout(() => {
       setshowConfirmation(false);
