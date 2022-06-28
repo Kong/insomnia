@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useState } from 'react';
 
 import * as constants from '../../../common/constants';
 import { METHOD_GRPC } from '../../../common/constants';
@@ -7,6 +7,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showPrompt } from '../modals/index';
+
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
@@ -17,21 +18,18 @@ interface Props {
   right?: boolean;
   showGrpc?: boolean;
 }
-export interface MethodDropdownHandle {
-  toggle: () => void;
-}
-export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
+
+export const MethodDropdown = forwardRef<Dropdown, Props>(({
   className,
   method,
   onChange,
   right,
   showGrpc,
 }, ref) => {
-  const [recent, setRecent] = useState<string[]>(JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY) || '[]'));
+  const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
+  const parsedLocalStorageHttpMethods = localStorageHttpMethods ? JSON.parse(localStorageHttpMethods) as string[] : [];
+  const [recent, setRecent] = useState(parsedLocalStorageHttpMethods);
 
-  const dropdownRef = useRef<Dropdown>(null);
-  const toggle = useCallback(() => dropdownRef.current?.toggle(), [dropdownRef]);
-  useImperativeHandle(ref, () => ({ toggle }), [toggle]);
   const handleSetCustomMethod = useCallback(() => {
     showPrompt({
       defaultValue: method,
@@ -69,11 +67,12 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
 
   const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
   return (
-    <Dropdown ref={dropdownRef} className="method-dropdown" right={right}>
+    <Dropdown ref={ref} className="method-dropdown" right={right}>
       <DropdownButton className={className}>
         <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
+
       {constants.HTTP_METHODS.map(method => (
         <DropdownItem
           key={method}
@@ -84,6 +83,7 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
           {method}
         </DropdownItem>
       ))}
+
       {showGrpc && (
         <>
           <DropdownDivider />
@@ -92,6 +92,7 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
           </DropdownItem>
         </>
       )}
+
       <DropdownDivider />
       <DropdownItem
         className="http-method-custom"
