@@ -1,0 +1,75 @@
+{
+	"_format_version": "1.1",
+	"services": [
+		{
+			"name": "Testing_Circular",
+			"protocol": "https",
+			"host": "some.random.url",
+			"port": 443,
+			"path": "/",
+			"plugins": [
+				{
+					"name": "request-validator",
+					"config": {
+						"version": "draft4",
+						"body_schema": "{}",
+						"verbose_response": true
+					},
+					"tags": [
+						"OAS3_import",
+            "OAS3file_circular-example.yaml"
+					],
+					"enabled": true
+				}
+			],
+			"routes": [
+				{
+					"tags": [
+						"OAS3_import",
+            "OAS3file_circular-example.yaml"
+					],
+					"name": "Testing_Circular-testing-testingId-testing-endpoint-post",
+					"methods": [
+						"POST"
+					],
+					"paths": [
+						"/testing/(?<testingId>[^\\/]+)/testing-endpoint$"
+					],
+					"strip_path": false,
+					"plugins": [
+						{
+							"name": "request-validator",
+							"config": {
+								"version": "draft4",
+								"parameter_schema": [
+									{
+										"in": "path",
+										"explode": false,
+										"required": true,
+										"name": "testingId",
+										"schema": "{\"type\":\"string\",\"maxLength\":50}",
+										"style": "simple"
+									}
+								],
+								"body_schema": "{\"description\":\"desc\",\"allOf\":[{\"$ref\":\"#/components/schemas/Entity1\"}],\"components\":{\"Entity1\":{\"description\":\"desc\",\"type\":\"object\",\"properties\":{\"entity1Prop1\":{\"$ref\":\"#/components/schemas/Entity2\"}}},\"Entity2\":{\"description\":\"desc\",\"oneOf\":[{\"$ref\":\"#/components/schemas/EntityCircularStart\"}],\"discriminator\":{\"propertyName\":\"entity5Type\",\"mapping\":{\"ENTITY_CIRCULAR_START\":\"#/components/schemas/EntityCircularStart\"}}},\"EntityCircularStart\":{\"description\":\"desc\",\"allOf\":[{\"$ref\":\"#/components/schemas/Entity5Common\"},{\"$ref\":\"#/components/schemas/Entity4Common\"}]},\"Entity5Common\":{\"description\":\"desc\",\"type\":\"string\"},\"Entity4Common\":{\"description\":\"desc\",\"type\":\"string\",\"properties\":{\"owners\":{\"$ref\":\"#/components/schemas/Entity4Owners\"}}},\"Entity4Owners\":{\"type\":\"array\",\"description\":\"desc\",\"items\":{\"$ref\":\"#/components/schemas/Entity6\"}},\"Entity6\":{\"description\":\"desc\",\"type\":\"object\",\"required\":[\"entity5\"],\"properties\":{\"entity5\":{\"$ref\":\"#/components/schemas/Entity5AsOwner\"}}},\"Entity5AsOwner\":{\"description\":\"desc\",\"oneOf\":[{\"$ref\":\"#/components/schemas/Entity3AsOwner\"}],\"discriminator\":{\"propertyName\":\"entity5Type\",\"mapping\":{\"ENTITY_3\":\"#/components/schemas/Entity3AsOwner\"}}},\"Entity3AsOwner\":{\"description\":\"desc\",\"allOf\":[{\"$ref\":\"#/components/schemas/Entity3Common\"}]},\"Entity3Common\":{\"description\":\"desc\",\"allOf\":[{\"$ref\":\"#/components/schemas/Entity5Common\"},{\"$ref\":\"#/components/schemas/Entity4Common\"}]}},\"$schema\":\"http://json-schema.org/schema#\"}",
+								"allowed_content_types": [
+									"application/json"
+								],
+								"verbose_response": true
+							},
+							"tags": [
+								"OAS3_import",
+                "OAS3file_circular-example.yaml"
+							],
+							"enabled": true
+						}
+					]
+				}
+			],
+			"tags": [
+				"OAS3_import",
+        "OAS3file_circular-example.yaml"
+			]
+		}
+	]
+}

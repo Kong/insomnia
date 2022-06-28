@@ -1,0 +1,141 @@
+openapi: 3.0.1
+
+info:
+  title: Testing Circular
+  version: 1.1.1
+  description: desc
+
+  contact:
+    name: Kong Insomnia
+
+servers:
+- url: https://some.random.url
+  description: desc
+
+x-kong-plugin-request-validator:
+  enabled: true
+  version: draft4
+  config:
+    verbose_response: true
+
+tags:
+  - name: Testing
+    description: Testing API.
+
+paths:
+  /testing/{testingId}/testing-endpoint:
+    post:
+      summary: sum
+      description: desc
+      parameters:
+        - $ref: '#/components/parameters/TestingId'
+      requestBody:
+        $ref: '#/components/requestBodies/TestingEndpointRequest'
+      responses:
+        "200":
+          $ref: '#/components/responses/TestingEndpointResponse'
+          
+components:
+  parameters:
+    TestingId:
+      name: testingId
+      in: path
+      description: desc
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+
+  requestBodies:
+    TestingEndpointRequest:
+      description: desc
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TestingEndpointRequest'
+
+  responses:
+    TestingEndpointResponse:
+      description: desc
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EntityCircularStart'
+
+  schemas:
+    TestingEndpointRequest:
+      description: desc
+      allOf:
+        - $ref: '#/components/schemas/Entity1'
+
+    Entity1:
+      description: desc
+      type: object
+      properties:
+        entity1Prop1:
+          $ref: '#/components/schemas/Entity2'
+
+    Entity3AsOwner:
+      description: desc
+      allOf:
+        - $ref: '#/components/schemas/Entity3Common'
+
+    Entity2:
+      description: desc
+      oneOf:
+        - $ref: '#/components/schemas/EntityCircularStart'
+      discriminator:
+        propertyName: entity5Type
+        mapping:
+          ENTITY_CIRCULAR_START: '#/components/schemas/EntityCircularStart'
+
+    Entity4Common:
+      description: desc
+      type: string
+      properties:
+        owners:
+          $ref: '#/components/schemas/Entity4Owners'
+
+    Entity5Common:
+      description: desc
+      type: string
+
+    Entity3:
+      allOf:
+        - $ref: '#/components/schemas/Entity3Common'
+
+    Entity3Common:
+      description: desc
+      allOf:
+        - $ref: '#/components/schemas/Entity5Common'
+        - $ref: '#/components/schemas/Entity4Common'
+
+    EntityCircularStart:
+      description: desc
+      allOf:
+        - $ref: '#/components/schemas/Entity5Common'
+        - $ref: '#/components/schemas/Entity4Common'
+
+    Entity4Owners:
+      type: array
+      description: desc
+      items:
+        $ref: '#/components/schemas/Entity6'
+
+    Entity6:
+      description: desc
+      type: object
+      required:
+        - entity5
+      properties:
+        entity5:
+          $ref: '#/components/schemas/Entity5AsOwner'
+
+    Entity5AsOwner:
+      description: desc
+      oneOf:
+        - $ref: '#/components/schemas/Entity3AsOwner'
+      discriminator:
+        propertyName: entity5Type
+        mapping:
+          ENTITY_3: '#/components/schemas/Entity3AsOwner'
