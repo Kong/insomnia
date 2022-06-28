@@ -1,6 +1,7 @@
 import { clipboard } from 'electron';
 import { Button, ButtonProps } from 'insomnia-components';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useInterval } from 'react-use';
 
 interface Props extends ButtonProps {
   confirmMessage?: string;
@@ -30,12 +31,9 @@ export const CopyButton: React.FC<Props> = ({
     fn();
   }, [content]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setshowConfirmation(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [showConfirmation]);
+  useInterval(() => {
+    setshowConfirmation(false);
+  }, 2000);
 
   const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
   return (
