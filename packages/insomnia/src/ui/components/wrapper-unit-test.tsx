@@ -1,4 +1,3 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import {
   Button,
@@ -11,12 +10,11 @@ import {
 } from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
-import React, { PureComponent, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import React, { ReactNode, useState } from 'react';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
-import { AUTOBIND_CFG } from '../../common/constants';
 import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
 import { isRequest, Request } from '../../models/request';
@@ -24,7 +22,6 @@ import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import { RootState } from '../redux/modules';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
@@ -44,28 +41,22 @@ const HeaderButton = styled(Button)({
   },
 });
 
-interface Props extends ReturnType<typeof mapStateToProps> {
+interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   wrapperProps: WrapperProps;
 }
 
-interface State {
-  testsRunning: UnitTest[] | null;
-  resultsError: string | null;
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
-  state: State = {
-    testsRunning: null,
-    resultsError: null,
-  };
-
-  // Defining it here instead of in render() so it won't act as a changed prop
-  // when being passed to <CodeEditor> again
-  static lintOptions = {
+const WrapperUnitTest: React.FC<Props> = ({
+  children,
+  wrapperProps,
+  gitSyncDropdown,
+  handleActivityChange,
+}) => {
+  const [testsRunning, settestsRunning] = useState<UnitTest[] | null>(null);
+  const [resultsError, setresultsError] = useState<string | null>(null);
+  const lintOptions = {
     globals: {
       // https://jshint.com/docs/options/
       insomnia: true,
@@ -81,8 +72,63 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
     // Enable NodeJS globals
     esversion: 8, // ES8 syntax (async/await, etc)
   };
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeUnitTestSuite = useSelector(selectActiveUnitTestSuite);
+  const activeUnitTestSuites = useSelector(selectActiveUnitTestSuites);
+  const activeUnitTests = useSelector(selectActiveUnitTests);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
 
-  generateSendReqSnippet(existingCode: string, requestId: string) {
+  const buildSelectableRequests = (): {
+    name: string;
+    request: Request;
+  }[] => {
+    const selectableRequests: {
+      name: string;
+      request: Request;
+    }[] = [];
+
+    const next = (p: string, children: Child[]) => {
+      for (const c of children) {
+        if (isRequest(c.doc)) {
+          selectableRequests.push({
+            name: `${p} [${c.doc.method}] ${c.doc.name}`,
+            request: c.doc,
+          });
+        } else if (isRequestGroup(c.doc)) {
+          next(c.doc.name + ' / ', c.children);
+        }
+      }
+    };
+
+    next('', children.all);
+    return selectableRequests;
+  };
+  const selectableRequests = buildSelectableRequests();
+
+  const _handleCreateTestSuite = async () => {
+    if (!activeWorkspace) {
+      return;
+    }
+
+    showPrompt({
+      title: 'New Test Suite',
+      defaultValue: 'New Suite',
+      submitName: 'Create Suite',
+      label: 'Test Suite Name',
+      selectText: true,
+      onComplete: async name => {
+        const unitTestSuite = await models.unitTestSuite.create({
+          parentId: activeWorkspace._id,
+          name,
+        });
+        await _handleSetActiveUnitTestSuite(unitTestSuite);
+        trackSegmentEvent(SegmentEvent.testSuiteCreate);
+      },
+    });
+  };
+
+  const generateSendReqSnippet = (existingCode: string, requestId: string) => {
     let variableName = 'response';
 
     for (let i = 1; i < 100; i++) {
@@ -101,14 +147,14 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
       `const ${variableName} = await insomnia.send(${requestId});\n` +
       `expect(${variableName}.status).to.equal(200);`
     );
-  }
+  };
 
-  autocompleteSnippets(unitTest: UnitTest) {
+  const autocompleteSnippets = (unitTest: UnitTest) => {
     return [
       {
         name: 'Send Current Request',
         displayValue: '',
-        value: this.generateSendReqSnippet(unitTest.code, ''),
+        value: generateSendReqSnippet(unitTest.code, ''),
       },
       {
         name: 'Send Request By ID',
@@ -124,10 +170,10 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
                   name: '-- Select Request --',
                   value: '__NULL__',
                 },
-                ...this.buildSelectableRequests().map(({ name, request }) => ({
+                ...buildSelectableRequests().map(({ name, request }) => ({
                   name: name,
                   displayValue: '',
-                  value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
+                  value: generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
               onDone: (value: string | null) => resolve(value),
@@ -136,34 +182,9 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
         },
       },
     ];
-  }
+  };
 
-  async _handleCreateTestSuite() {
-    const { activeWorkspace } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    showPrompt({
-      title: 'New Test Suite',
-      defaultValue: 'New Suite',
-      submitName: 'Create Suite',
-      label: 'Test Suite Name',
-      selectText: true,
-      onComplete: async name => {
-        const unitTestSuite = await models.unitTestSuite.create({
-          parentId: activeWorkspace._id,
-          name,
-        });
-        await this._handleSetActiveUnitTestSuite(unitTestSuite);
-        trackSegmentEvent(SegmentEvent.testSuiteCreate);
-      },
-    });
-  }
-
-  async _handleCreateTest() {
-    const { activeUnitTestSuite } = this.props;
+  const _handleCreateTest = () => {
     showPrompt({
       title: 'New Test',
       defaultValue: 'Returns 200',
@@ -173,32 +194,31 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
       onComplete: async name => {
         await models.unitTest.create({
           parentId: activeUnitTestSuite?._id,
-          code: this.generateSendReqSnippet('', ''),
+          code: generateSendReqSnippet('', ''),
           name,
         });
         trackSegmentEvent(SegmentEvent.unitTestCreate);
       },
     });
-  }
+  };
 
-  async _handleUnitTestCodeChange(unitTest: UnitTest, v: string) {
+  const _handleUnitTestCodeChange = async (unitTest: UnitTest, v: string) => {
     await models.unitTest.update(unitTest, {
       code: v,
     });
-  }
+  };
 
-  async _handleRunTests() {
-    const { activeUnitTests } = this.props;
-    await this._runTests(activeUnitTests);
+  const _handleRunTests = async () => {
+    await _runTests(activeUnitTests);
     trackSegmentEvent(SegmentEvent.unitTestRunAll);
-  }
+  };
 
-  async _handleRunTest(unitTest: UnitTest) {
-    await this._runTests([unitTest]);
+  const _handleRunTest = async (unitTest: UnitTest) => {
+    await _runTests([unitTest]);
     trackSegmentEvent(SegmentEvent.unitTestRun);
-  }
+  };
 
-  async _handleDeleteTest(unitTest: UnitTest) {
+  const _handleDeleteTest = (unitTest: UnitTest) => {
     showAlert({
       title: `Delete ${unitTest.name}`,
       message: (
@@ -212,19 +232,19 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
         trackSegmentEvent(SegmentEvent.unitTestDelete);
       },
     });
-  }
+  };
 
-  async _handleSetActiveRequest(
+  const _handleSetActiveRequest = async (
     unitTest: UnitTest,
     event: React.SyntheticEvent<HTMLSelectElement>,
-  ) {
+  ) => {
     const requestId = event.currentTarget.value === '__NULL__' ? null : event.currentTarget.value;
     await models.unitTest.update(unitTest, {
       requestId,
     });
-  }
+  };
 
-  async _handleDeleteUnitTestSuite(unitTestSuite: UnitTestSuite) {
+  const _handleDeleteUnitTestSuite = (unitTestSuite: UnitTestSuite) => {
     showAlert({
       title: `Delete ${unitTestSuite.name}`,
       message: (
@@ -238,11 +258,9 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
         trackSegmentEvent(SegmentEvent.testSuiteDelete);
       },
     });
-  }
+  };
 
-  async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
-    const { activeWorkspace } = this.props;
-
+  const _handleSetActiveUnitTestSuite = async (unitTestSuite: UnitTestSuite) => {
     if (!activeWorkspace) {
       return;
     }
@@ -250,16 +268,15 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
-  }
+  };
 
-  async _handleChangeTestName(unitTest: UnitTest, name?: string) {
+  const _handleChangeTestName = async (unitTest: UnitTest, name?: string) => {
     await models.unitTest.update(unitTest, {
       name,
     });
-  }
+  };
 
-  async _handleChangeActiveSuiteName(name?: string) {
-    const { activeUnitTestSuite } = this.props;
+  const _handleChangeActiveSuiteName = async (name?: string) => {
     if (!activeUnitTestSuite) {
       return;
     }
@@ -267,19 +284,14 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
     await models.unitTestSuite.update(activeUnitTestSuite, {
       name,
     });
-  }
+  };
 
-  async _runTests(unitTests: UnitTest[]) {
-    const { activeWorkspace, activeEnvironment } = this.props;
-
+  const _runTests = async (unitTests: UnitTest[]) => {
     if (!activeWorkspace) {
       return;
     }
-
-    this.setState({
-      testsRunning: unitTests,
-      resultsError: null,
-    });
+    settestsRunning(unitTests);
+    setresultsError(null);
     const tests: Test[] = [];
 
     for (const t of unitTests) {
@@ -305,294 +317,221 @@ class UnconnectedWrapperUnitTest extends PureComponent<Props, State> {
         results,
         parentId: activeWorkspace._id,
       });
-      this.setState({ testsRunning: null });
+      settestsRunning(null);
+
     } catch (err) {
       // Set the state after a timeout so the user still sees the loading state
       setTimeout(() => {
-        this.setState({
-          resultsError: err.message,
-          testsRunning: null,
-        });
+        settestsRunning(null);
+        setresultsError(err.message);
       }, 400);
       return;
     }
-  }
-
-  buildSelectableRequests(): {
-    name: string;
-    request: Request;
-  }[] {
-    const { children } = this.props;
-    const selectableRequests: {
-      name: string;
-      request: Request;
-    }[] = [];
-
-    const next = (p: string, children: Child[]) => {
-      for (const c of children) {
-        if (isRequest(c.doc)) {
-          selectableRequests.push({
-            name: `${p} [${c.doc.method}] ${c.doc.name}`,
-            request: c.doc,
-          });
-        } else if (isRequestGroup(c.doc)) {
-          next(c.doc.name + ' / ', c.children);
-        }
-      }
-    };
-
-    next('', children.all);
-    return selectableRequests;
-  }
-
-  _renderResults() {
-    const { activeUnitTestResult } = this.props;
-    const { testsRunning, resultsError } = this.state;
-
-    if (resultsError) {
-      return (
-        <div className="unit-tests__results">
-          <div className="unit-tests__top-header">
-            <h2>Run Failed</h2>
-          </div>
-          <div className="danger pad">{resultsError}</div>
-        </div>
-      );
-    }
-
-    if (testsRunning) {
-      return (
-        <div className="unit-tests__results">
-          <div className="unit-tests__top-header">
-            <h2>Running {testsRunning.length} Tests...</h2>
-          </div>
-        </div>
-      );
-    }
-
-    if (!activeUnitTestResult) {
-      return (
-        <div className="unit-tests__results">
-          <div className="unit-tests__top-header">
-            <h2>No Results</h2>
-          </div>
-        </div>
-      );
-    }
-
-    if (activeUnitTestResult.results) {
-      const { stats, tests } = activeUnitTestResult.results;
-      return (
-        <div className="unit-tests__results">
-          {activeUnitTestResult && (
-            <div key={activeUnitTestResult._id}>
-              <div className="unit-tests__top-header">
-                {stats.failures ? (
-                  <h2 className="warning">
-                    Tests Failed {stats.failures}/{stats.tests}
-                  </h2>
-                ) : (
-                  <h2 className="success">
-                    Tests Passed {stats.passes}/{stats.tests}
-                  </h2>
-                )}
-              </div>
-              <ListGroup>
-                {tests.map((t: any, i: number) => (
-                  <UnitTestResultItem key={i} item={t} />
-                ))}
-              </ListGroup>
+  };
+  return (
+    <PageLayout
+      wrapperProps={wrapperProps}
+      renderPageSidebar={
+        <ErrorBoundary showAlert>
+          <div className="unit-tests__sidebar">
+            <div className="pad-sm">
+              <Button variant="outlined" onClick={_handleCreateTestSuite}>
+                New Test Suite
+              </Button>
             </div>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="unit-tests">
-        <div className="unit-tests__top-header">
-          <h2 className="success">Awaiting Test Execution</h2>
-        </div>
-      </div>
-    );
-  }
-
-  renderUnitTest(unitTest: UnitTest) {
-    const { testsRunning } = this.state;
-    const selectableRequests = this.buildSelectableRequests();
-    return (
-      <UnitTestItem
-        item={unitTest}
-        key={unitTest._id}
-        onSetActiveRequest={this._handleSetActiveRequest.bind(this, unitTest)}
-        onDeleteTest={this._handleDeleteTest.bind(this, unitTest)}
-        onRunTest={this._handleRunTest.bind(this, unitTest)}
-
-        testsRunning={testsRunning}
-        selectedRequestId={unitTest.requestId}
-        // @ts-expect-error -- TSCONVERSION
-        selectableRequests={selectableRequests}
-        testNameEditable={
-          <UnitTestEditable
-            onSubmit={this._handleChangeTestName.bind(this, unitTest)}
-            value={unitTest.name}
-          />
-        }
-      >
-        <CodeEditor
-          dynamicHeight
-          manualPrettify
-          defaultValue={unitTest ? unitTest.code : ''}
-          getAutocompleteSnippets={() => this.autocompleteSnippets(unitTest)}
-          lintOptions={WrapperUnitTest.lintOptions}
-          onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
-          mode="javascript"
-          placeholder=""
-        />
-      </UnitTestItem>
-    );
-  }
-
-  _renderTestSuite() {
-    const { activeUnitTests, activeUnitTestSuite } = this.props;
-    const { testsRunning } = this.state;
-
-    const emptyStatePane = (
-      <div style={{ height: '100%' }}>
-        <EmptyStatePane
-          icon={<SvgIcon icon="vial" />}
-          documentationLinks={[
-            documentationLinks.unitTesting,
-            documentationLinks.introductionToInsoCLI,
-          ]}
-          title="Add unit tests to verify your API"
-          secondaryAction="You can run these tests in CI with Inso CLI"
-        />
-      </div>
-    );
-
-    if (!activeUnitTestSuite) {
-      return <div className="unit-tests pad theme--pane__body">No test suite selected</div>;
-    }
-
-    return (
-      <div className="unit-tests theme--pane__body">
-        <div className="unit-tests__top-header">
-          <h2>
-            <Editable
-              singleClick
-              onSubmit={this._handleChangeActiveSuiteName}
-              value={activeUnitTestSuite.name}
-            />
-          </h2>
-
-          <HeaderButton
-            variant="outlined"
-            onClick={this._handleCreateTest}
-          >
-            New Test
-          </HeaderButton>
-
-          <HeaderButton
-            variant="contained"
-            bg="surprise"
-            onClick={this._handleRunTests}
-            size="default"
-            disabled={Boolean(testsRunning)}
-          >
-            {testsRunning ? 'Running... ' : 'Run Tests'}
-            <i className="fa fa-play space-left" />
-          </HeaderButton>
-        </div>
-
-        {isEmpty(activeUnitTests) ? emptyStatePane : null}
-        <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
-      </div>
-    );
-  }
-
-  _renderPageSidebar() {
-    const { activeUnitTestSuites, activeUnitTestSuite } = this.props;
-    const { testsRunning } = this.state;
-    const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
-    return (
-      <ErrorBoundary showAlert>
-        <div className="unit-tests__sidebar">
-          <div className="pad-sm">
-            <Button variant="outlined" onClick={this._handleCreateTestSuite}>
-              New Test Suite
-            </Button>
-          </div>
-          <ul>
-            {activeUnitTestSuites.map(s => (
-              <li
-                key={s._id}
-                className={classnames({
-                  active: s._id === activeId,
-                })}
-              >
-                <button key={s._id} onClick={this._handleSetActiveUnitTestSuite.bind(this, s)}>
-                  {s.name}
-                </button>
-                <Dropdown
-                  right
-                  renderButton={() => (
-                    <button className="unit-tests__sidebar__action">
-                      <i className="fa fa-caret-down" />
-                    </button>
-                  )}
+            <ul>
+              {activeUnitTestSuites.map(suite => (
+                <li
+                  key={suite._id}
+                  className={classnames({
+                    active: suite._id === activeId,
+                  })}
                 >
-                  <DropdownItem
-                    stayOpenAfterClick
-                    onClick={this._handleRunTests}
-                    disabled={Boolean(testsRunning)}
+                  <button key={suite._id} onClick={() => _handleSetActiveUnitTestSuite(suite)}>
+                    {suite.name}
+                  </button>
+                  <Dropdown
+                    right
+                    renderButton={() => (
+                      <button className="unit-tests__sidebar__action">
+                        <i className="fa fa-caret-down" />
+                      </button>
+                    )}
                   >
-                    {testsRunning ? 'Running... ' : 'Run Tests'}
-                  </DropdownItem>
-                  <DropdownItem onClick={this._handleDeleteUnitTestSuite.bind(this, s)}>
-                    Delete Suite
-                  </DropdownItem>
-                </Dropdown>
-              </li>
-            ))}
-          </ul>
+                    <DropdownItem
+                      stayOpenAfterClick
+                      onClick={_handleRunTests}
+                      disabled={Boolean(testsRunning)}
+                    >
+                      {testsRunning ? 'Running... ' : 'Run Tests'}
+                    </DropdownItem>
+                    <DropdownItem onClick={_handleDeleteUnitTestSuite.bind(this, suite)}>
+                      Delete Suite
+                    </DropdownItem>
+                  </Dropdown>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </ErrorBoundary>
+      }
+      renderPaneOne={
+        activeUnitTestSuite ? <div className="unit-tests theme--pane__body">
+          <div className="unit-tests__top-header">
+            <h2>
+              <Editable
+                singleClick
+                onSubmit={_handleChangeActiveSuiteName}
+                value={activeUnitTestSuite.name}
+              />
+            </h2>
+            <HeaderButton
+              variant="outlined"
+              onClick={_handleCreateTest}
+            >
+              New Test
+            </HeaderButton>
+            <HeaderButton
+              variant="contained"
+              bg="surprise"
+              onClick={_handleRunTests}
+              size="default"
+              disabled={Boolean(testsRunning)}
+            >
+              {testsRunning ? 'Running... ' : 'Run Tests'}
+              <i className="fa fa-play space-left" />
+            </HeaderButton>
+          </div>
+          {isEmpty(activeUnitTests) ?
+            <div style={{ height: '100%' }}>
+              <EmptyStatePane
+                icon={<SvgIcon icon="vial" />}
+                documentationLinks={[
+                  documentationLinks.unitTesting,
+                  documentationLinks.introductionToInsoCLI,
+                ]}
+                title="Add unit tests to verify your API"
+                secondaryAction="You can run these tests in CI with Inso CLI"
+              />
+            </div> : null}
+          <ListGroup>{activeUnitTests.map(unitTest =>
+            <UnitTestItem
+              item={unitTest}
+              key={unitTest._id}
+              onSetActiveRequest={event => _handleSetActiveRequest(unitTest, event)}
+              onDeleteTest={() => _handleDeleteTest(unitTest)}
+              onRunTest={() => _handleRunTest(unitTest)}
+              testsRunning={testsRunning}
+              selectedRequestId={unitTest.requestId}
+              // @ts-expect-error -- TSCONVERSION
+              selectableRequests={selectableRequests}
+              testNameEditable={
+                <UnitTestEditable
+                  onSubmit={() => _handleChangeTestName(unitTest)}
+                  value={unitTest.name}
+                />
+              }
+            >
+              <CodeEditor
+                dynamicHeight
+                manualPrettify
+                defaultValue={unitTest ? unitTest.code : ''}
+                getAutocompleteSnippets={() => autocompleteSnippets(unitTest)}
+                lintOptions={lintOptions}
+                onChange={v => _handleUnitTestCodeChange(unitTest, v)}
+                mode="javascript"
+                placeholder=""
+              />
+            </UnitTestItem>)}</ListGroup>
         </div>
-      </ErrorBoundary>
-    );
-  }
-
-  _renderPageHeader() {
-    const { gitSyncDropdown, handleActivityChange } = this.props;
-    return (
-      <WorkspacePageHeader
-        handleActivityChange={handleActivityChange}
-        gridRight={gitSyncDropdown}
-      />
-    );
-  }
-
-  render() {
-    return (
-      <PageLayout
-        wrapperProps={this.props.wrapperProps}
-        renderPageSidebar={this._renderPageSidebar}
-        renderPaneOne={this._renderTestSuite}
-        renderPaneTwo={this._renderResults}
-        renderPageHeader={this._renderPageHeader}
-      />
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  activeWorkspace: selectActiveWorkspace(state),
-  activeUnitTestSuite: selectActiveUnitTestSuite(state),
-  activeUnitTestSuites: selectActiveUnitTestSuites(state),
-  activeUnitTests: selectActiveUnitTests(state),
-  activeEnvironment: selectActiveEnvironment(state),
-  activeUnitTestResult: selectActiveUnitTestResult(state),
-});
-
-export const WrapperUnitTest = connect(mapStateToProps)(UnconnectedWrapperUnitTest);
+          : <div className="unit-tests pad theme--pane__body">No test suite selected</div>
+      }
+      renderPaneTwo={
+        <TestRunStatus testsRunning={testsRunning} resultsError={resultsError} />
+      }
+      renderPageHeader={
+        <WorkspacePageHeader
+          handleActivityChange={handleActivityChange}
+          gridRight={gitSyncDropdown}
+        />
+      }
+    />
+  );
+};
 
 export default WrapperUnitTest;
+
+interface TestRunStatusProps{
+  testsRunning:UnitTest[] | null;
+  resultsError:string | null;
+}
+const TestRunStatus: React.FC<TestRunStatusProps> = ({ testsRunning, resultsError }) => {
+  const activeUnitTestResult = useSelector(selectActiveUnitTestResult);
+
+  if (resultsError) {
+    return (
+      <div className="unit-tests__results">
+        <div className="unit-tests__top-header">
+          <h2>Run Failed</h2>
+        </div>
+        <div className="danger pad">{resultsError}</div>
+      </div>
+    );
+  }
+
+  if (testsRunning) {
+    return (
+      <div className="unit-tests__results">
+        <div className="unit-tests__top-header">
+          <h2>Running {testsRunning.length} Tests...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeUnitTestResult) {
+    return (
+      <div className="unit-tests__results">
+        <div className="unit-tests__top-header">
+          <h2>No Results</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeUnitTestResult.results) {
+    const { stats, tests } = activeUnitTestResult.results;
+    return (
+      <div className="unit-tests__results">
+        {activeUnitTestResult && (
+          <div key={activeUnitTestResult._id}>
+            <div className="unit-tests__top-header">
+              {stats.failures ? (
+                <h2 className="warning">
+                  Tests Failed {stats.failures}/{stats.tests}
+                </h2>
+              ) : (
+                <h2 className="success">
+                  Tests Passed {stats.passes}/{stats.tests}
+                </h2>
+              )}
+            </div>
+            <ListGroup>
+              {tests.map((t: any, i: number) => (
+                <UnitTestResultItem key={i} item={t} />
+              ))}
+            </ListGroup>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="unit-tests">
+      <div className="unit-tests__top-header">
+        <h2 className="success">Awaiting Test Execution</h2>
+      </div>
+    </div>
+  );
+};
