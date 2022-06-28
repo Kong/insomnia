@@ -44,7 +44,6 @@ export const Editable: React.FC<Props> = ({
 }) => {
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const onSingleClick = () => singleClick && handleEditStart();
 
   const handleEditStart = () => {
     setEditing(true);
@@ -58,6 +57,8 @@ export const Editable: React.FC<Props> = ({
       onEditStart();
     }
   };
+
+  const onSingleClick = () => singleClick && handleEditStart();
 
   const handleEditEnd = useCallback(() => {
     if (shouldSave(value, inputRef.current?.value.trim(), preventBlank)) {
@@ -88,6 +89,7 @@ export const Editable: React.FC<Props> = ({
       }
     }
   }, [value, handleEditEnd]);
+
   const initialValue = value || fallbackValue;
   if (editing) {
     return (
