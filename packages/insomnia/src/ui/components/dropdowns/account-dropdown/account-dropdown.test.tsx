@@ -48,7 +48,7 @@ describe('<AccountDropdownButton />', () => {
       </Provider>, { container }
     );
     expect(screen.getByText('Log In')).toBeDefined();
-    expect(screen.queryByText('Upgrde Now')).toBeNull();
+    expect(screen.queryByText('Upgrade Now')).toBeNull();
   });
 
   test('renders "Log In" label with paid feature ads', async () => {
