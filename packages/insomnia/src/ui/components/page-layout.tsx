@@ -3,7 +3,7 @@ import React, { FC, forwardRef, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { selectIsLoading } from '../redux/modules/global';
-import { selectActiveEnvironment, selectActiveGitRepository, selectSettings, selectUnseenWorkspaces, selectWorkspacesForActiveProject } from '../redux/selectors';
+import { selectActiveEnvironment, selectSettings, selectUnseenWorkspaces, selectWorkspacesForActiveProject } from '../redux/selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
 import type { WrapperProps } from './wrapper';
@@ -36,15 +36,12 @@ export const PageLayout: FC<Props> = ({
   wrapperProps,
 }) => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeGitRepository = useSelector(selectActiveGitRepository);
   const isLoading = useSelector(selectIsLoading);
   const settings = useSelector(selectSettings);
   const unseenWorkspaces = useSelector(selectUnseenWorkspaces);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
 
   const {
-    gitVCS,
-    handleInitializeEntities,
     handleResetDragSidebar,
     handleStartDragSidebar,
     handleSetActiveEnvironment,
@@ -118,16 +115,12 @@ export const PageLayout: FC<Props> = ({
           <Sidebar
             ref={sidebarRef}
             activeEnvironment={activeEnvironment}
-            // @ts-expect-error -- TSCONVERSION
-            activeGitRepository={activeGitRepository}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            handleInitializeEntities={handleInitializeEntities}
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             hidden={sidebarHidden || false}
             hotKeyRegistry={settings.hotKeyRegistry}
             isLoading={isLoading}
             unseenWorkspaces={unseenWorkspaces}
-            gitVCS={gitVCS}
             width={sidebarWidth}
             workspacesForActiveProject={workspacesForActiveProject}
           >
