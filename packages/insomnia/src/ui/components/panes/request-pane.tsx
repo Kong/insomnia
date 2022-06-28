@@ -185,8 +185,6 @@ export const RequestPane: FC<Props> = ({
           <Tab tabIndex="=1">
             <ContentTypeDropdown
               onChange={updateRequestMimeType}
-              contentType={request.body.mimeType}
-              request={request}
               className="tall"
             >
               {typeof request.body.mimeType === 'string'
