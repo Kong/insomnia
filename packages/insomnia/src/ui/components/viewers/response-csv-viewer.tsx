@@ -7,13 +7,15 @@ interface Props {
 
 export const ResponseCSVViewer: FC<Props> = ({ body }) => {
   const [csv, setCSV] = useState<{ data: string[][] } | null>(null);
-  const parse = useCallback(() =>
+  const parse = useCallback(() => {
     Papa.parse<string[]>(body.toString('utf8'), {
       skipEmptyLines: true,
       complete: result => {
         setCSV(result);
       },
-    }), [body]);
+    });
+  }, [body]);
+
   useEffect(() => {
     parse();
   }, [parse]);
