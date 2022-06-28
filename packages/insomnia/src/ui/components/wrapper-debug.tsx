@@ -209,36 +209,37 @@ export const WrapperDebug: React.FC<Props> = ({
             />}
         </ErrorBoundary>
         : null}
-      renderPaneTwo={<ErrorBoundary showAlert>
-        {activeRequest && isGrpcRequest(activeRequest) ?
-          <GrpcResponsePane
-            activeRequest={activeRequest}
-            forceRefreshKey={forceRefreshKey}
-          />
-          :
-          <ResponsePane
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-            editorFontSize={settings.editorFontSize}
-            environment={activeEnvironment}
-            filter={responseFilter}
-            filterHistory={responseFilterHistory}
-            handleDeleteResponse={handleDeleteResponse}
-            handleDeleteResponses={handleDeleteResponses}
-            handleSetActiveResponse={handleSetActiveResponse}
-            handleSetFilter={handleSetResponseFilter}
-            handleSetPreviewMode={handleSetPreviewMode}
-            handleShowRequestSettings={handleShowRequestSettingsModal}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            loadStartTime={loadStartTime}
-            previewMode={responsePreviewMode}
-            request={activeRequest}
-            requestVersions={requestVersions}
-            response={activeResponse}
-            responses={activeRequestResponses}
-            unitTestResult={activeUnitTestResult}
-          />}
-      </ErrorBoundary>}
+      renderPaneTwo={
+        <ErrorBoundary showAlert>
+          {activeRequest && isGrpcRequest(activeRequest) ?
+            <GrpcResponsePane
+              activeRequest={activeRequest}
+              forceRefreshKey={forceRefreshKey}
+            />
+            :
+            <ResponsePane
+              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+              disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
+              editorFontSize={settings.editorFontSize}
+              environment={activeEnvironment}
+              filter={responseFilter}
+              filterHistory={responseFilterHistory}
+              handleDeleteResponse={handleDeleteResponse}
+              handleDeleteResponses={handleDeleteResponses}
+              handleSetActiveResponse={handleSetActiveResponse}
+              handleSetFilter={handleSetResponseFilter}
+              handleSetPreviewMode={handleSetPreviewMode}
+              handleShowRequestSettings={handleShowRequestSettingsModal}
+              hotKeyRegistry={settings.hotKeyRegistry}
+              loadStartTime={loadStartTime}
+              previewMode={responsePreviewMode}
+              request={activeRequest}
+              requestVersions={requestVersions}
+              response={activeResponse}
+              responses={activeRequestResponses}
+              unitTestResult={activeUnitTestResult}
+            />}
+        </ErrorBoundary>}
     />
   );
 };

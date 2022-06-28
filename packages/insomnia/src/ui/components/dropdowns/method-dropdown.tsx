@@ -30,11 +30,7 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
   const [recent, setRecent] = useState<string[]>(JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY) || '[]'));
 
   const dropdownRef = useRef<Dropdown>(null);
-  const toggle = useCallback(() => {
-    if (dropdownRef.current) {
-      dropdownRef.current.toggle();
-    }
-  }, [dropdownRef]);
+  const toggle = useCallback(() => dropdownRef.current?.toggle(), [dropdownRef]);
   useImperativeHandle(ref, () => ({ toggle }), [toggle]);
   const handleSetCustomMethod = useCallback(() => {
     showPrompt({
@@ -56,12 +52,10 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
         if (!methodToAdd) {
           return;
         }
-
         // Don't add base methods
         if (constants.HTTP_METHODS.includes(methodToAdd)) {
           return;
         }
-
         // Save method as recent
         if (recent.includes(methodToAdd)) {
           return;
@@ -69,7 +63,6 @@ export const MethodDropdown = forwardRef<MethodDropdownHandle, Props>(({
         setRecent([...recent, methodToAdd]);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recent));
         onChange(methodToAdd);
-
       },
     });
   }, [method, onChange, recent]);

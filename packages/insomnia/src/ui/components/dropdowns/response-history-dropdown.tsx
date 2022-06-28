@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { Fragment, useRef } from 'react';
+import React, { Fragment, useCallback, useRef } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
@@ -113,11 +113,7 @@ export const ResponseHistoryDropdown: React.FC<Props> = ({
     );
   };
 
-  const handleKeydown = (event: KeyboardEvent) => {
-    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
-      dropdownRef.current?.toggle(true);
-    });
-  };
+  const handleKeydown = useCallback((event: KeyboardEvent) => executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => dropdownRef.current?.toggle(true)), []);
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
   return (

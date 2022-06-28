@@ -42,14 +42,14 @@ const HeaderButton = styled(Button)({
 });
 
 interface Props {
-  children: SidebarChildObjects;
+  sidebarChildren: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   wrapperProps: WrapperProps;
 }
 
 const WrapperUnitTest: React.FC<Props> = ({
-  children,
+  sidebarChildren,
   wrapperProps,
   gitSyncDropdown,
   handleActivityChange,
@@ -101,9 +101,9 @@ const WrapperUnitTest: React.FC<Props> = ({
       }
     };
 
-    next('', children.all);
+    next('', sidebarChildren.all);
     return selectableRequests;
-  }, [children.all]);
+  }, [sidebarChildren.all]);
 
   const selectableRequests = buildSelectableRequests();
 
