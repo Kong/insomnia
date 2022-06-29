@@ -45,6 +45,7 @@ export class Modal extends PureComponent<ModalProps, State> {
   };
 
   async _handleKeyDown(event: KeyboardEvent) {
+    event.stopPropagation();
     if (!this.state.open) {
       return;
     }
@@ -179,7 +180,7 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
+      <KeydownBinder capture={false} scoped onKeydown={this._handleKeyDown}>
         <div
           ref={this._setModalRef}
           tabIndex={-1}
