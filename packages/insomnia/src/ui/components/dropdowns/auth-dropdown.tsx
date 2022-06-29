@@ -1,4 +1,5 @@
 import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import {
   AUTH_ASAP,
@@ -16,6 +17,7 @@ import {
 } from '../../../common/constants';
 import * as models from '../../../models';
 import type { Request, RequestAuthentication } from '../../../models/request';
+import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -34,17 +36,27 @@ const AuthItem: FC<{
     {nameOverride || getAuthTypeName(type, true)}
   </DropdownItem>
 );
+AuthItem.displayName = DropdownItem.name;
 
 interface Props {
-  className?: string;
   onChange: (request: Request, arg1: RequestAuthentication) => Promise<Request>;
-  request: Request;
 }
 
-export const AuthDropdown: FC<Props> = ({ children, className, onChange, request }) => {
-  const { authentication } = request;
+export const AuthDropdown: FC<Props> = ({ onChange }) => {
+  const activeRequest = useSelector(selectActiveRequest);
 
   const onClick = useCallback((type: string) => {
+    if (!activeRequest) {
+      return;
+    }
+
+    if (!('authentication' in activeRequest)) {
+      // gRPC Requests don't have `authentication`
+      return;
+    }
+
+    const { authentication } = activeRequest;
+
     const fn = async () => {
       if (type === authentication.type) {
       // Type didn't change
@@ -73,21 +85,34 @@ export const AuthDropdown: FC<Props> = ({ children, className, onChange, request
           break;
         }
       }
-      onChange(request, newAuthentication);
+      onChange(activeRequest, newAuthentication);
     };
     fn();
-  }, [authentication, onChange, request]);
+  }, [onChange, activeRequest]);
 
-  const isCurrent = useCallback((type: string) => (
-    type === (authentication.type || AUTH_NONE)
-  ), [authentication.type]);
+  const isCurrent = useCallback((type: string) => {
+    if (!activeRequest) {
+      return false;
+    }
+    if (!('authentication' in activeRequest)) {
+      return false;
+    }
+    return type === (activeRequest.authentication.type || AUTH_NONE);
+  }, [activeRequest]);
+
+  if (!activeRequest) {
+    return null;
+  }
 
   const itemProps = { onClick, isCurrent };
 
   return (
     <Dropdown beside>
       <DropdownDivider>Auth Types</DropdownDivider>
-      <DropdownButton className={className}>{children}</DropdownButton>
+      <DropdownButton className="tall">
+        {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+        <i className="fa fa-caret-down space-left" />
+      </DropdownButton>
       <AuthItem type={AUTH_BASIC} {...itemProps} />
       <AuthItem type={AUTH_DIGEST} {...itemProps} />
       <AuthItem type={AUTH_OAUTH_1} {...itemProps} />
