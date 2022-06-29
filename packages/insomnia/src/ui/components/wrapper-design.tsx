@@ -34,8 +34,8 @@ const EmptySpaceHelper = styled.div({
 const spectral = initializeSpectral();
 
 const RenderPageHeader: FC<Pick<Props,
-| 'gitSyncDropdown'
-| 'handleActivityChange'
+  | 'gitSyncDropdown'
+  | 'handleActivityChange'
 >> = ({
   gitSyncDropdown,
   handleActivityChange,
@@ -65,7 +65,7 @@ const RenderPageHeader: FC<Pick<Props,
         <Fragment>
           <Button variant="contained" onClick={handleTogglePreview}>
             <img src={previewIcon} alt="Preview" width="15" />
-            &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+              &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
           </Button>
           {gitSyncDropdown}
         </Fragment>
@@ -215,7 +215,7 @@ const RenderPreview: FC = () => {
 
   try {
     swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
-  } catch (err) {}
+  } catch (err) { }
 
   if (!swaggerUiSpec) {
     swaggerUiSpec = {};
@@ -253,7 +253,7 @@ const RenderPreview: FC = () => {
   );
 };
 
-const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor>}> = ({ editor }) => {
+const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
     if (!editor.current) {
@@ -308,32 +308,17 @@ export const WrapperDesign: FC<Props> = ({
 }) => {
   const editor = createRef<UnconnectedCodeEditor>();
 
-  const renderPageHeader = useCallback(() => (
-    <RenderPageHeader
-      gitSyncDropdown={gitSyncDropdown}
-      handleActivityChange={handleActivityChange}
-    />
-  ), [gitSyncDropdown, handleActivityChange]);
-
-  const renderEditor = useCallback(() => (
-    <RenderEditor editor={editor} />
-  ), [editor]);
-
-  const renderPreview = useCallback(() => (
-    <RenderPreview />
-  ), []);
-
-  const renderPageSidebar = useCallback(() => (
-    <RenderPageSidebar editor={editor} />
-  ), [editor]);
-
   return (
     <PageLayout
       wrapperProps={wrapperProps}
-      renderPageHeader={renderPageHeader}
-      renderPaneOne={renderEditor}
-      renderPaneTwo={renderPreview}
-      renderPageSidebar={renderPageSidebar}
+      renderPageHeader={
+        <RenderPageHeader
+          gitSyncDropdown={gitSyncDropdown}
+          handleActivityChange={handleActivityChange}
+        />}
+      renderPaneOne={<RenderEditor editor={editor} />}
+      renderPaneTwo={<RenderPreview />}
+      renderPageSidebar={<RenderPageSidebar editor={editor} />}
     />
   );
 };

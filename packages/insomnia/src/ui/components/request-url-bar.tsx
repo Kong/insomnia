@@ -45,7 +45,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
   _dropdown: Dropdown | null = null;
-  _methodDropdown: MethodDropdown | null = null;
+  _methodDropdown: Dropdown | null = null;
   _input: OneLineEditor | null = null;
   state: State = {
     currentInterval: null,
@@ -58,7 +58,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
     this._dropdown = dropdown;
   }
 
-  _setMethodDropdownRef(methodDropdown: MethodDropdown) {
+  _setMethodDropdownRef(methodDropdown: Dropdown) {
     this._methodDropdown = methodDropdown;
   }
 
@@ -370,9 +370,7 @@ export class RequestUrlBar extends PureComponent<Props, State> {
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
             method={method}
-          >
-            {method} <i className="fa fa-caret-down" />
-          </MethodDropdown>
+          />
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor
               key={uniquenessKey}

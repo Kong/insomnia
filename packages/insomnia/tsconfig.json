@@ -10,6 +10,7 @@
     "esbuild.sr.ts",
     "jest.config.js",
     "package.json",
+    "preload.js",
     "scripts",
     "send-request",
     "src",
@@ -17,11 +18,12 @@
   ],
   "exclude": [
     "**/@types/mocha",
-    "**/main.min.js",
     "bin",
     "build",
     "config",
     "node_modules",
     "src/coverage",
+    "src/main.min.js",
+    "src/preload.js",
   ],
 }

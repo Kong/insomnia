@@ -42,7 +42,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 }, ref) => {
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
-  const dropdownRef = useRef<Dropdown | null>(null);
+  const dropdownRef = useRef<Dropdown>(null);
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);

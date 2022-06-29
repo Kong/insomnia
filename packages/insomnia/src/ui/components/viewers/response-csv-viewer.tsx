@@ -1,65 +1,30 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Papa from 'papaparse';
-import React, { PureComponent } from 'react';
-
-import { AUTOBIND_CFG } from '../../../common/constants';
+import React, { FC, useEffect, useState } from 'react';
 
 interface Props {
   body: Buffer;
 }
 
-interface State {
-  result: null | {
-    data: string[][];
-  };
-}
+export const ResponseCSVViewer: FC<Props> = ({ body }) => {
+  const [csv, setCSV] = useState<{ data: string[][] } | null>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseCSVViewer extends PureComponent<Props, State> {
-  state: State = {
-    result: null,
-  };
-
-  currentHash = '';
-
-  update(body: Buffer) {
-    const csv = body.toString('utf8');
-    Papa.parse<string[]>(csv, {
+  useEffect(() => {
+    Papa.parse<string[]>(body.toString('utf8'), {
       skipEmptyLines: true,
       complete: result => {
-        this.setState({ result });
+        setCSV(result);
       },
     });
-  }
+  }, [body]);
 
-  componentDidMount() {
-    this.update(this.props.body);
-  }
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate(nextProps: Props) {
-    if (this.props.body === nextProps.body) {
-      return;
-    }
-
-    this.update(nextProps.body);
-  }
-
-  render() {
-    const { result } = this.state;
-
-    if (!result) {
-      return 'Parsing CSV...';
-    }
-
-    return (
-      <div className="pad-sm">
+  return (
+    <div className="pad-sm">
+      {csv ?
         <table className="table--fancy table--striped table--compact selectable">
           <tbody>
-            {result.data.map(row => (
-              // TODO: figure out what to key this with
-              // eslint-disable-next-line react/jsx-key
-              <tr>
+            {csv.data.map((row, index) => (
+            // eslint-disable-next-line react/no-array-index-key -- data structure is unknown, cannot compute a valid key
+              <tr key={index}>
                 {row.map(c => (
                   <td key={c}>{c}</td>
                 ))}
@@ -67,7 +32,6 @@ export class ResponseCSVViewer extends PureComponent<Props, State> {
             ))}
           </tbody>
         </table>
-      </div>
-    );
-  }
-}
+        : 'Parsing CSV...'}
+    </div>);
+};

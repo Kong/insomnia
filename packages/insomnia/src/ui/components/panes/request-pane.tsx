@@ -130,7 +130,7 @@ export const RequestPane: FC<Props> = ({
     }
   }, [request, forceUpdateRequest]);
 
-  const requestUrlBarRef = useRef<RequestUrlBar | null>(null);
+  const requestUrlBarRef = useRef<RequestUrlBar>(null);
   useMount(() => {
     requestUrlBarRef.current?.focusInput();
   });
@@ -185,8 +185,6 @@ export const RequestPane: FC<Props> = ({
           <Tab tabIndex="=1">
             <ContentTypeDropdown
               onChange={updateRequestMimeType}
-              contentType={request.body.mimeType}
-              request={request}
               className="tall"
             >
               {typeof request.body.mimeType === 'string'

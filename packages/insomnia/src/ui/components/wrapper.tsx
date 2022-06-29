@@ -628,9 +628,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   gitSyncDropdown={gitSyncDropdown}
                   wrapperProps={this.props}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                >
-                  {sidebarChildren}
-                </WrapperUnitTest>
+                  sidebarChildren={sidebarChildren}
+                />
               </Suspense>
             }
           />
