@@ -18,12 +18,10 @@ import vkBeautify from 'vkbeautify';
 import {
   AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
-  EditorKeyMap,
   isMac,
 } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
@@ -80,6 +78,7 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
     },
     [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function() {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
+      return CodeMirror.Pass;
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
     // Autocomplete
@@ -1044,15 +1043,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: Event) {
-    const { keyMap } = this.props;
-    // @ts-expect-error -- unsound property access
-    const { keyCode } = event;
-    const isVimKeyMap = keyMap === EditorKeyMap.vim;
-    const pressedEscape = keyCode === keyCodes.esc.keyCode;
-
-    if (isVimKeyMap && pressedEscape) {
-      event.stopPropagation();
-    }
+    event.stopPropagation();
   }
 
   _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
