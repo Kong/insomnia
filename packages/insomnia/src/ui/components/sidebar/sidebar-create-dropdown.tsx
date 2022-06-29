@@ -3,8 +3,8 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
-import { RequestGroup } from '../../../models/request-group';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
+import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -12,13 +12,11 @@ import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 interface Props {
-  handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
   hotKeyRegistry: HotKeyRegistry;
   right?: boolean;
 }
 
 export const SidebarCreateDropdown: FC<Props> = ({
-  handleCreateRequestGroup,
   hotKeyRegistry,
   right,
 }) => {
@@ -32,6 +30,14 @@ export const SidebarCreateDropdown: FC<Props> = ({
         workspaceId: activeWorkspaceId,
       });
     }
+  }, [activeWorkspaceId]);
+
+  const createGroup = useCallback(() => {
+    if (!activeWorkspaceId) {
+      return;
+    }
+
+    createRequestGroup(activeWorkspaceId);
   }, [activeWorkspaceId]);
 
   return (
@@ -54,7 +60,7 @@ export const SidebarCreateDropdown: FC<Props> = ({
         <i className="fa fa-plus-circle" />gRPC Request
       </DropdownItem>
 
-      <DropdownItem onClick={handleCreateRequestGroup}>
+      <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" />New Folder
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
       </DropdownItem>
