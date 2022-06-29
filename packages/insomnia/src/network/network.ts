@@ -28,38 +28,17 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../common/render';
+import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
-import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
 import { urlMatchesCertHost } from './url-matches-cert-host';
-
-export interface ResponsePatch {
-  bodyCompression?: 'zip' | null;
-  bodyPath?: string;
-  bytesContent?: number;
-  bytesRead?: number;
-  contentType?: string;
-  elapsedTime: number;
-  environmentId?: string | null;
-  error?: string;
-  headers?: ResponseHeader[];
-  httpVersion?: string;
-  message?: string;
-  parentId?: string;
-  settingSendCookies?: boolean;
-  settingStoreCookies?: boolean;
-  statusCode?: number;
-  statusMessage?: string;
-  timelinePath?: string;
-  url?: string;
-}
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -95,8 +74,8 @@ export async function _actuallySend(
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
           ? window.main.cancelCurlRequest
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          : require('./libcurl-promise').cancelCurlRequest;
+          :  (await import('../main/network/libcurl-promise')).cancelCurlRequest;
+
         nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
           elapsedTime: 0,
@@ -122,12 +101,12 @@ export async function _actuallySend(
         const socketUrl = (match && match[3]) || '';
         finalUrl = `${protocol}//${socketUrl}`;
       }
-      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'TEXT', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'TEXT', timestamp: Date.now() });
-      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'TEXT', timestamp: Date.now() });
+      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
 
       if (!renderedRequest.settingSendCookies) {
-        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'TEXT', timestamp: Date.now() });
+        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
       }
 
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
@@ -137,8 +116,8 @@ export async function _actuallySend(
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        : require('./libcurl-promise').curlRequest;
+        : (await import('../main/network/libcurl-promise')).curlRequest;
+
       const requestOptions = {
         requestId: renderedRequest._id,
         req: renderedRequest,
@@ -160,11 +139,11 @@ export async function _actuallySend(
         if (totalSetCookies) {
           const currentUrl = getCurrentUrl({ headerResults, finalUrl });
           const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'TEXT', timestamp: Date.now() }));
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
             await models.cookieJar.update(cookieJar, { cookies });
-            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'TEXT', timestamp: Date.now() });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }
       }

@@ -41,7 +41,7 @@
                             "name": "request-validator",
                             "config": {
                                 "version": "draft4",
-                                "body_schema": "{\"type\":\"object\",\"title\":\"request-body-nullable\",\"description\":\"This object is sent in post application request.\",\"required\":[\"redirectUri\"],\"properties\":{\"redirectUri\":{\"type\":[\"string\",\"null\"],\"nullable\":true}}}",
+                                "body_schema": "{\"type\":\"object\",\"title\":\"request-body-nullable\",\"description\":\"This object is sent in post application request.\",\"required\":[\"redirectUri\"],\"properties\":{\"redirectUri\":{\"type\":[\"string\",\"null\"],\"nullable\":true}},\"components\":{\"schemas\":{\"request-body-nullable\":{\"type\":\"object\",\"title\":\"request-body-nullable\",\"description\":\"This object is sent in post application request.\",\"required\":[\"redirectUri\"],\"properties\":{\"redirectUri\":{\"type\":[\"string\",\"null\"],\"nullable\":true}}}}},\"$schema\":\"http://json-schema.org/schema\"}",
                                 "allowed_content_types": [
                                     "application/json"
                                 ],

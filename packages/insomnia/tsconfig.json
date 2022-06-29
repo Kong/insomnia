@@ -2,10 +2,9 @@
   "extends": "./tsconfig.build.json",
   "include": [
     "**/insomnia.config.json",
-    "electron-builder.config.js",
     ".eslintrc.js",
-    "src",
     "config",
+    "electron-builder.config.js",
     "esbuild.main.ts",
     "esbuild.preload.ts",
     "esbuild.sr.ts",
@@ -13,6 +12,7 @@
     "package.json",
     "scripts",
     "send-request",
+    "src",
     "vite.config.ts",
   ],
   "exclude": [
@@ -21,7 +21,7 @@
     "bin",
     "build",
     "config",
+    "node_modules",
     "src/coverage",
-    "node_modules"
-  ]
+  ],
 }

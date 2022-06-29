@@ -450,14 +450,3 @@ export const toTitleCase = (value: string) => (
     .map(capitalize)
     .join(' ')
 );
-
-// Because node-libcurl changed some names that we used in the timeline
-export const LIBCURL_DEBUG_MIGRATION_MAP = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-} as const;

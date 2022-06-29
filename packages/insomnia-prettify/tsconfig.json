@@ -2,14 +2,14 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": false,
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": [
-    "src",
+    ".eslintrc.js",
     "jest.config.js",
-    ".eslintrc.js"
+    "src",
   ],
   "exclude": [
-    "dist"
-  ]
+    "dist",
+  ],
 }

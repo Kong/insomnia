@@ -1,5 +1,4 @@
 import childProcess from 'child_process';
-import { build } from 'esbuild';
 import { readFileSync, writeFileSync } from 'fs';
 import licenseChecker from 'license-checker';
 import mkdirp from 'mkdirp';
@@ -8,7 +7,7 @@ import path from 'path';
 import rimraf from 'rimraf';
 import * as vite from 'vite';
 
-import buildMain from '../esbuild.main';
+import buildMainAndPreload from '../esbuild.main';
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -138,25 +137,9 @@ export const start = async () => {
     path.join(buildFolder, 'opensource-licenses.txt')
   );
 
-  console.log('[build] Building main.min.js');
-  await buildMain({
+  console.log('[build] Building main.min.js and preload');
+  await buildMainAndPreload({
     mode: 'production',
-  });
-
-  console.log('[build] Building preload');
-  await build({
-    entryPoints: [path.join(__dirname, '../src/preload.js')],
-    outfile: path.join(__dirname, '../build/preload.js'),
-    platform: 'node',
-    bundle: true,
-    target: 'esnext',
-    sourcemap: false,
-    format: 'esm',
-    define: {
-      'process.env.NODE_ENV': JSON.stringify('production'),
-    },
-    minify: true,
-    external: ['electron'],
   });
 
   console.log('[build] Building renderer');

@@ -4,13 +4,11 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": "src",
-    "module": "CommonJS",
-    "resolveJsonModule": true
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
-    "**/*.test.ts"
-  ]
+    "**/*.test.ts",
+  ],
 }

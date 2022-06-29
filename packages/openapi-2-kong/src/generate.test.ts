@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import fs from 'fs';
+import { OpenAPIV3 } from 'openapi-types';
 import path from 'path';
 import YAML from 'yaml';
 
@@ -15,6 +16,7 @@ const firstK8sDocument = {
   },
   route: {
     methods: [
+      // There was some discrepency how we "generate" mock data and how we implemented it
       'get',
     ],
   },
@@ -91,7 +93,7 @@ describe('top-level API exports', () => {
       const parsedSpec = YAML.parse(dcFixtureFileString);
       const {
         documents: [dc],
-      } = generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
+      } = await generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
       expect(dc).not.toHaveProperty('upstreams');
@@ -104,7 +106,7 @@ describe('top-level API exports', () => {
         label,
         documents,
         warnings,
-      } = generateFromSpec(parsedSpec, 'kong-for-kubernetes') as KongForKubernetesResult;
+      } = await generateFromSpec(parsedSpec, 'kong-for-kubernetes') as KongForKubernetesResult;
       expect(type).toBe('kong-for-kubernetes');
       expect(label).toBe('Kong for Kubernetes');
       expect(documents).toHaveLength(9);
@@ -133,24 +135,25 @@ describe('top-level API exports', () => {
             name: {
               type: 'string',
             },
-          },
+          } as OpenAPIV3.SchemaObject,
         },
       },
     };
     const specResolved: OpenApi3Spec = {
       openapi: '3.0.0',
       components: partialSpec.components,
-      info: {},
+      info: {
+        title: '',
+        version: '',
+      },
       paths: {
         '/': {
           post: {
             responses: {
               200: {
-                name: {
-                  type: 'string',
-                },
-              },
-            },
+                '$ref': '#/components/schemas/dog',
+              } as OpenAPIV3.SchemaObject,
+            } as OpenAPIV3.ResponsesObject,
           },
         },
       },

@@ -1,6 +1,6 @@
+import SwaggerParser from '@apidevtools/swagger-parser';
 import fs from 'fs';
 import path from 'path';
-import SwaggerParser from 'swagger-parser';
 import YAML from 'yaml';
 
 import { generateDeclarativeConfigFromSpec } from './declarative-config/generate';
@@ -30,18 +30,20 @@ export const parseSpec = (spec: string | Record<string, any>) => {
 
   // Ensure it has some required properties to make parsing a bit less strict
   if (!api.info) {
-    api.info = {};
+    api.info = {
+      title: '',
+      version: '',
+    };
   }
 
   if (api.openapi === '3.0') {
     api.openapi = '3.0.0';
   }
 
-  // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
-  return SwaggerParser.dereference(api) as Promise<OpenApi3Spec>;
+  return SwaggerParser.bundle(api) as Promise<OpenApi3Spec>;
 };
 
-export const generateFromSpec = (
+export const generateFromSpec = async (
   api: OpenApi3Spec,
   type: ConversionResultType,
   tags: string[] = [],
@@ -50,7 +52,7 @@ export const generateFromSpec = (
 
   switch (type) {
     case 'kong-declarative-config':
-      return generateDeclarativeConfigFromSpec(api, allTags);
+      return await generateDeclarativeConfigFromSpec(api, allTags);
 
     case 'kong-for-kubernetes':
       return generateKongForKubernetesConfigFromSpec(api);

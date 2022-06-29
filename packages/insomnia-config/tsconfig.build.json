@@ -4,16 +4,14 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": "src",
-    "resolveJsonModule": true,
-    "strict": true,
   },
   "include": [
-    "src",
+    "**/*.d.ts",
     "**/*.schema.json",
-    "**/*.d.ts"
+    "src",
   ],
   "exclude": [
-    "dist",
     "**/*.test.ts",
+    "dist",
   ],
 }

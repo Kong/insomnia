@@ -47,6 +47,8 @@ describe('index', () => {
           'x-kubernetes-ingress-metadata': {
             name: 'K8s name',
           },
+          title: '',
+          version: '',
         },
       });
       expect(getSpecName(spec)).toBe('k8s-name');
@@ -63,6 +65,8 @@ describe('index', () => {
               'nginx.ingress.kubernetes.io/rewrite-target': '/',
             },
           },
+          title: '',
+          version: '',
         },
       });
       const result = generateMetadataAnnotations(spec, {
@@ -117,6 +121,8 @@ describe('index', () => {
             name: 'info-name',
             annotations,
           },
+          title: '',
+          version: '',
         },
       });
       const result = generateMetadataAnnotations(spec, {
@@ -610,9 +616,9 @@ describe('index', () => {
         ...pluginKeyAuth,
         paths: {
           '/path': {
-            GET: {},
-            PUT: { ...pluginKeyAuth },
-            POST: { ...pluginKeyAuth, ...pluginDummy },
+            get: {},
+            put: { ...pluginKeyAuth },
+            post: { ...pluginKeyAuth, ...pluginDummy },
           },
         },
       });

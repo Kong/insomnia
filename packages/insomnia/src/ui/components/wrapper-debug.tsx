@@ -35,7 +35,6 @@ interface Props extends ReturnType<typeof mapStateToProps> {
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleRequestGroupCreate: () => void;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
   handleSetActiveResponse: Function;
@@ -100,7 +99,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
       activeWorkspace,
       environments,
       handleChangeEnvironment,
-      handleRequestGroupCreate,
       handleSidebarSort,
       settings,
       sidebarChildren,
@@ -109,7 +107,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
     const {
       handleActivateRequest,
       handleCopyAsCurl,
-      handleCreateRequestGroup,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleGenerateCode,
@@ -143,7 +140,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
         <SidebarFilter
           key={`${activeWorkspace._id}::filter`}
           onChange={handleSetSidebarFilter}
-          requestGroupCreate={handleRequestGroupCreate}
           sidebarSort={handleSidebarSort}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
@@ -152,7 +148,6 @@ class UnconnectedWrapperDebug extends PureComponent<Props> {
         <SidebarChildren
           childObjects={sidebarChildren}
           handleActivateRequest={handleActivateRequest}
-          handleCreateRequestGroup={handleCreateRequestGroup}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleSetRequestPinned={handleSetRequestPinned}
           handleDuplicateRequest={handleDuplicateRequest}

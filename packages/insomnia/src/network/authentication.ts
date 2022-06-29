@@ -25,7 +25,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
   const requestId = renderedRequest._id;
 
   if (authentication.disabled) {
-    return null;
+    return;
   }
 
   if (authentication.type === AUTH_BASIC) {
@@ -51,7 +51,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       const token = oAuth2Token.accessToken;
       return _buildBearerHeader(token, authentication.tokenPrefix);
     } else {
-      return null;
+      return;
     }
   }
 
@@ -64,7 +64,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
         value: oAuth1Token.Authorization,
       };
     } else {
-      return null;
+      return;
     }
   }
 
@@ -138,12 +138,12 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     });
   }
 
-  return null;
+  return;
 }
 
 export const _buildBearerHeader = (accessToken: string, prefix: string) => {
   if (!accessToken) {
-    return null;
+    return;
   }
 
   const header = {

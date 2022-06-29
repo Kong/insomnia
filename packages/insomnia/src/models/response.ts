@@ -1,10 +1,9 @@
 import fs from 'fs';
 import { Readable } from 'stream';
-import { ValueOf } from 'type-fest';
 import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
-import { LIBCURL_DEBUG_MIGRATION_MAP } from '../common/misc';
+import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import type { BaseModel } from './index';
 import * as models from './index';
 
@@ -20,12 +19,6 @@ export const canSync = false;
 
 export interface ResponseHeader {
   name: string;
-  value: string;
-}
-
-export interface ResponseTimelineEntry {
-  name: ValueOf<typeof LIBCURL_DEBUG_MIGRATION_MAP>;
-  timestamp: number;
   value: string;
 }
 
@@ -234,7 +227,7 @@ export function getTimeline(response: Response, showBody?: boolean) {
     const timeline = JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
     const body: ResponseTimelineEntry[] = showBody ? [
       {
-        name: LIBCURL_DEBUG_MIGRATION_MAP.DataOut,
+        name: 'DataOut',
         timestamp: Date.now(),
         value: fs.readFileSync(bodyPath).toString(),
       },

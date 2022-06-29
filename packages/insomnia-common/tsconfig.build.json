@@ -4,11 +4,9 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": "src",
-    "resolveJsonModule": true,
-    "strict": true,
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
     "**/*.test.ts",

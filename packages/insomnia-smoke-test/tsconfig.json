@@ -2,21 +2,21 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": false,
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": [
+    "**/*.d.ts",
+    ".eslintrc.js",
     "__jest__",
-    "tests",
     "cli",
     "fixtures",
-    "playwright.config.ts",
-    "playwright",
-    "server",
     "jest.config.js",
-    ".eslintrc.js",
-    "**/*.d.ts",
+    "playwright",
+    "playwright.config.ts",
+    "server",
+    "tests",
   ],
   "exclude": [
-    "dist"
-  ]
+    "dist",
+  ],
 }
