@@ -3,6 +3,7 @@ import jwtAuthentication from 'jwt-authentication';
 
 import {
   AUTH_ASAP,
+  AUTH_AWS_IAM,
   AUTH_BASIC,
   AUTH_BEARER,
   AUTH_HAWK,
@@ -138,6 +139,10 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     });
   }
 
+  if (authentication.type === AUTH_AWS_IAM) {
+    // TODO: Implement
+    console.error('AWS IAM authentication is not yet supported for getAuthHeader');
+  }
   return;
 }
 
