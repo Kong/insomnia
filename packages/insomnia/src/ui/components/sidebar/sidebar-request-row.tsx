@@ -27,11 +27,11 @@ import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceColl
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
-  handleActivateRequest: (requestId?: string) => void;
-  handleCopyAsCurl: (reqeust: Request | GrpcRequest) => void;
-  handleDuplicateRequest: (reqeust: Request | GrpcRequest) => void;
-  handleGenerateCode: (reqeust: Request | GrpcRequest) => void;
-  handleSetRequestPinned: (reqeust: Request | GrpcRequest, isPinned: boolean) => void;
+  handleActivateRequest: Function;
+  handleSetRequestPinned: Function;
+  handleDuplicateRequest: Function;
+  handleGenerateCode: Function;
+  handleCopyAsCurl: Function;
   hotKeyRegistry: HotKeyRegistry;
   isActive: boolean;
   isPinned: boolean;

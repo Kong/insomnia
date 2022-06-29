@@ -26,10 +26,10 @@ import { showError } from '../modals';
 interface Props extends Pick<DropdownProps, 'right'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
-  handleCopyAsCurl: (reqeust: Request | GrpcRequest) => void;
-  handleDuplicateRequest: (reqeust: Request | GrpcRequest) => void;
-  handleGenerateCode: (reqeust: Request | GrpcRequest) => void;
-  handleSetRequestPinned: (reqeust: Request | GrpcRequest, isPinned: boolean) => void;
+  handleSetRequestPinned: Function;
+  handleDuplicateRequest: Function;
+  handleGenerateCode: Function;
+  handleCopyAsCurl: Function;
   handleShowSettings: () => void;
   hotKeyRegistry: HotKeyRegistry;
   isPinned: Boolean;
