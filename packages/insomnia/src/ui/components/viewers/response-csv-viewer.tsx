@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 interface Props {
   body: Buffer;
@@ -7,7 +7,8 @@ interface Props {
 
 export const ResponseCSVViewer: FC<Props> = ({ body }) => {
   const [csv, setCSV] = useState<{ data: string[][] } | null>(null);
-  const parse = useCallback(() => {
+
+  useEffect(() => {
     Papa.parse<string[]>(body.toString('utf8'), {
       skipEmptyLines: true,
       complete: result => {
@@ -15,10 +16,6 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
       },
     });
   }, [body]);
-
-  useEffect(() => {
-    parse();
-  }, [parse]);
 
   return (
     <div className="pad-sm">
