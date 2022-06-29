@@ -259,6 +259,7 @@ const GitHubRepositoryForm = ({
             <input
               className="form-control"
               defaultValue={uri}
+              disabled={Boolean(uri)}
               type="url"
               name="uri"
               autoFocus
@@ -289,7 +290,7 @@ const GitHubRepositoryForm = ({
           </Details>
         </AccountDetails>
         <Button
-          onClick={event => {
+          onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
             showAlert({
