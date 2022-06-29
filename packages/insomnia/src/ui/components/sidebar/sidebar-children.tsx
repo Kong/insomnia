@@ -35,7 +35,6 @@ const mapStateToProps = (state: RootState) => ({
 
 interface Props extends ReduxProps {
   handleActivateRequest: Function;
-  handleCreateRequestGroup: (parentId: string) => void;
   handleSetRequestPinned: Function;
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequest: Function;
@@ -52,7 +51,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
   _renderChildren(children: Child[], isInPinnedList: boolean) {
     const {
       filter,
-      handleCreateRequestGroup,
       handleSetRequestPinned,
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
@@ -117,7 +115,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           isCollapsed={child.collapsed}
-          handleCreateRequestGroup={handleCreateRequestGroup}
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
         >
@@ -137,20 +134,12 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     );
   }
 
-  _handleCreateRequestGroup() {
-    const { handleCreateRequestGroup, workspace } = this.props;
-    if (workspace) {
-      handleCreateRequestGroup(workspace._id);
-    }
-  }
-
   render() {
     const { childObjects, hotKeyRegistry } = this.props;
     const showSeparator = childObjects.pinned.length > 0;
     const contextMenuPortal = ReactDOM.createPortal(
       <div className="hide">
         <SidebarCreateDropdown
-          handleCreateRequestGroup={this._handleCreateRequestGroup}
           hotKeyRegistry={hotKeyRegistry}
         />
       </div>,
