@@ -1,3 +1,4 @@
+performance.mark('willEvalSpectal');
 import { IRuleResult, RulesetDefinition, Spectral } from '@stoplight/spectral-core';
 import { oas } from '@stoplight/spectral-rulesets';
 
@@ -8,3 +9,5 @@ export const initializeSpectral = () => {
 };
 
 export const isLintError = (result: IRuleResult) => result.severity === 0;
+performance.mark('didEvalSpectal');
+performance.measure('initEvalSpectal', 'willEvalSpectal', 'didEvalSpectal');

@@ -1,3 +1,5 @@
+performance.mark('willRegisterCodeMirror');
+
 import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/clojure/clojure';
 import 'codemirror/mode/css/css';
@@ -81,3 +83,5 @@ import './extensions/nunjucks-tags';
 // CSS
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
+performance.mark('didRegisterCodeMirror');
+performance.measure('initRegisterCodeMirror', 'willRegisterCodeMirror', 'didRegisterCodeMirror');

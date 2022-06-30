@@ -1,7 +1,8 @@
 import CodeMirror from 'codemirror';
 
-import { initializeSpectral, isLintError } from '../../../../common/spectral';
+performance.mark('willRegisterSpectal');
 
+import { initializeSpectral, isLintError } from '../../../../common/spectral';
 const spectral = initializeSpectral();
 
 CodeMirror.registerHelper('lint', 'openapi', async function(text: string) {
@@ -13,3 +14,5 @@ CodeMirror.registerHelper('lint', 'openapi', async function(text: string) {
     message: result.message,
   }));
 });
+performance.mark('didRegisterSpectal');
+performance.measure('initRegisterSpectal', 'willRegisterSpectal', 'didRegisterSpectal');

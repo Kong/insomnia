@@ -6,7 +6,6 @@ import path from 'path';
 import appConfig from '../../config/config.json';
 import { ParsedApiSpec } from '../common/api-specs';
 import { PLUGIN_PATH } from '../common/constants';
-import { resolveHomePath } from '../common/misc';
 import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
@@ -195,7 +194,13 @@ async function _traversePluginPath(
     }
   }
 }
-
+export function resolveHomePath(p: string) {
+  if (p.indexOf('~/') === 0) {
+    return path.join(process.env['HOME'] || '/', p.slice(1));
+  } else {
+    return p;
+  }
+}
 export async function getPlugins(force = false): Promise<Plugin[]> {
   if (force) {
     plugins = null;

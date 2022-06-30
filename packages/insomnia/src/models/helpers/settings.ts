@@ -1,3 +1,5 @@
+performance.mark('willEvalSettingsHelpers');
+
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
@@ -307,3 +309,5 @@ export const getMonkeyPatchedControlledSettings = <T extends Settings>(settings:
     ...override,
   };
 };
+performance.mark('didEvalSettingsHelpers');
+performance.measure('initEvalSettingsHelpers', 'willEvalSettingsHelpers', 'didEvalSettingsHelpers');

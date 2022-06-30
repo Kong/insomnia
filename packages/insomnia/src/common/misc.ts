@@ -1,3 +1,5 @@
+performance.mark('willEvalMisc');
+
 import fuzzysort from 'fuzzysort';
 import { join as pathJoin } from 'path';
 import { head, tail } from 'ramda';
@@ -233,7 +235,6 @@ export function resolveHomePath(p: string) {
     return p;
   }
 }
-
 export function jsonParseOr(str: string, fallback: any): any {
   try {
     return JSON.parse(str);
@@ -450,3 +451,6 @@ export const toTitleCase = (value: string) => (
     .map(capitalize)
     .join(' ')
 );
+
+performance.mark('didEvalMisc');
+performance.measure('initEvalMisc', 'willEvalMisc', 'didEvalMisc');

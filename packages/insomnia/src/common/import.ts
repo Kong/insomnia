@@ -1,3 +1,5 @@
+performance.mark('willEvalImporters');
+
 import fs from 'fs';
 import { convert, ConvertResultType } from 'insomnia-importers';
 
@@ -368,3 +370,5 @@ export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
 export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) => (
   id === 'insomnia-4'
 );
+performance.mark('didEvalImporters');
+performance.measure('initEvalImporters', 'willEvalImporters', 'didEvalImporters');
