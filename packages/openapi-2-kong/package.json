@@ -16,6 +16,9 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
+    "lodash.has": "^4.5.2",
+    "lodash.isempty": "^4.4.0",
+    "lodash.set": "^4.3.2",
     "openapi-types": "^8.0.0",
     "slugify": "1.6.5",
     "swagger-parser": "^10.0.3",
@@ -24,6 +27,9 @@
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
+    "@types/lodash.has": "^4.5.7",
+    "@types/lodash.isempty": "^4.4.7",
+    "@types/lodash.set": "^4.3.7",
     "@types/url-join": "^4.0.1",
     "@types/yaml": "^1.9.7",
     "jest": "^28.1.0",

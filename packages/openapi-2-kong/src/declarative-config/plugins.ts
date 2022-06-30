@@ -1,4 +1,7 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
+import has from 'lodash.has';
+import isEmpty from 'lodash.isempty';
+import set from 'lodash.set';
 import { OpenAPIV3 } from 'openapi-types';
 import { Entry } from 'type-fest';
 
@@ -171,7 +174,7 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
  * @param hash a hash map used to search and add
  * @returns a hash map that has resolved all ref schema items recursively with its size property
  */
-function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>($refs: SwaggerParser.$Refs, schema: T, hash = new Map<string, T>()): Map<string, unknown> {
+function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>($refs: SwaggerParser.$Refs, schema: T, hash = {}): Record<string, unknown> {
   // let's get all the $ref paths first recursively
   const paths = resolveObjectPathRecursively(schema);
   if (!paths?.length) {
@@ -179,25 +182,23 @@ function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.Para
     return hash;
   }
 
-  // resolve the reference object recursively here
-  return paths.reduce((components: Map<string, T>, $refPath: string) => {
-    // build the key from a JSON path as with the last split string item
-    const path = $refPath?.split('/').pop();
-
+  for (const path of paths) {
+    const paths = path.replace('#/components/', '').split('/').join('.');
     // if this path was never resolved, then try to resolve it
-    if (path && !components.has(path)) {
-      const pathResolved = getOperationRef<T>($refs, $refPath);
+    if (!has(hash, paths)) {
+      const pathResolved = getOperationRef<T>($refs, path);
 
       // if a schema for the given path is resolved, then add it to the hash map
       if (pathResolved) {
-        components.set(path, pathResolved);
+        set(hash, paths, pathResolved);
 
         // recursively check if the resolved schema also contains $ref path and resolve it
-        resolveRefSchemaRecursively($refs, pathResolved, components);
+        resolveRefSchemaRecursively($refs, pathResolved, hash);
       }
     }
-    return components;
-  }, hash);
+  }
+
+  return hash;
 }
 
 /**
@@ -207,11 +208,10 @@ function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.Para
  * @returns OpenAPIV3 component objects completely dereferenced for all paths mentioned in the given schema
  */
 function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject): OpenAPIV3.ComponentsObject | undefined {
-  const componentsIterable = resolveRefSchemaRecursively($refs, schema);
-  if (!componentsIterable.size) {
+  const components = resolveRefSchemaRecursively($refs, schema);
+  if (isEmpty(components)) {
     return;
   }
-  const components = Object.fromEntries(componentsIterable);
   return components;
 }
 
