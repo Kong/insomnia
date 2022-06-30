@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import clone from 'clone';
+import { isValid } from 'date-fns';
 import { cookieToString } from 'insomnia-cookies';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -107,12 +108,8 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     const cookie = clone(nextCookie);
     // Sanitize expires field
     const expires = new Date(Number(cookie.expires))?.getTime();
-    const isInValidExpires = (val: Cookie['expires']) => val === null || val === '' || new Date(Number(val)).toString() === 'Invalid Date';
-    if (isInValidExpires(cookie.expires)) {
-      cookie.expires = null;
-    } else {
-      cookie.expires = expires;
-    }
+    const isValidDate = (val: Cookie['expires']) => val !== null && val !== '' && isValid(Number(val));
+    cookie.expires = isValidDate(cookie.expires) ? expires : null;
 
     // Clone so we don't modify the original
     const cookieJar = clone(prevCookieJar);
@@ -173,13 +170,18 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
   }
 
-  _renderInputField(field: string, error: string | null = null) {
+  _renderInputField(field: string) {
     const { cookie } = this.state;
-    const {
-    } = this.props;
+    let error: string | null = null;
 
     if (!cookie) {
       return null;
+    }
+
+    if (field === 'expires') {
+      if (cookie.expires !== null && !isValid(Number(cookie.expires))) {
+        error = 'Invalid Date';
+      }
     }
 
     // @ts-expect-error -- mapping unsoundness
@@ -225,10 +227,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
                     {this._renderInputField('domain')}
                     {this._renderInputField('path')}
                   </div>
-                  {this._renderInputField(
-                    'expires',
-                    cookie.expires !== null && new Date(Number(cookie.expires)).toString() === 'Invalid Date' ? 'Invalid Date' : null,
-                  )}
+                  {this._renderInputField('expires')}
                 </div>
                 <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                   {checkFields.map((field, i) => {
