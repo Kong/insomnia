@@ -165,38 +165,3 @@ export const hasUpstreams = (api: OpenApi3Spec) => {
   const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
   return hasUpstreamDefaults || hasMoreThanOneServer;
 };
-
-/**
- * Resolves a list of string value that are most likely reference paths in the nested JSON Schema Object
- * @param unknownObject unknown paremeter that can be Object, Array or something else
- * @param keyForPath path to look for in JSON Schema for resolving in the nested object
- * @returns a list of path string values
- */
-export function resolveObjectPathRecursively(unknownObject: unknown, keyForPath = '$ref'): string[] {
-  // if the unknown object is with invalid type, exit this recursion immediately.
-  if (typeof unknownObject !== 'object' || Array.isArray(unknownObject) || !unknownObject) {
-    return [];
-  }
-
-  return Object.entries(unknownObject).reduce((paths: string[], entry: [string, unknown]) => {
-    const [key, value] = entry;
-
-    // if found the path value in the first try, add it to the paths array
-    if ((key === keyForPath) && typeof value === 'string') {
-      return paths.concat(value);
-    }
-
-    // start a recursion to find the path if value is an object
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      return paths.concat(resolveObjectPathRecursively(value, keyForPath));
-    }
-
-    // if value is an array, conduct the recursion in each item and accumulate the value
-    if (Array.isArray(value)) {
-      const recursedPaths = value.reduce((paths, item) => paths.concat(resolveObjectPathRecursively(item, keyForPath)), []);
-      return paths.concat(recursedPaths);
-    }
-
-    return paths;
-  }, []);
-}

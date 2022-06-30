@@ -5,7 +5,7 @@ import set from 'lodash.set';
 import { OpenAPIV3 } from 'openapi-types';
 import { Entry } from 'type-fest';
 
-import { distinctByProperty, getPluginNameFromKey, isPluginKey, resolveObjectPathRecursively } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
 import type { OA3Operation, OpenApi3Spec } from '../types/openapi3';
@@ -171,34 +171,48 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
  * Resolves all of the reference paths mentioned in the given OpenAPIV3 schema object into right schemas
  * @param $refs Swagger.$Refs object to get a OpenAPI schema resolving method for free
  * @param schema schema object to be recursively resolved
- * @param hash a hash map used to search and add
- * @returns a hash map that has resolved all ref schema items recursively with its size property
+ * @param components a components map used to search and add
+ * @returns a components map that has resolved all ref schema items recursively
  */
-function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>($refs: SwaggerParser.$Refs, schema: T, hash = {}): Record<string, unknown> {
-  // let's get all the $ref paths first recursively
-  const paths = resolveObjectPathRecursively(schema);
-  if (!paths?.length) {
-    // If it's empty, terminate it right away
-    return hash;
+function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>($refs: SwaggerParser.$Refs, source: T, components = {}): Record<string, unknown> {
+  if (typeof source !== 'object' || Array.isArray(source) || !source) {
+    return {};
   }
 
-  for (const path of paths) {
-    const paths = path.replace('#/components/', '').split('/').join('.');
-    // if this path was never resolved, then try to resolve it
-    if (!has(hash, paths)) {
-      const pathResolved = getOperationRef<T>($refs, path);
+  for (const entry of Object.entries(source)) {
+    const [key, value] = entry;
 
-      // if a schema for the given path is resolved, then add it to the hash map
-      if (pathResolved) {
-        set(hash, paths, pathResolved);
+    // if found $ref path in the key-value pair, resolve the schema object
+    if ((key === '$ref') && typeof value === 'string') {
+      const paths = value.replace('#/components/', '').split('/').join('.');
+      if (!has(components, paths)) {
+        const pathResolved = getOperationRef<T>($refs, value);
+        // if a schema for the given path is resolved, then add it to the hash map
+        if (pathResolved) {
+          // setting path like 'schemas.EntityItem' into the object; components['schema']['EntityItem] = pathResolved;
+          set(components, paths, pathResolved);
 
-        // recursively check if the resolved schema also contains $ref path and resolve it
-        resolveRefSchemaRecursively($refs, pathResolved, hash);
+          // recursively check if the resolved schema also contains $ref path and resolve it
+          resolveRefSchemaRecursively($refs, pathResolved, components);
+        }
       }
+      continue;
+    }
+
+    // start a recursion to find the path if value is an object
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      resolveRefSchemaRecursively($refs, value, components);
+      continue;
+    }
+
+    // if value is an array, conduct the recursion in each item and accumulate the value
+    if (Array.isArray(value)) {
+      value.forEach((item: unknown) => resolveRefSchemaRecursively($refs, item, components));
+      continue;
     }
   }
 
-  return hash;
+  return components;
 }
 
 /**
