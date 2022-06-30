@@ -106,11 +106,12 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
 
     const cookie = clone(nextCookie);
-    // Sanitize expires field
-    const expires = new Date(Number(cookie.expires))?.getTime();
-    const isValidDate = (val: Cookie['expires']) => val !== null && val !== '' && isValid(Number(val));
-    cookie.expires = isValidDate(cookie.expires) ? expires : null;
-
+    // transform to Date object or fallback to null
+    let dateFormat = null;
+    if (cookie.expires && isValid(new Date(cookie.expires))) {
+      dateFormat = new Date(cookie.expires);
+    }
+    cookie.expires = dateFormat;
     // Clone so we don't modify the original
     const cookieJar = clone(prevCookieJar);
     const { cookies } = cookieJar;
@@ -170,30 +171,29 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
   }
 
-  _renderInputField(field: string) {
+  _renderInputField(field: keyof Cookie) {
     const { cookie } = this.state;
-    let error: string | null = null;
 
     if (!cookie) {
       return null;
     }
-
-    if (field === 'expires') {
-      if (cookie.expires !== null && !isValid(Number(cookie.expires))) {
-        error = 'Invalid Date';
-      }
+    let localDateTime;
+    if (field === 'expires' && cookie.expires && isValid(new Date(cookie.expires))) {
+      localDateTime = new Date(cookie.expires).toISOString().slice(0, 16);
     }
 
-    // @ts-expect-error -- mapping unsoundness
     const val = (cookie[field] || '').toString();
     return (
       <div className="form-control form-control--outlined">
         <label>
-          {capitalize(field)} <span className="danger">{error}</span>
-          <OneLineEditor
-            defaultValue={val || ''}
-            onChange={value => this._handleChange(field, value)}
-          />
+          {capitalize(field)}
+          {field === 'expires' ?
+            <input type="datetime-local" value={localDateTime} onChange={value => this._handleChange(field, value)} /> :
+            <OneLineEditor
+              defaultValue={val || ''}
+              onChange={value => this._handleChange(field, value)}
+            />
+          }
         </label>
       </div>
     );
