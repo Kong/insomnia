@@ -31,4 +31,3 @@ packages/insomnia-smoke-test/screenshots
 *.tsbuildinfo
 dist
 .history
-packages/insomnia/src/main.min.js.map

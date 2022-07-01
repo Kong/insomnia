@@ -1,7 +1,9 @@
+import { OpenAPIV3 } from 'openapi-types';
+
 import { getSecurity } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { BasicAuthPlugin, KeyAuthPlugin, OpenIDConnectPlugin } from '../types/kong';
-import { OA3Operation, OA3SecurityScheme, OA3SecuritySchemeApiKey, OA3SecuritySchemeHttp, OA3SecuritySchemeOpenIdConnect, OpenApi3Spec } from '../types/openapi3';
+import { OA3Operation, OA3SecurityScheme, OpenApi3Spec } from '../types/openapi3';
 
 export function generateSecurityPlugins(
   op: OA3Operation | null,
@@ -28,7 +30,7 @@ export function generateSecurityPlugins(
   return plugins;
 }
 
-export const generateApiKeySecurityPlugin = (scheme: OA3SecuritySchemeApiKey) => {
+export const generateApiKeySecurityPlugin = (scheme: OpenAPIV3.ApiKeySecurityScheme) => {
   if (!['query', 'header', 'cookie'].includes(scheme.in)) {
     throw new Error(`a ${scheme.type} object expects valid "in" property. Got ${scheme.in}`);
   }
@@ -45,7 +47,7 @@ export const generateApiKeySecurityPlugin = (scheme: OA3SecuritySchemeApiKey) =>
   return keyAuthPlugin;
 };
 
-export const generateBasicAuthPlugin = (scheme: OA3SecuritySchemeHttp) => {
+export const generateBasicAuthPlugin = (scheme: OpenAPIV3.HttpSecurityScheme) => {
   if ((scheme.scheme || '').toLowerCase() !== 'basic') {
     throw new Error(`Only "basic" http scheme supported. got ${scheme.scheme}`);
   }
@@ -55,7 +57,7 @@ export const generateBasicAuthPlugin = (scheme: OA3SecuritySchemeHttp) => {
   return basicAuthPlugin;
 };
 
-export const generateOpenIdConnectSecurityPlugin = (scheme: OA3SecuritySchemeOpenIdConnect, args: string[]) => {
+export const generateOpenIdConnectSecurityPlugin = (scheme: OpenAPIV3.OpenIdSecurityScheme, args: string[]) => {
   if (!scheme.openIdConnectUrl) {
     throw new Error(`invalid "openIdConnectUrl" property. Got ${scheme.openIdConnectUrl}`);
   }
@@ -86,15 +88,15 @@ export function generateSecurityPlugin(
   // Generate base plugin
   switch (scheme?.type.toLowerCase()) {
     case 'apikey':
-      plugin = generateApiKeySecurityPlugin(scheme as OA3SecuritySchemeApiKey);
+      plugin = generateApiKeySecurityPlugin(scheme as OpenAPIV3.ApiKeySecurityScheme);
       break;
 
     case 'http':
-      plugin = generateBasicAuthPlugin(scheme as OA3SecuritySchemeHttp);
+      plugin = generateBasicAuthPlugin(scheme as OpenAPIV3.HttpSecurityScheme);
       break;
 
     case 'openidconnect':
-      plugin = generateOpenIdConnectSecurityPlugin(scheme as OA3SecuritySchemeOpenIdConnect, args);
+      plugin = generateOpenIdConnectSecurityPlugin(scheme as OpenAPIV3.OpenIdSecurityScheme, args);
       break;
 
     case 'oauth2':

@@ -47,7 +47,7 @@ jobs:
 
       - name: Package
         shell: bash
-        run: BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+        run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

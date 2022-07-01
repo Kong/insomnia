@@ -29,7 +29,7 @@
                   "application/json",
                   "application/xml"
                 ],
-                "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
+                "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}},\"components\":{\"schemas\":{\"jsonSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}},\"xmlSchema\":{\"type\":\"object\",\"properties\":{\"prop\":{\"type\":\"integer\"}}}}},\"$schema\":\"http://json-schema.org/schema\"}",
                 "version": "draft4"
               },
               "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
@@ -47,7 +47,7 @@
             {
               "config": {
                 "allowed_content_types": ["application/json"],
-                "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
+                "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}},\"components\":{\"schemas\":{\"jsonSchema\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}},\"xmlSchema\":{\"type\":\"object\",\"properties\":{\"prop\":{\"type\":\"integer\"}}}}},\"$schema\":\"http://json-schema.org/schema\"}",
                 "version": "draft4"
               },
               "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],

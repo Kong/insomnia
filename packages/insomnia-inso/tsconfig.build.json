@@ -2,25 +2,24 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": [
-    "src",
+    "**/*.d.ts",
     "package.json",
-    "**/*.d.ts"
+    "src",
   ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "src/jest",
-    "jest.config.js",
-    "bin",
-    "assets",
-    "scripts",
-    
-    "**/@types/mocha",
     "**/*.test.ts",
+    "**/@types/mocha",
+    "**/__mocks__/*",
     "**/__snapshots__/**",
-    "**/__mocks__/*"
-  ]
+    "assets",
+    "bin",
+    "dist",
+    "jest.config.js",
+    "node_modules",
+    "scripts",
+    "src/jest",
+  ],
 }

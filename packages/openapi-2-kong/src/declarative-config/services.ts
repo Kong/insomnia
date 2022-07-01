@@ -4,13 +4,12 @@ import {
   getAllServers,
   getName,
   hasUpstreams,
-  HttpMethod,
   parseUrl,
   pathVariablesToRegex,
 } from '../common';
 import { DCRoute, DCService } from '../types/declarative-config';
 import { xKongName, xKongServiceDefaults } from '../types/kong';
-import { OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
+import { HttpMethods, OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateGlobalPlugins,
   generateOperationPlugins,
@@ -20,7 +19,7 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import { appendUpstreamToName } from './upstreams';
 
-export function generateServices(api: OpenApi3Spec, tags: string[]) {
+export async function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
 
   if (servers.length === 0) {
@@ -28,22 +27,22 @@ export function generateServices(api: OpenApi3Spec, tags: string[]) {
   }
 
   // only support one service for now
-  const service = generateService(servers[0], api, tags);
+  const service = await generateService(servers[0], api, tags);
   return [service];
 }
 
-export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
+export async function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
 
   let host = parsedUrl.hostname;
   if (hasUpstreams(api)) {
-    host =  appendUpstreamToName(name);
+    host = appendUpstreamToName(name);
   }
 
   // Service plugins
-  const globalPlugins = generateGlobalPlugins(api, tags);
+  const globalPlugins = await generateGlobalPlugins(api, tags);
   const serviceDefaults = api[xKongServiceDefaults] || {};
 
   if (typeof serviceDefaults !== 'object') {
@@ -128,11 +127,12 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
       // Path plugin takes precedence over global
       const parentValidatorPlugin = pathValidatorPlugin || globalPlugins.requestValidatorPlugin;
 
-      const regularPlugins = generateOperationPlugins({
+      const regularPlugins = await generateOperationPlugins({
         operation,
         pathPlugins,
         parentValidatorPlugin,
         tags,
+        api,
       });
 
       const plugins = [...regularPlugins, ...securityPlugins];
@@ -151,7 +151,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 export function generateRouteName(
   api: OpenApi3Spec,
   routePath: string,
-  method: keyof typeof HttpMethod,
+  method: HttpMethods
 ) {
   const name = getName(api);
   const pathItem = api.paths[routePath];

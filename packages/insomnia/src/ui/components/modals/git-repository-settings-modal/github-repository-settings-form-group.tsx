@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios';
 import type { GraphQLError } from 'graphql';
 import { Button } from 'insomnia-components';
-import React, { useEffect, useState } from 'react';
+import React, { MouseEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
@@ -196,6 +196,21 @@ const GitHubRepositoryForm = ({
     undefined
   );
 
+  const handleSignOut = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    showAlert({
+      title: 'Sign out of GitHub',
+      message:
+        'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
+      okLabel: 'Sign out',
+      onConfirm: () => {
+        removeUser();
+        onSignOut();
+      },
+    });
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -259,6 +274,7 @@ const GitHubRepositoryForm = ({
             <input
               className="form-control"
               defaultValue={uri}
+              disabled={Boolean(uri)}
               type="url"
               name="uri"
               autoFocus
@@ -288,22 +304,7 @@ const GitHubRepositoryForm = ({
             </span>
           </Details>
         </AccountDetails>
-        <Button
-          onClick={event => {
-            event.preventDefault();
-            event.stopPropagation();
-            showAlert({
-              title: 'Sign out of GitHub',
-              message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
-              okLabel: 'Sign out',
-              onConfirm: () => {
-                removeUser();
-                onSignOut();
-              },
-            });
-          }}
-        >
+        <Button onClick={handleSignOut}>
           Sign out
         </Button>
       </AccountViewContainer>

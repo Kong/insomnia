@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { buildMultipart, DEFAULT_BOUNDARY } from '../multipart';
+import { buildMultipart, DEFAULT_BOUNDARY } from '../../main/network/multipart';
 
 window.app = electron.app;
 

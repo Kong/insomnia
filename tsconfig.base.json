@@ -1,16 +1,15 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "useUnknownInCatchVariables": false,
-    "allowJs": true,
     "checkJs": true,
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
     "lib": ["DOM", "ES2019"],
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
@@ -20,6 +19,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2019",
-    "types": ["node"]
-  }
+    "types": ["node"],
+    "useUnknownInCatchVariables": false,
+  },
 }

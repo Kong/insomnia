@@ -4,7 +4,6 @@ import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { useMount } from 'react-use';
 
-import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type {
@@ -130,7 +129,7 @@ export const RequestPane: FC<Props> = ({
     }
   }, [request, forceUpdateRequest]);
 
-  const requestUrlBarRef = useRef<RequestUrlBar | null>(null);
+  const requestUrlBarRef = useRef<RequestUrlBar>(null);
   useMount(() => {
     requestUrlBarRef.current?.focusInput();
   });
@@ -145,12 +144,6 @@ export const RequestPane: FC<Props> = ({
     return (
       <PlaceholderRequestPane />
     );
-  }
-
-  let numBodyParams = 0;
-
-  if (request.body && request.body.params) {
-    numBodyParams = request.body.params.filter(p => !p.disabled).length;
   }
 
   const numParameters = request.parameters.filter(p => !p.disabled).length;
@@ -185,26 +178,12 @@ export const RequestPane: FC<Props> = ({
           <Tab tabIndex="=1">
             <ContentTypeDropdown
               onChange={updateRequestMimeType}
-              contentType={request.body.mimeType}
-              request={request}
-              className="tall"
-            >
-              {typeof request.body.mimeType === 'string'
-                ? getContentTypeName(request.body.mimeType)
-                : 'Body'}
-              {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
-              <i className="fa fa-caret-down space-left" />
-            </ContentTypeDropdown>
+            />
           </Tab>
           <Tab tabIndex="=1">
             <AuthDropdown
               onChange={updateRequestAuthentication}
-              request={request}
-              className="tall"
-            >
-              {getAuthTypeName(request.authentication.type) || 'Auth'}
-              <i className="fa fa-caret-down space-left" />
-            </AuthDropdown>
+            />
           </Tab>
           <Tab tabIndex="=1">
             <button>

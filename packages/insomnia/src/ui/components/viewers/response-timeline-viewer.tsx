@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
-import { LIBCURL_DEBUG_MIGRATION_MAP } from '../../../common/misc';
+import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
-import { Response, ResponseTimelineEntry } from '../../../models/response';
+import type { Response } from '../../../models/response';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
@@ -47,40 +47,16 @@ export class ResponseTimelineViewer extends PureComponent<Props, State> {
   renderRow(row: ResponseTimelineEntry, i: number, all: ResponseTimelineEntry[]) {
     const { name, value } = row;
     const previousName = i > 0 ? all[i - 1].name : '';
-    let prefix: string | null = null;
-
-    switch (name) {
-      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderIn:
-        prefix = '< ';
-        break;
-
-      case LIBCURL_DEBUG_MIGRATION_MAP.DataIn:
-        prefix = '| ';
-        break;
-
-      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataIn:
-        prefix = '<< ';
-        break;
-
-      case LIBCURL_DEBUG_MIGRATION_MAP.HeaderOut:
-        prefix = '> ';
-        break;
-
-      case LIBCURL_DEBUG_MIGRATION_MAP.DataOut:
-        prefix = '| ';
-        break;
-
-      case LIBCURL_DEBUG_MIGRATION_MAP.SslDataOut:
-        prefix = '>> ';
-        break;
-
-      case LIBCURL_DEBUG_MIGRATION_MAP.Text:
-        prefix = '* ';
-        break;
-
-      default:
-        return null;
-    }
+    const prefixLookup: Record<ResponseTimelineEntry['name'], string> = {
+      HeaderIn: '< ',
+      DataIn: '| ',
+      SslDataIn: '<< ',
+      HeaderOut: '> ',
+      DataOut: '| ',
+      SslDataOut: '>> ',
+      Text: '* ',
+    };
+    const prefix: string = prefixLookup[name] || '* ';
 
     const lines = (value + '').replace(/\n$/, '').split('\n');
     const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);

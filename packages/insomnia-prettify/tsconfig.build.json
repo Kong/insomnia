@@ -3,14 +3,12 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
-    "module": "CommonJS",
     "rootDir": "src",
-    "resolveJsonModule": true
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
-    "**/*.test.ts"
-  ]
+    "**/*.test.ts",
+  ],
 }
