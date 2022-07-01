@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from 'react';
-
+// https://github.com/imbhargav5/rooks/blob/main/src/hooks/useTimeoutWhen.ts
 /**
  * A setTimeout hook that calls a callback after a timeout duration
  * when a condition is true
@@ -36,7 +36,7 @@ function useTimeoutWhen(
         console.warn('useTimeoutWhen: window is undefined.');
       }
     }
-  }, [when]);
+  }, [timeoutDelayMs, when]);
 }
 
 export { useTimeoutWhen };
