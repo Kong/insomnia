@@ -563,6 +563,7 @@ function getBounds() {
 
 const ZOOM_MAX = 6;
 const ZOOM_DEFAULT = 1;
+const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
