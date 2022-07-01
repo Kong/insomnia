@@ -58,4 +58,21 @@
     padding-left: var(--padding-md);
     padding-right: calc(var(--padding-md) / 2);
   }
+
+  .urlbar__send-btn-context {
+    padding-right: var(--padding-sm);
+    padding-left: var(--padding-sm);
+    text-align: center;
+    background: var(--color-surprise);
+    color: var(--color-font-surprise);
+  }
+  .urlbar__send-btn-context,
+  & > .dropdown {
+    height: 100%;
+  }
+
+  button:focus,
+  button:hover {
+    filter: brightness(0.8);
+  }
 }
