@@ -13,6 +13,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
+import { Dropdown } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
@@ -24,19 +25,18 @@ import { MethodTag } from '../tags/method-tag';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 interface RawProps {
+  disableDragAndDrop?: boolean;
+  filter: string;
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  filter: string;
+  hotKeyRegistry: HotKeyRegistry;
   isActive: boolean;
   isPinned: boolean;
-  hotKeyRegistry: HotKeyRegistry;
-  requestGroup?: RequestGroup;
-  /** can be Request or GrpcRequest */
   request?: Request | GrpcRequest;
-  disableDragAndDrop?: boolean;
+  requestGroup?: RequestGroup;
 }
 
 type Props = RawProps & DnDProps;
@@ -99,7 +99,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   const [renderedUrl, setRenderedUrl] = useState('');
 
-  const requestActionsDropdown = useRef<RequestActionsDropdown | null>(null);
+  const requestActionsDropdown = useRef<Dropdown>(null);
 
   const handleShowRequestActions = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -239,7 +239,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                 className="inline-block"
                 onEditStart={startEditing}
                 onSubmit={handleRequestUpdateName}
-                renderReadView={(value: string, props: any) => (
+                renderReadView={(value, props) => (
                   <Highlight
                     search={filter}
                     text={value}

@@ -2,4 +2,5 @@ build
 bin
 send-request
 coverage
-**/main.min.js
+src/main.min.js
+src/preload.js

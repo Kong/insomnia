@@ -146,9 +146,9 @@ interface State {
 }
 
 const isComponent = (match: string) => (child: ReactNode) => any(equals(match), [
-  // @ts-expect-error not sure
+  // @ts-expect-error this is required by our API for Dropdown
   child.type.name,
-  // @ts-expect-error not sure
+  // @ts-expect-error this is required by our API for Dropdown
   child.type.displayName,
 ]);
 

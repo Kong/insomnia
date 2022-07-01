@@ -133,7 +133,6 @@ export type WrapperProps = AppProps & {
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
-  handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
@@ -433,16 +432,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _handleCreateRequestGroupInWorkspace() {
-    const { activeWorkspace, handleCreateRequestGroup } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    handleCreateRequestGroup(activeWorkspace._id);
-  }
-
   _handleChangeEnvironment(id: string | null) {
     const { handleSetActiveEnvironment } = this.props;
     handleSetActiveEnvironment(id);
@@ -639,9 +628,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   gitSyncDropdown={gitSyncDropdown}
                   wrapperProps={this.props}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                >
-                  {sidebarChildren}
-                </WrapperUnitTest>
+                  sidebarChildren={sidebarChildren}
+                />
               </Suspense>
             }
           />
@@ -671,7 +659,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   handleForceUpdateRequest={this._handleForceUpdateRequest}
                   handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
-                  handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
                   handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
                   handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
                   handleSetActiveResponse={this._handleSetActiveResponse}

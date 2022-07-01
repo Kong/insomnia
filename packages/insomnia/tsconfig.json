@@ -6,7 +6,6 @@
     "config",
     "electron-builder.config.js",
     "esbuild.main.ts",
-    "esbuild.preload.ts",
     "esbuild.sr.ts",
     "jest.config.js",
     "package.json",
@@ -17,11 +16,12 @@
   ],
   "exclude": [
     "**/@types/mocha",
-    "**/main.min.js",
     "bin",
     "build",
     "config",
     "node_modules",
     "src/coverage",
+    "src/main.min.js",
+    "src/preload.js",
   ],
 }

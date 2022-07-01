@@ -1,8 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, ReactElement, useCallback, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { KeydownBinder } from '../keydown-binder';
+import { HighlightProps } from './highlight';
 
 export const shouldSave = (oldValue: string, newValue: string | undefined, preventBlank = false) => {
   // Should not save if length = 0 and we want to prevent blank
@@ -20,137 +19,103 @@ export const shouldSave = (oldValue: string, newValue: string | undefined, preve
 };
 
 interface Props {
-  onSubmit: (value?: string) => void;
-  value: string;
-  fallbackValue?: string;
   blankValue?: string;
-  renderReadView?: Function;
-  singleClick?: boolean;
-  onEditStart?: Function;
   className?: string;
+  fallbackValue?: string;
+  onEditStart?: () => void;
+  onSubmit: (value?: string) => void;
   preventBlank?: boolean;
+  renderReadView?: (value: string | undefined, props: any) => ReactElement<HighlightProps>;
+  singleClick?: boolean;
+  value: string;
 }
 
-interface State {
-  editing: boolean;
-}
+export const Editable: FC<Props> = ({
+  blankValue,
+  className,
+  fallbackValue,
+  onEditStart,
+  onSubmit,
+  preventBlank,
+  renderReadView,
+  singleClick,
+  value,
+  ...childProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Editable extends PureComponent<Props, State> {
-  state: State = {
-    editing: false,
+  const handleEditStart = () => {
+    setEditing(true);
+
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+
+    if (onEditStart) {
+      onEditStart();
+    }
   };
 
-  _input: HTMLInputElement | null = null;
+  const onSingleClick = () => singleClick && handleEditStart();
 
-  _handleSetInputRef(input: HTMLInputElement) {
-    this._input = input;
-  }
-
-  _handleSingleClickEditStart() {
-    if (this.props.singleClick) {
-      this._handleEditStart();
-    }
-  }
-
-  _handleEditStart() {
-    this.setState({
-      editing: true,
-    });
-    setTimeout(() => {
-      this._input?.focus();
-      this._input?.select();
-    });
-
-    if (this.props.onEditStart) {
-      this.props.onEditStart();
-    }
-  }
-
-  _handleEditEnd() {
-    const originalValue = this.props.value;
-
-    const newValue = this._input?.value.trim();
-
-    if (shouldSave(originalValue, newValue, this.props.preventBlank)) {
+  const handleEditEnd = useCallback(() => {
+    if (shouldSave(value, inputRef.current?.value.trim(), preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
-      this.props.onSubmit(newValue);
+      onSubmit(inputRef.current?.value.trim());
     }
 
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
-    setTimeout(
-      async () =>
-        this.setState({
-          editing: false,
-        }),
-      100,
-    );
-  }
+    setTimeout(() => setEditing(false), 100);
+  }, [onSubmit, preventBlank, value]);
 
-  _handleEditKeyDown(event: KeyboardEvent) {
+  const handleEditKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.keyCode === 13) {
       // Pressed Enter
-      this._handleEditEnd();
-    } else if (event.keyCode === 27) {
+      handleEditEnd();
+    }
+    if (event.keyCode === 27) {
       // Pressed Escape
       // Prevent bubbling to modals and other escape listeners.
       event.stopPropagation();
 
-      if (this._input) {
+      if (inputRef.current) {
         // Set the input to the original value
-        this._input.value = this.props.value;
+        inputRef.current.value = value;
 
-        this._handleEditEnd();
+        handleEditEnd();
       }
     }
+  }, [value, handleEditEnd]);
+
+  const initialValue = value || fallbackValue;
+  if (editing) {
+    return (
+      // KeydownBinder must be used here to properly stop propagation
+      // from reaching other scoped KeydownBinders
+      <KeydownBinder onKeydown={handleEditKeyDown} scoped>
+        <input
+          {...childProps}
+          className={`editable ${className || ''}`}
+          type="text"
+          ref={inputRef}
+          defaultValue={initialValue}
+          onBlur={handleEditEnd}
+        />
+      </KeydownBinder>
+    );
   }
+  const readViewProps = {
+    className: `editable ${className} ${!initialValue && 'empty'}`,
+    title: singleClick ? 'Click to edit' : 'Double click to edit',
+    onClick: onSingleClick,
+    onDoubleClick: handleEditStart,
+    ...childProps,
+  };
+  return renderReadView ?
+    renderReadView(initialValue, readViewProps)
+    : <span {...readViewProps}>{initialValue || blankValue}</span>;
 
-  render() {
-    const {
-      value,
-      fallbackValue,
-      blankValue,
-      singleClick,
-      onEditStart,
-      preventBlank,
-      className,
-      onSubmit,
-      renderReadView,
-      ...extra
-    } = this.props;
-    const { editing } = this.state;
-    const initialValue = value || fallbackValue;
-
-    if (editing) {
-      return (
-        // KeydownBinder must be used here to properly stop propagation
-        // from reaching other scoped KeydownBinders
-        <KeydownBinder onKeydown={this._handleEditKeyDown} scoped>
-          <input
-            {...extra}
-            className={`editable ${className || ''}`}
-            type="text"
-            ref={this._handleSetInputRef}
-            defaultValue={initialValue}
-            onBlur={this._handleEditEnd}
-          />
-        </KeydownBinder>
-      );
-    } else {
-      const readViewProps = {
-        className: `editable ${className} ${!initialValue && 'empty'}`,
-        title: singleClick ? 'Click to edit' : 'Double click to edit',
-        onClick: this._handleSingleClickEditStart,
-        onDoubleClick: this._handleEditStart,
-        ...extra,
-      };
-
-      if (renderReadView) {
-        return renderReadView(initialValue, readViewProps);
-      } else {
-        return <span {...readViewProps}>{initialValue || blankValue}</span>;
-      }
-    }
-  }
-}
+};

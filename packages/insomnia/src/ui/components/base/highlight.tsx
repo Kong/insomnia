@@ -3,13 +3,13 @@ import React, { FC } from 'react';
 
 import { fuzzyMatch } from '../../../common/misc';
 
-interface Props {
+export interface HighlightProps {
   search: string;
   text: string;
   blankValue?: String;
 }
 
-export const Highlight: FC<Props> = ({
+export const Highlight: FC<HighlightProps> = ({
   search,
   text,
   blankValue,
