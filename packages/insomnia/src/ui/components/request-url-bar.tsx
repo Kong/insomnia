@@ -1,5 +1,5 @@
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useInterval } from 'react-use';
 
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -81,11 +81,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setCurrentInterval(null);
     setCurrentTimeout(undefined);
   };
-  useEffect(() => {
-    return () => {
-      handleStop();
-    };
-  }, [request._id]);
 
   const handleSendOnInterval = useCallback(() => {
     showPrompt({

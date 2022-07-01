@@ -156,6 +156,7 @@ export const RequestPane: FC<Props> = ({
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
+            key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             onMethodChange={updateRequestMethod}
