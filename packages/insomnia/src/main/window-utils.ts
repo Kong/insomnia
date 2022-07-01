@@ -104,7 +104,7 @@ export function createWindow() {
 
   // Open generic links (<a .../>) in default browser
   mainWindow?.webContents.on('will-navigate', (event, url) => {
-    if (url === appUrl) {
+    if (url.startsWith(appUrl)) {
       return;
     }
 
@@ -563,7 +563,6 @@ function getBounds() {
 
 const ZOOM_MAX = 6;
 const ZOOM_DEFAULT = 1;
-const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
