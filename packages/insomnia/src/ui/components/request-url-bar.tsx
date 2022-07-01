@@ -1,10 +1,11 @@
 import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useInterval } from 'react-use';
 
-import { isMac } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import type { Request } from '../../models/request';
+import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -62,14 +63,23 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   useImperativeHandle(ref, () => ({ focusInput }), [focusInput]);
 
-  const timeoutRef = useRef<number | undefined>(undefined);
-  const intervalRef = useRef<number | undefined>(undefined);
+  const [currentInterval, setCurrentInterval] = useState<number | null>(null);
+  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+
+  const send = useCallback(() => {
+    setCurrentTimeout(undefined);
+    if (downloadPath) {
+      handleSendAndDownload(downloadPath);
+    } else {
+      handleSend();
+    }
+  }, [downloadPath, handleSend, handleSendAndDownload]);
+
+  useInterval(send, currentInterval ? currentInterval : null);
+  useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   const handleStop = () => {
-    const { clearInterval, clearTimeout } = window;
-    clearTimeout(timeoutRef.current);
-    clearInterval(intervalRef.current);
     setCurrentInterval(null);
-    setCurrentTimeout(null);
+    setCurrentTimeout(undefined);
   };
   useEffect(() => {
     return () => {
@@ -77,35 +87,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     };
   }, [request._id]);
 
-  const [currentTimeout, setCurrentTimeout] = useState<number | null>(null);
-  const [currentInterval, setCurrentInterval] = useState<number | null>(null);
-  const sendWrapper = useCallback(() => {
-    clearTimeout(timeoutRef.current);
-    clearInterval(intervalRef.current);
-    if (downloadPath) {
-      handleSendAndDownload(downloadPath);
-    } else {
-      handleSend();
-    }
-  }, [downloadPath, handleSend, handleSendAndDownload]);
-  const handleSendAfterDelay = () => {
-    showPrompt({
-      inputType: 'decimal',
-      title: 'Send After Delay',
-      label: 'Delay in seconds',
-      defaultValue: '3',
-      submitName: 'Start',
-      onComplete: seconds => {
-        const { setTimeout, clearTimeout } = window;
-        clearTimeout(timeoutRef.current);
-        setCurrentTimeout(+seconds);
-        timeoutRef.current = setTimeout(() => {
-          sendWrapper();
-          setCurrentTimeout(null);
-        }, +seconds * 1000);
-      },
-    });
-  };
   const handleSendOnInterval = useCallback(() => {
     showPrompt({
       inputType: 'decimal',
@@ -114,29 +95,23 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       defaultValue: '3',
       submitName: 'Start',
       onComplete: seconds => {
-        const { setInterval, clearInterval } = window;
-        setCurrentInterval(+seconds);
-        clearInterval(intervalRef.current);
-        intervalRef.current = setInterval(() => {
-          sendWrapper();
-          setCurrentInterval(null);
-        }, +seconds * 1000);
+        setCurrentInterval(+seconds * 1000);
       },
     });
-  }, [sendWrapper]);
-  const handleClickSend = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const metaPressed = isMac() ? event.metaKey : event.ctrlKey;
-    if (metaPressed) {
-      dropdownRef.current?.show();
-      return;
-    }
-    sendWrapper();
-  }, [sendWrapper]);
-  const handleFormSubmit = useCallback((event: React.SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    sendWrapper();
-  }, [sendWrapper]);
+  }, []);
+
+  const handleSendAfterDelay = () => {
+    showPrompt({
+      inputType: 'decimal',
+      title: 'Send After Delay',
+      label: 'Delay in seconds',
+      defaultValue: '3',
+      onComplete: seconds => {
+        setCurrentTimeout(+seconds * 1000);
+      },
+    });
+  };
+
   const handleSetDownloadLocation = useCallback(async () => {
     const { canceled, filePaths } = await window.dialog.showOpenDialog({
       title: 'Select Download Location',
@@ -152,7 +127,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
     if (event.code === 'Enter' && request.url) {
-      sendWrapper();
+      send();
       return;
     }
     if (!inputRef.current) {
@@ -168,10 +143,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       dropdownRef.current?.toggle(true);
     });
-  }, [request.url, sendWrapper]);
+  }, [request.url, send]);
 
   const [lastPastedText, setLastPastedText] = useState<string>();
-  // TODO: put the debounce back in
   const handleUrlChange = useCallback(async (url: string) => {
     const pastedText = lastPastedText;
     // If no pasted text in the queue, just fire the regular change handler
@@ -194,6 +168,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, []);
 
   const { url, method } = request;
+  const isCancellable = currentInterval || currentTimeout;
   return (
     <KeydownBinder onKeydown={handleKeyDown} scoped>
       <div className="urlbar">
@@ -202,7 +177,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           onChange={() => onMethodChange(request, method)}
           method={method}
         />
-        <form onSubmit={handleFormSubmit}>
+        <div className="urlbar__flex__right">
           <OneLineEditor
             key={uniquenessKey}
             ref={inputRef}
@@ -214,13 +189,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             defaultValue={url}
             onChange={handleUrlChange}
           />
-          {currentInterval || currentTimeout ? (
+          {isCancellable ? (
             <button
               type="button"
               className="urlbar__send-btn danger"
               onClick={handleStop}
             >
-              {currentInterval ? 'Stop' : 'Cancel'}
+              Cancel
             </button>
           ) : (
             <>
@@ -228,20 +203,20 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                 disabled={!request.url}
                 type="button"
                 className="urlbar__send-btn"
-                onClick={handleClickSend}
+                onClick={send}
               >
                 {downloadPath ? 'Download' : 'Send'}
               </button>
               <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
                 <DropdownButton
                   disabled={!request.url}
-                  className="urlbar__send-btn-context"
+                  className="urlbar__send-context"
                   onClick={() => dropdownRef.current?.show()}
                 >
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
                 <DropdownDivider>Basic</DropdownDivider>
-                <DropdownItem onClick={handleClickSend}>
+                <DropdownItem onClick={send}>
                   <i className="fa fa-arrow-circle-o-right" /> Send Now
                   <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
                 </DropdownItem>
@@ -275,7 +250,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               </Dropdown>
             </>
           )}
-        </form>
+        </div>
       </div>
     </KeydownBinder>
   );
