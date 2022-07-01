@@ -36,6 +36,7 @@ function useTimeoutWhen(
         console.warn('useTimeoutWhen: window is undefined.');
       }
     }
+    return;
   }, [timeoutDelayMs, when]);
 }
 
