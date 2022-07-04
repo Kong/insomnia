@@ -9,10 +9,6 @@ export const httpClient = {
     const defaultGitAcceptHeader = {
       'Accept': '*/*',
     };
-    const httpClientHeaders = {
-      ...defaultGitAcceptHeader,
-      ...config.headers,
-    };
 
     if (Array.isArray(config.body)) {
       body = Buffer.concat(config.body);
@@ -22,7 +18,7 @@ export const httpClient = {
       response = await axiosRequest({
         url: config.url,
         method: config.method,
-        headers: httpClientHeaders,
+        headers: defaultGitAcceptHeader,
         data: body,
         responseType: 'arraybuffer',
         maxRedirects: 10,
