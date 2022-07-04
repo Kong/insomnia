@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import clone from 'clone';
+import { isValid } from 'date-fns';
 import { cookieToString } from 'insomnia-cookies';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -105,15 +106,12 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
 
     const cookie = clone(nextCookie);
-    // Sanitize expires field
-    const expires = new Date(cookie.expires || '').getTime();
-
-    if (isNaN(expires)) {
-      cookie.expires = null;
-    } else {
-      cookie.expires = expires;
+    // transform to Date object or fallback to null
+    let dateFormat = null;
+    if (cookie.expires && isValid(new Date(cookie.expires))) {
+      dateFormat = new Date(cookie.expires);
     }
-
+    cookie.expires = dateFormat;
     // Clone so we don't modify the original
     const cookieJar = clone(prevCookieJar);
     const { cookies } = cookieJar;
@@ -173,25 +171,29 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     }
   }
 
-  _renderInputField(field: string, error: string | null = null) {
+  _renderInputField(field: keyof Cookie) {
     const { cookie } = this.state;
-    const {
-    } = this.props;
 
     if (!cookie) {
       return null;
     }
+    let localDateTime;
+    if (field === 'expires' && cookie.expires && isValid(new Date(cookie.expires))) {
+      localDateTime = new Date(cookie.expires).toISOString().slice(0, 16);
+    }
 
-    // @ts-expect-error -- mapping unsoundness
     const val = (cookie[field] || '').toString();
     return (
       <div className="form-control form-control--outlined">
         <label>
-          {capitalize(field)} <span className="danger">{error}</span>
-          <OneLineEditor
-            defaultValue={val || ''}
-            onChange={value => this._handleChange(field, value)}
-          />
+          {capitalize(field)}
+          {field === 'expires' ?
+            <input type="datetime-local" defaultValue={localDateTime} onChange={value => this._handleChange(field, value)} /> :
+            <OneLineEditor
+              defaultValue={val || ''}
+              onChange={value => this._handleChange(field, value)}
+            />
+          }
         </label>
       </div>
     );
@@ -225,10 +227,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
                     {this._renderInputField('domain')}
                     {this._renderInputField('path')}
                   </div>
-                  {this._renderInputField(
-                    'expires',
-                    isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null,
-                  )}
+                  {this._renderInputField('expires')}
                 </div>
                 <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                   {checkFields.map((field, i) => {
