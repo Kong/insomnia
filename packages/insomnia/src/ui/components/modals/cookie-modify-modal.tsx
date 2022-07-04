@@ -188,7 +188,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
         <label>
           {capitalize(field)}
           {field === 'expires' ?
-            <input type="datetime-local" value={localDateTime} onChange={value => this._handleChange(field, value)} /> :
+            <input type="datetime-local" defaultValue={localDateTime} onChange={value => this._handleChange(field, value)} /> :
             <OneLineEditor
               defaultValue={val || ''}
               onChange={value => this._handleChange(field, value)}
