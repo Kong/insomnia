@@ -1,12 +1,11 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { OpenDialogOptions } from 'electron';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useInterval } from 'react-use';
 
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import type { Request } from '../../models/request';
+import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -34,359 +33,222 @@ interface Props {
   downloadPath: string | null;
 }
 
-interface State {
-  currentInterval: number | null;
-  currentTimeout: number | null;
+export interface RequestUrlBarHandle {
+  focusInput: () => void;
 }
+export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
+  downloadPath,
+  handleAutocompleteUrls,
+  handleImport,
+  handleGenerateCode,
+  handleSend,
+  handleSendAndDownload,
+  handleUpdateDownloadPath,
+  hotKeyRegistry,
+  onMethodChange,
+  onUrlChange,
+  request,
+  uniquenessKey,
+}, ref) => {
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestUrlBar extends PureComponent<Props, State> {
-  _urlChangeDebounceTimeout: NodeJS.Timeout | null = null;
-  _sendTimeout: NodeJS.Timeout | null = null;
-  _sendInterval: NodeJS.Timeout | null = null;
-  _dropdown: Dropdown | null = null;
-  _methodDropdown: Dropdown | null = null;
-  _input: OneLineEditor | null = null;
-  state: State = {
-    currentInterval: null,
-    currentTimeout: null,
+  const methodDropdownRef = useRef<Dropdown>(null);
+  const dropdownRef = useRef<Dropdown>(null);
+  const inputRef = useRef<OneLineEditor>(null);
+
+  const focusInput = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.focus(true);
+    }
+  }, [inputRef]);
+
+  useImperativeHandle(ref, () => ({ focusInput }), [focusInput]);
+
+  const [currentInterval, setCurrentInterval] = useState<number | null>(null);
+  const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+
+  const send = useCallback(() => {
+    setCurrentTimeout(undefined);
+    if (downloadPath) {
+      handleSendAndDownload(downloadPath);
+    } else {
+      handleSend();
+    }
+  }, [downloadPath, handleSend, handleSendAndDownload]);
+
+  useInterval(send, currentInterval ? currentInterval : null);
+  useTimeoutWhen(send, currentTimeout, !!currentTimeout);
+  const handleStop = () => {
+    setCurrentInterval(null);
+    setCurrentTimeout(undefined);
   };
 
-  _lastPastedText?: string;
-
-  _setDropdownRef(dropdown: Dropdown) {
-    this._dropdown = dropdown;
-  }
-
-  _setMethodDropdownRef(methodDropdown: Dropdown) {
-    this._methodDropdown = methodDropdown;
-  }
-
-  _setInputRef(input: OneLineEditor) {
-    this._input = input;
-  }
-
-  _handleMetaClickSend(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    this._dropdown?.show();
-  }
-
-  _handleFormSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    this._handleSend();
-  }
-
-  _handleMethodChange(method: string) {
-    this.props.onMethodChange(this.props.request, method);
-  }
-
-  _handleUrlChange(url: string) {
-    if (this._urlChangeDebounceTimeout !== null) {
-      clearTimeout(this._urlChangeDebounceTimeout);
-    }
-    this._urlChangeDebounceTimeout = setTimeout(async () => {
-      const pastedText = this._lastPastedText;
-
-      // If no pasted text in the queue, just fire the regular change handler
-      if (!pastedText) {
-        this.props.onUrlChange(this.props.request, url);
-        return;
-      }
-
-      // Reset pasted text cache
-      this._lastPastedText = undefined;
-      // Attempt to import the pasted text
-      const importedRequest = await this.props.handleImport(pastedText);
-
-      // Update depending on whether something was imported
-      if (!importedRequest) {
-        this.props.onUrlChange(this.props.request, url);
-      }
-    }, DEBOUNCE_MILLIS);
-  }
-
-  _handleUrlPaste(event: ClipboardEvent) {
-    // NOTE: We're not actually doing the import here to avoid races with onChange
-    this._lastPastedText = event.clipboardData?.getData('text/plain');
-  }
-
-  _handleGenerateCode() {
-    this.props.handleGenerateCode();
-  }
-
-  async _handleSetDownloadLocation() {
-    const { request } = this.props;
-    const options: OpenDialogOptions = {
-      title: 'Select Download Location',
-      buttonLabel: 'Select',
-      properties: ['openDirectory'],
-    };
-    const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
-
-    if (canceled) {
-      return;
-    }
-
-    this.props.handleUpdateDownloadPath(request._id, filePaths[0]);
-  }
-
-  _handleClearDownloadLocation() {
-    const { request } = this.props;
-    this.props.handleUpdateDownloadPath(request._id, null);
-  }
-
-  async _handleKeyDown(event: KeyboardEvent) {
-    if (!this._input) {
-      return;
-    }
-
-    if (event.code === 'Enter' && this.props.request.url) {
-      this._handleSend();
-      return;
-    }
-
-    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
-      this._input?.focus();
-      this._input?.selectAll();
-    });
-    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
-      this._methodDropdown?.toggle();
-    });
-    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
-      this._dropdown?.toggle(true);
-    });
-  }
-
-  _handleSend() {
-    // Don't stop interval because duh, it needs to keep going!
-    // XXX this._handleStopInterval(); XXX
-    this._handleStopTimeout();
-
-    const { downloadPath } = this.props;
-
-    if (downloadPath) {
-      this.props.handleSendAndDownload(downloadPath);
-    } else {
-      this.props.handleSend();
-    }
-  }
-
-  _handleClickSendAndDownload() {
-    this.props.handleSendAndDownload();
-  }
-
-  _handleSendAfterDelay() {
-    showPrompt({
-      inputType: 'decimal',
-      title: 'Send After Delay',
-      label: 'Delay in seconds',
-      // @ts-expect-error TSCONVERSION string vs number issue
-      defaultValue: 3,
-      submitName: 'Start',
-      onComplete: seconds => {
-        this._handleStopTimeout();
-
-        // @ts-expect-error TSCONVERSION string vs number issue
-        this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
-        this.setState({
-          // @ts-expect-error TSCONVERSION string vs number issue
-          currentTimeout: seconds,
-        });
-      },
-    });
-  }
-
-  _handleSendOnInterval() {
+  const handleSendOnInterval = useCallback(() => {
     showPrompt({
       inputType: 'decimal',
       title: 'Send on Interval',
       label: 'Interval in seconds',
-      // @ts-expect-error TSCONVERSION string vs number issue
-      defaultValue: 3,
+      defaultValue: '3',
       submitName: 'Start',
       onComplete: seconds => {
-        this._handleStopInterval();
-
-        // @ts-expect-error TSCONVERSION string vs number issue
-        this._sendInterval = setInterval(this._handleSend, seconds * 1000);
-        this.setState({
-          // @ts-expect-error TSCONVERSION string vs number issue
-          currentInterval: seconds,
-        });
+        setCurrentInterval(+seconds * 1000);
       },
     });
-  }
+  }, []);
 
-  _handleStopInterval() {
-    if (this._sendInterval) {
-      clearInterval(this._sendInterval);
-    }
+  const handleSendAfterDelay = () => {
+    showPrompt({
+      inputType: 'decimal',
+      title: 'Send After Delay',
+      label: 'Delay in seconds',
+      defaultValue: '3',
+      onComplete: seconds => {
+        setCurrentTimeout(+seconds * 1000);
+      },
+    });
+  };
 
-    if (this.state.currentInterval) {
-      this.setState({
-        currentInterval: null,
-      });
-    }
-  }
-
-  _handleStopTimeout() {
-    if (this._sendTimeout !== null) {
-      clearTimeout(this._sendTimeout);
-    }
-
-    if (this.state.currentTimeout) {
-      this.setState({
-        currentTimeout: null,
-      });
-    }
-  }
-
-  _handleResetTimeouts() {
-    this._handleStopTimeout();
-
-    this._handleStopInterval();
-  }
-
-  _handleClickSend(event: React.MouseEvent<HTMLButtonElement>) {
-    const metaPressed = isMac() ? event.metaKey : event.ctrlKey;
-
-    // If we're pressing a meta key, let the dropdown open
-    if (metaPressed) {
+  const handleSetDownloadLocation = useCallback(async () => {
+    const { canceled, filePaths } = await window.dialog.showOpenDialog({
+      title: 'Select Download Location',
+      buttonLabel: 'Select',
+      properties: ['openDirectory'],
+    });
+    if (canceled) {
       return;
     }
+    handleUpdateDownloadPath(request._id, filePaths[0]);
+  }, [handleUpdateDownloadPath, request._id]);
+  const handleClearDownloadLocation = () => handleUpdateDownloadPath(request._id, null);
 
-    // If we're not pressing a meta key, cancel dropdown and send the request
-    event.stopPropagation(); // Don't trigger the dropdown
-
-    this._handleSend();
-  }
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    if (nextProps.request._id !== this.props.request._id) {
-      this._handleResetTimeouts();
+  const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
+    if (event.code === 'Enter' && request.url) {
+      send();
+      return;
     }
-  }
-
-  renderSendButton() {
-    const { hotKeyRegistry, downloadPath } = this.props;
-    const { currentInterval, currentTimeout } = this.state;
-    let cancelButton: ReactNode = null;
-
-    if (currentInterval) {
-      cancelButton = (
-        <button
-          type="button"
-          key="cancel-interval"
-          className="urlbar__send-btn danger"
-          onClick={this._handleStopInterval}
-        >
-          Stop
-        </button>
-      );
-    } else if (currentTimeout) {
-      cancelButton = (
-        <button
-          type="button"
-          key="cancel-timeout"
-          className="urlbar__send-btn danger"
-          onClick={this._handleStopTimeout}
-        >
-          Cancel
-        </button>
-      );
+    if (!inputRef.current) {
+      return;
     }
+    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+      inputRef.current?.focus();
+      inputRef.current?.selectAll();
+    });
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
+      methodDropdownRef.current?.toggle();
+    });
+    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
+      dropdownRef.current?.toggle(true);
+    });
+  }, [request.url, send]);
 
-    let sendButton;
-
-    if (!cancelButton) {
-      sendButton = (
-        <Dropdown key="dropdown" className="tall" right ref={this._setDropdownRef}>
-          <DropdownButton
-            className="urlbar__send-btn"
-            onContextMenu={this._handleMetaClickSend}
-            onClick={this._handleClickSend}
-          >
-            {downloadPath ? 'Download' : 'Send'}
-          </DropdownButton>
-          <DropdownDivider>Basic</DropdownDivider>
-          <DropdownItem onClick={this._handleClickSend}>
-            <i className="fa fa-arrow-circle-o-right" /> Send Now
-            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
-          </DropdownItem>
-          <DropdownItem onClick={this._handleGenerateCode}>
-            <i className="fa fa-code" /> Generate Client Code
-          </DropdownItem>
-          <DropdownDivider>Advanced</DropdownDivider>
-          <DropdownItem onClick={this._handleSendAfterDelay}>
-            <i className="fa fa-clock-o" /> Send After Delay
-          </DropdownItem>
-          <DropdownItem onClick={this._handleSendOnInterval}>
-            <i className="fa fa-repeat" /> Repeat on Interval
-          </DropdownItem>
-          {downloadPath ? (
-            <DropdownItem
-              stayOpenAfterClick
-              addIcon
-              buttonClass={PromptButton}
-              onClick={this._handleClearDownloadLocation}
-            >
-              <i className="fa fa-stop-circle" /> Stop Auto-Download
-            </DropdownItem>
-          ) : (
-            <DropdownItem onClick={this._handleSetDownloadLocation}>
-              <i className="fa fa-download" /> Download After Send
-            </DropdownItem>
-          )}
-          <DropdownItem onClick={this._handleClickSendAndDownload}>
-            <i className="fa fa-download" /> Send And Download
-          </DropdownItem>
-        </Dropdown>
-      );
+  const [lastPastedText, setLastPastedText] = useState<string>();
+  const handleUrlChange = useCallback(async (url: string) => {
+    const pastedText = lastPastedText;
+    // If no pasted text in the queue, just fire the regular change handler
+    if (!pastedText) {
+      onUrlChange(request, url);
+      return;
     }
+    // Reset pasted text cache
+    setLastPastedText(undefined);
+    // Attempt to import the pasted text
+    const importedRequest = await handleImport(pastedText);
+    // Update depending on whether something was imported
+    if (!importedRequest) {
+      onUrlChange(request, url);
+    }
+  }, [handleImport, lastPastedText, onUrlChange, request]);
+  const handleUrlPaste = useCallback((event: ClipboardEvent) => {
+    // NOTE: We're not actually doing the import here to avoid races with onChange
+    setLastPastedText(event.clipboardData?.getData('text/plain'));
+  }, []);
 
-    return [cancelButton, sendButton];
-  }
-
-  // note: not an unused function, used by parent, RequestPane
-  focusInput() {
-    this._input?.focus(true);
-  }
-
-  render() {
-    const {
-      request,
-      handleAutocompleteUrls,
-      uniquenessKey,
-    } = this.props;
-    const { url, method } = request;
-
-    return (
-      <KeydownBinder onKeydown={this._handleKeyDown} scoped>
-        <div className="urlbar">
-          <MethodDropdown
-            ref={this._setMethodDropdownRef}
-            onChange={this._handleMethodChange}
-            method={method}
+  const { url, method } = request;
+  const isCancellable = currentInterval || currentTimeout;
+  return (
+    <KeydownBinder onKeydown={handleKeyDown} scoped>
+      <div className="urlbar">
+        <MethodDropdown
+          ref={methodDropdownRef}
+          onChange={() => onMethodChange(request, method)}
+          method={method}
+        />
+        <div className="urlbar__flex__right">
+          <OneLineEditor
+            key={uniquenessKey}
+            ref={inputRef}
+            onPaste={handleUrlPaste}
+            forceEditor
+            type="text"
+            getAutocompleteConstants={handleAutocompleteUrls}
+            placeholder="https://api.myproduct.com/v1/users"
+            defaultValue={url}
+            onChange={handleUrlChange}
           />
-          <form onSubmit={this._handleFormSubmit}>
-            <OneLineEditor
-              key={uniquenessKey}
-              ref={this._setInputRef}
-              onPaste={this._handleUrlPaste}
-              forceEditor
-              type="text"
-              getAutocompleteConstants={handleAutocompleteUrls}
-              placeholder="https://api.myproduct.com/v1/users"
-              defaultValue={url}
-              onChange={this._handleUrlChange}
-            />
-            {this.renderSendButton()}
-          </form>
+          {isCancellable ? (
+            <button
+              type="button"
+              className="urlbar__send-btn danger"
+              onClick={handleStop}
+            >
+              Cancel
+            </button>
+          ) : (
+            <>
+              <button
+                disabled={!request.url}
+                type="button"
+                className="urlbar__send-btn"
+                onClick={send}
+              >
+                {downloadPath ? 'Download' : 'Send'}
+              </button>
+              <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
+                <DropdownButton
+                  disabled={!request.url}
+                  className="urlbar__send-context"
+                  onClick={() => dropdownRef.current?.show()}
+                >
+                  <i className="fa fa-caret-down" />
+                </DropdownButton>
+                <DropdownDivider>Basic</DropdownDivider>
+                <DropdownItem onClick={send}>
+                  <i className="fa fa-arrow-circle-o-right" /> Send Now
+                  <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
+                </DropdownItem>
+                <DropdownItem onClick={handleGenerateCode}>
+                  <i className="fa fa-code" /> Generate Client Code
+                </DropdownItem>
+                <DropdownDivider>Advanced</DropdownDivider>
+                <DropdownItem onClick={handleSendAfterDelay}>
+                  <i className="fa fa-clock-o" /> Send After Delay
+                </DropdownItem>
+                <DropdownItem onClick={handleSendOnInterval}>
+                  <i className="fa fa-repeat" /> Repeat on Interval
+                </DropdownItem>
+                {downloadPath ? (
+                  <DropdownItem
+                    stayOpenAfterClick
+                    addIcon
+                    buttonClass={PromptButton}
+                    onClick={handleClearDownloadLocation}
+                  >
+                    <i className="fa fa-stop-circle" /> Stop Auto-Download
+                  </DropdownItem>
+                ) : (
+                  <DropdownItem onClick={handleSetDownloadLocation}>
+                    <i className="fa fa-download" /> Download After Send
+                  </DropdownItem>
+                )}
+                <DropdownItem onClick={handleSendAndDownload}>
+                  <i className="fa fa-download" /> Send And Download
+                </DropdownItem>
+              </Dropdown>
+            </>
+          )}
         </div>
-      </KeydownBinder>
-    );
-  }
-}
+      </div>
+    </KeydownBinder>
+  );
+});
+
+RequestUrlBar.displayName = 'RequestUrlBar';

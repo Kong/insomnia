@@ -26,7 +26,7 @@ import { MarkdownPreview } from '../markdown-preview';
 import { showModal } from '../modals';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
-import { RequestUrlBar } from '../request-url-bar';
+import { RequestUrlBar, RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
@@ -129,7 +129,7 @@ export const RequestPane: FC<Props> = ({
     }
   }, [request, forceUpdateRequest]);
 
-  const requestUrlBarRef = useRef<RequestUrlBar>(null);
+  const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   useMount(() => {
     requestUrlBarRef.current?.focusInput();
   });
@@ -156,6 +156,7 @@ export const RequestPane: FC<Props> = ({
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
+            key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             onMethodChange={updateRequestMethod}

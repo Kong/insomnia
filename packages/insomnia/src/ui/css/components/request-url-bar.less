@@ -27,13 +27,12 @@
     padding-right: var(--padding-md);
     padding-left: var(--padding-md);
     margin-left: 0.75em;
-    min-width: 5em;
     text-align: center;
     background: var(--color-surprise);
     color: var(--color-font-surprise);
   }
 
-  form {
+  .urlbar__flex__right {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -42,9 +41,20 @@
     * {
       font-size: var(--font-size-md);
     }
-  }
 
+  }
   .urlbar__send-btn,
+  .surprise {
+    border-right: 1px solid var(--hl);
+  }
+  .urlbar__send-context {
+    padding-right: var(--padding-xs);
+    padding-left: var(--padding-xs);
+    text-align: center;
+    background: var(--color-surprise);
+    color: var(--color-font-surprise);
+  }
+  .urlbar__send-context,
   & > .dropdown {
     height: 100%;
   }
@@ -52,10 +62,5 @@
   button:focus,
   button:hover {
     filter: brightness(0.8);
-  }
-
-  & > .dropdown > button {
-    padding-left: var(--padding-md);
-    padding-right: calc(var(--padding-md) / 2);
   }
 }
