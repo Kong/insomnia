@@ -1,10 +1,19 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { any, equals } from 'ramda';
-import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react';
+import React, {
+  CSSProperties,
+  forwardRef,
+  Fragment,
+  isValidElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import ReactDOM from 'react-dom';
 
-import { AUTOBIND_CFG } from '../../../../common/constants';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
@@ -12,7 +21,6 @@ import { KeydownBinder } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
-export const dropdownsContainerId = 'dropdowns-container';
 
 export interface DropdownProps {
   children: ReactNode;
@@ -37,24 +45,39 @@ interface State {
   uniquenessKey: number;
 }
 
-const isComponent = (match: string) => (child: ReactNode) => any(equals(match), [
-  // @ts-expect-error this is required by our API for Dropdown
-  child.type.name,
-  // @ts-expect-error this is required by our API for Dropdown
-  child.type.displayName,
-]);
+const isComponent = (match: string) => (child: ReactNode) =>
+  any(equals(match), [
+    // @ts-expect-error this is required by our API for Dropdown
+    child.type.name,
+    // @ts-expect-error this is required by our API for Dropdown
+    child.type.displayName,
+  ]);
 
 const isDropdownItem = isComponent(DropdownItem.name);
 const isDropdownButton = isComponent(DropdownButton.name);
 const isDropdownDivider = isComponent(DropdownDivider.name);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Dropdown extends PureComponent<DropdownProps, State> {
-  private _node: HTMLDivElement | null = null;
-  private _dropdownList: HTMLDivElement | null = null;
-  private _filter: HTMLInputElement | null = null;
+export interface DropdownHandle {
+  show: () => void;
+  hide: () => void;
+  toggle: () => void;
+}
 
-  state: State = {
+export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(((props, ref) => {
+  const { right, outline, wide, className, style, children, beside, onOpen } = props;
+  const [
+    {
+      dropUp,
+      open,
+      uniquenessKey,
+      filterVisible,
+      filterActiveIndex,
+      filterItems,
+      filter,
+      forcedPosition,
+    },
+    setState,
+  ] = useState<State>({
     open: false,
     dropUp: false,
     // Filter Stuff
@@ -66,75 +89,84 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     forcedPosition: null,
     // Use this to force new menu every time dropdown opens
     uniquenessKey: 0,
-  };
+  });
 
-  _setRef(node: HTMLDivElement) {
-    this._node = node;
-  }
+  const _node = useRef<HTMLDivElement>(null);
+  const _dropdownList = useRef<HTMLDivElement>(null);
+  const _filter = useRef<HTMLInputElement>(null);
 
-  _handleCheckFilterSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
+  function _handleCheckFilterSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
-      const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
+      const selector = `li[data-filter-index="${filterActiveIndex}"] button`;
 
-      const button = this._dropdownList?.querySelector(selector);
+      const button = _dropdownList.current?.querySelector(selector);
 
-      // @ts-expect-error -- TSCONVERSION
-      button?.click();
+      if (button instanceof HTMLButtonElement) {
+        button.click();
+      }
     }
   }
 
-  _handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
+  function _handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
     const newFilter = event.target.value;
 
     // Nothing to do if the filter didn't change
-    if (newFilter === this.state.filter) {
+    if (newFilter === filter) {
       return;
     }
 
     // Filter the list items that are filterable (have data-filter-index property)
     const filterItems: number[] = [];
 
-    // @ts-expect-error -- TSCONVERSION convert to array or use querySelectorAll().forEach
-    for (const listItem of this._dropdownList.querySelectorAll('li')) {
-      if (!listItem.hasAttribute('data-filter-index')) {
-        continue;
-      }
+    const filterableItems = _dropdownList.current?.querySelectorAll('li');
 
-      const match = fuzzyMatch(newFilter, listItem.textContent || '');
+    if (filterableItems instanceof NodeList) {
+      for (const listItem of filterableItems) {
+        if (!listItem.hasAttribute('data-filter-index')) {
+          continue;
+        }
 
-      if (!newFilter || match) {
-        const filterIndex = listItem.getAttribute('data-filter-index');
-        if (filterIndex) {
-          filterItems.push(parseInt(filterIndex, 10));
+        const match = fuzzyMatch(newFilter, listItem.textContent || '');
+
+        if (!newFilter || match) {
+          const filterIndex = listItem.getAttribute('data-filter-index');
+
+          if (filterIndex) {
+            filterItems.push(parseInt(filterIndex, 10));
+          }
         }
       }
-    }
 
-    this.setState({
-      filter: newFilter,
-      filterItems: newFilter ? filterItems : null,
-      filterActiveIndex: filterItems[0] || -1,
-      filterVisible: this.state.filterVisible ? true : newFilter.length > 0,
-    });
+      setState({
+        open,
+        dropUp,
+        uniquenessKey,
+        filter: newFilter,
+        filterItems: newFilter ? filterItems : null,
+        filterActiveIndex: filterItems[0] || -1,
+        filterVisible: filterVisible ? true : newFilter.length > 0,
+      });
+    }
   }
 
-  _handleDropdownNavigation(event: KeyboardEvent) {
+  function _handleDropdownNavigation(event: KeyboardEvent) {
     const { key, shiftKey } = event;
     // Handle tab and arrows to move up and down dropdown entries
-    const { filterItems, filterActiveIndex } = this.state;
-
     if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
       event.preventDefault();
       const items = filterItems || [];
 
       if (!filterItems) {
-        // @ts-expect-error -- TSCONVERSION convert to array or use querySelectorAll().forEach
-        for (const li of this._dropdownList.querySelectorAll('li')) {
-          if (li.hasAttribute('data-filter-index')) {
-            const filterIndex = li.getAttribute('data-filter-index');
-            if (filterIndex) {
-              items.push(parseInt(filterIndex, 10));
+        const filterableItems = _dropdownList.current?.querySelectorAll('li');
+
+        if (filterableItems instanceof NodeList) {
+          for (const li of filterableItems) {
+            if (li.hasAttribute('data-filter-index')) {
+              const filterIndex = li.getAttribute('data-filter-index');
+              if (filterIndex) {
+                items.push(parseInt(filterIndex, 10));
+              }
             }
           }
         }
@@ -144,49 +176,56 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
 
       if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
         const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
-        this.setState({
+        setState({
+          open,
+          dropUp,
+          uniquenessKey,
+          filter,
+          filterItems,
+          filterVisible,
           filterActiveIndex: nextI,
         });
       } else {
-        this.setState({
+        setState({
+          open,
+          dropUp,
+          uniquenessKey,
+          filter,
+          filterItems,
+          filterVisible,
           filterActiveIndex: items[i + 1] || items[0],
         });
       }
     }
 
-    this._filter?.focus();
+    _filter.current?.focus();
   }
 
-  _handleBodyKeyDown(event: KeyboardEvent) {
-    if (!this.state.open) {
+  function   _handleBodyKeyDown(event: KeyboardEvent) {
+    if (!open) {
       return;
     }
 
     // Catch all key presses (like global app hotkeys) if we're open
     event.stopPropagation();
 
-    this._handleDropdownNavigation(event);
+    _handleDropdownNavigation(event);
 
     executeHotKey(event, hotKeyRefs.CLOSE_DROPDOWN, () => {
-      this.hide();
+      hide();
     });
   }
 
-  _checkSizeAndPosition() {
-    if (!this.state.open || !this._dropdownList) {
+  function _checkSizeAndPosition() {
+    if (!open || !_dropdownList.current) {
       return;
     }
 
-    // Get dropdown menu
-    const dropdownList = this._dropdownList;
-
     // Compute the size of all the menus
-    // @ts-expect-error -- TSCONVERSION should exit if node is not defined
-    let dropdownBtnRect = this._node.getBoundingClientRect();
+    let dropdownBtnRect = _node.current?.getBoundingClientRect();
 
     const bodyRect = document.body.getBoundingClientRect();
-    const dropdownListRect = dropdownList.getBoundingClientRect();
-    const { forcedPosition } = this.state;
+    const dropdownListRect = _dropdownList.current.getBoundingClientRect();
 
     if (forcedPosition) {
       // @ts-expect-error -- TSCONVERSION missing properties
@@ -200,94 +239,108 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       };
     }
 
-    // Should it drop up?
-    const bodyHeight = bodyRect.height;
-    const dropdownTop = dropdownBtnRect.top;
-    const dropUp = dropdownTop > bodyHeight - 200;
-    // Reset all the things so we can start fresh
-    this._dropdownList.style.left = 'initial';
-    this._dropdownList.style.right = 'initial';
-    this._dropdownList.style.top = 'initial';
-    this._dropdownList.style.bottom = 'initial';
-    this._dropdownList.style.minWidth = 'initial';
-    this._dropdownList.style.maxWidth = 'initial';
-    const screenMargin = 6;
-    const { right, wide } = this.props;
+    // @TODO FIX ME
+    if (dropdownBtnRect instanceof DOMRect) {
+      // Should it drop up?
+      const bodyHeight = bodyRect.height;
+      const dropdownTop = dropdownBtnRect.top || 0;
+      const dropUp = dropdownTop > bodyHeight - 200;
+      // Reset all the things so we can start fresh
+      _dropdownList.current.style.left = 'initial';
+      _dropdownList.current.style.right = 'initial';
+      _dropdownList.current.style.top = 'initial';
+      _dropdownList.current.style.bottom = 'initial';
+      _dropdownList.current.style.minWidth = 'initial';
+      _dropdownList.current.style.maxWidth = 'initial';
+      const screenMargin = 6;
 
-    if (right || wide) {
-      const { right: originalRight } = dropdownBtnRect;
-      // Prevent dropdown from squishing against left side of screen
-      const right = Math.max(dropdownListRect.width + screenMargin, originalRight);
-      const { beside } = this.props;
-      const offset = beside ? dropdownBtnRect.width - 40 : 0;
-      this._dropdownList.style.right = `${bodyRect.width - right + offset}px`;
-      this._dropdownList.style.maxWidth = `${Math.min(dropdownListRect.width, right + offset)}px`;
-    }
+      if (right || wide) {
+        // Prevent dropdown from squishing against left side of screen
+        const rightMargin = Math.max(
+          dropdownListRect.width + screenMargin,
+          dropdownBtnRect.right
+        );
 
-    if (!right || wide) {
-      const { left: originalLeft } = dropdownBtnRect;
-      const { beside } = this.props;
-      const offset = beside ? dropdownBtnRect.width - 40 : 0;
-      // Prevent dropdown from squishing against right side of screen
-      const left = Math.min(bodyRect.width - dropdownListRect.width - screenMargin, originalLeft);
-      this._dropdownList.style.left = `${left + offset}px`;
-      this._dropdownList.style.maxWidth = `${Math.min(
-        dropdownListRect.width,
-        bodyRect.width - left - offset,
-      )}px`;
-    }
+        const offset = beside ? dropdownBtnRect.width - 40 : 0;
+        _dropdownList.current.style.right = `${bodyRect.width - rightMargin + offset}px`;
+        _dropdownList.current.style.maxWidth = `${Math.min(
+          dropdownListRect.width,
+          rightMargin + offset
+        )}px`;
+      }
 
-    if (dropUp) {
-      const { top } = dropdownBtnRect;
-      this._dropdownList.style.bottom = `${bodyRect.height - top}px`;
-      this._dropdownList.style.maxHeight = `${top - screenMargin}px`;
-    } else {
-      const { bottom } = dropdownBtnRect;
-      this._dropdownList.style.top = `${bottom}px`;
-      this._dropdownList.style.maxHeight = `${bodyRect.height - bottom - screenMargin}px`;
+      if (!right || wide) {
+        const offset = beside ? dropdownBtnRect.width - 40 : 0;
+        // Prevent dropdown from squishing against right side of screen
+        const leftMargin = Math.min(
+          bodyRect.width - dropdownListRect.width - screenMargin,
+          dropdownBtnRect.left
+        );
+        _dropdownList.current.style.left = `${leftMargin + offset}px`;
+        _dropdownList.current.style.maxWidth = `${Math.min(
+          dropdownListRect.width,
+          bodyRect.width - leftMargin - offset
+        )}px`;
+      }
+
+      if (dropUp) {
+        _dropdownList.current.style.bottom = `${bodyRect.height - dropdownBtnRect.top}px`;
+        _dropdownList.current.style.maxHeight = `${dropdownBtnRect.top - screenMargin}px`;
+      } else {
+        _dropdownList.current.style.top = `${dropdownBtnRect.bottom}px`;
+        _dropdownList.current.style.maxHeight = `${bodyRect.height - dropdownBtnRect.bottom - screenMargin}px`;
+      }
     }
   }
 
-  _handleClick(event: React.MouseEvent<HTMLDivElement>) {
+  // useEffect(() => {
+  //   _checkSizeAndPosition();
+  // });
+
+  function _handleClick(event: React.MouseEvent<HTMLDivElement>) {
     event.preventDefault();
     event.stopPropagation();
-    this.toggle();
+    toggle();
   }
 
-  static _handleMouseDown(event: React.MouseEvent) {
+  function _handleMouseDown(event: React.MouseEvent) {
     // Intercept mouse down so that clicks don't trigger things like drag and drop.
     event.preventDefault();
   }
 
-  _addDropdownListRef(dropdownList: HTMLDivElement) {
-    this._dropdownList = dropdownList;
-  }
-
-  _addFilterRef(filter: HTMLInputElement) {
-    this._filter = filter;
-
-    // Automatically focus the filter element when mounted so we can start typing
-    if (this._filter) {
-      this._filter.focus();
-    }
-  }
-
   // TODO: children should not be 'any'.
-  _getFlattenedChildren(children: any) {
+  /** Check me out bro
+    function flattenChildren(children: React.ReactNode): ReactChildArray {
+      const childrenArray = React.Children.toArray(children);
+      return childrenArray.reduce((flatChildren: ReactChildArray, child) => {
+        if ((child as React.ReactElement<any>).type === React.Fragment) {
+          return flatChildren.concat(
+            flattenChildren((child as React.ReactElement<any>).props.children)
+          );
+        }
+        flatChildren.push(child);
+        return flatChildren;
+      }, []);
+    }
+   */
+  function _getFlattenedChildren(children: ReactNode[] | ReactNode) {
     let newChildren: ReactNode[] = [];
     // Ensure children is an array
-    children = Array.isArray(children) ? children : [children];
+    const flatChildren = Array.isArray(children) ? children : [children];
 
-    for (const child of children) {
+    for (const child of flatChildren) {
       if (!child) {
         // Ignore null components
         continue;
       }
 
       if (child.type === Fragment) {
-        newChildren = [...newChildren, ...this._getFlattenedChildren(child.props.children)];
+        newChildren = [
+          ...newChildren,
+          ..._getFlattenedChildren(child.props.children),
+        ];
       } else if (Array.isArray(child)) {
-        newChildren = [...newChildren, ...this._getFlattenedChildren(child)];
+        newChildren = [...newChildren, ..._getFlattenedChildren(child)];
       } else {
         newChildren.push(child);
       }
@@ -296,141 +349,137 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     return newChildren;
   }
 
-  componentDidUpdate() {
-    this._checkSizeAndPosition();
-  }
-
-  hide() {
+  const hide = useCallback(() => {
     // Focus the dropdown button after hiding
-    if (this._node) {
-      const button = this._node.querySelector('button');
+    if (_node.current) {
+      const button = _node.current.querySelector('button');
 
       button?.focus();
     }
 
-    this.setState({
-      open: false,
-    });
-    this.props.onHide?.();
-  }
-
-  show(filterVisible = false, forcedPosition: { x: number; y: number } | null = null) {
-    const bodyHeight = document.body.getBoundingClientRect().height;
-
-    // @ts-expect-error -- TSCONVERSION _node can be undefined
-    const dropdownTop = this._node.getBoundingClientRect().top;
-
-    const dropUp = dropdownTop > bodyHeight - 200;
-    this.setState({
-      open: true,
+    setState({
       dropUp,
-      forcedPosition,
-      filterVisible,
-      filter: '',
-      filterItems: null,
-      filterActiveIndex: -1,
-      uniquenessKey: this.state.uniquenessKey + 1,
-    });
-    this.props.onOpen?.();
-  }
-
-  toggle(filterVisible = false) {
-    if (this.state.open) {
-      this.hide();
-    } else {
-      this.show(filterVisible);
-    }
-  }
-
-  render() {
-    const { right, outline, wide, className, style, children } = this.props;
-    const {
-      dropUp,
-      open,
       uniquenessKey,
       filterVisible,
       filterActiveIndex,
       filterItems,
       filter,
-    } = this.state;
-    const classes = classnames('dropdown', className, {
-      'dropdown--wide': wide,
-      'dropdown--open': open,
-    });
-    const menuClasses = classnames({
-      // eslint-disable-next-line camelcase
-      dropdown__menu: true,
-      'theme--dropdown__menu': true,
-      'dropdown__menu--open': open,
-      'dropdown__menu--outlined': outline,
-      'dropdown__menu--up': dropUp,
-      'dropdown__menu--right': right,
-    });
-    const dropdownButtons: ReactNode[] = [];
-    const dropdownItems: ReactNode[] = [];
-
-    const allChildren = this._getFlattenedChildren(children);
-
-    const visibleChildren = allChildren.filter((child, i) => {
-      if (isDropdownItem(child)) {
-        return true;
-      }
-
-      // It's visible if its index is in the filterItems
-      return !filterItems || filterItems.includes(i);
+      forcedPosition,
+      open: false,
     });
 
-    for (let i = 0; i < allChildren.length; i++) {
-      const child = allChildren[i];
+    props.onHide?.();
+  }, [dropUp, filter, filterActiveIndex, filterItems, filterVisible, forcedPosition, props, uniquenessKey]);
 
-      if (isDropdownButton(child)) {
-        dropdownButtons.push(child);
-      } else if (isDropdownItem(child)) {
-        const active = i === filterActiveIndex;
-        const hide = !visibleChildren.includes(child);
-        dropdownItems.push(
-          <li
-            key={i}
-            data-filter-index={i}
-            className={classnames({
-              active,
-              hide,
-            })}
-          >
-            {child}
-          </li>,
-        );
-      } else if (isDropdownDivider(child)) {
-        const currentIndex = visibleChildren.indexOf(child);
-        const nextChild = visibleChildren[currentIndex + 1];
+  const show = useCallback((
+    filterVisible = false,
+    forcedPosition: { x: number; y: number } | null = null
+  ) => {
+    const bodyHeight = document.body.getBoundingClientRect().height;
+    const dropdownTop = _node.current?.getBoundingClientRect().top;
 
-        // Only show the divider if the next child is a DropdownItem
-        if (nextChild && isDropdownItem(nextChild)) {
-          dropdownItems.push(<li key={i}>{child}</li>);
-        }
-      }
+    setState({
+      open: true,
+      dropUp: dropdownTop ? dropdownTop > bodyHeight - 200 : dropUp,
+      forcedPosition,
+      filterVisible,
+      filter: '',
+      filterItems: null,
+      filterActiveIndex: -1,
+      uniquenessKey: uniquenessKey + 1,
+    });
+
+    onOpen?.();
+  }, [dropUp, onOpen, uniquenessKey]);
+
+  const toggle = useCallback((filterVisible = false) => {
+    if (open) {
+      hide();
+    } else {
+      show(filterVisible);
+    }
+  }, [hide, open, show]);
+
+  const classes = classnames('dropdown', className, {
+    'dropdown--wide': wide,
+    'dropdown--open': open,
+  });
+
+  const menuClasses = classnames({
+    // eslint-disable-next-line camelcase
+    dropdown__menu: true,
+    'theme--dropdown__menu': true,
+    'dropdown__menu--open': open,
+    'dropdown__menu--outlined': outline,
+    'dropdown__menu--up': dropUp,
+    'dropdown__menu--right': right,
+  });
+  const dropdownButtons: ReactNode[] = [];
+  const dropdownItems: ReactNode[] = [];
+
+  const allChildren = _getFlattenedChildren(children);
+
+  const visibleChildren = allChildren.filter((child, i) => {
+    if (!isDropdownItem(child)) {
+      return true;
     }
 
-    let finalChildren: React.ReactNode = [];
+    // It's visible if its index is in the filterItems
+    return !filterItems || filterItems.includes(i);
+  });
 
-    if (dropdownButtons.length !== 1) {
-      console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, {
+  for (let i = 0; i < allChildren.length; i++) {
+    const child = allChildren[i];
+
+    if (isDropdownButton(child)) {
+      dropdownButtons.push(child);
+    } else if (isDropdownItem(child)) {
+      const active = i === filterActiveIndex;
+      const hide = !visibleChildren.includes(child);
+      dropdownItems.push(
+        <li
+          key={i}
+          data-filter-index={i}
+          className={classnames({
+            active,
+            hide,
+          })}
+        >
+          {child}
+        </li>
+      );
+    } else if (isDropdownDivider(child)) {
+      const currentIndex = visibleChildren.indexOf(child);
+      const nextChild = visibleChildren[currentIndex + 1];
+
+      // Only show the divider if the next child is a DropdownItem
+      if (nextChild && isDropdownItem(nextChild)) {
+        dropdownItems.push(<li key={i}>{child}</li>);
+      }
+    }
+  }
+
+  let finalChildren: React.ReactNode = [];
+
+  if (dropdownButtons.length !== 1) {
+    console.error(
+      `Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`,
+      {
         allChildren,
-      });
-    } else {
-      const noResults = filter && filterItems && filterItems.length === 0;
+      }
+    );
+  } else {
+    const noResults = filter && filterItems && filterItems.length === 0;
+    const dropdownsContainer = document.querySelector('#dropdowns-container');
+    if (dropdownsContainer instanceof HTMLElement) {
       finalChildren = [
         dropdownButtons[0],
         ReactDOM.createPortal(
-          <div
-            key="item"
-            className={menuClasses}
-            aria-hidden={!open}
-          >
+          <div key="item" className={menuClasses} aria-hidden={!open}>
             <div className="dropdown__backdrop theme--transparent-overlay" />
             <div
               key={uniquenessKey}
-              ref={this._addDropdownListRef}
+              ref={_dropdownList}
               tabIndex={-1}
               className={classnames('dropdown__list', {
                 'dropdown__list--filtering': filterVisible,
@@ -440,12 +489,15 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
                 <i className="fa fa-search" />
                 <input
                   type="text"
-                  onChange={this._handleChangeFilter}
-                  ref={this._addFilterRef}
-                  onKeyPress={this._handleCheckFilterSubmit}
+                  autoFocus
+                  onChange={_handleChangeFilter}
+                  ref={_filter}
+                  onKeyPress={_handleCheckFilterSubmit}
                 />
               </div>
-              {noResults && <div className="text-center pad warning">No match :(</div>}
+              {noResults && (
+                <div className="text-center pad warning">{'No match :('}</div>
+              )}
               <ul
                 className={classnames({
                   hide: noResults,
@@ -455,25 +507,36 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
               </ul>
             </div>
           </div>,
-          // @ts-expect-error -- TSCONVERSION
-          document.getElementById(dropdownsContainerId),
+          dropdownsContainer
         ),
       ];
     }
-
-    return (
-      <KeydownBinder stopMetaPropagation onKeydown={this._handleBodyKeyDown} disabled={!open}>
-        <div
-          style={style}
-          className={classes}
-          ref={this._setRef}
-          onClick={this._handleClick}
-          tabIndex={-1}
-          onMouseDown={Dropdown._handleMouseDown}
-        >
-          {finalChildren}
-        </div>
-      </KeydownBinder>
-    );
   }
-}
+
+  useImperativeHandle(ref, () => ({
+    show,
+    hide,
+    toggle,
+  }), [hide, show, toggle]);
+
+  return (
+    <KeydownBinder
+      stopMetaPropagation
+      onKeydown={_handleBodyKeyDown}
+      disabled={!open}
+    >
+      <div
+        style={style}
+        className={classes}
+        ref={_node}
+        onClick={_handleClick}
+        tabIndex={-1}
+        onMouseDown={_handleMouseDown}
+      >
+        {finalChildren}
+      </div>
+    </KeydownBinder>
+  );
+}));
+
+Dropdown.displayName = 'Dropdown';
