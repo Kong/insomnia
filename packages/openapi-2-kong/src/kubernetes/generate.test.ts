@@ -1,6 +1,8 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { dummyName, dummyPluginDoc, getSpec, pluginDummy } from '../declarative-config/jest/test-helpers';
 import { xKongName } from '../types/kong';
-import { K8sAnnotations, K8sIngressRule, K8sIngressTLS, K8sManifest } from '../types/kubernetes-config';
+import { K8sAnnotations, K8sIngressTLS } from '../types/kubernetes-config';
 import { OA3Server } from '../types/openapi3';
 import {
   generateIngressRule,
@@ -45,6 +47,8 @@ describe('index', () => {
           'x-kubernetes-ingress-metadata': {
             name: 'K8s name',
           },
+          title: '',
+          version: '',
         },
       });
       expect(getSpecName(spec)).toBe('k8s-name');
@@ -61,12 +65,14 @@ describe('index', () => {
               'nginx.ingress.kubernetes.io/rewrite-target': '/',
             },
           },
+          title: '',
+          version: '',
         },
       });
       const result = generateMetadataAnnotations(spec, {
         pluginNames: [],
       });
-      expect(result).toEqual<K8sAnnotations>({
+      expect(result).toEqual({
         'kubernetes.io/ingress.class': 'kong',
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
       });
@@ -77,7 +83,7 @@ describe('index', () => {
       const result = generateMetadataAnnotations(spec, {
         pluginNames: [],
       });
-      expect(result).toEqual<K8sAnnotations>({
+      expect(result).toEqual({
         'kubernetes.io/ingress.class': 'kong',
       });
     });
@@ -87,7 +93,7 @@ describe('index', () => {
       const result = generateMetadataAnnotations(spec, {
         pluginNames: ['one', 'two'],
       });
-      expect(result).toEqual<K8sAnnotations>({
+      expect(result).toEqual({
         'kubernetes.io/ingress.class': 'kong',
         'konghq.com/plugins': 'one, two',
       });
@@ -99,7 +105,7 @@ describe('index', () => {
         pluginNames: [],
         overrideName: 'name',
       });
-      expect(result).toEqual<K8sAnnotations>({
+      expect(result).toEqual({
         'kubernetes.io/ingress.class': 'kong',
         'konghq.com/override': 'name',
       });
@@ -115,13 +121,15 @@ describe('index', () => {
             name: 'info-name',
             annotations,
           },
+          title: '',
+          version: '',
         },
       });
       const result = generateMetadataAnnotations(spec, {
         pluginNames: ['one', 'two'],
         overrideName: 'name',
       });
-      expect(result).toEqual<K8sAnnotations>({
+      expect(result).toEqual({
         'kubernetes.io/ingress.class': 'kong',
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
         'konghq.com/plugins': 'one, two',
@@ -129,7 +137,7 @@ describe('index', () => {
       });
       // Should not modify source metadata annotations object
       const sourceMetadata = spec.info['x-kubernetes-ingress-metadata']?.annotations;
-      expect(sourceMetadata).toStrictEqual<K8sAnnotations>(annotations);
+      expect(sourceMetadata).toStrictEqual(annotations);
     });
   });
 
@@ -321,7 +329,7 @@ describe('index', () => {
         },
         'my-ingress',
       );
-      expect(result).toStrictEqual<K8sIngressRule>({
+      expect(result).toStrictEqual({
         host: 'api.insomnia.rest',
         http: {
           paths: [
@@ -532,9 +540,8 @@ describe('index', () => {
     it('handles global plugins', () => {
       const spec = getSpec({ servers, ...pluginKeyAuth, ...pluginDummy });
       const result = generateKongForKubernetesConfigFromSpec(spec);
-      expect(result.documents).toStrictEqual<K8sManifest[]>([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
-        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('g1'),
         ingressDoc(0, [keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-service-0'),
       ]);
@@ -559,11 +566,10 @@ describe('index', () => {
         ],
       });
       const result = generateKongForKubernetesConfigFromSpec(spec);
-      expect(result.documents).toStrictEqual<K8sManifest[]>([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
-        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('s3'),
         ingressDoc(0, [keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-service-0'),
         ingressDoc(1, [keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-service-1'),
@@ -587,11 +593,10 @@ describe('index', () => {
         },
       });
       const result = generateKongForKubernetesConfigFromSpec(spec);
-      expect(result.documents).toStrictEqual<K8sManifest[]>([
+      expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
-        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('p3'),
         ingressDoc(0, [keyAuthName('g0')], 'api.insomnia.rest', 'my-api-service-0', '/no-plugin'),
         ingressDoc(1, [keyAuthName('p1')], 'api.insomnia.rest', 'my-api-service-0', '/plugin-0'),
@@ -611,21 +616,20 @@ describe('index', () => {
         ...pluginKeyAuth,
         paths: {
           '/path': {
-            GET: {},
-            PUT: { ...pluginKeyAuth },
-            POST: { ...pluginKeyAuth, ...pluginDummy },
+            get: {},
+            put: { ...pluginKeyAuth },
+            post: { ...pluginKeyAuth, ...pluginDummy },
           },
         },
       });
       const result = generateKongForKubernetesConfigFromSpec(spec);
-      expect(result.documents).toStrictEqual<K8sManifest[]>([
+      expect(result.documents).toStrictEqual([
         methodDoc('get'),
         methodDoc('put'),
         methodDoc('post'),
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('m1'),
         keyAuthPluginDoc('m2'),
-        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('m3'),
         ingressDocWithOverride(
           0,

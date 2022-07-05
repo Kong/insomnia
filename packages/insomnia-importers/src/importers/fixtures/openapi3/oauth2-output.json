@@ -44,7 +44,7 @@
           "authorizationUrl": "https://api.server.test/v1/auth",
           "grantType": "authorization_code",
           "redirectUrl": "{{ oauth2RedirectUrl }}",
-          "scope": "read:something write:something",
+          "scope": "",
           "type": "oauth2"
       },
       "body": {},
@@ -54,6 +54,48 @@
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
       "url": "{{ base_url }}/oauth2/authorization-code"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__cbd0a0fa",
+      "_type": "request",
+      "authentication": {
+        "clientId": "{{ oauth2ClientId }}",
+        "clientSecret": "{{ oauth2ClientSecret }}",
+        "accessTokenUrl": "https://api.server.test/v1/token",
+        "authorizationUrl": "https://api.server.test/v1/auth",
+        "grantType": "authorization_code",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "read:something",
+        "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/authorization-code-read",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/authorization-code-read"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__d7972b84",
+      "_type": "request",
+      "authentication": {
+        "clientId": "{{ oauth2ClientId }}",
+        "clientSecret": "{{ oauth2ClientSecret }}",
+        "accessTokenUrl": "https://api.server.test/v1/token",
+        "authorizationUrl": "https://api.server.test/v1/auth",
+        "grantType": "authorization_code",
+        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "scope": "read:something write:something",
+        "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/authorization-code-read-write",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/authorization-code-read-write"
     }
   ]
 }

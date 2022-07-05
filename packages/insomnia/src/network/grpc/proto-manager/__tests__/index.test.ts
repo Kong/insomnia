@@ -1,4 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
+import { Mock } from 'jest-mock';
 import path from 'path';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
@@ -9,8 +11,8 @@ import * as modals from '../../../../ui/components/modals';
 import { loadMethods as _loadMethods, loadMethodsFromPath as _loadMethodsFromPath } from '../../proto-loader';
 import * as protoManager from '../index';
 
-const loadMethods = _loadMethods as jest.Mock;
-const loadMethodsFromPath = _loadMethodsFromPath as jest.Mock;
+const loadMethods = _loadMethods as Mock;
+const loadMethodsFromPath = _loadMethodsFromPath as Mock;
 
 jest.mock('../../../../common/select-file-or-folder', () => ({
   selectFileOrFolder: jest.fn(),
@@ -20,7 +22,7 @@ jest.mock('../../../../ui/components/modals');
 jest.mock('../../proto-loader');
 
 describe('protoManager', () => {
-  const selectFileOrFolderMock = selectFileOrFolder as jest.Mock;
+  const selectFileOrFolderMock = selectFileOrFolder as Mock;
   beforeEach(() => {
     globalBeforeEach();
     jest.resetAllMocks();
@@ -175,7 +177,7 @@ describe('protoManager', () => {
 
       // Act
       await protoManager.deleteFile(pf, cbMock);
-      const showAlertCallArg = (modals.showAlert as jest.Mock).mock.calls[0][0];
+      const showAlertCallArg = (modals.showAlert as Mock).mock.calls[0][0];
       expect(showAlertCallArg.title).toBe('Delete pfName.proto');
       await showAlertCallArg.onConfirm();
 
@@ -205,7 +207,7 @@ describe('protoManager', () => {
 
       // Act
       await protoManager.deleteDirectory(pd, cbMock);
-      const showAlertCallArg = (modals.showAlert as jest.Mock).mock.calls[0][0];
+      const showAlertCallArg = (modals.showAlert as Mock).mock.calls[0][0];
       expect(showAlertCallArg.title).toBe('Delete pdName');
       await showAlertCallArg.onConfirm();
 
@@ -218,8 +220,8 @@ describe('protoManager', () => {
   });
 
   describe('addDirectory', () => {
-    let dbBufferChangesIndefinitelySpy: any | jest.Mock<any, any>;
-    let dbFlushChangesSpy: any | jest.Mock<any, any>;
+    let dbBufferChangesIndefinitelySpy: any | Mock<any, any>;
+    let dbFlushChangesSpy: any | Mock<any, any>;
     beforeEach(() => {
       dbBufferChangesIndefinitelySpy = jest.spyOn(db, 'bufferChangesIndefinitely');
       dbFlushChangesSpy = jest.spyOn(db, 'flushChanges');

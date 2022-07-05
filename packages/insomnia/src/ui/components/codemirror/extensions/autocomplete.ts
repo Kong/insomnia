@@ -42,7 +42,7 @@ const ICONS = {
   },
 };
 
-CodeMirror.defineExtension('isHintDropdownActive', function() {
+CodeMirror.defineExtension('isHintDropdownActive', function(this: CodeMirror.Editor) {
   return (
     this.state.completionActive &&
     this.state.completionActive.data &&
@@ -51,16 +51,16 @@ CodeMirror.defineExtension('isHintDropdownActive', function() {
   );
 });
 
-CodeMirror.defineExtension('closeHintDropdown', function() {
+CodeMirror.defineExtension('closeHintDropdown', function(this: CodeMirror.Editor) {
   this.state.completionActive?.close();
 });
 
-CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorFromTextArea, options: EnvironmentAutocompleteOptions) => {
+CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor, options: EnvironmentAutocompleteOptions) => {
   if (!options) {
     return;
   }
 
-  async function completeAfter(cm: CodeMirror.EditorFromTextArea, callback?: () => boolean, showAllOnNoMatch = false) {
+  async function completeAfter(cm: CodeMirror.Editor, callback?: () => boolean, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (callback && !callback()) {
       return;
@@ -114,7 +114,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     });
   }
 
-  function completeIfInVariableName(cm: CodeMirror.EditorFromTextArea) {
+  function completeIfInVariableName(cm: CodeMirror.Editor) {
     completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
@@ -125,7 +125,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
-  function completeIfAfterTagOrVarOpen(cm: CodeMirror.EditorFromTextArea) {
+  function completeIfAfterTagOrVarOpen(cm: CodeMirror.Editor) {
     completeAfter(
       cm,
       () => {
@@ -140,22 +140,22 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
-  function completeForce(cm: CodeMirror.EditorFromTextArea) {
+  function completeForce(cm: CodeMirror.Editor) {
     completeAfter(cm, undefined, true);
     return CodeMirror.Pass;
   }
 
   function setupKeyMap(
-    cm: CodeMirror.EditorFromTextArea,
+    cm: CodeMirror.Editor,
     {
       completeIfAfterTagOrVarOpen,
       completeForce,
-    } : {
+    }: {
       completeIfAfterTagOrVarOpen: (
-        cm: CodeMirror.EditorFromTextArea
+        cm: CodeMirror.Editor
       ) => void | typeof CodeMirror.Pass;
       completeForce: (
-        cm: CodeMirror.EditorFromTextArea
+        cm: CodeMirror.Editor
       ) => void | typeof CodeMirror.Pass;
     }
   ) {
@@ -187,21 +187,21 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
   }
 
   let keydownTimeoutHandle: NodeJS.Timeout | null = null;
-  cm.on('keydown', (cm: CodeMirror.EditorFromTextArea, e) => {
+  cm.on('keydown', (cm: CodeMirror.Editor, event) => {
     // Close autocomplete on Escape if it's open
-    if (cm.isHintDropdownActive() && e.key === 'Escape') {
+    if (cm.isHintDropdownActive() && event.key === 'Escape') {
       if (!cm.state.completionActive) {
         return;
       }
 
-      e.preventDefault();
-      e.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
       cm.state.completionActive.close();
     }
 
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
-    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
+    if (event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1) {
       return;
     }
 
@@ -232,7 +232,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
  * @param options
  * @returns {Promise.<{list: Array, from, to}>}
  */
-function hint(cm: CodeMirror.EditorFromTextArea, options: ShowHintOptions) {
+function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   // Add type to all things (except constants, which need to convert to an object)
   const variablesToMatch: VariableCompletionItem[] = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
   const snippetsToMatch: SnippetCompletionItem[] = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
@@ -358,7 +358,7 @@ function hint(cm: CodeMirror.EditorFromTextArea, options: ShowHintOptions) {
  * @param self
  * @param data
  */
-async function replaceHintMatch(cm: CodeMirror.EditorFromTextArea, _self, data) {
+async function replaceHintMatch(cm: CodeMirror.Editor, _self: any, data: any) {
   if (typeof data.text === 'function') {
     data.text = await data.text();
   }
@@ -446,18 +446,18 @@ function isTagCompletionItem(item: CompletionItem): item is TagCompletionItem {
   return item.type === TYPE_TAG;
 }
 
-function getCompletionHints(completionItems: CompletionItem[], segment: string, type: CompletionItem['type'], limit = -1): Hint[] {
-  const matches: CodeMirror.Hint[] = [];
+function getCompletionHints(completionItems: CompletionItem[], segment: string, type: CompletionItem['type'], limit = -1) {
+  const matches: Hint[] = [];
 
   for (const item of completionItems) {
     const name = typeof item === 'string' ? item : item.name;
     const value = typeof item === 'string' ? '' : item.value ?? '';
     const displayName = item.displayName || name;
-    let defaultFill = '';
+    let defaultFill: string | (() => PromiseLike<unknown>) = '';
 
-    if (isConstantCompletionItem(item)) {
+    if (isConstantCompletionItem(item) || isSnippetCompletionItem(item)) {
       defaultFill = item.value;
-    } else if (isVariableCompletionItem(item) || isSnippetCompletionItem(item)) {
+    } else if (isVariableCompletionItem(item)) {
       defaultFill = item.name;
     } else if (isTagCompletionItem(item)) {
       defaultFill = getDefaultFill(item.name, item.args);

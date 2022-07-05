@@ -37,10 +37,10 @@ const JSONPathHelp: FC = () => (
     <HelpExamples
       helpExamples={[
         { code: '$.store.books[*].title', description: 'Get titles of all books in the store' },
-        { code: '$.store.books[?(`@.price < 10)].title', description: 'Get books costing less than $10' },
+        { code: '$.store.books[?(@.price < 10)].title', description: 'Get books costing less than $10' },
         { code: '$.store.books[-1:]', description: 'Get the last book in the store' },
         { code: '$.store.books.length', description: 'Get the number of books in the store' },
-        { code: '$.store.books[?(`@.title.match(/lord.*rings/i))]', description: 'Get book by title regular expression' },
+        { code: '$.store.books[?(@.title.match(/lord.*rings/i))]', description: 'Get book by title regular expression' },
       ]}
     />
     <p className="notice info">
@@ -74,8 +74,8 @@ export class FilterHelpModal extends PureComponent<{}, State> {
 
   modal: Modal | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   show(isJSON: boolean) {

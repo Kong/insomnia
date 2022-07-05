@@ -1,11 +1,9 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
-import React, { PureComponent } from 'react';
-import * as toughCookie from 'tough-cookie';
+import React, { FC, useCallback } from 'react';
+import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
-import { AUTOBIND_CFG } from '../../common/constants';
-import type { Cookie } from '../../models/cookie-jar';
+import { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
@@ -13,8 +11,8 @@ import { PromptButton } from './base/prompt-button';
 import { RenderedText } from './rendered-text';
 
 export interface CookieListProps {
-  handleCookieAdd: Function;
-  handleCookieDelete: Function;
+  handleCookieAdd: (cookie: Cookie) => void;
+  handleCookieDelete: (cookie: Cookie) => void;
   handleDeleteAll: Function;
   cookies: Cookie[];
   newCookieDomainName: string;
@@ -25,117 +23,127 @@ export interface CookieListProps {
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
 const MAX_TIME = 2147483647000;
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class CookieList extends PureComponent<CookieListProps> {
-  _handleCookieAdd() {
-    const newCookie: Cookie = {
-      id: uuidv4(),
-      key: 'foo',
-      value: 'bar',
-      domain: this.props.newCookieDomainName,
-      expires: MAX_TIME,
-      path: '/',
-      secure: false,
-      httpOnly: false,
-    };
-    this.props.handleCookieAdd(newCookie);
-  }
+const CookieRow: FC<{
+  cookie: Cookie;
+  index: number;
+  deleteCookie: (cookie: Cookie) => void;
+  showModal: (cookie: Cookie) => void;
+}> = ({ cookie, index, deleteCookie, showModal }) => {
 
-  _handleDeleteCookie(cookie: Cookie) {
-    this.props.handleCookieDelete(cookie);
-  }
+  const handleDeleteCookie = useCallback(() => {
+    deleteCookie(cookie);
+  }, [deleteCookie, cookie]);
 
-  render() {
-    const { cookies, handleDeleteAll, handleShowModifyCookieModal } = this.props;
-    return (
-      <div>
-        <table className="table--fancy cookie-table table--striped">
-          <thead>
-            <tr>
-              <th
-                style={{
-                  minWidth: '10rem',
-                }}
-              >
-                Domain
-              </th>
-              <th
-                style={{
-                  width: '90%',
-                }}
-              >
-                Cookie
-              </th>
-              <th
-                style={{
-                  width: '2rem',
-                }}
-                className="text-right"
-              >
-                <Dropdown right>
-                  <DropdownButton
-                    title="Add cookie"
-                    className="btn btn--super-duper-compact btn--outlined txt-md"
-                  >
-                    Actions <i className="fa fa-caret-down" />
-                  </DropdownButton>
-                  <DropdownItem onClick={this._handleCookieAdd}>
-                    <i className="fa fa-plus-circle" /> Add Cookie
-                  </DropdownItem>
-                  <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
-                    <i className="fa fa-trash-o" /> Delete All
-                  </DropdownItem>
-                </Dropdown>
-              </th>
-            </tr>
-          </thead>
-          <tbody key={cookies.length}>
-            {cookies.map((cookie, i) => {
-              const cookieString = cookieToString(toughCookie.Cookie.fromJSON(cookie));
-              return (
-                <tr className="selectable" key={i}>
-                  <td>
-                    <RenderedText>{cookie.domain || ''}</RenderedText>
-                  </td>
-                  <td className="force-wrap wide">
-                    <RenderedText>{cookieString || ''}</RenderedText>
-                  </td>
-                  <td onClick={() => {}} className="text-right no-wrap">
-                    <button
-                      className="btn btn--super-compact btn--outlined"
-                      onClick={() => {
-                        handleShowModifyCookieModal(cookie);
-                      }}
-                      title="Edit cookie properties"
-                    >
-                      Edit
-                    </button>{' '}
-                    <PromptButton
-                      className="btn btn--super-compact btn--outlined"
-                      addIcon
-                      confirmMessage=""
-                      onClick={() => this._handleDeleteCookie(cookie)}
-                      title="Delete cookie"
-                    >
-                      <i className="fa fa-trash-o" />
-                    </PromptButton>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {cookies.length === 0 && (
-          <div className="pad faint italic text-center">
-            <p>I couldn't find any cookies for you.</p>
-            <p>
-              <button className="btn btn--clicky" onClick={() => this._handleCookieAdd()}>
-                Add Cookie <i className="fa fa-plus-circle" />
-              </button>
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  }
-}
+  const handleShowModal = useCallback(() => {
+    showModal(cookie);
+  }, [showModal, cookie]);
+
+  const cookieString = cookieToString(ToughCookie.fromJSON(cookie));
+  return <tr className="selectable" key={index}>
+    <td>
+      <RenderedText>{cookie.domain || ''}</RenderedText>
+    </td>
+    <td className="force-wrap wide">
+      <RenderedText>{cookieString || ''}</RenderedText>
+    </td>
+    <td onClick={() => {}} className="text-right no-wrap">
+      <button
+        className="btn btn--super-compact btn--outlined"
+        onClick={handleShowModal}
+        title="Edit cookie properties"
+      >
+        Edit
+      </button>{' '}
+      <PromptButton
+        className="btn btn--super-compact btn--outlined"
+        addIcon
+        confirmMessage=""
+        onClick={handleDeleteCookie}
+        title="Delete cookie"
+      >
+        <i className="fa fa-trash-o" />
+      </PromptButton>
+    </td>
+  </tr>;
+
+};
+
+export const CookieList: FC<CookieListProps> = ({
+  cookies,
+  handleDeleteAll,
+  handleShowModifyCookieModal,
+  handleCookieAdd,
+  newCookieDomainName,
+  handleCookieDelete,
+}) => {
+  const addCookie = useCallback(() => handleCookieAdd({
+    id: uuidv4(),
+    key: 'foo',
+    value: 'bar',
+    domain: newCookieDomainName,
+    expires: MAX_TIME as unknown as Date,
+    path: '/',
+    secure: false,
+    httpOnly: false,
+  }), [newCookieDomainName, handleCookieAdd]);
+
+  return <div>
+    <table className="table--fancy cookie-table table--striped">
+      <thead>
+        <tr>
+          <th
+            style={{
+              minWidth: '10rem',
+            }}
+          >
+            Domain
+          </th>
+          <th
+            style={{
+              width: '90%',
+            }}
+          >
+            Cookie
+          </th>
+          <th
+            style={{
+              width: '2rem',
+            }}
+            className="text-right"
+          >
+            <Dropdown right>
+              <DropdownButton title="Add cookie" className="btn btn--super-duper-compact btn--outlined txt-md">
+                Actions <i className="fa fa-caret-down" />
+              </DropdownButton>
+              <DropdownItem onClick={addCookie}>
+                <i className="fa fa-plus-circle" /> Add Cookie
+              </DropdownItem>
+              <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
+                <i className="fa fa-trash-o" /> Delete All
+              </DropdownItem>
+            </Dropdown>
+          </th>
+        </tr>
+      </thead>
+      <tbody key={cookies.length}>
+        {cookies.map((cookie, i) => (
+          <CookieRow
+            cookie={cookie}
+            index={i}
+            key={i}
+            deleteCookie={handleCookieDelete}
+            showModal={handleShowModifyCookieModal}
+          />
+        ))}
+      </tbody>
+    </table>
+    {cookies.length === 0 && <div className="pad faint italic text-center">
+      <p>I couldn't find any cookies for you.</p>
+      <p>
+        <button className="btn btn--clicky" onClick={addCookie}>
+          Add Cookie <i className="fa fa-plus-circle" />
+        </button>
+      </p>
+    </div>}
+  </div>;
+};

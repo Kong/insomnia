@@ -146,9 +146,9 @@ interface State {
 }
 
 const isComponent = (match: string) => (child: ReactNode) => any(equals(match), [
-  // @ts-expect-error not sure
+  // @ts-expect-error this is required by our API for Dropdown
   child.type.name,
-  // @ts-expect-error not sure
+  // @ts-expect-error this is required by our API for Dropdown
   child.type.displayName,
 ]);
 
@@ -200,8 +200,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _handleCheckFilterSubmit(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
+  _handleCheckFilterSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
       this._dropdownList?.querySelector<HTMLButtonElement>(selector)?.click();

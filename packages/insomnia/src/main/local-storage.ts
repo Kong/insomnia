@@ -14,13 +14,13 @@ class LocalStorage {
     console.log(`[localstorage] Initialized at ${basePath}`);
   }
 
-  setItem(key, obj) {
+  setItem<T>(key: string, obj?: T) {
     clearTimeout(this._timeouts[key]);
     this._buffer[key] = JSON.stringify(obj);
     this._timeouts[key] = setTimeout(this._flush.bind(this), 100);
   }
 
-  getItem(key, defaultObj) {
+  getItem<T>(key: string, defaultObj?: T) {
     // Make sure things are flushed before we read
     this._flush();
 
@@ -30,16 +30,16 @@ class LocalStorage {
 
     try {
       contents = String(fs.readFileSync(path));
-    } catch (e) {
-      if (e.code === 'ENOENT') {
+    } catch (error) {
+      if (error.code === 'ENOENT') {
         this.setItem(key, defaultObj);
       }
     }
 
     try {
       return JSON.parse(contents);
-    } catch (e) {
-      console.error(`[localstorage] Failed to parse item from LocalStorage: ${e}`);
+    } catch (error) {
+      console.error(`[localstorage] Failed to parse item from LocalStorage: ${error}`);
       return defaultObj;
     }
   }
@@ -60,13 +60,13 @@ class LocalStorage {
 
       try {
         fs.writeFileSync(path, contents);
-      } catch (e) {
-        console.error(`[localstorage] Failed to save to LocalStorage: ${e}`);
+      } catch (error) {
+        console.error(`[localstorage] Failed to save to LocalStorage: ${error}`);
       }
     }
   }
 
-  _getKeyPath(key) {
+  _getKeyPath(key: string) {
     // @ts-expect-error -- TSCONVERSION this appears to be a genuine error
     return path.join(this._basePath, key);
   }

@@ -1,4 +1,5 @@
-import { isOpenApiv2, isOpenApiv3, Spectral } from '@stoplight/spectral';
+import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
+import { oas } from '@stoplight/spectral-rulesets';
 import fs from 'fs';
 import path from 'path';
 
@@ -37,22 +38,20 @@ export async function lintSpecification(
 
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
-      } catch (e) {
-        throw new InsoError(`Failed to read "${fileName}"`, e);
+      } catch (error) {
+        throw new InsoError(`Failed to read "${fileName}"`, error);
       }
     } else {
       logger.fatal('Specification not found.');
       return false;
     }
-  } catch (e) {
-    logger.fatal(e.message);
+  } catch (error) {
+    logger.fatal(error.message);
     return false;
   }
 
   const spectral = new Spectral();
-  spectral.registerFormat('oas2', isOpenApiv2);
-  spectral.registerFormat('oas3', isOpenApiv3);
-  await spectral.loadRuleset('spectral:oas');
+  await spectral.setRuleset(oas as RulesetDefinition);
 
   const results = (await spectral.run(specContent)).filter(result => (
     result.severity === 0 // filter for errors only

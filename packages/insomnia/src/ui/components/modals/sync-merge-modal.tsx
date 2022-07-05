@@ -25,29 +25,31 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  _handleDone: (arg0: MergeConflict[]) => void;
+  _handleDone?: (arg0: MergeConflict[]) => void;
 
   state: State = {
     conflicts: [],
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleOk() {
-    this._handleDone(this.state.conflicts);
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this._handleDone!(this.state.conflicts);
 
     this.hide();
   }
 
-  _handleToggleSelect(key: DocumentKey, e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleToggleSelect(key: DocumentKey, event: React.SyntheticEvent<HTMLInputElement>) {
     const conflicts = this.state.conflicts.map(c => {
       if (c.key !== key) {
         return c;
       }
 
-      return { ...c, choose: e.currentTarget.value || null };
+      return { ...c, choose: event.currentTarget.value || null };
     });
     this.setState({
       conflicts,

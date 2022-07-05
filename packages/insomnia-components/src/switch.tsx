@@ -8,7 +8,7 @@ export interface SwitchItem {
 
 export interface SwitchProps {
   className?: string;
-  onClick?: (e: React.SyntheticEvent<HTMLInputElement>) => any;
+  onClick?: (event: React.SyntheticEvent<HTMLInputElement>) => any;
   optionItems?: SwitchItem[];
 }
 

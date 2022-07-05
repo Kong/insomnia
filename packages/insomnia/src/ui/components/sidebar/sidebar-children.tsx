@@ -35,8 +35,6 @@ const mapStateToProps = (state: RootState) => ({
 
 interface Props extends ReduxProps {
   handleActivateRequest: Function;
-  handleCreateRequest: (id: string) => any;
-  handleCreateRequestGroup: (parentId: string) => void;
   handleSetRequestPinned: Function;
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequest: Function;
@@ -50,37 +48,9 @@ interface Props extends ReduxProps {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class UnconnectedSidebarChildren extends PureComponent<Props> {
-  _contextMenu: SidebarCreateDropdown | null = null;
-
-  _handleContextMenu(e: React.MouseEvent<HTMLUListElement>) {
-    const { target, currentTarget, clientX, clientY } = e;
-
-    if (target !== currentTarget) {
-      return;
-    }
-
-    e.preventDefault();
-    const menu = this._contextMenu;
-
-    if (menu && document.body) {
-      const x = clientX;
-      const y = document.body.getBoundingClientRect().height - clientY;
-      menu.show({
-        x,
-        y,
-      });
-    }
-  }
-
-  _setContextMenuRef(n: SidebarCreateDropdown) {
-    this._contextMenu = n;
-  }
-
   _renderChildren(children: Child[], isInPinnedList: boolean) {
     const {
       filter,
-      handleCreateRequest,
-      handleCreateRequestGroup,
       handleSetRequestPinned,
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
@@ -107,7 +77,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
             handleDuplicateRequest={handleDuplicateRequest}
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
-            requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
             isPinned={child.pinned}
             disableDragAndDrop={isInPinnedList}
@@ -120,7 +89,7 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
       // We have a RequestGroup!
       const requestGroup = child.doc;
 
-      function hasActiveChild(children) {
+      function hasActiveChild(children: Child[]) {
         for (const c of children) {
           if (hasActiveChild(c.children || [])) {
             return true;
@@ -146,8 +115,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           isCollapsed={child.collapsed}
-          handleCreateRequest={handleCreateRequest}
-          handleCreateRequestGroup={handleCreateRequestGroup}
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
         >
@@ -161,25 +128,10 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     return (
       <ul
         className="sidebar__list sidebar__list-root theme--sidebar__list"
-        onContextMenu={this._handleContextMenu}
       >
         {this._renderChildren(children, pinnedList)}
       </ul>
     );
-  }
-
-  _handleCreateRequest() {
-    const { handleCreateRequest, workspace } = this.props;
-    if (workspace) {
-      handleCreateRequest(workspace._id);
-    }
-  }
-
-  _handleCreateRequestGroup() {
-    const { handleCreateRequestGroup, workspace } = this.props;
-    if (workspace) {
-      handleCreateRequestGroup(workspace._id);
-    }
   }
 
   render() {
@@ -188,9 +140,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     const contextMenuPortal = ReactDOM.createPortal(
       <div className="hide">
         <SidebarCreateDropdown
-          ref={this._setContextMenuRef}
-          handleCreateRequest={this._handleCreateRequest}
-          handleCreateRequestGroup={this._handleCreateRequestGroup}
           hotKeyRegistry={hotKeyRegistry}
         />
       </div>,

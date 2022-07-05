@@ -26,7 +26,7 @@ interface GitCredentialsOAuth {
    * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
    * https://isomorphic-git.org/docs/en/authentication.html
   */
-  oauth2format?: 'github';
+  oauth2format?: 'github' | 'gitlab';
   username: string;
   token: string;
 }
@@ -200,7 +200,6 @@ export class GitVCS {
     const config = await this.getRemote('origin');
 
     if (config === null) {
-      // Should never happen but it's here to make Flow happy
       throw new Error('Remote not found remote=origin');
     }
 
@@ -362,7 +361,7 @@ export class GitVCS {
     }
   }
 
-  async undoPendingChanges(fileFilter?: String[]) {
+  async undoPendingChanges(fileFilter?: string[]) {
     console.log('[git] Undo pending changes');
     await git.checkout({
       ...this._baseOpts,

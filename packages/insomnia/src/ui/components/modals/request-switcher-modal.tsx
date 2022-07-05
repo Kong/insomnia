@@ -3,12 +3,12 @@ import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import { keyboardKeys } from '../../../common/keyboard-keys';
+import { isEventKey, keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -39,7 +39,7 @@ const mapStateToProps = (state: RootState) => ({
   workspaceRequestsAndRequestGroups: selectWorkspaceRequestsAndRequestGroups(state),
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
   return {
     handleActivateWorkspace: bound.activateWorkspace,
@@ -86,31 +86,27 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     title: null,
   };
 
-  _handleInputKeydown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const keyCode = e.keyCode;
-
-    if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
-      // Up or Shift+Tab
+  _handleInputKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const isKey = isEventKey(event as unknown as KeyboardEvent);
+    if (isKey('uparrow') || (isKey('tab') && event.shiftKey)) {
       this._setActiveIndex(this.state.activeIndex - 1);
-    } else if (keyCode === 40 || keyCode === 9) {
-      // Down or Tab
+    } else if (isKey('downarrow') || isKey('tab')) {
       this._setActiveIndex(this.state.activeIndex + 1);
-    } else if (keyCode === 13) {
-      // Enter
+    } else if (isKey('enter')) {
       this._activateCurrentIndex();
     } else {
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
   }
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _setInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
   _setActiveIndex(activeIndex: number) {
@@ -163,13 +159,17 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this._activateRequest(request);
   }
 
-  async _activateWorkspace(workspace: Workspace) {
+  async _activateWorkspace(workspace?: Workspace) {
+    if (!workspace) {
+      return;
+    }
+
     await this.props.handleActivateWorkspace({ workspace });
 
     this.modal?.hide();
   }
 
-  _activateRequest(request: Request | GrpcRequest) {
+  _activateRequest(request?: Request | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -178,8 +178,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
-    this._handleChangeValue(e.currentTarget.value);
+  _handleChange(event: React.SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeValue(event.currentTarget.value);
   }
 
   /** Return array of path segments for given request or folder */
@@ -242,7 +242,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   _handleChangeValue(searchString: string) {
     const { workspace, workspaceRequestsAndRequestGroups, workspacesForActiveProject, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
-    const lastActiveMap = {};
+    const lastActiveMap: Record<string, number> = {};
 
     for (const meta of requestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
@@ -361,32 +361,32 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
   }
 
-  _handleKeydown(event: KeyboardEvent) {
+  _handleKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.keyCode === keyboardKeys.esc.keyCode) {
       this.hide();
       return;
     }
 
     // Only control up/down with tab if modal is visible
-    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex + 1);
       }
     });
     // Only control up/down with tab if modal is visible
-    executeHotKey(event, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
       if (this.state.isModalVisible) {
         this._setActiveIndex(this.state.activeIndex - 1);
       }
     });
   }
 
-  async _handleKeyup(e: KeyboardEvent) {
+  async _handleKeyup(event: KeyboardEvent) {
     const { selectOnKeyup } = this.state;
     // Handle selection if unpresses all modifier keys. Ideally this would trigger once
     // the user unpresses the hotkey that triggered this modal but we currently do not
     // have the facilities to do that.
-    const isMetaKeyDown = e.ctrlKey || e.shiftKey || e.metaKey || e.altKey;
+    const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
     const isActive = this.modal?.isOpen();
 
     if (selectOnKeyup && isActive && !isMetaKeyDown) {
@@ -446,7 +446,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
               </div>
             )}
             <ul>
-              {matchedRequests.map((r, i) => {
+              {matchedRequests.map((r: Request | GrpcRequest, i) => {
                 const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
                 const buttonClasses = classnames(
                   'btn btn--expandable-small wide text-left pad-bottom',
@@ -456,7 +456,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 );
                 return (
                   <li key={r._id}>
-                    <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
+                    <Button onClick={(_e, request) => this._activateRequest(request)} value={r} className={buttonClasses}>
                       <div>
                         {requestGroup ? (
                           <div className="pull-right faint italic">
@@ -489,7 +489,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 });
                 return (
                   <li key={w._id}>
-                    <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
+                    <Button onClick={(_e, value) => this._activateWorkspace(value)} value={w} className={buttonClasses}>
                       <i className="fa fa-random" />
                       &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
                     </Button>

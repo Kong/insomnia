@@ -25,9 +25,10 @@ import {
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
+  PreviewMode,
   SortOrder,
 } from '../../common/constants';
-import { database as db } from '../../common/database';
+import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -46,6 +47,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
 import { isWorkspace } from '../../models/workspace';
@@ -58,6 +60,7 @@ import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../..
 import { NeDBClient } from '../../sync/git/ne-db-client';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -66,7 +69,6 @@ import { AskModal } from '../components/modals/ask-modal';
 import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { RequestCreateModal } from '../components/modals/request-create-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
@@ -80,6 +82,7 @@ import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
 import { initialize } from '../redux/modules/entities';
 import {
@@ -196,19 +199,13 @@ class App extends PureComponent<AppProps, State> {
     };
 
     this._savePaneWidth = debounce(paneWidth =>
-      this._updateActiveWorkspaceMeta({
-        paneWidth,
-      }),
+      this._updateActiveWorkspaceMeta({ paneWidth }),
     );
     this._savePaneHeight = debounce(paneHeight =>
-      this._updateActiveWorkspaceMeta({
-        paneHeight,
-      }),
+      this._updateActiveWorkspaceMeta({ paneHeight }),
     );
     this._saveSidebarWidth = debounce(sidebarWidth =>
-      this._updateActiveWorkspaceMeta({
-        sidebarWidth,
-      }),
+      this._updateActiveWorkspaceMeta({ sidebarWidth }),
     );
     this._globalKeyMap = null;
     this._updateVCSLock = null;
@@ -276,7 +273,7 @@ class App extends PureComponent<AppProps, State> {
       ],
       [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
       [
-        hotKeyRefs.REQUEST_QUICK_CREATE,
+        hotKeyRefs.REQUEST_CREATE_HTTP,
         async () => {
           const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
@@ -290,19 +287,7 @@ class App extends PureComponent<AppProps, State> {
           });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
-          trackSegmentEvent(SegmentEvent.requestCreate);
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_CREATE,
-        () => {
-          const { activeRequest, activeWorkspace } = this.props;
-          if (!activeWorkspace) {
-            return;
-          }
-
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId);
+          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
         },
       ],
       [
@@ -317,7 +302,7 @@ class App extends PureComponent<AppProps, State> {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: async confirmed => {
+            onDone: async (confirmed: boolean) => {
               if (!confirmed) {
                 return;
               }
@@ -337,7 +322,7 @@ class App extends PureComponent<AppProps, State> {
           }
 
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestGroupCreate(parentId);
+          createRequestGroup(parentId);
         },
       ],
       [
@@ -366,7 +351,7 @@ class App extends PureComponent<AppProps, State> {
             ? entities.grpcRequestMetas
             : entities.requestMetas;
           const meta = Object.values<GrpcRequestMeta | RequestMeta>(entitiesToCheck).find(m => m.parentId === activeRequest._id);
-          await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
+          await this._handleSetRequestPinned(activeRequest, !meta?.pinned);
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -388,40 +373,8 @@ class App extends PureComponent<AppProps, State> {
     );
   }
 
-  _requestGroupCreate(parentId: string) {
-    showPrompt({
-      title: 'New Folder',
-      defaultValue: 'My Folder',
-      submitName: 'Create',
-      label: 'Name',
-      selectText: true,
-      onComplete: async name => {
-        const requestGroup = await models.requestGroup.create({
-          parentId,
-          name,
-        });
-        await models.requestGroupMeta.create({
-          parentId: requestGroup._id,
-          collapsed: false,
-        });
-      },
-    });
-  }
-
-  _requestCreate(parentId: string) {
-    showModal(RequestCreateModal, {
-      parentId,
-      onComplete: (requestId: string) => {
-        this._handleSetActiveRequest(requestId);
-
-        models.stats.incrementCreatedRequests();
-        trackSegmentEvent(SegmentEvent.requestCreate);
-      },
-    });
-  }
-
   async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
-    function __updateDoc(doc, metaSortKey) {
+    function __updateDoc(doc: RequestGroup | Request | GrpcRequest, metaSortKey: number) {
       // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
       // Which all have the .update method. How do we better filter types?
       return models.getModel(doc.type)?.update(doc, {
@@ -517,7 +470,7 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {
+  static async _updateRequestGroupMetaByParentId(requestGroupId: string, patch: Partial<RequestGroupMeta>) {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
 
     if (requestGroupMeta) {
@@ -571,7 +524,7 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _handleSetActiveEnvironment(activeEnvironmentId: string) {
+  async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
     await this._updateActiveWorkspaceMeta({
       activeEnvironmentId,
     });
@@ -607,25 +560,25 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _handleSetRequestPinned(request, pinned) {
+  async _handleSetRequestPinned(request: Request | GrpcRequest, pinned: boolean) {
     updateRequestMetaByParentId(request._id, {
       pinned,
     });
   }
 
-  _handleSetResponsePreviewMode(requestId, previewMode) {
+  _handleSetResponsePreviewMode(requestId: string, previewMode: PreviewMode) {
     updateRequestMetaByParentId(requestId, {
       previewMode,
     });
   }
 
-  _handleUpdateDownloadPath(requestId, downloadPath) {
+  _handleUpdateDownloadPath(requestId: string, downloadPath: string) {
     updateRequestMetaByParentId(requestId, {
       downloadPath,
     });
   }
 
-  async _handleSetResponseFilter(requestId, responseFilter) {
+  async _handleSetResponseFilter(requestId: string, responseFilter: string) {
     await updateRequestMetaByParentId(requestId, {
       responseFilter,
     });
@@ -713,7 +666,11 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
+    trackSegmentEvent(SegmentEvent.requestExecute, {
+      preferredHttpVersion: settings.preferredHttpVersion,
+      authenticationType: request.authentication?.type,
+      mimeType: request.body.mimeType,
+    });
     // Start loading
     handleStartLoading(requestId);
 
@@ -733,7 +690,7 @@ class App extends PureComponent<AppProps, State> {
         const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename;
+        let filename: string | null;
 
         if (dir) {
           filename = path.join(dir, name);
@@ -790,7 +747,7 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _handleSendRequestWithEnvironment(requestId, environmentId) {
+  async _handleSendRequestWithEnvironment(requestId: string, environmentId?: string) {
     const { handleStartLoading, handleStopLoading, settings } = this.props;
     const request = await models.request.getById(requestId);
 
@@ -800,7 +757,11 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, { preferredHttpVersion: settings.preferredHttpVersion, authenticationType: request.authentication?.type });
+    trackSegmentEvent(SegmentEvent.requestExecute, {
+      preferredHttpVersion: settings.preferredHttpVersion,
+      authenticationType: request.authentication?.type,
+      mimeType: request.body.mimeType,
+    });
     handleStartLoading(requestId);
 
     try {
@@ -868,12 +829,6 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _requestCreateForWorkspace() {
-    if (this.props.activeWorkspace) {
-      this._requestCreate(this.props.activeWorkspace._id);
-    }
-  }
-
   _startDragSidebar() {
     this.setState({
       draggingSidebar: true,
@@ -907,7 +862,7 @@ class App extends PureComponent<AppProps, State> {
     setTimeout(() => this._handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
   }
 
-  _handleMouseMove(e) {
+  _handleMouseMove(event: MouseEvent) {
     if (this.state.draggingPaneHorizontal) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.paneWidth - this.state.paneWidth;
@@ -929,7 +884,7 @@ class App extends PureComponent<AppProps, State> {
         const requestPaneWidth = requestPane.offsetWidth;
         const responsePaneWidth = responsePane.offsetWidth;
 
-        const pixelOffset = e.clientX - requestPane.offsetLeft;
+        const pixelOffset = event.clientX - requestPane.offsetLeft;
         let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
         paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
 
@@ -955,7 +910,7 @@ class App extends PureComponent<AppProps, State> {
       if (requestPane && responsePane) {
         const requestPaneHeight = requestPane.offsetHeight;
         const responsePaneHeight = responsePane.offsetHeight;
-        const pixelOffset = e.clientY - requestPane.offsetTop;
+        const pixelOffset = event.clientY - requestPane.offsetTop;
         let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
         paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
 
@@ -980,7 +935,7 @@ class App extends PureComponent<AppProps, State> {
       if (sidebar) {
         const currentPixelWidth = sidebar.offsetWidth;
 
-        const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
+        const ratio = (event.clientX - sidebar.offsetLeft) / currentPixelWidth;
         const width = this.state.sidebarWidth * ratio;
         let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
 
@@ -1031,8 +986,8 @@ class App extends PureComponent<AppProps, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(n: Wrapper) {
-    this._wrapper = n;
+  _setWrapperRef(wrapper: Wrapper) {
+    this._wrapper = wrapper;
   }
 
   async _handleReloadPlugins() {
@@ -1195,7 +1150,7 @@ class App extends PureComponent<AppProps, State> {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {
             conflicts,
-            handleDone: conflicts => resolve(conflicts),
+            handleDone: (conflicts: MergeConflict[]) => resolve(conflicts),
           });
         });
       });
@@ -1215,7 +1170,7 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _handleDbChange(changes) {
+  async _handleDbChange(changes: ChangeBufferEvent[]) {
     let needsRefresh = false;
 
     for (const change of changes) {
@@ -1299,7 +1254,7 @@ class App extends PureComponent<AppProps, State> {
           message: 'Are you sure you want to clear all models? This operation cannot be undone.',
           yesText: 'Yes',
           noText: 'No',
-          onDone: async yes => {
+          onDone: async (yes: boolean) => {
             if (yes) {
               const bufferId = await db.bufferChanges();
               const promises = models
@@ -1334,15 +1289,15 @@ class App extends PureComponent<AppProps, State> {
     // NOTE: This is required for "drop" event to trigger.
     document.addEventListener(
       'dragover',
-      e => {
-        e.preventDefault();
+      event => {
+        event.preventDefault();
       },
       false,
     );
     document.addEventListener(
       'drop',
-      async e => {
-        e.preventDefault();
+      async event => {
+        event.preventDefault();
         const { activeWorkspace, handleImportUri } = this.props;
 
         if (!activeWorkspace) {
@@ -1350,13 +1305,13 @@ class App extends PureComponent<AppProps, State> {
         }
 
         // @ts-expect-error -- TSCONVERSION
-        if (e.dataTransfer.files.length === 0) {
+        if (event.dataTransfer.files.length === 0) {
           console.log('[drag] Ignored drop event because no files present');
           return;
         }
 
         // @ts-expect-error -- TSCONVERSION
-        const file = e.dataTransfer.files[0];
+        const file = event.dataTransfer.files[0];
         const { path } = file;
         const uri = `file://${path}`;
         await showAlert({
@@ -1401,7 +1356,7 @@ class App extends PureComponent<AppProps, State> {
       return;
     }
 
-    const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
+    const baseEnvironments = environments.filter(environment => environment.parentId === activeWorkspace._id);
 
     // Nothing to do
     if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
@@ -1475,7 +1430,6 @@ class App extends PureComponent<AppProps, State> {
                   paneWidth={paneWidth}
                   paneHeight={paneHeight}
                   sidebarWidth={sidebarWidth}
-                  handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
                   handleSetRequestPinned={this._handleSetRequestPinned}
                   handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
                   handleActivateRequest={this._handleSetActiveRequest}
@@ -1488,10 +1442,8 @@ class App extends PureComponent<AppProps, State> {
                   handleStartDragPaneVertical={this._startDragPaneVertical}
                   handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
                   handleResetDragPaneVertical={this._resetDragPaneVertical}
-                  handleCreateRequest={this._requestCreate}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                  handleCreateRequestGroup={this._requestGroupCreate}
                   handleGenerateCode={App._handleGenerateCode}
                   handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
                   handleCopyAsCurl={this._handleCopyAsCurl}

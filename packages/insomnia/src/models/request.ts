@@ -233,14 +233,14 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
       mimeType: CONTENT_TYPE_GRAPHQL,
       text: rawBody.replace(/\\\\n/g, ''),
     };
-  } catch (e) {
-    if (e instanceof SyntaxError) {
+  } catch (error) {
+    if (error instanceof SyntaxError) {
       return {
         mimeType: CONTENT_TYPE_GRAPHQL,
         text: rawBody,
       };
     } else {
-      throw e;
+      throw error;
     }
   }
 }

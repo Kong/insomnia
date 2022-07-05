@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios';
 import type { GraphQLError } from 'graphql';
 import { Button } from 'insomnia-components';
-import React, { useEffect, useState } from 'react';
+import React, { MouseEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
@@ -150,7 +150,7 @@ const Avatar = ({ src }: { src: string }) => {
       img.removeEventListener('load', onLoad);
       img.removeEventListener('error', onError);
     };
-  });
+  }, [src]);
 
   return imageSrc ? (
     <AvatarImg src={imageSrc} />
@@ -191,10 +191,25 @@ const GitHubRepositoryForm = ({
 }: GitHubRepositoryFormProps) => {
   const [error, setError] = useState('');
 
-  const [user, setUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
+  const [user, setUser, removeUser] = useLocalStorage<GitHubUserInfoQueryResult['viewer']>(
     'github-user-info',
     undefined
   );
+
+  const handleSignOut = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    showAlert({
+      title: 'Sign out of GitHub',
+      message:
+        'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
+      okLabel: 'Sign out',
+      onConfirm: () => {
+        removeUser();
+        onSignOut();
+      },
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -218,8 +233,8 @@ const GitHubRepositoryForm = ({
             }
           }
         })
-        .catch((e: unknown) => {
-          if (e instanceof Error) {
+        .catch((error: unknown) => {
+          if (error instanceof Error) {
             setError(
               'Something went wrong when trying to fetch info from GitHub.'
             );
@@ -237,9 +252,9 @@ const GitHubRepositoryForm = ({
       id="github"
       className="form-group"
       style={{ height: '100%' }}
-      onSubmit={e =>
+      onSubmit={event =>
         onSubmit({
-          uri: (new FormData(e.currentTarget).get('uri') as string) ?? '',
+          uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
           author: {
             name: user?.login ?? '',
             email: user?.email ?? '',
@@ -259,6 +274,7 @@ const GitHubRepositoryForm = ({
             <input
               className="form-control"
               defaultValue={uri}
+              disabled={Boolean(uri)}
               type="url"
               name="uri"
               autoFocus
@@ -288,22 +304,7 @@ const GitHubRepositoryForm = ({
             </span>
           </Details>
         </AccountDetails>
-        <Button
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            showAlert({
-              title: 'Sign out of GitHub',
-              message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
-              okLabel: 'Sign out',
-              onConfirm: () => {
-                setUser(undefined);
-                onSignOut();
-              },
-            });
-          }}
-        >
+        <Button onClick={handleSignOut}>
           Sign out
         </Button>
       </AccountViewContainer>
@@ -325,6 +326,7 @@ interface GitHubSignInFormProps {
 }
 
 const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
+  const [error, setError] = useState('');
   const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
@@ -351,37 +353,54 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
 
       {isAuthenticating && (
         <form
-          onSubmit={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            const formData = new FormData(e.currentTarget);
+          onSubmit={event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const formData = new FormData(event.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
-              const parsedURL = new URL(link);
+              let parsedURL: URL;
+              try {
+                parsedURL = new URL(link);
+              } catch (error) {
+                setError('Invalid URL');
+                return;
+              }
+
               const code = parsedURL.searchParams.get('code');
               const state = parsedURL.searchParams.get('state');
 
-              if (typeof code === 'string' && typeof state === 'string') {
-                const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
-                  code,
-                  state,
-                });
-
-                command(dispatch);
+              if (!(typeof code === 'string') || !(typeof state === 'string')) {
+                setError('Incomplete URL');
+                return;
               }
+
+              const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
+                code,
+                state,
+              });
+
+              command(dispatch);
             }
           }}
         >
           <label className="form-control form-control--outlined">
             <div>
-              If you aren't redirected to the app you can manually paste your
-              code here:
+              If you aren't redirected to the app you can manually paste the authentication url here:
             </div>
             <div className="form-row">
               <input name="link" />
               <Button name="add-token">Add</Button>
             </div>
           </label>
+          {error && (
+            <p className="notice error margin-bottom-sm">
+              <button className="pull-right icon" onClick={() => setError('')}>
+                <i className="fa fa-times" />
+              </button>
+              {error}
+            </p>
+          )}
         </form>
       )}
     </AuthorizationFormContainer>

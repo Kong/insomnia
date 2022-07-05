@@ -1,5 +1,5 @@
 const os = require('os');
-const {JSONPath} = require('jsonpath-plus');
+const { JSONPath } = require('jsonpath-plus');
 
 const FILTERABLE = ['userInfo', 'cpus'];
 
@@ -32,9 +32,9 @@ module.exports.templateTags = [
     run(context, fnName, filter) {
       let value = os[fnName]();
 
-      if (jsonPath && FILTERABLE.includes(fnName)) {
+      if (JSONPath && FILTERABLE.includes(fnName)) {
         try {
-          value = JSONPath({json: value, path: filter})[0];
+          value = JSONPath({ json: value, path: filter })[0];
         } catch (err) {}
       }
 

@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -14,6 +14,7 @@ import type { GitRepository } from '../../../models/git-repository';
 import type { Workspace } from '../../../models/workspace';
 import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
+import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import type {
   SetupGitRepositoryCallback,
@@ -65,8 +66,8 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     branches: [],
   };
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   async _refreshState(otherState?: Record<string, any>) {
@@ -126,10 +127,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     const bufferId = await db.bufferChanges();
-
+    const providerName = getOauth2FormatName(gitRepository.credentials);
     try {
       await vcs.pull(gitRepository.credentials);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
     } catch (err) {
       showError({
         title: 'Error Pulling Repository',
@@ -144,7 +145,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handlePush(_e, force = false) {
+  async _handlePush(_e: unknown, force = false) {
     this.setState({
       loadingPush: true,
     });
@@ -184,10 +185,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     const bufferId = await db.bufferChanges();
-
+    const providerName = getOauth2FormatName(gitRepository.credentials);
     try {
       await vcs.push(gitRepository.credentials, force);
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push'));
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'), providerName });
     } catch (err) {
       if (err.code === 'PushRejectedError') {
         this._dropdown?.hide();
@@ -205,7 +206,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
           title: 'Error Pushing Repository',
           error: err,
         });
-        trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message));
+        trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message), providerName });
       }
     }
 
@@ -235,8 +236,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleCommit() {
+    const { gitRepository } = this.props;
     showModal(GitStagingModal, {
       onCommit: this._refreshState,
+      gitRepository,
     });
   }
 
@@ -264,6 +267,21 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     await this._refreshState();
   }
 
+  _getProviderIconClassName(): string | undefined {
+    const { gitRepository } = this.props;
+    const providerName = getOauth2FormatName(gitRepository?.credentials);
+
+    if (providerName === 'github') {
+      return 'fa fa-github';
+    }
+
+    if (providerName === 'gitlab') {
+      return 'fa fa-gitlab';
+    }
+
+    return;
+  }
+
   componentDidMount() {
     this._refreshState();
   }
@@ -275,7 +293,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     const renderBtn =
       renderDropdownButton ||
       (children => (
-        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
           {children}
         </DropdownButton>
       ));
@@ -290,8 +308,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     const initializing = false;
+    const iconClassName = this._getProviderIconClassName();
     return renderBtn(
       <Fragment>
+        {iconClassName && <i className={classnames('space-right', iconClassName)} />}
         <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
         <i className="fa fa-code-fork space-left" />
       </Fragment>,
@@ -395,7 +415,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
   const boundGitActions = bindActionCreators(gitActions, dispatch);
   return {
     setupGitRepository: boundGitActions.setupGitRepository,

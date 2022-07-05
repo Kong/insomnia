@@ -1,5 +1,8 @@
+import grpcJSOriginal from '@grpc/grpc-js';
+import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
-const grpcJs = jest.requireActual('@grpc/grpc-js');
+
+const grpcJs = jest.requireActual('@grpc/grpc-js') as typeof grpcJSOriginal;
 
 const mockCallWrite = jest.fn();
 const mockCallEnd = jest.fn();

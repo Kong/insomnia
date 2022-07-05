@@ -29,16 +29,16 @@ export class NunjucksModal extends PureComponent<Props, State> {
   _currentTemplate: string | null = null;
   modal: Modal | null = null;
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   _handleTemplateChange(template: string | null) {
     this._currentTemplate = template;
   }
 
-  _handleSubmit(e) {
-    e.preventDefault();
+  _handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     this.hide();
   }
 
@@ -52,7 +52,7 @@ export class NunjucksModal extends PureComponent<Props, State> {
     }
   }
 
-  show({ template, onDone }) {
+  show({ template, onDone }: any) {
     this._onDone = onDone;
     this._currentTemplate = template;
     this.setState({

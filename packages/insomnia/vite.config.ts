@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      sourcemap: __DEV__,
+      sourcemap: true,
       outDir: path.join(__dirname, 'build'),
       assetsDir: './',
       brotliSize: false,
@@ -61,6 +61,7 @@ export default defineConfig(({ mode }) => {
         jsxRuntime: 'automatic',
         babel: {
           plugins: [
+            // We need to have these plugins installed in our dependencies
             ['@babel/plugin-proposal-decorators', { legacy: true }],
             ['@babel/plugin-proposal-class-properties', { loose: true }],
           ],

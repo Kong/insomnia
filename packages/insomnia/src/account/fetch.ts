@@ -6,7 +6,7 @@ let _userAgent = '';
 let _baseUrl = '';
 const _commandListeners: Function[] = [];
 
-export function setup(userAgent, baseUrl) {
+export function setup(userAgent: string, baseUrl: string) {
   _userAgent = userAgent;
   _baseUrl = baseUrl;
 }
@@ -15,26 +15,49 @@ export function onCommand(callback: Function) {
   _commandListeners.push(callback);
 }
 
-export async function post(path, obj, sessionId, compressBody = false) {
-  return _fetch('POST', path, obj, sessionId, compressBody);
+export async function post<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T | string> {
+  return _fetch<T>('POST', path, obj, sessionId, compressBody);
 }
 
-export async function put(path, obj, sessionId, compressBody = false) {
-  return _fetch('PUT', path, obj, sessionId, compressBody);
+export async function postJson<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T> {
+  const response = await post<T>(path, obj, sessionId, compressBody);
+  if (typeof response === 'string') {
+    throw new Error('Unexpected plaintext response');
+  }
+  return response;
 }
 
-export async function get(path, sessionId) {
-  return _fetch('GET', path, null, sessionId);
+export async function put<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T | string> {
+  return _fetch<T>('PUT', path, obj, sessionId, compressBody);
 }
 
-async function _fetch(method, path, obj, sessionId, compressBody = false, retries = 0) {
+export async function get<T = any>(path: string, sessionId: string | null): Promise<T | string> {
+  return _fetch<T>('GET', path, null, sessionId);
+}
+
+export async function getJson<T = any>(path: string, sessionId: string | null): Promise<T> {
+  const response = await get<T>(path, sessionId);
+  if (typeof response === 'string') {
+    throw new Error('Unexpected plaintext response');
+  }
+  return response;
+}
+
+async function _fetch<T = any>(
+  method: 'POST' | 'PUT' | 'GET',
+  path: string,
+  obj: unknown,
+  sessionId: string | null,
+  compressBody = false,
+  retries = 0
+): Promise<T | string> {
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
 
   const config: {
     method: string;
-    headers: HeadersInit;
+    headers: Record<string, string>;
     body?: string | Buffer;
   } = {
     method: method,
@@ -59,7 +82,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
     config.headers['X-Session-Id'] = sessionId;
   }
 
-  let response;
+  let response: Response | undefined;
 
   const url = _getUrl(path);
 
@@ -70,7 +93,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 200);
-      return this._fetch(method, path, obj, sessionId, compressBody, retries);
+      return _fetch(method, path, obj, sessionId, compressBody, retries);
     }
   } catch (err) {
     throw new Error(`Failed to fetch '${url}'`);
@@ -94,7 +117,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   }
 }
 
-function _getUrl(path) {
+function _getUrl(path: string) {
   if (!_baseUrl) {
     throw new Error('API base URL not configured!');
   }
@@ -102,7 +125,7 @@ function _getUrl(path) {
   return `${_baseUrl}${path}`;
 }
 
-function _notifyCommandListeners(uri) {
+function _notifyCommandListeners(uri: string) {
   const parsed = urlParse(uri, true);
   const command = `${parsed.hostname}${parsed.pathname}`;
   const args = JSON.parse(JSON.stringify(parsed.query));

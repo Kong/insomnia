@@ -31,11 +31,11 @@ import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
 import { setTheme } from '../../../plugins/misc';
 import { exchangeCodeForToken } from '../../../sync/git/github-oauth-provider';
+import { exchangeCodeForGitLabToken } from '../../../sync/git/gitlab-oauth-provider';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
 import { LoginModal } from '../../components/modals/login-modal';
-import { PaymentNotificationModal } from '../../components/modals/payment-notification-modal';
 import { SelectModal } from '../../components/modals/select-modal';
 import {
   SettingsModal,
@@ -60,16 +60,16 @@ export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
-const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
 export const COMMAND_GITHUB_OAUTH_AUTHENTICATE = 'oauth/github/authenticate';
+export const COMMAND_GITLAB_OAUTH_AUTHENTICATE = 'oauth/gitlab/authenticate';
 
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
-const isFinishedBootingReducer = (state = false, action) => {
+const isFinishedBootingReducer = (state = false, action: any) => {
   switch (action.type) {
     case SET_IS_FINISHED_BOOTING:
       return action.payload;
@@ -79,7 +79,7 @@ const isFinishedBootingReducer = (state = false, action) => {
   }
 };
 
-function activeActivityReducer(state: string | null = null, action) {
+function activeActivityReducer(state: string | null = null, action: any) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
       return action.activity;
@@ -89,7 +89,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action) {
+function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action: any) {
   switch (action.type) {
     case SET_ACTIVE_PROJECT:
       return action.projectId;
@@ -99,7 +99,7 @@ function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action) {
   }
 }
 
-function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', action) {
+function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', action: any) {
   switch (action.type) {
     case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
@@ -109,7 +109,7 @@ function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', 
   }
 }
 
-function activeWorkspaceReducer(state: string | null = null, action) {
+function activeWorkspaceReducer(state: string | null = null, action: any) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
       return action.workspaceId;
@@ -119,7 +119,7 @@ function activeWorkspaceReducer(state: string | null = null, action) {
   }
 }
 
-function loadingReducer(state = false, action) {
+function loadingReducer(state = false, action: any) {
   switch (action.type) {
     case LOAD_START:
       return true;
@@ -132,7 +132,7 @@ function loadingReducer(state = false, action) {
   }
 }
 
-function loadingRequestsReducer(state: Record<string, number> = {}, action) {
+function loadingRequestsReducer(state: Record<string, number> = {}, action: any) {
   switch (action.type) {
     case LOAD_REQUEST_START:
       return Object.assign({}, state, {
@@ -149,7 +149,7 @@ function loadingRequestsReducer(state: Record<string, number> = {}, action) {
   }
 }
 
-function loginStateChangeReducer(state = false, action) {
+function loginStateChangeReducer(state = false, action: any) {
   switch (action.type) {
     case LOGIN_STATE_CHANGE:
       return action.loggedIn;
@@ -205,10 +205,6 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         title: args.title,
         message: args.message,
       });
-      break;
-
-    case COMMAND_TRIAL_END:
-      showModal(PaymentNotificationModal);
       break;
 
     case COMMAND_IMPORT_URI:
@@ -291,6 +287,17 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         showError({
           error,
           title: 'Error authorizing GitHub',
+          message: error.message,
+        });
+      });
+      break;
+    }
+
+    case COMMAND_GITLAB_OAUTH_AUTHENTICATE: {
+      await exchangeCodeForGitLabToken(args).catch((error: Error) => {
+        showError({
+          error,
+          title: 'Error authorizing GitLab',
           message: error.message,
         });
       });
@@ -448,7 +455,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
+export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) => {
   dispatch(loadStart());
   const state = getState();
   const activeProjectName = selectActiveProjectName(state);
@@ -539,7 +546,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
     onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request)[] = [];
       const privateEnvironments: Environment[] = [];
-      const workspaceLookup = {};
+      const workspaceLookup: any = {};
 
       for (const requestId of requestIds) {
         const request = await requestOperations.getById(requestId);
@@ -570,7 +577,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
       let exportPrivateEnvironments = false;
 
       if (privateEnvironments.length) {
-        const names = privateEnvironments.map(e => e.name).join(', ');
+        const names = privateEnvironments.map(privateEnvironment => privateEnvironment.name).join(', ');
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
@@ -633,7 +640,7 @@ export function initActiveProject() {
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     projectId = JSON.parse(item);
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -650,7 +657,7 @@ export function initDashboardSortOrder() {
     if (stringifiedDashboardSortOrder) {
       dashboardSortOrder = JSON.parse(stringifiedDashboardSortOrder);
     }
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -665,7 +672,7 @@ export function initActiveWorkspace() {
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     workspaceId = JSON.parse(item);
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -686,7 +693,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   Initialize with the cached active activity, and navigate to the next activity if necessary
   This will also decide whether to start with the migration
  */
-export const initActiveActivity = () => (dispatch, getState) => {
+export const initActiveActivity = () => (dispatch: any, getState: any) => {
   const state = getState();
   // Default to home
   let activeActivity = ACTIVITY_HOME;
@@ -696,7 +703,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     activeActivity = JSON.parse(item);
-  } catch (e) {
+  } catch (error) {
     // Nothing here...
   }
 
@@ -708,7 +715,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
   dispatch(setActiveActivity(initializeToActivity));
 };
 
-export const initFirstLaunch = () => async (dispatch, getState) => {
+export const initFirstLaunch = () => async (dispatch: any, getState: any) => {
   const state = getState();
 
   const stats = selectStats(state);

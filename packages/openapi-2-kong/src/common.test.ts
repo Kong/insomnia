@@ -1,3 +1,6 @@
+import { describe, expect, it } from '@jest/globals';
+import { OpenAPIV3 } from 'openapi-types';
+
 import {
   distinctByProperty,
   fillServerVariables,
@@ -118,12 +121,12 @@ describe('common', () => {
               type: 'http',
               scheme: 'basic',
               name: 'name',
-            },
+            } as OpenAPIV3.HttpSecurityScheme,
             anotherAuth: {
               type: 'http',
               scheme: 'basic',
               name: 'another-name',
-            },
+            } as OpenAPIV3.HttpSecurityScheme,
           },
         },
       });
@@ -153,6 +156,7 @@ describe('common', () => {
       const spec = getSpec({
         info: {
           version: '1.0.0',
+          title: '',
         },
       });
       const result = getName(spec);

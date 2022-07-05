@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 
 import { convertToOsSep, convertToPosixSep } from '../path-sep';
@@ -18,6 +19,7 @@ describe('convertToPosixSep()', () => {
 
 describe.each(['win32', 'posix'])('convertToOsSep() where os is %s', osType => {
   beforeAll(() => path.__mockPath(osType));
+
   afterAll(() => jest.restoreAllMocks());
 
   it.each(['win32', 'posix'])(`should convert separators from %s to ${osType}`, inputType => {

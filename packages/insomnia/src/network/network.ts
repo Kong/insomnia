@@ -15,7 +15,7 @@ import {
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';
-import { getDataDirectory, getTempDir } from '../common/electron-helpers';
+import { getDataDirectory } from '../common/electron-helpers';
 import {
   delay,
   getContentTypeHeader,
@@ -28,48 +28,26 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../common/render';
+import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
-import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { getAuthHeader } from './authentication';
-import caCerts from './ca_certs';
 import { urlMatchesCertHost } from './url-matches-cert-host';
-
-export interface ResponsePatch {
-  bodyCompression?: 'zip' | null;
-  bodyPath?: string;
-  bytesContent?: number;
-  bytesRead?: number;
-  contentType?: string;
-  elapsedTime: number;
-  environmentId?: string | null;
-  error?: string;
-  headers?: ResponseHeader[];
-  httpVersion?: string;
-  message?: string;
-  parentId?: string;
-  settingSendCookies?: boolean;
-  settingStoreCookies?: boolean;
-  statusCode?: number;
-  statusMessage?: string;
-  timelinePath?: string;
-  url?: string;
-}
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
-const cancelRequestFunctionMap = {};
+const cancelRequestFunctionMap: Record<string, () => void> = {};
 
 let lastUserInteraction = Date.now();
 
-export async function cancelRequestById(requestId) {
+export async function cancelRequestById(requestId: string) {
   const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
   if (hasCancelFunction) {
     return cancelRequestFunctionMap[requestId]();
@@ -96,8 +74,8 @@ export async function _actuallySend(
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
           ? window.main.cancelCurlRequest
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          : require('./libcurl-promise').cancelCurlRequest;
+          :  (await import('../main/network/libcurl-promise')).cancelCurlRequest;
+
         nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
           elapsedTime: 0,
@@ -123,27 +101,12 @@ export async function _actuallySend(
         const socketUrl = (match && match[3]) || '';
         finalUrl = `${protocol}//${socketUrl}`;
       }
-      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'TEXT', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'TEXT', timestamp: Date.now() });
-      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'TEXT', timestamp: Date.now() });
-
-      // Setup CA Root Certificates
-      const baseCAPath = getTempDir();
-      const fullCAPath = pathJoin(baseCAPath, 'ca-certs.pem');
-
-      try {
-        fs.statSync(fullCAPath);
-      } catch (err) {
-        // Doesn't exist yet, so write it
-        mkdirp.sync(baseCAPath);
-        // TODO: Should mock cacerts module for testing.
-        // This is literally coercing a function to string in tests due to lack of val-loader.
-        fs.writeFileSync(fullCAPath, String(caCerts));
-        console.log('[net] Set CA to', fullCAPath);
-      }
+      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
 
       if (!renderedRequest.settingSendCookies) {
-        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'TEXT', timestamp: Date.now() });
+        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
       }
 
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
@@ -153,8 +116,8 @@ export async function _actuallySend(
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        : require('./libcurl-promise').curlRequest;
+        : (await import('../main/network/libcurl-promise')).curlRequest;
+
       const requestOptions = {
         requestId: renderedRequest._id,
         req: renderedRequest,
@@ -162,7 +125,6 @@ export async function _actuallySend(
         socketPath,
         settings,
         certificates,
-        fullCAPath,
         authHeader,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
@@ -171,17 +133,17 @@ export async function _actuallySend(
       // add set-cookie headers to file(cookiejar) and database
       if (settingStoreCookies) {
         // supports many set-cookies over many redirects
-        const redirects: string[][] = headerResults.map(getSetCookiesFromResponseHeaders);
+        const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
         const setCookieStrings: string[] = redirects.flat();
         const totalSetCookies = setCookieStrings.length;
         if (totalSetCookies) {
           const currentUrl = getCurrentUrl({ headerResults, finalUrl });
           const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'TEXT', timestamp: Date.now() }));
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
             await models.cookieJar.update(cookieJar, { cookies });
-            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'TEXT', timestamp: Date.now() });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }
       }
@@ -223,9 +185,9 @@ export async function _actuallySend(
   });
 }
 
-export const getSetCookiesFromResponseHeaders = headers => getSetCookieHeaders(headers).map(h => h.value);
+export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
 
-export const getCurrentUrl = ({ headerResults, finalUrl }) => {
+export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any; finalUrl: string }): string => {
   if (!headerResults || !headerResults.length) {
     return finalUrl;
   }
@@ -241,7 +203,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }) => {
   }
 };
 
-const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }) => {
+const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
   const rejectedCookies: string[] = [];
   const jar = jarFromCookies(cookieJar.cookies);
   for (const setCookieStr of setCookieStrings) {
@@ -509,8 +471,8 @@ function storeTimeline(timeline: ResponseTimelineEntry[]) {
 }
 
 if (global.document) {
-  document.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) {
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
 

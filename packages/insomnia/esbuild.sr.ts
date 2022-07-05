@@ -2,18 +2,6 @@ import { build } from 'esbuild';
 import alias from 'esbuild-plugin-alias';
 import path from 'path';
 
-const env = {
-  window: JSON.stringify({
-    localStorage: {
-      getItem: () => undefined,
-      setItem: () => { },
-    },
-    performance: { now: () => 0 },
-    requestAnimationFrame: () => { },
-    cancelAnimationFrame: () => { },
-  }),
-};
-
 async function main() {
   await build({
     entryPoints: ['./send-request/index.ts'],
@@ -23,7 +11,6 @@ async function main() {
     target: 'esnext',
     sourcemap: true,
     format: 'cjs',
-    define: env,
     tsconfig: 'tsconfig.build.sr.json',
     plugins: [
       alias({

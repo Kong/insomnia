@@ -4,18 +4,17 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": ".",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "noImplicitAny": false
   },
   "include": [
+    "**/*.d.ts",
     "cli",
     "core",
     "fixtures",
     "modules",
-    "server"
+    "server",
   ],
   "exclude": [
-    "dist"
-  ]
+    "**/*.test.ts",
+    "dist",
+  ],
 }

@@ -28,8 +28,8 @@ export class WrapperModal extends PureComponent<{}, State> {
     wide: false,
   };
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   show(options: Record<string, any> = {}) {

@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import highlight from 'highlight.js';
+import highlight from 'highlight.js/lib/common';
 import React, { FC, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -36,11 +36,10 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
   /**
    * Debounce and compile the markdown (won't debounce first render)
    */
-  _compileMarkdown(markdown) {
+  _compileMarkdown(markdown: string) {
     if (this._compileTimeout !== null) {
       clearTimeout(this._compileTimeout);
     }
-    // @ts-expect-error -- TSCONVERSION
     this._compileTimeout = setTimeout(
       async () => {
         try {
@@ -62,13 +61,13 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
     );
   }
 
-  _setPreviewRef(n: HTMLDivElement) {
-    this._preview = n;
+  _setPreviewRef(preview: HTMLDivElement) {
+    this._preview = preview;
   }
 
-  _handleClickLink(e) {
-    e.preventDefault();
-    clickLink(e.target.getAttribute('href'));
+  _handleClickLink(event: any) {
+    event.preventDefault();
+    clickLink(event.target.getAttribute('href'));
   }
 
   _highlightCodeBlocks() {
@@ -80,7 +79,7 @@ class MarkdownPreviewInternal extends PureComponent<Props, State> {
 
     // @ts-expect-error -- TSCONVERSION
     for (const block of el.querySelectorAll('pre > code')) {
-      highlight.highlightBlock(block);
+      highlight.highlightElement(block);
     }
 
     // @ts-expect-error -- TSCONVERSION

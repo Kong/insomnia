@@ -96,8 +96,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
   RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
   SHOW_COOKIES_EDITOR: defineHotKey('showCookiesEditor', 'Edit Cookies'),
-  REQUEST_SHOW_CREATE: defineHotKey('request_showCreate', 'Create Request'),
-  REQUEST_QUICK_CREATE: defineHotKey('request_quickCreate', 'Create Request (Quick)'),
+  REQUEST_CREATE_HTTP: defineHotKey('request_createHTTP', 'Create HTTP Request'),
   REQUEST_SHOW_DELETE: defineHotKey('request_showDelete', 'Delete Request'),
   REQUEST_SHOW_CREATE_FOLDER: defineHotKey('request_showCreateFolder', 'Create Folder'),
   REQUEST_SHOW_DUPLICATE: defineHotKey('request_showDuplicate', 'Duplicate Request'),
@@ -206,13 +205,15 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(false, false, false, true, keyboardKeys.k.keyCode),
     keyComb(true, false, false, false, keyboardKeys.k.keyCode),
   ),
-  [hotKeyRefs.REQUEST_SHOW_CREATE.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.n.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.n.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_QUICK_CREATE.id]: keyBinds(
-    keyComb(false, true, false, true, keyboardKeys.n.keyCode),
-    keyComb(true, true, false, false, keyboardKeys.n.keyCode),
+  [hotKeyRefs.REQUEST_CREATE_HTTP.id]: keyBinds(
+    [
+      keyComb(false, false, false, true, keyboardKeys.n.keyCode),
+      keyComb(false, true, false, true, keyboardKeys.n.keyCode),
+    ],
+    [
+      keyComb(true, false, false, false, keyboardKeys.n.keyCode),
+      keyComb(true, true, false, false, keyboardKeys.n.keyCode),
+    ]
   ),
   [hotKeyRefs.REQUEST_SHOW_DELETE.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.delete.keyCode),

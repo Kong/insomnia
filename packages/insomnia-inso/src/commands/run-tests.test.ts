@@ -1,4 +1,6 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { generate as _generate, runTestsCli as _runTestsCli } from 'insomnia-testing';
+import { MockedFunction } from 'jest-mock';
 
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
@@ -8,8 +10,8 @@ import { runInsomniaTests, RunTestsOptions } from './run-tests';
 jest.mock('insomnia-testing');
 jest.mock('insomnia-send-request');
 
-const generate = _generate as jest.MockedFunction<typeof _generate>;
-const runTestsCli = _runTestsCli as jest.MockedFunction<typeof _runTestsCli>;
+const generate = _generate as MockedFunction<typeof _generate>;
+const runTestsCli = _runTestsCli as MockedFunction<typeof _runTestsCli>;
 
 describe('runInsomniaTests()', () => {
   beforeAll(() => {

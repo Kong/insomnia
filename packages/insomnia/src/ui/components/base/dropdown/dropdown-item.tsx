@@ -7,7 +7,7 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 interface Props {
   addIcon?: boolean; // TODO(TSCONVERSION) some consumers are passing this prop but it appears to be unused
   title?: string;
-  buttonClass?: React.ComponentType;
+  buttonClass?: React.ElementType;
   stayOpenAfterClick?: boolean;
   value?: any;
   disabled?: boolean;
@@ -19,11 +19,11 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class DropdownItem extends PureComponent<Props> {
-  _handleClick(e) {
+  _handleClick(event: React.MouseEvent) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
     if (stayOpenAfterClick) {
-      e.stopPropagation();
+      event.stopPropagation();
     }
 
     if (!onClick || disabled) {
@@ -31,9 +31,9 @@ export class DropdownItem extends PureComponent<Props> {
     }
 
     if (this.props.hasOwnProperty('value')) {
-      onClick(this.props.value, e);
+      onClick(this.props.value, event);
     } else {
-      onClick(e);
+      onClick(event);
     }
   }
 
@@ -66,7 +66,6 @@ export class DropdownItem extends PureComponent<Props> {
       onClick: this._handleClick,
       ...props,
     };
-    // @ts-expect-error -- TSCONVERSION
     return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }

@@ -1,29 +1,20 @@
 /** @type { import('@jest/types').Config.InitialOptions } */
 module.exports = {
-  // preset: '../../jest-preset.js', // DOES NOT WORK
-  // same as preset:
-  collectCoverage: false,
+  preset: '../../jest-preset.js',
   globals: {
     'ts-jest': {
       isolatedModules: true,
     },
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  resetMocks: true,
-  resetModules: true,
-  testRegex: ['.+\\.test\\.tsx?$'],
-  transform: { '^.+\\.tsx?$': 'ts-jest' },
-
-  // extended from preset:
   cache: false,
-  modulePathIgnorePatterns: ['<rootDir>/network/.*/__mocks__'],
-  rootDir: 'src',
-  setupFiles: ['./__jest__/setup.ts'],
-  setupFilesAfterEnv: ['./__jest__/setup-after-env.ts'],
+  modulePathIgnorePatterns: ['./src/network/.*/__mocks__'],
+  setupFiles: ['./src/__jest__/setup.ts'],
+  setupFilesAfterEnv: ['./src/__jest__/setup-after-env.ts'],
   testEnvironment: 'jsdom',
   verbose: true,
   moduleNameMapper: {
-    '\\.(css|less|png)$': '<rootDir>/__mocks__/dummy.ts',
-    'styled-components': '<rootDir>/../node_modules/styled-components',
+    '\\.(css|less|png)$': '<rootDir>/src/__mocks__/dummy.ts',
+    'styled-components': '<rootDir>/node_modules/styled-components',
+    'jsonpath-plus': '<rootDir>/node_modules/jsonpath-plus/dist/index-node-cjs.cjs',
   },
 };

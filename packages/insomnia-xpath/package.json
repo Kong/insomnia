@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-xpath",
-  "version": "2.13.0-beta.0",
+  "version": "3.3.1-beta.1",
   "author": "Kong <office@konghq.com>",
   "description": "Query XML using XPath",
   "license": "MIT",
@@ -30,10 +30,12 @@
     "test": "jest --silent"
   },
   "devDependencies": {
-    "@types/xmldom": "0.1.30"
+    "@jest/globals": "^28.1.0",
+    "@types/xmldom": "0.1.30",
+    "jest": "^28.1.0"
   },
   "dependencies": {
-    "insomnia-cookies": "2.13.0-beta.0",
+    "insomnia-cookies": "3.3.1-beta.1",
     "xmldom": "^0.5.0",
     "xpath": "0.0.32"
   }

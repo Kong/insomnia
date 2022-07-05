@@ -43,12 +43,12 @@ export class Tooltip extends PureComponent<Props, State> {
     visible: false,
   };
 
-  _setTooltipRef(n: HTMLDivElement) {
-    this._tooltip = n;
+  _setTooltipRef(tooltip: HTMLDivElement) {
+    this._tooltip = tooltip;
   }
 
-  _setBubbleRef(n: HTMLDivElement) {
-    this._bubble = n;
+  _setBubbleRef(bubble: HTMLDivElement) {
+    this._bubble = bubble;
   }
 
   _handleStopClick(event: React.MouseEvent<HTMLDivElement>) {

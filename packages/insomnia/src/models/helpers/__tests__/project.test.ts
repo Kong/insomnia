@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { DEFAULT_PROJECT_ID } from '../../project';
 import { sortProjects } from '../project';
 

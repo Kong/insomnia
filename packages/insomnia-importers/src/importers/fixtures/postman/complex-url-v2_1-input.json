@@ -18,7 +18,10 @@
         "url": {
           "raw": "https://insomnia.rest?foo=bar",
           "protocol": "https",
-          "host": ["insomnia", "rest"],
+          "host": [
+            "insomnia",
+            "rest"
+          ],
           "query": [
             {
               "key": "foo",

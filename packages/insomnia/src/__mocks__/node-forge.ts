@@ -1,7 +1,6 @@
 /*
  * This is a stupid little mock that basically disabled encryption.
- * The reason it is needed is because the Forge module loader doesn't
- * play along with Jest.
+ * The reason it is needed is because the Forge module loader doesn't play along with Jest.
  */
 import forge from '../../node_modules/node-forge/lib/index';
 
@@ -33,10 +32,10 @@ module.exports = {
     },
   },
   random: {
-    getBytesSync(n: number) {
+    getBytesSync(num: number) {
       let s = '';
 
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < num; i++) {
         s += 'a';
       }
 

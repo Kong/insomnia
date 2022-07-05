@@ -1,7 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { Fragment, PureComponent } from 'react';
+import React, { FC, Fragment } from 'react';
 
-import { AUTOBIND_CFG } from '../../../../common/constants';
 import { CodeEditor,  CodeEditorOnChange } from '../../codemirror/code-editor';
 
 interface Props {
@@ -12,29 +10,23 @@ interface Props {
   className?: string;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RawEditor extends PureComponent<Props> {
-  render() {
-    const {
-      className,
-      content,
-      contentType,
-      onChange,
-      uniquenessKey,
-    } = this.props;
-    return (
-      <Fragment>
-        <CodeEditor
-          manualPrettify
-          uniquenessKey={uniquenessKey}
-          defaultValue={content}
-          className={className}
-          enableNunjucks
-          onChange={onChange}
-          mode={contentType}
-          placeholder="..."
-        />
-      </Fragment>
-    );
-  }
-}
+export const RawEditor: FC<Props> = ({
+  className,
+  content,
+  contentType,
+  onChange,
+  uniquenessKey,
+}) => (
+  <Fragment>
+    <CodeEditor
+      manualPrettify
+      uniquenessKey={uniquenessKey}
+      defaultValue={content}
+      className={className}
+      enableNunjucks
+      onChange={onChange}
+      mode={contentType}
+      placeholder="..."
+    />
+  </Fragment>
+);

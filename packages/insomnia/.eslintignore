@@ -1,4 +1,6 @@
 build
 bin
 send-request
-**/main.min.js
+coverage
+src/main.min.js
+src/preload.js

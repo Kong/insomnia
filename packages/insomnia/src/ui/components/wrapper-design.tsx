@@ -1,4 +1,4 @@
-import { IRuleResult } from '@stoplight/spectral';
+import { IRuleResult } from '@stoplight/spectral-core';
 import { Button, Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -6,6 +6,7 @@ import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
@@ -13,7 +14,7 @@ import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import previewIcon from '../images/icn-eye.svg';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
-import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
@@ -33,8 +34,8 @@ const EmptySpaceHelper = styled.div({
 const spectral = initializeSpectral();
 
 const RenderPageHeader: FC<Pick<Props,
-| 'gitSyncDropdown'
-| 'handleActivityChange'
+  | 'gitSyncDropdown'
+  | 'handleActivityChange'
 >> = ({
   gitSyncDropdown,
   handleActivityChange,
@@ -50,6 +51,11 @@ const RenderPageHeader: FC<Pick<Props,
 
     const workspaceId = activeWorkspace._id;
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
+
+    trackSegmentEvent(SegmentEvent.buttonClick, {
+      type: 'design preview toggle',
+      action: previewHidden ? 'show' : 'hide',
+    });
   }, [activeWorkspace, previewHidden]);
 
   return (
@@ -59,7 +65,7 @@ const RenderPageHeader: FC<Pick<Props,
         <Fragment>
           <Button variant="contained" onClick={handleTogglePreview}>
             <img src={previewIcon} alt="Preview" width="15" />
-            &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+              &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
           </Button>
           {gitSyncDropdown}
         </Fragment>
@@ -209,7 +215,7 @@ const RenderPreview: FC = () => {
 
   try {
     swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
-  } catch (err) {}
+  } catch (err) { }
 
   if (!swaggerUiSpec) {
     swaggerUiSpec = {};
@@ -247,7 +253,7 @@ const RenderPreview: FC = () => {
   );
 };
 
-const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor>}> = ({ editor }) => {
+const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
     if (!editor.current) {
@@ -302,32 +308,19 @@ export const WrapperDesign: FC<Props> = ({
 }) => {
   const editor = createRef<UnconnectedCodeEditor>();
 
-  const renderPageHeader = useCallback(() => (
-    <RenderPageHeader
-      gitSyncDropdown={gitSyncDropdown}
-      handleActivityChange={handleActivityChange}
-    />
-  ), [gitSyncDropdown, handleActivityChange]);
-
-  const renderEditor = useCallback(() => (
-    <RenderEditor editor={editor} />
-  ), [editor]);
-
-  const renderPreview = useCallback(() => (
-    <RenderPreview />
-  ), []);
-
-  const renderPageSidebar = useCallback(() => (
-    <RenderPageSidebar editor={editor} />
-  ), [editor]);
-
   return (
     <PageLayout
       wrapperProps={wrapperProps}
-      renderPageHeader={renderPageHeader}
-      renderPaneOne={renderEditor}
-      renderPaneTwo={renderPreview}
-      renderPageSidebar={renderPageSidebar}
+      renderPageHeader={
+        <RenderPageHeader
+          gitSyncDropdown={gitSyncDropdown}
+          handleActivityChange={handleActivityChange}
+        />}
+      renderPaneOne={<RenderEditor editor={editor} />}
+      renderPaneTwo={<RenderPreview />}
+      renderPageSidebar={<RenderPageSidebar editor={editor} />}
     />
   );
 };
+
+export default WrapperDesign;

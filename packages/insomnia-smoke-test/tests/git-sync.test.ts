@@ -14,8 +14,8 @@ test('Sign in with GitHub', async ({ app, page }) => {
       const webContents = electron.BrowserWindow.getAllWindows()[0].webContents;
       // Remove all navigation listeners so that only the one we inject will run
       webContents.removeAllListeners('will-navigate');
-      webContents.on('will-navigate', (e, url) => {
-        e.preventDefault();
+      webContents.on('will-navigate', (event: Event, url: string) => {
+        event.preventDefault();
         const parsedUrl = new URL(url);
         // We use the same state parameter that the app created to assert that we prevent CSRF
         const stateSearchParam = parsedUrl.searchParams.get('state') || '';
@@ -44,5 +44,5 @@ test('Sign in with GitHub', async ({ app, page }) => {
     .locator('input[name="uri"]')
     .fill('https://github.com/insomnia/example-repo');
 
-  await page.locator('text=Done').click();
+  await page.locator('data-testid=git-repository-settings-modal__sync-btn').click();
 });

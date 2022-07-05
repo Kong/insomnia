@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { EditorFromTextArea, LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
+import CodeMirror, { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { OpenDialogOptions } from 'electron';
@@ -21,12 +21,12 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
+import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
-import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
@@ -101,7 +101,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
-  _queryEditor: null | EditorFromTextArea = null;
+  _queryEditor: null | CodeMirror.Editor = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -272,7 +272,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleQueryEditorInit(codeMirror: EditorFromTextArea) {
+  _handleQueryEditorInit(codeMirror: CodeMirror.Editor) {
     this._queryEditor = codeMirror;
     // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
     window.cm = this._queryEditor;
@@ -293,7 +293,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       schemaIsFetching: false,
     };
     let responsePatch: ResponsePatch | null = null;
-
+    if (!rawRequest.url) {
+      return;
+    }
     try {
       const bodyJson = JSON.stringify({
         query: getIntrospectionQuery(),
@@ -494,7 +496,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _setDocumentAST(query: string) {
     try {
       this._documentAST = parse(query);
-    } catch (e) {
+    } catch (error) {
       this._documentAST = null;
     }
   }
@@ -632,22 +634,21 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   renderSchemaFetchMessage() {
-    let message;
+    if (!this.props.request.url) {
+      return '';
+    }
     const { schemaLastFetchTime, schemaIsFetching } = this.state;
-
     if (schemaIsFetching) {
-      message = 'fetching schema...';
-    } else if (schemaLastFetchTime > 0) {
-      message = (
+      return 'fetching schema...';
+    }
+    if (schemaLastFetchTime > 0) {
+      return (
         <span>
           schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
         </span>
       );
-    } else {
-      message = <span>schema not yet fetched</span>;
     }
-
-    return message;
+    return <span>schema not yet fetched</span>;
   }
 
   static renderMarkdown(text: string) {

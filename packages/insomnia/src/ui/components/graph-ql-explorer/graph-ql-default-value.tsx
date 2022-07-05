@@ -8,7 +8,6 @@ interface Props {
 }
 
 export const GraphQLDefaultValue: FC<Props> = memo(({ field }) => {
-  // Make Flow happy :/
   const fieldO: Record<string, any> = field;
 
   if ('defaultValue' in fieldO && fieldO.defaultValue !== undefined) {

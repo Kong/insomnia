@@ -41,6 +41,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
+          NODE_OPTIONS: '--max_old_space_size=6144'
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
@@ -95,6 +96,12 @@ jobs:
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
 
+      - name: Create Docker Image artifacts
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          DOCKER_BUILDKIT=1 docker build --tag insomnia-inso:temp ./packages/insomnia-inso/
+          docker save insomnia-inso:temp -o ./packages/insomnia-inso/artifacts/inso-docker-image.tar
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -111,6 +118,15 @@ jobs:
             packages/insomnia/dist/*.AppImage
             packages/insomnia/dist/*.tar.gz
             packages/insomnia-inso/artifacts/*
+
+      - name: Upload source assets for Sentry
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-sentry
+          path: |
+            packages/insomnia/build/*.js
+            packages/insomnia/build/*.map
+            !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
     needs: build-and-upload-release-artifacts

@@ -68,7 +68,7 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
   }
 
-  _handleClick(e) {
+  _handleClick(event: React.MouseEvent<HTMLDivElement>) {
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -77,10 +77,17 @@ export class Modal extends PureComponent<ModalProps, State> {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
-    let target = e.target;
+    let target: ParentNode | null =
+      event.target instanceof HTMLElement ?
+        event.target : null;
+
     let shouldHide = false;
 
     for (let i = 0; i < 5; i++) {
+      if (!target) {
+        break;
+      }
+
       if (target instanceof HTMLElement && target.hasAttribute('data-close-modal')) {
         shouldHide = true;
         break;
@@ -95,8 +102,8 @@ export class Modal extends PureComponent<ModalProps, State> {
     }
   }
 
-  _setModalRef(n: HTMLDivElement) {
-    this._node = n;
+  _setModalRef(node: HTMLDivElement) {
+    this._node = node;
   }
 
   show(options?: ModalProps) {

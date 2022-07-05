@@ -11,7 +11,7 @@ const loadBaseEnvironmentForWorkspace = (db: Database, workspaceId: string): Env
     'Load base environment for the workspace `%s` from data store',
     workspaceId,
   );
-  const items = db.Environment.filter(e => e.parentId === workspaceId);
+  const items = db.Environment.filter(environment => environment.parentId === workspaceId);
   logger.trace('Found %d.', items.length);
   return ensureSingle(items, 'base environment');
 };
@@ -59,11 +59,11 @@ export const promptEnvironment = async (
 
   // Get the sub environments
   const baseWorkspaceEnv = loadBaseEnvironmentForWorkspace(db, workspaceId);
-  const subEnvs = db.Environment.filter(
-    e => e.parentId === baseWorkspaceEnv._id,
+  const subEnvironments = db.Environment.filter(
+    subEnv => subEnv.parentId === baseWorkspaceEnv._id,
   );
 
-  if (!subEnvs.length) {
+  if (!subEnvironments.length) {
     logger.trace('No sub environments found, using base environment');
     return baseWorkspaceEnv;
   }
@@ -71,7 +71,7 @@ export const promptEnvironment = async (
   const prompt = new AutoComplete({
     name: 'environment',
     message: 'Select an environment',
-    choices: subEnvs.map(e => getDbChoice(generateIdIsh(e, 14), e.name)),
+    choices: subEnvironments.map(subEnv => getDbChoice(generateIdIsh(subEnv, 14), subEnv.name)),
   });
   logger.trace('Prompt for environment');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();

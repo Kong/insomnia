@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { HotKeyRegistry } from 'insomnia-common';
 import { noop } from 'ramda-adjunct';
-import React, { PureComponent } from 'react';
+import React, { ElementRef, MouseEvent, PureComponent } from 'react';
 import { PropsWithChildren } from 'react';
 import { createRef } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
@@ -13,7 +13,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveRequest } from '../../redux/selectors';
 import { Highlight } from '../base/highlight';
-import { RequestGroupActionsDropdown, UnconnectedRequestGroupActionsDropdown } from '../dropdowns/request-group-actions-dropdown';
+import { RequestGroupActionsDropdown } from '../dropdowns/request-group-actions-dropdown';
 import { showModal } from '../modals';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
@@ -30,8 +30,6 @@ interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleActivateRequest: Function;
-  handleCreateRequest: (id: string) => any;
-  handleCreateRequestGroup: (requestGroup: string) => any;
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
@@ -49,7 +47,7 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
     dragDirection: 0,
   };
 
-  private dropdownRef = createRef<UnconnectedRequestGroupActionsDropdown>();
+  private dropdownRef = createRef<ElementRef<typeof RequestGroupActionsDropdown>>();
   private expandTagRef = createRef<HTMLDivElement>();
 
   getExpandTag() {
@@ -61,13 +59,13 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
   }
 
-  _handleShowActions(e) {
-    e.preventDefault();
+  _handleShowActions(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
 
     this.dropdownRef.current?.show();
   }
 
-  setDragDirection(dragDirection) {
+  setDragDirection(dragDirection: number) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({
         dragDirection,
@@ -90,8 +88,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
       requestGroup,
       isCollapsed,
       isActive,
-      handleCreateRequest,
-      handleCreateRequestGroup,
       handleDuplicateRequestGroup,
       isDragging,
       isDraggingOver,
@@ -145,8 +141,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
               ref={this.dropdownRef}
-              handleCreateRequest={handleCreateRequest}
-              handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleShowSettings={this._handleShowRequestGroupSettings}
               requestGroup={requestGroup}
@@ -172,7 +166,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               handleSetRequestPinned={noop}
               isActive={false}
               requestGroup={requestGroup}
-              requestCreate={handleCreateRequest}
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false} // Necessary so that plugin actions work

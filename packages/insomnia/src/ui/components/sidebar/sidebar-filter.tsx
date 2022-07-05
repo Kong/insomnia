@@ -11,8 +11,6 @@ import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
   onChange: (value: string) => Promise<void>;
-  requestCreate: () => void;
-  requestGroupCreate: () => void;
   sidebarSort: (sortOrder: SortOrder) => void;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
@@ -23,8 +21,8 @@ export class SidebarFilter extends PureComponent<Props> {
   _input: HTMLInputElement | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
 
-  _setInputRef(n: HTMLInputElement) {
-    this._input = n;
+  _setInputRef(input: HTMLInputElement) {
+    this._input = input;
   }
 
   _handleClearFilter() {
@@ -37,22 +35,14 @@ export class SidebarFilter extends PureComponent<Props> {
     }
   }
 
-  _handleOnChange(e: React.SyntheticEvent<HTMLInputElement>) {
-    const value = e.currentTarget.value;
+  _handleOnChange(event: React.SyntheticEvent<HTMLInputElement>) {
+    const value = event.currentTarget.value;
     if (this._triggerTimeout) {
       clearTimeout(this._triggerTimeout);
     }
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
     }, DEBOUNCE_MILLIS);
-  }
-
-  _handleRequestGroupCreate() {
-    this.props.requestGroupCreate();
-  }
-
-  _handleRequestCreate() {
-    this.props.requestCreate();
   }
 
   _handleKeydown(event: KeyboardEvent) {
@@ -82,8 +72,6 @@ export class SidebarFilter extends PureComponent<Props> {
           </div>
           <SidebarSortDropdown handleSort={sidebarSort} />
           <SidebarCreateDropdown
-            handleCreateRequest={this._handleRequestCreate}
-            handleCreateRequestGroup={this._handleRequestGroupCreate}
             hotKeyRegistry={hotKeyRegistry}
           />
         </div>

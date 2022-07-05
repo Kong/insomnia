@@ -1,8 +1,10 @@
+import { describe, expect, it } from '@jest/globals';
+import { OpenAPIV3 } from 'openapi-types';
+
 import { ParameterSchema, RequestTerminationPlugin, RequestValidatorPlugin, xKongPluginKeyAuth, xKongPluginRequestTermination, xKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OA3Parameter } from '../types/openapi3';
-import { getSpec, pluginDummy, tags, UserDCPlugin } from './jest/test-helpers';
+import { getSpec, pluginDummy, tags } from './jest/test-helpers';
 import { ALLOW_ALL_SCHEMA, generateBodyOptions, generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
-
 describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
     it('generates plugin given a spec with a plugin attached', async () => {
@@ -24,9 +26,9 @@ describe('plugins', () => {
         },
       });
 
-      const result = generateGlobalPlugins(api, tags);
+      const result = await generateGlobalPlugins(api, tags);
 
-      expect(result.plugins).toEqual<UserDCPlugin[]>([
+      expect(result.plugins).toEqual([
         {
           name: 'dummy',
           tags,
@@ -62,7 +64,7 @@ describe('plugins', () => {
       });
     });
 
-    it('does not add extra things to the plugin', () => {
+    it('does not add extra things to the plugin', async () => {
       const spec = getSpec({
         [xKongPluginRequestTermination]: {
           name: 'request-termination',
@@ -76,15 +78,14 @@ describe('plugins', () => {
         },
       });
 
-      const result = generateGlobalPlugins(spec, tags);
+      const result = await generateGlobalPlugins(spec, tags);
 
-      expect(result.plugins).toEqual<RequestTerminationPlugin[]>([
+      expect(result.plugins as RequestTerminationPlugin[]).toEqual([
         {
           name: 'request-termination',
           mad: 'max',
           tags,
           config: {
-            // @ts-expect-error this is intentionally passing in an extra property
             max: 'is mad',
             status_code: 403,
             message: 'So long and thanks for all the fish!',
@@ -95,6 +96,24 @@ describe('plugins', () => {
   });
 
   describe('generateRequestValidatorPlugin()', () => {
+    const api = getSpec({
+      [xKongPluginRequestValidator]: {
+        name: 'request-validator',
+        enabled: false,
+        config: {
+          body_schema: ALLOW_ALL_SCHEMA,
+          verbose_response: true,
+        },
+      },
+      ...pluginDummy,
+      [xKongPluginKeyAuth]: {
+        name: 'key-auth',
+        config: {
+          key_names: ['x-api-key'],
+        },
+      },
+    });
+
     const parameterSchema: ParameterSchema = {
       explode: false,
       in: 'path',
@@ -104,7 +123,7 @@ describe('plugins', () => {
       style: 'form',
     };
 
-    it('should retain config properties', () => {
+    it('should retain config properties', async () => {
       const plugin: RequestValidatorPlugin = {
         name: 'request-validator',
         enabled: true,
@@ -115,8 +134,8 @@ describe('plugins', () => {
           allowed_content_types: ['application/json'],
         },
       };
-      const generated = generateRequestValidatorPlugin({ plugin, tags });
-      expect(generated).toStrictEqual<RequestValidatorPlugin>({
+      const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
+      expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
         tags,
@@ -128,7 +147,7 @@ describe('plugins', () => {
       });
     });
 
-    it('should not add config properties if they are not defined', () => {
+    it('should not add config properties if they are not defined', async () => {
       const plugin: RequestValidatorPlugin = {
         name: 'request-validator',
         enabled: true,
@@ -140,8 +159,8 @@ describe('plugins', () => {
           // allowed_content_types: ['application/json'],
         },
       };
-      const generated = generateRequestValidatorPlugin({ plugin, tags });
-      expect(generated).toStrictEqual<RequestValidatorPlugin>({
+      const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
+      expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
         tags,
@@ -154,7 +173,7 @@ describe('plugins', () => {
     });
 
     describe('parameter_schema', () => {
-      it('should not add parameter_schema if no parameters present', () => {
+      it('should not add parameter_schema if no parameters present', async () => {
         const plugin: RequestValidatorPlugin = {
           name: 'request-validator',
           config: {
@@ -162,26 +181,27 @@ describe('plugins', () => {
           },
         };
 
-        const generated1 = generateRequestValidatorPlugin({ plugin, tags });
-        expect(generated1.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated1 = await generateRequestValidatorPlugin({ plugin, tags, api });
+        expect(generated1.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
 
-        const generated2 = generateRequestValidatorPlugin({
+        const generated2 = await generateRequestValidatorPlugin({
           plugin,
           operation: {
             parameters: [],
           },
           tags,
+          api,
         });
-        expect(generated2.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        expect(generated2.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
       });
 
-      it('should convert operation parameters to parameter_schema', () => {
+      it('should convert operation parameters to parameter_schema', async () => {
         const param: OA3Parameter = {
           in: 'query',
           explode: true,
@@ -199,8 +219,8 @@ describe('plugins', () => {
         const operation: OA3Operation = {
           parameters: [param],
         };
-        const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
             {
@@ -215,7 +235,7 @@ describe('plugins', () => {
         });
       });
 
-      it('should return default if operation parameter schema not defined on any parameters', () => {
+      it('should return default if operation parameter schema not defined on any parameters', async () => {
         const operation: OA3Operation = {
           parameters: [
             {
@@ -224,8 +244,8 @@ describe('plugins', () => {
             },
           ],
         };
-        const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
             {
@@ -240,7 +260,7 @@ describe('plugins', () => {
         });
       });
 
-      it('should ignore parameters without schema', () => {
+      it('should ignore parameters without schema', async () => {
         const paramWithSchema: OA3Parameter = {
           in: 'query',
           explode: true,
@@ -265,8 +285,8 @@ describe('plugins', () => {
             paramWithoutSchema,
           ],
         };
-        const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
             {
@@ -291,45 +311,44 @@ describe('plugins', () => {
     });
 
     describe('body_schema and allowed_content_types', () => {
-      it('should not add body_schema or allowed_content_types if no body present', () => {
+      it('should not add body_schema or allowed_content_types if no body present', async () => {
         const plugin: RequestValidatorPlugin = {
           name: 'request-validator',
           config: {
             body_schema: ALLOW_ALL_SCHEMA,
           },
         };
-        const generated = generateRequestValidatorPlugin({ plugin, tags });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
       });
 
-      it('should return default if no operation request body content defined', () => {
+      it('should return default if no operation request body content defined', async () => {
         const defaultReqVal: RequestValidatorPlugin['config'] = {
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         };
-        const op1: OA3Operation = {
-          requestBody: {},
-        };
-        const op2: OA3Operation = {
+        const op1: OpenAPIV3.OperationObject = {};
+        const op2: OpenAPIV3.OperationObject = {
           requestBody: {
-            $ref: 'non-existent',
+            $ref: '#/components/non-existent',
           },
         };
-        expect(generateRequestValidatorPlugin({ operation: op1, tags }).config).toStrictEqual(
+        const apiWithNoComponents = { ...api, components: {} };
+        expect((await generateRequestValidatorPlugin({ operation: op1, tags, api: apiWithNoComponents })).config).toStrictEqual(
           defaultReqVal,
         );
-        expect(generateRequestValidatorPlugin({ operation: op2, tags }).config).toStrictEqual(
+        expect((await generateRequestValidatorPlugin({ operation: op2, tags, api: apiWithNoComponents })).config).toStrictEqual(
           defaultReqVal,
         );
-        expect(generateRequestValidatorPlugin({ tags }).config).toStrictEqual(
+        expect((await generateRequestValidatorPlugin({ tags, api: apiWithNoComponents })).config).toStrictEqual(
           defaultReqVal,
         );
       });
 
-      it('should add non-json media types to allowed content types and not add body schema', () => {
+      it('should add non-json media types to allowed content types and not add body schema', async () => {
         const operation: OA3Operation = {
           requestBody: {
             content: {
@@ -338,15 +357,15 @@ describe('plugins', () => {
             },
           },
         };
-        const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
           allowed_content_types: ['application/xml', 'text/yaml'],
         });
       });
 
-      it('should add body_schema and allowed content types', () => {
+      it('should add body_schema and allowed content types', async () => {
         const schemaXml = {
           type: 'Object',
           properties: {
@@ -365,37 +384,37 @@ describe('plugins', () => {
             },
           },
         };
-        const operation: OA3Operation = {
+        const operation: OpenAPIV3.OperationObject = {
           requestBody: {
             content: {
               'application/xml': {
                 schema: schemaXml,
-              },
+              } as OpenAPIV3.SchemaObject,
               'application/json': {
                 schema: schemaJson,
-              },
+              } as OpenAPIV3.SchemaObject,
             },
           },
         };
-        const generated = generateRequestValidatorPlugin({ tags, operation });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
           allowed_content_types: ['application/xml', 'application/json'],
         });
       });
 
-      it('should default body_schema if no schema is defined or generated', () => {
-        const generated = generateRequestValidatorPlugin({ tags, operation: {} });
-        expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
+      it('should default body_schema if no schema is defined or generated', async () => {
+        const generated = await generateRequestValidatorPlugin({ tags, operation: {}, api });
+        expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
       });
     });
     describe('body_schema generateBodyOptions FTI-3278', () => {
-      it('should keep to properties[].type unchanged nullable is not set', () => {
-        const generated = generateBodyOptions({
+      it('should keep to properties[].type unchanged nullable is not set', async () => {
+        const generated = await generateBodyOptions(api, {
           requestBody: {
             content: {
               'application/json': {
@@ -412,8 +431,8 @@ describe('plugins', () => {
         });
         expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":\"string\"}}}');
       });
-      it('should keep to properties[].type unchanged nullable is false', () => {
-        const generated = generateBodyOptions({
+      it('should keep to properties[].type unchanged nullable is false', async () => {
+        const generated = await generateBodyOptions(api, {
           requestBody: {
             content: {
               'application/json': {
@@ -431,8 +450,8 @@ describe('plugins', () => {
         });
         expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":\"string\",\"nullable\":false}}}');
       });
-      it('should append null to properties[].type if nullable is true', () => {
-        const generated = generateBodyOptions({
+      it('should append null to properties[].type if nullable is true', async () => {
+        const generated = await generateBodyOptions(api, {
           requestBody: {
             content: {
               'application/json': {

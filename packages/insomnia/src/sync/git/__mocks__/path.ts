@@ -1,5 +1,8 @@
+import { jest } from '@jest/globals';
+import pathOriginal from 'path';
+
 // eslint-disable-next-line filenames/match-exported
-const path = jest.requireActual('path');
+const path = jest.requireActual('path') as typeof pathOriginal;
 
 const exportObj = { __mockPath, ...path };
 

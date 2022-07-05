@@ -39,12 +39,12 @@ export class AskModal extends PureComponent<{}, State> {
   _doneCallback: AskModalOptions['onDone'];
   _promiseCallback: (value: boolean | PromiseLike<boolean>) => void = () => {};
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
-  _setYesButtonRef(n: HTMLButtonElement) {
-    this.yesButton = n;
+  _setYesButtonRef(yesButton: HTMLButtonElement) {
+    this.yesButton = yesButton;
   }
 
   async _handleYes() {

@@ -1,7 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, useCallback } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Request, RequestParameter } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -12,25 +10,18 @@ interface Props {
   request: Request;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestParametersEditor extends PureComponent<Props> {
-  _handleBulkUpdate(paramsString: string) {
-    const { onChange, request } = this.props;
+export const RequestParametersEditor: FC<Props> = ({
+  onChange,
+  request,
+  bulk,
+}) => {
+  const handleBulkUpdate = useCallback((paramsString: string) => {
+    const params: {
+      name: string;
+      value: string;
+    }[] = [];
 
-    const params = RequestParametersEditor._getParamsFromString(paramsString);
-
-    onChange(request, params);
-  }
-
-  _handleKeyValueUpdate(parameters: RequestParameter[]) {
-    const { onChange, request } = this.props;
-    onChange(request, parameters);
-  }
-
-  static _getParamsFromString(paramsString: string) {
-    const params: { name: string; value: string }[] = [];
     const rows = paramsString.split(/\n+/);
-
     for (const row of rows) {
       const [rawName, rawValue] = row.split(/:(.*)$/);
       const name = (rawName || '').trim();
@@ -46,51 +37,46 @@ export class RequestParametersEditor extends PureComponent<Props> {
       });
     }
 
-    return params;
-  }
+    onChange(request, params);
+  }, [onChange, request]);
 
-  _getQueriesString() {
-    const { parameters } = this.props.request;
-    let paramsString = '';
-
-    for (const param of parameters) {
-      // Make sure it's not disabled
-      if (param.disabled) {
-        continue;
-      }
-
-      // Make sure it's not blank
-      if (!param.name && !param.value) {
-        continue;
-      }
-
-      paramsString += `${param.name}: ${param.value}\n`;
+  let paramsString = '';
+  for (const param of request.parameters) {
+    // Make sure it's not disabled
+    if (param.disabled) {
+      continue;
+    }
+    // Make sure it's not blank
+    if (!param.name && !param.value) {
+      continue;
     }
 
-    return paramsString;
+    paramsString += `${param.name}: ${param.value}\n`;
   }
 
-  render() {
-    const {
-      bulk,
-      request,
-    } = this.props;
-    return bulk ? (
+  const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
+    onChange(request, parameters);
+  }, [onChange, request]);
+
+  if (bulk) {
+    return (
       <CodeEditor
-        onChange={this._handleBulkUpdate}
-        defaultValue={this._getQueriesString()}
+        onChange={handleBulkUpdate}
+        defaultValue={paramsString}
         enableNunjucks
-      />
-    ) : (
-      <KeyValueEditor
-        sortable
-        allowMultiline
-        namePlaceholder="name"
-        valuePlaceholder="value"
-        descriptionPlaceholder="description"
-        pairs={request.parameters}
-        onChange={this._handleKeyValueUpdate}
       />
     );
   }
-}
+
+  return (
+    <KeyValueEditor
+      sortable
+      allowMultiline
+      namePlaceholder="name"
+      valuePlaceholder="value"
+      descriptionPlaceholder="description"
+      pairs={request.parameters}
+      onChange={onChangeParameter}
+    />
+  );
+};

@@ -97,8 +97,8 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
     });
   }
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
+  _setDropdownRef(dropdown: Dropdown) {
+    this._dropdown = dropdown;
   }
 
   static _handleShowExport() {

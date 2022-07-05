@@ -76,6 +76,10 @@ declare module 'codemirror' {
      * Custom Insomnia Key. Used for sorting the hints
      */
     score: number;
+    /**
+     * Custom Insomnia Key. Used for snippet promises
+     */
+    text: string | (() => PromiseLike<unknown>);
   }
 
   interface ShowHintOptions {

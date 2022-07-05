@@ -83,7 +83,7 @@ const generateSuiteLines = (
   return lines;
 };
 
-const generateTestLines = (n: number, test?: Test | null) => {
+const generateTestLines = (num: number, test?: Test | null) => {
   if (!test) {
     return [];
   }
@@ -91,22 +91,22 @@ const generateTestLines = (n: number, test?: Test | null) => {
   const lines: string[] = [];
 
   // Define test it() block (all test cases are async by default)
-  lines.push(indent(n, `it('${escapeJsStr(test.name)}', async () => {`));
+  lines.push(indent(num, `it('${escapeJsStr(test.name)}', async () => {`));
 
   // Add helper variables that are necessary
   const { defaultRequestId } = test;
 
   if (typeof defaultRequestId === 'string') {
-    lines.push(indent(n, '// Set active request on global insomnia object'));
+    lines.push(indent(num, '// Set active request on global insomnia object'));
     lines.push(
-      indent(n, `insomnia.setActiveRequestId('${defaultRequestId}');`),
+      indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`),
     );
   }
 
   // Add user-defined test source
-  test.code && lines.push(indent(n + 1, test.code));
+  test.code && lines.push(indent(num + 1, test.code));
 
   // Close the it() block
-  lines.push(indent(n, '});'));
+  lines.push(indent(num, '});'));
   return lines;
 };

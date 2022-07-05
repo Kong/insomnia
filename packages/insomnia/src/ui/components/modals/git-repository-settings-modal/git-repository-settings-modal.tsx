@@ -4,7 +4,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { docsGitSync } from '../../../../common/documentation';
-import type { GitRepository } from '../../../../models/git-repository';
+import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
 import { deleteGitRepository } from '../../../../models/helpers/git-repository-operations';
 import { Link } from '../../base/link';
 import { Modal } from '../../base/modal';
@@ -15,6 +15,7 @@ import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
+import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
 interface State {
   gitRepository: GitRepository | null;
@@ -29,8 +30,8 @@ export class GitRepositorySettingsModal extends PureComponent<{}, State> {
     gitRepository: null,
   };
 
-  _setModalRef(n: Modal) {
-    this.modal = n;
+  _setModalRef(modal: Modal) {
+    this.modal = modal;
   }
 
   show(options: {
@@ -87,6 +88,8 @@ interface Props {
   onReset: () => void;
 }
 
+const oauth2Formats: OauthProviderName[] = ['github', 'gitlab', 'custom'];
+
 const ModalForm = (props: Props) => {
   const { gitRepository, onSubmit, onReset } = props;
 
@@ -99,8 +102,9 @@ const ModalForm = (props: Props) => {
 
   const initialTab = !gitRepository ? 'github' : oauth2format;
 
-  const [selectedTab, setTab] = useState(initialTab);
+  const [selectedTab, setTab] = useState<OauthProviderName>(initialTab);
 
+  const selectedTabIndex = oauth2Formats.indexOf(selectedTab);
   return (
     <>
       <ModalHeader>
@@ -115,13 +119,18 @@ const ModalForm = (props: Props) => {
         <ErrorBoundary>
           <Tabs
             className="react-tabs"
-            onSelect={(index: number) => setTab(index ? 'custom' : 'github')}
-            selectedIndex={selectedTab === 'github' ? 0 : 1}
+            onSelect={(index: number) => setTab(oauth2Formats[index])}
+            selectedIndex={selectedTabIndex}
           >
             <TabList>
               <Tab>
                 <button>
                   <i className="fa fa-github" /> GitHub
+                </button>
+              </Tab>
+              <Tab>
+                <button>
+                  <i className="fa fa-gitlab" /> GitLab
                 </button>
               </Tab>
               <Tab>
@@ -138,6 +147,18 @@ const ModalForm = (props: Props) => {
               }}
             >
               <GitHubRepositorySetupFormGroup
+                uri={gitRepository?.uri}
+                onSubmit={onSubmit}
+              />
+            </TabPanel>
+            <TabPanel
+              className="tabs__tab-panel"
+              selectedClassName="pad pad-top-sm"
+              style={{
+                overflow: 'hidden',
+              }}
+            >
+              <GitLabRepositorySetupFormGroup
                 uri={gitRepository?.uri}
                 onSubmit={onSubmit}
               />
@@ -166,8 +187,8 @@ const ModalForm = (props: Props) => {
               Reset
             </button>
           )}
-          <button type="submit" form={selectedTab} className="btn">
-            Done
+          <button type="submit" form={selectedTab} className="btn" data-testid="git-repository-settings-modal__sync-btn">
+            Sync
           </button>
         </div>
       </ModalFooter>

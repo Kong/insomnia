@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
+
 import { KeyAuthPlugin, xKongPluginKeyAuth } from '../types/kong';
 import { getSpec, tags } from './jest/test-helpers';
 import { generatePlugins } from './plugins';
@@ -5,17 +7,17 @@ import { generateServices } from './services';
 import { generateUpstreams } from './upstreams';
 
 describe('tags', () => {
-  it('test that tags are appended to Service entities', () => {
+  it('test that tags are appended to Service entities', async () => {
     const spec = getSpec();
-    const services = generateServices(spec, tags);
+    const services = await generateServices(spec, tags);
     services.forEach(service => {
       expect(service.tags).toEqual(tags);
     });
   });
 
-  it('test that tags are appended to Route entities', () => {
+  it('test that tags are appended to Route entities', async () => {
     const spec = getSpec();
-    const services = generateServices(spec, tags);
+    const services = await generateServices(spec, tags);
     services.forEach(service => {
       service.routes.forEach(route => {
         expect(route.tags).toEqual(tags);

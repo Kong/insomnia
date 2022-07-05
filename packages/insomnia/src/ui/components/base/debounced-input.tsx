@@ -6,8 +6,8 @@ import { debounce } from '../../../common/misc';
 
 interface Props {
   onChange: (value: string) => void;
-  onFocus?: Function;
-  onBlur?: Function;
+  onFocus?: (event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
+  onBlur?: (event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
   textarea?: boolean;
   delay?: number;
   placeholder?: string;
@@ -36,22 +36,22 @@ export class DebouncedInput extends PureComponent<Props> {
     }
   }
 
-  _handleChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this._handleValueChange?.(e.target.value);
+  _handleChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    this._handleValueChange?.(event.target.value);
   }
 
-  _handleFocus(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
+  _handleFocus(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = true;
-    this.props.onFocus?.(e);
+    this.props.onFocus?.(event);
   }
 
-  _handleBlur(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
+  _handleBlur(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = false;
-    this.props.onBlur?.(e);
+    this.props.onBlur?.(event);
   }
 
-  _setRef(n: HTMLTextAreaElement | HTMLInputElement) {
-    this._input = n;
+  _setRef(input: HTMLTextAreaElement | HTMLInputElement) {
+    this._input = input;
   }
 
   setAttribute(name: string, value: string) {

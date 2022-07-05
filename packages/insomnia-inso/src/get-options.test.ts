@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import commander from 'commander';
 import path from 'path';
 

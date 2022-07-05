@@ -47,9 +47,8 @@ class VariableEditorInternal extends PureComponent<Props, State> {
     this._resize();
   }
 
-  _handleChange(e) {
-    const name = e.target.value;
-
+  _handleChange(event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) {
+    const name = event.target.value;
     this._update(name);
   }
 
@@ -63,15 +62,15 @@ class VariableEditorInternal extends PureComponent<Props, State> {
     }, 200);
   }
 
-  _setSelectRef(n: HTMLSelectElement) {
-    this._select = n;
+  _setSelectRef(select: HTMLSelectElement) {
+    this._select = select;
     // Let it render, then focus the input
     setTimeout(() => {
       this._select?.focus();
     }, 100);
   }
 
-  async _update(value, noCallback = false) {
+  async _update(value: string, noCallback = false) {
     const { handleRender } = this.props;
     const cleanedValue = value
       .replace(/^{%/, '')

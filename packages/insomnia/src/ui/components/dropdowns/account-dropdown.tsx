@@ -67,7 +67,7 @@ export const AccountDropdownButton: FunctionComponent = () => {
                 href="https://insomnia.rest/pricing"
                 button
               >
-                <StyledIcon faIcon="fa-users" />{' '}Upgrade to Plus
+                <StyledIcon faIcon="fa-users" />{' '}Upgrade Now
                 <i className="fa fa-star surprise fa-outline" />
               </DropdownItem>
             )}

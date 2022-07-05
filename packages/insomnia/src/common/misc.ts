@@ -132,18 +132,21 @@ export function formatMethodName(method: string) {
   return methodName;
 }
 
-export function keyedDebounce<T extends Function>(callback: T, millis: number = DEBOUNCE_MILLIS): T {
-  let timeout;
-  let results = {};
-  // @ts-expect-error -- TSCONVERSION
-  const t: T = function(key, ...args) {
+export function keyedDebounce<T>(
+  callback: (t: Record<string, T[]>) => void,
+  millis: number = DEBOUNCE_MILLIS
+) {
+  let timeout: NodeJS.Timeout;
+  let results: Record<string, T[]> = {};
+  const t = function(key: string, ...args: T[]) {
     results[key] = args;
-    clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(() => {
       if (!Object.keys(results).length) {
         return;
       }
-
       callback(results);
       results = {};
     }, millis);
@@ -156,6 +159,7 @@ export function debounce<T extends Function>(
   milliseconds: number = DEBOUNCE_MILLIS,
 ): T {
   // For regular debounce, just use a keyed debounce with a fixed key
+  // @ts-expect-error -- unsound contravariance
   return keyedDebounce(results => {
     // eslint-disable-next-line prefer-spread -- don't know if there was a "this binding" reason for this being this way so I'm leaving it alone
     callback.apply(null, results.__key__);
@@ -358,7 +362,7 @@ export function pluralize(text: string) {
   return `${text.slice(0, text.length - chop)}${trailer}`;
 }
 
-export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false) {
+export function diffPatchObj(baseObj: any, patchObj: any, deep = false) {
   const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
 
   for (const prop in baseObj) {
@@ -446,14 +450,3 @@ export const toTitleCase = (value: string) => (
     .map(capitalize)
     .join(' ')
 );
-
-// Because node-libcurl changed some names that we used in the timeline
-export const LIBCURL_DEBUG_MIGRATION_MAP = {
-  HeaderIn: 'HEADER_IN',
-  DataIn: 'DATA_IN',
-  SslDataIn: 'SSL_DATA_IN',
-  HeaderOut: 'HEADER_OUT',
-  DataOut: 'DATA_OUT',
-  SslDataOut: 'SSL_DATA_OUT',
-  Text: 'TEXT',
-} as const;
