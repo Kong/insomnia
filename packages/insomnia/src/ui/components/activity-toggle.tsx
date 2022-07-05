@@ -1,6 +1,7 @@
-import { MultiSwitch } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import styled from 'styled-components';
 
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
@@ -8,34 +9,60 @@ import { isDesign } from '../../models/workspace';
 import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
 import { HandleActivityChange } from './wrapper';
 
+const StyledNav = styled.nav`
+  display: flex;
+  justify-content: space-between;
+  align-content: space-evenly;
+  font-weight: 500;
+  color: var(--color-font);
+  background: var(--hl-xs);
+  border: 0;
+  border-radius: 100px;
+  padding: var(--padding-xxs);
+  transform: scale(0.9);
+  transformOrigin: 'center';
+
+  & > * :not(:last-child) {
+    margin-right: var(--padding-xs);
+  }
+`;
+
+const StyledLink = styled(Link)`
+  min-width: 4rem;
+  margin: 0 auto;
+  text-transform: uppercase;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  padding: var(--padding-xs) var(--padding-xxs);
+  border-radius: var(--line-height-sm);
+  color: var(--hl)!important;
+  background: transparent;
+
+  &.active {
+    color: var(--color-font)!important;
+    background: var(--color-bg);
+  }
+
+  &:hover,
+  &:active {
+    text-decoration: none;
+  }
+`;
+
 interface Props {
   handleActivityChange: HandleActivityChange;
 }
 
 export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange }) => {
-  const choices = [
-    {
-      label: 'Design',
-      value: ACTIVITY_SPEC,
-    },
-    {
-      label: 'Debug',
-      value: ACTIVITY_DEBUG,
-    },
-    {
-      label: 'Test',
-      value: ACTIVITY_UNIT_TEST,
-    },
-  ];
-
   const activeActivity = useSelector(selectActiveActivity);
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
-  const onChange = useCallback((nextActivity: string) => {
+  const onChange = useCallback((e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, nextActivity: GlobalActivity) => {
+    // Prevent the default behavior in order to avoid extra re-render.
+    e.preventDefault();
     handleActivityChange({
       workspaceId: activeWorkspace?._id,
-      // TODO: unsound cast
-      nextActivity: nextActivity as GlobalActivity,
+      nextActivity,
     });
   }, [handleActivityChange, activeWorkspace]);
 
@@ -48,11 +75,34 @@ export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange 
   }
 
   return (
-    <MultiSwitch
-      name="activity-toggle"
-      onChange={onChange}
-      choices={choices}
-      selectedValue={activeActivity}
-    />
+    <StyledNav>
+      <StyledLink
+        to={ACTIVITY_SPEC}
+        className={activeActivity === ACTIVITY_SPEC ? 'active' : undefined }
+        onClick={e => {
+          onChange(e, ACTIVITY_SPEC);
+        }}
+      >
+        Design
+      </StyledLink>
+      <StyledLink
+        to={ACTIVITY_DEBUG}
+        className={activeActivity === ACTIVITY_DEBUG ? 'active' : undefined }
+        onClick={e => {
+          onChange(e, ACTIVITY_DEBUG);
+        }}
+      >
+        Debug
+      </StyledLink>
+      <StyledLink
+        to={ACTIVITY_UNIT_TEST}
+        className={activeActivity === ACTIVITY_UNIT_TEST ? 'active' : undefined }
+        onClick={e => {
+          onChange(e, ACTIVITY_UNIT_TEST);
+        }}
+      >
+        Test
+      </StyledLink>
+    </StyledNav>
   );
 };
