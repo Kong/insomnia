@@ -11,6 +11,7 @@ import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
+import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -26,7 +27,6 @@ interface Props extends Partial<DropdownProps> {
   hotKeyRegistry: HotKeyRegistry;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any;
-  handleCreateRequestGroup: (requestGroup: string) => any;
 }
 
 interface RequestGroupActionsDropdownHandle {
@@ -38,12 +38,11 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   hotKeyRegistry,
   handleShowSettings,
   handleDuplicateRequestGroup,
-  handleCreateRequestGroup,
   ...other
 }, ref) => {
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
-  const dropdownRef = useRef<Dropdown | null>(null);
+  const dropdownRef = useRef<Dropdown>(null);
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -72,9 +71,9 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     handleDuplicateRequestGroup(requestGroup);
   }, [requestGroup, handleDuplicateRequestGroup]);
 
-  const handleRequestGroupCreate = useCallback(() => {
-    handleCreateRequestGroup(requestGroup._id);
-  }, [handleCreateRequestGroup, requestGroup._id]);
+  const createGroup = useCallback(() => {
+    createRequestGroup(requestGroup._id);
+  }, [requestGroup._id]);
 
   const handleDeleteFolder = useCallback(() => {
     models.stats.incrementDeletedRequestsForDescendents(requestGroup).then(() => {
@@ -140,7 +139,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         <i className="fa fa-plus-circle" />New gRPC Request
       </DropdownItem>
 
-      <DropdownItem onClick={handleRequestGroupCreate}>
+      <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" /> New Folder
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
       </DropdownItem>

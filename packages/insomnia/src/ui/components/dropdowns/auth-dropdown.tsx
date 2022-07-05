@@ -1,5 +1,5 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import {
   AUTH_ASAP,
@@ -13,11 +13,11 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-  AUTOBIND_CFG,
   getAuthTypeName,
 } from '../../../common/constants';
 import * as models from '../../../models';
 import type { Request, RequestAuthentication } from '../../../models/request';
+import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -25,84 +25,106 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
+const AuthItem: FC<{
+  type: string;
+  nameOverride?: string;
+  isCurrent: (type: string) => boolean;
+  onClick: (type: string) => void;
+}> = ({ type, nameOverride, isCurrent, onClick }) => (
+  <DropdownItem onClick={onClick} value={type}>
+    {<i className={`fa fa-${isCurrent(type) ? 'check' : 'empty'}`} />}{' '}
+    {nameOverride || getAuthTypeName(type, true)}
+  </DropdownItem>
+);
+AuthItem.displayName = DropdownItem.name;
+
 interface Props {
-  onChange: (r: Request, arg1: RequestAuthentication) => Promise<Request>;
-  request: Request;
-  className?: string;
-  children?: ReactNode;
+  onChange: (request: Request, arg1: RequestAuthentication) => Promise<Request>;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class AuthDropdown extends PureComponent<Props> {
-  async _handleTypeChange(type: string) {
-    const { request, onChange } = this.props;
-    const { authentication } = request;
+export const AuthDropdown: FC<Props> = ({ onChange }) => {
+  const activeRequest = useSelector(selectActiveRequest);
 
-    if (type === authentication.type) {
-      // Type didn't change
+  const onClick = useCallback((type: string) => {
+    if (!activeRequest) {
       return;
     }
 
-    const newAuthentication = models.request.newAuth(type, authentication);
-    const defaultAuthentication = models.request.newAuth(authentication.type);
-
-    // Prompt the user if fields will change between new and old
-    for (const key of Object.keys(authentication)) {
-      if (key === 'type') {
-        continue;
-      }
-
-      const value = authentication[key];
-      const changedSinceDefault = defaultAuthentication[key] !== value;
-      const willChange = newAuthentication[key] !== value;
-
-      if (changedSinceDefault && willChange) {
-        await showModal(AlertModal, {
-          title: 'Switch Authentication?',
-          message: 'Current authentication settings will be lost',
-          addCancel: true,
-        });
-        break;
-      }
+    if (!('authentication' in activeRequest)) {
+      // gRPC Requests don't have `authentication`
+      return;
     }
 
-    onChange(request, newAuthentication);
+    const { authentication } = activeRequest;
+
+    const fn = async () => {
+      if (type === authentication.type) {
+      // Type didn't change
+        return;
+      }
+
+      const newAuthentication = models.request.newAuth(type, authentication);
+      const defaultAuthentication = models.request.newAuth(authentication.type);
+
+      // Prompt the user if fields will change between new and old
+      for (const key of Object.keys(authentication)) {
+        if (key === 'type') {
+          continue;
+        }
+
+        const value = authentication[key];
+        const changedSinceDefault = defaultAuthentication[key] !== value;
+        const willChange = newAuthentication[key] !== value;
+
+        if (changedSinceDefault && willChange) {
+          await showModal(AlertModal, {
+            title: 'Switch Authentication?',
+            message: 'Current authentication settings will be lost',
+            addCancel: true,
+          });
+          break;
+        }
+      }
+      onChange(activeRequest, newAuthentication);
+    };
+    fn();
+  }, [onChange, activeRequest]);
+
+  const isCurrent = useCallback((type: string) => {
+    if (!activeRequest) {
+      return false;
+    }
+    if (!('authentication' in activeRequest)) {
+      return false;
+    }
+    return type === (activeRequest.authentication.type || AUTH_NONE);
+  }, [activeRequest]);
+
+  if (!activeRequest) {
+    return null;
   }
 
-  renderAuthType(type: string, nameOverride: string | null = null) {
-    const { authentication } = this.props.request;
-    const currentType = authentication.type || AUTH_NONE;
-    return (
-      <DropdownItem onClick={this._handleTypeChange} value={type}>
-        {currentType === type ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}{' '}
-        {nameOverride || getAuthTypeName(type, true)}
-      </DropdownItem>
-    );
-  }
+  const itemProps = { onClick, isCurrent };
 
-  render() {
-    const { children, className } = this.props;
-    return (
-      <Dropdown
-        beside
-        // @ts-expect-error -- TSCONVERSION appears to be genuine
-        debug="true"
-      >
-        <DropdownDivider>Auth Types</DropdownDivider>
-        <DropdownButton className={className}>{children}</DropdownButton>
-        {this.renderAuthType(AUTH_BASIC)}
-        {this.renderAuthType(AUTH_DIGEST)}
-        {this.renderAuthType(AUTH_OAUTH_1)}
-        {this.renderAuthType(AUTH_OAUTH_2)}
-        {this.renderAuthType(AUTH_NTLM)}
-        {this.renderAuthType(AUTH_AWS_IAM)}
-        {this.renderAuthType(AUTH_BEARER)}
-        {this.renderAuthType(AUTH_HAWK)}
-        {this.renderAuthType(AUTH_ASAP)}
-        {this.renderAuthType(AUTH_NETRC)}
-        <DropdownDivider>Other</DropdownDivider>
-        {this.renderAuthType(AUTH_NONE, 'No Authentication')}
-      </Dropdown>
-    );
-  }
-}
+  return (
+    <Dropdown beside>
+      <DropdownDivider>Auth Types</DropdownDivider>
+      <DropdownButton className="tall">
+        {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+        <i className="fa fa-caret-down space-left" />
+      </DropdownButton>
+      <AuthItem type={AUTH_BASIC} {...itemProps} />
+      <AuthItem type={AUTH_DIGEST} {...itemProps} />
+      <AuthItem type={AUTH_OAUTH_1} {...itemProps} />
+      <AuthItem type={AUTH_OAUTH_2} {...itemProps} />
+      <AuthItem type={AUTH_NTLM} {...itemProps} />
+      <AuthItem type={AUTH_AWS_IAM} {...itemProps} />
+      <AuthItem type={AUTH_BEARER} {...itemProps} />
+      <AuthItem type={AUTH_HAWK} {...itemProps} />
+      <AuthItem type={AUTH_ASAP} {...itemProps} />
+      <AuthItem type={AUTH_NETRC} {...itemProps} />
+      <DropdownDivider>Other</DropdownDivider>
+      <AuthItem type={AUTH_NONE} nameOverride="No Authentication" {...itemProps} />
+    </Dropdown>
+  );
+};

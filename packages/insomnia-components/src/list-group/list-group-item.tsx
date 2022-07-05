@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import styled, { css } from 'styled-components';
 
 export interface ListGroupItemProps extends React.LiHTMLAttributes<HTMLLIElement> {
@@ -33,4 +33,4 @@ const StyledListGroupItem = styled.li<ListGroupItemProps>`
     `};
 `;
 
-export const ListGroupItem: React.FC<ListGroupItemProps> = props => <StyledListGroupItem {...props} />;
+export const ListGroupItem: FC<ListGroupItemProps> = props => <StyledListGroupItem {...props} />;

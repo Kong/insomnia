@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent } from 'react';
+import React, { FC, useCallback, useRef } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Environment } from '../../../models/environment';
@@ -18,127 +16,97 @@ import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments
 import { Tooltip } from '../tooltip';
 
 interface Props {
-  handleChangeEnvironment: Function;
-  workspace: Workspace;
-  environments: Environment[];
-  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
-  hotKeyRegistry: HotKeyRegistry;
-  className?: string;
   activeEnvironment?: Environment | null;
+  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
+  environments: Environment[];
+  handleChangeEnvironment: Function;
+  hotKeyRegistry: HotKeyRegistry;
+  workspace: Workspace;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class EnvironmentsDropdown extends PureComponent<Props> {
-  _dropdown: Dropdown | null = null;
+export const EnvironmentsDropdown: FC<Props> = ({
+  activeEnvironment,
+  environmentHighlightColorStyle,
+  environments,
+  handleChangeEnvironment,
+  hotKeyRegistry,
+  workspace,
+}) => {
+  const dropdownRef = useRef<Dropdown>(null);
+  const handleShowEnvironmentModal = useCallback(() => {
+    showModal(WorkspaceEnvironmentsEditModal, workspace);
+  }, [workspace]);
 
-  _handleActivateEnvironment(environmentId: string) {
-    this.props.handleChangeEnvironment(environmentId);
-  }
-
-  _handleShowEnvironmentModal() {
-    showModal(WorkspaceEnvironmentsEditModal, this.props.workspace);
-  }
-
-  _setDropdownRef(dropdown: Dropdown) {
-    this._dropdown = dropdown;
-  }
-
-  renderEnvironmentItem(environment: Environment) {
-    return (
-      <DropdownItem
-        key={environment._id}
-        value={environment._id}
-        onClick={this._handleActivateEnvironment}
-      >
-        <i
-          className="fa fa-random"
-          style={{
-            // @ts-expect-error -- TSCONVERSION don't set color if undefined
-            color: environment.color,
-          }}
-        />
-        Use <strong>{environment.name}</strong>
-      </DropdownItem>
-    );
-  }
-
-  _handleKeydown(event: KeyboardEvent) {
+  const onKeydown = useCallback((event: KeyboardEvent) => {
     executeHotKey(event, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
-      this._dropdown?.toggle(true);
+      dropdownRef.current?.toggle(true);
     });
-  }
+  }, []);
 
-  render() {
-    const {
-      className,
-      workspace,
-      environments,
-      activeEnvironment,
-      environmentHighlightColorStyle,
-      hotKeyRegistry,
-      ...other
-    } = this.props;
-    // NOTE: Base environment might not exist if the users hasn't managed environments yet.
-    const baseEnvironment = environments.find(environment => environment.parentId === workspace._id);
-    const subEnvironments = environments
-      .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
-      .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
-    let description;
+  // NOTE: Base environment might not exist if the users hasn't managed environments yet.
+  const baseEnvironment = environments.find(environment => environment.parentId === workspace._id);
+  const subEnvironments = environments
+    .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
+    .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
+  const description =  (!activeEnvironment || activeEnvironment === baseEnvironment) ? 'No Environment' : activeEnvironment.name;
 
-    if (!activeEnvironment || activeEnvironment === baseEnvironment) {
-      description = 'No Environment';
-    } else {
-      description = activeEnvironment.name;
-    }
-
-    return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
-        <Dropdown
-          ref={this._setDropdownRef}
-          {...(other as Record<string, any>)}
-          className={className}
-        >
-          <DropdownButton className="btn btn--super-compact no-wrap">
-            <div className="sidebar__menu__thing">
-              {!activeEnvironment && subEnvironments.length > 0 && (
-                <Tooltip
-                  message="No environments active. Please select one to use."
-                  className="space-right"
-                  position="right"
-                >
-                  <i className="fa fa-exclamation-triangle notice" />
-                </Tooltip>
-              )}
-              <div className="sidebar__menu__thing__text">
-                {activeEnvironment?.color && environmentHighlightColorStyle === 'sidebar-indicator' ? (
-                  <i
-                    className="fa fa-circle space-right"
-                    style={{
-                      color: activeEnvironment.color,
-                    }}
-                  />
-                ) : null}
-                {description}
-              </div>
-              <i className="space-left fa fa-caret-down" />
+  return (
+    <KeydownBinder onKeydown={onKeydown}>
+      <Dropdown ref={dropdownRef}>
+        <DropdownButton className="btn btn--super-compact no-wrap">
+          <div className="sidebar__menu__thing">
+            {!activeEnvironment && subEnvironments.length > 0 && (
+              <Tooltip
+                message="No environments active. Please select one to use."
+                className="space-right"
+                position="right"
+              >
+                <i className="fa fa-exclamation-triangle notice" />
+              </Tooltip>
+            )}
+            <div className="sidebar__menu__thing__text">
+              {activeEnvironment?.color && environmentHighlightColorStyle === 'sidebar-indicator' ? (
+                <i
+                  className="fa fa-circle space-right"
+                  style={{
+                    color: activeEnvironment.color,
+                  }}
+                />
+              ) : null}
+              {description}
             </div>
-          </DropdownButton>
+            <i className="space-left fa fa-caret-down" />
+          </div>
+        </DropdownButton>
 
-          <DropdownDivider>Activate Environment</DropdownDivider>
-          {subEnvironments.map(this.renderEnvironmentItem)}
-
-          <DropdownItem value={null} onClick={this._handleActivateEnvironment}>
-            <i className="fa fa-empty" /> No Environment
+        <DropdownDivider>Activate Environment</DropdownDivider>
+        {subEnvironments.map(environment => (
+          <DropdownItem
+            key={environment._id}
+            value={environment._id}
+            onClick={handleChangeEnvironment}
+          >
+            <i
+              className="fa fa-random"
+              style={{
+                ...(environment.color ? { color: environment.color } : {}),
+              }}
+            />
+            Use <strong>{environment.name}</strong>
           </DropdownItem>
+        ))}
 
-          <DropdownDivider>General</DropdownDivider>
+        <DropdownItem onClick={handleChangeEnvironment}>
+          <i className="fa fa-empty" /> No Environment
+        </DropdownItem>
 
-          <DropdownItem onClick={this._handleShowEnvironmentModal}>
-            <i className="fa fa-wrench" /> Manage Environments
-            <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
-          </DropdownItem>
-        </Dropdown>
-      </KeydownBinder>
-    );
-  }
-}
+        <DropdownDivider>General</DropdownDivider>
+
+        <DropdownItem onClick={handleShowEnvironmentModal}>
+          <i className="fa fa-wrench" /> Manage Environments
+          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
+        </DropdownItem>
+      </Dropdown>
+    </KeydownBinder>
+  );
+};

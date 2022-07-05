@@ -267,6 +267,21 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     await this._refreshState();
   }
 
+  _getProviderIconClassName(): string | undefined {
+    const { gitRepository } = this.props;
+    const providerName = getOauth2FormatName(gitRepository?.credentials);
+
+    if (providerName === 'github') {
+      return 'fa fa-github';
+    }
+
+    if (providerName === 'gitlab') {
+      return 'fa fa-gitlab';
+    }
+
+    return;
+  }
+
   componentDidMount() {
     this._refreshState();
   }
@@ -293,8 +308,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     const initializing = false;
+    const iconClassName = this._getProviderIconClassName();
     return renderBtn(
       <Fragment>
+        {iconClassName && <i className={classnames('space-right', iconClassName)} />}
         <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
         <i className="fa fa-code-fork space-left" />
       </Fragment>,

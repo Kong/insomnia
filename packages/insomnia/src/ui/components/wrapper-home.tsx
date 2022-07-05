@@ -1,6 +1,5 @@
 import 'swagger-ui-react/swagger-ui.css';
 
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   Button,
   CardContainer,
@@ -9,15 +8,13 @@ import {
   DropdownItem,
   SvgIcon,
 } from 'insomnia-components';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, bindActionCreators, Dispatch } from 'redux';
+import React, { FC, useCallback, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
-  AUTOBIND_CFG,
   DashboardSortOrder,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -30,7 +27,6 @@ import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace'
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import { RootState } from '../redux/modules';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
@@ -54,14 +50,8 @@ const CreateButton = styled(Button)({
   },
 });
 
-interface Props
-  extends ReturnType<typeof mapDispatchToProps>,
-    ReturnType<typeof mapStateToProps> {
+interface Props {
   wrapperProps: WrapperProps;
-}
-
-interface State {
-  filter: string;
 }
 
 function orderDashboardCards(orderBy: DashboardSortOrder) {
@@ -112,9 +102,7 @@ const mapWorkspaceToWorkspaceCard = ({
   }
 
   // Get cached branch from WorkspaceMeta
-  const workspaceMeta = workspaceMetas?.find(
-    wm => wm.parentId === workspace._id
-  );
+  const workspaceMeta = workspaceMetas?.find(({ parentId }) => parentId === workspace._id);
 
   const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
@@ -158,275 +146,215 @@ const mapWorkspaceToWorkspaceCard = ({
   };
 };
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperHome extends PureComponent<Props, State> {
-  state: State = {
-    filter: '',
-  };
+const WrapperHome: FC<Props> = (({ wrapperProps }) => {
+  const sortOrder = useSelector(selectDashboardSortOrder);
+  const activeProject = useSelector(selectActiveProject);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const isLoading = useSelector(selectIsLoading);
+  const apiSpecs = useSelector(selectApiSpecs);
+  const workspaceMetas = useSelector(selectWorkspaceMetas);
+  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
 
-  _filterInput: HTMLInputElement | null = null;
+  const dispatch = useDispatch();
 
-  _setFilterInputRef(filterInput: HTMLInputElement) {
-    this._filterInput = filterInput;
-  }
+  const handleCreateWorkspace = useCallback(({ scope, onCreate }) => {
+    dispatch(createWorkspace({ scope, onCreate }));
+  }, [dispatch]);
 
-  _handleFilterChange(event: React.SyntheticEvent<HTMLInputElement>) {
-    this.setState({
-      filter: event.currentTarget.value,
-    });
-  }
+  const handleGitCloneWorkspace = useCallback(({ createFsClient }) => {
+    dispatch(cloneGitRepository({ createFsClient }));
+  }, [dispatch]);
 
-  _handleDocumentCreate() {
-    this.props.handleCreateWorkspace({
-      scope: WorkspaceScopeKeys.design,
-    });
-  }
+  const handleImportFile = useCallback(({ forceToWorkspace }) => {
+    dispatch(importFile({ forceToWorkspace }));
+  }, [dispatch]);
 
-  _handleCollectionCreate() {
-    const {
-      activeProject,
-      isLoggedIn,
-      handleCreateWorkspace,
-      wrapperProps: { vcs },
-    } = this.props;
+  const handleImportUri = useCallback((uri, { forceToWorkspace }) => {
+    dispatch(importUri(uri, { forceToWorkspace }));
+  }, [dispatch]);
 
+  const handleImportClipboard = useCallback(({ forceToWorkspace }) => {
+    dispatch(importClipBoard({ forceToWorkspace }));
+  }, [dispatch]);
+
+  const handleSetDashboardSortOrder = useCallback(sortOrder => {
+    dispatch(setDashboardSortOrder(sortOrder));
+  }, [dispatch]);
+
+  const handleActivateWorkspace = useCallback(({ workspace }) => {
+    dispatch(activateWorkspace({ workspace }));
+  }, [dispatch]);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [filter, setFilter] = useState('');
+
+  const { vcs } = wrapperProps;
+  // Render each card, removing all the ones that don't match the filter
+  const cards = workspacesForActiveProject
+    .map(mapWorkspaceToWorkspaceCard({ workspaceMetas, apiSpecs }))
+    .filter(isNotNullOrUndefined)
+    .sort(orderDashboardCards(sortOrder))
+    .map(card => (
+      <WorkspaceCard
+        {...card}
+        key={card.apiSpec._id}
+        activeProject={activeProject}
+        onSelect={() => handleActivateWorkspace({ workspace: card.workspace })}
+        filter={filter}
+      />
+    ));
+
+  const createRequestCollection = useCallback(() => {
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
-      onCreate: async workspace => {
-        // Don't mark for sync if not logged in at the time of creation
+      onCreate: async (workspace: Workspace) => {
+      // Don't mark for sync if not logged in at the time of creation
         if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
           await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
     });
-  }
+  }, [activeProject, handleCreateWorkspace, isLoggedIn, vcs]);
 
-  _handleImportFile() {
-    this.props.handleImportFile({
-      forceToWorkspace: ForceToWorkspace.existing,
-    });
-  }
+  const createDesignDocument = useCallback(() => {
+    handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });
+  }, [handleCreateWorkspace]);
 
-  _handleImportClipBoard() {
-    this.props.handleImportClipboard({
-      forceToWorkspace: ForceToWorkspace.existing,
-    });
-  }
-
-  _handleImportUri() {
+  const importFromURL = useCallback(() => {
     showPrompt({
       title: 'Import document from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        this.props.handleImportUri(uri, {
-          forceToWorkspace: ForceToWorkspace.existing,
-        });
+        handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
       },
     });
-  }
+  }, [handleImportUri]);
 
-  _handleWorkspaceClone() {
-    this.props.handleGitCloneWorkspace({
-      createFsClient: MemClient.createClient,
-    });
-  }
+  const importFromClipboard = useCallback(() => {
+    handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing });
+  }, [handleImportClipboard]);
 
-  _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => {
-      if (this._filterInput) {
-        this._filterInput.focus();
-      }
-    });
-  }
+  const importFromFile = useCallback(() => {
+    handleImportFile({ forceToWorkspace: ForceToWorkspace.existing });
+  }, [handleImportFile]);
 
-  renderCreateMenu() {
-    const button = (
-      <CreateButton variant="contained" bg="surprise">
-        Create <i className="fa fa-caret-down pad-left-sm" />
-      </CreateButton>
-    );
-    return (
-      <Dropdown renderButton={button}>
-        <DropdownDivider>New</DropdownDivider>
-        <DropdownItem
-          icon={<i className="fa fa-file-o" />}
-          onClick={this._handleDocumentCreate}
-        >
-          Design Document
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-bars" />}
-          onClick={this._handleCollectionCreate}
-        >
-          Request Collection
-        </DropdownItem>
-        <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem
-          icon={<i className="fa fa-plus" />}
-          onClick={this._handleImportFile}
-        >
-          File
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-link" />}
-          onClick={this._handleImportUri}
-        >
-          URL
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-clipboard" />}
-          onClick={this._handleImportClipBoard}
-        >
-          Clipboard
-        </DropdownItem>
-        <DropdownItem
-          icon={<i className="fa fa-code-fork" />}
-          onClick={this._handleWorkspaceClone}
-        >
-          Git Clone
-        </DropdownItem>
-      </Dropdown>
-    );
-  }
+  const importFromGit = useCallback(() => {
+    handleGitCloneWorkspace({ createFsClient: MemClient.createClient });
+  }, [handleGitCloneWorkspace]);
 
-  renderDashboardMenu() {
-    const { wrapperProps: { vcs }, handleSetDashboardSortOrder, sortOrder } = this.props;
-    return (
-      <div className="row row--right pad-left wide">
-        <div
-          className="form-control form-control--outlined no-margin"
-          style={{
-            maxWidth: '400px',
+  const onChangeFilter = useCallback(event => {
+    setFilter(event.currentTarget.value);
+  }, []);
+
+  const onKeydown = useCallback(event => {
+    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus());
+  }, []);
+
+  return (
+    <PageLayout
+      wrapperProps={wrapperProps}
+      renderPageHeader={
+        <AppHeader
+          breadcrumbProps={{
+            crumbs: [
+              {
+                id: 'project',
+                node: <ProjectDropdown vcs={vcs || undefined} />,
+              },
+            ],
+            isLoading,
           }}
-        >
-          <KeydownBinder onKeydown={this._handleKeyDown}>
-            <input
-              ref={this._setFilterInputRef}
-              type="text"
-              placeholder="Filter..."
-              onChange={this._handleFilterChange}
-              className="no-margin"
-            />
-            <span className="fa fa-search filter-icon" />
-          </KeydownBinder>
-        </div>
-        <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
-        <RemoteWorkspacesDropdown vcs={vcs} />
-        {this.renderCreateMenu()}
-      </div>
-    );
-  }
-
-  render() {
-    const {
-      activeProject,
-      isLoading,
-      sortOrder,
-      wrapperProps,
-      apiSpecs,
-      workspacesForActiveProject,
-      handleActivateWorkspace,
-      workspaceMetas,
-    } = this.props;
-    const { vcs } = wrapperProps;
-    const { filter } = this.state;
-    // Render each card, removing all the ones that don't match the filter
-    const cards = workspacesForActiveProject
-      .map(
-        mapWorkspaceToWorkspaceCard({
-          workspaceMetas,
-          apiSpecs,
-        })
-      )
-      .filter(isNotNullOrUndefined)
-      .sort(orderDashboardCards(sortOrder))
-      .map(props => (
-        <WorkspaceCard
-          {...props}
-          key={props.apiSpec._id}
-          activeProject={activeProject}
-          onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
-          filter={filter}
         />
-      ));
-
-    return (
-      <PageLayout
-        wrapperProps={wrapperProps}
-        renderPageHeader={() => (
-          <AppHeader
-            breadcrumbProps={{
-              crumbs: [
-                {
-                  id: 'project',
-                  node: <ProjectDropdown vcs={vcs || undefined} />,
-                },
-              ],
-              isLoading,
-            }}
-          />
-        )}
-        renderPageBody={() => (
-          <div className="document-listing theme--pane layout-body">
-            <div className="document-listing__body pad-bottom">
-              <div className="row-spaced margin-top margin-bottom-sm">
-                <h2 className="no-margin">Dashboard</h2>
-                {this.renderDashboardMenu()}
+      }
+      renderPageBody={
+        <div className="document-listing theme--pane layout-body">
+          <div className="document-listing__body pad-bottom">
+            <div className="row-spaced margin-top margin-bottom-sm">
+              <h2 className="no-margin">Dashboard</h2>
+              <div className="row row--right pad-left wide">
+                <div
+                  className="form-control form-control--outlined no-margin"
+                  style={{
+                    maxWidth: '400px',
+                  }}
+                >
+                  <KeydownBinder onKeydown={onKeydown}>
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      placeholder="Filter..."
+                      onChange={onChangeFilter}
+                      className="no-margin"
+                    />
+                    <span className="fa fa-search filter-icon" />
+                  </KeydownBinder>
+                </div>
+                <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
+                <RemoteWorkspacesDropdown vcs={vcs} />
+                <Dropdown
+                  renderButton={<CreateButton variant="contained" bg="surprise">
+                    Create <i className="fa fa-caret-down pad-left-sm" />
+                  </CreateButton>}
+                >
+                  <DropdownDivider>New</DropdownDivider>
+                  <DropdownItem
+                    icon={<i className="fa fa-file-o" />}
+                    onClick={createDesignDocument}
+                  >
+                    Design Document
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-bars" />}
+                    onClick={createRequestCollection}
+                  >
+                    Request Collection
+                  </DropdownItem>
+                  <DropdownDivider>Import From</DropdownDivider>
+                  <DropdownItem
+                    icon={<i className="fa fa-plus" />}
+                    onClick={importFromFile}
+                  >
+                    File
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-link" />}
+                    onClick={importFromURL}
+                  >
+                    URL
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-clipboard" />}
+                    onClick={importFromClipboard}
+                  >
+                    Clipboard
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-code-fork" />}
+                    onClick={importFromGit}
+                  >
+                    Git Clone
+                  </DropdownItem>
+                </Dropdown>
               </div>
-              <CardContainer>{cards}</CardContainer>
-              {filter && cards.length === 0 && (
-                <Notice color="subtle">
-                  No documents found for <strong>{filter}</strong>
-                </Notice>
-              )}
             </div>
-            <div className="document-listing__footer vertically-center">
-              <a className="made-with-love" href="https://github.com/Kong/insomnia">
-                Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
-              </a>
-            </div>
+            <CardContainer>{cards}</CardContainer>
+            {filter && cards.length === 0 && (
+              <Notice color="subtle">
+                No documents found for <strong>{filter}</strong>
+              </Notice>
+            )}
           </div>
-        )}
-      />
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  sortOrder: selectDashboardSortOrder(state),
-  activeProject: selectActiveProject(state),
-  isLoggedIn: selectIsLoggedIn(state),
-  isLoading: selectIsLoading(state),
-  apiSpecs: selectApiSpecs(state),
-  workspaceMetas: selectWorkspaceMetas(state),
-  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+          <div className="document-listing__footer vertically-center">
+            <a className="made-with-love" href="https://github.com/Kong/insomnia">
+              Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
+            </a>
+          </div>
+        </div>
+      }
+    />
+  );
 });
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
-  const bound = bindActionCreators(
-    {
-      createWorkspace,
-      cloneGitRepository,
-      importFile,
-      importClipBoard,
-      importUri,
-      setDashboardSortOrder,
-      activateWorkspace,
-    },
-    dispatch
-  );
-
-  return ({
-    handleCreateWorkspace: bound.createWorkspace,
-    handleGitCloneWorkspace: bound.cloneGitRepository,
-    handleImportFile: bound.importFile,
-    handleImportUri: bound.importUri,
-    handleImportClipboard: bound.importClipBoard,
-    handleSetDashboardSortOrder: bound.setDashboardSortOrder,
-    handleActivateWorkspace: bound.activateWorkspace,
-  });
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(WrapperHome);
+export default WrapperHome;
