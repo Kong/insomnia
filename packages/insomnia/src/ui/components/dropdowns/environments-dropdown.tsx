@@ -5,7 +5,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import { Dropdown } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -32,7 +32,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   hotKeyRegistry,
   workspace,
 }) => {
-  const dropdownRef = useRef<Dropdown>(null);
+  const dropdownRef = useRef<DropdownHandle>(null);
   const handleShowEnvironmentModal = useCallback(() => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);
   }, [workspace]);

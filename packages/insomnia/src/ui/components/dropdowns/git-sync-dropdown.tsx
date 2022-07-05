@@ -21,7 +21,7 @@ import type {
   UpdateGitRepositoryCallback,
 } from '../../redux/modules/git';
 import * as gitActions from '../../redux/modules/git';
-import { Dropdown } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -55,7 +55,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GitSyncDropdown extends PureComponent<Props, State> {
-  _dropdown: Dropdown | null = null;
+  _dropdown: DropdownHandle | null = null;
 
   state: State = {
     initializing: false,
@@ -66,7 +66,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     branches: [],
   };
 
-  _setDropdownRef(dropdown: Dropdown) {
+  _setDropdownRef(dropdown: DropdownHandle) {
     this._dropdown = dropdown;
   }
 

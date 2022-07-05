@@ -15,7 +15,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
+import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -37,7 +37,7 @@ interface Props extends Pick<DropdownProps, 'right'> {
   requestGroup?: RequestGroup;
 }
 
-export const RequestActionsDropdown = forwardRef<Dropdown, Props>(({
+export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   activeEnvironment,
   activeProject,
   handleCopyAsCurl,

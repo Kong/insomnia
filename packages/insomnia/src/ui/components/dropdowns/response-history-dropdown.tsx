@@ -7,7 +7,7 @@ import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
-import { Dropdown } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -42,7 +42,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
   requestVersions,
   responses,
 }) => {
-  const dropdownRef = useRef<Dropdown>(null);
+  const dropdownRef = useRef<DropdownHandle>(null);
 
   const now = new Date();
   const categories: Record<string, Response[]> = {
