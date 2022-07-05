@@ -41,7 +41,6 @@ interface State {
   filterVisible: boolean;
   filterItems?: number[] | null;
   filterActiveIndex: number;
-  forcedPosition?: { x: number; y: number } | null;
   uniquenessKey: number;
 }
 
@@ -60,16 +59,13 @@ const isDropdownDivider = isComponent(DropdownDivider.name);
 export interface DropdownHandle {
   show: (
     filterVisible?: boolean,
-    forcedPosition?: { x: number; y: number } | null
   ) => void;
   hide: () => void;
   toggle: (filterVisible?: boolean) => void;
 }
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
-  (props, ref) => {
-    const { right, outline, wide, className, style, children, beside, onOpen } =
-      props;
+  ({ right, outline, wide, className, style, children, beside, onOpen, onHide }, ref) => {
     const [
       {
         dropUp,
@@ -79,7 +75,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         filterActiveIndex,
         filterItems,
         filter,
-        forcedPosition,
       },
       setState,
     ] = useState<State>({
@@ -90,8 +85,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       filterVisible: false,
       filterItems: null,
       filterActiveIndex: 0,
-      // Position
-      forcedPosition: null,
       // Use this to force new menu every time dropdown opens
       uniquenessKey: 0,
     });
@@ -230,85 +223,72 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       // Compute the size of all the menus
-      let dropdownBtnRect = _node.current?.getBoundingClientRect();
-
+      const dropdownBtnRect = _node.current?.getBoundingClientRect();
+      if (!dropdownBtnRect) {
+        return;
+      }
       const bodyRect = document.body.getBoundingClientRect();
       const dropdownListRect = _dropdownList.current.getBoundingClientRect();
 
-      if (forcedPosition) {
-        // @ts-expect-error -- TSCONVERSION missing properties
-        dropdownBtnRect = {
-          left: forcedPosition.x,
-          right: bodyRect.width - forcedPosition.x,
-          top: forcedPosition.y,
-          bottom: bodyRect.height - forcedPosition.y,
-          width: 100,
-          height: 10,
-        };
+      // Should it drop up?
+      const bodyHeight = bodyRect.height;
+      const dropdownTop = dropdownBtnRect.top || 0;
+      const dropUp = dropdownTop > bodyHeight - 200;
+      // Reset all the things so we can start fresh
+      _dropdownList.current.style.left = 'initial';
+      _dropdownList.current.style.right = 'initial';
+      _dropdownList.current.style.top = 'initial';
+      _dropdownList.current.style.bottom = 'initial';
+      _dropdownList.current.style.minWidth = 'initial';
+      _dropdownList.current.style.maxWidth = 'initial';
+      // Why not 15?
+      const screenMargin = 6;
+
+      if (right || wide) {
+        // Prevent dropdown from squishing against left side of screen
+        const rightMargin = Math.max(
+          dropdownListRect.width + screenMargin,
+          dropdownBtnRect.right
+        );
+
+        const offset = beside ? dropdownBtnRect.width - 40 : 0;
+        _dropdownList.current.style.right = `${
+          bodyRect.width - rightMargin + offset
+        }px`;
+        _dropdownList.current.style.maxWidth = `${Math.min(
+          dropdownListRect.width,
+          rightMargin + offset
+        )}px`;
       }
 
-      // @TODO FIX ME
-      if (dropdownBtnRect instanceof DOMRect) {
-        // Should it drop up?
-        const bodyHeight = bodyRect.height;
-        const dropdownTop = dropdownBtnRect.top || 0;
-        const dropUp = dropdownTop > bodyHeight - 200;
-        // Reset all the things so we can start fresh
-        _dropdownList.current.style.left = 'initial';
-        _dropdownList.current.style.right = 'initial';
-        _dropdownList.current.style.top = 'initial';
-        _dropdownList.current.style.bottom = 'initial';
-        _dropdownList.current.style.minWidth = 'initial';
-        _dropdownList.current.style.maxWidth = 'initial';
-        // Why not 15?
-        const screenMargin = 6;
-
-        if (right || wide) {
-          // Prevent dropdown from squishing against left side of screen
-          const rightMargin = Math.max(
-            dropdownListRect.width + screenMargin,
-            dropdownBtnRect.right
-          );
-
-          const offset = beside ? dropdownBtnRect.width - 40 : 0;
-          _dropdownList.current.style.right = `${
-            bodyRect.width - rightMargin + offset
-          }px`;
-          _dropdownList.current.style.maxWidth = `${Math.min(
-            dropdownListRect.width,
-            rightMargin + offset
-          )}px`;
-        }
-
-        if (!right || wide) {
-          const offset = beside ? dropdownBtnRect.width - 40 : 0;
-          // Prevent dropdown from squishing against right side of screen
-          const leftMargin = Math.min(
-            bodyRect.width - dropdownListRect.width - screenMargin,
-            dropdownBtnRect.left
-          );
-          _dropdownList.current.style.left = `${leftMargin + offset}px`;
-          _dropdownList.current.style.maxWidth = `${Math.min(
-            dropdownListRect.width,
-            bodyRect.width - leftMargin - offset
-          )}px`;
-        }
-
-        if (dropUp) {
-          _dropdownList.current.style.bottom = `${
-            bodyRect.height - dropdownBtnRect.top
-          }px`;
-          _dropdownList.current.style.maxHeight = `${
-            dropdownBtnRect.top - screenMargin
-          }px`;
-        } else {
-          _dropdownList.current.style.top = `${dropdownBtnRect.bottom}px`;
-          _dropdownList.current.style.maxHeight = `${
-            bodyRect.height - dropdownBtnRect.bottom - screenMargin
-          }px`;
-        }
+      if (!right || wide) {
+        const offset = beside ? dropdownBtnRect.width - 40 : 0;
+        // Prevent dropdown from squishing against right side of screen
+        const leftMargin = Math.min(
+          bodyRect.width - dropdownListRect.width - screenMargin,
+          dropdownBtnRect.left
+        );
+        _dropdownList.current.style.left = `${leftMargin + offset}px`;
+        _dropdownList.current.style.maxWidth = `${Math.min(
+          dropdownListRect.width,
+          bodyRect.width - leftMargin - offset
+        )}px`;
       }
-    }, [beside, forcedPosition, open, right, wide]);
+
+      if (dropUp) {
+        _dropdownList.current.style.bottom = `${
+          bodyRect.height - dropdownBtnRect.top
+        }px`;
+        _dropdownList.current.style.maxHeight = `${
+          dropdownBtnRect.top - screenMargin
+        }px`;
+      } else {
+        _dropdownList.current.style.top = `${dropdownBtnRect.bottom}px`;
+        _dropdownList.current.style.maxHeight = `${
+          bodyRect.height - dropdownBtnRect.bottom - screenMargin
+        }px`;
+      }
+    }, [beside, open, right, wide]);
 
     function _handleClick(event: React.MouseEvent<HTMLDivElement>) {
       event.preventDefault();
@@ -377,26 +357,23 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         filterActiveIndex,
         filterItems,
         filter,
-        forcedPosition,
         open: false,
       });
 
-      props.onHide?.();
+      onHide?.();
     }, [
       dropUp,
       filter,
       filterActiveIndex,
       filterItems,
       filterVisible,
-      forcedPosition,
-      props,
+      onHide,
       uniquenessKey,
     ]);
 
     const show = useCallback(
       (
         filterVisible = false,
-        forcedPosition: { x: number; y: number } | null = null
       ) => {
         const bodyHeight = document.body.getBoundingClientRect().height;
         const dropdownTop = _node.current?.getBoundingClientRect().top;
@@ -404,7 +381,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         setState({
           open: true,
           dropUp: dropdownTop ? dropdownTop > bodyHeight - 200 : dropUp,
-          forcedPosition,
           filterVisible,
           filter: '',
           filterItems: null,

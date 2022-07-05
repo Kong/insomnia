@@ -49,6 +49,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   isPinned,
   request,
   requestGroup,
+  right,
 }, ref) => {
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
@@ -109,7 +110,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown ref={ref} onOpen={onOpen}>
+    <Dropdown right={right} ref={ref} onOpen={onOpen}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
