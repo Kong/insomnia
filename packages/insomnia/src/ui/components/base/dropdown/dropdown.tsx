@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -216,7 +217,8 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(((props, ref) 
     });
   }
 
-  function _checkSizeAndPosition() {
+  // Recalculate the position of the dropdown
+  useLayoutEffect(() => {
     if (!open || !_dropdownList.current) {
       return;
     }
@@ -252,6 +254,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(((props, ref) 
       _dropdownList.current.style.bottom = 'initial';
       _dropdownList.current.style.minWidth = 'initial';
       _dropdownList.current.style.maxWidth = 'initial';
+      // Why not 15?
       const screenMargin = 6;
 
       if (right || wide) {
@@ -291,11 +294,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(((props, ref) 
         _dropdownList.current.style.maxHeight = `${bodyRect.height - dropdownBtnRect.bottom - screenMargin}px`;
       }
     }
-  }
-
-  // useEffect(() => {
-  //   _checkSizeAndPosition();
-  // });
+  }, [beside, forcedPosition, open, right, wide]);
 
   function _handleClick(event: React.MouseEvent<HTMLDivElement>) {
     event.preventDefault();
