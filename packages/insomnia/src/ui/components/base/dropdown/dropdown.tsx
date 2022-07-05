@@ -36,7 +36,6 @@ export interface DropdownProps {
 
 interface State {
   open: boolean;
-  dropUp: boolean;
   filter: string;
   filterVisible: boolean;
   filterItems?: number[] | null;
@@ -65,10 +64,9 @@ export interface DropdownHandle {
 }
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
-  ({ right, outline, wide, className, style, children, beside, onOpen, onHide }, ref) => {
+  ({ right, outline, className, style, children, beside, onOpen, onHide, wide }, ref) => {
     const [
       {
-        dropUp,
         open,
         uniquenessKey,
         filterVisible,
@@ -79,7 +77,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       setState,
     ] = useState<State>({
       open: false,
-      dropUp: false,
       // Filter Stuff
       filter: '',
       filterVisible: false,
@@ -88,14 +85,13 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       // Use this to force new menu every time dropdown opens
       uniquenessKey: 0,
     });
-
     const _node = useRef<HTMLDivElement>(null);
     const _dropdownList = useRef<HTMLDivElement>(null);
     const _filter = useRef<HTMLInputElement>(null);
 
-    function _handleCheckFilterSubmit(
+    const _handleCheckFilterSubmit = useCallback((
       event: React.KeyboardEvent<HTMLInputElement>
-    ) {
+    ) => {
       if (event.key === 'Enter') {
         // Listen for the Enter key and "click" on the active list item
         const selector = `li[data-filter-index="${filterActiveIndex}"] button`;
@@ -106,7 +102,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           button.click();
         }
       }
-    }
+    }, [filterActiveIndex]);
 
     function _handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
       const newFilter = event.target.value;
@@ -140,7 +136,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
         setState({
           open,
-          dropUp,
           uniquenessKey,
           filter: newFilter,
           filterItems: newFilter ? filterItems : null,
@@ -178,7 +173,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
           setState({
             open,
-            dropUp,
             uniquenessKey,
             filter,
             filterItems,
@@ -188,7 +182,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         } else {
           setState({
             open,
-            dropUp,
             uniquenessKey,
             filter,
             filterItems,
@@ -216,6 +209,17 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       });
     }
 
+    function isNearBottomOfScreen() {
+      if (!_node.current) {
+        return false;
+      }
+
+      const bodyHeight = document.body.getBoundingClientRect().height;
+      const dropdownTop = _node.current.getBoundingClientRect().top;
+
+      return dropdownTop > bodyHeight - 200;
+    }
+
     // Recalculate the position of the dropdown
     useLayoutEffect(() => {
       if (!open || !_dropdownList.current) {
@@ -230,10 +234,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       const bodyRect = document.body.getBoundingClientRect();
       const dropdownListRect = _dropdownList.current.getBoundingClientRect();
 
-      // Should it drop up?
-      const bodyHeight = bodyRect.height;
-      const dropdownTop = dropdownBtnRect.top || 0;
-      const dropUp = dropdownTop > bodyHeight - 200;
       // Reset all the things so we can start fresh
       _dropdownList.current.style.left = 'initial';
       _dropdownList.current.style.right = 'initial';
@@ -241,9 +241,9 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       _dropdownList.current.style.bottom = 'initial';
       _dropdownList.current.style.minWidth = 'initial';
       _dropdownList.current.style.maxWidth = 'initial';
+
       // Why not 15?
       const screenMargin = 6;
-
       if (right || wide) {
         // Prevent dropdown from squishing against left side of screen
         const rightMargin = Math.max(
@@ -275,7 +275,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         )}px`;
       }
 
-      if (dropUp) {
+      if (isNearBottomOfScreen()) {
         _dropdownList.current.style.bottom = `${
           bodyRect.height - dropdownBtnRect.top
         }px`;
@@ -351,7 +351,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       setState({
-        dropUp,
         uniquenessKey,
         filterVisible,
         filterActiveIndex,
@@ -362,7 +361,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
       onHide?.();
     }, [
-      dropUp,
       filter,
       filterActiveIndex,
       filterItems,
@@ -375,12 +373,8 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       (
         filterVisible = false,
       ) => {
-        const bodyHeight = document.body.getBoundingClientRect().height;
-        const dropdownTop = _node.current?.getBoundingClientRect().top;
-
         setState({
           open: true,
-          dropUp: dropdownTop ? dropdownTop > bodyHeight - 200 : dropUp,
           filterVisible,
           filter: '',
           filterItems: null,
@@ -390,7 +384,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
         onOpen?.();
       },
-      [dropUp, onOpen, uniquenessKey]
+      [onOpen, uniquenessKey]
     );
 
     const toggle = useCallback(
@@ -415,7 +409,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       'theme--dropdown__menu': true,
       'dropdown__menu--open': open,
       'dropdown__menu--outlined': outline,
-      'dropdown__menu--up': dropUp,
+      'dropdown__menu--up': isNearBottomOfScreen(),
       'dropdown__menu--right': right,
     });
     const dropdownButtons: ReactNode[] = [];
