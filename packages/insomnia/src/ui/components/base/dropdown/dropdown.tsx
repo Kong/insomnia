@@ -398,6 +398,16 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       [hide, open, show]
     );
 
+    useImperativeHandle(
+      ref,
+      () => ({
+        show,
+        hide,
+        toggle,
+      }),
+      [hide, show, toggle]
+    );
+
     const classes = classnames('dropdown', className, {
       'dropdown--wide': wide,
       'dropdown--open': open,
@@ -468,58 +478,53 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       );
     } else {
       const noResults = filter && filterItems && filterItems.length === 0;
-      const dropdownsContainer = document.querySelector('#dropdowns-container');
-      if (dropdownsContainer instanceof HTMLElement) {
-        finalChildren = [
-          dropdownButtons[0],
-          ReactDOM.createPortal(
-            <div key="item" className={menuClasses} aria-hidden={!open}>
-              <div className="dropdown__backdrop theme--transparent-overlay" />
-              <div
-                key={uniquenessKey}
-                ref={_dropdownList}
-                tabIndex={-1}
-                className={classnames('dropdown__list', {
-                  'dropdown__list--filtering': filterVisible,
+      const dropdownsContainer = document.querySelector<HTMLDivElement>('#dropdowns-container');
+
+      if (!dropdownsContainer) {
+        console.error('Dropdown: a #dropdowns-container element is required for a dropdown to render properly');
+
+        return null;
+      }
+
+      finalChildren = [
+        dropdownButtons[0],
+        ReactDOM.createPortal(
+          <div key="item" className={menuClasses} aria-hidden={!open}>
+            <div className="dropdown__backdrop theme--transparent-overlay" />
+            <div
+              key={uniquenessKey}
+              ref={_dropdownList}
+              tabIndex={-1}
+              className={classnames('dropdown__list', {
+                'dropdown__list--filtering': filterVisible,
+              })}
+            >
+              <div className="form-control dropdown__filter">
+                <i className="fa fa-search" />
+                <input
+                  type="text"
+                  autoFocus={open}
+                  onChange={_handleChangeFilter}
+                  ref={_filter}
+                  onKeyPress={_handleCheckFilterSubmit}
+                />
+              </div>
+              {noResults && (
+                <div className="text-center pad warning">{'No match :('}</div>
+              )}
+              <ul
+                className={classnames({
+                  hide: noResults,
                 })}
               >
-                <div className="form-control dropdown__filter">
-                  <i className="fa fa-search" />
-                  <input
-                    type="text"
-                    autoFocus
-                    onChange={_handleChangeFilter}
-                    ref={_filter}
-                    onKeyPress={_handleCheckFilterSubmit}
-                  />
-                </div>
-                {noResults && (
-                  <div className="text-center pad warning">{'No match :('}</div>
-                )}
-                <ul
-                  className={classnames({
-                    hide: noResults,
-                  })}
-                >
-                  {dropdownItems}
-                </ul>
-              </div>
-            </div>,
-            dropdownsContainer
-          ),
-        ];
-      }
+                {dropdownItems}
+              </ul>
+            </div>
+          </div>,
+          dropdownsContainer
+        ),
+      ];
     }
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        show,
-        hide,
-        toggle,
-      }),
-      [hide, show, toggle]
-    );
 
     return (
       <KeydownBinder
