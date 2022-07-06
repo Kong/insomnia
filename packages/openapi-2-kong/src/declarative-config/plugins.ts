@@ -1,7 +1,4 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
-import has from 'lodash.has';
-import isEmpty from 'lodash.isempty';
-import set from 'lodash.set';
 import { OpenAPIV3 } from 'openapi-types';
 import { Entry } from 'type-fest';
 
@@ -168,51 +165,121 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
 }
 
 /**
- * Resolves all of the reference paths mentioned in the given OpenAPIV3 schema object into right schemas
- * @param $refs Swagger.$Refs object to get a OpenAPI schema resolving method for free
- * @param schema schema object to be recursively resolved
- * @param components a components map used to search and add
- * @returns a components map that has resolved all ref schema items recursively
+ * Resolves path key for a string path value recursively.
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param key path key to check in the Map
+ * @param value path value to parse and call recursive method to resolve further down tree
+ * @param acc Map object to check if path key already has a value set
+ * @returns Map object with path key - path value set
  */
-function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>($refs: SwaggerParser.$Refs, source: T, components = {}): Record<string, unknown> {
+function handleStringCase(
+  $refs: SwaggerParser.$Refs,
+  key: string,
+  value: string,
+  acc: Map<string, unknown>
+): Map<string, unknown> {
+  if (key !== '$ref' || acc.has(value)) {
+    return acc;
+  }
+
+  const pathResolved = getOperationRef($refs, value);
+  if (pathResolved) {
+    acc.set(value, pathResolved);
+    const resolved = resolveRefSchemaRecursively($refs, pathResolved, acc);
+    return new Map([...acc, ...resolved]);
+  }
+
+  return acc;
+}
+
+/**
+ * Resolves path key for a object of unknown path value recursively.
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param value object type value of unknown
+ * @param acc Map object to check if path key already has a value set
+ * @returns Map object with path key - path value set
+ */
+function handleObjectCase(
+  $refs: SwaggerParser.$Refs,
+  value: unknown,
+  acc: Map<string, unknown>
+): Map<string, unknown> {
+  const resolved = resolveRefSchemaRecursively($refs, value, acc);
+  return new Map([...acc, ...resolved]);
+}
+
+/**
+ * Resolves path key for an array of unknown path value recursively.
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param value array type value of unknown
+ * @param acc Map object to check if path key already has a value set
+ * @returns Map object with path key - path value set
+ */
+function handleArrayCase(
+  $refs: SwaggerParser.$Refs,
+  value: unknown[],
+  acc: Map<string, unknown>
+): Map<string, unknown> {
+  let resolved = new Map([...acc]);
+  value.forEach((item: unknown) => {
+    const newresolved = resolveRefSchemaRecursively($refs, item, resolved);
+    resolved = new Map([...resolved, ...newresolved]);
+  });
+  return resolved;
+}
+
+/**
+ * Resolves a ref for the given schema recursively with unknown types.
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param source the source object to be parsed by resolving all the references
+ * @param components Map object to map each component path key and value recursively
+ * @returns a New Map object that capture all resolved refs of path keys and values upto the Nth iteration.
+ */
+function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>(
+  $refs: SwaggerParser.$Refs,
+  source: T,
+  components = new Map(),
+): Map<string, unknown> {
+  const componentsRefMap = new Map([...components]);
   if (typeof source !== 'object' || Array.isArray(source) || !source) {
-    return {};
+    return componentsRefMap;
   }
 
-  for (const entry of Object.entries(source)) {
-    const [key, value] = entry;
-
-    // if found $ref path in the key-value pair, resolve the schema object
-    if ((key === '$ref') && typeof value === 'string') {
-      const paths = value.replace('#/components/', '').split('/').join('.');
-      if (!has(components, paths)) {
-        const pathResolved = getOperationRef<T>($refs, value);
-        // if a schema for the given path is resolved, then add it to the hash map
-        if (pathResolved) {
-          // setting path like 'schemas.EntityItem' into the object; components['schema']['EntityItem] = pathResolved;
-          set(components, paths, pathResolved);
-
-          // recursively check if the resolved schema also contains $ref path and resolve it
-          resolveRefSchemaRecursively($refs, pathResolved, components);
-        }
+  return Object
+    .entries(source)
+    .reduce((acc: Map<string, unknown>, [pathKey, pathValue]: [string, unknown]) => {
+      if (typeof pathValue === 'string') {
+        return handleStringCase($refs, pathKey, pathValue, acc);
       }
-      continue;
-    }
 
-    // start a recursion to find the path if value is an object
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      resolveRefSchemaRecursively($refs, value, components);
-      continue;
-    }
+      if (typeof pathValue !== 'object') {
+        return acc;
+      }
 
-    // if value is an array, conduct the recursion in each item and accumulate the value
-    if (Array.isArray(value)) {
-      value.forEach((item: unknown) => resolveRefSchemaRecursively($refs, item, components));
-      continue;
-    }
-  }
+      if (Array.isArray(pathValue)) {
+        return handleArrayCase($refs, pathValue, acc);
+      }
 
-  return components;
+      return handleObjectCase($refs, pathValue, acc);
+    }, componentsRefMap);
+}
+
+/**
+ * 
+ * @param mapObject Map object that keeps all the ref keys and valuese to be transformed into the final object product with nested paths
+ * @returns final object product with nested paths
+ */
+function buildComponentsObjectFromMap(mapObject: Map<string, unknown>): Record<string, unknown> {
+  return Array
+    .from(mapObject.entries())
+    .reduce((acc: Record<string, unknown>, [pathKey, pathValue]: [string, unknown]) => {
+      const paths = pathKey.replace('#/components/', '').split('/');
+      const lastPath = paths.pop();
+      if (lastPath) {
+        paths.reduce<Record<string, unknown>>((r: Record<string, any>, a: string) => r[a] = r[a] || {}, acc)[lastPath] = pathValue;
+      }
+      return acc;
+    }, {});
 }
 
 /**
@@ -221,15 +288,29 @@ function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.Para
  * @param schema schema object to be recursively resolved
  * @returns OpenAPIV3 component objects completely dereferenced for all paths mentioned in the given schema
  */
-function resolveComponents($refs: SwaggerParser.$Refs, schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject): OpenAPIV3.ComponentsObject | undefined {
-  const components = resolveRefSchemaRecursively($refs, schema);
-  if (isEmpty(components)) {
+function resolveComponents(
+  $refs: SwaggerParser.$Refs,
+  schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject,
+): OpenAPIV3.ComponentsObject | undefined {
+  const componentsMap = resolveRefSchemaRecursively($refs, schema);
+  if (!componentsMap.size) {
     return;
   }
+
+  const components = buildComponentsObjectFromMap(componentsMap);
   return components;
 }
 
-function serializeSchemaForKong(schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject, components: OpenAPIV3.ComponentsObject | undefined): string {
+/**
+ * 
+ * @param schema 
+ * @param components 
+ * @returns 
+ */
+function serializeSchemaForKong(
+  schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject,
+  components: OpenAPIV3.ComponentsObject | undefined,
+): string {
   const kongSchema: KongSchema = { ...schema };
 
   // we probably want to include 'components' and '$schema' only if 'components' exists
