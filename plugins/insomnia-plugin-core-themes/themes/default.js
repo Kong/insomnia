@@ -1,3 +1,13 @@
+const sidebarBackground = {
+  default: '#2C2C2C',
+  success: '#7ecf2b',
+  notice: '#f0e137',
+  warning: '#ff9a1f',
+  danger: '#ff5631',
+  surprise: '#a896ff',
+  info: '#46c1e6',
+};
+
 module.exports = {
   name: 'default',
   displayName: 'Core Default',
@@ -37,15 +47,7 @@ module.exports = {
         },
       },
       sidebar: {
-        background: {
-          default: '#2C2C2C',
-          success: '#7ecf2b',
-          notice: '#f0e137',
-          warning: '#ff9a1f',
-          danger: '#ff5631',
-          surprise: '#a896ff',
-          info: '#46c1e6',
-        },
+        background: sidebarBackground,
         foreground: {
           default: '#e0e0e0',
         },
@@ -77,13 +79,8 @@ module.exports = {
       },
       pane: {
         background: {
+          ...sidebarBackground,
           default: '#292929',
-          success: '{{ styles.sidebar.background.success }}',
-          notice: '{{ styles.sidebar.background.notice }}',
-          warning: '{{ styles.sidebar.background.warning }}',
-          danger: '{{ styles.sidebar.background.danger }}',
-          surprise: '{{ styles.sidebar.background.surprise }}',
-          info: '{{ styles.sidebar.background.info }}',
         },
         foreground: {
           default: '#e0e0e0',

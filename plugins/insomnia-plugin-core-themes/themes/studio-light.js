@@ -1,3 +1,12 @@
+const background = {
+  success: '#3d9c62',
+  notice: '#bb9700',
+  warning: '#d6803e',
+  danger: '#da5b56',
+  info: '#003052',
+  surprise: '#6030BF',
+};
+
 module.exports = {
   name: 'studio-light',
   displayName: 'Designer Light',
@@ -5,14 +14,7 @@ module.exports = {
     foreground: {
       default: '#555',
     },
-    background: {
-      success: '#3d9c62',
-      notice: '#bb9700',
-      warning: '#d6803e',
-      danger: '#da5b56',
-      info: '#003052',
-      surprise: '#6030BF',
-    },
+    background,
     styles: {
       appHeader: {
         background: {
@@ -26,8 +28,8 @@ module.exports = {
       },
       editor: {
         background: {
-          surprise: '{{ background.info }}',
-          info: '{{ background.surprise }}',
+          surprise: background.info,
+          info: background.surprise,
         },
       },
       dialog: {
