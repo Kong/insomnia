@@ -24,6 +24,9 @@ paths:
     post:
       requestBody:
         $ref: '#/components/requestBodies/TestRequest'
+      responses:
+        '200':
+          description: success
 
 components:
   requestBodies:
