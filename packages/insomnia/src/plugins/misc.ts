@@ -10,9 +10,8 @@ import { ColorScheme, getThemes } from './index';
 export type HexColor = `#${string}`;
 export type RGBColor = `rgb(${string})`;
 export type RGBAColor = `rgba(${string})`;
-export type NunjucksColor = `{{${string}}}`;
 
-export type ThemeColor = HexColor | RGBColor | RGBAColor | NunjucksColor;
+export type ThemeColor = HexColor | RGBColor | RGBAColor;
 
 // notice that for each sub-block (`background`, `foreground`, `highlight`) the `default` key is required if the sub-block is present
 export interface ThemeBlock {
@@ -95,7 +94,7 @@ export const validateThemeName = (name: string) => {
   return validName;
 };
 
-export const containsNunjucks = (data: string): data is NunjucksColor => (
+export const containsNunjucks = (data: string) => (
   data.includes('{{') && data.includes('}}')
 );
 
