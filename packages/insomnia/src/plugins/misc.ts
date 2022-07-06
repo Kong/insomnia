@@ -137,7 +137,7 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
 
 };
 
-export async function generateThemeCSS(pluginTheme: PluginTheme) {
+export const generateThemeCSS = (pluginTheme: PluginTheme) => {
   const { theme, name } = pluginTheme;
   validateTheme(pluginTheme);
   validateThemeName(name);
@@ -191,8 +191,9 @@ export async function generateThemeCSS(pluginTheme: PluginTheme) {
     css += wrapStyles(name, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
   }
 
+  css += '\n';
   return css;
-}
+};
 
 function getThemeBlockCSS(block?: ThemeBlock) {
   if (!block) {
@@ -350,7 +351,7 @@ export async function setTheme(themeName: string) {
   body.setAttribute('theme', themeName);
 
   for (const theme of themes) {
-    let themeCSS = (await generateThemeCSS(theme.theme)) + '\n';
+    let themeCSS = generateThemeCSS(theme.theme);
     const { name } = theme.theme;
     const { rawCss } = theme.theme.theme;
     let s = document.querySelector(`style[data-theme-name="${name}"]`);
