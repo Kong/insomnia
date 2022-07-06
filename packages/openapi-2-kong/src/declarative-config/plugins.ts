@@ -220,12 +220,13 @@ function handleArrayCase(
   value: unknown[],
   acc: Map<string, unknown>
 ): Map<string, unknown> {
-  let resolved = new Map([...acc]);
-  value.forEach((item: unknown) => {
-    const newresolved = resolveRefSchemaRecursively($refs, item, resolved);
-    resolved = new Map([...resolved, ...newresolved]);
-  });
-  return resolved;
+  if (!value.length) {
+    return acc;
+  }
+
+  return value.reduce((newAcc: Map<string, unknown>, item: unknown) => {
+    return resolveRefSchemaRecursively($refs, item, newAcc);
+  }, new Map([...acc]));
 }
 
 /**
@@ -265,7 +266,7 @@ function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.Para
 }
 
 /**
- * 
+ * Build components reference object with nested paths
  * @param mapObject Map object that keeps all the ref keys and valuese to be transformed into the final object product with nested paths
  * @returns final object product with nested paths
  */
