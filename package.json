@@ -36,6 +36,7 @@
     "hard-reset": "npm run clean && npm run bootstrap && npm run app-start",
     "type-check": "lerna run type-check",
     "changelog-image": "esr ./scripts/changelog-image/changelog-image.ts",
+    "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts",
     "dev": "npm start --prefix packages/insomnia"
   },
   "devDependencies": {
