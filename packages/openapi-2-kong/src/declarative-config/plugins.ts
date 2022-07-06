@@ -302,10 +302,10 @@ function resolveComponents(
 }
 
 /**
- * 
- * @param schema 
- * @param components 
- * @returns 
+ * Serializes schema used in the Kong configuration parameter schema or body schema with optional JSON properties for reference resolving.
+ * @param schema parsed Object to be passed to the Kong configuration either in parameter schema or body schema
+ * @param components component Object to be referred during Kong configuration parsing (outside of Insomnia/Inso context)
+ * @returns Object with the schema and JSON schema properties
  */
 function serializeSchemaForKong(
   schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject,
