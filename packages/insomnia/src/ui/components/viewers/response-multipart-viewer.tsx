@@ -21,6 +21,7 @@ import { ResponseHeadersViewer } from './response-headers-viewer';
 import { ResponseViewer } from './response-viewer';
 
 interface Part {
+  id: number;
   title: string;
   name: string;
   bytes: number;
@@ -55,15 +56,15 @@ export const ResponseMultipartViewer: FC<Props> = ({
   contentType,
 }) => {
   const [parts, setParts] = useState<Part[]>([]);
+  const [selectedPart, setSelectedPart] = useState<Part>();
   const [error, setError] = useState<string | null>(null);
-  const [currentPart, setCurrentPart] = useState<Part>();
 
   useEffect(() => {
     const init = async () => {
       try {
         const parts = await multipartBufferToArray({ bodyBuffer, contentType });
         setParts(parts);
-        setCurrentPart(parts[0]);
+        setSelectedPart(parts[0]);
       } catch (err) {
         setError(err.message);
       }
@@ -72,35 +73,35 @@ export const ResponseMultipartViewer: FC<Props> = ({
   }, [bodyBuffer, contentType]);
 
   const selectPart = useCallback((part: Part) => {
-    setCurrentPart(part);
+    setSelectedPart(part);
   }, []);
 
-  const partBuffer = useCallback(() => currentPart?.value, [currentPart]);
+  const partBuffer = useCallback(() => selectedPart?.value, [selectedPart]);
 
   const viewHeaders = useCallback(() => {
-    if (!currentPart) {
+    if (!selectedPart) {
       return;
     }
     showModal(WrapperModal, {
       title: (
         <span>
-          Headers for <code>{currentPart.name}</code>
+          Headers for <code>{selectedPart.name}</code>
         </span>
       ),
-      body: <ResponseHeadersViewer headers={[...currentPart.headers]} />,
+      body: <ResponseHeadersViewer headers={[...selectedPart.headers]} />,
     });
-  }, [currentPart]);
+  }, [selectedPart]);
 
-  const saveAsFile = async () => {
-    if (!currentPart) {
+  const saveAsFile = useCallback(async () => {
+    if (!selectedPart) {
       return;
     }
-    const contentType = getContentTypeFromHeaders(currentPart.headers, 'text/plain');
+    const contentType = getContentTypeFromHeaders(selectedPart.headers, 'text/plain');
     const extension = mimeExtension(contentType) || '.txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
     const dir = lastDir || window.app.getPath('desktop');
     const date = format(Date.now(), 'yyyy-MM-dd');
-    const filename = currentPart.filename || `${currentPart.name}_${date}`;
+    const filename = selectedPart.filename || `${selectedPart.name}_${date}`;
     const options: SaveDialogOptions = {
       title: 'Save as File',
       buttonLabel: 'Save',
@@ -124,11 +125,11 @@ export const ResponseMultipartViewer: FC<Props> = ({
     // Save the file
     try {
       // @ts-expect-error -- TSCONVERSION if filePath is undefined, don't try to write anything
-      await fs.promises.writeFile(filePath, currentPart.value);
+      await fs.promises.writeFile(filePath, selectedPart.value);
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
     }
-  };
+  }, [selectedPart]);
 
   if (error) {
     return (
@@ -141,6 +142,10 @@ export const ResponseMultipartViewer: FC<Props> = ({
         Failed to parse multipart response: {error}
       </div>
     );
+  }
+
+  if (parts.length === 0 || !selectedPart) {
+    return null;
   }
   return (
     <div
@@ -166,13 +171,13 @@ export const ResponseMultipartViewer: FC<Props> = ({
                   display: 'inline-block',
                 }}
               >
-                {currentPart ? currentPart.title : 'Unknown'}
+                {selectedPart.title}
               </div>
               <i className="fa fa-caret-down fa--skinny space-left" />
             </DropdownButton>
             {parts.map(part => (
               <DropdownItem key={part.title} value={part} onClick={selectPart}>
-                {currentPart?.title === part.title ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
+                {selectedPart?.id === part.id ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
                 {part.title}
               </DropdownItem>
             ))}
@@ -190,26 +195,25 @@ export const ResponseMultipartViewer: FC<Props> = ({
           </DropdownItem>
         </Dropdown>
       </div>
-      {currentPart ? (
-        <div className="tall wide">
-          <ResponseViewer
-            bytes={currentPart.bytes || 0}
-            contentType={getContentTypeFromHeaders(currentPart.headers, 'text/plain')}
-            disableHtmlPreviewJs={disableHtmlPreviewJs}
-            disablePreviewLinks={disablePreviewLinks}
-            download={download}
-            editorFontSize={editorFontSize}
-            error={null}
-            filter={filter}
-            filterHistory={filterHistory}
-            getBody={partBuffer}
-            key={`${responseId}::${currentPart?.title}`}
-            previewMode={PREVIEW_MODE_FRIENDLY}
-            responseId={`${responseId}[${currentPart?.title}]`}
-            url={url}
-          />
-        </div>
-      ) : null}
+      <div className="tall wide">
+        <ResponseViewer
+          bytes={selectedPart.bytes || 0}
+          contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
+          disableHtmlPreviewJs={disableHtmlPreviewJs}
+          disablePreviewLinks={disablePreviewLinks}
+          download={download}
+          editorFontSize={editorFontSize}
+          error={null}
+          filter={filter}
+          filterHistory={filterHistory}
+          getBody={partBuffer}
+          key={`${responseId}::${selectedPart?.title}`}
+          previewMode={PREVIEW_MODE_FRIENDLY}
+          responseId={`${responseId}[${selectedPart?.title}]`}
+          url={url}
+        />
+      </div>
+
     </div>
   );
 };
@@ -228,6 +232,7 @@ function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffe
       'content-type': contentType,
     };
     const form = new multiparty.Form();
+    let id = 0;
     form.on('part', part => {
       const dataBuffers: any[] = [];
       part.on('data', data => {
@@ -239,6 +244,7 @@ function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffe
       part.on('end', () => {
         const title = part.filename ? `${part.name} (${part.filename})` : part.name;
         parts.push({
+          id,
           title,
           value: dataBuffers ? Buffer.concat(dataBuffers) : Buffer.from(''),
           name: part.name,
@@ -249,6 +255,7 @@ function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffe
             value: part.headers[name],
           })),
         });
+        id += 1;
       });
     });
     form.on('error', err => {
