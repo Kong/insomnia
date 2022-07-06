@@ -7,6 +7,7 @@ import configureMockStore, { MockStoreEnhanced } from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
 import * as models from '../../../../models';
+import { dropdownsContainerId } from '../../base/dropdown/dropdown';
 import { registerModal } from '../../modals';
 import { LoginModal } from '../../modals/login-modal';
 import { AccountDropdownButton } from './account-dropdown';
@@ -33,7 +34,7 @@ export const createMockStoreWithoutPaidFeatureAd = async (disablePaidFeatureAds:
 describe('<AccountDropdownButton />', () => {
   const getDropdownContainer = () => {
     const container = document.createElement('div');
-    container.setAttribute('id', 'dropdowns-container');
+    container.setAttribute('id', dropdownsContainerId);
     document.body.appendChild(container);
 
     return container;
