@@ -45,7 +45,7 @@ interface Props {
 export const AuthDropdown: FC<Props> = ({ onChange }) => {
   const activeRequest = useSelector(selectActiveRequest);
 
-  const onClick = useCallback((type: string) => {
+  const onClick = useCallback(async (type: string) => {
     if (!activeRequest) {
       return;
     }
@@ -57,37 +57,34 @@ export const AuthDropdown: FC<Props> = ({ onChange }) => {
 
     const { authentication } = activeRequest;
 
-    const fn = async () => {
-      if (type === authentication.type) {
+    if (type === authentication.type) {
       // Type didn't change
-        return;
+      return;
+    }
+
+    const newAuthentication = models.request.newAuth(type, authentication);
+    const defaultAuthentication = models.request.newAuth(authentication.type);
+
+    // Prompt the user if fields will change between new and old
+    for (const key of Object.keys(authentication)) {
+      if (key === 'type') {
+        continue;
       }
 
-      const newAuthentication = models.request.newAuth(type, authentication);
-      const defaultAuthentication = models.request.newAuth(authentication.type);
+      const value = authentication[key];
+      const changedSinceDefault = defaultAuthentication[key] !== value;
+      const willChange = newAuthentication[key] !== value;
 
-      // Prompt the user if fields will change between new and old
-      for (const key of Object.keys(authentication)) {
-        if (key === 'type') {
-          continue;
-        }
-
-        const value = authentication[key];
-        const changedSinceDefault = defaultAuthentication[key] !== value;
-        const willChange = newAuthentication[key] !== value;
-
-        if (changedSinceDefault && willChange) {
-          await showModal(AlertModal, {
-            title: 'Switch Authentication?',
-            message: 'Current authentication settings will be lost',
-            addCancel: true,
-          });
-          break;
-        }
+      if (changedSinceDefault && willChange) {
+        await showModal(AlertModal, {
+          title: 'Switch Authentication?',
+          message: 'Current authentication settings will be lost',
+          addCancel: true,
+        });
+        break;
       }
-      onChange(activeRequest, newAuthentication);
-    };
-    fn();
+    }
+    onChange(activeRequest, newAuthentication);
   }, [onChange, activeRequest]);
 
   const isCurrent = useCallback((type: string) => {
