@@ -452,7 +452,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             </div>
           </div>,
           // @ts-expect-error -- TSCONVERSION
-          document.getElementById(`${dropdownsContainerId}`),
+          document.getElementById(dropdownsContainerId),
         ),
       ];
     }
