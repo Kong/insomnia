@@ -1,0 +1,50 @@
+openapi: 3.0.1
+
+info:
+  title: Testing Circular
+  version: 1.1.1
+
+  contact:
+    name: Kong Insomnia
+
+servers:
+  - url: https://some.random.url
+
+x-kong-plugin-request-validator:
+  enabled: true
+  version: draft4
+  config:
+    verbose_response: true
+
+tags:
+  - name: Testing
+
+paths:
+  /testing:
+    post:
+      requestBody:
+        $ref: '#/components/requestBodies/TestRequest'
+      responses:
+        '200':
+          description: success
+
+components:
+  requestBodies:
+    TestRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TestRequest'
+
+  schemas:
+    TestRequest:
+      allOf:
+        - $ref: '#/components/schemas/CircularStart'
+
+    CircularStart:
+      allOf:
+        - $ref: '#/components/schemas/CircularEnd'
+
+    CircularEnd:
+      allOf:
+        - $ref: '#/components/schemas/CircularStart'

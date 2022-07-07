@@ -50,10 +50,8 @@ interface ResolvedParameter {
   resolvedParam: OpenAPIV3.ParameterObject;
   components: OpenAPIV3.ComponentsObject | undefined;
 }
-
 const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): ResolvedParameter => {
   if ('$ref' in parameter) {
-    const components = getOperationRef<OpenAPIV3.ComponentsObject>($refs, '#/components');
     const dereferenced = getOperationRef<OpenAPIV3.ParameterObject>($refs, parameter.$ref);
     const { $ref, ...param } = parameter;
 
@@ -70,6 +68,7 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
       schema,
     };
 
+    const components = resolveComponents($refs, resolvedParam);
     return {
       resolvedParam,
       components,
@@ -77,14 +76,11 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
   }
 
   if (parameter.schema && '$ref' in parameter.schema) {
-    const components = getOperationRef<OpenAPIV3.ComponentsObject>($refs, '#/components');
-    const schema = getOperationRef<OpenAPIV3.ParameterObject['schema']>($refs, parameter.schema.$ref);
-
+    const schema = getOperationRef<OpenAPIV3.ReferenceObject>($refs, parameter.schema.$ref);
+    const resolvedParam = { ...parameter, schema };
+    const components = resolveComponents($refs, resolvedParam);
     return {
-      resolvedParam: {
-        ...parameter,
-        schema,
-      },
+      resolvedParam,
       components,
     };
   }
@@ -168,34 +164,151 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
   return;
 }
 
-function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): OpenAPIV3.SchemaObject {
-  if (item.schema && '$ref' in item.schema) {
-    const resolved: OpenAPIV3.NonArraySchemaObject & { $schema: string; components: Record<string, unknown> } = { ...$refs.get(item.schema.$ref) };
-    resolved.components = $refs.get('#/components');
-    resolved.$schema = 'http://json-schema.org/schema';
-    return resolved;
+/**
+ * Resolves a ref for the given schema recursively with unknown types.
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param source the source object to be parsed by resolving all the references
+ * @param components Map object to map each component path key and value recursively
+ * @returns a New Map object that capture all resolved refs of path keys and values upto the Nth iteration.
+ */
+function resolveRefSchemaRecursively(
+  $refs: SwaggerParser.$Refs,
+  source: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject,
+  components = new Map(),
+): Map<string, unknown> {
+  const componentsRefMap = new Map([...components]);
+  if (typeof source !== 'object' || source === null) {
+    // if the source is any non-object literal (string, boolean, number, undefined) we want to bail because you cannot iterate these values. (Since `typeof null` equals `'object'` in JavaScript, we also want to catch null)
+    return componentsRefMap;
   }
 
-  if (!item.schema) {
-    return {};
+  if (Array.isArray(source)) {
+    // if the source is an array literal, we want to just return it literally (i.e. skip) because all we're looking for is the `$ref` value (which is always an object in the OpenAPI spec). For the purposes of this function, we don't care about arrays because it means the value isn't relevant to what this function tries to do (which is, resolving `$ref`s).
+    return componentsRefMap;
   }
 
-  return item.schema;
+  return Object.entries(source)
+    .reduce<Map<string, unknown>>((acc, [key, value]: Entry<Map<string, unknown>>) => {
+      if (typeof value === 'string') {
+        // the responsiblity of this function is only really concerning `$ref`s, so if the end value is not a `$ref` we can skip it
+        if (key !== '$ref') {
+          return acc;
+        }
+
+        // the accumulator alreadly having this `$ref` value indicates that we have already visited this ref, and as such we should exit early to prevent an infinite loop since circular `$ref`s are valid in OpenAPI.
+        if (acc.has(value)) {
+          return acc;
+        }
+
+        const pathResolved = getOperationRef($refs, value);
+        if (pathResolved) {
+          acc.set(value, pathResolved);
+          const resolved = resolveRefSchemaRecursively($refs, pathResolved, acc);
+          return new Map([...acc, ...resolved]);
+        }
+
+        return acc;
+      }
+
+      // if the value is not iterable (i.e. array or object) we want to bail
+      if (typeof value !== 'object') {
+        return acc;
+      }
+
+      // since `typeof null` equals `object` in JavaScript, we catch this case separately
+      if (value === null) {
+        return acc;
+      }
+
+      if (Array.isArray(value)) {
+        // if the array is empty, we're done
+        if (value.length === 0) {
+          return acc;
+        }
+
+        // resolve the refs (recursively) looking for `$ref`s
+        return value.reduce((newAcc, item) => (
+          resolveRefSchemaRecursively($refs, item, newAcc)
+        ), new Map([...acc]));
+      }
+
+      // iterate into the next level in the recursion with `value` as the source (value is now narrowed to an Object)
+      return new Map([...acc, ...resolveRefSchemaRecursively($refs, value, acc)]);
+    }, componentsRefMap);
 }
 
-function serializeSchema(schema: OpenAPIV3.SchemaObject): string {
-  for (const key in schema.properties) {
-    // Append 'null' to property type if nullable true, see FTI-3278
-    // TODO: this does not conform to the OpenAPI 3 spec typings. We may need to investifate further why this was needed
+/**
+ * Build components reference object with nested paths
+ * @param mapObject Map object that keeps all the ref keys and valuese to be transformed into the final object product with nested paths
+ * @returns final object product with nested paths
+ */
+function buildComponentsObjectFromMap(mapObject: Map<string, unknown>): Record<string, unknown> {
+  return Array
+    .from(mapObject.entries())
+    .reduce((acc: Record<string, unknown>, [pathKey, pathValue]: [string, unknown]) => {
+      const paths = pathKey.replace('#/components/', '').split('/');
+      const lastPath = paths.pop();
+      if (lastPath) {
+        paths.reduce<Record<string, unknown>>((r: Record<string, any>, a: string) => r[a] = r[a] || {}, acc)[lastPath] = pathValue;
+      }
+      return acc;
+    }, {});
+}
 
-    // @ts-expect-error this needs a casting perhaps. schema can be either ArraySchemaObject or NonArraySchemaObject. Only the later has 'properties'
-    if (schema.properties[key].nullable === true) {
-      // @ts-expect-error this needs some further investigation. 'type' is merely an string enum, not an array according to the OpenAPI 3 typings.
-      schema.properties[key].type = [schema.properties[key].type, 'null'];
+/**
+ * Resolves a set of components used in the given schema recursively
+ * @param $refs SwaggerParser.$Ref object to get free methods
+ * @param schema schema object to be recursively resolved
+ * @returns OpenAPIV3 component objects completely dereferenced for all paths mentioned in the given schema
+ */
+function resolveComponents(
+  $refs: SwaggerParser.$Refs,
+  schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
+): OpenAPIV3.ComponentsObject | undefined {
+  const componentsMap = resolveRefSchemaRecursively($refs, schema);
+  if (!componentsMap.size) {
+    return;
+  }
+
+  const components = buildComponentsObjectFromMap(componentsMap);
+  return components;
+}
+
+/**
+ * Serializes schema used in the Kong configuration parameter schema or body schema with optional JSON properties for reference resolving.
+ * @param schema parsed Object to be passed to the Kong configuration either in parameter schema or body schema
+ * @param components component Object to be referred during Kong configuration parsing (outside of Insomnia/Inso context)
+ * @returns Object with the schema and JSON schema properties
+ */
+function serializeSchemaForKong(
+  schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject,
+  components: OpenAPIV3.ComponentsObject | undefined,
+): string {
+  const kongSchema: KongSchema = { ...schema };
+
+  // we probably want to include 'components' and '$schema' only if 'components' exists
+  if (components) {
+    kongSchema.components = components;
+    kongSchema.$schema = $schema;
+  }
+  return JSON.stringify(kongSchema);
+}
+
+interface ResolvedItemSchema {
+  schema: OpenAPIV3.SchemaObject;
+  components: OpenAPIV3.ComponentsObject | undefined;
+}
+function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaTypeObject): ResolvedItemSchema {
+  if (item.schema && '$ref' in item.schema) {
+    const schema = getOperationRef<OpenAPIV3.SchemaObject>($refs, item.schema.$ref);
+    if (schema) {
+      const components = resolveComponents($refs, schema);
+      return { schema, components };
     }
   }
 
-  return JSON.stringify(schema);
+  const hasNoRef = { schema: item.schema as OpenAPIV3.SchemaObject ?? {}, components: undefined };
+  return hasNoRef;
 }
 
 export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Operation) {
@@ -212,9 +325,17 @@ export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Oper
 
     if (allowedContentTypes.includes(jsonContentType)) {
       const item: OpenAPIV3.MediaTypeObject = bodyContent[jsonContentType];
+      const { schema, components } = resolveItemSchema($refs, item);
 
-      const schema = resolveItemSchema($refs, item);
-      bodySchema = serializeSchema(schema);
+      for (const key in schema.properties) {
+        // Append 'null' to property type if nullable true, seeccccc
+        if ((schema.properties[key] as OpenAPIV3.SchemaObject).nullable === true) {
+          // @ts-expect-error this needs some further investigation. 'type' is merely an string literal union, not an array (i.e. tuple) according to the OpenAPI 3 typings for `SchemaObject.type`.
+          schema.properties[key].type = [schema.properties[key].type, 'null'];
+        }
+      }
+
+      bodySchema = serializeSchemaForKong(schema, components);
     }
   }
 
