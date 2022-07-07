@@ -1,3 +1,13 @@
+const sidebarBackground = {
+  default: '#eaeaeb',
+  success: '#50a14f',
+  notice: '#c18401',
+  warning: '#c18401',
+  danger: '#e45649',
+  surprise: '#a626a4',
+  info: '#0184bc',
+};
+
 module.exports = {
   name: 'one-light',
   displayName: 'One Light',
@@ -30,29 +40,14 @@ module.exports = {
         },
       },
       sidebar: {
-        background: {
-          default: '#eaeaeb',
-          success: '#50a14f',
-          notice: '#c18401',
-          warning: '#c18401',
-          danger: '#e45649',
-          surprise: '#a626a4',
-          info: '#0184bc',
-        },
+        background: sidebarBackground,
         foreground: {
           default: '#444',
         },
         highlight: {},
       },
       paneHeader: {
-        background: {
-          success: '{{ styles.sidebar.background.success }}',
-          notice: '{{ styles.sidebar.background.notice }}',
-          warning: '{{ styles.sidebar.background.warning }}',
-          danger: '{{ styles.sidebar.background.danger }}',
-          surprise: '{{ styles.sidebar.background.surprise }}',
-          info: '{{ styles.sidebar.background.info }}',
-        },
+        background: sidebarBackground,
       },
       transparentOverlay: {
         background: {
