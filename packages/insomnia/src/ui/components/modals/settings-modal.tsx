@@ -1,6 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
@@ -8,6 +7,7 @@ import { selectSettings } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
 import { Account } from '../settings/account';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
@@ -53,23 +53,23 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       <ModalBody noScroll>
         <Tabs className="react-tabs" defaultIndex={currentTabIndex ?? undefined}>
           <TabList>
-            <Tab tabIndex="-1">
-              <button value="General">General</button>
+            <Tab>
+              General
             </Tab>
-            <Tab tabIndex="-1">
-              <button value="Import/Export">Data</button>
+            <Tab>
+              Data
             </Tab>
-            <Tab tabIndex="-1">
-              <button value="Themes">Themes</button>
+            <Tab>
+              Themes
             </Tab>
-            <Tab tabIndex="-1">
-              <button value="Shortcuts">Keyboard</button>
+            <Tab>
+              Keyboard
             </Tab>
-            <Tab tabIndex="-1">
-              <button value="Account">Account</button>
+            <Tab>
+              Account
             </Tab>
-            <Tab tabIndex="-1">
-              <button value="Plugins">Plugins</button>
+            <Tab>
+              Plugins
             </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
