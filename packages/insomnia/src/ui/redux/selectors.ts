@@ -76,6 +76,11 @@ export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
 
+export const selectHotKeyRegistry = createSelector(
+  selectSettings,
+  settings => settings.hotKeyRegistry,
+);
+
 export const selectRequestMetas = createSelector(
   selectEntitiesLists,
   entities => entities.requestMetas,

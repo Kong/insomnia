@@ -1,8 +1,15 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { KeyCombination } from 'insomnia-common';
+import { useEffect } from 'react';
 import { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+import { useSelector } from 'react-redux';
+import tinykeys, { type KeyBindingMap, createKeybindingsHandler } from 'tinykeys';
 
 import { AUTOBIND_CFG, isMac } from '../../common/constants';
+import { getPlatformKeyCombinations, hotKeyRefs, KeyboardShortcut } from '../../common/hotkeys';
+import { keyboardKeys } from '../../common/keyboard-keys';
+import { selectHotKeyRegistry } from '../redux/selectors';
 
 interface Props {
   children?: ReactNode;
@@ -79,3 +86,41 @@ export class KeydownBinder extends PureComponent<Props> {
     return this.props.children ?? null;
   }
 }
+
+export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+
+  useEffect(() => {
+    const finalListeners: KeyBindingMap = {};
+    Object.entries(listeners).map(([key, listener]) => {
+      const keyDefinition = hotKeyRefs[key as KeyboardShortcut];
+      const bindings = hotKeyRegistry[keyDefinition.id];
+
+      const keyCombList = getPlatformKeyCombinations(bindings);
+
+      for (const keyComb of keyCombList) {
+        const parseKeyComb = (keyComb: KeyCombination) => {
+          const { ctrl, alt, shift, meta, keyCode } = keyComb;
+
+          // Get the key from the keyCode from the event
+          const key = Object.keys(keyboardKeys).find(
+            keyName => keyboardKeys[keyName].keyCode === keyCode,
+          );
+
+          return `${ctrl ? 'Control+' : ''}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${meta ? 'Meta+' : ''}${key}`;
+        };
+
+        finalListeners[parseKeyComb(keyComb)] = listener;
+      }
+    });
+
+    const unsubscribe = tinykeys(target, finalListeners);
+    return unsubscribe;
+  }, [hotKeyRegistry, listeners, target]);
+}
+
+export function useGlobalKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+  useKeyboardShortcuts(document.body, listeners);
+}
+
+export { createKeybindingsHandler };

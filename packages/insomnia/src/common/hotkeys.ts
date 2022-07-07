@@ -1,4 +1,4 @@
-import { HotKeyRegistry, KeyBindings, KeyCombination } from 'insomnia-common';
+import type { HotKeyRegistry, KeyBindings, KeyCombination } from 'insomnia-common';
 import { forEach } from 'ramda';
 
 import { displayModifierKey, isMac } from './constants';
@@ -148,6 +148,8 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
     description: 'Focus Documents Filter',
   },
 };
+
+export type KeyboardShortcut = keyof typeof hotKeyRefs;
 
 /**
  * The default key bindings values of all available hotkeys.
