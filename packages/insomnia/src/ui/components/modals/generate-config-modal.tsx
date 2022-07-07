@@ -1,5 +1,4 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import type { ApiSpec } from '../../../models/api-spec';
@@ -11,6 +10,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { showModal } from './index';
@@ -96,19 +96,17 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
       <ModalBody className="wide">
         <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={onSelect}>
           <TabList>{configs.map(config =>
-            (<Tab key={config.label} tabIndex="-1">
-              <button>
-                {config.label}
-                {config.docsLink ?
-                  <>
-                    {' '}
-                    <HelpTooltip>
-                      To learn more about {config.label}
-                      <br />
-                      <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
-                    </HelpTooltip>
-                  </> : null}
-              </button>
+            (<Tab key={config.label}>
+              {config.label}
+              {config.docsLink ?
+                <>
+                  {' '}
+                  <HelpTooltip>
+                    To learn more about {config.label}
+                    <br />
+                    <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
+                  </HelpTooltip>
+                </> : null}
             </Tab>)
           )}
           </TabList>
