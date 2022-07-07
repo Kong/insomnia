@@ -2,7 +2,6 @@ import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
@@ -15,6 +14,7 @@ import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
+import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -184,33 +184,27 @@ export const RequestPane: FC<Props> = ({
       </PaneHeader>
       <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
         <TabList>
-          <Tab tabIndex="-1">
+          <Tab>
             <ContentTypeDropdown onChange={updateRequestMimeType} />
           </Tab>
-          <Tab tabIndex="-1">
+          <Tab>
             <AuthDropdown />
           </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Query
-              {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
-            </button>
+          <Tab>
+            Query
+            {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
           </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Headers
-              {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
-            </button>
+          <Tab>
+            Headers
+            {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
           </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Docs
-              {request.description && (
-                <span className="bubble space-left">
-                  <i className="fa fa--skinny fa-check txt-xxs" />
-                </span>
-              )}
-            </button>
+          <Tab>
+            Docs
+            {request.description && (
+              <span className="bubble space-left">
+                <i className="fa fa--skinny fa-check txt-xxs" />
+              </span>
+            )}
           </Tab>
         </TabList>
         <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
