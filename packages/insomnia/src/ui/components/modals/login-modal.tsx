@@ -83,7 +83,7 @@ export class LoginModal extends PureComponent<{}, State> {
   render() {
     const { title, message, loading, error } = this.state;
     return (
-      <form onSubmit={this._handleLogin}>
+      <form onSubmit={this._handleLogin} data-testid="LoginModal__form">
         <Modal ref={this._setModalRef} {...this.props}>
           <ModalHeader>{title || 'Log Into Your Account'}</ModalHeader>
           <ModalBody className="pad">
