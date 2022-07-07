@@ -3,7 +3,6 @@ import { isValid } from 'date-fns';
 import { cookieToString } from 'insomnia-cookies';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as toughCookie from 'tough-cookie';
 
 import * as models from '../../../models';
@@ -13,6 +12,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 export interface CookieModifyModalOptions {
   cookie: Cookie;
@@ -84,11 +84,11 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
         {activeCookieJar && cookie && (
           <Tabs>
             <TabList>
-              <Tab tabIndex="-1">
-                <button>Friendly</button>
+              <Tab>
+                Friendly
               </Tab>
-              <Tab tabIndex="-1">
-                <button>Raw</button>
+              <Tab>
+                Raw
               </Tab>
             </TabList>
             <TabPanel>
