@@ -176,7 +176,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
               <i className="fa fa-caret-down fa--skinny space-left" />
             </DropdownButton>
             {parts.map(part => (
-              <DropdownItem key={part.title} value={part} onClick={selectPart}>
+              <DropdownItem key={part.id} value={part} onClick={selectPart}>
                 {selectedPart?.id === part.id ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
                 {part.title}
               </DropdownItem>
@@ -207,9 +207,9 @@ export const ResponseMultipartViewer: FC<Props> = ({
           filter={filter}
           filterHistory={filterHistory}
           getBody={partBuffer}
-          key={`${responseId}::${selectedPart?.title}`}
+          key={`${responseId}::${selectedPart?.id}`}
           previewMode={PREVIEW_MODE_FRIENDLY}
-          responseId={`${responseId}[${selectedPart?.title}]`}
+          responseId={`${responseId}[${selectedPart?.id}]`}
           url={url}
         />
       </div>
