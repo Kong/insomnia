@@ -4,7 +4,6 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -15,6 +14,7 @@ import { cancelRequestById } from '../../../network/network';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
+import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -157,30 +157,26 @@ export const ResponsePane: FC<Props> = ({
         forceRenderTabPanel
       >
         <TabList>
-          <Tab tabIndex="-1">
+          <Tab>
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={handleCopyResponseToClipboard}
             />
           </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Headers{' '}
-              {response.headers.length > 0 && (
-                <span className="bubble">{response.headers.length}</span>
-              )}
-            </button>
+          <Tab>
+            Headers{' '}
+            {response.headers.length > 0 && (
+              <span className="bubble">{response.headers.length}</span>
+            )}
           </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Cookies{' '}
-              {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>
-              ) : null}
-            </button>
+          <Tab>
+            Cookies{' '}
+            {cookieHeaders.length ? (
+              <span className="bubble">{cookieHeaders.length}</span>
+            ) : null}
           </Tab>
-          <Tab tabIndex="-1">
-            <button>Timeline</button>
+          <Tab>
+            Timeline
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
