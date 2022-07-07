@@ -17,18 +17,15 @@ export const CopyButton: FC<Props> = ({
   ...buttonProps
 }) => {
   const [showConfirmation, setshowConfirmation] = useState(false);
-  const onClick = useCallback((event: React.MouseEvent) => {
-    const fn = async () => {
-      event.preventDefault();
-      event.stopPropagation();
-      const toCopy = typeof content === 'string' ? content : await content();
+  const onClick = useCallback(async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const toCopy = typeof content === 'string' ? content : await content();
 
-      if (toCopy) {
-        clipboard.writeText(toCopy);
-      }
-      setshowConfirmation(true);
-    };
-    fn();
+    if (toCopy) {
+      clipboard.writeText(toCopy);
+    }
+    setshowConfirmation(true);
   }, [content]);
 
   useInterval(() => {

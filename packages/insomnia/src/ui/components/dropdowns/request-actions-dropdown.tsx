@@ -53,42 +53,36 @@ export const RequestActionsDropdown = forwardRef<Dropdown, Props>(({
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 
-  const onOpen = useCallback(() => {
-    const fn = async () => {
-      const actionPlugins = await getRequestActions();
-      setActionPlugins(actionPlugins);
-    };
-    fn();
+  const onOpen = useCallback(async () => {
+    const actionPlugins = await getRequestActions();
+    setActionPlugins(actionPlugins);
   }, []);
 
-  const handlePluginClick = useCallback(({ plugin, action, label }: RequestAction) => {
-    const fn = async () => {
-      setLoadingActions({ ...loadingActions, [label]: true });
+  const handlePluginClick = useCallback(async ({ plugin, action, label }: RequestAction) => {
+    setLoadingActions({ ...loadingActions, [label]: true });
 
-      try {
-        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-        const context = {
-          ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
-          ...pluginContexts.data.init(activeProject._id),
-          ...(pluginContexts.store.init(plugin)),
-          ...(pluginContexts.network.init(activeEnvironmentId)),
-        };
-        await action(context, {
-          request,
-          requestGroup,
-        });
-      } catch (error) {
-        showError({
-          title: 'Plugin Action Failed',
-          error,
-        });
-      }
-      setLoadingActions({ ...loadingActions, [label]: false });
-      if (ref && 'current' in ref) { // this `in` operator statement type-narrows to `MutableRefObject`
-        ref.current?.hide();
-      }
-    };
-    fn();
+    try {
+      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
+        ...pluginContexts.data.init(activeProject._id),
+        ...(pluginContexts.store.init(plugin)),
+        ...(pluginContexts.network.init(activeEnvironmentId)),
+      };
+      await action(context, {
+        request,
+        requestGroup,
+      });
+    } catch (error) {
+      showError({
+        title: 'Plugin Action Failed',
+        error,
+      });
+    }
+    setLoadingActions({ ...loadingActions, [label]: false });
+    if (ref && 'current' in ref) { // this `in` operator statement type-narrows to `MutableRefObject`
+      ref.current?.hide();
+    }
   }, [request, activeEnvironment, requestGroup, loadingActions, activeProject._id, ref]);
 
   const duplicate = useCallback(() => {
