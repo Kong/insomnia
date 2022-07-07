@@ -76,7 +76,7 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
   }
 
   if (parameter.schema && '$ref' in parameter.schema) {
-    const schema = getOperationRef<OpenAPIV3.ParameterObject['schema']>($refs, parameter.schema.$ref);
+    const schema = getOperationRef<OpenAPIV3.ReferenceObject>($refs, parameter.schema.$ref);
     const resolvedParam = { ...parameter, schema };
     const components = resolveComponents($refs, resolvedParam);
     return {
@@ -165,103 +165,75 @@ function getOperationRef<RefType = OpenAPIV3.RequestBodyObject>($refs: SwaggerPa
 }
 
 /**
- * Resolves path key for a string path value recursively.
- * @param $refs SwaggerParser.$Ref object to get free methods
- * @param key path key to check in the Map
- * @param value path value to parse and call recursive method to resolve further down tree
- * @param acc Map object to check if path key already has a value set
- * @returns Map object with path key - path value set
- */
-function handleStringCase(
-  $refs: SwaggerParser.$Refs,
-  key: string,
-  value: string,
-  acc: Map<string, unknown>
-): Map<string, unknown> {
-  if (key !== '$ref' || acc.has(value)) {
-    return acc;
-  }
-
-  const pathResolved = getOperationRef($refs, value);
-  if (pathResolved) {
-    acc.set(value, pathResolved);
-    const resolved = resolveRefSchemaRecursively($refs, pathResolved, acc);
-    return new Map([...acc, ...resolved]);
-  }
-
-  return acc;
-}
-
-/**
- * Resolves path key for a object of unknown path value recursively.
- * @param $refs SwaggerParser.$Ref object to get free methods
- * @param value object type value of unknown
- * @param acc Map object to check if path key already has a value set
- * @returns Map object with path key - path value set
- */
-function handleObjectCase(
-  $refs: SwaggerParser.$Refs,
-  value: unknown,
-  acc: Map<string, unknown>
-): Map<string, unknown> {
-  const resolved = resolveRefSchemaRecursively($refs, value, acc);
-  return new Map([...acc, ...resolved]);
-}
-
-/**
- * Resolves path key for an array of unknown path value recursively.
- * @param $refs SwaggerParser.$Ref object to get free methods
- * @param value array type value of unknown
- * @param acc Map object to check if path key already has a value set
- * @returns Map object with path key - path value set
- */
-function handleArrayCase(
-  $refs: SwaggerParser.$Refs,
-  value: unknown[],
-  acc: Map<string, unknown>
-): Map<string, unknown> {
-  if (!value.length) {
-    return acc;
-  }
-
-  return value.reduce((newAcc: Map<string, unknown>, item: unknown) => {
-    return resolveRefSchemaRecursively($refs, item, newAcc);
-  }, new Map([...acc]));
-}
-
-/**
  * Resolves a ref for the given schema recursively with unknown types.
  * @param $refs SwaggerParser.$Ref object to get free methods
  * @param source the source object to be parsed by resolving all the references
  * @param components Map object to map each component path key and value recursively
  * @returns a New Map object that capture all resolved refs of path keys and values upto the Nth iteration.
  */
-function resolveRefSchemaRecursively<T = OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject>(
+function resolveRefSchemaRecursively(
   $refs: SwaggerParser.$Refs,
-  source: T,
+  source: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject,
   components = new Map(),
 ): Map<string, unknown> {
   const componentsRefMap = new Map([...components]);
-  if (typeof source !== 'object' || Array.isArray(source) || !source) {
+  if (typeof source !== 'object' || source === null) {
+    // if the source is any non-object literal (string, boolean, number, undefined) we want to bail because you cannot iterate these values. (Since `typeof null` equals `'object'` in JavaScript, we also want to catch null)
     return componentsRefMap;
   }
 
-  return Object
-    .entries(source)
-    .reduce((acc: Map<string, unknown>, [pathKey, pathValue]: [string, unknown]) => {
-      if (typeof pathValue === 'string') {
-        return handleStringCase($refs, pathKey, pathValue, acc);
-      }
+  if (Array.isArray(source)) {
+    // if the source is an array literal, we want to just return it literally (i.e. skip) because all we're looking for is the `$ref` value (which is always an object in the OpenAPI spec). For the purposes of this function, we don't care about arrays because it means the value isn't relevant to what this function tries to do (which is, resolving `$ref`s).
+    return componentsRefMap;
+  }
 
-      if (typeof pathValue !== 'object') {
+  return Object.entries(source)
+    .reduce<Map<string, unknown>>((acc, [key, value]: Entry<Map<string, unknown>>) => {
+      if (typeof value === 'string') {
+        // the responsiblity of this function is only really concerning `$ref`s, so if the end value is not a `$ref` we can skip it
+        if (key !== '$ref') {
+          return acc;
+        }
+
+        // the accumulator alreadly having this `$ref` value indicates that we have already visited this ref, and as such we should exit early to prevent an infinite loop since circular `$ref`s are valid in OpenAPI.
+        if (acc.has(value)) {
+          return acc;
+        }
+
+        const pathResolved = getOperationRef($refs, value);
+        if (pathResolved) {
+          acc.set(value, pathResolved);
+          const resolved = resolveRefSchemaRecursively($refs, pathResolved, acc);
+          return new Map([...acc, ...resolved]);
+        }
+
         return acc;
       }
 
-      if (Array.isArray(pathValue)) {
-        return handleArrayCase($refs, pathValue, acc);
+      // if the value is not iterable (i.e. array or object) we want to bail
+      if (typeof value !== 'object') {
+        return acc;
       }
 
-      return handleObjectCase($refs, pathValue, acc);
+      // since `typeof null` equals `object` in JavaScript, we catch this case separately
+      if (value === null) {
+        return acc;
+      }
+
+      if (Array.isArray(value)) {
+        // if the array is empty, we're done
+        if (value.length === 0) {
+          return acc;
+        }
+
+        // resolve the refs (recursively) looking for `$ref`s
+        return value.reduce((newAcc, item) => (
+          resolveRefSchemaRecursively($refs, item, newAcc)
+        ), new Map([...acc]));
+      }
+
+      // iterate into the next level in the recursion with `value` as the source (value is now narrowed to an Object)
+      return new Map([...acc, ...resolveRefSchemaRecursively($refs, value, acc)]);
     }, componentsRefMap);
 }
 
@@ -291,7 +263,7 @@ function buildComponentsObjectFromMap(mapObject: Map<string, unknown>): Record<s
  */
 function resolveComponents(
   $refs: SwaggerParser.$Refs,
-  schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject,
+  schema: OpenAPIV3.SchemaObject | OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
 ): OpenAPIV3.ComponentsObject | undefined {
   const componentsMap = resolveRefSchemaRecursively($refs, schema);
   if (!componentsMap.size) {
@@ -339,21 +311,6 @@ function resolveItemSchema($refs: SwaggerParser.$Refs, item: OpenAPIV3.MediaType
   return hasNoRef;
 }
 
-function processSchema(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
-  for (const key in schema.properties) {
-    // Append 'null' to property type if nullable true, see FTI-3278
-    // TODO: this does not conform to the OpenAPI 3 spec typings. We may need to investifate further why this was needed
-
-    // @ts-expect-error this needs a casting perhaps. schema can be either ArraySchemaObject or NonArraySchemaObject. Only the later has 'properties'
-    if (schema.properties[key].nullable === true) {
-      // @ts-expect-error this needs some further investigation. 'type' is merely an string enum, not an array according to the OpenAPI 3 typings.
-      schema.properties[key].type = [schema.properties[key].type, 'null'];
-    }
-  }
-
-  return schema;
-}
-
 export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Operation) {
   const $refs: SwaggerParser.$Refs = await SwaggerParser.resolve(api);
   let bodySchema;
@@ -368,8 +325,16 @@ export async function generateBodyOptions(api: OpenApi3Spec, operation?: OA3Oper
 
     if (allowedContentTypes.includes(jsonContentType)) {
       const item: OpenAPIV3.MediaTypeObject = bodyContent[jsonContentType];
-      const { schema: rawSchema, components } = resolveItemSchema($refs, item);
-      const schema = processSchema(rawSchema);
+      const { schema, components } = resolveItemSchema($refs, item);
+
+      for (const key in schema.properties) {
+        // Append 'null' to property type if nullable true, seeccccc
+        if ((schema.properties[key] as OpenAPIV3.SchemaObject).nullable === true) {
+          // @ts-expect-error this needs some further investigation. 'type' is merely an string literal union, not an array (i.e. tuple) according to the OpenAPI 3 typings for `SchemaObject.type`.
+          schema.properties[key].type = [schema.properties[key].type, 'null'];
+        }
+      }
+
       bodySchema = serializeSchemaForKong(schema, components);
     }
   }
