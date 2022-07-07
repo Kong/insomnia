@@ -1,6 +1,5 @@
 import React, { FC, forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { ACTIVITY_HOME } from '../../../common/constants';
@@ -17,6 +16,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
+import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
@@ -223,11 +223,11 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
         <ModalBody key={`body::${workspace._id}`} noScroll>
           <Tabs forceRenderTabPanel className="react-tabs">
             <TabList>
-              <Tab tabIndex="-1">
-                <button>Overview</button>
+              <Tab>
+                Overview
               </Tab>
-              <Tab tabIndex="-1">
-                <button>Client Certificates</button>
+              <Tab>
+                Client Certificates
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable pad-top-sm">
