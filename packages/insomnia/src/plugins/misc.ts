@@ -1,62 +1,79 @@
 import Color from 'color';
+import { forEach, keys, path } from 'ramda';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { getAppDefaultTheme } from '../common/constants';
-import { render, THROW_ON_ERROR } from '../common/render';
 import { ThemeSettings } from '../models/settings';
 import type { Theme } from './index';
 import { ColorScheme, getThemes } from './index';
 
-interface ThemeBlock {
+export type HexColor = `#${string}`;
+export type RGBColor = `rgb(${string})`;
+export type RGBAColor = `rgba(${string})`;
+
+export type ThemeColor = HexColor | RGBColor | RGBAColor;
+
+// notice that for each sub-block (`background`, `foreground`, `highlight`) the `default` key is required if the sub-block is present
+export interface ThemeBlock {
   background?: {
-    default: string;
-    success?: string;
-    notice?: string;
-    warning?: string;
-    danger?: string;
-    surprise?: string;
-    info?: string;
+    default: ThemeColor;
+    success?: ThemeColor;
+    notice?: ThemeColor;
+    warning?: ThemeColor;
+    danger?: ThemeColor;
+    surprise?: ThemeColor;
+    info?: ThemeColor;
   };
   foreground?: {
-    default: string;
-    success?: string;
-    notice?: string;
-    warning?: string;
-    danger?: string;
-    surprise?: string;
-    info?: string;
+    default: ThemeColor;
+    success?: ThemeColor;
+    notice?: ThemeColor;
+    warning?: ThemeColor;
+    danger?: ThemeColor;
+    surprise?: ThemeColor;
+    info?: ThemeColor;
   };
   highlight?: {
-    default: string;
-    xxs?: string;
-    xs?: string;
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
+    default: ThemeColor;
+    xxs?: ThemeColor;
+    xs?: ThemeColor;
+    sm?: ThemeColor;
+    md?: ThemeColor;
+    lg?: ThemeColor;
+    xl?: ThemeColor;
   };
 }
 
-type ThemeInner = ThemeBlock & {
+export interface CompleteStyleBlock {
+  background: Required<Required<ThemeBlock>['background']>;
+  foreground: Required<Required<ThemeBlock>['foreground']>;
+  highlight: Required<Required<ThemeBlock>['highlight']>;
+}
+
+export interface StylesThemeBlocks {
+  appHeader?: ThemeBlock;
+  dialog?: ThemeBlock;
+  dialogFooter?: ThemeBlock;
+  dialogHeader?: ThemeBlock;
+  dropdown?: ThemeBlock;
+  editor?: ThemeBlock;
+  link?: ThemeBlock;
+  overlay?: ThemeBlock;
+  pane?: ThemeBlock;
+  paneHeader?: ThemeBlock;
+  sidebar?: ThemeBlock;
+  sidebarHeader?: ThemeBlock;
+  sidebarList?: ThemeBlock;
+
+  /** does not respect parent wrapping theme */
+  tooltip?: ThemeBlock;
+
+  transparentOverlay?: ThemeBlock;
+}
+
+export type ThemeInner = ThemeBlock & {
   rawCss?: string;
-  styles?:
-    | {
-        dialog?: ThemeBlock;
-        dialogFooter?: ThemeBlock;
-        dialogHeader?: ThemeBlock;
-        dropdown?: ThemeBlock;
-        editor?: ThemeBlock;
-        link?: ThemeBlock;
-        overlay?: ThemeBlock;
-        pane?: ThemeBlock;
-        paneHeader?: ThemeBlock;
-        sidebar?: ThemeBlock;
-        sidebarHeader?: ThemeBlock;
-        sidebarList?: ThemeBlock;
-        tooltip?: ThemeBlock;
-        transparentOverlay?: ThemeBlock;
-      }
-    | null;
+  styles?: StylesThemeBlocks | null;
 };
 
 export interface PluginTheme {
@@ -77,70 +94,105 @@ export const validateThemeName = (name: string) => {
   return validName;
 };
 
-export async function generateThemeCSS(theme: PluginTheme) {
-  const renderedTheme: ThemeInner = await render(
-    theme.theme,
-    theme.theme,
-    null,
-    THROW_ON_ERROR,
-    theme.name,
-  );
-  const n = theme.name;
-  validateThemeName(theme.name);
+export const containsNunjucks = (data: string) => (
+  data.includes('{{') && data.includes('}}')
+);
+
+/** In July 2022, the ability to use Nunjucks in themes was removed. This validator is a means of alerting any users of a theme depending on Nunjucks.  The failure mode for this case (in practice) is that the CSS variable will just not be used, thus it's not something we'd want to go as far as throwing an error about. */
+export const validateTheme = (pluginTheme: PluginTheme) => {
+  const checkIfContainsNunjucks = (pluginTheme: PluginTheme) => (keyPath: string[]) => {
+    const data = path(keyPath, pluginTheme.theme);
+
+    if (!data) {
+      return;
+    }
+
+    if (typeof data === 'string' && containsNunjucks(data)) {
+      console.error(`[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${pluginTheme.displayName} (${pluginTheme.name}) has an invalid value, "${data}" at the path $.theme.${keyPath.join('.')}`);
+    }
+
+    if (typeof data === 'object') {
+      forEach(ownKey => {
+        checkIfContainsNunjucks(pluginTheme)([...keyPath, ownKey]);
+      }, keys(data));
+    }
+  };
+
+  const check = checkIfContainsNunjucks(pluginTheme);
+
+  check(['rawCss']);
+
+  forEach<keyof ThemeBlock>(rootPath => {
+    check([rootPath]);
+
+    forEach(style => {
+      check(['styles', style, rootPath]);
+    }, keys<StylesThemeBlocks>(pluginTheme.theme.styles ?? {}));
+  }, [
+    'background',
+    'foreground',
+    'highlight',
+  ]);
+
+};
+
+export const generateThemeCSS = (pluginTheme: PluginTheme) => {
+  const { theme, name } = pluginTheme;
+  validateTheme(pluginTheme);
+  validateThemeName(name);
 
   let css = '';
-  // For the top-level variables, merge with the base theme to ensure that
-  // we have everything we need.
+  // For the top-level variables, merge with the base theme to ensure that we have everything we need.
   css += wrapStyles(
-    n,
+    name,
     '',
     getThemeBlockCSS({
-      ...renderedTheme,
-      background: { ..._baseTheme.background, ...renderedTheme.background },
-      foreground: { ..._baseTheme.foreground, ...renderedTheme.foreground },
-      highlight: { ..._baseTheme.highlight, ...renderedTheme.highlight },
+      ...theme,
+      background: { ...baseTheme.background, ...theme.background },
+      foreground: { ...baseTheme.foreground, ...theme.foreground },
+      highlight: { ...baseTheme.highlight, ...theme.highlight },
     }),
   );
 
-  if (renderedTheme.styles) {
-    const styles = renderedTheme.styles;
+  if (theme.styles) {
+    const styles = theme.styles;
     // Dropdown Menus
     css += wrapStyles(
-      n,
+      name,
       '.theme--dropdown__menu',
       getThemeBlockCSS(styles.dropdown || styles.dialog),
     );
     // Tooltips
-    css += wrapStyles(n, '.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
+    css += wrapStyles(name, '.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
     // Overlay
     css += wrapStyles(
-      n,
+      name,
       '.theme--transparent-overlay',
       getThemeBlockCSS(styles.transparentOverlay),
     );
     // Dialogs
-    css += wrapStyles(n, '.theme--dialog', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(n, '.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));
-    css += wrapStyles(n, '.theme--dialog__footer', getThemeBlockCSS(styles.dialogFooter));
+    css += wrapStyles(name, '.theme--dialog', getThemeBlockCSS(styles.dialog));
+    css += wrapStyles(name, '.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));
+    css += wrapStyles(name, '.theme--dialog__footer', getThemeBlockCSS(styles.dialogFooter));
     // Panes
-    css += wrapStyles(n, '.theme--pane', getThemeBlockCSS(styles.pane));
-    css += wrapStyles(n, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
-    // @ts-expect-error -- TSCONVERSION
-    css += wrapStyles(n, '.theme--app-header', getThemeBlockCSS(styles.appHeader));
+    css += wrapStyles(name, '.theme--pane', getThemeBlockCSS(styles.pane));
+    css += wrapStyles(name, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
+    css += wrapStyles(name, '.theme--app-header', getThemeBlockCSS(styles.appHeader));
     // Sidebar Styles
-    css += wrapStyles(n, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
-    css += wrapStyles(n, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
-    css += wrapStyles(n, '.theme--sidebar__header', getThemeBlockCSS(styles.sidebarHeader));
+    css += wrapStyles(name, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
+    css += wrapStyles(name, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
+    css += wrapStyles(name, '.theme--sidebar__header', getThemeBlockCSS(styles.sidebarHeader));
     // Link
-    css += wrapStyles(n, '.theme--link', getThemeBlockCSS(styles.link));
+    css += wrapStyles(name, '.theme--link', getThemeBlockCSS(styles.link));
     // Code Editors
-    css += wrapStyles(n, '.theme--editor', getThemeBlockCSS(styles.editor));
+    css += wrapStyles(name, '.theme--editor', getThemeBlockCSS(styles.editor));
     // HACK: Dialog styles for CodeMirror dialogs too
-    css += wrapStyles(n, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
+    css += wrapStyles(name, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
   }
 
+  css += '\n';
   return css;
-}
+};
 
 function getThemeBlockCSS(block?: ThemeBlock) {
   if (!block) {
@@ -298,7 +350,7 @@ export async function setTheme(themeName: string) {
   body.setAttribute('theme', themeName);
 
   for (const theme of themes) {
-    let themeCSS = (await generateThemeCSS(theme.theme)) + '\n';
+    let themeCSS = generateThemeCSS(theme.theme);
     const { name } = theme.theme;
     const { rawCss } = theme.theme.theme;
     let s = document.querySelector(`style[data-theme-name="${name}"]`);
@@ -317,7 +369,7 @@ export async function setTheme(themeName: string) {
   }
 }
 
-const _baseTheme = {
+export const baseTheme: CompleteStyleBlock = {
   background: {
     default: '#fff',
     success: '#75ba24',

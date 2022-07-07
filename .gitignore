@@ -8,6 +8,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+/scripts/npm-plugins
 lib-cov
 coverage
 .lock-wscript
