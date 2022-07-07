@@ -1,5 +1,4 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -9,6 +8,7 @@ import { type ModalHandle, Modal, ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
+import { Tab, TabList, TabPanel, Tabs } from '../../base/tabs';
 import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
@@ -100,21 +100,9 @@ const ModalForm = (props: Props) => {
             selectedIndex={selectedTabIndex}
           >
             <TabList>
-              <Tab>
-                <button>
-                  <i className="fa fa-github" /> GitHub
-                </button>
-              </Tab>
-              <Tab>
-                <button>
-                  <i className="fa fa-gitlab" /> GitLab
-                </button>
-              </Tab>
-              <Tab>
-                <button>
-                  <i className="fa fa-code-fork" /> Git
-                </button>
-              </Tab>
+              <Tab><i className="fa fa-github" /> GitHub</Tab>
+              <Tab><i className="fa fa-gitlab" /> GitLab</Tab>
+              <Tab><i className="fa fa-code-fork" /> Git</Tab>
             </TabList>
             <TabPanel
               className="tabs__tab-panel"
