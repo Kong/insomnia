@@ -1,15 +1,13 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { format } from 'date-fns';
 import { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import multiparty from 'multiparty';
 import path from 'path';
-import React, { PureComponent } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { PassThrough } from 'stream';
 
 import {
-  AUTOBIND_CFG,
   getContentTypeFromHeaders,
   PREVIEW_MODE_FRIENDLY,
 } from '../../../common/constants';
@@ -20,9 +18,11 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
-import { ResponseViewer } from  './response-viewer';
+import { ResponseViewer } from './response-viewer';
 
 interface Part {
+  id: number;
+  title: string;
   name: string;
   bytes: number;
   value: Buffer;
@@ -43,98 +43,65 @@ interface Props {
   url: string;
 }
 
-interface State {
-  activePart: number;
-  parts: Part[];
-  error: string | null;
-}
+export const ResponseMultipartViewer: FC<Props> = ({
+  download,
+  disableHtmlPreviewJs,
+  disablePreviewLinks,
+  editorFontSize,
+  filter,
+  filterHistory,
+  responseId,
+  url,
+  bodyBuffer,
+  contentType,
+}) => {
+  const [parts, setParts] = useState<Part[]>([]);
+  const [selectedPart, setSelectedPart] = useState<Part>();
+  const [error, setError] = useState<string | null>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseMultipartViewer extends PureComponent<Props, State> {
-  state: State = {
-    activePart: -1,
-    parts: [],
-    error: null,
-  };
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const parts = await multipartBufferToArray({ bodyBuffer, contentType });
+        setParts(parts);
+        setSelectedPart(parts[0]);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    init();
+  }, [bodyBuffer, contentType]);
 
-  componentDidMount() {
-    this._setParts();
-  }
+  const selectPart = useCallback((part: Part) => {
+    setSelectedPart(part);
+  }, []);
 
-  async _setParts() {
-    try {
-      const parts = await this._getParts();
-      this.setState({
-        parts,
-        activePart: 0,
-        error: null,
-      });
-    } catch (err) {
-      this.setState({
-        error: err.message,
-      });
-    }
-  }
+  const partBuffer = useCallback(() => selectedPart?.value, [selectedPart]);
 
-  _describePart(part: Part) {
-    const segments = [part.name];
-
-    if (part.filename) {
-      segments.push(`(${part.filename})`);
-    }
-
-    return segments.join(' ');
-  }
-
-  async _handleSelectPart(index: number) {
-    this.setState({
-      activePart: index,
-    });
-  }
-
-  _getBody() {
-    const { parts, activePart } = this.state;
-    const part = parts[activePart];
-
-    if (!part) {
-      return Buffer.from('');
-    }
-
-    return part.value;
-  }
-
-  _handleViewHeaders() {
-    const { parts, activePart } = this.state;
-    const part = parts[activePart];
-
-    if (!part) {
+  const viewHeaders = useCallback(() => {
+    if (!selectedPart) {
       return;
     }
-
     showModal(WrapperModal, {
       title: (
         <span>
-          Headers for <code>{part.name}</code>
+          Headers for <code>{selectedPart.name}</code>
         </span>
       ),
-      body: <ResponseHeadersViewer headers={[...part.headers]} />,
+      body: <ResponseHeadersViewer headers={[...selectedPart.headers]} />,
     });
-  }
+  }, [selectedPart]);
 
-  async _handleSaveAsFile() {
-    const { parts, activePart } = this.state;
-    const part = parts[activePart];
-
-    if (!part) {
+  const saveAsFile = useCallback(async () => {
+    if (!selectedPart) {
       return;
     }
-
-    const contentType = getContentTypeFromHeaders(part.headers, 'text/plain');
+    const contentType = getContentTypeFromHeaders(selectedPart.headers, 'text/plain');
     const extension = mimeExtension(contentType) || '.txt';
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
     const dir = lastDir || window.app.getPath('desktop');
     const date = format(Date.now(), 'yyyy-MM-dd');
-    const filename = part.filename || `${part.name}_${date}`;
+    const filename = selectedPart.filename || `${selectedPart.name}_${date}`;
     const options: SaveDialogOptions = {
       title: 'Save as File',
       buttonLabel: 'Save',
@@ -158,157 +125,148 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
     // Save the file
     try {
       // @ts-expect-error -- TSCONVERSION if filePath is undefined, don't try to write anything
-      await fs.promises.writeFile(filePath, part.value);
+      await fs.promises.writeFile(filePath, selectedPart.value);
     } catch (err) {
       console.warn('Failed to save multipart to file', err);
     }
-  }
+  }, [selectedPart]);
 
-  _getParts(): Promise<Part[]> {
-    return new Promise((resolve, reject) => {
-      const { bodyBuffer, contentType } = this.props;
-      const parts: Part[] = [];
-
-      if (!bodyBuffer) {
-        return resolve(parts);
-      }
-
-      const fakeReq = new PassThrough();
-      // @ts-expect-error -- TSCONVERSION investigate `stream` types
-      fakeReq.headers = {
-        'content-type': contentType,
-      };
-      const form = new multiparty.Form();
-      form.on('part', part => {
-        const dataBuffers: any[] = [];
-        part.on('data', data => {
-          dataBuffers.push(data);
-        });
-        part.on('error', err => {
-          reject(new Error(`Failed to parse part: ${err.message}`));
-        });
-        part.on('end', () => {
-          parts.push({
-            value: Buffer.concat(dataBuffers),
-            name: part.name,
-            filename: part.filename || null,
-            bytes: part.byteCount,
-            headers: Object.keys(part.headers).map(name => ({
-              name,
-              value: part.headers[name],
-            })),
-          });
-        });
-      });
-      form.on('error', err => {
-        reject(err);
-      });
-      form.on('close', () => {
-        resolve(parts);
-      });
-      // @ts-expect-error -- TSCONVERSION
-      form.parse(fakeReq);
-      fakeReq.write(bodyBuffer);
-      fakeReq.end();
-    });
-  }
-
-  render() {
-    const {
-      download,
-      disableHtmlPreviewJs,
-      disablePreviewLinks,
-      editorFontSize,
-      filter,
-      filterHistory,
-      responseId,
-      url,
-    } = this.props;
-    const { activePart, parts, error } = this.state;
-
-    if (error) {
-      return (
-        <div
-          className="pad monospace"
-          style={{
-            fontSize: editorFontSize,
-          }}
-        >
-          Failed to parse multipart response: {error}
-        </div>
-      );
-    }
-
-    const selectedPart = parts[activePart];
+  if (error) {
     return (
       <div
-        className="pad-sm tall wide"
+        className="pad monospace"
         style={{
-          display: 'grid',
-          gridTemplateRows: 'auto minmax(0, 1fr)',
+          fontSize: editorFontSize,
         }}
       >
-        <div
-          className="pad-bottom-sm"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) auto',
-          }}
-        >
-          <div>
-            <Dropdown wide>
-              <DropdownButton className="btn btn--clicky">
-                <div
-                  style={{
-                    minWidth: '200px',
-                    display: 'inline-block',
-                  }}
-                >
-                  {selectedPart ? this._describePart(selectedPart) : 'Unknown'}
-                </div>
-                <i className="fa fa-caret-down fa--skinny space-left" />
-              </DropdownButton>
-              {parts.map((part, i) => (
-                <DropdownItem key={i} value={i} onClick={this._handleSelectPart}>
-                  {i === activePart ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
-                  {this._describePart(part)}
-                </DropdownItem>
-              ))}
-            </Dropdown>
-          </div>
-          <Dropdown right>
-            <DropdownButton className="btn btn--clicky">
-              <i className="fa fa-bars" />
-            </DropdownButton>
-            <DropdownItem onClick={this._handleViewHeaders}>
-              <i className="fa fa-list" /> View Headers
-            </DropdownItem>
-            <DropdownItem onClick={this._handleSaveAsFile}>
-              <i className="fa fa-save" /> Save as File
-            </DropdownItem>
-          </Dropdown>
-        </div>
-        {selectedPart ? (
-          <div className="tall wide">
-            <ResponseViewer
-              bytes={selectedPart.bytes || 0}
-              contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
-              disableHtmlPreviewJs={disableHtmlPreviewJs}
-              disablePreviewLinks={disablePreviewLinks}
-              download={download}
-              editorFontSize={editorFontSize}
-              error={null}
-              filter={filter}
-              filterHistory={filterHistory}
-              getBody={this._getBody}
-              key={`${responseId}::${activePart}`}
-              previewMode={PREVIEW_MODE_FRIENDLY}
-              responseId={`${responseId}[${activePart}]`}
-              url={url}
-            />
-          </div>
-        ) : null}
+        Failed to parse multipart response: {error}
       </div>
     );
   }
+
+  if (parts.length === 0 || !selectedPart) {
+    return null;
+  }
+  return (
+    <div
+      className="pad-sm tall wide"
+      style={{
+        display: 'grid',
+        gridTemplateRows: 'auto minmax(0, 1fr)',
+      }}
+    >
+      <div
+        className="pad-bottom-sm"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
+        }}
+      >
+        <div>
+          <Dropdown wide>
+            <DropdownButton className="btn btn--clicky">
+              <div
+                style={{
+                  minWidth: '200px',
+                  display: 'inline-block',
+                }}
+              >
+                {selectedPart.title}
+              </div>
+              <i className="fa fa-caret-down fa--skinny space-left" />
+            </DropdownButton>
+            {parts.map(part => (
+              <DropdownItem key={part.id} value={part} onClick={selectPart}>
+                {selectedPart?.id === part.id ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
+                {part.title}
+              </DropdownItem>
+            ))}
+          </Dropdown>
+        </div>
+        <Dropdown right>
+          <DropdownButton className="btn btn--clicky">
+            <i className="fa fa-bars" />
+          </DropdownButton>
+          <DropdownItem onClick={viewHeaders}>
+            <i className="fa fa-list" /> View Headers
+          </DropdownItem>
+          <DropdownItem onClick={saveAsFile}>
+            <i className="fa fa-save" /> Save as File
+          </DropdownItem>
+        </Dropdown>
+      </div>
+      <div className="tall wide">
+        <ResponseViewer
+          bytes={selectedPart.bytes || 0}
+          contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
+          disableHtmlPreviewJs={disableHtmlPreviewJs}
+          disablePreviewLinks={disablePreviewLinks}
+          download={download}
+          editorFontSize={editorFontSize}
+          error={null}
+          filter={filter}
+          filterHistory={filterHistory}
+          getBody={partBuffer}
+          key={`${responseId}::${selectedPart?.id}`}
+          previewMode={PREVIEW_MODE_FRIENDLY}
+          responseId={`${responseId}[${selectedPart?.id}]`}
+          url={url}
+        />
+      </div>
+
+    </div>
+  );
+};
+
+function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffer | null; contentType: string }): Promise<Part[]> {
+  return new Promise((resolve, reject) => {
+    const parts: Part[] = [];
+
+    if (!bodyBuffer) {
+      return resolve(parts);
+    }
+
+    const fakeReq = new PassThrough();
+    // @ts-expect-error -- TSCONVERSION investigate `stream` types
+    fakeReq.headers = {
+      'content-type': contentType,
+    };
+    const form = new multiparty.Form();
+    let id = 0;
+    form.on('part', part => {
+      const dataBuffers: any[] = [];
+      part.on('data', data => {
+        dataBuffers.push(data);
+      });
+      part.on('error', err => {
+        reject(new Error(`Failed to parse part: ${err.message}`));
+      });
+      part.on('end', () => {
+        const title = part.filename ? `${part.name} (${part.filename})` : part.name;
+        parts.push({
+          id,
+          title,
+          value: dataBuffers ? Buffer.concat(dataBuffers) : Buffer.from(''),
+          name: part.name,
+          filename: part.filename || null,
+          bytes: part.byteCount,
+          headers: Object.keys(part.headers).map(name => ({
+            name,
+            value: part.headers[name],
+          })),
+        });
+        id += 1;
+      });
+    });
+    form.on('error', err => {
+      reject(err);
+    });
+    form.on('close', () => {
+      resolve(parts);
+    });
+    // @ts-expect-error -- TSCONVERSION
+    form.parse(fakeReq);
+    fakeReq.write(bodyBuffer);
+    fakeReq.end();
+  });
 }
