@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
@@ -10,6 +9,7 @@ import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../../redux/selectors';
+import { Tab, TabList, TabPanel, Tabs } from '../../base/tabs';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
@@ -120,10 +120,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           <Tabs className="react-tabs" forceRenderTabPanel>
             <TabList>
               <Tab>
-                <button>{methodTypeLabel}</button>
+                {methodTypeLabel}
               </Tab>
               <Tab>
-                <button>Headers</button>
+                Headers
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel">
