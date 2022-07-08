@@ -92,15 +92,12 @@ const useDesignEmptyState = () => {
     }
   }, [contents, shouldIncrementCounter]);
 
-  const onUpdateContents = useCallback((value: string) => {
+  const onUpdateContents = useCallback(async (value: string) => {
     if (!activeApiSpec) {
       return;
     }
 
-    const fn = async () => {
-      await models.apiSpec.update({ ...activeApiSpec, contents: value });
-    };
-    fn();
+    await models.apiSpec.update({ ...activeApiSpec, contents: value });
 
     // Because we can't await activeApiSpec.contents to have propageted to redux, we flip a toggle to decide if we should do something when redux does eventually change
     setShouldIncrementCounter(true);
@@ -124,15 +121,12 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
 
   const onCodeEditorChange = useMemo(() => {
-    const handler = (contents: string) => {
-      const fn = async () => {
-        if (!activeApiSpec) {
-          return;
-        }
+    const handler = async (contents: string) => {
+      if (!activeApiSpec) {
+        return;
+      }
 
-        await models.apiSpec.update({ ...activeApiSpec, contents });
-      };
-      fn();
+      await models.apiSpec.update({ ...activeApiSpec, contents });
     };
 
     return debounce(handler, 500);

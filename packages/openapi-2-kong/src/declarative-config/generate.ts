@@ -35,8 +35,7 @@ export async function generateDeclarativeConfigFromSpec(
      *
      * Therefore, JSON.parse(JSON.stringify(result)) doesn't seem to be needed any more.
      */
-    const result: DeclarativeConfigResult = declarativeConfigResult;
-    return result;
+    return declarativeConfigResult;
   } catch (err) {
     throw new Error('Failed to generate spec: ' + err.message);
   }

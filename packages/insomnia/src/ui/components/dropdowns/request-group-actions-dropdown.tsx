@@ -61,10 +61,9 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     },
   }));
 
-  const onOpen = useCallback(() => {
-    getRequestGroupActions().then(actionPlugins => {
-      setActionPlugins(actionPlugins);
-    });
+  const onOpen = useCallback(async () => {
+    const actionPlugins = await getRequestGroupActions();
+    setActionPlugins(actionPlugins);
   }, []);
 
   const handleRequestGroupDuplicate = useCallback(() => {
@@ -75,49 +74,46 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     createRequestGroup(requestGroup._id);
   }, [requestGroup._id]);
 
-  const handleDeleteFolder = useCallback(() => {
-    models.stats.incrementDeletedRequestsForDescendents(requestGroup).then(() => {
-      models.requestGroup.remove(requestGroup);
-    });
+  const handleDeleteFolder = useCallback(async () => {
+    await models.stats.incrementDeletedRequestsForDescendents(requestGroup);
+    models.requestGroup.remove(requestGroup);
   }, [requestGroup]);
 
   const handleEditEnvironment = useCallback(() => {
     showModal(EnvironmentEditModal, requestGroup);
   }, [requestGroup]);
 
-  const handlePluginClick = useCallback(({ label, plugin, action }: RequestGroupAction) => {
-    const fn = async () => {
-      setLoadingActions({ ...loadingActions, [label]: true });
+  const handlePluginClick = useCallback(async ({ label, plugin, action }: RequestGroupAction) => {
+    setLoadingActions({ ...loadingActions, [label]: true });
 
-      try {
-        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-        const context = {
-          ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-          ...pluginContexts.data.init(activeProject._id),
-          ...(pluginContexts.store.init(plugin) as Record<string, any>),
-          ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
-        };
-        const requests = await models.request.findByParentId(requestGroup._id);
-        requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
-        await action(context, {
-          requestGroup,
-          requests,
-        });
-      } catch (err) {
-        showError({
-          title: 'Plugin Action Failed',
-          error: err,
-        });
-      }
-
-      setLoadingActions({
-        ...loadingActions,
-        [label]: false,
+    try {
+      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...pluginContexts.data.init(activeProject._id),
+        ...(pluginContexts.store.init(plugin) as Record<string, any>),
+        ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
+      };
+      const requests = await models.request.findByParentId(requestGroup._id);
+      requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
+      await action(context, {
+        requestGroup,
+        requests,
       });
+    } catch (err) {
+      showError({
+        title: 'Plugin Action Failed',
+        error: err,
+      });
+    }
 
-      dropdownRef.current?.hide();
-    };
-    fn();
+    setLoadingActions({
+      ...loadingActions,
+      [label]: false,
+    });
+
+    dropdownRef.current?.hide();
+
   }, [dropdownRef, loadingActions,  activeEnvironment, requestGroup, activeProject]);
 
   return (

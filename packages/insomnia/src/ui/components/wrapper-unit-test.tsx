@@ -104,41 +104,35 @@ const WrapperUnitTest: FC<Props> = ({
 
   const selectableRequests = buildSelectableRequests();
 
-  const handleSetActiveUnitTestSuite = useCallback((unitTestSuite: UnitTestSuite) => {
-    const fn = async () => {
-      if (!activeWorkspace) {
-        return;
-      }
+  const handleSetActiveUnitTestSuite = useCallback(async (unitTestSuite: UnitTestSuite) => {
+    if (!activeWorkspace) {
+      return;
+    }
 
-      await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
-        activeUnitTestSuiteId: unitTestSuite._id,
-      });
-    };
-    fn();
+    await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
+      activeUnitTestSuiteId: unitTestSuite._id,
+    });
   }, [activeWorkspace]);
 
-  const handleCreateTestSuite = useCallback(() => {
-    const fn = async () => {
-      if (!activeWorkspace) {
-        return;
-      }
-      showPrompt({
-        title: 'New Test Suite',
-        defaultValue: 'New Suite',
-        submitName: 'Create Suite',
-        label: 'Test Suite Name',
-        selectText: true,
-        onComplete: async name => {
-          const unitTestSuite = await models.unitTestSuite.create({
-            parentId: activeWorkspace._id,
-            name,
-          });
-          await handleSetActiveUnitTestSuite(unitTestSuite);
-          trackSegmentEvent(SegmentEvent.testSuiteCreate);
-        },
-      });
-    };
-    fn();
+  const handleCreateTestSuite = useCallback(async () => {
+    if (!activeWorkspace) {
+      return;
+    }
+    showPrompt({
+      title: 'New Test Suite',
+      defaultValue: 'New Suite',
+      submitName: 'Create Suite',
+      label: 'Test Suite Name',
+      selectText: true,
+      onComplete: async name => {
+        const unitTestSuite = await models.unitTestSuite.create({
+          parentId: activeWorkspace._id,
+          name,
+        });
+        await handleSetActiveUnitTestSuite(unitTestSuite);
+        trackSegmentEvent(SegmentEvent.testSuiteCreate);
+      },
+    });
   }, [handleSetActiveUnitTestSuite, activeWorkspace]);
 
   const generateSendReqSnippet = useCallback((existingCode: string, requestId: string) => {
@@ -240,22 +234,20 @@ const WrapperUnitTest: FC<Props> = ({
     models.unitTest.update(unitTest, { requestId });
   }, []);
 
-  const handleDeleteUnitTestSuite = useCallback((unitTestSuite: UnitTestSuite) => {
-    return () => {
-      showAlert({
-        title: `Delete ${unitTestSuite.name}`,
-        message: (
-          <span>
-            Really delete <strong>{unitTestSuite.name}</strong>?
-          </span>
-        ),
-        addCancel: true,
-        onConfirm: async () => {
-          await models.unitTestSuite.remove(unitTestSuite);
-          trackSegmentEvent(SegmentEvent.testSuiteDelete);
-        },
-      });
-    };
+  const handleDeleteUnitTestSuite = useCallback((unitTestSuite: UnitTestSuite) => () => {
+    showAlert({
+      title: `Delete ${unitTestSuite.name}`,
+      message: (
+        <span>
+          Really delete <strong>{unitTestSuite.name}</strong>?
+        </span>
+      ),
+      addCancel: true,
+      onConfirm: async () => {
+        await models.unitTestSuite.remove(unitTestSuite);
+        trackSegmentEvent(SegmentEvent.testSuiteDelete);
+      },
+    });
   }, []);
 
   const handleChangeTestName = useCallback((unitTest: UnitTest, name?: string) => {
@@ -270,47 +262,42 @@ const WrapperUnitTest: FC<Props> = ({
     models.unitTestSuite.update(activeUnitTestSuite, { name });
   }, [activeUnitTestSuite]);
 
-  const _runTests = useCallback((unitTests: UnitTest[]) => {
-    const fn = async () => {
-      if (!activeWorkspace) {
-        return;
-      }
-      setTestsRunning(unitTests);
-      setResultsError(null);
-      const tests: Test[] = unitTests.map(t => ({ name: t.name, code: t.code, defaultRequestId: t.requestId }));
-      const src = await generate([{ name: 'My Suite', suites: [], tests }]);
-      const sendRequest = getSendRequestCallback(activeEnvironment?._id);
+  const _runTests = useCallback(async (unitTests: UnitTest[]) => {
+    if (!activeWorkspace) {
+      return;
+    }
+    setTestsRunning(unitTests);
+    setResultsError(null);
+    const tests: Test[] = unitTests.map(t => ({ name: t.name, code: t.code, defaultRequestId: t.requestId }));
+    const src = generate([{ name: 'My Suite', suites: [], tests }]);
+    const sendRequest = getSendRequestCallback(activeEnvironment?._id);
 
-      try {
-        const results = await runTests(src, { sendRequest });
-        await models.unitTestResult.create({
-          results,
-          parentId: activeWorkspace._id,
-        });
+    try {
+      const results = await runTests(src, { sendRequest });
+      await models.unitTestResult.create({
+        results,
+        parentId: activeWorkspace._id,
+      });
+      setTestsRunning(null);
+
+    } catch (err) {
+      // Set the state after a timeout so the user still sees the loading state
+      setTimeout(() => {
         setTestsRunning(null);
-
-      } catch (err) {
-        // Set the state after a timeout so the user still sees the loading state
-        setTimeout(() => {
-          setTestsRunning(null);
-          setResultsError(err.message);
-        }, 400);
-        return;
-      }
-    };
-    return fn();
+        setResultsError(err.message);
+      }, 400);
+      return;
+    }
   }, [activeEnvironment?._id, activeWorkspace]);
 
-  const handleRunTests = useCallback(() => {
-    _runTests(activeUnitTests).then(() => {
-      trackSegmentEvent(SegmentEvent.unitTestRunAll);
-    });
+  const handleRunTests = useCallback(async () => {
+    await _runTests(activeUnitTests);
+    trackSegmentEvent(SegmentEvent.unitTestRunAll);
   }, [_runTests, activeUnitTests]);
 
   const handleRunTest = useCallback(async (unitTest: UnitTest) => {
-    _runTests([unitTest]).then(() => {
-      trackSegmentEvent(SegmentEvent.unitTestRun);
-    });
+    await _runTests([unitTest]);
+    trackSegmentEvent(SegmentEvent.unitTestRun);
   }, [_runTests]);
 
   return (

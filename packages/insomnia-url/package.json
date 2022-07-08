@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-url",
-  "version": "3.3.1-beta.1",
+  "version": "3.3.1-beta.2",
   "author": "Kong <office@konghq.com>",
   "description": "URL Utilities",
   "license": "MIT",

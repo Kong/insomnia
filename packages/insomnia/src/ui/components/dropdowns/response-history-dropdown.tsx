@@ -121,7 +121,9 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     );
   };
 
-  const handleKeydown = useCallback((event: KeyboardEvent) => executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => dropdownRef.current?.toggle(true)), []);
+  const handleKeydown = useCallback((event: KeyboardEvent) => {
+    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => dropdownRef.current?.toggle(true));
+  }, []);
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
   return (
