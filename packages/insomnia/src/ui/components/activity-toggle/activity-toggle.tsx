@@ -1,13 +1,11 @@
 import React, { FunctionComponent, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
-import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
-import { isDesign } from '../../models/workspace';
-import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
-import { HandleActivityChange } from './wrapper';
+import type { GlobalActivity } from '../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../common/constants';
+import { isDesign, Workspace } from '../../../models/workspace';
+import { HandleActivityChange } from '../wrapper';
 
 const StyledNav = styled.nav`
   display: flex;
@@ -50,27 +48,30 @@ const StyledLink = styled(Link)`
 `;
 
 interface Props {
+  activity: GlobalActivity;
+  workspace: Workspace;
   handleActivityChange: HandleActivityChange;
 }
 
-export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange }) => {
-  const activeActivity = useSelector(selectActiveActivity);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-
+export const ActivityToggle: FunctionComponent<Props> = ({
+  activity,
+  workspace,
+  handleActivityChange,
+}) => {
   const onChange = useCallback((e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, nextActivity: GlobalActivity) => {
     // Prevent the default behavior in order to avoid extra re-render.
     e.preventDefault();
     handleActivityChange({
-      workspaceId: activeWorkspace?._id,
+      workspaceId: workspace?._id,
       nextActivity,
     });
-  }, [handleActivityChange, activeWorkspace]);
+  }, [handleActivityChange, workspace]);
 
-  if (!activeActivity) {
+  if (!activity) {
     return null;
   }
 
-  if (!activeWorkspace || !isDesign(activeWorkspace)) {
+  if (!workspace || !isDesign(workspace)) {
     return null;
   }
 
@@ -78,7 +79,7 @@ export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange 
     <StyledNav>
       <StyledLink
         to={ACTIVITY_SPEC}
-        className={activeActivity === ACTIVITY_SPEC ? 'active' : undefined }
+        className={activity === ACTIVITY_SPEC ? 'active' : undefined }
         onClick={e => {
           onChange(e, ACTIVITY_SPEC);
         }}
@@ -87,7 +88,7 @@ export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange 
       </StyledLink>
       <StyledLink
         to={ACTIVITY_DEBUG}
-        className={activeActivity === ACTIVITY_DEBUG ? 'active' : undefined }
+        className={activity === ACTIVITY_DEBUG ? 'active' : undefined }
         onClick={e => {
           onChange(e, ACTIVITY_DEBUG);
         }}
@@ -96,7 +97,7 @@ export const ActivityToggle: FunctionComponent<Props> = ({ handleActivityChange 
       </StyledLink>
       <StyledLink
         to={ACTIVITY_UNIT_TEST}
-        className={activeActivity === ACTIVITY_UNIT_TEST ? 'active' : undefined }
+        className={activity === ACTIVITY_UNIT_TEST ? 'active' : undefined }
         onClick={e => {
           onChange(e, ACTIVITY_UNIT_TEST);
         }}
