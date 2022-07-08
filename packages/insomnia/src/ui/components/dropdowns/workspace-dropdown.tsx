@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -142,8 +142,6 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
         ref={this._setDropdownRef}
         className={classes}
         onOpen={this._handleDropdownOpen}
-        // @ts-expect-error -- TSCONVERSION appears to be genuine
-        onHide={this._handleDropdownHide}
         {...(other as Record<string, any>)}
       >
         <DropdownButton className="row">
@@ -216,3 +214,151 @@ const mapStateToProps = (state: RootState) => ({
 });
 
 export const WorkspaceDropdown = connect(mapStateToProps)(UnconnectedWorkspaceDropdown);
+export const WorkspaceDropdownFC:FC<Props> = props => {
+  const {
+    activeWorkspaceName,
+    className,
+    activeWorkspace,
+    isLoading,
+    hotKeyRegistry,
+    ...other
+  } = props;
+  const classes = classnames(className, 'wide', 'workspace-dropdown');
+  const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
+  const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const dropdownRef = useRef<Dropdown>(null);
+
+  async function _handlePluginClick({ action, plugin, label }: WorkspaceAction, workspace: Workspace) {
+    setLoadingActions({ ...loadingActions, [label]: true });
+
+    const { activeEnvironment, activeProject } = props;
+
+    try {
+      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...pluginContexts.data.init(activeProject._id),
+        ...(pluginContexts.store.init(plugin) as Record<string, any>),
+        ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
+      };
+      const docs = await db.withDescendants(workspace);
+      const requests = docs
+        .filter(isRequest)
+        .filter(doc => (
+          !doc.isPrivate
+        ));
+      const requestGroups = docs.filter(isRequestGroup);
+      await action(context, {
+        requestGroups,
+        requests,
+        workspace,
+      });
+    } catch (err) {
+      showError({
+        title: 'Plugin Action Failed',
+        error: err,
+      });
+    }
+    setLoadingActions({ ...loadingActions, [label]: false });
+
+    dropdownRef.current?.hide();
+  }
+
+  async function _handleDropdownOpen() {
+    const actionPlugins = await getWorkspaceActions();
+    const configGeneratorPlugins = await getConfigGenerators();
+    setActionPlugins(actionPlugins);
+    setConfigGeneratorPlugins(configGeneratorPlugins);
+  }
+
+  function _handleShowExport() {
+    showModal(SettingsModal, TAB_INDEX_EXPORT);
+  }
+
+  function _handleShowWorkspaceSettings() {
+    showModal(WorkspaceSettingsModal);
+  }
+
+  async function _handleGenerateConfig(label: string) {
+    const { activeApiSpec } = props;
+    if (!activeApiSpec) {
+      return;
+    }
+    showGenerateConfigModal({
+      apiSpec: activeApiSpec,
+      activeTabLabel: label,
+    });
+  }
+  if (!activeWorkspace) {
+    console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
+    return null;
+  }
+
+  return (
+    <Dropdown
+      beside
+      ref={dropdownRef}
+      className={classes}
+      onOpen={_handleDropdownOpen}
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
+      onHide={_handleDropdownHide}
+      {...(other as Record<string, any>)}
+    >
+      <DropdownButton className="row">
+        <div
+          className="ellipsis"
+          style={{
+            maxWidth: '400px',
+          }}
+          title={activeWorkspaceName}
+        >
+          {activeWorkspaceName}
+        </div>
+        <i className="fa fa-caret-down space-left" />
+        {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
+      </DropdownButton>
+      <DropdownItem onClick={_handleShowWorkspaceSettings}>
+        <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
+        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
+      </DropdownItem>
+
+      <DropdownItem onClick={_handleShowExport}>
+        <i className="fa fa-share" /> Import/Export
+      </DropdownItem>
+
+      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
+      {actionPlugins.map((p: WorkspaceAction) => (
+        <DropdownItem
+          key={p.label}
+          onClick={() => _handlePluginClick(p, activeWorkspace)}
+          stayOpenAfterClick
+        >
+          {loadingActions[p.label] ? (
+            <i className="fa fa-refresh fa-spin" />
+          ) : (
+            <i className={classnames('fa', p.icon || 'fa-code')} />
+          )}
+          {p.label}
+        </DropdownItem>
+      ))}
+      {isDesign(activeWorkspace) && (
+        <>
+          {configGeneratorPlugins.length > 0 && (
+            <DropdownDivider>Config Generators</DropdownDivider>
+          )}
+          {configGeneratorPlugins.map((p: ConfigGenerator) => (
+            <DropdownItem
+              key="generateConfig"
+              onClick={_handleGenerateConfig}
+              value={p.label}
+            >
+              <i className="fa fa-code" />
+              {p.label}
+            </DropdownItem>
+          ))}
+        </>
+      )}
+    </Dropdown>
+  );
+};
