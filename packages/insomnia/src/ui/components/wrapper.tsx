@@ -1,5 +1,5 @@
 import * as importers from 'insomnia-importers';
-import React, { FC, Fragment, lazy, Ref, Suspense, useState } from 'react';
+import React, { forwardRef, Fragment, lazy, Ref, Suspense, useCallback, useImperativeHandle, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
@@ -174,13 +174,22 @@ const requestUpdate = (request: Request, patch: Partial<Request>) => {
 
   return models.request.update(request, patch);
 };
-
-export const Wrapper: FC<WrapperProps> = props => {
+export interface WrapperHandle {
+  _forceRequestPaneRefresh: ()=>void;
+}
+export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
   const [forceRefreshKey, setForceRefreshKey] = useState(Date.now());
+  const _forceRequestPaneRefresh = useCallback(() => {
+    setForceRefreshKey(Date.now);
+  }, []);
+  useImperativeHandle(ref, () => ({ _forceRequestPaneRefresh }), [_forceRequestPaneRefresh]);
+
   async function _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
     const newRequest = await requestUpdate(r, patch);
-    _forceRequestPaneRefreshAfterDelay();
-
+    // Give it a second for the app to render first. If we don't wait, it will refresh
+    // on the old request and won't catch the newest one.
+    // TODO: Move this refresh key into redux store so we don't need timeout
+    window.setTimeout(_forceRequestPaneRefresh, 100);
     return newRequest;
   }
 
@@ -419,17 +428,6 @@ export const Wrapper: FC<WrapperProps> = props => {
     handleSetActiveEnvironment(id);
   }
 
-  function _forceRequestPaneRefreshAfterDelay(): void {
-    // Give it a second for the app to render first. If we don't wait, it will refresh
-    // on the old request and won't catch the newest one.
-    // TODO: Move this refresh key into redux store so we don't need timeout
-    window.setTimeout(_forceRequestPaneRefresh, 100);
-  }
-
-  function _forceRequestPaneRefresh() {
-    setForceRefreshKey(Date.now);
-  }
-
   const {
     activeCookieJar,
     activeEnvironment,
@@ -654,4 +652,5 @@ export const Wrapper: FC<WrapperProps> = props => {
       <ActivityRouter />
     </Fragment>
   );
-};
+});
+Wrapper.displayName = 'Wrapper';

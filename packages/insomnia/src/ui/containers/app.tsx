@@ -78,7 +78,7 @@ import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
-import { Wrapper } from '../components/wrapper';
+import { type WrapperHandle, Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
@@ -177,7 +177,7 @@ class App extends PureComponent<AppProps, State> {
   private _requestPaneRef = createRef<HTMLElement>();
   private _responsePaneRef = createRef<HTMLElement>();
   private _sidebarRef = createRef<HTMLElement>();
-  private _wrapper: Wrapper | null = null;
+  private _wrapper: WrapperHandle | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: AppProps) {
@@ -986,7 +986,7 @@ class App extends PureComponent<AppProps, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(wrapper: Wrapper) {
+  _setWrapperRef(wrapper: WrapperHandle) {
     this._wrapper = wrapper;
   }
 
