@@ -430,9 +430,6 @@ export const Wrapper: FC<WrapperProps> = props => {
     setForceRefreshKey(Date.now);
   }
 
-  function _handleGitBranchChanged(branch: string) {
-    setActiveGitBranch(branch || 'no-vcs');
-  }
   const {
     activeCookieJar,
     activeEnvironment,
@@ -460,7 +457,6 @@ export const Wrapper: FC<WrapperProps> = props => {
         gitRepository={activeGitRepository}
         vcs={gitVCS}
         handleInitializeEntities={handleInitializeEntities}
-        handleGitBranchChanged={_handleGitBranchChanged}
         renderDropdownButton={children => (
           <DropdownButton className="btn--clicky-small btn-sync">
             {children}
@@ -547,7 +543,6 @@ export const Wrapper: FC<WrapperProps> = props => {
                   vcs={gitVCS}
                   gitRepository={activeGitRepository}
                   handleInitializeEntities={handleInitializeEntities}
-                  handleGitBranchChanged={_handleGitBranchChanged}
                 />
               )}
             </Fragment>

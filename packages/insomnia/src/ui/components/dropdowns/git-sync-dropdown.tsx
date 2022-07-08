@@ -34,7 +34,6 @@ import { GitStagingModal } from '../modals/git-staging-modal';
 
 interface Props {
   handleInitializeEntities: typeof initializeEntities;
-  handleGitBranchChanged: (branch: string) => void;
   workspace: Workspace;
   vcs: GitVCS;
   gitRepository: GitRepository | null;
@@ -71,7 +70,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _refreshState(otherState?: Record<string, any>) {
-    const { vcs, workspace, handleGitBranchChanged } = this.props;
+    const { vcs, workspace } = this.props;
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     // Clear cached items and return if no state
@@ -108,7 +107,6 @@ class GitSyncDropdown extends PureComponent<Props, State> {
       cachedGitLastAuthor,
       cachedGitLastCommitTime,
     });
-    handleGitBranchChanged(branch);
   }
 
   async _handleOpen() {

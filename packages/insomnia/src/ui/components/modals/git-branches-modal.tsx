@@ -19,7 +19,6 @@ interface Props {
   vcs: GitVCS;
   gitRepository: GitRepository;
   handleInitializeEntities: typeof initializeEntities;
-  handleGitBranchChanged: (branch: string) => void;
 }
 
 interface State {
@@ -74,7 +73,7 @@ export class GitBranchesModal extends PureComponent<Props, State> {
   }
 
   async _refreshState(newState?: Record<string, any>) {
-    const { vcs, handleGitBranchChanged } = this.props;
+    const { vcs } = this.props;
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
     const remoteBranches = await vcs.listRemoteBranches();
@@ -84,7 +83,6 @@ export class GitBranchesModal extends PureComponent<Props, State> {
       remoteBranches,
       ...newState,
     });
-    handleGitBranchChanged(branch);
   }
 
   _handleClearError() {
