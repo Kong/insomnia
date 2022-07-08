@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import React, { FC, useRef, useState } from 'react';
-import {  useSelector } from 'react-redux';
+import React, { FC, useCallback, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -33,13 +33,12 @@ export const WorkspaceDropdown: FC = () => {
   const isLoading = useSelector(selectIsLoading);
   const settings = useSelector(selectSettings);
   const { hotKeyRegistry } = settings;
-  const classes = classnames('wide', 'workspace-dropdown');
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<Dropdown>(null);
 
-  async function _handlePluginClick({ action, plugin, label }: WorkspaceAction, workspace: Workspace) {
+  const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
@@ -69,24 +68,24 @@ export const WorkspaceDropdown: FC = () => {
     }
     setLoadingActions({ ...loadingActions, [label]: false });
     dropdownRef.current?.hide();
-  }
+  }, [activeEnvironment, activeProject._id, loadingActions]);
 
-  async function _handleDropdownOpen() {
+  const handleDropdownOpen = useCallback(async () => {
     const actionPlugins = await getWorkspaceActions();
     const configGeneratorPlugins = await getConfigGenerators();
     setActionPlugins(actionPlugins);
     setConfigGeneratorPlugins(configGeneratorPlugins);
-  }
+  }, []);
 
-  function _handleShowExport() {
+  const handleShowExport = useCallback(() => {
     showModal(SettingsModal, TAB_INDEX_EXPORT);
-  }
+  }, []);
 
-  function _handleShowWorkspaceSettings() {
+  const handleShowWorkspaceSettings = useCallback(() => {
     showModal(WorkspaceSettingsModal);
-  }
+  }, []);
 
-  async function _handleGenerateConfig(label: string) {
+  const handleGenerateConfig = useCallback((label: string) => {
     if (!activeApiSpec) {
       return;
     }
@@ -94,7 +93,7 @@ export const WorkspaceDropdown: FC = () => {
       apiSpec: activeApiSpec,
       activeTabLabel: label,
     });
-  }
+  }, [activeApiSpec]);
 
   if (!activeWorkspace) {
     console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
@@ -105,8 +104,8 @@ export const WorkspaceDropdown: FC = () => {
     <Dropdown
       beside
       ref={dropdownRef}
-      className={classes}
-      onOpen={_handleDropdownOpen}
+      className="wide workspace-dropdown"
+      onOpen={handleDropdownOpen}
     >
       <DropdownButton className="row">
         <div
@@ -121,19 +120,19 @@ export const WorkspaceDropdown: FC = () => {
         <i className="fa fa-caret-down space-left" />
         {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
       </DropdownButton>
-      <DropdownItem onClick={_handleShowWorkspaceSettings}>
+      <DropdownItem onClick={handleShowWorkspaceSettings}>
         <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
       </DropdownItem>
 
-      <DropdownItem onClick={_handleShowExport}>
+      <DropdownItem onClick={handleShowExport}>
         <i className="fa fa-share" /> Import/Export
       </DropdownItem>
       {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
       {actionPlugins.map((p: WorkspaceAction) => (
         <DropdownItem
           key={p.label}
-          onClick={() => _handlePluginClick(p, activeWorkspace)}
+          onClick={() => handlePluginClick(p, activeWorkspace)}
           stayOpenAfterClick
         >
           {loadingActions[p.label] ? (
@@ -152,7 +151,7 @@ export const WorkspaceDropdown: FC = () => {
           {configGeneratorPlugins.map((p: ConfigGenerator) => (
             <DropdownItem
               key="generateConfig"
-              onClick={_handleGenerateConfig}
+              onClick={handleGenerateConfig}
               value={p.label}
             >
               <i className="fa fa-code" />
