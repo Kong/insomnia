@@ -15,7 +15,6 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
-import { Notice } from '../notice';
 import { showModal } from './index';
 
 interface Config {
@@ -90,10 +89,10 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
     if (config.error) {
       return (
         <TabPanel key={config.label}>
-          <Notice color="error" className="margin-md">
+          <p className="notice error margin-md">
             {config.error}
             {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {linkIcon}</Link></> : null}
-          </Notice>
+          </p>
         </TabPanel>
       );
     }

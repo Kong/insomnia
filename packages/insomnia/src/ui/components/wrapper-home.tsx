@@ -39,7 +39,6 @@ import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
 import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals';
-import { Notice } from './notice';
 import { PageLayout } from './page-layout';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 import type { WrapperProps } from './wrapper';
@@ -341,9 +340,9 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
             </div>
             <CardContainer>{cards}</CardContainer>
             {filter && cards.length === 0 && (
-              <Notice color="subtle">
+              <p className="notice subtle">
                 No documents found for <strong>{filter}</strong>
-              </Notice>
+              </p>
             )}
           </div>
           <div className="document-listing__footer vertically-center">
