@@ -195,7 +195,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           ) : (
             <>
               <button
-                disabled={!request.url}
                 type="button"
                 className="urlbar__send-btn"
                 onClick={send}
@@ -204,7 +203,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               </button>
               <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
                 <DropdownButton
-                  disabled={!request.url}
                   className="urlbar__send-context"
                   onClick={() => dropdownRef.current?.show()}
                 >
