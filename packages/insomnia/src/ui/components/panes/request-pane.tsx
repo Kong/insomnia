@@ -44,13 +44,8 @@ interface Props {
   headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
-  updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  updateRequestMethod: (r: Request, method: string) => Promise<Request>;
-  updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
-  updateRequestUrl: (r: Request, url: string) => Promise<Request>;
+  handleUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
+  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   workspace: Workspace;
@@ -70,17 +65,42 @@ export const RequestPane: FC<Props> = ({
   headerEditorKey,
   request,
   settings,
-  updateRequestAuthentication,
-  updateRequestBody,
-  updateRequestHeaders,
-  updateRequestMethod,
-  updateRequestMimeType,
-  updateRequestParameters,
-  updateRequestUrl,
+  handleUpdateRequest,
+  handleUpdateRequestMimeType,
   updateSettingsUseBulkHeaderEditor,
   updateSettingsUseBulkParametersEditor,
   workspace,
 }) => {
+
+  function updateRequestBody(request: Request, body: RequestBody) {
+    return handleUpdateRequest(request, { body });
+  }
+
+  function updateRequestParameters(request: Request, parameters: RequestParameter[]) {
+    return handleUpdateRequest(request, { parameters });
+  }
+
+  function updateRequestAuthentication(request: Request, authentication: RequestAuthentication) {
+    return handleUpdateRequest(request, { authentication });
+  }
+
+  function updateRequestHeaders(request: Request, headers: RequestHeader[]) {
+    return handleUpdateRequest(request, { headers });
+  }
+
+  function updateRequestMethod(request: Request, method: string) {
+    return handleUpdateRequest(request, { method });
+  }
+
+  function updateRequestUrl(request: Request, url: string) {
+    // Don't update if we don't need to
+    if (request.url === url) {
+      return Promise.resolve(request);
+    }
+
+    return handleUpdateRequest(request, { url });
+  }
+
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
     showModal(RequestSettingsModal, { request, forceEditMode });
   }, [request]);
@@ -178,7 +198,7 @@ export const RequestPane: FC<Props> = ({
         <TabList>
           <Tab tabIndex="-1">
             <ContentTypeDropdown
-              onChange={updateRequestMimeType}
+              onChange={handleUpdateRequestMimeType}
             />
           </Tab>
           <Tab tabIndex="-1">
@@ -212,7 +232,7 @@ export const RequestPane: FC<Props> = ({
         <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
           <BodyEditor
             key={uniqueKey}
-            handleUpdateRequestMimeType={updateRequestMimeType}
+            handleUpdateRequestMimeType={handleUpdateRequestMimeType}
             request={request}
             workspace={workspace}
             environmentId={environmentId}

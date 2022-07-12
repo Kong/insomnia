@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
-import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { Request, RequestHeader } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
@@ -40,12 +40,7 @@ interface Props {
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  handleUpdateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  handleUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleUpdateRequestMethod: (r: Request, method: string) => Promise<Request>;
-  handleUpdateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
-  handleUpdateRequestUrl: (r: Request, url: string) => Promise<Request>;
+  handleUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   wrapperProps: WrapperProps;
@@ -67,12 +62,7 @@ export const WrapperDebug: FC<Props> = ({
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
   handleSidebarSort,
-  handleUpdateRequestAuthentication,
-  handleUpdateRequestBody,
-  handleUpdateRequestHeaders,
-  handleUpdateRequestMethod,
-  handleUpdateRequestParameters,
-  handleUpdateRequestUrl,
+  handleUpdateRequest,
   handleUpdateSettingsUseBulkHeaderEditor,
   handleUpdateSettingsUseBulkParametersEditor,
   wrapperProps,
@@ -196,13 +186,8 @@ export const WrapperDebug: FC<Props> = ({
               headerEditorKey={headerEditorKey}
               request={activeRequest}
               settings={settings}
-              updateRequestAuthentication={handleUpdateRequestAuthentication}
-              updateRequestBody={handleUpdateRequestBody}
-              updateRequestHeaders={handleUpdateRequestHeaders}
-              updateRequestMethod={handleUpdateRequestMethod}
-              updateRequestMimeType={handleUpdateRequestMimeType}
-              updateRequestParameters={handleUpdateRequestParameters}
-              updateRequestUrl={handleUpdateRequestUrl}
+              handleUpdateRequest={handleUpdateRequest}
+              handleUpdateRequestMimeType={handleUpdateRequestMimeType}
               updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
               updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
               workspace={activeWorkspace}

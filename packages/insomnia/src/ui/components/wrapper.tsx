@@ -19,10 +19,7 @@ import * as models from '../../models/index';
 import {
   isRequest,
   Request,
-  RequestAuthentication,
-  RequestBody,
   RequestHeader,
-  RequestParameter,
 } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
@@ -197,36 +194,12 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     return _handleForceUpdateRequest(r, { headers });
   }
 
-  function _handleUpdateRequestBody(request: Request, body: RequestBody) {
-    return requestUpdate(request, { body });
-  }
-
-  function _handleUpdateRequestParameters(request: Request, parameters: RequestParameter[]) {
-    return requestUpdate(request, { parameters });
-  }
-
-  function _handleUpdateRequestAuthentication(request: Request, authentication: RequestAuthentication) {
-    return requestUpdate(request, { authentication });
-  }
-
-  function _handleUpdateRequestHeaders(request: Request, headers: RequestHeader[]) {
-    return requestUpdate(request, { headers });
-  }
-
-  function _handleUpdateRequestMethod(request: Request, method: string) {
-    return requestUpdate(request, { method });
+  function _handleUpdateRequest(request: Request, patch: Partial<Request>) {
+    return requestUpdate(request, patch);
   }
 
   function _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
-  }
-  function _handleUpdateRequestUrl(request: Request, url: string) {
-    // Don't update if we don't need to
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-
-    return requestUpdate(request, { url });
   }
 
   async function _handleImport(text: string) {
@@ -635,12 +608,7 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
                 handleSetResponseFilter={_handleSetResponseFilter}
                 handleShowRequestSettingsModal={_handleShowRequestSettingsModal}
                 handleSidebarSort={handleSidebarSort}
-                handleUpdateRequestAuthentication={_handleUpdateRequestAuthentication}
-                handleUpdateRequestBody={_handleUpdateRequestBody}
-                handleUpdateRequestHeaders={_handleUpdateRequestHeaders}
-                handleUpdateRequestMethod={_handleUpdateRequestMethod}
-                handleUpdateRequestParameters={_handleUpdateRequestParameters}
-                handleUpdateRequestUrl={_handleUpdateRequestUrl}
+                handleUpdateRequest={_handleUpdateRequest}
                 handleUpdateSettingsUseBulkHeaderEditor={_handleUpdateSettingsUseBulkHeaderEditor}
                 handleUpdateSettingsUseBulkParametersEditor={_handleUpdateSettingsUseBulkParametersEditor}
                 wrapperProps={props}
