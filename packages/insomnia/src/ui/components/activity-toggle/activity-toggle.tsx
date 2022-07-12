@@ -7,45 +7,41 @@ import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../comm
 import { isDesign, Workspace } from '../../../models/workspace';
 import { HandleActivityChange } from '../wrapper';
 
-const StyledNav = styled.nav`
-  display: flex;
-  justify-content: space-between;
-  align-content: space-evenly;
-  font-weight: 500;
-  color: var(--color-font);
-  background: var(--hl-xs);
-  border: 0;
-  border-radius: 100px;
-  padding: var(--padding-xxs);
-  transform: scale(0.9);
-  transformOrigin: 'center';
+const StyledNav = styled.nav({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignContent: 'space-evenly',
+  fontWeight: '500',
+  color: 'var(--color-font)',
+  background: 'var(--hl-xs)',
+  border: '0',
+  borderRadius: '100px',
+  padding: 'var(--padding-xxs)',
+  transform: 'scale(0.9)',
+  transformOrigin: 'center',
+  '& > * :not(:last-child)': {
+    marginRight: 'var(--padding-xs)',
+  },
+});
 
-  & > * :not(:last-child) {
-    margin-right: var(--padding-xs);
-  }
-`;
-
-const StyledLink = styled(Link)`
-  min-width: 4rem;
-  margin: 0 auto;
-  text-transform: uppercase;
-  text-align: center;
-  font-size: var(--font-size-xs);
-  padding: var(--padding-xs) var(--padding-xxs);
-  border-radius: var(--line-height-sm);
-  color: var(--hl)!important;
-  background: transparent;
-
-  &.active {
-    color: var(--color-font)!important;
-    background: var(--color-bg);
-  }
-
-  &:hover,
-  &:active {
-    text-decoration: none;
-  }
-`;
+const StyledLink = styled(Link)({
+  minWidth: '4rem',
+  margin: '0 auto',
+  textTransform: 'uppercase',
+  textAlign: 'center',
+  fontSize: 'var(--font-size-xs)',
+  padding: 'var(--padding-xs) var(--padding-xxs)',
+  borderRadius: 'var(--line-height-sm)',
+  color: 'var(--hl)!important',
+  background: 'transparent',
+  '&.active': {
+    color: 'var(--color-font)!important',
+    background: 'var(--color-bg)',
+  },
+  '&:hover,&:active': {
+    textDecoration: 'none',
+  },
+});
 
 interface Props {
   activity: GlobalActivity;
