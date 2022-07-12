@@ -301,7 +301,6 @@ export const RequestPane: FC<Props> = ({
                 <ErrorBoundary errorClassName="font-error pad text-center">
                   <MarkdownPreview
                     heading={request.name}
-                    debounceMillis={1000}
                     markdown={request.description}
                   />
                 </ErrorBoundary>
