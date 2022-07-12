@@ -1,4 +1,4 @@
-import { GraphQLInterfaceType, GraphQLObjectType, GraphQLSchema, GraphQLType, GraphQLUnionType, isType } from 'graphql';
+import { GraphQLInterfaceType, GraphQLObjectType, GraphQLSchema, GraphQLType, GraphQLUnionType } from 'graphql';
 import React, { FC, Fragment } from 'react';
 
 import { ascendingNameSort } from '../../../common/sorting';
