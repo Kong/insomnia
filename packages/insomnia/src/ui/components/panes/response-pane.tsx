@@ -41,7 +41,6 @@ interface Props {
   handleSetActiveResponse: Function;
   handleDeleteResponses: Function;
   handleDeleteResponse: Function;
-  handleShowRequestSettings: Function;
   previewMode: PreviewMode;
   filter: string;
   filterHistory: string[];
@@ -234,7 +233,6 @@ export class ResponsePane extends PureComponent<Props> {
       handleSetActiveResponse,
       handleSetFilter,
       handleSetPreviewMode,
-      handleShowRequestSettings,
       hotKeyRegistry,
       loadStartTime,
       previewMode,
@@ -349,7 +347,6 @@ export class ResponsePane extends PureComponent<Props> {
             <div className="scrollable pad">
               <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
                 <ResponseCookiesViewer
-                  handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
                   cookiesStored={response.settingStoreCookies}
                   headers={cookieHeaders}

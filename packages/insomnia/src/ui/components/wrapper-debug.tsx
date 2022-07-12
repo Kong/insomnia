@@ -37,7 +37,6 @@ interface Props {
   handleSetActiveResponse: Function;
   handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
@@ -58,7 +57,6 @@ export const WrapperDebug: FC<Props> = ({
   handleSetActiveResponse,
   handleSetPreviewMode,
   handleSetResponseFilter,
-  handleShowRequestSettingsModal,
   handleSidebarSort,
   handleUpdateRequest,
   handleUpdateSettingsUseBulkHeaderEditor,
@@ -211,7 +209,6 @@ export const WrapperDebug: FC<Props> = ({
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
               handleSetPreviewMode={handleSetPreviewMode}
-              handleShowRequestSettings={handleShowRequestSettingsModal}
               hotKeyRegistry={settings.hotKeyRegistry}
               loadStartTime={loadStartTime}
               previewMode={responsePreviewMode}

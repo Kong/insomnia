@@ -123,7 +123,6 @@ const spectral = initializeSpectral();
 export type WrapperProps = AppProps & {
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleShowSettingsModal: Function;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
@@ -294,10 +293,6 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     }
 
     props.handleSetActiveResponse(props.activeRequest._id, responseId);
-  };
-
-  const _handleShowRequestSettingsModal = () => {
-    showModal(RequestSettingsModal, { request: props.activeRequest });
   };
 
   const _handleDeleteResponses = async (requestId: string, environmentId: string | null) => {
@@ -590,7 +585,6 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
                 handleSetActiveResponse={_handleSetActiveResponse}
                 handleSetPreviewMode={_handleSetPreviewMode}
                 handleSetResponseFilter={_handleSetResponseFilter}
-                handleShowRequestSettingsModal={_handleShowRequestSettingsModal}
                 handleSidebarSort={handleSidebarSort}
                 handleUpdateRequest={_handleUpdateRequest}
                 handleUpdateSettingsUseBulkHeaderEditor={_handleUpdateSettingsUseBulkHeaderEditor}

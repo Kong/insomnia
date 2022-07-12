@@ -216,13 +216,13 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.PREFERENCES_SHOW_GENERAL,
         () => {
-          App._handleShowSettingsModal();
+          showModal(SettingsModal);
         },
       ],
       [
         hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
         () => {
-          App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
+          showModal(SettingsModal, { tabIndex: TAB_INDEX_SHORTCUTS });
         },
       ],
       [
@@ -982,10 +982,6 @@ class App extends PureComponent<AppProps, State> {
     await this._handleSetSidebarHidden(sidebarHidden);
   }
 
-  static _handleShowSettingsModal(tabIndex?: number) {
-    showModal(SettingsModal, tabIndex);
-  }
-
   _setWrapperRef(wrapper: WrapperHandle) {
     this._wrapper = wrapper;
   }
@@ -1219,7 +1215,7 @@ class App extends PureComponent<AppProps, State> {
     await this._updateGitVCS();
     db.onChange(this._handleDbChange);
     ipcRenderer.on('toggle-preferences', () => {
-      App._handleShowSettingsModal();
+      showModal(SettingsModal);
     });
 
     if (isDevelopment()) {
@@ -1277,7 +1273,7 @@ class App extends PureComponent<AppProps, State> {
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
-      App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
+      showModal(SettingsModal, { tabIndex: TAB_INDEX_SHORTCUTS });
     });
     ipcRenderer.on('run-command', (_, commandUri) => {
       const parsed = urlParse(commandUri, true);
@@ -1457,7 +1453,6 @@ class App extends PureComponent<AppProps, State> {
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleSetSidebarFilter={this._handleSetSidebarFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  handleShowSettingsModal={App._handleShowSettingsModal}
                   handleUpdateDownloadPath={this._handleUpdateDownloadPath}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   handleSidebarSort={this._sortSidebar}
