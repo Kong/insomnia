@@ -28,7 +28,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('button:has-text("No PKCE")').click();
 
   const [authorizationCodePage] = await Promise.all([
-    app.context().waitForEvent('page'),
+    app.waitForEvent('window'),
     sendButton.click(),
   ]);
 
@@ -56,7 +56,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('button:has-text("Click to confirm")').click();
 
   const [refreshPage] = await Promise.all([
-    app.context().waitForEvent('page'),
+    app.waitForEvent('window'),
     page.locator('button:has-text("Fetch Tokens")').click(),
   ]);
 
@@ -97,7 +97,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('button:has-text("ID Token")').click();
 
   const [implicitPage] = await Promise.all([
-    app.context().waitForEvent('page'),
+    app.waitForEvent('window'),
     sendButton.click(),
   ]);
   await implicitPage.waitForLoadState();
