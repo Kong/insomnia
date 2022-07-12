@@ -14,13 +14,6 @@ export interface HotKeyDefinition {
   description: string;
 }
 
-function defineHotKey(id: string, description: string): HotKeyDefinition {
-  return {
-    id: id,
-    description: description,
-  };
-}
-
 function keyComb(
   ctrl: boolean,
   alt: boolean,
@@ -60,53 +53,134 @@ function keyBinds(
  */
 // Not using dot, because NeDB prohibits field names to contain dots.
 export const hotKeyRefs: Record<string, HotKeyDefinition> = {
-  WORKSPACE_SHOW_SETTINGS: defineHotKey(
-    'workspace_showSettings',
-    `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
-  ),
-  REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),
-  PREFERENCES_SHOW_KEYBOARD_SHORTCUTS: defineHotKey(
-    'preferences_showKeyboardShortcuts',
-    'Show Keyboard Shortcuts',
-  ),
-  PREFERENCES_SHOW_GENERAL: defineHotKey('preferences_showGeneral', 'Show App Preferences'),
-  REQUEST_QUICK_SWITCH: defineHotKey('request_quickSwitch', 'Switch Requests'),
-  SHOW_RECENT_REQUESTS: defineHotKey('request_showRecent', 'Show Recent Requests'),
-  SHOW_RECENT_REQUESTS_PREVIOUS: defineHotKey(
-    'request_showRecentPrevious',
-    'Show Recent Requests (Previous)',
-  ),
-  PLUGIN_RELOAD: defineHotKey('plugin_reload', 'Reload Plugins'),
-  SHOW_AUTOCOMPLETE: defineHotKey('showAutocomplete', 'Show Autocomplete'),
-  REQUEST_SEND: defineHotKey('request_send', 'Send Request'),
-  REQUEST_SHOW_OPTIONS: defineHotKey('request_showOptions', 'Send Request (Options)'),
-  ENVIRONMENT_SHOW_EDITOR: defineHotKey('environment_showEditor', 'Show Environment Editor'),
-  ENVIRONMENT_SHOW_SWITCH_MENU: defineHotKey('environment_showSwitchMenu', 'Switch Environments'),
-  REQUEST_TOGGLE_HTTP_METHOD_MENU: defineHotKey(
-    'request_toggleHttpMethodMenu',
-    'Change HTTP Method',
-  ),
-  REQUEST_TOGGLE_HISTORY: defineHotKey('request_toggleHistory', 'Show Request History'),
-  REQUEST_FOCUS_URL: defineHotKey('request_focusUrl', 'Focus URL'),
-  REQUEST_SHOW_GENERATE_CODE_EDITOR: defineHotKey(
-    'request_showGenerateCodeEditor',
-    'Generate Code',
-  ),
-  SIDEBAR_FOCUS_FILTER: defineHotKey('sidebar_focusFilter', 'Filter Sidebar'),
-  SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
-  RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
-  SHOW_COOKIES_EDITOR: defineHotKey('showCookiesEditor', 'Edit Cookies'),
-  REQUEST_CREATE_HTTP: defineHotKey('request_createHTTP', 'Create HTTP Request'),
-  REQUEST_SHOW_DELETE: defineHotKey('request_showDelete', 'Delete Request'),
-  REQUEST_SHOW_CREATE_FOLDER: defineHotKey('request_showCreateFolder', 'Create Folder'),
-  REQUEST_SHOW_DUPLICATE: defineHotKey('request_showDuplicate', 'Duplicate Request'),
-  REQUEST_TOGGLE_PIN: defineHotKey('request_togglePin', 'Pin/Unpin Request'),
-  CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
-  CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
-  ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE: defineHotKey('environment_showVariableSourceAndValue', 'Show variable source and value'),
-  BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Active Code Editors'),
-  GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
-  FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
+  WORKSPACE_SHOW_SETTINGS: {
+    id: 'workspace_showSettings',
+    description: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
+  },
+  REQUEST_SHOW_SETTINGS: {
+    id: 'request_showSettings',
+    description: 'Show Request Settings',
+  },
+  PREFERENCES_SHOW_KEYBOARD_SHORTCUTS: {
+    id: 'preferences_showKeyboardShortcuts',
+    description: 'Show Keyboard Shortcuts',
+  },
+  PREFERENCES_SHOW_GENERAL: {
+    id: 'preferences_showGeneral',
+    description: 'Show App Preferences',
+  },
+  REQUEST_QUICK_SWITCH: {
+    id: 'request_quickSwitch',
+    description: 'Switch Requests',
+  },
+  SHOW_RECENT_REQUESTS: {
+    id: 'request_showRecent',
+    description: 'Show Recent Requests',
+  },
+  SHOW_RECENT_REQUESTS_PREVIOUS: {
+    id: 'request_showRecentPrevious',
+    description: 'Show Recent Requests (Previous)',
+  },
+  PLUGIN_RELOAD: {
+    id: 'plugin_reload',
+    description: 'Reload Plugins',
+  },
+  SHOW_AUTOCOMPLETE: {
+    id: 'showAutocomplete',
+    description: 'Show Autocomplete',
+  },
+  REQUEST_SEND: {
+    id: 'request_send',
+    description: 'Send Request',
+  },
+  REQUEST_SHOW_OPTIONS: {
+    id: 'request_showOptions',
+    description: 'Send Request (Options)',
+  },
+  ENVIRONMENT_SHOW_EDITOR: {
+    id: 'environment_showEditor',
+    description: 'Show Environment Editor',
+  },
+  ENVIRONMENT_SHOW_SWITCH_MENU: {
+    id: 'environment_showSwitchMenu',
+    description: 'Switch Environments',
+  },
+  REQUEST_TOGGLE_HTTP_METHOD_MENU: {
+    id: 'request_toggleHttpMethodMenu',
+    description: 'Change HTTP Method',
+  },
+  REQUEST_TOGGLE_HISTORY: {
+    id: 'request_toggleHistory',
+    description: 'Show Request History',
+  },
+  REQUEST_FOCUS_URL: {
+    id: 'request_focusUrl',
+    description: 'Focus URL',
+  },
+  REQUEST_SHOW_GENERATE_CODE_EDITOR: {
+    id: 'request_showGenerateCodeEditor',
+    description: 'Generate Code',
+  },
+  SIDEBAR_FOCUS_FILTER: {
+    id: 'sidebar_focusFilter',
+    description: 'Filter Sidebar',
+  },
+  SIDEBAR_TOGGLE: {
+    id: 'sidebar_toggle',
+    description: 'Toggle Sidebar',
+  },
+  RESPONSE_FOCUS: {
+    id: 'response_focus',
+    description: 'Focus Response',
+  },
+  SHOW_COOKIES_EDITOR: {
+    id: 'showCookiesEditor',
+    description: 'Edit Cookies',
+  },
+  REQUEST_CREATE_HTTP: {
+    id: 'request_createHTTP',
+    description: 'Create HTTP Request',
+  },
+  REQUEST_SHOW_DELETE: {
+    id: 'request_showDelete',
+    description: 'Delete Request',
+  },
+  REQUEST_SHOW_CREATE_FOLDER: {
+    id: 'request_showCreateFolder',
+    description: 'Create Folder',
+  },
+  REQUEST_SHOW_DUPLICATE: {
+    id: 'request_showDuplicate',
+    description: 'Duplicate Request',
+  },
+  REQUEST_TOGGLE_PIN: {
+    id: 'request_togglePin',
+    description: 'Pin/Unpin Request',
+  },
+  CLOSE_DROPDOWN: {
+    id: 'closeDropdown',
+    description: 'Close Dropdown',
+  },
+  CLOSE_MODAL: {
+    id: 'closeModal',
+    description: 'Close Modal',
+  },
+  ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE: {
+    id: 'environment_showVariableSourceAndValue',
+    description: 'Show variable source and value',
+  },
+  BEAUTIFY_REQUEST_BODY: {
+    id: 'beautifyRequestBody',
+    description: 'Beautify Active Code Editors',
+  },
+  GRAPHQL_EXPLORER_FOCUS_FILTER: {
+    id: 'graphql_explorer_focus_filter',
+    description: 'Focus GraphQL Explorer Filter',
+  },
+  FILTER_DOCUMENTS: {
+    id: 'documents_filter',
+    description: 'Focus Documents Filter',
+  },
 };
 
 /**
