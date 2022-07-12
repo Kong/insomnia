@@ -73,11 +73,11 @@ import { WrapperModal } from './modals/wrapper-modal';
 const lazyWithPreload = (
   importFn: () => Promise<{ default: React.ComponentType<any> }>
 ): [
-  React.LazyExoticComponent<React.ComponentType<any>>,
-  () => Promise<{
-    default: React.ComponentType<any>;
-  }>
-] => {
+    React.LazyExoticComponent<React.ComponentType<any>>,
+    () => Promise<{
+      default: React.ComponentType<any>;
+    }>
+  ] => {
   const LazyComponent = lazy(importFn);
   const preload = () => importFn();
 
@@ -163,15 +163,8 @@ export type HandleActivityChange = (options: {
   nextActivity: GlobalActivity;
 }) => Promise<void>;
 
-const requestUpdate = (request: Request, patch: Partial<Request>) => {
-  if (!request) {
-    throw new Error('Tried to update null request');
-  }
-
-  return models.request.update(request, patch);
-};
 export interface WrapperHandle {
-  _forceRequestPaneRefresh: ()=>void;
+  _forceRequestPaneRefresh: () => void;
 }
 export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
   const [forceRefreshKey, setForceRefreshKey] = useState(Date.now());
@@ -179,27 +172,25 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     setForceRefreshKey(Date.now);
   }, []);
   useImperativeHandle(ref, () => ({ _forceRequestPaneRefresh }), [_forceRequestPaneRefresh]);
-
-  async function _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
-    const newRequest = await requestUpdate(r, patch);
+  const _handleUpdateRequest = useCallback((request: Request, patch: Partial<Request>) => {
+    if (!request) {
+      throw new Error('Tried to update null request');
+    }
+    return models.request.update(request, patch);
+  }, []);
+  const _handleForceUpdateRequest = useCallback(async (r: Request, patch: Partial<Request>) => {
+    const newRequest = await _handleUpdateRequest(r, patch);
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
-    // TODO: Move this refresh key into redux store so we don't need timeout
     window.setTimeout(_forceRequestPaneRefresh, 100);
     return newRequest;
-  }
+  }, [_forceRequestPaneRefresh, _handleUpdateRequest]);
 
-  function _handleUpdateRequest(request: Request, patch: Partial<Request>) {
-    return requestUpdate(request, patch);
-  }
-
-  function _handleShowModifyCookieModal(cookie: Cookie) {
+  const _handleShowModifyCookieModal = useCallback((cookie: Cookie) => {
     showModal(CookieModifyModal, cookie);
-  }
+  }, []);
 
-  async function _handleImport(text: string) {
-    const { activeRequest } = props;
-
+  const _handleImport = useCallback(async (text: string) => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -207,9 +198,9 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
       const { resources } = data;
       const r = resources[0];
 
-      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
+      if (r && r._type === 'request' && props.activeRequest && isRequest(props.activeRequest)) {
         // Only pull fields that we want to update
-        return _handleForceUpdateRequest(activeRequest, {
+        return _handleForceUpdateRequest(props.activeRequest, {
           url: r.url,
           method: r.method,
           headers: r.headers,
@@ -225,9 +216,9 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     }
 
     return null;
-  }
+  }, [_handleForceUpdateRequest, props.activeRequest]);
 
-  async function _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
+  const _handleWorkspaceActivityChange = async ({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> => {
     const { activeActivity, activeApiSpec, handleSetActiveActivity } = props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
@@ -285,40 +276,40 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
         },
       });
     }, 1000);
-  }
+  };
 
   // Settings updaters
-  function _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
+  const _handleUpdateSettingsUseBulkHeaderEditor = (useBulkHeaderEditor: boolean) => {
     return models.settings.update(props.settings, { useBulkHeaderEditor });
-  }
+  };
 
-  function _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
+  const _handleUpdateSettingsUseBulkParametersEditor = (useBulkParametersEditor: boolean) => {
     return models.settings.update(props.settings, { useBulkParametersEditor });
-  }
+  };
 
-  function _handleSetActiveResponse(responseId: string | null) {
+  const _handleSetActiveResponse = (responseId: string | null) => {
     if (!props.activeRequest) {
       console.warn('Tried to set active response when request not active');
       return;
     }
 
     props.handleSetActiveResponse(props.activeRequest._id, responseId);
-  }
+  };
 
-  function _handleShowRequestSettingsModal() {
+  const _handleShowRequestSettingsModal = () => {
     showModal(RequestSettingsModal, { request: props.activeRequest });
-  }
+  };
 
-  async function _handleDeleteResponses(requestId: string, environmentId: string | null) {
+  const _handleDeleteResponses = async (requestId: string, environmentId: string | null) => {
     const { handleSetActiveResponse, activeRequest } = props;
     await models.response.removeForRequest(requestId, environmentId);
 
     if (activeRequest && activeRequest._id === requestId) {
       await handleSetActiveResponse(requestId, null);
     }
-  }
+  };
 
-  async function _handleDeleteResponse(response: Response) {
+  const _handleDeleteResponse = async (response: Response) => {
     if (response) {
       await models.response.remove(response);
     }
@@ -327,9 +318,9 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     if (props.activeResponse?._id === response._id) {
       _handleSetActiveResponse(null);
     }
-  }
+  };
 
-  async function _handleRemoveActiveWorkspace() {
+  const _handleRemoveActiveWorkspace = async () => {
     const { activeWorkspace, handleSetActiveActivity } = props;
 
     if (!activeWorkspace) {
@@ -338,11 +329,10 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
 
     await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
     await models.workspace.remove(activeWorkspace);
-
     handleSetActiveActivity(ACTIVITY_HOME);
-  }
+  };
 
-  async function _handleActiveWorkspaceClearAllResponses() {
+  const _handleActiveWorkspaceClearAllResponses = async () => {
     const { activeWorkspace } = props;
 
     if (!activeWorkspace) {
@@ -355,16 +345,16 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     for (const req of requests) {
       await models.response.removeForRequest(req._id);
     }
-  }
+  };
 
-  function _handleSendRequestWithActiveEnvironment() {
+  const _handleSendRequestWithActiveEnvironment = () => {
     const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
-  }
+  };
 
-  async function _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string) {
+  const _handleSendAndDownloadRequestWithActiveEnvironment = async (filename?: string) => {
     const {
       activeRequest,
       activeEnvironment,
@@ -377,24 +367,24 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
       activeEnvironmentId,
       filename,
     );
-  }
+  };
 
-  function _handleSetPreviewMode(previewMode: string) {
+  const _handleSetPreviewMode = (previewMode: string) => {
     const activeRequest = props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     props.handleSetResponsePreviewMode(activeRequestId, previewMode);
-  }
+  };
 
-  function _handleSetResponseFilter(filter: string) {
+  const _handleSetResponseFilter = (filter: string) => {
     const activeRequest = props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     props.handleSetResponseFilter(activeRequestId, filter);
-  }
+  };
 
-  function _handleChangeEnvironment(id: string | null) {
+  const _handleChangeEnvironment = (id: string | null) => {
     const { handleSetActiveEnvironment } = props;
     handleSetActiveEnvironment(id);
-  }
+  };
 
   const {
     activeCookieJar,
@@ -615,4 +605,5 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     </Fragment>
   );
 });
+
 Wrapper.displayName = 'Wrapper';
