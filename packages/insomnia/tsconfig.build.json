@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["DOM.Iterable"],
     "experimentalDecorators": true,
     "isolatedModules": true,
     "jsx": "react",
