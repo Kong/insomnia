@@ -1,6 +1,5 @@
-import React, { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, CSSProperties, PropsWithChildren } from 'react';
 export interface ButtonProps<T> {
-  children: ReactNode;
   value?: T;
   className?: string;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
@@ -12,21 +11,18 @@ export interface ButtonProps<T> {
   style?: CSSProperties;
 }
 
-export const Button = <T, >(props: ButtonProps<T>) => {
-  // Distract all the available properties.
-  const {
-    value,
-    children,
-    disabled,
-    tabIndex,
-    className,
-    type,
-    id,
-    style,
-    title,
-    onClick,
-  } = props;
-
+export const Button = <T, >({
+  value,
+  disabled,
+  tabIndex,
+  className,
+  type,
+  id,
+  style,
+  title,
+  onClick,
+  children,
+}: PropsWithChildren<ButtonProps<T>>) => {
   /**
    * This function fires when user clicks the button
    * @param e The mouse click event
