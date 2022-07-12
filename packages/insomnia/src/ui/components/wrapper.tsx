@@ -19,7 +19,6 @@ import * as models from '../../models/index';
 import {
   isRequest,
   Request,
-  RequestHeader,
 } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
@@ -188,10 +187,6 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
     // TODO: Move this refresh key into redux store so we don't need timeout
     window.setTimeout(_forceRequestPaneRefresh, 100);
     return newRequest;
-  }
-
-  function _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
-    return _handleForceUpdateRequest(r, { headers });
   }
 
   function _handleUpdateRequest(request: Request, patch: Partial<Request>) {
@@ -599,7 +594,6 @@ export const Wrapper = forwardRef<WrapperHandle, WrapperProps>((props, ref) => {
                 handleDeleteResponse={_handleDeleteResponse}
                 handleDeleteResponses={_handleDeleteResponses}
                 handleForceUpdateRequest={_handleForceUpdateRequest}
-                handleForceUpdateRequestHeaders={_handleForceUpdateRequestHeaders}
                 handleImport={_handleImport}
                 handleSendAndDownloadRequestWithActiveEnvironment={_handleSendAndDownloadRequestWithActiveEnvironment}
                 handleSendRequestWithActiveEnvironment={_handleSendRequestWithActiveEnvironment}

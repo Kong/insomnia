@@ -35,7 +35,6 @@ interface Props {
   environmentId: string;
   forceRefreshCounter: number;
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleGenerateCode: Function;
   handleImport: Function;
   handleSend: () => void;
@@ -56,7 +55,6 @@ export const RequestPane: FC<Props> = ({
   environmentId,
   forceRefreshCounter,
   forceUpdateRequest,
-  forceUpdateRequestHeaders,
   handleGenerateCode,
   handleImport,
   handleSend,
@@ -71,7 +69,9 @@ export const RequestPane: FC<Props> = ({
   updateSettingsUseBulkParametersEditor,
   workspace,
 }) => {
-
+  function forceUpdateRequestHeaders(request: Request, headers: RequestHeader[]) {
+    return forceUpdateRequest(request, { headers });
+  }
   function updateRequestBody(request: Request, body: RequestBody) {
     return handleUpdateRequest(request, { body });
   }

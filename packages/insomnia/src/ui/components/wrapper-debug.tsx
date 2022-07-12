@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
-import { Request, RequestHeader } from '../../models/request';
+import { Request } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
@@ -31,7 +31,6 @@ interface Props {
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
@@ -53,7 +52,6 @@ export const WrapperDebug: FC<Props> = ({
   handleDeleteResponse,
   handleDeleteResponses,
   handleForceUpdateRequest,
-  handleForceUpdateRequestHeaders,
   handleImport,
   handleSendAndDownloadRequestWithActiveEnvironment,
   handleSendRequestWithActiveEnvironment,
@@ -177,7 +175,6 @@ export const WrapperDebug: FC<Props> = ({
               environmentId={activeEnvironment ? activeEnvironment._id : ''}
               forceRefreshCounter={forceRefreshKey}
               forceUpdateRequest={handleForceUpdateRequest}
-              forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
               handleGenerateCode={handleGenerateCodeForActiveRequest}
               handleImport={handleImport}
               handleSend={handleSendRequestWithActiveEnvironment}
