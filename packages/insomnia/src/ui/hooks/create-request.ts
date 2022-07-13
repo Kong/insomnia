@@ -50,7 +50,7 @@ export const setActiveRequest = async (
   });
 };
 
-export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL';
+export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'Websocket';
 type RequestCreator = (input: {
   parentId: string;
   requestType: CreateRequestType;
@@ -109,6 +109,10 @@ export const createRequest: RequestCreator = async ({
       });
       models.stats.incrementCreatedRequests();
       requestId = request._id;
+      break;
+    }
+    case 'Websocket': {
+      requestId = await window.main.createWebsocketRequest(parentId);
       break;
     }
 

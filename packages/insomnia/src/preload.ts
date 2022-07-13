@@ -8,6 +8,15 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
+  createWebsocketRequest: options => ipcRenderer.invoke('createWebsocketRequest', options),
+  getWebSocketRequestsByParentId: options => ipcRenderer.invoke('getWebSocketRequestsByParentId', options),
+  open: options => ipcRenderer.send('websocket.open', options),
+  message: options => ipcRenderer.invoke('websocket.message', options),
+  close: options => ipcRenderer.invoke('websocket.close', options),
+  websocketlistener: (channel, listener) => {
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

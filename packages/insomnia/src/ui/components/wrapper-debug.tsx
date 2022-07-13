@@ -1,4 +1,4 @@
-import React, { FC, Fragment, ReactNode } from 'react';
+import React, { FC, Fragment, ReactNode, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../common/constants';
@@ -16,12 +16,50 @@ import { showCookiesModal } from './modals/cookies-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
+import { Pane, PaneHeader } from './panes/pane';
 import { RequestPane } from './panes/request-pane';
 import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
 import { SidebarFilter } from './sidebar/sidebar-filter';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange, WrapperProps } from './wrapper';
+
+// TODO: create request process
+// TODO: request list
+// TODO: sync the ready state to main listener
+// TODO: make a codeeditor
+// TODO: make a table
+// TODO: url bar
+
+interface WebSocketRequest {
+  _id: string;
+  parentId: string;
+  name: string;
+  url?: string;
+}
+
+function usePoorMansWebSocketRequests(parentId: string) {
+  const [requests, setRequests] = useState<WebSocketRequest[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncWebSocketRequests() {
+      const r = await window.main.getWebSocketRequestsByParentId(parentId);
+      isMounted && setRequests(r);
+    }
+
+    syncWebSocketRequests();
+    const timeoutId = setInterval(() => syncWebSocketRequests(), 500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timeoutId);
+    };
+  }, [parentId]);
+
+  return requests;
+}
 
 interface Props {
   forceRefreshKey: number;
@@ -116,6 +154,8 @@ export const WrapperDebug: FC<Props> = ({
   const sidebarFilter = useSelector(selectSidebarFilter);
 
   const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
+  const webSocketRequests = usePoorMansWebSocketRequests(activeWorkspace?._id || '');
+  const [activeWebsocketId, setActiveWebsocketId] = useState('');
 
   return (
     <PageLayout
@@ -157,6 +197,14 @@ export const WrapperDebug: FC<Props> = ({
           hotKeyRegistry={settings.hotKeyRegistry}
         />
 
+        <ul>
+          {webSocketRequests.map(ws => {
+            return <li
+              key={ws._id}
+              onClick={() => setActiveWebsocketId(ws._id)}
+            >{ws.name}</li>;
+          })}
+        </ul>
         <SidebarChildren
           childObjects={sidebarChildren}
           handleActivateRequest={handleActivateRequest}
@@ -173,75 +221,124 @@ export const WrapperDebug: FC<Props> = ({
         : null}
       renderPaneOne={activeWorkspace ?
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) ?
-            <GrpcRequestPane
-              activeRequest={activeRequest}
-              environmentId={activeEnvironment ? activeEnvironment._id : ''}
-              workspaceId={activeWorkspace._id}
-              forceRefreshKey={forceRefreshKey}
-              settings={settings}
-            />
-            :
-            <RequestPane
-              downloadPath={responseDownloadPath}
-              environmentId={activeEnvironment ? activeEnvironment._id : ''}
-              forceRefreshCounter={forceRefreshKey}
-              forceUpdateRequest={handleForceUpdateRequest}
-              forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-              handleGenerateCode={handleGenerateCodeForActiveRequest}
-              handleImport={handleImport}
-              handleSend={handleSendRequestWithActiveEnvironment}
-              handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
-              handleUpdateDownloadPath={handleUpdateDownloadPath}
-              headerEditorKey={headerEditorKey}
-              request={activeRequest}
-              settings={settings}
-              updateRequestAuthentication={handleUpdateRequestAuthentication}
-              updateRequestBody={handleUpdateRequestBody}
-              updateRequestHeaders={handleUpdateRequestHeaders}
-              updateRequestMethod={handleUpdateRequestMethod}
-              updateRequestMimeType={handleUpdateRequestMimeType}
-              updateRequestParameters={handleUpdateRequestParameters}
-              updateRequestUrl={handleUpdateRequestUrl}
-              updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
-              updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
-              workspace={activeWorkspace}
-            />}
+          {activeWebsocketId ? <WSLeftPanel />
+            : activeRequest && isGrpcRequest(activeRequest) ?
+              <GrpcRequestPane
+                activeRequest={activeRequest}
+                environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                workspaceId={activeWorkspace._id}
+                forceRefreshKey={forceRefreshKey}
+                settings={settings}
+              />
+              :
+              <RequestPane
+                downloadPath={responseDownloadPath}
+                environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                forceRefreshCounter={forceRefreshKey}
+                forceUpdateRequest={handleForceUpdateRequest}
+                forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
+                handleGenerateCode={handleGenerateCodeForActiveRequest}
+                handleImport={handleImport}
+                handleSend={handleSendRequestWithActiveEnvironment}
+                handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
+                handleUpdateDownloadPath={handleUpdateDownloadPath}
+                headerEditorKey={headerEditorKey}
+                request={activeRequest}
+                settings={settings}
+                updateRequestAuthentication={handleUpdateRequestAuthentication}
+                updateRequestBody={handleUpdateRequestBody}
+                updateRequestHeaders={handleUpdateRequestHeaders}
+                updateRequestMethod={handleUpdateRequestMethod}
+                updateRequestMimeType={handleUpdateRequestMimeType}
+                updateRequestParameters={handleUpdateRequestParameters}
+                updateRequestUrl={handleUpdateRequestUrl}
+                updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
+                updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
+                workspace={activeWorkspace}
+              />}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) ?
-            <GrpcResponsePane
-              activeRequest={activeRequest}
-              forceRefreshKey={forceRefreshKey}
-            />
-            :
-            <ResponsePane
-              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-              disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-              editorFontSize={settings.editorFontSize}
-              environment={activeEnvironment}
-              filter={responseFilter}
-              filterHistory={responseFilterHistory}
-              handleDeleteResponse={handleDeleteResponse}
-              handleDeleteResponses={handleDeleteResponses}
-              handleSetActiveResponse={handleSetActiveResponse}
-              handleSetFilter={handleSetResponseFilter}
-              handleSetPreviewMode={handleSetPreviewMode}
-              handleShowRequestSettings={handleShowRequestSettingsModal}
-              hotKeyRegistry={settings.hotKeyRegistry}
-              loadStartTime={loadStartTime}
-              previewMode={responsePreviewMode}
-              request={activeRequest}
-              requestVersions={requestVersions}
-              response={activeResponse}
-              responses={activeRequestResponses}
-              unitTestResult={activeUnitTestResult}
-            />}
+          {activeWebsocketId ?
+            <WSRightPanel /> :
+            activeRequest && isGrpcRequest(activeRequest) ?
+              <GrpcResponsePane
+                activeRequest={activeRequest}
+                forceRefreshKey={forceRefreshKey}
+              />
+              :
+              <ResponsePane
+                disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+                disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
+                editorFontSize={settings.editorFontSize}
+                environment={activeEnvironment}
+                filter={responseFilter}
+                filterHistory={responseFilterHistory}
+                handleDeleteResponse={handleDeleteResponse}
+                handleDeleteResponses={handleDeleteResponses}
+                handleSetActiveResponse={handleSetActiveResponse}
+                handleSetFilter={handleSetResponseFilter}
+                handleSetPreviewMode={handleSetPreviewMode}
+                handleShowRequestSettings={handleShowRequestSettingsModal}
+                hotKeyRegistry={settings.hotKeyRegistry}
+                loadStartTime={loadStartTime}
+                previewMode={responsePreviewMode}
+                request={activeRequest}
+                requestVersions={requestVersions}
+                response={activeResponse}
+                responses={activeRequestResponses}
+                unitTestResult={activeUnitTestResult}
+              />}
         </ErrorBoundary>}
     />
   );
+};
+
+const WSLeftPanel = () => {
+  return (
+    <Pane type="request">
+      <PaneHeader>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const url = formData.get('url') || '';
+            console.log({ url });
+            window.main.open({ url });
+          }}
+        >
+          <input name="url" defaultValue='wss://ws.postman-echo.com/raw' />
+          <button type="submit">Connect</button>
+        </form>
+      </PaneHeader>
+
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const message = formData.get('body') || '';
+          console.log({ message });
+          window.main.message({ message });
+        }}
+      >
+        <input name="body" />
+        <button type="submit">Send</button>
+      </form>
+    </Pane>
+  );
+};
+const WSRightPanel = () => {
+  const [messages, setMessages] = useState<any>([]);
+
+  useEffect(() => {
+    const unsubscribe = window.main.websocketlistener('websocket.response', (e, message) => {
+      setMessages(messages => [...messages, message]);
+    });
+    return unsubscribe;
+  }, []);
+
+  return <div>{JSON.stringify(messages, null, 2)}</div>;
 };
 
 export default WrapperDebug;
