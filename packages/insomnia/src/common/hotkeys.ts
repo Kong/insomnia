@@ -360,11 +360,11 @@ export function areSameKeyCombinations(
   keyComb2: KeyCombination,
 ) {
   return (
-    keyComb1.alt === keyComb2.alt &&
-    keyComb1.shift === keyComb2.shift &&
-    keyComb1.ctrl === keyComb2.ctrl &&
-    keyComb1.meta === keyComb2.meta &&
-    keyComb1.keyCode === keyComb2.keyCode
+    keyComb1.keyCode === keyComb2.keyCode &&
+    Boolean(keyComb1.alt) === Boolean(keyComb2.alt) &&
+    Boolean(keyComb1.shift) === Boolean(keyComb2.shift) &&
+    Boolean(keyComb1.ctrl) === Boolean(keyComb2.ctrl) &&
+    Boolean(keyComb1.meta) === Boolean(keyComb2.meta)
   );
 }
 
