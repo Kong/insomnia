@@ -22,7 +22,17 @@ export interface SidebarChildObjects {
   pinned: Child[];
   all: Child[];
 }
-interface SharedProps {
+
+function hasActiveChild(children: Child[], activeRequestId: string): boolean {
+  return !!children.find(c => c.doc._id === activeRequestId || hasActiveChild(c.children || [], activeRequestId));
+}
+interface RecursiveSidebarRowsProps {
+  children: Child[];
+  isInPinnedList: boolean;
+}
+
+interface Props {
+  childObjects: SidebarChildObjects;
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
   handleSetRequestGroupCollapsed: Function;
@@ -32,82 +42,6 @@ interface SharedProps {
   handleCopyAsCurl: Function;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
-}
-function hasActiveChild(children: Child[], activeRequestId: string): boolean {
-  return !!children.find(c => c.doc._id === activeRequestId || hasActiveChild(c.children || [], activeRequestId));
-}
-interface RecursiveSidebarRowsProps extends SharedProps {
-  children: Child[];
-  isInPinnedList: boolean;
-}
-const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({
-  children,
-  isInPinnedList,
-  filter,
-  handleSetRequestPinned,
-  handleSetRequestGroupCollapsed,
-  handleDuplicateRequest,
-  handleDuplicateRequestGroup,
-  handleGenerateCode,
-  handleCopyAsCurl,
-  handleActivateRequest,
-  hotKeyRegistry,
-}) => {
-  const activeRequest = useSelector(selectActiveRequest);
-  const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-
-  return (
-    <>
-      {children.map(child => (!isInPinnedList && child.hidden)
-        ? null
-        : (isRequest(child.doc) || isGrpcRequest(child.doc))
-          ? (
-            <SidebarRequestRow
-              key={child.doc._id}
-              filter={isInPinnedList ? '' : filter || ''}
-              handleActivateRequest={handleActivateRequest}
-              handleSetRequestPinned={handleSetRequestPinned}
-              handleDuplicateRequest={handleDuplicateRequest}
-              handleGenerateCode={handleGenerateCode}
-              handleCopyAsCurl={handleCopyAsCurl}
-              isActive={child.doc._id === activeRequestId}
-              isPinned={child.pinned}
-              disableDragAndDrop={isInPinnedList}
-              request={child.doc}
-              hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
-            />
-          ) : (
-            <SidebarRequestGroupRow
-              key={child.doc._id}
-              filter={filter || ''}
-              isActive={hasActiveChild(child.children, activeRequestId)}
-              handleActivateRequest={handleActivateRequest}
-              handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-              handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-              isCollapsed={child.collapsed}
-              requestGroup={child.doc}
-              hotKeyRegistry={hotKeyRegistry}
-            >
-              <RecursiveSidebarRows
-                isInPinnedList={isInPinnedList}
-                filter={filter}
-                handleSetRequestPinned={handleSetRequestPinned}
-                handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-                handleDuplicateRequest={handleDuplicateRequest}
-                handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-                handleGenerateCode={handleGenerateCode}
-                handleCopyAsCurl={handleCopyAsCurl}
-                handleActivateRequest={handleActivateRequest}
-                hotKeyRegistry={hotKeyRegistry}
-              >
-                {child.children}
-              </RecursiveSidebarRows>
-            </SidebarRequestGroupRow>
-          ))}
-    </>);
-};
-interface Props extends SharedProps {
-  childObjects: SidebarChildObjects;
 }
 export const SidebarChildren: FC<Props> = ({
   filter,
@@ -121,6 +55,50 @@ export const SidebarChildren: FC<Props> = ({
   childObjects,
   hotKeyRegistry,
 }) => {
+  const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ children, isInPinnedList }) => {
+    const activeRequest = useSelector(selectActiveRequest);
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+    return (
+      <>
+        {children.map(child => (!isInPinnedList && child.hidden)
+          ? null
+          : (isRequest(child.doc) || isGrpcRequest(child.doc))
+            ? (
+              <SidebarRequestRow
+                key={child.doc._id}
+                filter={isInPinnedList ? '' : filter || ''}
+                handleActivateRequest={handleActivateRequest}
+                handleSetRequestPinned={handleSetRequestPinned}
+                handleDuplicateRequest={handleDuplicateRequest}
+                handleGenerateCode={handleGenerateCode}
+                handleCopyAsCurl={handleCopyAsCurl}
+                isActive={child.doc._id === activeRequestId}
+                isPinned={child.pinned}
+                disableDragAndDrop={isInPinnedList}
+                request={child.doc}
+                hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
+              />
+            ) : (
+              <SidebarRequestGroupRow
+                key={child.doc._id}
+                filter={filter || ''}
+                isActive={hasActiveChild(child.children, activeRequestId)}
+                handleActivateRequest={handleActivateRequest}
+                handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+                handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+                isCollapsed={child.collapsed}
+                requestGroup={child.doc}
+                hotKeyRegistry={hotKeyRegistry}
+              >
+                <RecursiveSidebarRows
+                  isInPinnedList={isInPinnedList}
+                >
+                  {child.children}
+                </RecursiveSidebarRows>
+              </SidebarRequestGroupRow>
+            ))}
+      </>);
+  };
   const { all, pinned } = childObjects;
   const showSeparator = childObjects.pinned.length > 0;
   const contextMenuPortal = ReactDOM.createPortal(
@@ -138,15 +116,6 @@ export const SidebarChildren: FC<Props> = ({
       >
         <RecursiveSidebarRows
           isInPinnedList={true}
-          filter={filter}
-          handleSetRequestPinned={handleSetRequestPinned}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          handleDuplicateRequest={handleDuplicateRequest}
-          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleGenerateCode={handleGenerateCode}
-          handleCopyAsCurl={handleCopyAsCurl}
-          handleActivateRequest={handleActivateRequest}
-          hotKeyRegistry={hotKeyRegistry}
         >
           {pinned}
         </RecursiveSidebarRows>
@@ -157,15 +126,6 @@ export const SidebarChildren: FC<Props> = ({
       >
         <RecursiveSidebarRows
           isInPinnedList={false}
-          filter={filter}
-          handleSetRequestPinned={handleSetRequestPinned}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          handleDuplicateRequest={handleDuplicateRequest}
-          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleGenerateCode={handleGenerateCode}
-          handleCopyAsCurl={handleCopyAsCurl}
-          handleActivateRequest={handleActivateRequest}
-          hotKeyRegistry={hotKeyRegistry}
         >
           {all}
         </RecursiveSidebarRows>
