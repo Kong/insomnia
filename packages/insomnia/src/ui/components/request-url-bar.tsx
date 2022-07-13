@@ -169,7 +169,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       <div className="urlbar">
         <MethodDropdown
           ref={methodDropdownRef}
-          onChange={() => onMethodChange(request, method)}
+          onChange={(methodValue: string) => onMethodChange(request, methodValue)}
           method={method}
         />
         <div className="urlbar__flex__right">
