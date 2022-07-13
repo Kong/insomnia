@@ -33,26 +33,26 @@ interface RecursiveSidebarRowsProps {
 
 interface Props {
   childObjects: SidebarChildObjects;
+  filter: string;
   handleActivateRequest: Function;
-  handleSetRequestPinned: Function;
-  handleSetRequestGroupCollapsed: Function;
+  handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleGenerateCode: Function;
-  handleCopyAsCurl: Function;
-  filter: string;
+  handleSetRequestGroupCollapsed: Function;
+  handleSetRequestPinned: Function;
   hotKeyRegistry: HotKeyRegistry;
 }
 export const SidebarChildren: FC<Props> = ({
+  childObjects,
   filter,
-  handleSetRequestPinned,
-  handleSetRequestGroupCollapsed,
+  handleActivateRequest,
+  handleCopyAsCurl,
   handleDuplicateRequest,
   handleDuplicateRequestGroup,
   handleGenerateCode,
-  handleCopyAsCurl,
-  handleActivateRequest,
-  childObjects,
+  handleSetRequestGroupCollapsed,
+  handleSetRequestPinned,
   hotKeyRegistry,
 }) => {
   const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ children, isInPinnedList }) => {
