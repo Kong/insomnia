@@ -121,6 +121,44 @@ export function authorizeUserInWindow({
         reject(new Error(errorDescription));
       }
     });
+
+    // Select client certificate during login if needed.
+    // More Info: https://textslashplain.com/2020/05/04/client-certificate-authentication/
+    child.webContents.on('select-client-certificate', (event, url, certificateList, callback) => {
+      event.preventDefault();
+
+      // There is only a single certificate so just use
+      // that certificate without prompting user.
+      // In the future maybe this could be a setting?
+      if (certificateList.length === 1) {
+        callback(certificateList[0]);
+        return;
+      }
+
+      const buttonLabels = certificateList.map(c => `${c.subjectName} (${c.issuerName})`);
+      const cancelId = buttonLabels.length;
+      const options = {
+        type: 'none',
+        buttons: [...buttonLabels, 'Cancel'],
+        cancelId: cancelId,
+        message: `The website\n"${url}"\nrequires a client certificate.`,
+        detail: 'This website requires a certificate to validate your identity. Select the certificate to use when you connect to this website.',
+        textWidth: 300,
+      };
+
+      // Prompt the user to select a certificate to use.
+      electron.dialog.showMessageBox(child, options).then(r => {
+        const selectedButtonIndex = r.response;
+        // Cancel button clicked
+        if (r.response === cancelId) {
+          child.close();
+          return;
+        }
+        const selectedCertificate = certificateList[selectedButtonIndex];
+        callback(selectedCertificate);
+      });
+    });
+
     // Catch the redirect after login
     child.webContents.on('did-navigate', () => {
       // Be sure to resolve URL so that we can handle redirects with no host like /foo/bar
