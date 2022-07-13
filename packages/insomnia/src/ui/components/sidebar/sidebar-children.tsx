@@ -27,7 +27,7 @@ function hasActiveChild(children: Child[], activeRequestId: string): boolean {
   return !!children.find(c => c.doc._id === activeRequestId || hasActiveChild(c.children || [], activeRequestId));
 }
 interface RecursiveSidebarRowsProps {
-  children: Child[];
+  rows: Child[];
   isInPinnedList: boolean;
 }
 
@@ -55,46 +55,42 @@ export const SidebarChildren: FC<Props> = ({
   handleSetRequestPinned,
   hotKeyRegistry,
 }) => {
-  const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ children, isInPinnedList }) => {
+  const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ rows, isInPinnedList }) => {
     const activeRequest = useSelector(selectActiveRequest);
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     return (
       <>
-        {children.map(child => (!isInPinnedList && child.hidden)
+        {rows.map(row => (!isInPinnedList && row.hidden)
           ? null
-          : (isRequest(child.doc) || isGrpcRequest(child.doc))
+          : (isRequest(row.doc) || isGrpcRequest(row.doc))
             ? (
               <SidebarRequestRow
-                key={child.doc._id}
+                key={row.doc._id}
                 filter={isInPinnedList ? '' : filter || ''}
                 handleActivateRequest={handleActivateRequest}
                 handleSetRequestPinned={handleSetRequestPinned}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleGenerateCode={handleGenerateCode}
                 handleCopyAsCurl={handleCopyAsCurl}
-                isActive={child.doc._id === activeRequestId}
-                isPinned={child.pinned}
+                isActive={row.doc._id === activeRequestId}
+                isPinned={row.pinned}
                 disableDragAndDrop={isInPinnedList}
-                request={child.doc}
+                request={row.doc}
                 hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
               />
             ) : (
               <SidebarRequestGroupRow
-                key={child.doc._id}
+                key={row.doc._id}
                 filter={filter || ''}
-                isActive={hasActiveChild(child.children, activeRequestId)}
+                isActive={hasActiveChild(row.children, activeRequestId)}
                 handleActivateRequest={handleActivateRequest}
                 handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
                 handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-                isCollapsed={child.collapsed}
-                requestGroup={child.doc}
+                isCollapsed={row.collapsed}
+                requestGroup={row.doc}
                 hotKeyRegistry={hotKeyRegistry}
               >
-                <RecursiveSidebarRows
-                  isInPinnedList={isInPinnedList}
-                >
-                  {child.children}
-                </RecursiveSidebarRows>
+                <RecursiveSidebarRows isInPinnedList={isInPinnedList} rows={row.children} />
               </SidebarRequestGroupRow>
             ))}
       </>);
@@ -111,24 +107,12 @@ export const SidebarChildren: FC<Props> = ({
   );
   return (
     <Fragment>
-      <ul
-        className="sidebar__list sidebar__list-root theme--sidebar__list"
-      >
-        <RecursiveSidebarRows
-          isInPinnedList={true}
-        >
-          {pinned}
-        </RecursiveSidebarRows>
+      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+        <RecursiveSidebarRows isInPinnedList={true} rows={pinned} />
       </ul>
       <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
-      <ul
-        className="sidebar__list sidebar__list-root theme--sidebar__list"
-      >
-        <RecursiveSidebarRows
-          isInPinnedList={false}
-        >
-          {all}
-        </RecursiveSidebarRows>
+      <ul className="sidebar__list sidebar__list-root theme--sidebar__list"  >
+        <RecursiveSidebarRows isInPinnedList={false} rows={all} />
       </ul>
       {contextMenuPortal}
     </Fragment>
