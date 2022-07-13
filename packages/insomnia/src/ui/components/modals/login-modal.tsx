@@ -1,6 +1,6 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
-import React from 'react';
+import React, { Dispatch, FormEvent, forwardRef, MutableRefObject, RefObject, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
@@ -40,9 +40,9 @@ interface AuthBox {
 
 export class LoginModalHandle {
   constructor(
-    private readonly modalRef: React.RefObject<Modal>,
-    private readonly stateRef: Readonly<React.MutableRefObject<State & Options>>,
-    private readonly setState: React.Dispatch<React.SetStateAction<State & Options>>,
+    private readonly modalRef: RefObject<Modal>,
+    private readonly stateRef: Readonly<MutableRefObject<State & Options>>,
+    private readonly setState: Dispatch<SetStateAction<State & Options>>,
   ) {}
 
   private async getLoginUrl() {
@@ -87,20 +87,20 @@ export class LoginModalHandle {
   }
 }
 
-function useStateRef<T>(state: T): Readonly<React.MutableRefObject<T>> {
-  const stateRef = React.useRef(state);
-  React.useEffect(() => {
+function useStateRef<T>(state: T): Readonly<MutableRefObject<T>> {
+  const stateRef = useRef(state);
+  useEffect(() => {
     stateRef.current = state;
   }, [state]);
   return stateRef;
 }
 
-export const LoginModal = React.forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
-  const modalRef = React.useRef<Modal>(null);
-  const tokenInputRef = React.useRef<HTMLInputElement>(null);
-  const urlInputRef = React.useRef<HTMLInputElement>(null);
+export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
+  const modalRef = useRef<Modal>(null);
+  const tokenInputRef = useRef<HTMLInputElement>(null);
+  const urlInputRef = useRef<HTMLInputElement>(null);
 
-  const [state, setState] = React.useState<State & Options>({
+  const [state, setState] = useState<State & Options>({
     state: 'ready',
     error: '',
     title: '',
@@ -110,32 +110,32 @@ export const LoginModal = React.forwardRef<LoginModalHandle, {}>(function LoginM
 
   const stateRef = useStateRef(state);
 
-  React.useImperativeHandle(ref, () => {
+  useImperativeHandle(ref, () => {
     currentLoginModalHandle = new LoginModalHandle(modalRef, stateRef, setState);
     return currentLoginModalHandle;
   }, [stateRef]);
 
   // Clean up global login modal handle on unmount.
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       currentLoginModalHandle = null;
     };
   }, []);
 
-  const reset = React.useCallback(() => {
+  const reset = useCallback(() => {
     setState({ ...state, state: 'ready', error: '' });
   }, [state]);
 
-  const goToTokenEntry = React.useCallback(() => {
+  const goToTokenEntry = useCallback(() => {
     setState({ ...state, state: 'token-entry' });
   }, [state]);
 
-  const submitToken = React.useCallback((e: React.FormEvent) => {
-    e.preventDefault();
+  const submitToken = useCallback((event: FormEvent) => {
+    event.preventDefault();
     currentLoginModalHandle?.submitAuthCode(tokenInputRef.current?.value ?? '');
   }, []);
 
-  const copyUrl = React.useCallback(() => {
+  const copyUrl = useCallback(() => {
     urlInputRef.current?.select();
     document.execCommand('copy');
   }, []);
