@@ -322,23 +322,25 @@ const WSLeftPanel = () => {
           window.main.message({ message });
         }}
       >
-        <input name="body" />
+        <input name="body" defaultValue="example message" />
         <button type="submit">Send</button>
       </form>
+      <button onClick={() => window.main.close()}>Disconnect</button>
     </Pane>
   );
 };
 const WSRightPanel = () => {
+  // TODO: add and fill in table
   const [messages, setMessages] = useState<any>([]);
 
   useEffect(() => {
-    const unsubscribe = window.main.websocketlistener('websocket.response', (e, message) => {
+    const unsubscribe = window.main.on('websocket.response', (_, message) => {
       setMessages(messages => [...messages, message]);
     });
     return unsubscribe;
   }, []);
 
-  return <div>{JSON.stringify(messages, null, 2)}</div>;
+  return <ul>{messages.map((m, i) => (<li key={i}>{m}</li>))}</ul>;
 };
 
 export default WrapperDebug;

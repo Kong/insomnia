@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { type IpcRendererEvent, app, ipcMain } from 'electron';
 import { writeFile } from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
@@ -20,7 +20,7 @@ export interface MainBridgeAPI {
   open: (options: { url: string }) => void;
   message: (options: { message: string }) => string;
   close: () => string;
-  websocketlistener: (channel: string, listener: Function) => void;
+  on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
 }
 export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
@@ -112,14 +112,15 @@ function setupWebSockets() {
     return 'sent: ' + options.message;
   });
 
-  ipcMain.handle('websocket.close', () => {
+  ipcMain.handle('websocket.close', event => {
     if (!temporaryOpenConnectionHack) {
       return;
     }
     const ws = temporaryOpenConnectionHack;
     ws.close();
     ws.on('close', () => {
-      console.log('Disconnected from ', ws.url);
+      console.log('Disconnected from ', ws._url);
+      event.sender.send('websocket.response', 'Disconnected from ', ws._url);
     });
     return 'success';
   });

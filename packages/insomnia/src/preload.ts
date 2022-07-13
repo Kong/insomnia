@@ -13,7 +13,7 @@ const main: Window['main'] = {
   open: options => ipcRenderer.send('websocket.open', options),
   message: options => ipcRenderer.invoke('websocket.message', options),
   close: options => ipcRenderer.invoke('websocket.close', options),
-  websocketlistener: (channel, listener) => {
+  on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
