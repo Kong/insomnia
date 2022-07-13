@@ -55,72 +55,19 @@ export function onLoginLogout(loginCallback: LoginCallback) {
   loginCallbacks.push(loginCallback);
 }
 
-/** Create a new session for the user */
-export async function login(rawEmail: string, rawPassphrase: string) {
-  // ~~~~~~~~~~~~~~~ //
-  // Sanitize Inputs //
-  // ~~~~~~~~~~~~~~~ //
-  const email = _sanitizeEmail(rawEmail);
-
-  const passphrase = _sanitizePassphrase(rawPassphrase);
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // Fetch Salt and Submit A To Server //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const { saltKey, saltAuth } = await _getAuthSalts(email);
-  const authSecret = await crypt.deriveKey(passphrase, email, saltKey);
-  const secret1 = await crypt.srpGenKey();
-  const c = new srp.Client(
-    _getSrpParams(),
-    Buffer.from(saltAuth, 'hex'),
-    Buffer.from(email, 'utf8'),
-    Buffer.from(authSecret, 'hex'),
-    // @ts-expect-error -- TSCONVERSION missing type from srpGenKey
-    Buffer.from(secret1, 'hex'),
-  );
-  const srpA = c.computeA().toString('hex');
-  const { sessionStarterId, srpB } = await fetch.post(
-    '/auth/login-a',
-    {
-      srpA,
-      email,
-    },
-    null,
-  );
-  // ~~~~~~~~~~~~~~~~~~~~~ //
-  // Compute and Submit M1 //
-  // ~~~~~~~~~~~~~~~~~~~~~ //
-  c.setB(Buffer.from(srpB, 'hex'));
-  const srpM1 = c.computeM1().toString('hex');
-  const { srpM2 } = await fetch.post(
-    '/auth/login-m1',
-    {
-      srpM1,
-      sessionStarterId,
-    },
-    null,
-  );
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // Verify Server Identity M2 //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  c.checkM2(Buffer.from(srpM2, 'hex'));
-  // ~~~~~~~~~~~~~~~~~~~~~~ //
-  // Initialize the Session //
-  // ~~~~~~~~~~~~~~~~~~~~~~ //
-  // Compute K (used for session ID)
-  const sessionId = (c.computeK() as Buffer).toString('hex');
+/** Creates a session from a sessionId and derived symmetric key. */
+export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
   const {
     publicKey,
     encPrivateKey,
     encSymmetricKey,
-    saltEnc,
+    email,
     accountId,
     firstName,
     lastName,
   } = await _whoami(sessionId);
-  const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
-  const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
+  const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
   // Store the information for later
   setSessionData(
     sessionId,
@@ -327,10 +274,6 @@ function _getSessionKey(sessionId: string | null) {
 
 function _getSrpParams() {
   return srp.params[2048];
-}
-
-function _sanitizeEmail(email: string) {
-  return email.trim().toLowerCase();
 }
 
 function _sanitizePassphrase(passphrase: string) {

@@ -88,9 +88,7 @@ describe('<AccountDropdownButton />', () => {
     const loginBtn = screen.getByText('Log In');
     expect(loginBtn).toBeDefined();
     await user.click(loginBtn);
-    expect(await screen.findByTestId('LoginModal__form')).toBeDefined();
-    expect(await screen.getByText('Email')).toBeDefined();
-    expect(await screen.getByText('Password')).toBeDefined();
+    expect(await screen.findByTestId('LoginModal__url')).toBeDefined();
   });
 
   test('renders "Logout" label when session is logged in', async () => {
