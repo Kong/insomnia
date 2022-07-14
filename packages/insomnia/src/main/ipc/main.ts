@@ -15,11 +15,11 @@ export interface MainBridgeAPI {
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
-  createWebsocketRequest: (parentId: string) => Promise<string>;
-  getWebSocketRequestsByParentId: (parentId: string) => Promise<WebSocketRequest[]>;
-  open: (options: { url: string }) => void;
-  message: (options: { message: string }) => string;
-  close: () => string;
+  createWebsocketRequest: (options: { workspaceId: string }) => Promise<string>;
+  getWebSocketRequestsByParentId: (options: { workspaceId: string }) => Promise<WebSocketRequest[]>;
+  open: (options: { url: string; requestId: string }) => void;
+  message: (options: { message: string; connectionId: string }) => string;
+  close: (options: { connectionId: string }) => string;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
 }
 export function registerMainHandlers() {
@@ -56,44 +56,83 @@ export function registerMainHandlers() {
   setupWebSockets();
 }
 
-interface WebSocketRequest {
+export interface WebSocketRequest {
   _id: string;
-  parentId: string;
+  workspaceId: string;
   name: string;
   url?: string;
+  connection?: {
+    _id: string;
+    connected: boolean;
+    // messages: []
+  };
 }
-function setupWebSockets() {
-  // TODO: make it a list, and persist somewhere
-  let temporaryOpenConnectionHack: WebSocket;
-  // TODO: persist somewhere
-  const websocketsRequests: WebSocketRequest[] = [];
 
-  ipcMain.handle('createWebsocketRequest', (_, parentId: string) => {
+function setupWebSockets() {
+  const WebSockets = new Map<string, WebSocket>();
+  // TODO: persist somewhere
+  let websocketsRequests: WebSocketRequest[] = [];
+
+  ipcMain.handle('createWebsocketRequest', (_, options: { workspaceId: string }) => {
     // TODO: figure out what to do with this
     // const request = await models.request.create({
     //   parentId,
     //   method: METHOD_GET,
     //   name: 'New Request',
     // });
-    const requestId = websocketsRequests.push({ _id: uuidv4(), parentId, name: 'New Request' });
+    const requestId = websocketsRequests.push({ _id: uuidv4(), workspaceId: options.workspaceId, name: 'New Request' });
     return requestId;
   });
 
-  ipcMain.handle('getWebSocketRequestsByParentId', (_, parentId: string) => {
-    return websocketsRequests.filter(request => request.parentId === parentId);
+  ipcMain.handle('getWebSocketRequestsByParentId', (_, options: { workspaceId: string }) => {
+    return websocketsRequests.filter(request => request.workspaceId === options.workspaceId);
   });
-  ipcMain.on('websocket.open', (event, options: { url: string }) => {
+
+  ipcMain.on('websocket.open', (event, options: { url: string; requestId: string }) => {
     console.log('Connecting to ' + options.url);
     try {
       const ws = new WebSocket(options.url);
+      const connectionId = uuidv4();
+      WebSockets.set(connectionId, ws);
       ws.on('open', () => {
-        temporaryOpenConnectionHack = ws;
+        websocketsRequests = websocketsRequests.map(request => {
+          if (request._id === options.requestId) {
+            return {
+              ...request,
+              connection: {
+                _id: connectionId,
+                connected: true,
+              },
+            };
+          }
 
+          return request;
+        });
         event.sender.send('websocket.response', 'Connected to ' + options.url);
         ws.send('remove this test message');
       });
+
       ws.on('message', buffer => {
         event.sender.send('websocket.response', buffer.toString());
+      });
+
+      ws.on('close', () => {
+        console.log('Disconnected from ', options.url);
+        websocketsRequests = websocketsRequests.map(request => {
+          if (request._id === options.requestId && request.connection) {
+            return {
+              ...request,
+              connection: {
+                _id: request.connection._id,
+                connected: false,
+              },
+            };
+          }
+
+          return request;
+        });
+
+        event.sender.send('websocket.response', 'Disconnected from ' + options.url);
       });
 
     } catch (e) {
@@ -102,26 +141,22 @@ function setupWebSockets() {
     }
   });
 
-  ipcMain.handle('websocket.message', (_, options: { message: string }) => {
-    if (!temporaryOpenConnectionHack) {
-      return;
+  ipcMain.handle('websocket.message', (_, options: { message: string; connectionId: string }) => {
+    const ws = WebSockets.get(options.connectionId);
+    if (ws) {
+      ws.send(options.message);
+      console.log('sent: ' + options.message);
+    } else {
+      console.warn('No websocket found for requestId: ' + options.connectionId);
     }
-    const ws = temporaryOpenConnectionHack;
-    ws.send(options.message);
-    console.log('sent: ' + options.message);
-    return 'sent: ' + options.message;
   });
 
-  ipcMain.handle('websocket.close', event => {
-    if (!temporaryOpenConnectionHack) {
-      return;
+  ipcMain.handle('websocket.close', (_, options: { connectionId: string }) => {
+    const ws = WebSockets.get(options.connectionId);
+    if (ws) {
+      ws.close();
+    } else {
+      console.warn('No websocket found for requestId: ' + options.connectionId);
     }
-    const ws = temporaryOpenConnectionHack;
-    ws.close();
-    ws.on('close', () => {
-      console.log('Disconnected from ', ws._url);
-      event.sender.send('websocket.response', 'Disconnected from ', ws._url);
-    });
-    return 'success';
   });
 }
