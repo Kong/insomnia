@@ -1,40 +1,19 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { PureComponent } from 'react';
-
-import { AUTOBIND_CFG } from '../../../common/constants';
-
+import { PropsWithChildren, useLayoutEffect, useState } from 'react';
 interface Props {
   delay?: number;
 }
 
-interface State {
-  show: boolean;
-}
+export const Lazy = ({ delay, children }: PropsWithChildren<Props>) => {
+  const [show, setShow] = useState(false);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Lazy extends PureComponent<Props> {
-  state: State = {
-    show: false,
-  };
-
-  show() {
-    this.setState({
-      show: true,
-    });
-  }
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
-    const { delay } = this.props;
+  useLayoutEffect(() => {
     if (typeof delay === 'number' && delay < 0) {
       // Show right away if negative delay passed
-      this.show();
+      setShow(true);
     } else {
-      setTimeout(this.show, this.props.delay || 50);
+      setTimeout(() => setShow(true), delay || 50);
     }
-  }
+  }, [delay]);
 
-  render() {
-    return this.state.show ? this.props.children : null;
-  }
-}
+  return show ? children : null;
+};
