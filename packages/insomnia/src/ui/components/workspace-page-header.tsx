@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 
 import { ACTIVITY_HOME } from '../../common/constants';
 import { selectActiveActivity, selectActiveApiSpec, selectActiveProjectName, selectActiveWorkspace } from '../redux/selectors';
-import { ActivityToggle } from './activity-toggle';
+import { ActivityToggle } from './activity-toggle/activity-toggle';
 import { AppHeader } from './app-header';
 import { WorkspaceDropdown } from './dropdowns/workspace-dropdown';
 import { HandleActivityChange } from './wrapper';
@@ -38,7 +38,13 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
   return (
     <AppHeader
       breadcrumbProps={{ crumbs }}
-      gridCenter={<ActivityToggle handleActivityChange={handleActivityChange} />}
+      gridCenter={
+        <ActivityToggle
+          workspace={activeWorkspace}
+          activity={activity}
+          handleActivityChange={handleActivityChange}
+        />
+      }
       gridRight={gridRight}
     />
   );

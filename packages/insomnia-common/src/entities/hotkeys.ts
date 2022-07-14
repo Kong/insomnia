@@ -2,10 +2,10 @@
  * The combination of key presses that will activate a hotkey if pressed.
  */
 export interface KeyCombination {
-  ctrl: boolean;
-  alt: boolean;
-  shift: boolean;
-  meta: boolean;
+  ctrl?: boolean;
+  alt?: boolean;
+  shift?: boolean;
+  meta?: boolean;
   keyCode: number;
 }
 
