@@ -51,7 +51,6 @@ import type { HandleActivityChange, WrapperProps } from './wrapper';
 
 // TODO: create request process
 // TODO: request list
-// TODO: sync the ready state to main listener
 // TODO: make a codeeditor
 // TODO: make a table
 // TODO: url bar
@@ -290,7 +289,7 @@ export const WrapperDebug: FC<Props> = ({
         activeWorkspace ? (
           <ErrorBoundary showAlert>
             {activeWebsocketId && activeWebSocketRequest ? (
-              <WSLeftPanel request={activeWebSocketRequest} />
+              <WSLeftPanel key={activeWebsocketId} request={activeWebSocketRequest} />
             ) : activeRequest && isGrpcRequest(activeRequest) ? (
               <GrpcRequestPane
                 activeRequest={activeRequest}
@@ -338,7 +337,7 @@ export const WrapperDebug: FC<Props> = ({
       renderPaneTwo={
         <ErrorBoundary showAlert>
           {activeWebsocketId && activeWebSocketRequest ? (
-            <WSRightPanel request={activeWebSocketRequest} />
+            <WSRightPanel key={activeWebsocketId} request={activeWebSocketRequest} />
           ) : activeRequest && isGrpcRequest(activeRequest) ? (
             <GrpcResponsePane
               activeRequest={activeRequest}
@@ -426,19 +425,38 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
 };
 const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
   // TODO: add and fill in table
-  const [messages, setMessages] = useState<any>([]);
+  // const [messages, setMessages] = useState<{
+  //   _id: string;
+  //   createdAt: string;
+  //   message: string;
+  //   connectionId: string;
+  //   direction: string;
+  // }[]>([]);
 
-  useEffect(() => {
-    const unsubscribe = window.main.on('websocket.response', (_, message) => {
-      setMessages(messages => [...messages, message]);
-    });
-    return unsubscribe;
-  }, []);
+  // useEffect(() => {
+  //   const unsubscribe = window.main.on('websocket.response', (_, message) => {
+  //     if (message.connectionId === request.connection?._id) {
+  //       setMessages(messages => [...messages.slice(-15), message]);
+  //     }
+  //   });
+  //   return unsubscribe;
+  // }, [request.connection?._id]);
 
   return (
-    <ul>
-      {messages.map((m, i) => (
-        <li key={i}>{m}</li>
+    <ul
+      style={{
+        overflowY: 'auto',
+        height: '100%',
+      }}
+    >
+      {request.connection?.messages.reverse().map((m, i) => (
+        <li
+          style={{
+            border: '1px solid #ccc',
+          }}
+          key={i}
+        >
+          {m.type === 'UP' ? '⬆️' : m.type === 'INFO' ? 'ℹ️' : '⬇️'} {m.message}</li>
       ))}
     </ul>
   );
