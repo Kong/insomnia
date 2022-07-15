@@ -34,6 +34,7 @@ import {
   selectSidebarChildren,
   selectSidebarFilter,
 } from '../redux/sidebar-selectors';
+import { SplitButton } from './base/split-button';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -418,7 +419,21 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
         }}
       >
         <input name="body" defaultValue="example message" />
-        <button type="submit">Send</button>
+        <SplitButton disabled={!isConnected}>
+          <button type='submit'>Send</button>
+          <button
+            type='button'
+            onClick={() => {
+              if (request.connection) {
+                window.main.close({
+                  connectionId: request.connection._id,
+                });
+              }
+            }}
+          >
+            Close
+          </button>
+        </SplitButton>
       </form>
     </Pane>
   );
@@ -461,5 +476,72 @@ const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
     </ul>
   );
 };
+
+// const SplitButtonContext = React.createContext({});
+// const { Provider } = SplitButtonContext;
+// const SplitButtonProvider = ({ children, selected: defaultSelected }: PropsWithChildren<{ selected: number }>) => {
+//   const [selected, setSelected] = useState<number>(defaultSelected);
+
+//   const selectButton = (index: number) => {
+//     setSelected(index);
+//   };
+
+//   return (<Provider value={{ selectButton, selected }}>{children}</Provider>);
+// };
+
+// function mapChildren(children: ReactNode, selected: number, selectButton: (index: number) => void): ReactElement[] {
+//   return React.Children
+//     .toArray(children)
+//     .filter(isValidElement)
+//     .filter((child: ReactElement) => child.type === 'button')
+//     .map((child: ReactElement, index: number) => {
+//       // eslint-disable-next-line react/jsx-key
+//       const { onClick: onButtonClick } = child.props;
+//       const onClick = () => {
+//         if (index === selected) {
+//           onButtonClick();
+//         } else {
+//           selectButton(index);
+//         }
+//       };
+
+//       // eslint-disable-next-line react/jsx-key
+//       return <DropdownItem {...child.props} onClick={onClick}>{child.props.children}</DropdownItem>;
+//     });
+// }
+
+// const SplitButtonContent = ({ children }: PropsWithChildren<{ disabled?: boolean; selected?: number }>) => {
+//   /** @ts-ignore */
+//   const { selected, selectButton } = useContext(SplitButtonContext);
+//   const dropdownRef = useRef<Dropdown>(null);
+//   const buttons = mapChildren(children, selected, selectButton);
+
+//   if (buttons.length < selected + 1) {
+//     throw new Error('the button count should be bigger than the selected index');
+//   }
+
+//   return (
+//     <div>
+//       {buttons[selected]}
+//       <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
+//         <DropdownButton
+//           className="urlbar__send-context"
+//           onClick={() => dropdownRef.current?.show()}
+//         >
+//           <i className="fa fa-caret-down" />
+//         </DropdownButton>
+//         {buttons}
+//       </Dropdown>
+//     </div>
+//   );
+// };
+
+// const SplitButton = ({ children, selected = 0 }: PropsWithChildren<{ disabled?: boolean; selected?: number }>) => {
+//   return (
+//     <SplitButtonProvider selected={selected}>
+//       <SplitButtonContent>{children}</SplitButtonContent>
+//     </SplitButtonProvider>
+//   );
+// };
 
 export default WrapperDebug;
