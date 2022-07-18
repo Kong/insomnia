@@ -1,4 +1,5 @@
-import { PropsWithChildren, useLayoutEffect, useState } from 'react';
+import React, { PropsWithChildren, useLayoutEffect, useState } from 'react';
+
 interface Props {
   delay?: number;
 }
@@ -15,5 +16,5 @@ export const Lazy = ({ delay, children }: PropsWithChildren<Props>) => {
     }
   }, [delay]);
 
-  return show ? children : null;
+  return show ? <>{children}</> : null;
 };
