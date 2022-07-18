@@ -72,6 +72,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } else {
       handleSend();
     }
+    inputRef.current?.focus(true);
   }, [downloadPath, handleSend, handleSendAndDownload]);
 
   useInterval(send, currentInterval ? currentInterval : null);
@@ -119,7 +120,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [handleUpdateDownloadPath, request._id]);
   const handleClearDownloadLocation = () => handleUpdateDownloadPath(request._id, null);
 
-  const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.code === 'Enter' && request.url) {
       send();
       return;
