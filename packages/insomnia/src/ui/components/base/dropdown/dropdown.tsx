@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useImperativeHandle,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -54,6 +55,32 @@ const isComponent = (match: string) => (child: ReactNode) =>
 const isDropdownItem = isComponent(DropdownItem.name);
 const isDropdownButton = isComponent(DropdownButton.name);
 const isDropdownDivider = isComponent(DropdownDivider.name);
+
+const _getFlattenedChildren = (children: ReactNode[] | ReactNode) => {
+  let newChildren: ReactNode[] = [];
+  // Ensure children is an array
+  const flatChildren = Array.isArray(children) ? children : [children];
+
+  for (const child of flatChildren) {
+    if (!child) {
+      // Ignore null components
+      continue;
+    }
+
+    if (isValidElement(child) && child.type === Fragment) {
+      newChildren = [
+        ...newChildren,
+        ..._getFlattenedChildren(child.props.children),
+      ];
+    } else if (Array.isArray(child)) {
+      newChildren = [...newChildren, ..._getFlattenedChildren(child)];
+    } else {
+      newChildren.push(child);
+    }
+  }
+
+  return newChildren;
+};
 
 export interface DropdownHandle {
   show: (
@@ -104,7 +131,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
     }, [filterActiveIndex]);
 
-    function _handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
+    const _handleChangeFilter = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
       const newFilter = event.target.value;
 
       // Nothing to do if the filter didn't change
@@ -143,9 +170,9 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           filterVisible: filterVisible ? true : newFilter.length > 0,
         });
       }
-    }
+    }, [filter, filterVisible, open, uniquenessKey]);
 
-    function _handleDropdownNavigation(event: KeyboardEvent) {
+    const _handleDropdownNavigation = useCallback((event: KeyboardEvent) => {
       const { key, shiftKey } = event;
       // Handle tab and arrows to move up and down dropdown entries
       if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
@@ -192,9 +219,9 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       _filter.current?.focus();
-    }
+    }, [filter, filterActiveIndex, filterItems, filterVisible, open, uniquenessKey]);
 
-    function _handleBodyKeyDown(event: KeyboardEvent) {
+    const _handleBodyKeyDown = (event: KeyboardEvent) => {
       if (!open) {
         return;
       }
@@ -207,9 +234,9 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       executeHotKey(event, hotKeyRefs.CLOSE_DROPDOWN, () => {
         hide();
       });
-    }
+    };
 
-    function isNearBottomOfScreen() {
+    const isNearBottomOfScreen = () => {
       if (!_node.current) {
         return false;
       }
@@ -218,7 +245,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       const dropdownTop = _node.current.getBoundingClientRect().top;
 
       return dropdownTop > bodyHeight - 200;
-    }
+    };
 
     // Recalculate the position of the dropdown
     useLayoutEffect(() => {
@@ -242,7 +269,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       _dropdownList.current.style.minWidth = 'initial';
       _dropdownList.current.style.maxWidth = 'initial';
 
-      // Why not 15?
       const screenMargin = 6;
       if (right || wide) {
         // Prevent dropdown from squishing against left side of screen
@@ -290,57 +316,16 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
     }, [beside, open, right, wide]);
 
-    function _handleClick(event: React.MouseEvent<HTMLDivElement>) {
+    const _handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
       toggle();
-    }
+    };
 
-    function _handleMouseDown(event: React.MouseEvent) {
+    const _handleMouseDown = (event: React.MouseEvent) => {
       // Intercept mouse down so that clicks don't trigger things like drag and drop.
       event.preventDefault();
-    }
-
-    // TODO: children should not be 'any'.
-    /** Check me out bro
-    function flattenChildren(children: React.ReactNode): ReactChildArray {
-      const childrenArray = React.Children.toArray(children);
-      return childrenArray.reduce((flatChildren: ReactChildArray, child) => {
-        if ((child as React.ReactElement<any>).type === React.Fragment) {
-          return flatChildren.concat(
-            flattenChildren((child as React.ReactElement<any>).props.children)
-          );
-        }
-        flatChildren.push(child);
-        return flatChildren;
-      }, []);
-    }
-   */
-    function _getFlattenedChildren(children: ReactNode[] | ReactNode) {
-      let newChildren: ReactNode[] = [];
-      // Ensure children is an array
-      const flatChildren = Array.isArray(children) ? children : [children];
-
-      for (const child of flatChildren) {
-        if (!child) {
-          // Ignore null components
-          continue;
-        }
-
-        if (isValidElement(child) && child.type === Fragment) {
-          newChildren = [
-            ...newChildren,
-            ..._getFlattenedChildren(child.props.children),
-          ];
-        } else if (Array.isArray(child)) {
-          newChildren = [...newChildren, ..._getFlattenedChildren(child)];
-        } else {
-          newChildren.push(child);
-        }
-      }
-
-      return newChildren;
-    }
+    };
 
     const hide = useCallback(() => {
       // Focus the dropdown button after hiding
@@ -422,109 +407,114 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       'dropdown__menu--up': isNearBottomOfScreen(),
       'dropdown__menu--right': right,
     });
-    const dropdownButtons: ReactNode[] = [];
-    const dropdownItems: ReactNode[] = [];
 
-    const allChildren = _getFlattenedChildren(children);
+    const dropdownChildren = useMemo(() => {
+      const dropdownButtons: ReactNode[] = [];
+      const dropdownItems: ReactNode[] = [];
 
-    const visibleChildren = allChildren.filter((child, i) => {
-      if (!isDropdownItem(child)) {
-        return true;
-      }
+      const allChildren = _getFlattenedChildren(children);
 
-      // It's visible if its index is in the filterItems
-      return !filterItems || filterItems.includes(i);
-    });
-
-    for (let i = 0; i < allChildren.length; i++) {
-      const child = allChildren[i];
-
-      if (isDropdownButton(child)) {
-        dropdownButtons.push(child);
-      } else if (isDropdownItem(child)) {
-        const active = i === filterActiveIndex;
-        const hide = !visibleChildren.includes(child);
-        dropdownItems.push(
-          <li
-            key={i}
-            data-filter-index={i}
-            className={classnames({
-              active,
-              hide,
-            })}
-          >
-            {child}
-          </li>
-        );
-      } else if (isDropdownDivider(child)) {
-        const currentIndex = visibleChildren.indexOf(child);
-        const nextChild = visibleChildren[currentIndex + 1];
-
-        // Only show the divider if the next child is a DropdownItem
-        if (nextChild && isDropdownItem(nextChild)) {
-          dropdownItems.push(<li key={i}>{child}</li>);
+      const visibleChildren = allChildren.filter((child, i) => {
+        if (!isDropdownItem(child)) {
+          return true;
         }
-      }
-    }
 
-    let finalChildren: React.ReactNode = [];
+        // It's visible if its index is in the filterItems
+        return !filterItems || filterItems.includes(i);
+      });
 
-    if (dropdownButtons.length !== 1) {
-      console.error(
-        `Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`,
-        {
-          allChildren,
-        }
-      );
-    } else {
-      const noResults = filter && filterItems && filterItems.length === 0;
-      const dropdownsContainer = document.querySelector<HTMLDivElement>('#dropdowns-container');
+      for (let i = 0; i < allChildren.length; i++) {
+        const child = allChildren[i];
 
-      if (!dropdownsContainer) {
-        console.error('Dropdown: a #dropdowns-container element is required for a dropdown to render properly');
-
-        return null;
-      }
-
-      finalChildren = [
-        dropdownButtons[0],
-        ReactDOM.createPortal(
-          <div key="item" className={menuClasses} aria-hidden={!open}>
-            <div className="dropdown__backdrop theme--transparent-overlay" />
-            <div
-              key={uniquenessKey}
-              ref={_dropdownList}
-              tabIndex={-1}
-              className={classnames('dropdown__list', {
-                'dropdown__list--filtering': filterVisible,
+        if (isDropdownButton(child)) {
+          dropdownButtons.push(child);
+        } else if (isDropdownItem(child)) {
+          const active = i === filterActiveIndex;
+          const hide = !visibleChildren.includes(child);
+          dropdownItems.push(
+            <li
+              key={i}
+              data-filter-index={i}
+              className={classnames({
+                active,
+                hide,
               })}
             >
-              <div className="form-control dropdown__filter">
-                <i className="fa fa-search" />
-                <input
-                  type="text"
-                  autoFocus={open}
-                  onChange={_handleChangeFilter}
-                  ref={_filter}
-                  onKeyPress={_handleCheckFilterSubmit}
-                />
-              </div>
-              {noResults && (
-                <div className="text-center pad warning">{'No match :('}</div>
-              )}
-              <ul
-                className={classnames({
-                  hide: noResults,
+              {child}
+            </li>
+          );
+        } else if (isDropdownDivider(child)) {
+          const currentIndex = visibleChildren.indexOf(child);
+          const nextChild = visibleChildren[currentIndex + 1];
+
+          // Only show the divider if the next child is a DropdownItem
+          if (nextChild && isDropdownItem(nextChild)) {
+            dropdownItems.push(<li key={i}>{child}</li>);
+          }
+        }
+      }
+
+      let finalChildren: React.ReactNode = [];
+
+      if (dropdownButtons.length !== 1) {
+        console.error(
+          `Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`,
+          {
+            allChildren,
+          }
+        );
+      } else {
+        const noResults = filter && filterItems && filterItems.length === 0;
+        const dropdownsContainer = document.querySelector<HTMLDivElement>('#dropdowns-container');
+
+        if (!dropdownsContainer) {
+          console.error('Dropdown: a #dropdowns-container element is required for a dropdown to render properly');
+
+          return null;
+        }
+
+        finalChildren = [
+          dropdownButtons[0],
+          ReactDOM.createPortal(
+            <div key="item" className={menuClasses} aria-hidden={!open}>
+              <div className="dropdown__backdrop theme--transparent-overlay" />
+              <div
+                key={uniquenessKey}
+                ref={_dropdownList}
+                tabIndex={-1}
+                className={classnames('dropdown__list', {
+                  'dropdown__list--filtering': filterVisible,
                 })}
               >
-                {dropdownItems}
-              </ul>
-            </div>
-          </div>,
-          dropdownsContainer
-        ),
-      ];
-    }
+                <div className="form-control dropdown__filter">
+                  <i className="fa fa-search" />
+                  <input
+                    type="text"
+                    autoFocus={open}
+                    onChange={_handleChangeFilter}
+                    ref={_filter}
+                    onKeyPress={_handleCheckFilterSubmit}
+                  />
+                </div>
+                {noResults && (
+                  <div className="text-center pad warning">{'No match :('}</div>
+                )}
+                <ul
+                  className={classnames({
+                    hide: noResults,
+                  })}
+                >
+                  {dropdownItems}
+                </ul>
+              </div>
+            </div>,
+            dropdownsContainer
+          ),
+        ];
+      }
+
+      return finalChildren;
+    }, [_handleChangeFilter, _handleCheckFilterSubmit, children, filter, filterActiveIndex, filterItems, filterVisible, menuClasses, open, uniquenessKey]);
 
     return (
       <KeydownBinder
@@ -540,7 +530,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           tabIndex={-1}
           onMouseDown={_handleMouseDown}
         >
-          {finalChildren}
+          {dropdownChildren}
         </div>
       </KeydownBinder>
     );
