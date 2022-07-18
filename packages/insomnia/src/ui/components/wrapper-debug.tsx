@@ -1,4 +1,4 @@
-import React, { FC, Fragment, ReactNode, useEffect, useState } from 'react';
+import React, { FC, Fragment, ReactNode, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../common/constants';
@@ -35,6 +35,7 @@ import {
   selectSidebarFilter,
 } from '../redux/sidebar-selectors';
 import { SplitButton } from './base/split-button';
+import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -376,6 +377,7 @@ export const WrapperDebug: FC<Props> = ({
 
 const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
   const isConnected = request.connection?.connected;
+  const editorRef = useRef<UnconnectedCodeEditor>(null);
   return (
     <Pane type="request">
       <PaneHeader>
@@ -401,7 +403,6 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
           </button>
         </form>
       </PaneHeader>
-
       <form
         onSubmit={e => {
           e.preventDefault();
@@ -409,8 +410,7 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
             console.warn('Sending message to closed connection');
             return;
           }
-          const formData = new FormData(e.target);
-          const message = formData.get('body') as string || '';
+          const message = editorRef.current?.getValue() || '';
           console.log({ message });
           window.main.message({
             message,
@@ -418,22 +418,15 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
           });
         }}
       >
-        <input name="body" defaultValue="example message" />
-        <SplitButton disabled={!isConnected}>
+        <PaneHeader>
           <button type='submit'>Send</button>
-          <button
-            type='button'
-            onClick={() => {
-              if (request.connection) {
-                window.main.close({
-                  connectionId: request.connection._id,
-                });
-              }
-            }}
-          >
-            Close
-          </button>
-        </SplitButton>
+        </PaneHeader>
+        <CodeEditor
+          ref={editorRef}
+          onChange={() => {}}
+          defaultValue={''}
+          enableNunjucks
+        />
       </form>
     </Pane>
   );
