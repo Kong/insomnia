@@ -274,6 +274,9 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
             className="btn btn--super-compact width-auto"
             confirmMessage=""
             addIcon
+            doneIcon
+            doneMessage=""
+            doneAfterTimeout
             onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}
           >
             <i className="fa fa-trash-o" />
