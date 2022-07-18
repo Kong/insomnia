@@ -18,6 +18,7 @@ interface Props<T> {
   doneMessage?: string;
   tabIndex?: number;
   title?: string;
+  doneAfterTimeout?: boolean;
   onClick?: (event: MouseEvent<HTMLButtonElement>, value?: T) => void;
 }
 
@@ -32,6 +33,7 @@ export const PromptButton = <T, >({
   tabIndex,
   title,
   className,
+  doneAfterTimeout = false,
   children,
 }: PropsWithChildren<Props<T>>) => {
   // Create flag to store the state value.
@@ -55,7 +57,7 @@ export const PromptButton = <T, >({
     }
 
     // Fire the click handler
-    onClick?.(event, value);
+    !doneAfterTimeout && onClick?.(event, value);
 
     // Set the state to done (but delay a bit to not alarm user)
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
@@ -66,6 +68,9 @@ export const PromptButton = <T, >({
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
     triggerTimeout.current = global.setTimeout(() => {
       setState(States.default);
+
+      // Fire the click handler
+      doneAfterTimeout && onClick?.(event, value);
     }, 2000);
   };
 
