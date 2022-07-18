@@ -57,7 +57,8 @@ import type { HandleActivityChange, WrapperProps } from './wrapper';
 // TODO: make a table
 // TODO: url bar
 
-function usePoorMansWebSocketRequests(workspaceId: string) {
+// temp workaround for delaying request modelling decision
+function usePollingWebSocketRequests(workspaceId: string) {
   const [requests, setRequests] = useState<WebSocketRequest[]>([]);
 
   useEffect(() => {
@@ -196,7 +197,7 @@ export const WrapperDebug: FC<Props> = ({
     isCollection(activeWorkspace) &&
     isRemoteProject(activeProject) &&
     vcs;
-  const webSocketRequests = usePoorMansWebSocketRequests(
+  const webSocketRequests = usePollingWebSocketRequests(
     activeWorkspace?._id || ''
   );
   const [activeWebsocketId, setActiveWebsocketId] = useState('');
@@ -206,9 +207,7 @@ export const WrapperDebug: FC<Props> = ({
 
   if (!activeWebSocketRequest) {
     // console.error('How did this happen?');
-    console.log(activeWebSocketRequest);
   }
-  console.log(activeWebSocketRequest);
 
   return (
     <PageLayout
@@ -377,7 +376,7 @@ export const WrapperDebug: FC<Props> = ({
   );
 };
 
-function usePoorMansConnectionStatus(connectionId?: string) {
+function usePollingConnectionStatus(connectionId?: string) {
   const [connectionStatus, setConnectionStatus] = useState(false);
 
   useEffect(() => {
@@ -403,7 +402,7 @@ function usePoorMansConnectionStatus(connectionId?: string) {
 }
 
 const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
-  const isConnected = usePoorMansConnectionStatus(request.connectionId);
+  const isConnected = usePollingConnectionStatus(request.connectionId);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
   return (
@@ -459,45 +458,45 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
     </Pane>
   );
 };
-function usePoorMansEventLogFetcher(connectionId?: string) {
+
+function useEventLogQuery(connectionId?: string) {
   const [eventLog, setEventLog] = useState<EventLog>([]);
 
   useEffect(() => {
     let isMounted = true;
-    console.log(connectionId);
     async function syncWebSocketEventLog() {
       if (connectionId) {
         const e = await window.main.getWebSocketEventLog({ connectionId });
         isMounted && setEventLog(e);
       }
     }
-
     connectionId && syncWebSocketEventLog();
-    const timeoutId = setInterval(() => syncWebSocketEventLog(), 500);
 
     return () => {
       isMounted = false;
-      clearInterval(timeoutId);
     };
   }, [connectionId]);
 
   return { eventLog, setEventLog };
 }
-const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
-  // TODO: add and fill in table
-  const { eventLog, setEventLog } = usePoorMansEventLogFetcher(request.connectionId);
-
+const useEventSubscription = (connectionId?: string) => {
+  const { eventLog, setEventLog } = useEventLogQuery(connectionId);
   useEffect(() => {
-    const unsubscribe = window.main.on('websocket.response', (_, lastEvent) => {
-      if (lastEvent.connectionId === request.connectionId) {
+    const unsubscribe = window.main.on('websocket.log', (_, lastEvent) => {
+      if (lastEvent.connectionId === connectionId) {
         setEventLog(events => [...events, lastEvent]);
       }
     });
     return unsubscribe;
-  }, [request.connectionId, setEventLog]);
+  }, [connectionId, setEventLog]);
+  return eventLog;
+};
+
+const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
+  // TODO: add and fill in table
+  const eventLog = useEventSubscription(request.connectionId);
   // reverse
   const [filter, setFilter] = useState('');
-
   const list = eventLog.filter(m => m.message.toLowerCase().includes(filter.toLowerCase())) || [];
   return (
     <div>

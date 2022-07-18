@@ -77,6 +77,7 @@ const makeNewEvent = (message: string, connectionId: string, type: 'OUTGOING' | 
 };
 
 function setupWebSockets() {
+  // volatile state, later persist event logs
   const WebSocketInstances = new Map<string, WebSocket>();
   const WebSocketEventLog = new Map<string, EventLog>();
   // TODO: persist somewhere
@@ -113,25 +114,19 @@ function setupWebSockets() {
       const connectionId = uuidv4();
       WebSocketInstances.set(connectionId, ws);
       ws.on('open', () => {
-        websocketsRequests = websocketsRequests.map(request => {
-          if (request._id === options.requestId) {
-            return {
-              ...request,
-              connectionId,
-            };
-          }
-
-          return request;
-        });
+        websocketsRequests = websocketsRequests.map(request =>
+          request._id === options.requestId ?
+            { ...request, connectionId }
+            : request
+        );
         WebSocketEventLog.set(connectionId, [makeNewEvent('Connected to ' + options.url, connectionId, 'INFO')]);
-        ws.send('remove this test message');
       });
 
       ws.on('message', buffer => {
         const msgs = WebSocketEventLog.get(connectionId) || [];
-        const lastMessage = makeNewEvent(buffer.toString(), connectionId, 'INCOMING');
+        const lastMessage = makeNewEvent(buffer.toString().slice(0, 50), connectionId, 'INCOMING');
         WebSocketEventLog.set(connectionId, [...msgs, lastMessage]);
-        event.sender.send('websocket.response', lastMessage);
+        event.sender.send('websocket.log', lastMessage);
       });
 
       ws.on('close', () => {
@@ -139,7 +134,7 @@ function setupWebSockets() {
         const msgs = WebSocketEventLog.get(connectionId) || [];
         const lastMessage = makeNewEvent('Disconnected from ' + options.url, connectionId, 'INFO');
         WebSocketEventLog.set(connectionId, [...msgs, lastMessage]);
-        event.sender.send('websocket.response', lastMessage);
+        event.sender.send('websocket.log', lastMessage);
         WebSocketInstances.delete(connectionId);
       });
 
@@ -149,16 +144,16 @@ function setupWebSockets() {
     }
   });
 
-  ipcMain.handle('websocket.message', (_, options: { message: string; connectionId: string }) => {
+  ipcMain.handle('websocket.message', (event, options: { message: string; connectionId: string }) => {
     const ws = WebSocketInstances.get(options.connectionId);
     if (ws) {
       ws.send(options.message);
       const msgs = WebSocketEventLog.get(options.connectionId) || [];
       const lastMessage = makeNewEvent(options.message, options.connectionId, 'OUTGOING');
       WebSocketEventLog.set(options.connectionId, [...msgs, lastMessage]);
-      console.log('sent: ' + options.message);
+      event.sender.send('websocket.log', lastMessage);
     } else {
-      console.warn('No websocket found for requestId: ' + options.connectionId);
+      console.warn('No websocket found for connectionId: ' + options.connectionId);
     }
   });
 
@@ -167,7 +162,7 @@ function setupWebSockets() {
     if (ws) {
       ws.close();
     } else {
-      console.warn('No websocket found for requestId: ' + options.connectionId);
+      console.warn('No websocket found for connectionId: ' + options.connectionId);
     }
   });
 }
