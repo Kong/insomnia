@@ -1,9 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { FC, useCallback, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -14,7 +12,6 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import { RootState } from '../../redux/modules';
 import { selectIsLoading } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -27,34 +24,22 @@ import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
+export const WorkspaceDropdown: FC = () => {
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const activeProject = useSelector(selectActiveProject);
+  const isLoading = useSelector(selectIsLoading);
+  const settings = useSelector(selectSettings);
+  const { hotKeyRegistry } = settings;
+  const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
+  const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const dropdownRef = useRef<Dropdown>(null);
 
-interface Props extends ReduxProps {
-  isLoading: boolean;
-  className?: string;
-}
-
-interface State {
-  actionPlugins: WorkspaceAction[];
-  configGeneratorPlugins: ConfigGenerator[];
-  loadingActions: Record<string, boolean>;
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
-  _dropdown: Dropdown | null = null;
-  state: State = {
-    actionPlugins: [],
-    configGeneratorPlugins: [],
-    loadingActions: {},
-  };
-
-  async _handlePluginClick({ action, plugin, label }: WorkspaceAction, workspace: Workspace) {
-    this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [label]: true },
-    }));
-    const { activeEnvironment, activeProject } = this.props;
-
+  const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
+    setLoadingActions({ ...loadingActions, [label]: true });
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
@@ -81,36 +66,26 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
         error: err,
       });
     }
+    setLoadingActions({ ...loadingActions, [label]: false });
+    dropdownRef.current?.hide();
+  }, [activeEnvironment, activeProject._id, loadingActions]);
 
-    this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [label]: false },
-    }));
-    this._dropdown?.hide();
-  }
-
-  async _handleDropdownOpen() {
+  const handleDropdownOpen = useCallback(async () => {
     const actionPlugins = await getWorkspaceActions();
     const configGeneratorPlugins = await getConfigGenerators();
-    this.setState({
-      actionPlugins,
-      configGeneratorPlugins,
-    });
-  }
+    setActionPlugins(actionPlugins);
+    setConfigGeneratorPlugins(configGeneratorPlugins);
+  }, []);
 
-  _setDropdownRef(dropdown: Dropdown) {
-    this._dropdown = dropdown;
-  }
-
-  static _handleShowExport() {
+  const handleShowExport = useCallback(() => {
     showModal(SettingsModal, TAB_INDEX_EXPORT);
-  }
+  }, []);
 
-  static _handleShowWorkspaceSettings() {
+  const handleShowWorkspaceSettings = useCallback(() => {
     showModal(WorkspaceSettingsModal);
-  }
+  }, []);
 
-  async _handleGenerateConfig(label: string) {
-    const { activeApiSpec } = this.props;
+  const handleGenerateConfig = useCallback((label: string) => {
     if (!activeApiSpec) {
       return;
     }
@@ -118,101 +93,73 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
       apiSpec: activeApiSpec,
       activeTabLabel: label,
     });
+  }, [activeApiSpec]);
+
+  if (!activeWorkspace) {
+    console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
+    return null;
   }
 
-  render() {
-    const {
-      activeWorkspaceName,
-      className,
-      activeWorkspace,
-      isLoading,
-      hotKeyRegistry,
-      ...other
-    } = this.props;
-    const classes = classnames(className, 'wide', 'workspace-dropdown');
-    const { actionPlugins, loadingActions, configGeneratorPlugins } = this.state;
-    if (!activeWorkspace) {
-      console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
-      return null;
-    }
+  return (
+    <Dropdown
+      beside
+      ref={dropdownRef}
+      className="wide workspace-dropdown"
+      onOpen={handleDropdownOpen}
+    >
+      <DropdownButton className="row">
+        <div
+          className="ellipsis"
+          style={{
+            maxWidth: '400px',
+          }}
+          title={activeWorkspaceName}
+        >
+          {activeWorkspaceName}
+        </div>
+        <i className="fa fa-caret-down space-left" />
+        {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
+      </DropdownButton>
+      <DropdownItem onClick={handleShowWorkspaceSettings}>
+        <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
+        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
+      </DropdownItem>
 
-    return (
-      <Dropdown
-        beside
-        ref={this._setDropdownRef}
-        className={classes}
-        onOpen={this._handleDropdownOpen}
-        // @ts-expect-error -- TSCONVERSION appears to be genuine
-        onHide={this._handleDropdownHide}
-        {...(other as Record<string, any>)}
-      >
-        <DropdownButton className="row">
-          <div
-            className="ellipsis"
-            style={{
-              maxWidth: '400px',
-            }}
-            title={activeWorkspaceName}
-          >
-            {activeWorkspaceName}
-          </div>
-          <i className="fa fa-caret-down space-left" />
-          {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
-        </DropdownButton>
-        <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
-          <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
-          <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
+      <DropdownItem onClick={handleShowExport}>
+        <i className="fa fa-share" /> Import/Export
+      </DropdownItem>
+      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
+      {actionPlugins.map((p: WorkspaceAction) => (
+        <DropdownItem
+          key={p.label}
+          onClick={() => handlePluginClick(p, activeWorkspace)}
+          stayOpenAfterClick
+        >
+          {loadingActions[p.label] ? (
+            <i className="fa fa-refresh fa-spin" />
+          ) : (
+            <i className={classnames('fa', p.icon || 'fa-code')} />
+          )}
+          {p.label}
         </DropdownItem>
-
-        <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
-          <i className="fa fa-share" /> Import/Export
-        </DropdownItem>
-
-        {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-        {actionPlugins.map((p: WorkspaceAction) => (
-          <DropdownItem
-            key={p.label}
-            onClick={() => this._handlePluginClick(p, activeWorkspace)}
-            stayOpenAfterClick
-          >
-            {loadingActions[p.label] ? (
-              <i className="fa fa-refresh fa-spin" />
-            ) : (
-              <i className={classnames('fa', p.icon || 'fa-code')} />
-            )}
-            {p.label}
-          </DropdownItem>
-        ))}
-        {isDesign(activeWorkspace) && (
-          <>
-            {configGeneratorPlugins.length > 0 && (
-              <DropdownDivider>Config Generators</DropdownDivider>
-            )}
-            {configGeneratorPlugins.map((p: ConfigGenerator) => (
-              <DropdownItem
-                key="generateConfig"
-                onClick={this._handleGenerateConfig}
-                value={p.label}
-              >
-                <i className="fa fa-code" />
-                {p.label}
-              </DropdownItem>
-            ))}
-          </>
-        )}
-      </Dropdown>
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  activeEnvironment: selectActiveEnvironment(state),
-  activeWorkspace: selectActiveWorkspace(state),
-  activeWorkspaceName: selectActiveWorkspaceName(state),
-  activeApiSpec: selectActiveApiSpec(state),
-  activeProject: selectActiveProject(state),
-  hotKeyRegistry: selectSettings(state).hotKeyRegistry,
-  isLoading: selectIsLoading(state),
-});
-
-export const WorkspaceDropdown = connect(mapStateToProps)(UnconnectedWorkspaceDropdown);
+      ))}
+      {isDesign(activeWorkspace) && (
+        <>
+          {configGeneratorPlugins.length > 0 && (
+            <DropdownDivider>Config Generators</DropdownDivider>
+          )}
+          {configGeneratorPlugins.map((p: ConfigGenerator) => (
+            <DropdownItem
+              key="generateConfig"
+              onClick={handleGenerateConfig}
+              value={p.label}
+            >
+              <i className="fa fa-code" />
+              {p.label}
+            </DropdownItem>
+          ))}
+        </>
+      )}
+    </Dropdown>
+  );
+};

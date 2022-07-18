@@ -86,7 +86,6 @@ export class MarkdownEditor extends PureComponent<Props, State> {
               enableNunjucks
               mode={mode || 'text/x-markdown'}
               placeholder={placeholder}
-              debounceMillis={300}
               defaultValue={markdown}
               onChange={this._handleChange}
             />

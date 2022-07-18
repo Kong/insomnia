@@ -101,11 +101,13 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
         continue;
       }
 
-      const match = fuzzyMatch(newFilter, listItem.textContent);
+      const match = fuzzyMatch(newFilter, listItem.textContent || '');
 
       if (!newFilter || match) {
         const filterIndex = listItem.getAttribute('data-filter-index');
-        filterItems.push(parseInt(filterIndex, 10));
+        if (filterIndex) {
+          filterItems.push(parseInt(filterIndex, 10));
+        }
       }
     }
 
@@ -131,7 +133,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
         for (const li of this._dropdownList.querySelectorAll('li')) {
           if (li.hasAttribute('data-filter-index')) {
             const filterIndex = li.getAttribute('data-filter-index');
-            items.push(parseInt(filterIndex, 10));
+            if (filterIndex) {
+              items.push(parseInt(filterIndex, 10));
+            }
           }
         }
       }
