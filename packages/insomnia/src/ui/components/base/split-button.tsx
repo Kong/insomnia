@@ -5,19 +5,19 @@ import { Dropdown } from './dropdown/dropdown';
 import { DropdownButton } from './dropdown/dropdown-button';
 import { DropdownItem } from './dropdown/dropdown-item';
 
-const SplitButtonContext = React.createContext({});
-const { Provider } = SplitButtonContext;
-const SplitButtonProvider = ({ disabled, children, selected: defaultSelected }: PropsWithChildren<{ selected: number; disabled: boolean }>) => {
-  const [selected, setSelected] = useState<number>(defaultSelected);
-
-  const selectButton = (index: number) => {
-    setSelected(index);
-  };
-
-  return (
-    <Provider value={{ selectButton, selected, disabled }}>{children}</Provider>
-  );
-};
+interface UseSplitButton {
+  selected: number;
+  disabled: boolean;
+  selectButton(index: number): void;
+}
+const SplitButtonContext = React.createContext<UseSplitButton | undefined>(undefined);
+function useSplitButton(): UseSplitButton {
+  const context = useContext(SplitButtonContext);
+  if (context === undefined) {
+    throw new Error('useSplitButton must be used within <SplitButton />');
+  }
+  return context;
+}
 
 function mapChildren(children: ReactNode, disabled: boolean): ReactElement[] {
   return Children
@@ -28,8 +28,7 @@ function mapChildren(children: ReactNode, disabled: boolean): ReactElement[] {
 }
 
 const SplitGroup = ({ children }: { children: ReactElement[] }) => {
-  /** @ts-ignore */
-  const { selected, selectButton, disabled } = useContext(SplitButtonContext);
+  const { selected, selectButton, disabled } = useSplitButton();
   const dropdownRef = useRef<Dropdown>(null);
   const dropdowns = children.map((child: ReactElement, index: number) => {
     const { onClick: onButtonClick } = child.props;
@@ -43,6 +42,7 @@ const SplitGroup = ({ children }: { children: ReactElement[] }) => {
     };
 
     return (
+      // TODO: fix this key mapping. Maybe require button to take name attribute and use it?
       // eslint-disable-next-line react/jsx-key
       <DropdownItem
         {...child.props}
@@ -68,8 +68,7 @@ const SplitGroup = ({ children }: { children: ReactElement[] }) => {
 };
 
 const SplitButtonWrapper = ({ children }: PropsWithChildren<{ selected?: number }>) => {
-  /** @ts-ignore */
-  const { selected, disabled } = useContext(SplitButtonContext);
+  const { selected, disabled } = useSplitButton();
   const buttons = mapChildren(children, disabled);
 
   if (buttons.length < selected + 1) {
@@ -84,10 +83,17 @@ const SplitButtonWrapper = ({ children }: PropsWithChildren<{ selected?: number 
   );
 };
 
-export const SplitButton = ({ disabled, children, selected = 0 }: PropsWithChildren<{ disabled?: boolean; selected?: number }>) => {
+export const SplitButton = ({ disabled, children, selected: defaultSelected = 0 }: PropsWithChildren<{ disabled?: boolean; selected?: number }>) => {
+  const [selected, setSelected] = useState<number>(defaultSelected);
+  const selectButton = (index: number) => {
+    setSelected(index);
+  };
+
+  // you can use useMemo if performance is concerned, but most likely premature optimization.
+  const value = { selected, disabled: Boolean(disabled), selectButton };
   return (
-    <SplitButtonProvider selected={selected} disabled={Boolean(disabled)}>
+    <SplitButtonContext.Provider value={value}>
       <SplitButtonWrapper>{children}</SplitButtonWrapper>
-    </SplitButtonProvider>
+    </SplitButtonContext.Provider>
   );
 };
