@@ -1,9 +1,9 @@
 import classnames from 'classnames';
-import React, { forwardRef, ForwardRefRenderFunction, ReactElement, useState } from 'react';
+import React, { forwardRef, ReactElement, useCallback, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { Button } from './base/button';
-import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
   tall?: boolean;
 }
 
-const MarkdownEditorForwarded: ForwardRefRenderFunction<UnconnectedCodeEditor, Props> = ({
+export const MarkdownEditor = forwardRef<UnconnectedCodeEditor, Props>(({
   mode,
   placeholder,
   defaultPreviewMode,
@@ -25,15 +25,16 @@ const MarkdownEditorForwarded: ForwardRefRenderFunction<UnconnectedCodeEditor, P
   defaultValue,
   onChange,
 }, ref): ReactElement => {
-  const [markdown, setMarkdown] = useState(defaultValue); // this was we are cutting the flow of prop change event after the initial rendering
+  // default value is added here to capture the original class component's behavior, but this way cuts the flow of prop change event after the initial rendering
+  const [markdown, setMarkdown] = useState(defaultValue);
   const classes = classnames('react-tabs', 'markdown-editor', 'outlined', className, {
     'markdown-editor--dynamic-height': !tall,
   });
 
-  const handleChange = (markdown: string): void => {
+  const handleChange = useCallback((markdown: string) => {
     onChange(markdown);
     setMarkdown(markdown);
-  };
+  }, [onChange]);
 
   return (
     <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
@@ -69,6 +70,5 @@ const MarkdownEditorForwarded: ForwardRefRenderFunction<UnconnectedCodeEditor, P
       </TabPanel>
     </Tabs>
   );
-};
-
-export const MarkdownEditor = forwardRef(MarkdownEditorForwarded);
+});
+MarkdownEditor.displayName = 'MarkdownEditor';
