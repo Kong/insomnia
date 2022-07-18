@@ -60,6 +60,7 @@ const CookieRow: FC<{
         doneIcon
         confirmMessage=""
         doneMessage=""
+        doneAfterTimeout
         onClick={handleDeleteCookie}
         title="Delete cookie"
       >
