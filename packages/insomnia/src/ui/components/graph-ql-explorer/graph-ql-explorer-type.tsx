@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { GraphQLInterfaceType, GraphQLObjectType, GraphQLSchema, GraphQLType, GraphQLUnionType } from 'graphql';
-import React, { Fragment, PureComponent } from 'react';
+import React, { FC, Fragment } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { ascendingNameSort } from '../../../common/sorting';
 import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
@@ -15,94 +13,64 @@ interface Props {
   type: GraphQLType;
   schema: GraphQLSchema | null;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class GraphQLExplorerType extends PureComponent<Props> {
-  _handleNavigateType(type: GraphQLType) {
-    const { onNavigateType } = this.props;
-    onNavigateType(type);
-  }
-
-  _handleNavigateField(field: GraphQLFieldWithParentName) {
-    const { onNavigateField } = this.props;
-    onNavigateField(field);
-  }
-
-  renderDescription() {
-    const { type } = this.props;
-    // @ts-expect-error -- TSCONVERSION
-    return <MarkdownPreview markdown={type.description || '*no description*'} />;
-  }
-
-  renderTypesMaybe() {
-    const { schema, type, onNavigateType } = this.props;
-
-    if (schema === null) {
-      return null;
-    }
-
-    let title = 'Types';
-    let types: readonly GraphQLInterfaceType[] | GraphQLObjectType[] = [];
-
+export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, onNavigateField }) => {
+  const getTitle = () => {
     if (type instanceof GraphQLUnionType) {
-      title = 'Possible Types';
-      // @ts-expect-error -- TSCONVERSION
-      types = schema.getPossibleTypes(type);
-    } else if (type instanceof GraphQLInterfaceType) {
-      title = 'Implementations';
-      // @ts-expect-error -- TSCONVERSION
-      types = schema.getPossibleTypes(type);
-    } else if (type instanceof GraphQLObjectType) {
-      title = 'Implements';
-      types = type.getInterfaces();
-    } else {
-      return null;
+      return 'Possible Types';
     }
-
-    return (
-      <Fragment>
-        <h2 className="graphql-explorer__subheading">{title}</h2>
-        <ul className="graphql-explorer__defs">
-          {types.map(type => (
-            <li key={type.name}>
-              <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
-            </li>
-          ))}
-        </ul>
-      </Fragment>
-    );
-  }
-
-  renderFieldsMaybe() {
-    const { type } = this.props;
-
-    // @ts-expect-error -- TSCONVERSION
-    if (typeof type.getFields !== 'function') {
-      return null;
+    if (type instanceof GraphQLInterfaceType) {
+      return 'Implementations';
     }
+    if (type instanceof GraphQLObjectType) {
+      return 'Implements';
+    }
+    return 'Types';
+  };
+  const getTypes = () => {
+    const isUnionOrInterface = type instanceof GraphQLUnionType || type instanceof GraphQLInterfaceType;
+    if (schema && isUnionOrInterface) {
+      return schema.getPossibleTypes(type);
+    }
+    if (type instanceof GraphQLObjectType) {
+      return type.getInterfaces();
+    }
+    return [];
+  };
 
-    // @ts-expect-error -- TSCONVERSION
-    const fields: GraphQLFieldWithOptionalArgs[] = type.getFields();
-    const sortedFields = Object.values(fields).sort(ascendingNameSort);
-    return (
-      <Fragment>
-        <h2 className="graphql-explorer__subheading">Fields</h2>
-        <GraphQLExplorerFieldsList
-          fields={sortedFields}
-          onNavigateType={this._handleNavigateType}
-          onNavigateField={this._handleNavigateField}
-        />
-      </Fragment>
-    );
-  }
+  const markdown = ('description' in type) ? (type.description || '') : '*no description*';
 
-  render() {
-    return (
-      <div className="graphql-explorer__type">
-        {this.renderDescription()}
-        {this.renderTypesMaybe()}
-        {this.renderFieldsMaybe()}
-      </div>
-    );
-  }
-}
+  const types = getTypes();
+  const hasSchemaAndTypes = schema && types.length;
+
+  const title = getTitle();
+
+  const sortedFields = 'getFields' in type ? Object.values(type.getFields()).sort(ascendingNameSort) : [];
+
+  return (
+    <div className="graphql-explorer__type">
+      <MarkdownPreview markdown={markdown} />
+      {hasSchemaAndTypes ?
+        <Fragment>
+          <h2 className="graphql-explorer__subheading">{title}</h2>
+          <ul className="graphql-explorer__defs">
+            {types.map(type => (
+              <li key={type.name}>
+                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+              </li>
+            ))}
+          </ul>
+        </Fragment>
+        : null}
+      {sortedFields.length
+        ? (<Fragment>
+          <h2 className="graphql-explorer__subheading">Fields</h2>
+          <GraphQLExplorerFieldsList
+            fields={sortedFields}
+            onNavigateType={onNavigateType}
+            onNavigateField={onNavigateField}
+          />
+        </Fragment>)
+        : null}
+    </div>
+  );
+};
