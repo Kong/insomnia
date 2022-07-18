@@ -15,7 +15,7 @@ import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
 
-import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
+import { AUTOBIND_CFG, CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
@@ -811,7 +811,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             dynamicHeight
             enableNunjucks
             uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-            debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
             defaultValue={variables}
             className={className}
