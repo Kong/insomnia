@@ -35,6 +35,8 @@ export interface DropdownProps {
   beside?: boolean;
 }
 
+export const dropdownsContainerId = 'dropdowns-container';
+
 interface State {
   open: boolean;
   filter: string;
@@ -465,7 +467,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         );
       } else {
         const noResults = filter && filterItems && filterItems.length === 0;
-        const dropdownsContainer = document.querySelector<HTMLDivElement>('#dropdowns-container');
+        const dropdownsContainer = document.getElementById(dropdownsContainerId);
 
         if (!dropdownsContainer) {
           console.error('Dropdown: a #dropdowns-container element is required for a dropdown to render properly');

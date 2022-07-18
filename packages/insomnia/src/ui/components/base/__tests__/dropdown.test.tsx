@@ -2,13 +2,13 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import { Dropdown } from '../dropdown/dropdown';
+import { Dropdown, dropdownsContainerId } from '../dropdown/dropdown';
 import { DropdownButton } from '../dropdown/dropdown-button';
 import { DropdownItem } from '../dropdown/dropdown-item';
 
 const prepareDom = () => {
   const dropdownsContainer = document.createElement('div');
-  dropdownsContainer.id = 'dropdowns-container';
+  dropdownsContainer.setAttribute('id', dropdownsContainerId);
 
   dropdownsContainer.style.position = 'fixed';
   dropdownsContainer.style.right = '-90000px';
@@ -103,7 +103,7 @@ describe('Dropdown', () => {
     await user.keyboard('[ArrowDown]');
     await user.keyboard('[ArrowDown]');
 
-    const parent = queryByTitle(options[1].label).parentElement;
+    const parent = queryByTitle(options[1].label)?.parentElement;
     expect(parent).toHaveClass('active');
 
     // Press enter on the second option
