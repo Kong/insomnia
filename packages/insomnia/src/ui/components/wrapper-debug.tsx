@@ -449,24 +449,31 @@ const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
   //   });
   //   return unsubscribe;
   // }, [request.connection?._id]);
+  // reverse
+  // merging
+  const [filter, setFilter] = useState('');
 
+  const list = request.connection?.messages.filter(m => m.message.toLowerCase().includes(filter.toLowerCase())) || [];
   return (
-    <ul
-      style={{
-        overflowY: 'auto',
-        height: '100%',
-      }}
-    >
-      {request.connection?.messages.reverse().map((m, i) => (
-        <li
-          style={{
-            border: '1px solid #ccc',
-          }}
-          key={i}
-        >
-          {m.type === 'UP' ? '⬆️' : m.type === 'INFO' ? 'ℹ️' : '⬇️'} {m.message}</li>
-      ))}
-    </ul>
+    <div>
+      <input onChange={e => setFilter(e.target.value)} />
+      <ul
+        style={{
+          overflowY: 'auto',
+          height: '100%',
+        }}
+      >
+        {list.map((m, i) => (
+          <li
+            style={{
+              border: '1px solid #ccc',
+            }}
+            key={i}
+          >
+            {m.type === 'UP' ? '⬆️' : m.type === 'INFO' ? 'ℹ️' : '⬇️'} {m.message}</li>
+        ))}
+      </ul>
+    </div>
   );
 };
 
