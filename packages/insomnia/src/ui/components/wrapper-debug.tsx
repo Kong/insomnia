@@ -2,7 +2,7 @@ import React, { FC, Fragment, ReactNode, useEffect, useRef, useState } from 'rea
 import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../common/constants';
-import type { WebSocketRequest } from '../../main/ipc/main';
+import type { EventLog, WebSocketRequest } from '../../main/ipc/main';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import {
@@ -205,8 +205,10 @@ export const WrapperDebug: FC<Props> = ({
   );
 
   if (!activeWebSocketRequest) {
-    console.error('How did this happen?');
+    // console.error('How did this happen?');
+    console.log(activeWebSocketRequest);
   }
+  console.log(activeWebSocketRequest);
 
   return (
     <PageLayout
@@ -375,9 +377,35 @@ export const WrapperDebug: FC<Props> = ({
   );
 };
 
+function usePoorMansConnectionStatus(connectionId?: string) {
+  const [connectionStatus, setConnectionStatus] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    console.log(connectionId);
+    async function syncWebSocketConnection() {
+      if (connectionId) {
+        const c = await window.main.getWebSocketConnectionStatus({ connectionId });
+        isMounted && setConnectionStatus(c);
+      }
+    }
+
+    connectionId && syncWebSocketConnection();
+    const timeoutId = setInterval(() => syncWebSocketConnection(), 500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timeoutId);
+    };
+  }, [connectionId]);
+
+  return connectionStatus;
+}
+
 const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
-  const isConnected = request.connection?.connected;
+  const isConnected = usePoorMansConnectionStatus(request.connectionId);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -385,9 +413,9 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
           onSubmit={e => {
             e.preventDefault();
 
-            if (isConnected && request.connection) {
+            if (isConnected && request.connectionId) {
               window.main.close({
-                connectionId: request.connection._id,
+                connectionId: request.connectionId,
               });
             } else {
               const formData = new FormData(e.target);
@@ -406,7 +434,7 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
       <form
         onSubmit={e => {
           e.preventDefault();
-          if (!request.connection?._id) {
+          if (!request.connectionId) {
             console.warn('Sending message to closed connection');
             return;
           }
@@ -414,7 +442,7 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
           console.log({ message });
           window.main.message({
             message,
-            connectionId: request.connection?._id,
+            connectionId: request.connectionId,
           });
         }}
       >
@@ -423,7 +451,7 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
         </PaneHeader>
         <CodeEditor
           ref={editorRef}
-          onChange={() => {}}
+          onChange={() => { }}
           defaultValue={''}
           enableNunjucks
         />
@@ -431,29 +459,46 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
     </Pane>
   );
 };
+function usePoorMansEventLogFetcher(connectionId?: string) {
+  const [eventLog, setEventLog] = useState<EventLog>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    console.log(connectionId);
+    async function syncWebSocketEventLog() {
+      if (connectionId) {
+        const e = await window.main.getWebSocketEventLog({ connectionId });
+        isMounted && setEventLog(e);
+      }
+    }
+
+    connectionId && syncWebSocketEventLog();
+    const timeoutId = setInterval(() => syncWebSocketEventLog(), 500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timeoutId);
+    };
+  }, [connectionId]);
+
+  return { eventLog, setEventLog };
+}
 const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
   // TODO: add and fill in table
-  // const [messages, setMessages] = useState<{
-  //   _id: string;
-  //   createdAt: string;
-  //   message: string;
-  //   connectionId: string;
-  //   direction: string;
-  // }[]>([]);
+  const { eventLog, setEventLog } = usePoorMansEventLogFetcher(request.connectionId);
 
-  // useEffect(() => {
-  //   const unsubscribe = window.main.on('websocket.response', (_, message) => {
-  //     if (message.connectionId === request.connection?._id) {
-  //       setMessages(messages => [...messages.slice(-15), message]);
-  //     }
-  //   });
-  //   return unsubscribe;
-  // }, [request.connection?._id]);
+  useEffect(() => {
+    const unsubscribe = window.main.on('websocket.response', (_, lastEvent) => {
+      if (lastEvent.connectionId === request.connectionId) {
+        setEventLog(events => [...events, lastEvent]);
+      }
+    });
+    return unsubscribe;
+  }, [request.connectionId, setEventLog]);
   // reverse
-  // merging
   const [filter, setFilter] = useState('');
 
-  const list = request.connection?.messages.filter(m => m.message.toLowerCase().includes(filter.toLowerCase())) || [];
+  const list = eventLog.filter(m => m.message.toLowerCase().includes(filter.toLowerCase())) || [];
   return (
     <div>
       <input onChange={e => setFilter(e.target.value)} />
@@ -470,7 +515,7 @@ const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
             }}
             key={i}
           >
-            {m.type === 'UP' ? '⬆️' : m.type === 'INFO' ? 'ℹ️' : '⬇️'} {m.message}</li>
+            {m.type === 'OUTGOING' ? '⬆️' : m.type === 'INFO' ? 'ℹ️' : '⬇️'} {m.message}</li>
         ))}
       </ul>
     </div>
