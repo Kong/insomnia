@@ -101,6 +101,10 @@ function setupWebSockets() {
   });
 
   ipcMain.on('websocket.open', (event, options: { url: string; requestId: string }) => {
+    if (WebSocketInstances.get(options.requestId)) {
+      console.warn('Connection still open to ' + options.url);
+      return;
+    }
     console.log('Connecting to ' + options.url);
     try {
       const ws = new WebSocket(options.url);
@@ -121,8 +125,8 @@ function setupWebSockets() {
         const msgs = WebSocketEventLog.get(options.requestId) || [];
         const lastMessage = makeNewEvent('Disconnected from ' + options.url, options.requestId, 'INFO');
         WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
-        event.sender.send('websocket.log', lastMessage);
         WebSocketInstances.delete(options.requestId);
+        event.sender.send('websocket.log', lastMessage);
       });
     } catch (e) {
       console.error(e);
@@ -132,23 +136,23 @@ function setupWebSockets() {
 
   ipcMain.on('websocket.message', (event, options: { message: string; requestId: string }) => {
     const ws = WebSocketInstances.get(options.requestId);
-    if (ws) {
-      ws.send(options.message);
-      const msgs = WebSocketEventLog.get(options.requestId) || [];
-      const lastMessage = makeNewEvent(options.message, options.requestId, 'OUTGOING');
-      WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
-      event.sender.send('websocket.log', lastMessage);
-    } else {
+    if (!ws) {
       console.warn('No websocket found for requestId: ' + options.requestId);
+      return;
     }
+    ws.send(options.message);
+    const msgs = WebSocketEventLog.get(options.requestId) || [];
+    const lastMessage = makeNewEvent(options.message, options.requestId, 'OUTGOING');
+    WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
+    event.sender.send('websocket.log', lastMessage);
   });
 
   ipcMain.on('websocket.close', (_, options: { requestId: string }) => {
     const ws = WebSocketInstances.get(options.requestId);
-    if (ws) {
-      ws.close();
-    } else {
+    if (!ws) {
       console.warn('No websocket found for requestId: ' + options.requestId);
+      return;
     }
+    ws.close();
   });
 }
