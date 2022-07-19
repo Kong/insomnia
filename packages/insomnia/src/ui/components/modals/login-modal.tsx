@@ -1,6 +1,6 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
-import * as Sentry from '@sentry/electron/renderer';
+import * as Sentry from '@sentry/electron';
 import React, { Dispatch, FormEvent, forwardRef, MutableRefObject, RefObject, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
@@ -24,7 +24,7 @@ const sessionKeyPair = keyPair();
 export let currentLoginModalHandle: LoginModalHandle | null = null;
 
 interface State {
-  state: 'ready' | 'error' | 'token-entry' | 'loading-session' | 'done';
+  state: 'ready' | 'error' | 'token-entry' | 'loading-session';
   url: string;
   error: string;
 }
@@ -63,7 +63,6 @@ export class LoginModalHandle {
       const decoder = new TextDecoder();
       const box: AuthBox = JSON.parse(decoder.decode(boxData));
       await session.absorbKey(box.token, box.key);
-      this.setState({ ...this.stateRef.current, state: 'done' });
     } catch (e) {
       Sentry.captureException(e);
       this.setState({ ...this.stateRef.current, state: 'error', error: `Error loading credentials: ${String(e)}` });
@@ -194,9 +193,6 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
       case 'error':
         return <div className="notice error">An error occurred: {state.error}</div>;
 
-      case 'done':
-        return <div className="notice surprise">Success! You are now authenticated.</div>;
-
       default:
         return <div className="notice error">Unknown state.</div>;
     }
@@ -214,8 +210,6 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
           <button className="btn" onClick={reset}>Retry</button> : null}
         {state.state === 'ready' ?
           <button className="btn" onClick={goToTokenEntry}>Manually Enter Token</button> : null}
-        {state.state === 'done' ?
-          <button className="btn" onClick={modalRef.current?.hide}>Close</button> : null}
       </ModalFooter>
     </Modal>
   );
