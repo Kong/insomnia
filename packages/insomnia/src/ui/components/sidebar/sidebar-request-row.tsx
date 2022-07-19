@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
@@ -32,7 +31,6 @@ interface RawProps {
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  hotKeyRegistry: HotKeyRegistry;
   isActive: boolean;
   isPinned: boolean;
   request?: Request | GrpcRequest;
@@ -67,7 +65,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   handleDuplicateRequest,
   handleGenerateCode,
   handleSetRequestPinned,
-  hotKeyRegistry,
   isActive,
   isDragging,
   isDraggingOver,
@@ -263,7 +260,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
               request={request}
               isPinned={isPinned}
               requestGroup={requestGroup}
-              hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions to have network capabilities
               activeEnvironment={activeEnvironment}
               activeProject={activeProject}
             />

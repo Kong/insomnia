@@ -1,4 +1,3 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
@@ -41,7 +40,6 @@ interface Props {
   handleGenerateCode: Function;
   handleSetRequestGroupCollapsed: Function;
   handleSetRequestPinned: Function;
-  hotKeyRegistry: HotKeyRegistry;
 }
 export const SidebarChildren: FC<Props> = ({
   childObjects,
@@ -53,7 +51,6 @@ export const SidebarChildren: FC<Props> = ({
   handleGenerateCode,
   handleSetRequestGroupCollapsed,
   handleSetRequestPinned,
-  hotKeyRegistry,
 }) => {
   const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ rows, isInPinnedList }) => {
     const activeRequest = useSelector(selectActiveRequest);
@@ -76,7 +73,6 @@ export const SidebarChildren: FC<Props> = ({
                 isPinned={row.pinned}
                 disableDragAndDrop={isInPinnedList}
                 request={row.doc}
-                hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
               />
             ) : (
               <SidebarRequestGroupRow
@@ -88,7 +84,6 @@ export const SidebarChildren: FC<Props> = ({
                 handleDuplicateRequestGroup={handleDuplicateRequestGroup}
                 isCollapsed={row.collapsed}
                 requestGroup={row.doc}
-                hotKeyRegistry={hotKeyRegistry}
               >
                 {row.children.filter(Boolean).length > 0 ? <RecursiveSidebarRows isInPinnedList={isInPinnedList} rows={row.children} /> : null}
               </SidebarRequestGroupRow>
@@ -99,9 +94,7 @@ export const SidebarChildren: FC<Props> = ({
   const showSeparator = childObjects.pinned.length > 0;
   const contextMenuPortal = ReactDOM.createPortal(
     <div className="hide">
-      <SidebarCreateDropdown
-        hotKeyRegistry={hotKeyRegistry}
-      />
+      <SidebarCreateDropdown />
     </div>,
     document.querySelector('#dropdowns-container') as any,
   );

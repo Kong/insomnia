@@ -2,10 +2,10 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { clipboard } from 'electron';
 import fs from 'fs';
-import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { extension as mimeExtension } from 'mime-types';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
@@ -18,6 +18,8 @@ import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import type { UnitTestResult } from '../../../models/unit-test-result';
 import { cancelRequestById } from '../../../network/network';
+import { RootState } from '../../redux/modules';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -35,7 +37,7 @@ import { BlankPane } from './blank-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
-interface Props {
+interface OwnProps {
   handleSetFilter: (filter: string) => void;
   handleSetPreviewMode: Function;
   handleSetActiveResponse: Function;
@@ -49,7 +51,6 @@ interface Props {
   editorFontSize: number;
   loadStartTime: number;
   responses: Response[];
-  hotKeyRegistry: HotKeyRegistry;
   disableResponsePreviewLinks: boolean;
   requestVersions: RequestVersion[];
   request?: Request | null;
@@ -58,8 +59,16 @@ interface Props {
   unitTestResult?: UnitTestResult | null;
 }
 
+const mapStateToProps = (state: RootState) => ({
+  hotKeyRegistry: selectHotKeyRegistry(state),
+});
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+type Props = OwnProps & ReduxProps;
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponsePane extends PureComponent<Props> {
+class UnconnectedResponsePane extends PureComponent<Props> {
   _responseViewer: ResponseViewer | null = null;
 
   _setResponseViewerRef(responseViewer: ResponseViewer) {
@@ -235,7 +244,6 @@ export class ResponsePane extends PureComponent<Props> {
       handleSetFilter,
       handleSetPreviewMode,
       handleShowRequestSettings,
-      hotKeyRegistry,
       loadStartTime,
       previewMode,
       request,
@@ -250,7 +258,7 @@ export class ResponsePane extends PureComponent<Props> {
 
     if (!response) {
       return (
-        <PlaceholderResponsePane hotKeyRegistry={hotKeyRegistry}>
+        <PlaceholderResponsePane>
           <ResponseTimer
             handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
@@ -375,3 +383,5 @@ export class ResponsePane extends PureComponent<Props> {
     );
   }
 }
+
+export const ResponsePane = connect(mapStateToProps)(UnconnectedResponsePane);

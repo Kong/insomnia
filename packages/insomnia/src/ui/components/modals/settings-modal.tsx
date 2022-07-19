@@ -116,7 +116,6 @@ export class UnconnectedSettingsModal extends PureComponent<Props, State> {
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <Shortcuts
-                hotKeyRegistry={settings.hotKeyRegistry}
                 handleUpdateKeyBindings={this._handleUpdateKeyBindings}
               />
             </TabPanel>

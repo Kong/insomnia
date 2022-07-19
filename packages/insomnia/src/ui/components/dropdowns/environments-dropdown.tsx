@@ -1,10 +1,12 @@
-import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle } from 'insomnia-common';
 import React, { FC, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -20,7 +22,6 @@ interface Props {
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   environments: Environment[];
   handleChangeEnvironment: Function;
-  hotKeyRegistry: HotKeyRegistry;
   workspace: Workspace;
 }
 
@@ -29,9 +30,9 @@ export const EnvironmentsDropdown: FC<Props> = ({
   environmentHighlightColorStyle,
   environments,
   handleChangeEnvironment,
-  hotKeyRegistry,
   workspace,
 }) => {
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const dropdownRef = useRef<DropdownHandle>(null);
   const handleShowEnvironmentModal = useCallback(() => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);

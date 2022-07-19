@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -12,7 +11,7 @@ import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -24,7 +23,6 @@ import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
-  hotKeyRegistry: HotKeyRegistry;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any;
 }
@@ -35,11 +33,11 @@ interface RequestGroupActionsDropdownHandle {
 
 export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
   requestGroup,
-  hotKeyRegistry,
   handleShowSettings,
   handleDuplicateRequestGroup,
   ...other
 }, ref) => {
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);

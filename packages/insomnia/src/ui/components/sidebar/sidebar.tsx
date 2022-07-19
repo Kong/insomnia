@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import { EnvironmentHighlightColorStyle, HotKeyRegistry } from 'insomnia-common';
+import { EnvironmentHighlightColorStyle } from 'insomnia-common';
 import React, { forwardRef, memo, ReactNode } from 'react';
 
 import {
@@ -15,7 +15,6 @@ interface Props {
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   handleSetActiveEnvironment: (...args: any[]) => any;
   hidden: boolean;
-  hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   unseenWorkspaces: Workspace[];
   width: number;
@@ -23,15 +22,13 @@ interface Props {
 }
 
 export const Sidebar = memo(
-  forwardRef<HTMLElement, Props>((props, ref) => {
-    const {
-      activeEnvironment,
-      children,
-      environmentHighlightColorStyle,
-      hidden,
-      width,
-    } = props;
-
+  forwardRef<HTMLElement, Props>(({
+    activeEnvironment,
+    children,
+    environmentHighlightColorStyle,
+    hidden,
+    width,
+  }, ref) => {
     return (
       <aside
         ref={ref}

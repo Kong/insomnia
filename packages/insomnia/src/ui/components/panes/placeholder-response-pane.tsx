@@ -1,8 +1,9 @@
-import { HotKeyRegistry } from 'insomnia-common';
-import React, { FunctionComponent } from 'react';
+import React, { FC } from 'react';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
@@ -26,36 +27,34 @@ const Description = styled.div({
   marginRight: '2em',
 });
 
-interface Props {
-  hotKeyRegistry: HotKeyRegistry;
-}
+export const PlaceholderResponsePane: FC = ({ children }) => {
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  return (
+    <Pane type="response">
+      <PaneHeader />
+      <PaneBody placeholder>
+        <Wrapper>
+          {[
+            hotKeyRefs.REQUEST_SEND,
+            hotKeyRefs.REQUEST_FOCUS_URL,
+            hotKeyRefs.SHOW_COOKIES_EDITOR,
+            hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
+            hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+          ].map(({ description, id }) => (
+            <Item key={id}>
+              <Description>{description}</Description>
+              <code>
+                <Hotkey
+                  keyBindings={hotKeyRegistry[id]}
+                  useFallbackMessage
+                />
+              </code>
 
-// TODO: get hotKeyRegistry from redux
-export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
-  <Pane type="response">
-    <PaneHeader />
-    <PaneBody placeholder>
-      <Wrapper>
-        {[
-          hotKeyRefs.REQUEST_SEND,
-          hotKeyRefs.REQUEST_FOCUS_URL,
-          hotKeyRefs.SHOW_COOKIES_EDITOR,
-          hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
-          hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
-        ].map(({ description, id }) => (
-          <Item key={id}>
-            <Description>{description}</Description>
-            <code>
-              <Hotkey
-                keyBindings={hotKeyRegistry[id]}
-                useFallbackMessage
-              />
-            </code>
-
-          </Item>
-        ))}
-      </Wrapper>
-    </PaneBody>
-    {children}
-  </Pane>
-);
+            </Item>
+          ))}
+        </Wrapper>
+      </PaneBody>
+      {children}
+    </Pane>
+  );
+};
