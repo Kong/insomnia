@@ -105,7 +105,6 @@ function setupWebSockets() {
       console.warn('Connection still open to ' + options.url);
       return;
     }
-    console.log('Connecting to ' + options.url);
     try {
       const ws = new WebSocket(options.url);
       WebSocketInstances.set(options.requestId, ws);
@@ -121,7 +120,6 @@ function setupWebSockets() {
         event.sender.send('websocket.log', lastMessage);
       });
       ws.on('close', () => {
-        console.log('Disconnected from ', options.url);
         const msgs = WebSocketEventLog.get(options.requestId) || [];
         const lastMessage = makeNewEvent('Disconnected from ' + options.url, options.requestId, 'INFO');
         WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);

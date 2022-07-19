@@ -367,16 +367,13 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
         <form
           onSubmit={e => {
             e.preventDefault();
-            console.log('connection:', isConnected, request._id);
-
             if (isConnected) {
               window.main.close({
                 requestId: request._id,
               });
             } else {
-              const formData = new FormData(e.target);
+              const formData = new FormData(e.currentTarget);
               const url = (formData.get('url') as string) || '';
-              console.log({ url });
               window.main.open({ url, requestId: request._id });
             }
           }}
@@ -390,13 +387,12 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
       <form
         onSubmit={async e => {
           e.preventDefault();
-          if (!request._id) {
+          if (!isConnected) {
             console.warn('Sending message to closed connection');
             return;
           }
           const msg = editorRef.current?.getValue() || '';
           const message = await handleRender(msg);
-          console.log({ message });
           window.main.message({
             message,
             requestId: request._id,
