@@ -2,10 +2,11 @@ import React, { FC, Fragment, ReactNode, useEffect, useRef, useState } from 'rea
 import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../common/constants';
-import type { EventLog, WebSocketRequest } from '../../main/ipc/main';
+import type { EventLog } from '../../main/ipc/main';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import {
+  isRequest,
   Request,
   RequestAuthentication,
   RequestBody,
@@ -55,30 +56,6 @@ import type { HandleActivityChange, WrapperProps } from './wrapper';
 // TODO: make a codeeditor
 // TODO: make a table
 // TODO: url bar
-
-// temp workaround for delaying request modelling decision
-function usePollingWebSocketRequests(workspaceId: string) {
-  const [requests, setRequests] = useState<WebSocketRequest[]>([]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function syncWebSocketRequests() {
-      const r = await window.main.getWebSocketRequestsByParentId({ workspaceId });
-      isMounted && setRequests(r);
-    }
-
-    syncWebSocketRequests();
-    const timeoutId = setInterval(() => syncWebSocketRequests(), 500);
-
-    return () => {
-      isMounted = false;
-      clearInterval(timeoutId);
-    };
-  }, [workspaceId]);
-
-  return requests;
-}
 
 interface Props {
   forceRefreshKey: number;
@@ -196,17 +173,6 @@ export const WrapperDebug: FC<Props> = ({
     isCollection(activeWorkspace) &&
     isRemoteProject(activeProject) &&
     vcs;
-  const webSocketRequests = usePollingWebSocketRequests(
-    activeWorkspace?._id || ''
-  );
-  const [activeWebsocketId, setActiveWebsocketId] = useState('');
-  const activeWebSocketRequest = webSocketRequests.find(
-    ws => ws._id === activeWebsocketId
-  );
-
-  if (!activeWebSocketRequest) {
-    // console.error('How did this happen?');
-  }
 
   return (
     <PageLayout
@@ -263,15 +229,6 @@ export const WrapperDebug: FC<Props> = ({
               hotKeyRegistry={settings.hotKeyRegistry}
             />
 
-            <ul>
-              {webSocketRequests.map(ws => {
-                return (
-                  <li key={ws._id} onClick={() => setActiveWebsocketId(ws._id)}>
-                    {ws.name}
-                  </li>
-                );
-              })}
-            </ul>
             <SidebarChildren
               childObjects={sidebarChildren}
               handleActivateRequest={handleActivateRequest}
@@ -290,9 +247,8 @@ export const WrapperDebug: FC<Props> = ({
       renderPaneOne={
         activeWorkspace ? (
           <ErrorBoundary showAlert>
-            {activeWebsocketId && activeWebSocketRequest ? (
-              <WSLeftPanel key={activeWebsocketId} request={activeWebSocketRequest} />
-            ) : activeRequest && isGrpcRequest(activeRequest) ? (
+            {activeRequest && isRequest(activeRequest) && activeRequest?.method === 'WS' && <WSLeftPanel request={activeRequest} />}
+            {activeRequest && isGrpcRequest(activeRequest) && (
               <GrpcRequestPane
                 activeRequest={activeRequest}
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -300,7 +256,8 @@ export const WrapperDebug: FC<Props> = ({
                 forceRefreshKey={forceRefreshKey}
                 settings={settings}
               />
-            ) : (
+            )}
+            {activeRequest && !isGrpcRequest(activeRequest) && activeRequest?.method !== 'WS' && (
               <RequestPane
                 downloadPath={responseDownloadPath}
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -338,14 +295,13 @@ export const WrapperDebug: FC<Props> = ({
       }
       renderPaneTwo={
         <ErrorBoundary showAlert>
-          {activeWebsocketId && activeWebSocketRequest ? (
-            <WSRightPanel key={activeWebsocketId} request={activeWebSocketRequest} />
-          ) : activeRequest && isGrpcRequest(activeRequest) ? (
+          {activeRequest && isRequest(activeRequest) && activeRequest?.method === 'WS' && <WSRightPanel request={activeRequest} />}
+          {activeRequest && isGrpcRequest(activeRequest) && (
             <GrpcResponsePane
               activeRequest={activeRequest}
               forceRefreshKey={forceRefreshKey}
-            />
-          ) : (
+            />)}
+          {activeRequest && !isGrpcRequest(activeRequest) && activeRequest?.method !== 'WS' && (
             <ResponsePane
               disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
               disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
@@ -380,7 +336,6 @@ function usePollingConnectionStatus(requestId?: string) {
 
   useEffect(() => {
     let isMounted = true;
-    console.log('connected to:', requestId);
     async function syncWebSocketConnection() {
       if (requestId) {
         const c = await window.main.getWebSocketConnectionStatus({ requestId });
@@ -400,7 +355,7 @@ function usePollingConnectionStatus(requestId?: string) {
   return connectionStatus;
 }
 
-const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
+const WSLeftPanel = ({ request }: { request: Request }) => {
   const isConnected = usePollingConnectionStatus(request._id);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
@@ -492,7 +447,7 @@ const useEventSubscription = (requestId?: string) => {
   return eventLog;
 };
 
-const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
+const WSRightPanel = ({ request }: { request: Request }) => {
   // TODO: add and fill in table
   const eventLog = useEventSubscription(request._id);
   // reverse

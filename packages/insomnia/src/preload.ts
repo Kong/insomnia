@@ -9,7 +9,6 @@ const main: Window['main'] = {
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
   createWebsocketRequest: options => ipcRenderer.invoke('createWebsocketRequest', options),
-  getWebSocketRequestsByParentId: options => ipcRenderer.invoke('getWebSocketRequestsByParentId', options),
   getWebSocketConnectionStatus: options => ipcRenderer.invoke('getWebSocketConnectionStatus', options),
   getWebSocketEventLog: options => ipcRenderer.invoke('getWebSocketEventLog', options),
   open: options => ipcRenderer.send('websocket.open', options),

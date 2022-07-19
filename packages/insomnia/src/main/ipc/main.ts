@@ -3,6 +3,8 @@ import { writeFile } from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
+import * as models from '../../models';
+import { Request } from '../../models/request';
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
 import installPlugin from '../install-plugin';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -15,8 +17,7 @@ export interface MainBridgeAPI {
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
-  createWebsocketRequest: (options: { workspaceId: string }) => Promise<string>;
-  getWebSocketRequestsByParentId: (options: { workspaceId: string }) => Promise<WebSocketRequest[]>;
+  createWebsocketRequest: (options: { workspaceId: string }) => Promise<Request>;
   open: (options: { url: string; requestId: string }) => void;
   message: (options: { message: string; requestId: string }) => void;
   close: (options: { requestId: string }) => void;
@@ -64,6 +65,7 @@ export interface WebSocketRequest {
   name: string;
   url?: string;
 }
+
 export type EventLog = ReturnType<typeof makeNewEvent>[];
 const makeNewEvent = (message: string, requestId: string, type: 'OUTGOING' | 'INCOMING' | 'INFO') => {
   return {
@@ -81,21 +83,13 @@ function setupWebSockets() {
   const WebSocketEventLog = new Map<string, EventLog>();
   // TODO: persist somewhere
   // TODO: Limit the active connections to a certain number
-  const websocketsRequests: WebSocketRequest[] = [];
 
   ipcMain.handle('createWebsocketRequest', (_, options: { workspaceId: string }) => {
-    // TODO: figure out what to do with this
-    // const request = await models.request.create({
-    //   parentId,
-    //   method: METHOD_GET,
-    //   name: 'New Request',
-    // });
-    const requestId = websocketsRequests.push({ _id: uuidv4(), workspaceId: options.workspaceId, name: 'New Request' });
-    return requestId;
-  });
-
-  ipcMain.handle('getWebSocketRequestsByParentId', (_, options: { workspaceId: string }) => {
-    return websocketsRequests.filter(request => request.workspaceId === options.workspaceId);
+    return models.request.create({
+      parentId: options.workspaceId,
+      method: 'WS',
+      name: 'New Request',
+    });
   });
 
   ipcMain.handle('getWebSocketConnectionStatus', (_, options: { requestId: string }) => {

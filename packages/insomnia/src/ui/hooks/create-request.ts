@@ -112,7 +112,8 @@ export const createRequest: RequestCreator = async ({
       break;
     }
     case 'Websocket': {
-      requestId = await window.main.createWebsocketRequest({ workspaceId: parentId });
+      const request = await window.main.createWebsocketRequest({ workspaceId: parentId });
+      requestId = request._id;
       break;
     }
 
