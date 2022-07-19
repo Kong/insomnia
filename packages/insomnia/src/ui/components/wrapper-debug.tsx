@@ -7,7 +7,20 @@ import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
+import {
+  selectActiveEnvironment,
+  selectActiveRequest,
+  selectActiveResponse,
+  selectActiveWorkspace,
+  selectEnvironments,
+  selectLoadStartTime,
+  selectRequestVersions,
+  selectResponseDownloadPath,
+  selectResponseFilter,
+  selectResponseFilterHistory,
+  selectResponsePreviewMode,
+  selectSettings,
+} from '../redux/selectors';
 import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
@@ -28,8 +41,6 @@ interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleChangeEnvironment: Function;
-  handleDeleteResponse: Function;
-  handleDeleteResponses: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
@@ -55,8 +66,6 @@ export const WrapperDebug: FC<Props> = ({
   gitSyncDropdown,
   handleActivityChange,
   handleChangeEnvironment,
-  handleDeleteResponse,
-  handleDeleteResponses,
   handleForceUpdateRequest,
   handleForceUpdateRequestHeaders,
   handleImport,
@@ -100,9 +109,8 @@ export const WrapperDebug: FC<Props> = ({
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
-  const activeRequestResponses = useSelector(selectActiveRequestResponses);
+
   const activeResponse = useSelector(selectActiveResponse);
-  const activeUnitTestResult = useSelector(selectActiveUnitTestResult);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const environments = useSelector(selectEnvironments);
   const loadStartTime = useSelector(selectLoadStartTime);
@@ -221,8 +229,6 @@ export const WrapperDebug: FC<Props> = ({
               environment={activeEnvironment}
               filter={responseFilter}
               filterHistory={responseFilterHistory}
-              handleDeleteResponse={handleDeleteResponse}
-              handleDeleteResponses={handleDeleteResponses}
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
               handleSetPreviewMode={handleSetPreviewMode}
@@ -232,8 +238,6 @@ export const WrapperDebug: FC<Props> = ({
               request={activeRequest}
               requestVersions={requestVersions}
               response={activeResponse}
-              responses={activeRequestResponses}
-              unitTestResult={activeUnitTestResult}
             />}
         </ErrorBoundary>}
     />

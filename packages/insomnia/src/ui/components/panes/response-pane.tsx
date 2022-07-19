@@ -39,8 +39,6 @@ interface Props {
   environment?: Environment | null;
   filter: string;
   filterHistory: string[];
-  handleDeleteResponse: Function;
-  handleDeleteResponses: Function;
   handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
   handleSetPreviewMode: Function;
@@ -59,8 +57,6 @@ export const ResponsePane: FC<Props> = ({
   filter,
   disableResponsePreviewLinks,
   filterHistory,
-  handleDeleteResponse,
-  handleDeleteResponses,
   handleSetActiveResponse,
   handleSetFilter,
   handleSetPreviewMode,
@@ -70,7 +66,6 @@ export const ResponsePane: FC<Props> = ({
   request,
   requestVersions,
   response,
-  responses,
 }) => {
 
   const responseViewerRef = useRef<ResponseViewer>(null);
@@ -246,12 +241,9 @@ export const ResponsePane: FC<Props> = ({
           <ResponseHistoryDropdown
             activeResponse={response}
             activeEnvironment={environment}
-            responses={responses}
             requestVersions={requestVersions}
             requestId={request._id}
             handleSetActiveResponse={handleSetActiveResponse}
-            handleDeleteResponses={handleDeleteResponses}
-            handleDeleteResponse={handleDeleteResponse}
             className="tall pane__header__right"
           />
         </PaneHeader>

@@ -1,12 +1,15 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { FC, Fragment, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
+import * as models from '../../../models/index';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
+import { selectActiveRequest, selectActiveRequestResponses } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -23,27 +26,22 @@ interface Props {
   activeEnvironment?: Environment | null;
   activeResponse: Response;
   className?: string;
-  handleDeleteResponse: Function;
-  handleDeleteResponses: Function;
   handleSetActiveResponse: Function;
   requestId: string;
   requestVersions: RequestVersion[];
-  responses: Response[];
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
   activeEnvironment,
   activeResponse,
   className,
-  handleDeleteResponse,
-  handleDeleteResponses,
   handleSetActiveResponse,
   requestId,
   requestVersions,
-  responses,
 }) => {
   const dropdownRef = useRef<DropdownHandle>(null);
-
+  const responses = useSelector(selectActiveRequestResponses);
+  const activeRequest = useSelector(selectActiveRequest);
   const now = new Date();
   const categories: Record<string, Response[]> = {
     minutes: [],
@@ -52,6 +50,25 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     week: [],
     other: [],
   };
+
+  const handleDeleteResponses = useCallback(async (requestId: string, environmentId: string | null) => {
+    await models.response.removeForRequest(requestId, environmentId);
+
+    if (activeRequest && activeRequest._id === requestId) {
+      await handleSetActiveResponse(requestId, null);
+    }
+  }, [activeRequest, handleSetActiveResponse]);
+
+  const handleDeleteResponse = useCallback(async (response: Response) => {
+    if (response) {
+      await models.response.remove(response);
+    }
+
+    // Also unset active response it's the one we're deleting
+    if (activeResponse?._id === response._id) {
+      handleSetActiveResponse(null);
+    }
+  }, [activeResponse?._id, handleSetActiveResponse]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
