@@ -15,11 +15,9 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 interface Props {
   download: (pretty: boolean) => any;
   copyToClipboard: () => any;
-  showPrettifyOption?: boolean;
 }
 
 export const PreviewModeDropdown: FC<Props> = ({
-  showPrettifyOption,
   download,
   copyToClipboard,
 }) => {
@@ -118,7 +116,7 @@ export const PreviewModeDropdown: FC<Props> = ({
       <i className="fa fa-save" />
       Export raw response
     </DropdownItem>
-    {showPrettifyOption && <DropdownItem onClick={handleDownloadPrettify}>
+    {response.contentType.includes('json') && <DropdownItem onClick={handleDownloadPrettify}>
       <i className="fa fa-save" />
       Export prettified response
     </DropdownItem>}

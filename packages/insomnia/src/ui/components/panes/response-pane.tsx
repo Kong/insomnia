@@ -163,7 +163,6 @@ export const ResponsePane: FC<Props> = ({
           <Tab tabIndex="-1">
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
-              showPrettifyOption={response.contentType.includes('json')}
               copyToClipboard={handleCopyResponseToClipboard}
             />
           </Tab>
