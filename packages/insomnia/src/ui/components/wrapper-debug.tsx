@@ -15,6 +15,7 @@ import {
 } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
+import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 import {
   selectActiveEnvironment,
   selectActiveRequest,
@@ -358,6 +359,7 @@ function usePollingConnectionStatus(requestId?: string) {
 const WSLeftPanel = ({ request }: { request: Request }) => {
   const isConnected = usePollingConnectionStatus(request._id);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const { handleRender } = useNunjucks();
 
   return (
     <Pane type="request">
@@ -386,13 +388,14 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
         </form>
       </PaneHeader>
       <form
-        onSubmit={e => {
+        onSubmit={async e => {
           e.preventDefault();
           if (!request._id) {
             console.warn('Sending message to closed connection');
             return;
           }
-          const message = editorRef.current?.getValue() || '';
+          const msg = editorRef.current?.getValue() || '';
+          const message = await handleRender(msg);
           console.log({ message });
           window.main.message({
             message,
