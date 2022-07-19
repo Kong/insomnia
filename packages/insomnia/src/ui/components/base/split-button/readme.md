@@ -4,7 +4,9 @@ This button allows to list several buttons as a split button
 
 ## Usage
 
-### Stateful (Connection aware) split group button
+### Imaginary WebSocket Usecase
+
+The WebSocket hook API and the UI component APIs are totally imaginery.
 
 ```jsx
 import React, { useState } from 'react';
