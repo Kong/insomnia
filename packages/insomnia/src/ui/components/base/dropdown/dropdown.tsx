@@ -37,15 +37,6 @@ export interface DropdownProps {
 
 export const dropdownsContainerId = 'dropdowns-container';
 
-interface State {
-  open: boolean;
-  filter: string;
-  filterVisible: boolean;
-  filterItems?: number[] | null;
-  filterActiveIndex: number;
-  uniquenessKey: number;
-}
-
 const isComponent = (match: string) => (child: ReactNode) =>
   any(equals(match), [
     // @ts-expect-error this is required by our API for Dropdown
@@ -58,6 +49,8 @@ const isDropdownItem = isComponent(DropdownItem.name);
 const isDropdownButton = isComponent(DropdownButton.name);
 const isDropdownDivider = isComponent(DropdownDivider.name);
 
+// This walks the children tree and returns the dropdown specific components.
+// It allows us to use arrays, fragments etc.
 const _getFlattenedChildren = (children: ReactNode[] | ReactNode) => {
   let newChildren: ReactNode[] = [];
   // Ensure children is an array
@@ -94,29 +87,17 @@ export interface DropdownHandle {
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
   ({ right, outline, className, style, children, beside, onOpen, onHide, wide }, ref) => {
-    const [
-      {
-        open,
-        uniquenessKey,
-        filterVisible,
-        filterActiveIndex,
-        filterItems,
-        filter,
-      },
-      setState,
-    ] = useState<State>({
-      open: false,
-      // Filter Stuff
-      filter: '',
-      filterVisible: false,
-      filterItems: null,
-      filterActiveIndex: 0,
-      // Use this to force new menu every time dropdown opens
-      uniquenessKey: 0,
-    });
-    const _node = useRef<HTMLDivElement>(null);
-    const _dropdownList = useRef<HTMLDivElement>(null);
-    const _filter = useRef<HTMLInputElement>(null);
+    const [open, setOpen] = useState(false);
+    // @TODO: This is a hack to force new menu every time dropdown opens
+    const [uniquenessKey, setUniquenessKey] = useState(0);
+    const [filter, setFilter] = useState('');
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [filterItems, setFilterItems] = useState<number[] | null>(null);
+    const [filterActiveIndex, setFilterActiveIndex] = useState(0);
+
+    const dropdownContainerRef = useRef<HTMLDivElement>(null);
+    const dropdownListRef = useRef<HTMLDivElement>(null);
+    const filterInputRef = useRef<HTMLInputElement>(null);
 
     const _handleCheckFilterSubmit = useCallback((
       event: React.KeyboardEvent<HTMLInputElement>
@@ -125,7 +106,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         // Listen for the Enter key and "click" on the active list item
         const selector = `li[data-filter-index="${filterActiveIndex}"] button`;
 
-        const button = _dropdownList.current?.querySelector(selector);
+        const button = dropdownListRef.current?.querySelector(selector);
 
         if (button instanceof HTMLButtonElement) {
           button.click();
@@ -144,7 +125,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       // Filter the list items that are filterable (have data-filter-index property)
       const filterItems: number[] = [];
 
-      const filterableItems = _dropdownList.current?.querySelectorAll('li');
+      const filterableItems = dropdownListRef.current?.querySelectorAll('li');
 
       if (filterableItems instanceof NodeList) {
         for (const listItem of filterableItems) {
@@ -163,16 +144,12 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           }
         }
 
-        setState({
-          open,
-          uniquenessKey,
-          filter: newFilter,
-          filterItems: newFilter ? filterItems : null,
-          filterActiveIndex: filterItems[0] || -1,
-          filterVisible: filterVisible ? true : newFilter.length > 0,
-        });
+        setFilter(newFilter);
+        setFilterItems(newFilter ? filterItems : null);
+        setFilterActiveIndex(filterItems[0] || -1);
+        setFilterVisible(filterVisible || newFilter.length > 0);
       }
-    }, [filter, filterVisible, open, uniquenessKey]);
+    }, [filter, filterVisible]);
 
     const _handleDropdownNavigation = useCallback((event: KeyboardEvent) => {
       const { key, shiftKey } = event;
@@ -182,7 +159,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         const items = filterItems || [];
 
         if (!filterItems) {
-          const filterableItems = _dropdownList.current?.querySelectorAll('li');
+          const filterableItems = dropdownListRef.current?.querySelectorAll('li');
 
           if (filterableItems instanceof NodeList) {
             for (const li of filterableItems) {
@@ -200,28 +177,14 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
         if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
           const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
-          setState({
-            open,
-            uniquenessKey,
-            filter,
-            filterItems,
-            filterVisible,
-            filterActiveIndex: nextI,
-          });
+          setFilterActiveIndex(nextI);
         } else {
-          setState({
-            open,
-            uniquenessKey,
-            filter,
-            filterItems,
-            filterVisible,
-            filterActiveIndex: items[i + 1] || items[0],
-          });
+          setFilterActiveIndex(items[i + 1] || items[0]);
         }
       }
 
-      _filter.current?.focus();
-    }, [filter, filterActiveIndex, filterItems, filterVisible, open, uniquenessKey]);
+      filterInputRef.current?.focus();
+    }, [filterActiveIndex, filterItems]);
 
     const _handleBodyKeyDown = (event: KeyboardEvent) => {
       if (!open) {
@@ -239,37 +202,37 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     };
 
     const isNearBottomOfScreen = () => {
-      if (!_node.current) {
+      if (!dropdownContainerRef.current) {
         return false;
       }
 
       const bodyHeight = document.body.getBoundingClientRect().height;
-      const dropdownTop = _node.current.getBoundingClientRect().top;
+      const dropdownTop = dropdownContainerRef.current.getBoundingClientRect().top;
 
       return dropdownTop > bodyHeight - 200;
     };
 
     // Recalculate the position of the dropdown
     useLayoutEffect(() => {
-      if (!open || !_dropdownList.current) {
+      if (!open || !dropdownListRef.current) {
         return;
       }
 
       // Compute the size of all the menus
-      const dropdownBtnRect = _node.current?.getBoundingClientRect();
+      const dropdownBtnRect = dropdownContainerRef.current?.getBoundingClientRect();
       if (!dropdownBtnRect) {
         return;
       }
       const bodyRect = document.body.getBoundingClientRect();
-      const dropdownListRect = _dropdownList.current.getBoundingClientRect();
+      const dropdownListRect = dropdownListRef.current.getBoundingClientRect();
 
       // Reset all the things so we can start fresh
-      _dropdownList.current.style.left = 'initial';
-      _dropdownList.current.style.right = 'initial';
-      _dropdownList.current.style.top = 'initial';
-      _dropdownList.current.style.bottom = 'initial';
-      _dropdownList.current.style.minWidth = 'initial';
-      _dropdownList.current.style.maxWidth = 'initial';
+      dropdownListRef.current.style.left = 'initial';
+      dropdownListRef.current.style.right = 'initial';
+      dropdownListRef.current.style.top = 'initial';
+      dropdownListRef.current.style.bottom = 'initial';
+      dropdownListRef.current.style.minWidth = 'initial';
+      dropdownListRef.current.style.maxWidth = 'initial';
 
       const screenMargin = 6;
       if (right || wide) {
@@ -280,10 +243,10 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         );
 
         const offset = beside ? dropdownBtnRect.width - 40 : 0;
-        _dropdownList.current.style.right = `${
+        dropdownListRef.current.style.right = `${
           bodyRect.width - rightMargin + offset
         }px`;
-        _dropdownList.current.style.maxWidth = `${Math.min(
+        dropdownListRef.current.style.maxWidth = `${Math.min(
           dropdownListRect.width,
           rightMargin + offset
         )}px`;
@@ -296,23 +259,23 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           bodyRect.width - dropdownListRect.width - screenMargin,
           dropdownBtnRect.left
         );
-        _dropdownList.current.style.left = `${leftMargin + offset}px`;
-        _dropdownList.current.style.maxWidth = `${Math.min(
+        dropdownListRef.current.style.left = `${leftMargin + offset}px`;
+        dropdownListRef.current.style.maxWidth = `${Math.min(
           dropdownListRect.width,
           bodyRect.width - leftMargin - offset
         )}px`;
       }
 
       if (isNearBottomOfScreen()) {
-        _dropdownList.current.style.bottom = `${
+        dropdownListRef.current.style.bottom = `${
           bodyRect.height - dropdownBtnRect.top
         }px`;
-        _dropdownList.current.style.maxHeight = `${
+        dropdownListRef.current.style.maxHeight = `${
           dropdownBtnRect.top - screenMargin
         }px`;
       } else {
-        _dropdownList.current.style.top = `${dropdownBtnRect.bottom}px`;
-        _dropdownList.current.style.maxHeight = `${
+        dropdownListRef.current.style.top = `${dropdownBtnRect.bottom}px`;
+        dropdownListRef.current.style.maxHeight = `${
           bodyRect.height - dropdownBtnRect.bottom - screenMargin
         }px`;
       }
@@ -331,43 +294,27 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
     const hide = useCallback(() => {
       // Focus the dropdown button after hiding
-      if (_node.current) {
-        const button = _node.current.querySelector('button');
+      if (dropdownContainerRef.current) {
+        const button = dropdownContainerRef.current.querySelector('button');
 
         button?.focus();
       }
 
-      setState({
-        uniquenessKey,
-        filterVisible,
-        filterActiveIndex,
-        filterItems,
-        filter,
-        open: false,
-      });
+      setOpen(false);
 
       onHide?.();
-    }, [
-      filter,
-      filterActiveIndex,
-      filterItems,
-      filterVisible,
-      onHide,
-      uniquenessKey,
-    ]);
+    }, [onHide]);
 
     const show = useCallback(
       (
         filterVisible = false,
       ) => {
-        setState({
-          open: true,
-          filterVisible,
-          filter: '',
-          filterItems: null,
-          filterActiveIndex: -1,
-          uniquenessKey: uniquenessKey + 1,
-        });
+        setOpen(true);
+        setFilterVisible(filterVisible);
+        setFilter('');
+        setFilterItems(null);
+        setFilterActiveIndex(-1);
+        setUniquenessKey(uniquenessKey + 1);
 
         onOpen?.();
       },
@@ -482,7 +429,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
               <div className="dropdown__backdrop theme--transparent-overlay" />
               <div
                 key={uniquenessKey}
-                ref={_dropdownList}
+                ref={dropdownListRef}
                 tabIndex={-1}
                 className={classnames('dropdown__list', {
                   'dropdown__list--filtering': filterVisible,
@@ -494,7 +441,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
                     type="text"
                     autoFocus={open}
                     onChange={_handleChangeFilter}
-                    ref={_filter}
+                    ref={filterInputRef}
                     onKeyPress={_handleCheckFilterSubmit}
                   />
                 </div>
@@ -527,7 +474,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         <div
           style={style}
           className={classes}
-          ref={_node}
+          ref={dropdownContainerRef}
           onClick={_handleClick}
           tabIndex={-1}
           onMouseDown={_handleMouseDown}
