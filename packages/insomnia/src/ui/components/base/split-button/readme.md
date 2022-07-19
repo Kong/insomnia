@@ -28,7 +28,7 @@ const WebSocketLeftPanel = ({ workspaceId }) => {
   return (
     <Pane>
       <PaneHeader>
-        <form onSubmit={}>
+        <form onSubmit={sendMessage}>
           <ConnectionIndicator>
           <ConnectionUrlControl>
           <SendButtonForWebSocket workspaceId="workspace1234" />;        
