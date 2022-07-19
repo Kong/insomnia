@@ -1,5 +1,8 @@
+import classnames from 'classnames';
 import React, { FC, Fragment, ReactNode, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import styled from 'styled-components';
 
 import { SortOrder } from '../../common/constants';
 import type { EventLog } from '../../main/ipc/main';
@@ -44,7 +47,7 @@ import { showCookiesModal } from './modals/cookies-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
-import { Pane, PaneHeader } from './panes/pane';
+import { Pane, paneBodyClasses, PaneHeader } from './panes/pane';
 import { RequestPane } from './panes/request-pane';
 import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
@@ -355,7 +358,8 @@ function usePollingConnectionStatus(requestId?: string) {
 
   return connectionStatus;
 }
-
+const StretchedPaneHeader = styled(PaneHeader)({ '&&': { alignItems: 'stretch' } });
+const RightPaneHeader = styled(PaneHeader)({ '&&': { justifyContent: 'end' } });
 const WSLeftPanel = ({ request }: { request: Request }) => {
   const isConnected = usePollingConnectionStatus(request._id);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
@@ -363,8 +367,9 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
 
   return (
     <Pane type="request">
-      <PaneHeader>
+      <StretchedPaneHeader>
         <form
+          style={{ display: 'flex', flex: 1 }}
           onSubmit={e => {
             e.preventDefault();
             if (isConnected) {
@@ -378,12 +383,21 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
             }
           }}
         >
-          <input name="url" defaultValue="wss://ws.postman-echo.com/raw" />
-          <button type="submit">
-            {isConnected ? 'Disconnect' : 'Connect'}
-          </button>
+          <div className="urlbar">
+            <div className="urlbar__flex__right">
+              <input
+                name="url"
+                defaultValue="wss://ws.postman-echo.com/raw"
+                placeholder="wss://ws.postman-echo.com/raw"
+                style={{ flex: 1, marginLeft: '0.5rem' }}
+              />
+            </div>
+            <button type="submit" className="urlbar__send-btn">
+              {isConnected ? 'Disconnect' : 'Connect'}
+            </button>
+          </div>
         </form>
-      </PaneHeader>
+      </StretchedPaneHeader>
       <form
         onSubmit={async e => {
           e.preventDefault();
@@ -399,17 +413,34 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
           });
         }}
       >
-        <PaneHeader>
-          <button type='submit'>Send</button>
-        </PaneHeader>
-        <CodeEditor
-          ref={editorRef}
-          onChange={() => { }}
-          defaultValue={''}
-          enableNunjucks
-        />
+        <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
+          <div className="tab-action-wrapper">
+            <div className="tab-action-tabs">
+              <TabList>
+                <Tab tabIndex="-1">
+                  <button type="button">Text</button>
+                </Tab>
+              </TabList>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn--compact btn--clicky margin-sm bg-surprise"
+            >
+              Send <i className="fa fa-arrow-right" />
+            </button>
+          </div>
+          <TabPanel className="react-tabs__tab-panel scrollable-container">
+            <CodeEditor
+              ref={editorRef}
+              onChange={() => { }}
+              defaultValue={''}
+              enableNunjucks
+            />
+          </TabPanel>
+        </Tabs>
       </form>
-    </Pane>
+    </Pane >
   );
 };
 
@@ -450,28 +481,31 @@ const WSRightPanel = ({ request }: { request: Request }) => {
   // TODO: add and fill in table
   const eventLog = useEventSubscription(request._id);
   // reverse
-  const [filter, setFilter] = useState('');
-  const list = eventLog.filter(m => m.message.toLowerCase().includes(filter.toLowerCase())) || [];
+  const list = eventLog || [];
   return (
-    <div>
-      <input onChange={e => setFilter(e.target.value)} />
-      <ul
-        style={{
-          overflowY: 'auto',
-          height: '100%',
-        }}
-      >
-        {list.map((m, i) => (
-          <li
-            style={{
-              border: '1px solid #ccc',
-            }}
-            key={i}
-          >
-            {m.type === 'OUTGOING' ? '⬆️' : m.type === 'INFO' ? 'ℹ️' : '⬇️'} {m.message}</li>
-        ))}
-      </ul>
-    </div>
+    <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
+      <TabList>
+        <Tab tabIndex="-1">
+          <button type="button">Preview</button>
+        </Tab>
+      </TabList>
+      <TabPanel className="react-tabs__tab-panel scrollable-container">
+        <div className='scrollable'>
+          {list ?
+            <table className="table--fancy table--striped table--compact selectable">
+              <tbody>
+                {[...list].reverse().map(event => (
+                  <tr key={event._id}>
+                    <td>{event.type === 'OUTGOING' ? '⬆️' : event.type === 'INFO' ? 'ℹ️' : '⬇️'}</td>
+                    <td>{event.message.slice(0, 50)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            : null}
+        </div>
+      </TabPanel>
+    </Tabs>
   );
 };
 

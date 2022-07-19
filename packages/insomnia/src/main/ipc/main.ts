@@ -106,6 +106,7 @@ function setupWebSockets() {
       return;
     }
     try {
+      event.sender.send('websocket.log', makeNewEvent('Connecting to ' + options.url, options.requestId, 'INFO'));
       const ws = new WebSocket(options.url);
       WebSocketInstances.set(options.requestId, ws);
       ws.on('open', () => {
