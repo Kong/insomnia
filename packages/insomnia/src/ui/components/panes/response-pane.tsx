@@ -34,14 +34,12 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 interface Props {
   handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
-  handleSetPreviewMode: Function;
   handleShowRequestSettings: Function;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
   handleSetActiveResponse,
   handleSetFilter,
-  handleSetPreviewMode,
   handleShowRequestSettings,
   request,
 }) => {
@@ -239,8 +237,6 @@ export const ResponsePane: FC<Props> = ({
               download={handleDownloadResponseBody}
               fullDownload={handleDownloadFullResponseBody}
               exportAsHAR={handleExportAsHAR}
-              previewMode={previewMode}
-              updatePreviewMode={handleSetPreviewMode}
               showPrettifyOption={response.contentType.includes('json')}
               copyToClipboard={handleCopyResponseToClipboard}
             />

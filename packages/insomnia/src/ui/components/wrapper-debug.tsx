@@ -41,7 +41,6 @@ interface Props {
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
   handleSetActiveResponse: Function;
-  handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
@@ -66,7 +65,6 @@ export const WrapperDebug: FC<Props> = ({
   handleSendAndDownloadRequestWithActiveEnvironment,
   handleSendRequestWithActiveEnvironment,
   handleSetActiveResponse,
-  handleSetPreviewMode,
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
   handleSidebarSort,
@@ -214,7 +212,6 @@ export const WrapperDebug: FC<Props> = ({
             <ResponsePane
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
-              handleSetPreviewMode={handleSetPreviewMode}
               handleShowRequestSettings={handleShowRequestSettingsModal}
               request={activeRequest}
             />}

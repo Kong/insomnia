@@ -1,6 +1,9 @@
 import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import * as models from '../../../models';
+import { selectActiveRequest, selectResponsePreviewMode } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -11,23 +14,24 @@ interface Props {
   fullDownload: (pretty: boolean) => any;
   exportAsHAR: () => void;
   copyToClipboard: () => any;
-  updatePreviewMode: Function;
-  previewMode: PreviewMode;
   showPrettifyOption?: boolean;
 }
 
 export const PreviewModeDropdown: FC<Props> = ({
   fullDownload,
-  previewMode,
   showPrettifyOption,
   download,
   copyToClipboard,
   exportAsHAR,
-  updatePreviewMode,
 }) => {
+  const activeRequest = useSelector(selectActiveRequest);
+  const previewMode = useSelector(selectResponsePreviewMode);
 
-  const handleClick = async (previewMode: string) => {
-    await updatePreviewMode(previewMode);
+  const handleClick = async (previewMode: PreviewMode) => {
+    if (!activeRequest) {
+      return;
+    }
+    return models.requestMeta.updateOrCreateByParentId(activeRequest._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => {
     download(true);
