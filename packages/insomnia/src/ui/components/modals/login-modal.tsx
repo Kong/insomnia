@@ -1,5 +1,6 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
+import * as Sentry from '@sentry/electron/renderer';
 import React, { Dispatch, FormEvent, forwardRef, MutableRefObject, RefObject, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
@@ -61,9 +62,10 @@ export class LoginModalHandle {
       }
       const decoder = new TextDecoder();
       const box: AuthBox = JSON.parse(decoder.decode(boxData));
-      session.absorbKey(box.token, box.key);
+      await session.absorbKey(box.token, box.key);
       this.setState({ ...this.stateRef.current, state: 'done' });
     } catch (e) {
+      Sentry.captureException(e);
       this.setState({ ...this.stateRef.current, state: 'error', error: `Error loading credentials: ${String(e)}` });
     }
   }
