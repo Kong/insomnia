@@ -13,7 +13,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
+import type { DropdownHandle } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
@@ -99,7 +99,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   const [renderedUrl, setRenderedUrl] = useState('');
 
-  const requestActionsDropdown = useRef<Dropdown>(null);
+  const requestActionsDropdown = useRef<DropdownHandle>(null);
 
   const handleShowRequestActions = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
