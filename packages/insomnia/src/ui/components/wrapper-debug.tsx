@@ -113,8 +113,6 @@ export const WrapperDebug: FC<Props> = ({
   const loadStartTime = useSelector(selectLoadStartTime);
 
   const responseDownloadPath = useSelector(selectResponseDownloadPath);
-  const responseFilter = useSelector(selectResponseFilter);
-  const responseFilterHistory = useSelector(selectResponseFilterHistory);
   const responsePreviewMode = useSelector(selectResponsePreviewMode);
   const settings = useSelector(selectSettings);
   const sidebarChildren = useSelector(selectSidebarChildren);
@@ -224,8 +222,6 @@ export const WrapperDebug: FC<Props> = ({
               disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
               editorFontSize={settings.editorFontSize}
               environment={activeEnvironment}
-              filter={responseFilter}
-              filterHistory={responseFilterHistory}
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
               handleSetPreviewMode={handleSetPreviewMode}

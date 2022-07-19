@@ -14,7 +14,7 @@ import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Request } from '../../../models/request';
 import { cancelRequestById } from '../../../network/network';
-import { selectActiveResponse } from '../../redux/selectors';
+import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -37,8 +37,6 @@ interface Props {
   disableResponsePreviewLinks: boolean;
   editorFontSize: number;
   environment?: Environment | null;
-  filter: string;
-  filterHistory: string[];
   handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
   handleSetPreviewMode: Function;
@@ -49,11 +47,9 @@ interface Props {
 }
 export const ResponsePane: FC<Props> = ({
   disableHtmlPreviewJs,
+  disableResponsePreviewLinks,
   editorFontSize,
   environment,
-  filter,
-  disableResponsePreviewLinks,
-  filterHistory,
   handleSetActiveResponse,
   handleSetFilter,
   handleSetPreviewMode,
@@ -63,6 +59,8 @@ export const ResponsePane: FC<Props> = ({
   request,
 }) => {
   const response = useSelector(selectActiveResponse);
+  const filterHistory = useSelector(selectResponseFilterHistory);
+  const filter = useSelector(selectResponseFilter);
 
   const responseViewerRef = useRef<ResponseViewer>(null);
   const _handleGetResponseBody = (): Buffer | null => {
