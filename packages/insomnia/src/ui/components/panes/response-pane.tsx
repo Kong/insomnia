@@ -60,21 +60,20 @@ export const ResponsePane: FC<Props> = ({
   const filter = useSelector(selectResponseFilter);
 
   const responseViewerRef = useRef<ResponseViewer>(null);
-  const _handleGetResponseBody = (): Buffer | null => {
+  const handleGetResponseBody = (): Buffer | null => {
     if (!response) {
       return null;
     }
-
     return models.response.getBodyBuffer(response);
   };
-  async function _handleCopyResponseToClipboard() {
-    const bodyBuffer = _handleGetResponseBody();
+  const handleCopyResponseToClipboard = async () => {
+    const bodyBuffer = handleGetResponseBody();
     if (bodyBuffer) {
       clipboard.writeText(bodyBuffer.toString('utf8'));
     }
-  }
+  };
 
-  async function _handleDownloadResponseBody(prettify: boolean) {
+  const handleDownloadResponseBody = async (prettify: boolean) => {
     if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
@@ -121,9 +120,9 @@ export const ResponsePane: FC<Props> = ({
         to.end();
       });
     }
-  }
+  };
 
-  async function _handleDownloadFullResponseBody() {
+  const handleDownloadFullResponseBody = async () => {
     if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
@@ -157,9 +156,9 @@ export const ResponsePane: FC<Props> = ({
         console.warn('Failed to save full response', err);
       });
     }
-  }
+  };
 
-  async function _handleExportAsHAR() {
+  const handleExportAsHAR = async () => {
     if (!response) {
       // Should never happen
       console.warn('No response to download');
@@ -190,19 +189,18 @@ export const ResponsePane: FC<Props> = ({
       console.warn('Failed to export har', err);
     });
     to.end(har);
-  }
+  };
 
-  function _handleTabSelect(index: number, lastIndex: number) {
+  const handleTabSelect = (index: number, lastIndex: number) => {
     if (responseViewerRef.current != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
       // Refresh must be called when the editor is visible,
       // so use nextTick to give time for it to be visible.
       process.nextTick(() => {
-        // @ts-expect-error -- TSCONVERSION
-        responseViewerRef.current.refresh();
+        responseViewerRef.current?.refresh();
       });
     }
-  }
+  };
 
   if (!request) {
     return <BlankPane type="response" />;
@@ -239,19 +237,19 @@ export const ResponsePane: FC<Props> = ({
       )}
       <Tabs
         className={classnames(paneBodyClasses, 'react-tabs')}
-        onSelect={_handleTabSelect}
+        onSelect={handleTabSelect}
         forceRenderTabPanel
       >
         <TabList>
           <Tab tabIndex="-1">
             <PreviewModeDropdown
-              download={_handleDownloadResponseBody}
-              fullDownload={_handleDownloadFullResponseBody}
-              exportAsHAR={_handleExportAsHAR}
+              download={handleDownloadResponseBody}
+              fullDownload={handleDownloadFullResponseBody}
+              exportAsHAR={handleExportAsHAR}
               previewMode={previewMode}
               updatePreviewMode={handleSetPreviewMode}
               showPrettifyOption={response.contentType.includes('json')}
-              copyToClipboard={_handleCopyResponseToClipboard}
+              copyToClipboard={handleCopyResponseToClipboard}
             />
           </Tab>
           <Tab tabIndex="-1">
@@ -281,12 +279,12 @@ export const ResponsePane: FC<Props> = ({
             contentType={response.contentType || ''}
             disableHtmlPreviewJs={disableHtmlPreviewJs}
             disablePreviewLinks={disableResponsePreviewLinks}
-            download={_handleDownloadResponseBody}
+            download={handleDownloadResponseBody}
             editorFontSize={editorFontSize}
             error={response.error}
             filter={filter}
             filterHistory={filterHistory}
-            getBody={_handleGetResponseBody}
+            getBody={handleGetResponseBody}
             previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={response._id}
             updateFilter={response.error ? undefined : handleSetFilter}
