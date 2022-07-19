@@ -57,10 +57,7 @@ const CookieRow: FC<{
       <PromptButton
         className="btn btn--super-compact btn--outlined"
         addIcon
-        doneIcon
         confirmMessage=""
-        doneMessage=""
-        doneAfterTimeout
         onClick={handleDeleteCookie}
         title="Delete cookie"
       >
