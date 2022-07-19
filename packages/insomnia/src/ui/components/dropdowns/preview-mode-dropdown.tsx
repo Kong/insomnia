@@ -2,8 +2,10 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
-import { selectActiveRequest, selectResponsePreviewMode } from '../../redux/selectors';
+import { isRequest } from '../../../models/request';
+import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -12,7 +14,6 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 interface Props {
   download: (pretty: boolean) => any;
   fullDownload: (pretty: boolean) => any;
-  exportAsHAR: () => void;
   copyToClipboard: () => any;
   showPrettifyOption?: boolean;
 }
@@ -22,16 +23,16 @@ export const PreviewModeDropdown: FC<Props> = ({
   showPrettifyOption,
   download,
   copyToClipboard,
-  exportAsHAR,
 }) => {
-  const activeRequest = useSelector(selectActiveRequest);
+  const request = useSelector(selectActiveRequest);
   const previewMode = useSelector(selectResponsePreviewMode);
+  const response = useSelector(selectActiveResponse);
 
   const handleClick = async (previewMode: PreviewMode) => {
-    if (!activeRequest) {
+    if (!request || !isRequest(request)) {
       return;
     }
-    return models.requestMeta.updateOrCreateByParentId(activeRequest._id, { previewMode });
+    return models.requestMeta.updateOrCreateByParentId(request._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => {
     download(true);
@@ -44,6 +45,27 @@ export const PreviewModeDropdown: FC<Props> = ({
   const handleCopyRawResponse = useCallback(() => {
     copyToClipboard();
   }, [copyToClipboard]);
+
+  const exportAsHAR = async () => {
+    if (!response || !request || !isRequest(request)) {
+      console.warn('Nothing to download');
+      return;
+    }
+
+    const data = await exportHarCurrentRequest(request, response);
+    const har = JSON.stringify(data, null, '\t');
+
+    const { filePath } = await window.dialog.showSaveDialog({
+      title: 'Export As HAR',
+      buttonLabel: 'Save',
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
+    });
+
+    if (!filePath) {
+      return;
+    }
+    window.main.writeFile({ path: filePath, content: har });
+  };
 
   return <Dropdown beside>
     <DropdownButton className="tall">

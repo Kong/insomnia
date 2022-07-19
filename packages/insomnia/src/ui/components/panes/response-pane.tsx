@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
@@ -149,39 +148,6 @@ export const ResponsePane: FC<Props> = ({
     }
   };
 
-  const handleExportAsHAR = async () => {
-    if (!response) {
-      // Should never happen
-      console.warn('No response to download');
-      return;
-    }
-
-    if (!request) {
-      // Should never happen
-      console.warn('No request to download');
-      return;
-    }
-
-    const data = await exportHarCurrentRequest(request, response);
-    const har = JSON.stringify(data, null, '\t');
-
-    const { filePath } = await window.dialog.showSaveDialog({
-      title: 'Export As HAR',
-      buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
-    });
-
-    if (!filePath) {
-      return;
-    }
-
-    const to = fs.createWriteStream(filePath);
-    to.on('error', err => {
-      console.warn('Failed to export har', err);
-    });
-    to.end(har);
-  };
-
   const handleTabSelect = (index: number, lastIndex: number) => {
     if (responseViewerRef.current != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
@@ -236,7 +202,6 @@ export const ResponsePane: FC<Props> = ({
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               fullDownload={handleDownloadFullResponseBody}
-              exportAsHAR={handleExportAsHAR}
               showPrettifyOption={response.contentType.includes('json')}
               copyToClipboard={handleCopyResponseToClipboard}
             />
