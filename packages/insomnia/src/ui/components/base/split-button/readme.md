@@ -19,7 +19,7 @@ const SendButtonForWebSocket = ({ workspaceId }) => {
       {connection && <button name="wsSendButton" type="submit">Send</button>}
       {!connection && <button name="wsConnectButton" onClick={connect}>Connect</button>}
       <button name="wsCloseButton" onClick={close} disabled={!connection}>Close</button>
-    </ButtonGroup>
+    </SplitButton>
   );
 };
 
