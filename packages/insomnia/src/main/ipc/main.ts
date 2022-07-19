@@ -18,8 +18,8 @@ export interface MainBridgeAPI {
   createWebsocketRequest: (options: { workspaceId: string }) => Promise<string>;
   getWebSocketRequestsByParentId: (options: { workspaceId: string }) => Promise<WebSocketRequest[]>;
   open: (options: { url: string; requestId: string }) => void;
-  message: (options: { message: string; connectionId: string }) => string;
-  close: (options: { connectionId: string }) => string;
+  message: (options: { message: string; connectionId: string }) => void;
+  close: (options: { connectionId: string }) => void;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
   getWebSocketConnectionStatus: (options: { connectionId: string }) => Promise<boolean>;
   getWebSocketEventLog: (options: { connectionId: string }) => Promise<EventLog>;
