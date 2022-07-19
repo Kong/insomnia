@@ -90,7 +90,7 @@ export const SidebarChildren: FC<Props> = ({
                 requestGroup={row.doc}
                 hotKeyRegistry={hotKeyRegistry}
               >
-                <RecursiveSidebarRows isInPinnedList={isInPinnedList} rows={row.children} />
+                {row.children.filter(Boolean).length > 0 ? <RecursiveSidebarRows isInPinnedList={isInPinnedList} rows={row.children} /> : null}
               </SidebarRequestGroupRow>
             ))}
       </>);
