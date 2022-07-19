@@ -65,8 +65,7 @@ export const ResponsePane: FC<Props> = ({
 
   const handleDownloadResponseBody = async (prettify: boolean) => {
     if (!response || !request) {
-      // Should never happen
-      console.warn('No response to download');
+      console.warn('Nothing to download');
       return;
     }
 
@@ -85,12 +84,11 @@ export const ResponsePane: FC<Props> = ({
     const readStream = models.response.getBodyStream(response);
     const dataBuffers: any[] = [];
 
-    if (readStream) {
+    if (readStream && outputPath) {
       readStream.on('data', data => {
         dataBuffers.push(data);
       });
       readStream.on('end', () => {
-        // @ts-expect-error -- TSCONVERSION
         const to = fs.createWriteStream(outputPath);
         const finalBuffer = Buffer.concat(dataBuffers);
         to.on('error', err => {
@@ -108,42 +106,6 @@ export const ResponsePane: FC<Props> = ({
         }
 
         to.end();
-      });
-    }
-  };
-
-  const handleDownloadFullResponseBody = async () => {
-    if (!response || !request) {
-      // Should never happen
-      console.warn('No response to download');
-      return;
-    }
-
-    const timeline = models.response.getTimeline(response);
-    const headers = timeline
-      .filter(v => v.name === 'HeaderIn')
-      .map(v => v.value)
-      .join('');
-
-    const { canceled, filePath } = await window.dialog.showSaveDialog({
-      title: 'Save Full Response',
-      buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
-    });
-
-    if (canceled) {
-      return;
-    }
-
-    const readStream = models.response.getBodyStream(response);
-
-    if (readStream) {
-      // @ts-expect-error -- TSCONVERSION
-      const to = fs.createWriteStream(filePath);
-      to.write(headers);
-      readStream.pipe(to);
-      to.on('error', err => {
-        console.warn('Failed to save full response', err);
       });
     }
   };
@@ -201,7 +163,6 @@ export const ResponsePane: FC<Props> = ({
           <Tab tabIndex="-1">
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
-              fullDownload={handleDownloadFullResponseBody}
               showPrettifyOption={response.contentType.includes('json')}
               copyToClipboard={handleCopyResponseToClipboard}
             />

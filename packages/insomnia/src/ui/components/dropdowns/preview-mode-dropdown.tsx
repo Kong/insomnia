@@ -1,3 +1,4 @@
+import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -13,13 +14,11 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 interface Props {
   download: (pretty: boolean) => any;
-  fullDownload: (pretty: boolean) => any;
   copyToClipboard: () => any;
   showPrettifyOption?: boolean;
 }
 
 export const PreviewModeDropdown: FC<Props> = ({
-  fullDownload,
   showPrettifyOption,
   download,
   copyToClipboard,
@@ -67,6 +66,39 @@ export const PreviewModeDropdown: FC<Props> = ({
     window.main.writeFile({ path: filePath, content: har });
   };
 
+  const exportDebugFile = async () => {
+    if (!response || !request) {
+      console.warn('Nothing to download');
+      return;
+    }
+
+    const timeline = models.response.getTimeline(response);
+    const headers = timeline
+      .filter(v => v.name === 'HeaderIn')
+      .map(v => v.value)
+      .join('');
+
+    const { canceled, filePath } = await window.dialog.showSaveDialog({
+      title: 'Save Full Response',
+      buttonLabel: 'Save',
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
+    });
+
+    if (canceled) {
+      return;
+    }
+    const readStream = models.response.getBodyStream(response);
+
+    if (readStream && filePath) {
+      const to = fs.createWriteStream(filePath);
+      to.write(headers);
+      readStream.pipe(to);
+      to.on('error', err => {
+        console.warn('Failed to save full response', err);
+      });
+    }
+  };
+
   return <Dropdown beside>
     <DropdownButton className="tall">
       {getPreviewModeName(previewMode)}
@@ -90,7 +122,7 @@ export const PreviewModeDropdown: FC<Props> = ({
       <i className="fa fa-save" />
       Export prettified response
     </DropdownItem>}
-    <DropdownItem onClick={fullDownload}>
+    <DropdownItem onClick={exportDebugFile}>
       <i className="fa fa-bug" />
       Export HTTP debug
     </DropdownItem>
