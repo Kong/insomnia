@@ -14,8 +14,6 @@ import {
   selectEnvironments,
   selectLoadStartTime,
   selectResponseDownloadPath,
-  selectResponseFilter,
-  selectResponseFilterHistory,
   selectResponsePreviewMode,
   selectSettings,
 } from '../redux/selectors';
@@ -221,7 +219,6 @@ export const WrapperDebug: FC<Props> = ({
               disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
               disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
               editorFontSize={settings.editorFontSize}
-              environment={activeEnvironment}
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
               handleSetPreviewMode={handleSetPreviewMode}

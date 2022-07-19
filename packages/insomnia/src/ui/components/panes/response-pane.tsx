@@ -11,7 +11,6 @@ import { PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
-import type { Environment } from '../../../models/environment';
 import type { Request } from '../../../models/request';
 import { cancelRequestById } from '../../../network/network';
 import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory } from '../../redux/selectors';
@@ -36,7 +35,6 @@ interface Props {
   disableHtmlPreviewJs: boolean;
   disableResponsePreviewLinks: boolean;
   editorFontSize: number;
-  environment?: Environment | null;
   handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
   handleSetPreviewMode: Function;
@@ -49,7 +47,6 @@ export const ResponsePane: FC<Props> = ({
   disableHtmlPreviewJs,
   disableResponsePreviewLinks,
   editorFontSize,
-  environment,
   handleSetActiveResponse,
   handleSetFilter,
   handleSetPreviewMode,
@@ -234,7 +231,6 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
-            activeEnvironment={environment}
             requestId={request._id}
             handleSetActiveResponse={handleSetActiveResponse}
             className="tall pane__header__right"

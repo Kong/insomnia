@@ -5,10 +5,9 @@ import { useSelector } from 'react-redux';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
-import type { Environment } from '../../../models/environment';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
-import { selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -22,7 +21,6 @@ import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
 
 interface Props {
-  activeEnvironment?: Environment | null;
   activeResponse: Response;
   className?: string;
   handleSetActiveResponse: Function;
@@ -30,13 +28,13 @@ interface Props {
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
-  activeEnvironment,
   activeResponse,
   className,
   handleSetActiveResponse,
   requestId,
 }) => {
   const dropdownRef = useRef<DropdownHandle>(null);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
   const responses = useSelector(selectActiveRequestResponses);
   const activeRequest = useSelector(selectActiveRequest);
   const requestVersions = useSelector(selectRequestVersions);
