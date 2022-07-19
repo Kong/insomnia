@@ -10,11 +10,9 @@ import { isCollection, isDesign } from '../../models/workspace';
 import {
   selectActiveEnvironment,
   selectActiveRequest,
-  selectActiveResponse,
   selectActiveWorkspace,
   selectEnvironments,
   selectLoadStartTime,
-  selectRequestVersions,
   selectResponseDownloadPath,
   selectResponseFilter,
   selectResponseFilterHistory,
@@ -110,11 +108,10 @@ export const WrapperDebug: FC<Props> = ({
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
 
-  const activeResponse = useSelector(selectActiveResponse);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const environments = useSelector(selectEnvironments);
   const loadStartTime = useSelector(selectLoadStartTime);
-  const requestVersions = useSelector(selectRequestVersions);
+
   const responseDownloadPath = useSelector(selectResponseDownloadPath);
   const responseFilter = useSelector(selectResponseFilter);
   const responseFilterHistory = useSelector(selectResponseFilterHistory);
@@ -236,8 +233,6 @@ export const WrapperDebug: FC<Props> = ({
               loadStartTime={loadStartTime}
               previewMode={responsePreviewMode}
               request={activeRequest}
-              requestVersions={requestVersions}
-              response={activeResponse}
             />}
         </ErrorBoundary>}
     />

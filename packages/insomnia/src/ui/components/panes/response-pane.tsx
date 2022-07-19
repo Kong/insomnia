@@ -4,6 +4,7 @@ import fs from 'fs';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
@@ -12,9 +13,8 @@ import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Request } from '../../../models/request';
-import type { RequestVersion } from '../../../models/request-version';
-import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
+import { selectActiveResponse } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -46,9 +46,6 @@ interface Props {
   loadStartTime: number;
   previewMode: PreviewMode;
   request?: Request | null;
-  requestVersions: RequestVersion[];
-  response?: Response | null;
-  responses: Response[];
 }
 export const ResponsePane: FC<Props> = ({
   disableHtmlPreviewJs,
@@ -64,9 +61,8 @@ export const ResponsePane: FC<Props> = ({
   loadStartTime,
   previewMode,
   request,
-  requestVersions,
-  response,
 }) => {
+  const response = useSelector(selectActiveResponse);
 
   const responseViewerRef = useRef<ResponseViewer>(null);
   const _handleGetResponseBody = (): Buffer | null => {
@@ -241,7 +237,6 @@ export const ResponsePane: FC<Props> = ({
           <ResponseHistoryDropdown
             activeResponse={response}
             activeEnvironment={environment}
-            requestVersions={requestVersions}
             requestId={request._id}
             handleSetActiveResponse={handleSetActiveResponse}
             className="tall pane__header__right"

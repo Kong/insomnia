@@ -7,9 +7,8 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import * as models from '../../../models/index';
-import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
-import { selectActiveRequest, selectActiveRequestResponses } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -28,7 +27,6 @@ interface Props {
   className?: string;
   handleSetActiveResponse: Function;
   requestId: string;
-  requestVersions: RequestVersion[];
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
@@ -37,11 +35,11 @@ export const ResponseHistoryDropdown: FC<Props> = ({
   className,
   handleSetActiveResponse,
   requestId,
-  requestVersions,
 }) => {
   const dropdownRef = useRef<DropdownHandle>(null);
   const responses = useSelector(selectActiveRequestResponses);
   const activeRequest = useSelector(selectActiveRequest);
+  const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
   const categories: Record<string, Response[]> = {
     minutes: [],
