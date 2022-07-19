@@ -8,7 +8,6 @@ import { generateId } from '../../../common/misc';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { Lazy } from '../base/lazy';
 import { PromptButton } from '../base/prompt-button';
 import { AutocompleteHandler, Pair, Row } from './row';
 
@@ -440,80 +439,78 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     const { pairs } = this.state;
     const classes = classnames('key-value-editor', 'wide', className);
     return (
-      <Lazy delay={pairs.length > 20 ? 50 : -1}>
-        <ul className={classes}>
-          {pairs.map((pair, i) => (
-            <Row
-              noDelete={disableDelete}
-              key={pair.id || 'no-id'}
-              index={i} // For dragging
-              ref={this._setRowRef}
-              sortable={sortable}
-              displayDescription={this.state.displayDescription}
-              namePlaceholder={namePlaceholder}
-              valuePlaceholder={valuePlaceholder}
-              descriptionPlaceholder={descriptionPlaceholder}
-              valueInputType={valueInputType}
-              onChange={this._handlePairChange}
-              onDelete={this._handlePairDelete}
-              onFocusName={this._handleFocusName}
-              onFocusValue={this._handleFocusValue}
-              onFocusDescription={this._handleFocusDescription}
-              onKeyDown={this._handleKeyDown}
-              onBlurName={this._handleBlurName}
-              onBlurValue={this._handleBlurValue}
-              onBlurDescription={this._handleBlurDescription}
-              onMove={this._handleMove}
-              handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
-              handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
-              allowMultiline={allowMultiline}
-              allowFile={allowFile}
-              pair={pair}
-            />
-          ))}
+      <ul className={classes}>
+        {pairs.map((pair, i) => (
+          <Row
+            noDelete={disableDelete}
+            key={pair.id || 'no-id'}
+            index={i} // For dragging
+            ref={this._setRowRef}
+            sortable={sortable}
+            displayDescription={this.state.displayDescription}
+            namePlaceholder={namePlaceholder}
+            valuePlaceholder={valuePlaceholder}
+            descriptionPlaceholder={descriptionPlaceholder}
+            valueInputType={valueInputType}
+            onChange={this._handlePairChange}
+            onDelete={this._handlePairDelete}
+            onFocusName={this._handleFocusName}
+            onFocusValue={this._handleFocusValue}
+            onFocusDescription={this._handleFocusDescription}
+            onKeyDown={this._handleKeyDown}
+            onBlurName={this._handleBlurName}
+            onBlurValue={this._handleBlurValue}
+            onBlurDescription={this._handleBlurDescription}
+            onMove={this._handleMove}
+            handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
+            handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
+            allowMultiline={allowMultiline}
+            allowFile={allowFile}
+            pair={pair}
+          />
+        ))}
 
-          {!maxPairs || pairs.length < maxPairs ? (
-            <Row
-              key="empty-row"
-              hideButtons
-              sortable
-              noDropZone
-              readOnly
-              forceInput
-              index={-1}
-              onChange={noop}
-              onDelete={noop}
-              renderLeftIcon={() => (
-                <Dropdown>
-                  <DropdownButton>
-                    <i className="fa fa-cog" />
-                  </DropdownButton>
-                  <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
-                    Delete All Items
-                  </DropdownItem>
-                  <DropdownItem onClick={this._toggleDescription}>Toggle Description</DropdownItem>
-                </Dropdown>
-              )}
-              className="key-value-editor__row-wrapper--clicker"
-              displayDescription={this.state.displayDescription}
-              namePlaceholder={`New ${namePlaceholder}`}
-              valuePlaceholder={`New ${valuePlaceholder}`}
-              descriptionPlaceholder={`New ${descriptionPlaceholder}`}
-              onFocusName={this._handleAddFromName}
-              onFocusValue={this._handleAddFromValue}
-              onFocusDescription={this._handleAddFromDescription}
-              allowMultiline={allowMultiline}
-              allowFile={allowFile}
-              // @ts-expect-error -- TSCONVERSION missing defaults
-              pair={{
-                name: '',
-                value: '',
-                description: '',
-              }}
-            />
-          ) : null}
-        </ul>
-      </Lazy>
+        {!maxPairs || pairs.length < maxPairs ? (
+          <Row
+            key="empty-row"
+            hideButtons
+            sortable
+            noDropZone
+            readOnly
+            forceInput
+            index={-1}
+            onChange={noop}
+            onDelete={noop}
+            renderLeftIcon={() => (
+              <Dropdown>
+                <DropdownButton>
+                  <i className="fa fa-cog" />
+                </DropdownButton>
+                <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
+                  Delete All Items
+                </DropdownItem>
+                <DropdownItem onClick={this._toggleDescription}>Toggle Description</DropdownItem>
+              </Dropdown>
+            )}
+            className="key-value-editor__row-wrapper--clicker"
+            displayDescription={this.state.displayDescription}
+            namePlaceholder={`New ${namePlaceholder}`}
+            valuePlaceholder={`New ${valuePlaceholder}`}
+            descriptionPlaceholder={`New ${descriptionPlaceholder}`}
+            onFocusName={this._handleAddFromName}
+            onFocusValue={this._handleAddFromValue}
+            onFocusDescription={this._handleAddFromDescription}
+            allowMultiline={allowMultiline}
+            allowFile={allowFile}
+            // @ts-expect-error -- TSCONVERSION missing defaults
+            pair={{
+              name: '',
+              value: '',
+              description: '',
+            }}
+          />
+        ) : null}
+      </ul>
     );
   }
 }
