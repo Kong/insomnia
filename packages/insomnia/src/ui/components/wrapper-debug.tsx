@@ -12,9 +12,7 @@ import {
   selectActiveRequest,
   selectActiveWorkspace,
   selectEnvironments,
-  selectLoadStartTime,
   selectResponseDownloadPath,
-  selectResponsePreviewMode,
   selectSettings,
 } from '../redux/selectors';
 import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
@@ -108,10 +106,8 @@ export const WrapperDebug: FC<Props> = ({
 
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const environments = useSelector(selectEnvironments);
-  const loadStartTime = useSelector(selectLoadStartTime);
 
   const responseDownloadPath = useSelector(selectResponseDownloadPath);
-  const responsePreviewMode = useSelector(selectResponsePreviewMode);
   const settings = useSelector(selectSettings);
   const sidebarChildren = useSelector(selectSidebarChildren);
   const sidebarFilter = useSelector(selectSidebarFilter);
@@ -216,15 +212,10 @@ export const WrapperDebug: FC<Props> = ({
             />
             :
             <ResponsePane
-              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-              disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-              editorFontSize={settings.editorFontSize}
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
               handleSetPreviewMode={handleSetPreviewMode}
               handleShowRequestSettings={handleShowRequestSettingsModal}
-              loadStartTime={loadStartTime}
-              previewMode={responsePreviewMode}
               request={activeRequest}
             />}
         </ErrorBoundary>}

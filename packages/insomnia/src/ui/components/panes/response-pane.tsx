@@ -7,13 +7,13 @@ import React, { FC, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
-import { PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
+import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import { cancelRequestById } from '../../../network/network';
-import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory } from '../../redux/selectors';
+import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -32,32 +32,25 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  disableHtmlPreviewJs: boolean;
-  disableResponsePreviewLinks: boolean;
-  editorFontSize: number;
   handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
   handleSetPreviewMode: Function;
   handleShowRequestSettings: Function;
-  loadStartTime: number;
-  previewMode: PreviewMode;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
-  disableHtmlPreviewJs,
-  disableResponsePreviewLinks,
-  editorFontSize,
   handleSetActiveResponse,
   handleSetFilter,
   handleSetPreviewMode,
   handleShowRequestSettings,
-  loadStartTime,
-  previewMode,
   request,
 }) => {
   const response = useSelector(selectActiveResponse);
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
+  const settings = useSelector(selectSettings);
+  const loadStartTime = useSelector(selectLoadStartTime);
+  const previewMode = useSelector(selectResponsePreviewMode);
 
   const responseViewerRef = useRef<ResponseViewer>(null);
   const handleGetResponseBody = (): Buffer | null => {
@@ -277,10 +270,10 @@ export const ResponsePane: FC<Props> = ({
             ref={responseViewerRef}
             bytes={Math.max(response.bytesContent, response.bytesRead)}
             contentType={response.contentType || ''}
-            disableHtmlPreviewJs={disableHtmlPreviewJs}
-            disablePreviewLinks={disableResponsePreviewLinks}
+            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+            disablePreviewLinks={settings.disableResponsePreviewLinks}
             download={handleDownloadResponseBody}
-            editorFontSize={editorFontSize}
+            editorFontSize={settings.editorFontSize}
             error={response.error}
             filter={filter}
             filterHistory={filterHistory}
