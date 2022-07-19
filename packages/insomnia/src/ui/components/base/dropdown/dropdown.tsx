@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   Fragment,
   isValidElement,
+  ReactElement,
   ReactNode,
   useCallback,
   useImperativeHandle,
@@ -33,6 +34,7 @@ export interface DropdownProps {
   className?: string;
   style?: CSSProperties;
   beside?: boolean;
+  disabled?: boolean;
 }
 
 export const dropdownsContainerId = 'dropdowns-container';
@@ -86,7 +88,7 @@ export interface DropdownHandle {
 }
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
-  ({ right, outline, className, style, children, beside, onOpen, onHide, wide }, ref) => {
+  ({ right, outline, className, style, children, beside, onOpen, onHide, wide, disabled }, ref) => {
     const [open, setOpen] = useState(false);
     // @TODO: This is a hack to force new menu every time dropdown opens
     const [uniquenessKey, setUniquenessKey] = useState(0);
@@ -323,24 +325,54 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
     const toggle = useCallback(
       (filterVisible = false) => {
+        if (disabled) {
+          return;
+        }
+
         if (open) {
           hide();
         } else {
           show(filterVisible);
         }
       },
-      [hide, open, show]
+      [disabled, hide, open, show]
     );
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        show,
-        hide,
-        toggle,
-      }),
-      [hide, show, toggle]
-    );
+    useImperativeHandle(ref, () => ({
+      show(filterVisible = false): void {
+        setOpen(true);
+        setFilterVisible(filterVisible);
+        setFilter('');
+        setFilterItems(null);
+        setFilterActiveIndex(-1);
+        setUniquenessKey(uniquenessKey + 1);
+
+        onOpen?.();
+      },
+      hide(): void {
+      // Focus the dropdown button after hiding
+        if (dropdownContainerRef.current) {
+          const button = dropdownContainerRef.current.querySelector('button');
+
+          button?.focus();
+        }
+
+        setOpen(false);
+
+        onHide?.();
+      },
+      toggle(filterVisible = false) {
+        if (disabled) {
+          return;
+        }
+
+        if (open) {
+          hide();
+        } else {
+          show(filterVisible);
+        }
+      },
+    }), [disabled, hide, onHide, onOpen, open, show, uniquenessKey]);
 
     const classes = classnames('dropdown', className, {
       'dropdown--wide': wide,
@@ -361,7 +393,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       const dropdownButtons: ReactNode[] = [];
       const dropdownItems: ReactNode[] = [];
 
-      const allChildren = _getFlattenedChildren(children);
+      const allChildren: ReactElement[] = _getFlattenedChildren(children).filter(isValidElement);
 
       const visibleChildren = allChildren.filter((child, i) => {
         if (!isDropdownItem(child)) {
@@ -378,7 +410,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         if (isDropdownButton(child)) {
           dropdownButtons.push(child);
         } else if (isDropdownItem(child)) {
-          const active = i === filterActiveIndex;
+          const active = i === filterActiveIndex || child.props.selected;
           const hide = !visibleChildren.includes(child);
           dropdownItems.push(
             <li
