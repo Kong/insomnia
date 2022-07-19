@@ -35,7 +35,7 @@ import { exchangeCodeForGitLabToken } from '../../../sync/git/gitlab-oauth-provi
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
-import { currentLoginModalHandle, LoginModal } from '../../components/modals/login-modal';
+import { currentLoginModalHandle, LoginModalHandle } from '../../components/modals/login-modal';
 import { SelectModal } from '../../components/modals/select-modal';
 import {
   SettingsModal,
@@ -202,7 +202,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       break;
 
     case COMMAND_LOGIN:
-      showModal(LoginModal, {
+      showModal(LoginModalHandle, {
         title: args.title,
         message: args.message,
       });
@@ -306,7 +306,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
     }
 
     case COMMAND_FINISH_AUTHENTICATION: {
-      if (submitAuthCode) {
+      if (currentLoginModalHandle) {
         currentLoginModalHandle?.submitAuthCode(args.box);
       } else {
         console.log(`Received auth box, but no login modal... ${command}`);
