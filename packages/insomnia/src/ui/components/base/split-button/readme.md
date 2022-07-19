@@ -10,7 +10,7 @@ The WebSocket hook API and the UI component APIs are totally imaginery.
 
 ```jsx
 import React, { useState } from 'react';
-import { ButtonGroup, Button } from '@zendeskgarden/react-buttons';
+import { SplitButton } from '../components/base/split-button';
 
 const SendButtonForWebSocket = ({ workspaceId }) => {
   const { idle, connection, connect, close } = useWebSocket(workspaceId);
