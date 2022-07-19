@@ -34,7 +34,6 @@ import {
   selectSidebarChildren,
   selectSidebarFilter,
 } from '../redux/sidebar-selectors';
-import { SplitButton } from './base/split-button';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
@@ -376,33 +375,33 @@ export const WrapperDebug: FC<Props> = ({
   );
 };
 
-function usePollingConnectionStatus(connectionId?: string) {
+function usePollingConnectionStatus(requestId?: string) {
   const [connectionStatus, setConnectionStatus] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    console.log(connectionId);
+    console.log('connected to:', requestId);
     async function syncWebSocketConnection() {
-      if (connectionId) {
-        const c = await window.main.getWebSocketConnectionStatus({ connectionId });
+      if (requestId) {
+        const c = await window.main.getWebSocketConnectionStatus({ requestId });
         isMounted && setConnectionStatus(c);
       }
     }
 
-    connectionId && syncWebSocketConnection();
+    requestId && syncWebSocketConnection();
     const timeoutId = setInterval(() => syncWebSocketConnection(), 500);
 
     return () => {
       isMounted = false;
       clearInterval(timeoutId);
     };
-  }, [connectionId]);
+  }, [requestId]);
 
   return connectionStatus;
 }
 
 const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
-  const isConnected = usePollingConnectionStatus(request.connectionId);
+  const isConnected = usePollingConnectionStatus(request._id);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
   return (
@@ -411,10 +410,11 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
         <form
           onSubmit={e => {
             e.preventDefault();
+            console.log('connection:', isConnected, request._id);
 
-            if (isConnected && request.connectionId) {
+            if (isConnected) {
               window.main.close({
-                connectionId: request.connectionId,
+                requestId: request._id,
               });
             } else {
               const formData = new FormData(e.target);
@@ -433,7 +433,7 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
       <form
         onSubmit={e => {
           e.preventDefault();
-          if (!request.connectionId) {
+          if (!request._id) {
             console.warn('Sending message to closed connection');
             return;
           }
@@ -441,7 +441,7 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
           console.log({ message });
           window.main.message({
             message,
-            connectionId: request.connectionId,
+            requestId: request._id,
           });
         }}
       >
@@ -459,42 +459,42 @@ const WSLeftPanel = ({ request }: { request: WebSocketRequest }) => {
   );
 };
 
-function useEventLogQuery(connectionId?: string) {
+function useEventLogQuery(requestId?: string) {
   const [eventLog, setEventLog] = useState<EventLog>([]);
 
   useEffect(() => {
     let isMounted = true;
     async function syncWebSocketEventLog() {
-      if (connectionId) {
-        const e = await window.main.getWebSocketEventLog({ connectionId });
+      if (requestId) {
+        const e = await window.main.getWebSocketEventLog({ requestId });
         isMounted && setEventLog(e);
       }
     }
-    connectionId && syncWebSocketEventLog();
+    requestId && syncWebSocketEventLog();
 
     return () => {
       isMounted = false;
     };
-  }, [connectionId]);
+  }, [requestId]);
 
   return { eventLog, setEventLog };
 }
-const useEventSubscription = (connectionId?: string) => {
-  const { eventLog, setEventLog } = useEventLogQuery(connectionId);
+const useEventSubscription = (requestId?: string) => {
+  const { eventLog, setEventLog } = useEventLogQuery(requestId);
   useEffect(() => {
     const unsubscribe = window.main.on('websocket.log', (_, lastEvent) => {
-      if (lastEvent.connectionId === connectionId) {
+      if (lastEvent.requestId === requestId) {
         setEventLog(events => [...events, lastEvent]);
       }
     });
     return unsubscribe;
-  }, [connectionId, setEventLog]);
+  }, [requestId, setEventLog]);
   return eventLog;
 };
 
 const WSRightPanel = ({ request }: { request: WebSocketRequest }) => {
   // TODO: add and fill in table
-  const eventLog = useEventSubscription(request.connectionId);
+  const eventLog = useEventSubscription(request._id);
   // reverse
   const [filter, setFilter] = useState('');
   const list = eventLog.filter(m => m.message.toLowerCase().includes(filter.toLowerCase())) || [];

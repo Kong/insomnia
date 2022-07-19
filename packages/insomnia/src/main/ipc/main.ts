@@ -18,11 +18,11 @@ export interface MainBridgeAPI {
   createWebsocketRequest: (options: { workspaceId: string }) => Promise<string>;
   getWebSocketRequestsByParentId: (options: { workspaceId: string }) => Promise<WebSocketRequest[]>;
   open: (options: { url: string; requestId: string }) => void;
-  message: (options: { message: string; connectionId: string }) => void;
-  close: (options: { connectionId: string }) => void;
+  message: (options: { message: string; requestId: string }) => void;
+  close: (options: { requestId: string }) => void;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
-  getWebSocketConnectionStatus: (options: { connectionId: string }) => Promise<boolean>;
-  getWebSocketEventLog: (options: { connectionId: string }) => Promise<EventLog>;
+  getWebSocketConnectionStatus: (options: { requestId: string }) => Promise<boolean>;
+  getWebSocketEventLog: (options: { requestId: string }) => Promise<EventLog>;
 }
 export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
@@ -63,15 +63,14 @@ export interface WebSocketRequest {
   workspaceId: string;
   name: string;
   url?: string;
-  connectionId?: string;
 }
 export type EventLog = ReturnType<typeof makeNewEvent>[];
-const makeNewEvent = (message: string, connectionId: string, type: 'OUTGOING' | 'INCOMING' | 'INFO') => {
+const makeNewEvent = (message: string, requestId: string, type: 'OUTGOING' | 'INCOMING' | 'INFO') => {
   return {
     _id: uuidv4(),
     createdAt: new Date().toISOString(),
     message,
-    connectionId,
+    requestId,
     type,
   };
 };
@@ -82,7 +81,7 @@ function setupWebSockets() {
   const WebSocketEventLog = new Map<string, EventLog>();
   // TODO: persist somewhere
   // TODO: Limit the active connections to a certain number
-  let websocketsRequests: WebSocketRequest[] = [];
+  const websocketsRequests: WebSocketRequest[] = [];
 
   ipcMain.handle('createWebsocketRequest', (_, options: { workspaceId: string }) => {
     // TODO: figure out what to do with this
@@ -99,70 +98,63 @@ function setupWebSockets() {
     return websocketsRequests.filter(request => request.workspaceId === options.workspaceId);
   });
 
-  ipcMain.handle('getWebSocketConnectionStatus', (_, options: { connectionId: string }) => {
-    return !!WebSocketInstances.get(options.connectionId);
+  ipcMain.handle('getWebSocketConnectionStatus', (_, options: { requestId: string }) => {
+    return !!WebSocketInstances.get(options.requestId);
   });
 
-  ipcMain.handle('getWebSocketEventLog', (_, options: { connectionId: string }) => {
-    return WebSocketEventLog.get(options.connectionId) || [];
+  ipcMain.handle('getWebSocketEventLog', (_, options: { requestId: string }) => {
+    return WebSocketEventLog.get(options.requestId) || [];
   });
 
   ipcMain.on('websocket.open', (event, options: { url: string; requestId: string }) => {
     console.log('Connecting to ' + options.url);
     try {
       const ws = new WebSocket(options.url);
-      const connectionId = uuidv4();
-      WebSocketInstances.set(connectionId, ws);
+      WebSocketInstances.set(options.requestId, ws);
       ws.on('open', () => {
-        websocketsRequests = websocketsRequests.map(request =>
-          request._id === options.requestId ?
-            { ...request, connectionId }
-            : request
-        );
-        WebSocketEventLog.set(connectionId, [makeNewEvent('Connected to ' + options.url, connectionId, 'INFO')]);
-      });
-
-      ws.on('message', buffer => {
-        const msgs = WebSocketEventLog.get(connectionId) || [];
-        const lastMessage = makeNewEvent(buffer.toString().slice(0, 50), connectionId, 'INCOMING');
-        WebSocketEventLog.set(connectionId, [...msgs, lastMessage]);
+        const lastMessage = makeNewEvent('Connected to ' + options.url, options.requestId, 'INFO');
+        WebSocketEventLog.set(options.requestId, [lastMessage]);
         event.sender.send('websocket.log', lastMessage);
       });
-
+      ws.on('message', buffer => {
+        const msgs = WebSocketEventLog.get(options.requestId) || [];
+        const lastMessage = makeNewEvent(buffer.toString().slice(0, 50), options.requestId, 'INCOMING');
+        WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
+        event.sender.send('websocket.log', lastMessage);
+      });
       ws.on('close', () => {
         console.log('Disconnected from ', options.url);
-        const msgs = WebSocketEventLog.get(connectionId) || [];
-        const lastMessage = makeNewEvent('Disconnected from ' + options.url, connectionId, 'INFO');
-        WebSocketEventLog.set(connectionId, [...msgs, lastMessage]);
+        const msgs = WebSocketEventLog.get(options.requestId) || [];
+        const lastMessage = makeNewEvent('Disconnected from ' + options.url, options.requestId, 'INFO');
+        WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
         event.sender.send('websocket.log', lastMessage);
-        WebSocketInstances.delete(connectionId);
+        WebSocketInstances.delete(options.requestId);
       });
-
     } catch (e) {
       console.error(e);
       throw e;
     }
   });
 
-  ipcMain.handle('websocket.message', (event, options: { message: string; connectionId: string }) => {
-    const ws = WebSocketInstances.get(options.connectionId);
+  ipcMain.on('websocket.message', (event, options: { message: string; requestId: string }) => {
+    const ws = WebSocketInstances.get(options.requestId);
     if (ws) {
       ws.send(options.message);
-      const msgs = WebSocketEventLog.get(options.connectionId) || [];
-      const lastMessage = makeNewEvent(options.message, options.connectionId, 'OUTGOING');
-      WebSocketEventLog.set(options.connectionId, [...msgs, lastMessage]);
+      const msgs = WebSocketEventLog.get(options.requestId) || [];
+      const lastMessage = makeNewEvent(options.message, options.requestId, 'OUTGOING');
+      WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
       event.sender.send('websocket.log', lastMessage);
     } else {
-      console.warn('No websocket found for connectionId: ' + options.connectionId);
+      console.warn('No websocket found for requestId: ' + options.requestId);
     }
   });
 
-  ipcMain.handle('websocket.close', (_, options: { connectionId: string }) => {
-    const ws = WebSocketInstances.get(options.connectionId);
+  ipcMain.on('websocket.close', (_, options: { requestId: string }) => {
+    const ws = WebSocketInstances.get(options.requestId);
     if (ws) {
       ws.close();
     } else {
-      console.warn('No websocket found for connectionId: ' + options.connectionId);
+      console.warn('No websocket found for requestId: ' + options.requestId);
     }
   });
 }
