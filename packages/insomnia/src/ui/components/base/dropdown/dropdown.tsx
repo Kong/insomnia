@@ -33,7 +33,6 @@ export interface DropdownProps {
   className?: string;
   style?: CSSProperties;
   beside?: boolean;
-  disabled?: boolean;
 }
 
 export const dropdownsContainerId = 'dropdowns-container';

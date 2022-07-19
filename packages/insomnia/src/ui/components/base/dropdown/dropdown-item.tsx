@@ -15,7 +15,6 @@ interface Props {
   children: ReactNode;
   className?: string;
   color?: string;
-  selected?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
