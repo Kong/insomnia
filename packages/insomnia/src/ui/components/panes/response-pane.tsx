@@ -14,7 +14,6 @@ import type { Environment } from '../../../models/environment';
 import type { Request } from '../../../models/request';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
-import type { UnitTestResult } from '../../../models/unit-test-result';
 import { cancelRequestById } from '../../../network/network';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
@@ -52,41 +51,44 @@ interface Props {
   requestVersions: RequestVersion[];
   response?: Response | null;
   responses: Response[];
-  unitTestResult?: UnitTestResult | null;
 }
-export const ResponsePane: FC<Props> = props => {
-  const {
-    disableHtmlPreviewJs,
-    editorFontSize,
-    environment,
-    filter,
-    disableResponsePreviewLinks,
-    filterHistory,
-    handleDeleteResponse,
-    handleDeleteResponses,
-    handleSetActiveResponse,
-    handleSetFilter,
-    handleSetPreviewMode,
-    handleShowRequestSettings,
-    loadStartTime,
-    previewMode,
-    request,
-    requestVersions,
-    response,
-    responses,
-  } = props;
+export const ResponsePane: FC<Props> = ({
+  disableHtmlPreviewJs,
+  editorFontSize,
+  environment,
+  filter,
+  disableResponsePreviewLinks,
+  filterHistory,
+  handleDeleteResponse,
+  handleDeleteResponses,
+  handleSetActiveResponse,
+  handleSetFilter,
+  handleSetPreviewMode,
+  handleShowRequestSettings,
+  loadStartTime,
+  previewMode,
+  request,
+  requestVersions,
+  response,
+  responses,
+}) => {
+
   const responseViewerRef = useRef<ResponseViewer>(null);
   const _handleGetResponseBody = (): Buffer | null => {
-    if (!props.response) {
+    if (!response) {
       return null;
     }
 
-    return models.response.getBodyBuffer(props.response);
+    return models.response.getBodyBuffer(response);
   };
+  async function _handleCopyResponseToClipboard() {
+    const bodyBuffer = _handleGetResponseBody();
+    if (bodyBuffer) {
+      clipboard.writeText(bodyBuffer.toString('utf8'));
+    }
+  }
 
   async function _handleDownloadResponseBody(prettify: boolean) {
-    const { response, request } = props;
-
     if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
@@ -136,8 +138,6 @@ export const ResponsePane: FC<Props> = props => {
   }
 
   async function _handleDownloadFullResponseBody() {
-    const { response, request } = props;
-
     if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
@@ -173,20 +173,7 @@ export const ResponsePane: FC<Props> = props => {
     }
   }
 
-  async function _handleCopyResponseToClipboard() {
-    if (!props.response) {
-      return;
-    }
-
-    const bodyBuffer = models.response.getBodyBuffer(props.response);
-    if (bodyBuffer) {
-      clipboard.writeText(bodyBuffer.toString('utf8'));
-    }
-  }
-
   async function _handleExportAsHAR() {
-    const { response, request } = props;
-
     if (!response) {
       // Should never happen
       console.warn('No response to download');
