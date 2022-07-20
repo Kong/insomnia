@@ -1,5 +1,5 @@
 import { Sidebar } from 'insomnia-components';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 import styled from 'styled-components';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -17,34 +17,14 @@ const StyledSpecEditorSidebar = styled.div`
 `;
 
 export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) => {
-  const [isSpecJSONParsable, setIsSpecJSONParsable] = useState(false);
+  const onClick = (...itemPath: any[]): void => {
+    const scrollPosition = { start: { line: 0, col: 0 }, end: { line: 0, col: 200 } };
 
-  useEffect(() => {
     try {
       JSON.parse(apiSpec.contents);
-    } catch (error) {
-      setIsSpecJSONParsable(false);
-      return;
-    }
-    setIsSpecJSONParsable(true);
-  }, [apiSpec.contents]);
-
-  const onClick = (...itemPath: any[]): void => {
-    const scrollPosition = {
-      start: {
-        line: 0,
-        col: 0,
-      },
-      end: {
-        line: 0,
-        col: 200,
-      },
-    };
-
-    // Account for JSON (as string) line number shift
-    if (isSpecJSONParsable) {
+      // Account for JSON (as string) line number shift
       scrollPosition.start.line = 1;
-    }
+    } catch  {}
 
     const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
