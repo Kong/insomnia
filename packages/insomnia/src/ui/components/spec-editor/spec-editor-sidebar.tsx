@@ -15,22 +15,21 @@ const StyledSpecEditorSidebar = styled.div`
   overflow: hidden;
   overflow-y: auto;
 `;
+
 export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) => {
-  const [specContentJSON, setSpecContentJSON] = useState(false);
+  const [isSpecJSONParsable, setIsSpecJSONParsable] = useState(false);
 
   useEffect(() => {
     try {
       JSON.parse(apiSpec.contents);
     } catch (error) {
-      setSpecContentJSON(false);
+      setIsSpecJSONParsable(false);
       return;
     }
-    setSpecContentJSON(true);
+    setIsSpecJSONParsable(true);
   }, [apiSpec.contents]);
 
   const onClick = (...itemPath: any[]): void => {
-    const sourceMap = new YAMLSourceMap();
-    const { contents } = apiSpec;
     const scrollPosition = {
       start: {
         line: 0,
@@ -43,21 +42,21 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
     };
 
     // Account for JSON (as string) line number shift
-    if (specContentJSON) {
+    if (isSpecJSONParsable) {
       scrollPosition.start.line = 1;
     }
 
+    const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
-      YAML.parseDocument(contents, {
+      YAML.parseDocument(apiSpec.contents, {
         keepCstNodes: true,
       }),
     );
     const itemMappedPosition = sourceMap.lookup(itemPath, specMap);
+    if (itemMappedPosition) {
+      scrollPosition.start.line += itemMappedPosition.start.line;
+    }
     const isServersSection = itemPath[0] === 'servers';
-    // TODO: remove non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    scrollPosition.start.line += itemMappedPosition!.start.line;
-
     if (!isServersSection) {
       scrollPosition.start.line -= 1;
     }
