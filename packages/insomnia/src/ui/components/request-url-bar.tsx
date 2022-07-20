@@ -6,7 +6,7 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import type { Request } from '../../models/request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { Dropdown } from './base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
 import { DropdownHint } from './base/dropdown/dropdown-hint';
@@ -51,8 +51,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   uniquenessKey,
 }, ref) => {
 
-  const methodDropdownRef = useRef<Dropdown>(null);
-  const dropdownRef = useRef<Dropdown>(null);
+  const methodDropdownRef = useRef<DropdownHandle>(null);
+  const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditor>(null);
 
   const focusInput = useCallback(() => {

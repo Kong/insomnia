@@ -2,7 +2,7 @@ import React, { forwardRef, useCallback, useState } from 'react';
 
 import * as constants from '../../../common/constants';
 import { METHOD_GRPC } from '../../../common/constants';
-import { Dropdown } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -19,7 +19,7 @@ interface Props {
   showGrpc?: boolean;
 }
 
-export const MethodDropdown = forwardRef<Dropdown, Props>(({
+export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
   className,
   method,
   onChange,

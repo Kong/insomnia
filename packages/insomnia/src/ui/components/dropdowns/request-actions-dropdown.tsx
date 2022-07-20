@@ -15,7 +15,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
+import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -37,7 +37,7 @@ interface Props extends Pick<DropdownProps, 'right'> {
   requestGroup?: RequestGroup;
 }
 
-export const RequestActionsDropdown = forwardRef<Dropdown, Props>(({
+export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   activeEnvironment,
   activeProject,
   handleCopyAsCurl,
@@ -49,6 +49,7 @@ export const RequestActionsDropdown = forwardRef<Dropdown, Props>(({
   isPinned,
   request,
   requestGroup,
+  right,
 }, ref) => {
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
@@ -109,7 +110,7 @@ export const RequestActionsDropdown = forwardRef<Dropdown, Props>(({
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown ref={ref} onOpen={onOpen}>
+    <Dropdown right={right} ref={ref} onOpen={onOpen}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>

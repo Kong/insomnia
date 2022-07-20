@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { createRef, PureComponent } from 'react';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -15,6 +15,7 @@ import { DebouncedInput } from '../base/debounced-input';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+import { UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
@@ -42,7 +43,7 @@ interface RequestSettingsModalOptions {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedRequestSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  _editor: MarkdownEditor | null = null;
+  _editorRef = createRef<UnconnectedCodeEditor>();
 
   state: State = {
     request: null,
@@ -57,10 +58,6 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
 
   _setModalRef(modal: Modal) {
     this.modal = modal;
-  }
-
-  _setEditorRef(editor: MarkdownEditor) {
-    this._editor = editor;
   }
 
   async _updateRequestSettingBoolean(event: React.SyntheticEvent<HTMLInputElement>) {
@@ -216,7 +213,7 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor?.focus();
+            this._editorRef.current?.focus();
           }, 400);
         }
       },
@@ -331,7 +328,7 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
 
     return showDescription ? (
       <MarkdownEditor
-        ref={this._setEditorRef}
+        ref={this._editorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
         placeholder="Write a description"

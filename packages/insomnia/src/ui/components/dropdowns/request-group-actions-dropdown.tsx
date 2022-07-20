@@ -13,7 +13,7 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
-import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
+import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -42,7 +42,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 }, ref) => {
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
-  const dropdownRef = useRef<Dropdown>(null);
+  const dropdownRef = useRef<DropdownHandle>(null);
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);

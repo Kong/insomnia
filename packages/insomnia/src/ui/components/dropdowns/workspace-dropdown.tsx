@@ -14,7 +14,7 @@ import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../..
 import * as pluginContexts from '../../../plugins/context';
 import { selectIsLoading } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -36,7 +36,7 @@ export const WorkspaceDropdown: FC = () => {
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
-  const dropdownRef = useRef<Dropdown>(null);
+  const dropdownRef = useRef<DropdownHandle>(null);
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });

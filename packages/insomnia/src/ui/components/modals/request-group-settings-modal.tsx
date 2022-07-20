@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as React from 'react';
+import React, { createRef } from 'react';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -13,6 +13,7 @@ import { DebouncedInput } from '../base/debounced-input';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+import { UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
@@ -40,7 +41,7 @@ interface RequestGroupSettingsModalOptions {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null = null;
-  _editor: MarkdownEditor | null = null;
+  _editorRef = createRef<UnconnectedCodeEditor>();
 
   state: State = {
     requestGroup: null,
@@ -55,10 +56,6 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
 
   _setModalRef(modal: Modal) {
     this.modal = modal;
-  }
-
-  _setEditorRef(ediotr: MarkdownEditor) {
-    this._editor = ediotr;
   }
 
   async _handleNameChange(name: string) {
@@ -181,7 +178,7 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor?.focus();
+            this._editorRef.current?.focus();
           }, 400);
         }
       },
@@ -204,7 +201,7 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
 
     return showDescription ? (
       <MarkdownEditor
-        ref={this._setEditorRef}
+        ref={this._editorRef}
         className="margin-top"
         defaultPreviewMode={defaultPreviewMode}
         placeholder="Write a description"

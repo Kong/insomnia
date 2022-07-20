@@ -1,13 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { ButtonHTMLAttributes, CSSProperties, PureComponent, ReactNode } from 'react';
-
-import { AUTOBIND_CFG } from '../../../common/constants';
-
+import React, { ButtonHTMLAttributes, CSSProperties, PropsWithChildren } from 'react';
 export interface ButtonProps<T> {
-  children: ReactNode;
   value?: T;
   className?: string;
-  onDisabledClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
   disabled?: boolean;
   tabIndex?: number;
@@ -17,34 +11,36 @@ export interface ButtonProps<T> {
   style?: CSSProperties;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Button<T> extends PureComponent<ButtonProps<T>> {
-  _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
-    const { onClick, onDisabledClick, disabled, value } = this.props;
-    const fn = disabled ? onDisabledClick : onClick;
+export const Button = <T, >({
+  value,
+  disabled,
+  tabIndex,
+  className,
+  type,
+  id,
+  style,
+  title,
+  onClick,
+  children,
+}: PropsWithChildren<ButtonProps<T>>) => {
+  /**
+   * This function fires when user clicks the button
+   * @param e The mouse click event
+   */
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => onClick?.(e, value);
 
-    if (this.props.hasOwnProperty('value')) {
-      fn?.(event, value);
-    } else {
-      fn?.(event);
-    }
-  }
-
-  render() {
-    const { children, disabled, tabIndex, className, type, id, style, title } = this.props;
-    return (
-      <button
-        disabled={disabled}
-        id={id}
-        type={type}
-        tabIndex={tabIndex}
-        className={className}
-        onClick={this._handleClick}
-        style={style}
-        title={title}
-      >
-        {children}
-      </button>
-    );
-  }
-}
+  return (
+    <button
+      disabled={disabled}
+      id={id}
+      type={type}
+      tabIndex={tabIndex}
+      className={className}
+      onClick={handleClick}
+      style={style}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+};
