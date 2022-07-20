@@ -1,13 +1,8 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { createRef, FC, PureComponent } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   defaultValue: string;
   onChange: Function;
 }
@@ -20,58 +15,19 @@ interface State {
   variableSource: string;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class VariableEditorInternal extends PureComponent<Props, State> {
-  textAreaRef = createRef<HTMLTextAreaElement>();
-  _select: HTMLSelectElement | null = null;
+export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const { handleRender, handleGetRenderContext } = useNunjucks();
+  const [state, setState] = useState<State>({
+    variables: [],
+    value: `{{ ${defaultValue.replace(/\s*}}$/, '').replace(/^{{\s*/, '')} }}`,
+    preview: '',
+    error: '',
+    variableSource: '',
+  });
 
-  constructor(props: Props) {
-    super(props);
-    const inner = props.defaultValue.replace(/\s*}}$/, '').replace(/^{{\s*/, '');
-    this.state = {
-      variables: [],
-      value: `{{ ${inner} }}`,
-      preview: '',
-      error: '',
-      variableSource: '',
-    };
-  }
-
-  componentDidMount() {
-    this._update(this.state.value, true);
-
-    this._resize();
-  }
-
-  componentDidUpdate() {
-    this._resize();
-  }
-
-  _handleChange(event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) {
-    const name = event.target.value;
-    this._update(name);
-  }
-
-  _resize() {
-    setTimeout(() => {
-      const element = this.textAreaRef.current;
-      // @ts-expect-error -- TSCONVERSION null coalesce
-      element.style.cssText = 'height:auto';
-      // @ts-expect-error -- TSCONVERSION null coalesce
-      element.style.cssText = `height:${element.scrollHeight}px;overflow:hidden`;
-    }, 200);
-  }
-
-  _setSelectRef(select: HTMLSelectElement) {
-    this._select = select;
-    // Let it render, then focus the input
-    setTimeout(() => {
-      this._select?.focus();
-    }, 100);
-  }
-
-  async _update(value: string, noCallback = false) {
-    const { handleRender } = this.props;
+  const _update = useCallback(async (value: string, noCallback = false) => {
     const cleanedValue = value
       .replace(/^{%/, '')
       .replace(/%}$/, '')
@@ -87,13 +43,13 @@ class VariableEditorInternal extends PureComponent<Props, State> {
       error = err.message;
     }
 
-    const context = await this.props.handleGetRenderContext();
+    const context = await handleGetRenderContext();
     const variables = context.keys.sort((a, b) => (a.name < b.name ? -1 : 1));
     const variableSource = context.context.getKeysContext().keyContext[cleanedValue] || '';
 
     // Hack to skip updating if we unmounted for some reason
-    if (this._select) {
-      this.setState({
+    if (selectRef.current) {
+      setState({
         preview,
         error,
         variables,
@@ -102,51 +58,57 @@ class VariableEditorInternal extends PureComponent<Props, State> {
       });
     }
 
-    // Call the callback if we need to
+    // Call the callback except in the useEffect
     if (!noCallback) {
-      this.props.onChange(value);
+      onChange(value);
     }
-  }
+  }, [handleGetRenderContext, handleRender, onChange]);
 
-  render() {
-    const { error, value, preview, variables, variableSource } = this.state;
-    const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
-    return (
-      <div>
-        <div className="form-control form-control--outlined">
-          <label>
-            Environment Variable
-            <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
-              <option value={"{{ 'my custom template logic' | urlencode }}"}>-- Custom --</option>
-              {variables.map((v, i) => (
-                <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        {isOther && (
-          <div className="form-control form-control--outlined">
-            <input type="text" defaultValue={value} onChange={this._handleChange} />
-          </div>
-        )}
-        <div className="form-control form-control--outlined">
-          <label>
-            Live Preview {variableSource && ` - {source: ${variableSource} }`}
-            {error ? (
-              <textarea className="danger" value={error || 'Error'} readOnly />
-            ) : (
-              <textarea ref={this.textAreaRef} value={preview || ''} readOnly />
-            )}
-          </label>
-        </div>
+  useEffect(() => {
+    _update(state.value, true);
+    const _resize = () => {
+      setTimeout(() => {
+        if (textAreaRef.current) {
+          textAreaRef.current.style.cssText = 'height:auto';
+          textAreaRef.current.style.cssText = `height:${textAreaRef.current.scrollHeight}px;overflow:hidden`;
+        }
+      }, 200);
+    };
+    _resize();
+  }, [_update, state.value]);
+
+  const { error, value, preview, variables, variableSource } = state;
+  const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
+  return (
+    <div>
+      <div className="form-control form-control--outlined">
+        <label>
+          Environment Variable
+          <select ref={selectRef} value={value} onChange={event => _update(event.target.value)}>
+            <option value={"{{ 'my custom template logic' | urlencode }}"}>-- Custom --</option>
+            {variables.map((v, i) => (
+              <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
+                {v.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-    );
-  }
-}
-
-export const VariableEditor: FC<Omit<Props, 'handleRender' | 'handleGetRenderContext'>> = props => {
-  const { handleRender, handleGetRenderContext } = useNunjucks();
-  return <VariableEditorInternal {...props} handleRender={handleRender} handleGetRenderContext={handleGetRenderContext} />;
+      {isOther && (
+        <div className="form-control form-control--outlined">
+          <input type="text" defaultValue={value} onChange={event => _update(event.target.value)} />
+        </div>
+      )}
+      <div className="form-control form-control--outlined">
+        <label>
+          Live Preview {variableSource && ` - {source: ${variableSource} }`}
+          {error ? (
+            <textarea className="danger" value={error || 'Error'} readOnly />
+          ) : (
+            <textarea ref={textAreaRef} value={preview || ''} readOnly />
+          )}
+        </label>
+      </div>
+    </div>
+  );
 };
