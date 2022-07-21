@@ -5,16 +5,17 @@ import { PromptModal, PromptModalOptions } from './prompt-modal';
 
 const modals: Record<string, any> = {};
 
-export function registerModal(instance: any) {
+export function registerModal(instance: any, modalName?: string) {
   if (instance === null) {
     // Modal was unmounted
     return;
   }
 
-  modals[instance.constructor.name] = instance;
+  modals[modalName ?? instance.constructor.name] = instance;
 }
 
 export function showModal(modalCls: any, ...args: any[]) {
+  console.log(modalCls);
   trackPageView(modalCls.name);
   return _getModal(modalCls).show(...args);
 }
@@ -43,7 +44,7 @@ export function hideAllModals() {
 }
 
 function _getModal(modalCls: any) {
-  const m = modals[modalCls.name || modalCls.WrappedComponent?.name];
+  const m = modals[modalCls.name || modalCls.WrappedComponent?.name || modalCls.displayName];
 
   if (!m) {
     throw new Error('Modal was not registered with the app');
