@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useState } from 'react';
+import React, { FC, Fragment, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
@@ -11,7 +11,6 @@ import { LoginModal } from '../modals/login-modal';
 
 export const Account: FC = () => {
   const settings = useSelector(selectSettings);
-  const disablePaidFeatureAds = settings.disablePaidFeatureAds;
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
@@ -20,39 +19,17 @@ export const Account: FC = () => {
   const [error, setError] = useState('');
   const [finishedResetting, setFinishedResetting] = useState(false);
 
-  async function handleShowChangePasswordForm() {
-    setShowChangePassword(!showChangePassword);
-    setFinishedResetting(false);
-  }
-
-  function handleChangeCode(event: React.SyntheticEvent<HTMLInputElement>) {
-    setCode(event.currentTarget.value);
-  }
-
-  function handleChangePassword(event: React.SyntheticEvent<HTMLInputElement>) {
-    setPassword(event.currentTarget.value);
-  }
-
-  function handleChangePassword2(event: React.SyntheticEvent<HTMLInputElement>) {
-    setPassword2(event.currentTarget.value);
-  }
-
-  async function handleSubmitPasswordChange(event: React.SyntheticEvent<HTMLFormElement>) {
+  const handleSubmitPasswordChange = useCallback(async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
-    let error = '';
-
     if (password !== password2) {
-      error = 'Passwords did not match';
-    } else if (!code) {
-      error = 'Code was not provided';
-    }
-
-    if (error) {
-      setError(error);
+      setError('Passwords did not match');
       return;
     }
-
+    if (!code) {
+      setError('Code was not provided');
+      return;
+    }
     try {
       await session.changePasswordWithToken(password, code);
     } catch (err) {
@@ -62,32 +39,13 @@ export const Account: FC = () => {
     setError('');
     setFinishedResetting(true);
     setShowChangePassword(false);
-  }
+  }, [code, password, password2]);
 
-  async function handleLogout() {
-    await session.logout();
-  }
-
-  function handleLogin(event: React.SyntheticEvent<HTMLAnchorElement>) {
+  const handleLogin = useCallback((event: React.SyntheticEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     hideAllModals();
     showModal(LoginModal);
-  }
-
-  async function _sendCode() {
-    try {
-      await session.sendPasswordChangeCode();
-    } catch (err) {
-      setError(err.message);
-      return;
-    }
-    setCodeSent(true);
-  }
-
-  async function handleSendCode(event: React.SyntheticEvent<HTMLAnchorElement>) {
-    event.preventDefault();
-    await _sendCode();
-  }
+  }, []);
 
   return session.isLoggedIn() ? (
     <Fragment>
@@ -101,12 +59,15 @@ export const Account: FC = () => {
         <Link button href="https://app.insomnia.rest" className="btn btn--clicky">
           Manage Account
         </Link>
-        <PromptButton className="space-left btn btn--clicky" onClick={handleLogout}>
+        <PromptButton className="space-left btn btn--clicky" onClick={() => session.logout()}>
           Sign Out
         </PromptButton>
         <button
           className="space-left btn btn--clicky"
-          onClick={handleShowChangePasswordForm}
+          onClick={() => {
+            setShowChangePassword(!showChangePassword);
+            setFinishedResetting(false);
+          }}
         >
           Change Password
         </button>
@@ -126,7 +87,7 @@ export const Account: FC = () => {
               <input
                 type="password"
                 placeholder="•••••••••••••••••"
-                onChange={handleChangePassword}
+                onChange={event => setPassword(event.currentTarget.value)}
               />
             </label>
           </div>
@@ -136,7 +97,7 @@ export const Account: FC = () => {
               <input
                 type="password"
                 placeholder="•••••••••••••••••"
-                onChange={handleChangePassword2}
+                onChange={event => setPassword2(event.currentTarget.value)}
               />
             </label>
           </div>
@@ -148,14 +109,26 @@ export const Account: FC = () => {
                 type="text"
                 defaultValue={code}
                 placeholder="aa8b0d1ea9"
-                onChange={handleChangeCode}
+                onChange={event => setCode(event.currentTarget.value)}
               />
             </label>
           </div>
           <div className="row-spaced row--top">
             <div>
               {codeSent ? 'A code was sent to your email' : 'Looking for a code?'}{' '}
-              <Link href="#" onClick={handleSendCode}>
+              <Link
+                href="#"
+                onClick={async event => {
+                  event.preventDefault();
+                  try {
+                    await session.sendPasswordChangeCode();
+                  } catch (err) {
+                    setError(err.message);
+                    return;
+                  }
+                  setCodeSent(true);
+                }}
+              >
                 Email Me a Code
               </Link>
             </div>
@@ -172,7 +145,7 @@ export const Account: FC = () => {
         </form>
       )}
     </Fragment>
-  ) : (disablePaidFeatureAds ? (
+  ) : (settings.disablePaidFeatureAds ? (
     <a href="#" onClick={handleLogin} className="theme--link">
       Log In
     </a>
