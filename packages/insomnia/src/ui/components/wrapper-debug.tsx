@@ -359,7 +359,6 @@ function usePollingConnectionStatus(requestId?: string) {
   return connectionStatus;
 }
 const StretchedPaneHeader = styled(PaneHeader)({ '&&': { alignItems: 'stretch' } });
-const RightPaneHeader = styled(PaneHeader)({ '&&': { justifyContent: 'end' } });
 const WSLeftPanel = ({ request }: { request: Request }) => {
   const isConnected = usePollingConnectionStatus(request._id);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
@@ -423,12 +422,13 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
               </TabList>
             </div>
 
-            <button
+            <StyledButton
               type="submit"
+              disabled={!isConnected}
               className="btn btn--compact btn--clicky margin-sm bg-surprise"
             >
               Send <i className="fa fa-arrow-right" />
-            </button>
+            </StyledButton>
           </div>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <CodeEditor
@@ -443,7 +443,11 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
     </Pane >
   );
 };
-
+const StyledButton = styled('button')`
+&:focus,
+&:hover {
+  filter: brightness(0.8);
+}`;
 function useEventLogQuery(requestId?: string) {
   const [eventLog, setEventLog] = useState<EventLog>([]);
 
@@ -478,14 +482,11 @@ const useEventSubscription = (requestId?: string) => {
 };
 
 const WSRightPanel = ({ request }: { request: Request }) => {
-  const [selected, setSelected] = useState<EventLog | null>(null);
+  const [selected, setSelected] = useState<EventLog[0] | null>(null);
   // TODO: add and fill in table
   const eventLog = useEventSubscription(request._id);
   // reverse
   const list = eventLog || [];
-  const handleOnRowSelect = (event: EventLog) => {
-    setSelected(event);
-  };
   return (
     <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
       <TabList>
@@ -498,22 +499,24 @@ const WSRightPanel = ({ request }: { request: Request }) => {
           <div style={{ height: '50%', display: 'flex' }}>
             <div style={{ width: '100%' }}>
               {list ?
-                <table className="table--fancy table--striped table--compact selectable scrollable">
-                  <tbody>
-                    {[...list].reverse().map(event => (
-                      <tr key={event._id} onClick={() => handleOnRowSelect(event)}>
-                        <td>{event.type === 'OUTGOING' ? '⬆️' : event.type === 'INFO' ? 'ℹ️' : '⬇️'}</td>
-                        <td>{event.message.slice(0, 50)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="selectable scrollable" style={{ height: '100%' }}>
+                  <table className="table--fancy table--striped table--compact">
+                    <tbody>
+                      {[...list].reverse().map(event => (
+                        <tr style={{ border: selected?._id === event._id ? '1px solid var(--hl-md)' : '' }} key={event._id} onClick={() => setSelected(event)}>
+                          <td>{event.type === 'OUTGOING' ? '⬆️' : event.type === 'INFO' ? 'ℹ️' : '⬇️'}</td>
+                          <td>{event.message.slice(0, 50)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 : null}
             </div>
           </div>
-          <div style={{ height: '1px', background: 'lightgrey' }}/>
+          <div style={{ height: '1px', background: 'lightgrey' }} />
           <div style={{ height: '50%', display: 'flex' }}>
-            <CodeEditor mode={'application/json'} defaultValue={selected?.message} uniquenessKey={selected?._id} readOnly />
+            <CodeEditor hideLineNumbers mode={'text/plain'} defaultValue={selected?.message || ''} uniquenessKey={selected?._id} readOnly />
           </div>
         </div>
       </TabPanel>
