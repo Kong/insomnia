@@ -55,16 +55,12 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     }
   }, [activeRequest, handleSetActiveResponse]);
 
-  const handleDeleteResponse = useCallback(async (response: Response) => {
-    if (response) {
-      await models.response.remove(response);
+  const handleDeleteResponse = useCallback(async () => {
+    if (activeResponse) {
+      await models.response.remove(activeResponse);
     }
-
-    // Also unset active response it's the one we're deleting
-    if (activeResponse?._id === response._id) {
-      handleSetActiveResponse(null);
-    }
-  }, [activeResponse?._id, handleSetActiveResponse]);
+    handleSetActiveResponse(null);
+  }, [activeResponse, handleSetActiveResponse]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
