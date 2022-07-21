@@ -10,7 +10,7 @@ import { hideAllModals, showModal } from '../modals/index';
 import { LoginModal } from '../modals/login-modal';
 
 export const Account: FC = () => {
-  const settings = useSelector(selectSettings);
+  const { disablePaidFeatureAds } = useSelector(selectSettings);
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState('');
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -69,6 +69,8 @@ export const Account: FC = () => {
     setFinishedResetting(false);
   }, [showChangePassword]);
 
+  const logout = useCallback(() => session.logout(), []);
+
   return session.isLoggedIn() ? (
     <Fragment>
       <div>
@@ -81,7 +83,7 @@ export const Account: FC = () => {
         <Link button href="https://app.insomnia.rest" className="btn btn--clicky">
           Manage Account
         </Link>
-        <PromptButton className="space-left btn btn--clicky" onClick={() => session.logout()}>
+        <PromptButton className="space-left btn btn--clicky" onClick={logout}>
           Sign Out
         </PromptButton>
         <button
@@ -153,7 +155,7 @@ export const Account: FC = () => {
         </form>
       )}
     </Fragment>
-  ) : (settings.disablePaidFeatureAds ? (
+  ) : (disablePaidFeatureAds ? (
     <a href="#" onClick={handleLogin} className="theme--link">
       Log In
     </a>
