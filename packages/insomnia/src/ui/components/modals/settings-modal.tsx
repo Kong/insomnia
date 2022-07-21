@@ -17,17 +17,12 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import { registerModal, showModal } from './index';
+import { ModalHandle, registerModal, showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
-export interface ModalHandle {
-  hide(): void;
-  show(currentTabIndex: number): void;
-}
-
 export const SETTINGS_MODAL_DISPLAYNAME = 'SettingsModal';
 export const SettingsModal = forwardRef<ModalHandle, ModalProps>((props, ref) => {
   const settings = useSelector(selectSettings);
@@ -113,5 +108,4 @@ export const SettingsModal = forwardRef<ModalHandle, ModalProps>((props, ref) =>
   );
 });
 SettingsModal.displayName = SETTINGS_MODAL_DISPLAYNAME;
-
 export const showSettingsModal = () => showModal(SettingsModal);

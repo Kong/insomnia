@@ -4,6 +4,10 @@ import { ErrorModal, ErrorModalOptions } from './error-modal';
 import { PromptModal, PromptModalOptions } from './prompt-modal';
 
 const modals: Record<string, any> = {};
+export interface ModalHandle {
+  hide(): void;
+  show(currentTabIndex: number): void;
+}
 
 export function registerModal(instance: any, modalName?: string) {
   if (instance === null) {
@@ -15,7 +19,6 @@ export function registerModal(instance: any, modalName?: string) {
 }
 
 export function showModal(modalCls: any, ...args: any[]) {
-  console.log(modalCls);
   trackPageView(modalCls.name);
   return _getModal(modalCls).show(...args);
 }

@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
-import React, { createRef, Fragment, lazy, PureComponent, Ref, Suspense } from 'react';
+import React, { Fragment, lazy, PureComponent, Ref, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
@@ -64,7 +64,7 @@ import { RequestSettingsModal } from './modals/request-settings-modal';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import { ResponseDebugModal } from './modals/response-debug-modal';
 import { SelectModal } from './modals/select-modal';
-import { ModalHandle, SettingsModal } from './modals/settings-modal';
+import { SettingsModal } from './modals/settings-modal';
 import { SyncBranchesModal } from './modals/sync-branches-modal';
 import { SyncDeleteModal } from './modals/sync-delete-modal';
 import { SyncHistoryModal } from './modals/sync-history-modal';
@@ -170,9 +170,7 @@ const requestUpdate = (request: Request, patch: Partial<Request>) => {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class Wrapper extends PureComponent<WrapperProps
-, State> {
-  settingsModalRef = createRef<ModalHandle>();
+export class Wrapper extends PureComponent<WrapperProps, State> {
   state: State = {
     forceRefreshKey: Date.now(),
     activeGitBranch: 'no-vcs',
@@ -515,7 +513,7 @@ export class Wrapper extends PureComponent<WrapperProps
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
             />
 
-            <SettingsModal ref={registerModal} />
+            <SettingsModal />
             <ResponseDebugModal ref={registerModal} />
 
             <RequestSwitcherModal
