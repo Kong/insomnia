@@ -168,7 +168,6 @@ export const RequestPane: FC<Props> = ({
             handleSendAndDownload={handleSendAndDownload}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
-            hotKeyRegistry={settings.hotKeyRegistry}
             handleUpdateDownloadPath={handleUpdateDownloadPath}
             downloadPath={downloadPath}
           />

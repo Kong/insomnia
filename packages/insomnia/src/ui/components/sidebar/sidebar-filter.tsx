@@ -1,4 +1,3 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback, useRef } from 'react';
 
 import { SortOrder } from '../../../common/constants';
@@ -12,9 +11,8 @@ interface Props {
   onChange: (value: string) => Promise<void>;
   sidebarSort: (sortOrder: SortOrder) => void;
   filter: string;
-  hotKeyRegistry: HotKeyRegistry;
 }
-export const SidebarFilter: FC<Props> = ({ filter, hotKeyRegistry, sidebarSort, onChange }) => {
+export const SidebarFilter: FC<Props> = ({ filter, sidebarSort, onChange }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const handleClearFilter = useCallback(() => {
     onChange('');
@@ -49,9 +47,7 @@ export const SidebarFilter: FC<Props> = ({ filter, hotKeyRegistry, sidebarSort, 
           )}
         </div>
         <SidebarSortDropdown handleSort={sidebarSort} />
-        <SidebarCreateDropdown
-          hotKeyRegistry={hotKeyRegistry}
-        />
+        <SidebarCreateDropdown />
       </div>
     </KeydownBinder>
   );

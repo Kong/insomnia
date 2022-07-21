@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, useCallback, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -15,6 +15,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -31,7 +32,6 @@ interface Props extends Pick<DropdownProps, 'right'> {
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleShowSettings: () => void;
-  hotKeyRegistry: HotKeyRegistry;
   isPinned: Boolean;
   request: Request | GrpcRequest;
   requestGroup?: RequestGroup;
@@ -45,12 +45,12 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   handleGenerateCode,
   handleSetRequestPinned,
   handleShowSettings,
-  hotKeyRegistry,
   isPinned,
   request,
   requestGroup,
   right,
 }, ref) => {
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 

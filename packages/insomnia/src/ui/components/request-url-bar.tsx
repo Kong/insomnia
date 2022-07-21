@@ -1,11 +1,12 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import type { Request } from '../../models/request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
+import { selectHotKeyRegistry } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -29,7 +30,6 @@ interface Props {
   onUrlChange: (r: Request, url: string) => Promise<Request>;
   request: Request;
   uniquenessKey: string;
-  hotKeyRegistry: HotKeyRegistry;
   downloadPath: string | null;
 }
 
@@ -44,13 +44,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleSend,
   handleSendAndDownload,
   handleUpdateDownloadPath,
-  hotKeyRegistry,
   onMethodChange,
   onUrlChange,
   request,
   uniquenessKey,
 }, ref) => {
-
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditor>(null);

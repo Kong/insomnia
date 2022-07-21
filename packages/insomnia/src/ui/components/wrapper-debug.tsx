@@ -139,7 +139,6 @@ export const WrapperDebug: FC<Props> = ({
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             environments={environments}
             handleChangeEnvironment={handleChangeEnvironment}
-            hotKeyRegistry={settings.hotKeyRegistry}
             workspace={activeWorkspace}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
@@ -154,7 +153,6 @@ export const WrapperDebug: FC<Props> = ({
           onChange={handleSetSidebarFilter}
           sidebarSort={handleSidebarSort}
           filter={sidebarFilter || ''}
-          hotKeyRegistry={settings.hotKeyRegistry}
         />
 
         <SidebarChildren
@@ -167,7 +165,6 @@ export const WrapperDebug: FC<Props> = ({
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
           filter={sidebarFilter || ''}
-          hotKeyRegistry={settings.hotKeyRegistry}
         />
       </Fragment>
         : null}
@@ -230,7 +227,6 @@ export const WrapperDebug: FC<Props> = ({
               handleSetFilter={handleSetResponseFilter}
               handleSetPreviewMode={handleSetPreviewMode}
               handleShowRequestSettings={handleShowRequestSettingsModal}
-              hotKeyRegistry={settings.hotKeyRegistry}
               loadStartTime={loadStartTime}
               previewMode={responsePreviewMode}
               request={activeRequest}

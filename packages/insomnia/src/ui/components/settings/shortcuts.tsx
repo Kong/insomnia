@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import {
@@ -13,6 +14,8 @@ import {
   newDefaultKeyBindings,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
+import { RootState } from '../../redux/modules';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -22,15 +25,22 @@ import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
 import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
 
-interface Props {
-  hotKeyRegistry: HotKeyRegistry;
+interface OwnProps {
   handleUpdateKeyBindings: (keyBindings: HotKeyRegistry) => void;
 }
+
+const mapStateToProps = (state: RootState) => ({
+  hotKeyRegistry: selectHotKeyRegistry(state),
+});
+
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+type Props = OwnProps & ReduxProps;
 
 const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class Shortcuts extends PureComponent<Props> {
+export class UnconnectedShortcuts extends PureComponent<Props> {
   /**
    * Checks whether the given key combination already existed.
    * @param newKeyComb the key combination to be checked.
@@ -190,3 +200,5 @@ export class Shortcuts extends PureComponent<Props> {
     );
   }
 }
+
+export const Shortcuts = connect(mapStateToProps)(UnconnectedShortcuts);

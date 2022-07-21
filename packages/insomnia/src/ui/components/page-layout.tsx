@@ -118,7 +118,6 @@ export const PageLayout: FC<Props> = ({
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             hidden={sidebarHidden || false}
-            hotKeyRegistry={settings.hotKeyRegistry}
             isLoading={isLoading}
             unseenWorkspaces={unseenWorkspaces}
             width={sidebarWidth}

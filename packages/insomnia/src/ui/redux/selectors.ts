@@ -419,6 +419,11 @@ export const selectResponseDownloadPath = createSelector(
   requestMeta => requestMeta?.downloadPath || null,
 );
 
+export const selectHotKeyRegistry = createSelector(
+  selectSettings,
+  settings => settings.hotKeyRegistry,
+);
+
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,

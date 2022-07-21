@@ -1,6 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
 import { noop } from 'ramda-adjunct';
 import React, { ElementRef, MouseEvent, PureComponent } from 'react';
 import { PropsWithChildren } from 'react';
@@ -34,7 +33,6 @@ interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
   isActive: boolean;
   isCollapsed: boolean;
   requestGroup: RequestGroup;
-  hotKeyRegistry: HotKeyRegistry;
 }
 
 interface State {
@@ -91,7 +89,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
       handleDuplicateRequestGroup,
       isDragging,
       isDraggingOver,
-      hotKeyRegistry,
     } = this.props;
     const { dragDirection } = this.state;
     let folderIconClass = 'fa-folder';
@@ -144,7 +141,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleShowSettings={this._handleShowRequestGroupSettings}
               requestGroup={requestGroup}
-              hotKeyRegistry={hotKeyRegistry}
               right
             />
           </div>
@@ -167,8 +163,7 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               isActive={false}
               requestGroup={requestGroup}
               filter={filter}
-              hotKeyRegistry={hotKeyRegistry}
-              isPinned={false} // Necessary so that plugin actions work
+              isPinned={false}
             />
           )}
         </ul>
