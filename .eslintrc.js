@@ -119,6 +119,7 @@ module.exports = {
     'react/no-unescaped-entities': OFF(TYPESCRIPT_CONVERSION),
     'react/jsx-first-prop-new-line': [ERROR, 'multiline'],
     'react/jsx-max-props-per-line': [ERROR, { maximum: 1, when: 'multiline' }],
+    'react/jsx-no-bind': WARNING,
     'react/jsx-uses-react': ERROR,
     'react/jsx-uses-vars': ERROR,
     'react/jsx-indent': [ERROR, 2],
