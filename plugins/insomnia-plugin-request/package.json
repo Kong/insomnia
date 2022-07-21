@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-plugin-request",
-  "version": "3.3.1-beta.3",
+  "version": "3.3.1-beta.4",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia request template tag",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "3.3.1-beta.3",
-    "insomnia-url": "3.3.1-beta.3"
+    "insomnia-cookies": "3.3.1-beta.4",
+    "insomnia-url": "3.3.1-beta.4"
   }
 }
