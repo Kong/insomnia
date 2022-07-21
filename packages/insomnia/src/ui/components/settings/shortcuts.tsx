@@ -1,5 +1,5 @@
 import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
@@ -35,46 +35,42 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
    * @param newKeyComb the key combination to be checked.
    * @returns {boolean} true if already existed.
    */
-  function checkKeyCombinationDuplicate(newKeyComb: KeyCombination) {
+  const checkKeyCombinationDuplicate = useCallback((newKeyComb: KeyCombination) => {
     for (const hotKeyRefId in hotKeyRegistry) {
       if (!hotKeyRegistry.hasOwnProperty(hotKeyRefId)) {
         continue;
       }
-
       const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
-
       for (const keyComb of keyCombs) {
         if (areSameKeyCombinations(keyComb, newKeyComb)) {
           return true;
         }
       }
     }
-
     return false;
-  }
+  }, [hotKeyRegistry]);
 
   /**
    * Registers a new key combination under a hot key.
    * @param hotKeyRefId the reference id of a hot key to be given the new key combination.
    * @param keyComb the new key combination.
    */
-  function addKeyCombination(hotKeyRefId: string, keyComb: KeyCombination) {
+  const addKeyCombination = useCallback((hotKeyRefId: string, keyComb: KeyCombination) => {
     const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
     keyCombs.push(keyComb);
     handleUpdateKeyBindings(hotKeyRegistry);
-  }
+  }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
-  function handleAddKeyCombination(hotKeyRefId: string) {
+  const handleAddKeyCombination = useCallback((hotKeyRefId: string) => {
     showModal(
       AddKeyCombinationModal,
       hotKeyRefId,
       checkKeyCombinationDuplicate,
       addKeyCombination,
     );
-  }
+  }, [addKeyCombination, checkKeyCombinationDuplicate]);
 
-  function handleRemoveKeyCombination(toBeRemoved: Record<string, any>) {
-    const { hotKeyRefId, keyComb } = toBeRemoved;
+  const handleRemoveKeyCombination = useCallback(({ hotKeyRefId, keyComb }: { hotKeyRefId: string; keyComb: KeyCombination }) => {
     const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
     let toBeRemovedIndex = -1;
     keyCombs.forEach((existingKeyComb, index) => {
@@ -82,21 +78,20 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
         toBeRemovedIndex = index;
       }
     });
-
     if (toBeRemovedIndex >= 0) {
       keyCombs.splice(toBeRemovedIndex, 1);
       handleUpdateKeyBindings(hotKeyRegistry);
     }
-  }
+  }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
-  function handleResetKeyBindings(hotKeyRefId: string) {
+  const handleResetKeyBindings = useCallback((hotKeyRefId: string) => {
     hotKeyRegistry[hotKeyRefId] = newDefaultKeyBindings(hotKeyRefId);
     handleUpdateKeyBindings(hotKeyRegistry);
-  }
+  }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
-  function handleResetAllKeyBindings() {
+  const handleResetAllKeyBindings = useCallback(() => {
     handleUpdateKeyBindings(newDefaultRegistry());
-  }
+  }, [handleUpdateKeyBindings]);
   return (
     <div className="shortcuts">
       <div className="row-spaced margin-bottom-xs">
@@ -108,13 +103,13 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
       </div>
       <table className="table--fancy">
         <tbody>
-          {HOT_KEY_DEFS.map((def: HotKeyDefinition, index: number) => {
+          {HOT_KEY_DEFS.map((def: HotKeyDefinition) => {
             const keyBindings = hotKeyRegistry[def.id];
             const keyCombinations = getPlatformKeyCombinations(keyBindings);
             const hasRemoveItems = keyCombinations.length > 0;
             const hasResetItems = !areKeyBindingsSameAsDefault(def.id, keyBindings);
             return (
-              <tr key={index}>
+              <tr key={def.id}>
                 <td style={{ verticalAlign: 'middle' }}>{def.description}</td>
                 <td className="text-right">
                   {keyCombinations.map((keyComb: KeyCombination, index: number) => {
