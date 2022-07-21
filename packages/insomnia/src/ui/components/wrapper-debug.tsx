@@ -478,10 +478,14 @@ const useEventSubscription = (requestId?: string) => {
 };
 
 const WSRightPanel = ({ request }: { request: Request }) => {
+  const [selected, setSelected] = useState<EventLog | null>(null);
   // TODO: add and fill in table
   const eventLog = useEventSubscription(request._id);
   // reverse
   const list = eventLog || [];
+  const handleOnRowSelect = (event: EventLog) => {
+    setSelected(event);
+  };
   return (
     <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
       <TabList>
@@ -490,19 +494,27 @@ const WSRightPanel = ({ request }: { request: Request }) => {
         </Tab>
       </TabList>
       <TabPanel className="react-tabs__tab-panel scrollable-container">
-        <div className='scrollable'>
-          {list ?
-            <table className="table--fancy table--striped table--compact selectable">
-              <tbody>
-                {[...list].reverse().map(event => (
-                  <tr key={event._id}>
-                    <td>{event.type === 'OUTGOING' ? '⬆️' : event.type === 'INFO' ? 'ℹ️' : '⬇️'}</td>
-                    <td>{event.message.slice(0, 50)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            : null}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div style={{ height: '50%', display: 'flex' }}>
+            <div style={{ width: '100%' }}>
+              {list ?
+                <table className="table--fancy table--striped table--compact selectable scrollable">
+                  <tbody>
+                    {[...list].reverse().map(event => (
+                      <tr key={event._id} onClick={() => handleOnRowSelect(event)}>
+                        <td>{event.type === 'OUTGOING' ? '⬆️' : event.type === 'INFO' ? 'ℹ️' : '⬇️'}</td>
+                        <td>{event.message.slice(0, 50)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                : null}
+            </div>
+          </div>
+          <div style={{ height: '1px', background: 'lightgrey' }}/>
+          <div style={{ height: '50%', display: 'flex' }}>
+            <CodeEditor mode={'application/json'} defaultValue={selected?.message} uniquenessKey={selected?._id} readOnly />
+          </div>
         </div>
       </TabPanel>
     </Tabs>
