@@ -61,7 +61,11 @@ export const PreviewModeDropdown: FC<Props> = ({
     if (!filePath) {
       return;
     }
-    window.main.writeFile({ path: filePath, content: har });
+    const to = fs.createWriteStream(filePath);
+    to.on('error', err => {
+      console.warn('Failed to export har', err);
+    });
+    to.end(har);
   };
 
   const exportDebugFile = async () => {
