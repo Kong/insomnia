@@ -47,13 +47,14 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     other: [],
   };
 
-  const handleDeleteResponses = useCallback(async (requestId: string, environmentId: string | null) => {
+  const handleDeleteResponses = useCallback(async () => {
+    const environmentId = activeEnvironment ? activeEnvironment._id : null;
     await models.response.removeForRequest(requestId, environmentId);
 
     if (activeRequest && activeRequest._id === requestId) {
       await handleSetActiveResponse(requestId, null);
     }
-  }, [activeRequest, handleSetActiveResponse]);
+  }, [activeEnvironment, activeRequest, handleSetActiveResponse, requestId]);
 
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
@@ -157,7 +158,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
           <i className="fa fa-trash-o" />
           Delete Current Response
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon onClick={() => handleDeleteResponses(requestId, activeEnvironment ? activeEnvironment._id : null)}>
+        <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponses}>
           <i className="fa fa-trash-o" />
           Clear History
         </DropdownItem>
