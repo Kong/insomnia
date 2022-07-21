@@ -31,19 +31,11 @@ export const PreviewModeDropdown: FC<Props> = ({
     }
     return models.requestMeta.updateOrCreateByParentId(request._id, { previewMode });
   };
-  const handleDownloadPrettify = useCallback(() => {
-    download(true);
-  }, [download]);
+  const handleDownloadPrettify = useCallback(() => download(true), [download]);
 
-  const handleDownloadNormal = useCallback(() => {
-    download(false);
-  }, [download]);
+  const handleDownloadNormal = useCallback(() => download(false), [download]);
 
-  const handleCopyRawResponse = useCallback(() => {
-    copyToClipboard();
-  }, [copyToClipboard]);
-
-  const exportAsHAR = async () => {
+  const exportAsHAR = useCallback(async () => {
     if (!response || !request || !isRequest(request)) {
       console.warn('Nothing to download');
       return;
@@ -66,9 +58,9 @@ export const PreviewModeDropdown: FC<Props> = ({
       console.warn('Failed to export har', err);
     });
     to.end(har);
-  };
+  }, [request, response]);
 
-  const exportDebugFile = async () => {
+  const exportDebugFile = useCallback(async () => {
     if (!response || !request) {
       console.warn('Nothing to download');
       return;
@@ -99,8 +91,8 @@ export const PreviewModeDropdown: FC<Props> = ({
         console.warn('Failed to save full response', err);
       });
     }
-  };
-
+  }, [request, response]);
+  const shouldPrettifyOption = response.contentType.includes('json');
   return <Dropdown beside>
     <DropdownButton className="tall">
       {getPreviewModeName(previewMode)}
@@ -112,7 +104,7 @@ export const PreviewModeDropdown: FC<Props> = ({
       {getPreviewModeName(mode, true)}
     </DropdownItem>)}
     <DropdownDivider>Actions</DropdownDivider>
-    <DropdownItem onClick={handleCopyRawResponse}>
+    <DropdownItem onClick={copyToClipboard}>
       <i className="fa fa-copy" />
       Copy raw response
     </DropdownItem>
@@ -120,7 +112,7 @@ export const PreviewModeDropdown: FC<Props> = ({
       <i className="fa fa-save" />
       Export raw response
     </DropdownItem>
-    {response.contentType.includes('json') && <DropdownItem onClick={handleDownloadPrettify}>
+    {shouldPrettifyOption && <DropdownItem onClick={handleDownloadPrettify}>
       <i className="fa fa-save" />
       Export prettified response
     </DropdownItem>}

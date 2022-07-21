@@ -3,7 +3,7 @@ import { clipboard } from 'electron';
 import fs from 'fs';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { extension as mimeExtension } from 'mime-types';
-import React, { FC, useRef } from 'react';
+import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -50,20 +50,20 @@ export const ResponsePane: FC<Props> = ({
   const previewMode = useSelector(selectResponsePreviewMode);
 
   const responseViewerRef = useRef<ResponseViewer>(null);
-  const handleGetResponseBody = (): Buffer | null => {
+  const handleGetResponseBody = useCallback(() => {
     if (!response) {
       return null;
     }
     return models.response.getBodyBuffer(response);
-  };
-  const handleCopyResponseToClipboard = async () => {
+  }, [response]);
+  const handleCopyResponseToClipboard = useCallback(async () => {
     const bodyBuffer = handleGetResponseBody();
     if (bodyBuffer) {
       clipboard.writeText(bodyBuffer.toString('utf8'));
     }
-  };
+  }, [handleGetResponseBody]);
 
-  const handleDownloadResponseBody = async (prettify: boolean) => {
+  const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!response || !request) {
       console.warn('Nothing to download');
       return;
@@ -108,7 +108,7 @@ export const ResponsePane: FC<Props> = ({
         to.end();
       });
     }
-  };
+  }, [request, response]);
 
   const handleTabSelect = (index: number, lastIndex: number) => {
     if (responseViewerRef.current != null && index === 0 && index !== lastIndex) {
