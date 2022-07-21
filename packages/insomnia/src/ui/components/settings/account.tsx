@@ -11,18 +11,29 @@ import { LoginModal } from '../modals/login-modal';
 
 export const Account: FC = () => {
   const settings = useSelector(selectSettings);
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
   const [codeSent, setCodeSent] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
   const [error, setError] = useState('');
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [finishedResetting, setFinishedResetting] = useState(false);
+
+  const handleLogin = useCallback((event: React.SyntheticEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    hideAllModals();
+    showModal(LoginModal);
+  }, []);
 
   const handleSubmitPasswordChange = useCallback(async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    const code = formData.get('code') as string;
     setError('');
-    if (password !== password2) {
+    if (!password) {
+      setError('Password was not provided');
+      return;
+    }
+    if (password !== confirmPassword) {
       setError('Passwords did not match');
       return;
     }
@@ -39,13 +50,24 @@ export const Account: FC = () => {
     setError('');
     setFinishedResetting(true);
     setShowChangePassword(false);
-  }, [code, password, password2]);
-
-  const handleLogin = useCallback((event: React.SyntheticEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    hideAllModals();
-    showModal(LoginModal);
   }, []);
+
+  const emailCode = useCallback(async event => {
+    event.preventDefault();
+    try {
+      session.sendPasswordChangeCode();
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
+    setCodeSent(true);
+    setError('');
+  }, []);
+
+  const openChangePasswordDialog = useCallback(() => {
+    setShowChangePassword(!showChangePassword);
+    setFinishedResetting(false);
+  }, [showChangePassword]);
 
   return session.isLoggedIn() ? (
     <Fragment>
@@ -64,10 +86,7 @@ export const Account: FC = () => {
         </PromptButton>
         <button
           className="space-left btn btn--clicky"
-          onClick={() => {
-            setShowChangePassword(!showChangePassword);
-            setFinishedResetting(false);
-          }}
+          onClick={openChangePasswordDialog}
         >
           Change Password
         </button>
@@ -85,9 +104,9 @@ export const Account: FC = () => {
             <label>
               New Password
               <input
+                name="password"
                 type="password"
                 placeholder="•••••••••••••••••"
-                onChange={event => setPassword(event.currentTarget.value)}
               />
             </label>
           </div>
@@ -95,9 +114,9 @@ export const Account: FC = () => {
             <label>
               Confirm Password
               <input
+                name="confirmPassword"
                 type="password"
                 placeholder="•••••••••••••••••"
-                onChange={event => setPassword2(event.currentTarget.value)}
               />
             </label>
           </div>
@@ -106,10 +125,9 @@ export const Account: FC = () => {
               Confirmation Code{' '}
               <HelpTooltip>A confirmation code has been sent to your email address</HelpTooltip>
               <input
+                name="code"
                 type="text"
-                defaultValue={code}
                 placeholder="aa8b0d1ea9"
-                onChange={event => setCode(event.currentTarget.value)}
               />
             </label>
           </div>
@@ -118,16 +136,7 @@ export const Account: FC = () => {
               {codeSent ? 'A code was sent to your email' : 'Looking for a code?'}{' '}
               <Link
                 href="#"
-                onClick={async event => {
-                  event.preventDefault();
-                  try {
-                    await session.sendPasswordChangeCode();
-                  } catch (err) {
-                    setError(err.message);
-                    return;
-                  }
-                  setCodeSent(true);
-                }}
+                onClick={emailCode}
               >
                 Email Me a Code
               </Link>
@@ -136,7 +145,6 @@ export const Account: FC = () => {
               <button
                 type="submit"
                 className="btn btn--clicky"
-                disabled={!code || !password || password !== password2}
               >
                 Submit Change
               </button>
