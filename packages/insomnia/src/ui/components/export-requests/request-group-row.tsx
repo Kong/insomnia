@@ -21,8 +21,6 @@ export const RequestGroupRow: FC<Props> = ({
   selectedRequests,
   totalRequests,
 }) => {
-  let folderIconClass = 'fa-folder';
-  folderIconClass += isCollapsed ? '' : '-open';
   const isSelected = selectedRequests === totalRequests;
   const checkboxRef = useRef<HTMLInputElement>(null);
   if (checkboxRef.current) {
@@ -42,7 +40,7 @@ export const RequestGroupRow: FC<Props> = ({
           />
         </div>
         <button onClick={() => handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed)}>
-          <i className={classnames('tree__item__icon', 'fa', folderIconClass)} />
+          <i className={classnames('tree__item__icon', 'fa', `fa-folder${isCollapsed ? '' : '-open'}`)} />
           {requestGroup.name}
           <span className="total-requests">{totalRequests} requests</span>
         </button>
