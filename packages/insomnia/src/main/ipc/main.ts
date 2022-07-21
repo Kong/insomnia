@@ -18,9 +18,9 @@ export interface MainBridgeAPI {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   createWebsocketRequest: (options: { workspaceId: string }) => Promise<Request>;
-  open: (options: { url: string; requestId: string }) => void;
-  message: (options: { message: string; requestId: string }) => void;
-  close: (options: { requestId: string }) => void;
+  openWebsocket: (options: { url: string; requestId: string }) => void;
+  messageWebsocket: (options: { message: string; requestId: string }) => void;
+  closeWebsocket: (options: { requestId: string }) => void;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => void;
   getWebSocketConnectionStatus: (options: { requestId: string }) => Promise<boolean>;
   getWebSocketEventLog: (options: { requestId: string }) => Promise<EventLog>;
@@ -100,7 +100,7 @@ function setupWebSockets() {
     return WebSocketEventLog.get(options.requestId) || [];
   });
 
-  ipcMain.on('websocket.open', (event, options: { url: string; requestId: string }) => {
+  ipcMain.on('openWebsocket', (event, options: { url: string; requestId: string }) => {
     if (WebSocketInstances.get(options.requestId)) {
       console.warn('Connection still open to ' + options.url);
       return;
@@ -116,7 +116,7 @@ function setupWebSockets() {
       });
       ws.on('message', buffer => {
         const msgs = WebSocketEventLog.get(options.requestId) || [];
-        const lastMessage = makeNewEvent(buffer.toString().slice(0, 50), options.requestId, 'INCOMING');
+        const lastMessage = makeNewEvent(buffer.toString(), options.requestId, 'INCOMING');
         WebSocketEventLog.set(options.requestId, [...msgs, lastMessage]);
         event.sender.send('websocket.log', lastMessage);
       });
@@ -133,7 +133,7 @@ function setupWebSockets() {
     }
   });
 
-  ipcMain.on('websocket.message', (event, options: { message: string; requestId: string }) => {
+  ipcMain.on('messageWebsocket', (event, options: { message: string; requestId: string }) => {
     const ws = WebSocketInstances.get(options.requestId);
     if (!ws) {
       console.warn('No websocket found for requestId: ' + options.requestId);
@@ -146,7 +146,7 @@ function setupWebSockets() {
     event.sender.send('websocket.log', lastMessage);
   });
 
-  ipcMain.on('websocket.close', (_, options: { requestId: string }) => {
+  ipcMain.on('closeWebsocket', (_, options: { requestId: string }) => {
     const ws = WebSocketInstances.get(options.requestId);
     if (!ws) {
       console.warn('No websocket found for requestId: ' + options.requestId);

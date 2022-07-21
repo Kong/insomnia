@@ -372,13 +372,13 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
           onSubmit={e => {
             e.preventDefault();
             if (isConnected) {
-              window.main.close({
+              window.main.closeWebsocket({
                 requestId: request._id,
               });
             } else {
               const formData = new FormData(e.currentTarget);
               const url = (formData.get('url') as string) || '';
-              window.main.open({ url, requestId: request._id });
+              window.main.openWebsocket({ url, requestId: request._id });
             }
           }}
         >
@@ -406,7 +406,7 @@ const WSLeftPanel = ({ request }: { request: Request }) => {
           }
           const msg = editorRef.current?.getValue() || '';
           const message = await handleRender(msg);
-          window.main.message({
+          window.main.messageWebsocket({
             message,
             requestId: request._id,
           });

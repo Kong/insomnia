@@ -11,9 +11,9 @@ const main: Window['main'] = {
   createWebsocketRequest: options => ipcRenderer.invoke('createWebsocketRequest', options),
   getWebSocketConnectionStatus: options => ipcRenderer.invoke('getWebSocketConnectionStatus', options),
   getWebSocketEventLog: options => ipcRenderer.invoke('getWebSocketEventLog', options),
-  open: options => ipcRenderer.send('websocket.open', options),
-  message: options => ipcRenderer.send('websocket.message', options),
-  close: options => ipcRenderer.send('websocket.close', options),
+  openWebsocket: options => ipcRenderer.send('openWebsocket', options),
+  messageWebsocket: options => ipcRenderer.send('messageWebsocket', options),
+  closeWebsocket: options => ipcRenderer.send('closeWebsocket', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
