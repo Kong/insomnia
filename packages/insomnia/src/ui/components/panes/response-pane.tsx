@@ -1,25 +1,18 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { clipboard } from 'electron';
 import fs from 'fs';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { extension as mimeExtension } from 'mime-types';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { FC, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
-import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
+import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
-import type { Environment } from '../../../models/environment';
 import type { Request } from '../../../models/request';
-import type { RequestVersion } from '../../../models/request-version';
-import type { Response } from '../../../models/response';
-import type { UnitTestResult } from '../../../models/unit-test-result';
 import { cancelRequestById } from '../../../network/network';
-import { RootState } from '../../redux/modules';
-import { selectHotKeyRegistry } from '../../redux/selectors';
+import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -32,63 +25,47 @@ import { TimeTag } from '../tags/time-tag';
 import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
-import { ResponseViewer } from  '../viewers/response-viewer';
+import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
-interface OwnProps {
-  handleSetFilter: (filter: string) => void;
-  handleSetPreviewMode: Function;
+interface Props {
   handleSetActiveResponse: Function;
-  handleDeleteResponses: Function;
-  handleDeleteResponse: Function;
+  handleSetFilter: (filter: string) => void;
   handleShowRequestSettings: Function;
-  previewMode: PreviewMode;
-  filter: string;
-  filterHistory: string[];
-  disableHtmlPreviewJs: boolean;
-  editorFontSize: number;
-  loadStartTime: number;
-  responses: Response[];
-  disableResponsePreviewLinks: boolean;
-  requestVersions: RequestVersion[];
   request?: Request | null;
-  response?: Response | null;
-  environment?: Environment | null;
-  unitTestResult?: UnitTestResult | null;
 }
+export const ResponsePane: FC<Props> = ({
+  handleSetActiveResponse,
+  handleSetFilter,
+  handleShowRequestSettings,
+  request,
+}) => {
+  const response = useSelector(selectActiveResponse);
+  const filterHistory = useSelector(selectResponseFilterHistory);
+  const filter = useSelector(selectResponseFilter);
+  const settings = useSelector(selectSettings);
+  const loadStartTime = useSelector(selectLoadStartTime);
+  const previewMode = useSelector(selectResponsePreviewMode);
 
-const mapStateToProps = (state: RootState) => ({
-  hotKeyRegistry: selectHotKeyRegistry(state),
-});
-
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-type Props = OwnProps & ReduxProps;
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class UnconnectedResponsePane extends PureComponent<Props> {
-  _responseViewer: ResponseViewer | null = null;
-
-  _setResponseViewerRef(responseViewer: ResponseViewer) {
-    this._responseViewer = responseViewer;
-  }
-
-  _handleGetResponseBody(): Buffer | null {
-    if (!this.props.response) {
+  const responseViewerRef = useRef<ResponseViewer>(null);
+  const handleGetResponseBody = useCallback(() => {
+    if (!response) {
       return null;
     }
+    return models.response.getBodyBuffer(response);
+  }, [response]);
+  const handleCopyResponseToClipboard = useCallback(async () => {
+    const bodyBuffer = handleGetResponseBody();
+    if (bodyBuffer) {
+      clipboard.writeText(bodyBuffer.toString('utf8'));
+    }
+  }, [handleGetResponseBody]);
 
-    return models.response.getBodyBuffer(this.props.response);
-  }
-
-  async _handleDownloadResponseBody(prettify: boolean) {
-    const { response, request } = this.props;
-
+  const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!response || !request) {
-      // Should never happen
-      console.warn('No response to download');
+      console.warn('Nothing to download');
       return;
     }
 
@@ -107,12 +84,11 @@ class UnconnectedResponsePane extends PureComponent<Props> {
     const readStream = models.response.getBodyStream(response);
     const dataBuffers: any[] = [];
 
-    if (readStream) {
+    if (readStream && outputPath) {
       readStream.on('data', data => {
         dataBuffers.push(data);
       });
       readStream.on('end', () => {
-        // @ts-expect-error -- TSCONVERSION
         const to = fs.createWriteStream(outputPath);
         const finalBuffer = Buffer.concat(dataBuffers);
         to.on('error', err => {
@@ -132,256 +108,136 @@ class UnconnectedResponsePane extends PureComponent<Props> {
         to.end();
       });
     }
-  }
+  }, [request, response]);
 
-  async _handleDownloadFullResponseBody() {
-    const { response, request } = this.props;
-
-    if (!response || !request) {
-      // Should never happen
-      console.warn('No response to download');
-      return;
-    }
-
-    const timeline = models.response.getTimeline(response);
-    const headers = timeline
-      .filter(v => v.name === 'HeaderIn')
-      .map(v => v.value)
-      .join('');
-
-    const { canceled, filePath } = await window.dialog.showSaveDialog({
-      title: 'Save Full Response',
-      buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
-    });
-
-    if (canceled) {
-      return;
-    }
-
-    const readStream = models.response.getBodyStream(response);
-
-    if (readStream) {
-      // @ts-expect-error -- TSCONVERSION
-      const to = fs.createWriteStream(filePath);
-      to.write(headers);
-      readStream.pipe(to);
-      to.on('error', err => {
-        console.warn('Failed to save full response', err);
-      });
-    }
-  }
-
-  async _handleCopyResponseToClipboard() {
-    if (!this.props.response) {
-      return;
-    }
-
-    const bodyBuffer = models.response.getBodyBuffer(this.props.response);
-    if (bodyBuffer) {
-      clipboard.writeText(bodyBuffer.toString('utf8'));
-    }
-  }
-
-  async _handleExportAsHAR() {
-    const { response, request } = this.props;
-
-    if (!response) {
-      // Should never happen
-      console.warn('No response to download');
-      return;
-    }
-
-    if (!request) {
-      // Should never happen
-      console.warn('No request to download');
-      return;
-    }
-
-    const data = await exportHarCurrentRequest(request, response);
-    const har = JSON.stringify(data, null, '\t');
-
-    const { filePath } = await window.dialog.showSaveDialog({
-      title: 'Export As HAR',
-      buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
-    });
-
-    if (!filePath) {
-      return;
-    }
-
-    const to = fs.createWriteStream(filePath);
-    to.on('error', err => {
-      console.warn('Failed to export har', err);
-    });
-    to.end(har);
-  }
-
-  _handleTabSelect(index: number, lastIndex: number) {
-    if (this._responseViewer != null && index === 0 && index !== lastIndex) {
+  const handleTabSelect = (index: number, lastIndex: number) => {
+    if (responseViewerRef.current != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
       // Refresh must be called when the editor is visible,
       // so use nextTick to give time for it to be visible.
       process.nextTick(() => {
-        // @ts-expect-error -- TSCONVERSION
-        this._responseViewer.refresh();
+        responseViewerRef.current?.refresh();
       });
     }
+  };
+
+  if (!request) {
+    return <BlankPane type="response" />;
   }
 
-  render() {
-    const {
-      disableHtmlPreviewJs,
-      editorFontSize,
-      environment,
-      filter,
-      disableResponsePreviewLinks,
-      filterHistory,
-      handleDeleteResponse,
-      handleDeleteResponses,
-      handleSetActiveResponse,
-      handleSetFilter,
-      handleSetPreviewMode,
-      handleShowRequestSettings,
-      loadStartTime,
-      previewMode,
-      request,
-      requestVersions,
-      response,
-      responses,
-    } = this.props;
-
-    if (!request) {
-      return <BlankPane type="response" />;
-    }
-
-    if (!response) {
-      return (
-        <PlaceholderResponsePane>
-          <ResponseTimer
-            handleCancel={() => cancelRequestById(request._id)}
-            loadStartTime={loadStartTime}
-          />
-        </PlaceholderResponsePane>
-      );
-    }
-
-    const cookieHeaders = getSetCookieHeaders(response.headers);
+  if (!response) {
     return (
-      <Pane type="response">
-        {!response ? null : (
-          <PaneHeader className="row-spaced">
-            <div className="no-wrap scrollable scrollable--no-bars pad-left">
-              <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
-              <TimeTag milliseconds={response.elapsedTime} />
-              <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} />
-            </div>
-            <ResponseHistoryDropdown
-              activeResponse={response}
-              activeEnvironment={environment}
-              responses={responses}
-              requestVersions={requestVersions}
-              requestId={request._id}
-              handleSetActiveResponse={handleSetActiveResponse}
-              handleDeleteResponses={handleDeleteResponses}
-              handleDeleteResponse={handleDeleteResponse}
-              className="tall pane__header__right"
-            />
-          </PaneHeader>
-        )}
-        <Tabs
-          className={classnames(paneBodyClasses, 'react-tabs')}
-          onSelect={this._handleTabSelect}
-          forceRenderTabPanel
-        >
-          <TabList>
-            <Tab tabIndex="-1">
-              <PreviewModeDropdown
-                download={this._handleDownloadResponseBody}
-                fullDownload={this._handleDownloadFullResponseBody}
-                exportAsHAR={this._handleExportAsHAR}
-                previewMode={previewMode}
-                updatePreviewMode={handleSetPreviewMode}
-                showPrettifyOption={response.contentType.includes('json')}
-                copyToClipboard={this._handleCopyResponseToClipboard}
-              />
-            </Tab>
-            <Tab tabIndex="-1">
-              <Button>
-                Header{' '}
-                {response.headers.length > 0 && (
-                  <span className="bubble">{response.headers.length}</span>
-                )}
-              </Button>
-            </Tab>
-            <Tab tabIndex="-1">
-              <Button>
-                Cookie{' '}
-                {cookieHeaders.length ? (
-                  <span className="bubble">{cookieHeaders.length}</span>
-                ) : null}
-              </Button>
-            </Tab>
-            <Tab tabIndex="-1">
-              <Button>Timeline</Button>
-            </Tab>
-          </TabList>
-          <TabPanel className="react-tabs__tab-panel">
-            <ResponseViewer
-              ref={this._setResponseViewerRef}
-              bytes={Math.max(response.bytesContent, response.bytesRead)}
-              contentType={response.contentType || ''}
-              disableHtmlPreviewJs={disableHtmlPreviewJs}
-              disablePreviewLinks={disableResponsePreviewLinks}
-              download={this._handleDownloadResponseBody}
-              editorFontSize={editorFontSize}
-              error={response.error}
-              filter={filter}
-              filterHistory={filterHistory}
-              getBody={this._handleGetResponseBody}
-              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              responseId={response._id}
-              updateFilter={response.error ? undefined : handleSetFilter}
-              url={response.url}
-            />
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel scrollable-container">
-            <div className="scrollable pad">
-              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-                <ResponseHeadersViewer headers={response.headers} />
-              </ErrorBoundary>
-            </div>
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel scrollable-container">
-            <div className="scrollable pad">
-              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-                <ResponseCookiesViewer
-                  handleShowRequestSettings={handleShowRequestSettings}
-                  cookiesSent={response.settingSendCookies}
-                  cookiesStored={response.settingStoreCookies}
-                  headers={cookieHeaders}
-                />
-              </ErrorBoundary>
-            </div>
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-              <ResponseTimelineViewer
-                response={response}
-              />
-            </ErrorBoundary>
-          </TabPanel>
-        </Tabs>
-        <ErrorBoundary errorClassName="font-error pad text-center">
-          <ResponseTimer
-            handleCancel={() => cancelRequestById(request._id)}
-            loadStartTime={loadStartTime}
-          />
-        </ErrorBoundary>
-      </Pane>
+      <PlaceholderResponsePane>
+        <ResponseTimer
+          handleCancel={() => cancelRequestById(request._id)}
+          loadStartTime={loadStartTime}
+        />
+      </PlaceholderResponsePane>
     );
   }
-}
 
-export const ResponsePane = connect(mapStateToProps)(UnconnectedResponsePane);
+  const cookieHeaders = getSetCookieHeaders(response.headers);
+  return (
+    <Pane type="response">
+      {!response ? null : (
+        <PaneHeader className="row-spaced">
+          <div className="no-wrap scrollable scrollable--no-bars pad-left">
+            <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
+            <TimeTag milliseconds={response.elapsedTime} />
+            <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} />
+          </div>
+          <ResponseHistoryDropdown
+            activeResponse={response}
+            requestId={request._id}
+            handleSetActiveResponse={handleSetActiveResponse}
+            className="tall pane__header__right"
+          />
+        </PaneHeader>
+      )}
+      <Tabs
+        className={classnames(paneBodyClasses, 'react-tabs')}
+        onSelect={handleTabSelect}
+        forceRenderTabPanel
+      >
+        <TabList>
+          <Tab tabIndex="-1">
+            <PreviewModeDropdown
+              download={handleDownloadResponseBody}
+              copyToClipboard={handleCopyResponseToClipboard}
+            />
+          </Tab>
+          <Tab tabIndex="-1">
+            <Button>
+              Header{' '}
+              {response.headers.length > 0 && (
+                <span className="bubble">{response.headers.length}</span>
+              )}
+            </Button>
+          </Tab>
+          <Tab tabIndex="-1">
+            <Button>
+              Cookie{' '}
+              {cookieHeaders.length ? (
+                <span className="bubble">{cookieHeaders.length}</span>
+              ) : null}
+            </Button>
+          </Tab>
+          <Tab tabIndex="-1">
+            <Button>Timeline</Button>
+          </Tab>
+        </TabList>
+        <TabPanel className="react-tabs__tab-panel">
+          <ResponseViewer
+            ref={responseViewerRef}
+            bytes={Math.max(response.bytesContent, response.bytesRead)}
+            contentType={response.contentType || ''}
+            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+            disablePreviewLinks={settings.disableResponsePreviewLinks}
+            download={handleDownloadResponseBody}
+            editorFontSize={settings.editorFontSize}
+            error={response.error}
+            filter={filter}
+            filterHistory={filterHistory}
+            getBody={handleGetResponseBody}
+            previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+            responseId={response._id}
+            updateFilter={response.error ? undefined : handleSetFilter}
+            url={response.url}
+          />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel scrollable-container">
+          <div className="scrollable pad">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+              <ResponseHeadersViewer headers={response.headers} />
+            </ErrorBoundary>
+          </div>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel scrollable-container">
+          <div className="scrollable pad">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+              <ResponseCookiesViewer
+                handleShowRequestSettings={handleShowRequestSettings}
+                cookiesSent={response.settingSendCookies}
+                cookiesStored={response.settingStoreCookies}
+                headers={cookieHeaders}
+              />
+            </ErrorBoundary>
+          </div>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+            <ResponseTimelineViewer
+              response={response}
+            />
+          </ErrorBoundary>
+        </TabPanel>
+      </Tabs>
+      <ErrorBoundary errorClassName="font-error pad text-center">
+        <ResponseTimer
+          handleCancel={() => cancelRequestById(request._id)}
+          loadStartTime={loadStartTime}
+        />
+      </ErrorBoundary>
+    </Pane>
+  );
+};

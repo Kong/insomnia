@@ -27,7 +27,6 @@ import {
   RequestParameter,
 } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
-import type { Response } from '../../models/response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
@@ -350,26 +349,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
-  async _handleDeleteResponses(requestId: string, environmentId: string | null) {
-    const { handleSetActiveResponse, activeRequest } = this.props;
-    await models.response.removeForRequest(requestId, environmentId);
-
-    if (activeRequest && activeRequest._id === requestId) {
-      await handleSetActiveResponse(requestId, null);
-    }
-  }
-
-  async _handleDeleteResponse(response: Response) {
-    if (response) {
-      await models.response.remove(response);
-    }
-
-    // Also unset active response it's the one we're deleting
-    if (this.props.activeResponse?._id === response._id) {
-      this._handleSetActiveResponse(null);
-    }
-  }
-
   async _handleRemoveActiveWorkspace() {
     const { activeWorkspace, handleSetActiveActivity } = this.props;
 
@@ -654,8 +633,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
                   handleChangeEnvironment={this._handleChangeEnvironment}
-                  handleDeleteResponse={this._handleDeleteResponse}
-                  handleDeleteResponses={this._handleDeleteResponses}
                   handleForceUpdateRequest={this._handleForceUpdateRequest}
                   handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
