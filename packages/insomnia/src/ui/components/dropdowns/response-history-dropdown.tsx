@@ -1,12 +1,13 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { FC, Fragment, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
-import type { Environment } from '../../../models/environment';
-import type { RequestVersion } from '../../../models/request-version';
+import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
+import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -20,30 +21,23 @@ import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
 
 interface Props {
-  activeEnvironment?: Environment | null;
   activeResponse: Response;
   className?: string;
-  handleDeleteResponse: Function;
-  handleDeleteResponses: Function;
   handleSetActiveResponse: Function;
   requestId: string;
-  requestVersions: RequestVersion[];
-  responses: Response[];
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
-  activeEnvironment,
   activeResponse,
   className,
-  handleDeleteResponse,
-  handleDeleteResponses,
   handleSetActiveResponse,
   requestId,
-  requestVersions,
-  responses,
 }) => {
   const dropdownRef = useRef<DropdownHandle>(null);
-
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const responses = useSelector(selectActiveRequestResponses);
+  const activeRequest = useSelector(selectActiveRequest);
+  const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
   const categories: Record<string, Response[]> = {
     minutes: [],
@@ -52,6 +46,22 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     week: [],
     other: [],
   };
+
+  const handleDeleteResponses = useCallback(async () => {
+    const environmentId = activeEnvironment ? activeEnvironment._id : null;
+    await models.response.removeForRequest(requestId, environmentId);
+
+    if (activeRequest && activeRequest._id === requestId) {
+      await handleSetActiveResponse(requestId, null);
+    }
+  }, [activeEnvironment, activeRequest, handleSetActiveResponse, requestId]);
+
+  const handleDeleteResponse = useCallback(async () => {
+    if (activeResponse) {
+      await models.response.remove(activeResponse);
+    }
+    handleSetActiveResponse(null);
+  }, [activeResponse, handleSetActiveResponse]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
@@ -148,7 +158,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
           <i className="fa fa-trash-o" />
           Delete Current Response
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon onClick={() => handleDeleteResponses(requestId, activeEnvironment ? activeEnvironment._id : null)}>
+        <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponses}>
           <i className="fa fa-trash-o" />
           Clear History
         </DropdownItem>

@@ -7,7 +7,14 @@ import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectActiveResponse, selectActiveUnitTestResult, selectActiveWorkspace, selectEnvironments, selectLoadStartTime, selectRequestVersions, selectResponseDownloadPath, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../redux/selectors';
+import {
+  selectActiveEnvironment,
+  selectActiveRequest,
+  selectActiveWorkspace,
+  selectEnvironments,
+  selectResponseDownloadPath,
+  selectSettings,
+} from '../redux/selectors';
 import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
@@ -28,15 +35,12 @@ interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleChangeEnvironment: Function;
-  handleDeleteResponse: Function;
-  handleDeleteResponses: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
   handleSetActiveResponse: Function;
-  handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
@@ -55,15 +59,12 @@ export const WrapperDebug: FC<Props> = ({
   gitSyncDropdown,
   handleActivityChange,
   handleChangeEnvironment,
-  handleDeleteResponse,
-  handleDeleteResponses,
   handleForceUpdateRequest,
   handleForceUpdateRequestHeaders,
   handleImport,
   handleSendAndDownloadRequestWithActiveEnvironment,
   handleSendRequestWithActiveEnvironment,
   handleSetActiveResponse,
-  handleSetPreviewMode,
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
   handleSidebarSort,
@@ -100,17 +101,11 @@ export const WrapperDebug: FC<Props> = ({
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
-  const activeRequestResponses = useSelector(selectActiveRequestResponses);
-  const activeResponse = useSelector(selectActiveResponse);
-  const activeUnitTestResult = useSelector(selectActiveUnitTestResult);
+
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const environments = useSelector(selectEnvironments);
-  const loadStartTime = useSelector(selectLoadStartTime);
-  const requestVersions = useSelector(selectRequestVersions);
+
   const responseDownloadPath = useSelector(selectResponseDownloadPath);
-  const responseFilter = useSelector(selectResponseFilter);
-  const responseFilterHistory = useSelector(selectResponseFilterHistory);
-  const responsePreviewMode = useSelector(selectResponsePreviewMode);
   const settings = useSelector(selectSettings);
   const sidebarChildren = useSelector(selectSidebarChildren);
   const sidebarFilter = useSelector(selectSidebarFilter);
@@ -215,25 +210,10 @@ export const WrapperDebug: FC<Props> = ({
             />
             :
             <ResponsePane
-              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-              disableResponsePreviewLinks={settings.disableResponsePreviewLinks}
-              editorFontSize={settings.editorFontSize}
-              environment={activeEnvironment}
-              filter={responseFilter}
-              filterHistory={responseFilterHistory}
-              handleDeleteResponse={handleDeleteResponse}
-              handleDeleteResponses={handleDeleteResponses}
               handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
-              handleSetPreviewMode={handleSetPreviewMode}
               handleShowRequestSettings={handleShowRequestSettingsModal}
-              loadStartTime={loadStartTime}
-              previewMode={responsePreviewMode}
               request={activeRequest}
-              requestVersions={requestVersions}
-              response={activeResponse}
-              responses={activeRequestResponses}
-              unitTestResult={activeUnitTestResult}
             />}
         </ErrorBoundary>}
     />
