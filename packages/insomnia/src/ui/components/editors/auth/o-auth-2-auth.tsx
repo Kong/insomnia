@@ -1,13 +1,12 @@
 import { Button } from 'insomnia-components';
-import React, { ChangeEvent, FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { ChangeBufferEvent, database } from '../../../../common/database';
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
-import { OAuth2Token, type } from '../../../../models/o-auth-2-token';
+import { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -35,37 +34,10 @@ import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
 import { AuthToggleRow } from './components/auth-toggle-row';
+import { useOauth2TokenClear } from './use-oauth2-token';
 
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
-
-const useOauthToken = (): [{ token: OAuth2Token | undefined; loading: boolean }, () => Promise<void>] => {
-  const token = useSelector(selectActiveOAuth2Token);
-  const [loading, setLoading] = useState(false);
-
-  const clearTokens = useCallback(async () => {
-    if (token) {
-      setLoading(true);
-      await models.oAuth2Token.remove(token);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    function listener(changes: ChangeBufferEvent[]): void {
-      for (const change of changes) {
-        const [operationEvent, entity] = change;
-        if (entity.type === type && operationEvent === database.CHANGE_REMOVE) {
-          setLoading(false);
-        }
-      }
-    }
-
-    database.onChange(listener);
-    return () => database.offChange(listener);
-  }, [token]);
-
-  return [{ token, loading }, clearTokens];
-};
 
 const grantTypeOptions = [
   {
@@ -450,7 +422,7 @@ const OAuth2Error: FC = () => {
 };
 
 const useActiveOAuth2Token = () => {
-  const [, clearTokens] = useOauthToken();
+  const [, clearTokens] = useOauth2TokenClear();
   const { activeRequest: { authentication, _id: requestId } } = useActiveRequest();
   const { handleRender } = useNunjucks();
 
@@ -478,7 +450,7 @@ const useActiveOAuth2Token = () => {
 
 const OAuth2Tokens: FC = () => {
   const { refreshToken, loading, error } = useActiveOAuth2Token();
-  const [{ token, loading: tokenClearLoading }, clearTokens] = useOauthToken();
+  const [{ token, loading: tokenClearLoading }, clearTokens] = useOauth2TokenClear();
 
   return (
     <div className='notice subtle text-left'>
