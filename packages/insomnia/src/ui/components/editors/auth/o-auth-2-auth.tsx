@@ -25,7 +25,6 @@ import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { useActiveRequest } from '../../../hooks/use-active-request';
 import { selectActiveOAuth2Token } from '../../../redux/selectors';
 import { Link } from '../../base/link';
-import { PromptButton } from '../../base/prompt-button';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';

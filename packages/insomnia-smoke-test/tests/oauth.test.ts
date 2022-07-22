@@ -53,7 +53,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('text=Advanced Options').click();
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.locator('button:text-is("Clear")').click();
-  await page.locator('button:has-text("Click to confirm")').click();
 
   const [refreshPage] = await Promise.all([
     app.waitForEvent('window'),
