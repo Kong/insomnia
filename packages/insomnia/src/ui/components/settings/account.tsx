@@ -162,7 +162,7 @@ export const Account: FC = () => {
   ) : (
     <Fragment>
       <div className="notice pad surprise">
-        <h1 className="no-margin-top">Try Insomnia Plus!</h1>
+        <h1 className="no-margin-top">Try Insomnia Sync!</h1>
         <p>
           Sync your data across devices or with a team
           <br />
