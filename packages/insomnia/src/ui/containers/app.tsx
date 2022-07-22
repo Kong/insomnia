@@ -123,7 +123,7 @@ import {
   selectWorkspaceMetas,
   selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectSidebarChildren, selectSidebarFilter, selectSidebarHidden } from '../redux/sidebar-selectors';
+import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
 
 const updateRequestMetaByParentId = async (
@@ -319,7 +319,9 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
-          this._handleToggleSidebar();
+          if (this.props.activeWorkspaceMeta) {
+            models.workspaceMeta.update(this.props.activeWorkspaceMeta, { sidebarHidden: !this.props.activeWorkspaceMeta.sidebarHidden });
+          }
         },
       ],
     ];
@@ -764,15 +766,6 @@ class App extends PureComponent<AppProps, State> {
       executeHotKey(event, definition, callback);
     }
   }
-  async _handleSetSidebarHidden(sidebarHidden: boolean) {
-    await this._updateActiveWorkspaceMeta({
-      sidebarHidden,
-    });
-  }
-  async _handleToggleSidebar() {
-    const sidebarHidden = !this.props.sidebarHidden;
-    await this._handleSetSidebarHidden(sidebarHidden);
-  }
 
   static _handleShowSettingsModal(tabIndex?: number) {
     showModal(SettingsModal, tabIndex);
@@ -1116,7 +1109,6 @@ class App extends PureComponent<AppProps, State> {
       },
       false,
     );
-    ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
@@ -1284,7 +1276,6 @@ const mapStateToProps = (state: RootState) => ({
   settings: selectSettings(state),
   sidebarChildren: selectSidebarChildren(state),
   sidebarFilter: selectSidebarFilter(state),
-  sidebarHidden: selectSidebarHidden(state),
   stats: selectStats(state),
   syncItems: selectSyncItems(state),
   unseenWorkspaces: selectUnseenWorkspaces(state),

@@ -43,11 +43,6 @@ export interface SidebarChildren {
   pinned: Child[];
 }
 
-export const selectSidebarHidden = createSelector(
-  selectActiveWorkspaceMeta,
-  activeWorkspaceMeta => activeWorkspaceMeta?.sidebarHidden || false,
-);
-
 export const selectSidebarWidth = createSelector(
   selectActiveWorkspaceMeta,
   activeWorkspaceMeta =>  activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,

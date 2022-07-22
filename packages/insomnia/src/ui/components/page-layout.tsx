@@ -50,7 +50,6 @@ export const PageLayout: FC<Props> = ({
   const reduxSidebarWidth = useSelector(selectSidebarWidth);
   const {
     handleSetActiveEnvironment,
-    sidebarHidden,
   } = wrapperProps;
 
   const requestPaneRef = useRef<HTMLElement>(null);
@@ -63,6 +62,15 @@ export const PageLayout: FC<Props> = ({
   const [sidebarWidth, setSidebarWidth] = useState(reduxSidebarWidth || DEFAULT_SIDEBAR_WIDTH);
   const [paneWidth, setPaneWidth] = useState(reduxPaneWidth || DEFAULT_PANE_WIDTH);
   const [paneHeight, setPaneHeight] = useState(reduxPaneHeight || DEFAULT_PANE_HEIGHT);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('toggle-sidebar', () => {
+      if (activeWorkspaceMeta) {
+        models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });
+      }
+    });
+    return () => unsubscribe();
+  }, [activeWorkspaceMeta]);
 
   const handleSetPaneWidth = useCallback((paneWidth: number) => {
     setPaneWidth(paneWidth);
@@ -193,7 +201,7 @@ export const PageLayout: FC<Props> = ({
     setDraggingSidebar(true);
   }, []);
 
-  const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
+  const realSidebarWidth = activeWorkspaceMeta?.sidebarHidden ? 0 : sidebarWidth;
   const gridRows = renderPaneTwo
     ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
     : 'auto 1fr';
@@ -246,7 +254,7 @@ export const PageLayout: FC<Props> = ({
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             handleSetActiveEnvironment={handleSetActiveEnvironment}
-            hidden={sidebarHidden || false}
+            hidden={activeWorkspaceMeta?.sidebarHidden || false}
             isLoading={isLoading}
             unseenWorkspaces={unseenWorkspaces}
             width={sidebarWidth}
