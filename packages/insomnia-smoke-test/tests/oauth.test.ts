@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../playwright/paths';
 import { test } from '../playwright/test';
 
-test('can make oauth2 requests', async ({ app, page }) => {
+test.only('can make oauth2 requests', async ({ app, page }) => {
   test.slow();
 
   const sendButton = page.locator('[data-testid="request-pane"] button:has-text("Send")');
@@ -54,7 +54,9 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.locator('button:text-is("Clear")').click();
   await page.locator('button:has-text("Click to confirm")').click();
+  await expect(tokenInput).toHaveValue('');
 
+  // Fetch new tokens
   const [refreshPage] = await Promise.all([
     app.waitForEvent('window'),
     page.locator('button:has-text("Fetch Tokens")').click(),
