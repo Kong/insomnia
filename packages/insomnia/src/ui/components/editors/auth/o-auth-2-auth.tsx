@@ -53,8 +53,7 @@ const useOauthToken = (): [{ token: OAuth2Token | undefined; loading: boolean },
   useEffect(() => {
     function listener(changes: ChangeBufferEvent[]): void {
       for (const change of changes) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [operationEvent, entity, _fromSync] = change;
+        const [operationEvent, entity] = change;
         if (entity.type === type && operationEvent === database.CHANGE_REMOVE) {
           setLoading(false);
         }
@@ -451,8 +450,7 @@ const OAuth2Error: FC = () => {
 };
 
 const useActiveOAuth2Token = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, clearTokens] = useOauthToken();
+  const [, clearTokens] = useOauthToken();
   const { activeRequest: { authentication, _id: requestId } } = useActiveRequest();
   const { handleRender } = useNunjucks();
 
