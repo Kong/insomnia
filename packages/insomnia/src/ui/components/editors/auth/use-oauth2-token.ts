@@ -15,13 +15,13 @@ export function useOauth2TokenClear(): UseOauth2TokenClear {
   const token = useSelector(selectActiveOAuth2Token);
   const [loading, setLoading] = useState(false);
 
-  const clearTokens = useCallback(() => {
+  const clearTokens = useCallback(async () => {
     if (!token) {
       return;
     }
 
     setLoading(true);
-    models.oAuth2Token.remove(token);
+    await models.oAuth2Token.remove(token);
   }, [token]);
 
   useEffect(() => {

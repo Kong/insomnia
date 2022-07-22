@@ -1,5 +1,5 @@
 import { Button } from 'insomnia-components';
-import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
+import React, { ChangeEvent, FC, ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
@@ -449,8 +449,8 @@ const useActiveOAuth2Token = () => {
 };
 
 const OAuth2Tokens: FC = () => {
-  const { refreshToken, loading, error } = useActiveOAuth2Token();
-  const [{ token, loading: tokenClearLoading }, clearTokens] = useOauth2TokenClear();
+  const { error } = useActiveOAuth2Token();
+  const [{ token }, clearTokens] = useOauth2TokenClear();
 
   return (
     <div className='notice subtle text-left'>
@@ -464,26 +464,45 @@ const OAuth2Tokens: FC = () => {
       <OAuth2TokenInput label='Identity Token' property='identityToken' />
       <OAuth2TokenInput label='Access Token' property='accessToken' />
       <div className='pad-top text-right'>
-        {token ? (
-          <PromptButton className="btn btn--clicky" onClick={clearTokens}>
-            Clear
-          </PromptButton>
-        ) : null}
+        {token && <PromptButton className="btn btn--clicky" onClick={clearTokens}>
+          Clear
+        </PromptButton>}
         &nbsp;&nbsp;
-        <button
-          className="btn btn--clicky"
-          onClick={refreshToken}
-          disabled={loading || tokenClearLoading}
-        >
-          {loading || tokenClearLoading
-            ? token
-              ? 'Refreshing...'
-              : 'Fetching...'
-            : token
-              ? 'Refresh Token'
-              : 'Fetch Tokens'}
-        </button>
+        <TokenRefreshButton />
       </div>
     </div>
+  );
+};
+
+function getLabel(loading: boolean, token?: OAuth2Token): string {
+  if (!loading) {
+    if (!token) {
+      return 'Fetch Tokens';
+    }
+
+    return 'Refresh Token';
+  }
+
+  if (!token) {
+    return 'Fetching...';
+  }
+
+  return 'Refreshing...';
+}
+
+const TokenRefreshButton = (): ReactElement => {
+  const { refreshToken, loading: refreshLoading } = useActiveOAuth2Token();
+  const [{ token, loading: clearLoading }] = useOauth2TokenClear();
+  const loading = refreshLoading || clearLoading;
+  const label = getLabel(loading, token);
+
+  return (
+    <button
+      className="btn btn--clicky"
+      onClick={refreshToken}
+      disabled={loading}
+    >
+      {label}
+    </button>
   );
 };
