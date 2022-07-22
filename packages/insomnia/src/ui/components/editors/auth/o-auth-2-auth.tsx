@@ -469,9 +469,9 @@ const OAuth2Tokens: FC = () => {
       <OAuth2TokenInput label='Access Token' property='accessToken' />
       <div className='pad-top text-right'>
         {token ? (
-          <PromptButton className="btn btn--clicky" onClick={clearTokens}>
+          <button className="btn btn--clicky" onClick={clearTokens}>
             Clear
-          </PromptButton>
+          </button>
         ) : null}
         &nbsp;&nbsp;
         <button
