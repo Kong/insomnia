@@ -69,6 +69,10 @@ export function remove(token: OAuth2Token) {
   return db.remove(token);
 }
 
+export function removeAsync(token: OAuth2Token) {
+  return db.remove(token);
+}
+
 export function getByParentId(parentId: string) {
   return db.getWhere<OAuth2Token>(type, { parentId });
 }
