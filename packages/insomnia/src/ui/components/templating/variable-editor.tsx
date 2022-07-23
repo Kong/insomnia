@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
@@ -7,106 +7,71 @@ interface Props {
   onChange: Function;
 }
 
-interface State {
-  variables: any[];
-  value: string;
-  preview: string;
-  error: string;
-  variableSource: string;
-}
-
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const selectRef = useRef<HTMLSelectElement>(null);
   const { handleRender, handleGetRenderContext } = useNunjucks();
-  const [state, setState] = useState<State>({
-    variables: [],
-    value: `{{ ${defaultValue.replace(/\s*}}$/, '').replace(/^{{\s*/, '')} }}`,
-    preview: '',
-    error: '',
-    variableSource: '',
-  });
-
-  const _update = useCallback(async (value: string, noCallback = false) => {
-    const cleanedValue = value
-      .replace(/^{%/, '')
-      .replace(/%}$/, '')
-      .replace(/^{{/, '')
-      .replace(/}}$/, '')
-      .trim();
-    let preview = '';
-    let error = '';
-
-    try {
-      preview = await handleRender(value);
-    } catch (err) {
-      error = err.message;
-    }
-
-    const context = await handleGetRenderContext();
-    const variables = context.keys.sort((a, b) => (a.name < b.name ? -1 : 1));
-    const variableSource = context.context.getKeysContext().keyContext[cleanedValue] || '';
-
-    // Hack to skip updating if we unmounted for some reason
-    if (selectRef.current) {
-      setState({
-        preview,
-        error,
-        variables,
-        value,
-        variableSource,
-      });
-    }
-
-    // Call the callback except in the useEffect
-    if (!noCallback) {
-      onChange(value);
-    }
-  }, [handleGetRenderContext, handleRender, onChange]);
+  const [selected, setSelected] = useState(defaultValue);
+  const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
+  const [preview, setPreview] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    _update(state.value, true);
-    const _resize = () => {
-      setTimeout(() => {
-        if (textAreaRef.current) {
-          textAreaRef.current.style.cssText = 'height:auto';
-          textAreaRef.current.style.cssText = `height:${textAreaRef.current.scrollHeight}px;overflow:hidden`;
-        }
-      }, 200);
+    let isMounted = true;
+    const syncInterpolation = async () => {
+      try {
+        const p = await handleRender(selected);
+        isMounted && setPreview(p);
+        isMounted && setError('');
+      } catch (e) {
+        isMounted && setPreview('');
+        isMounted && setError(e.message);
+      }
+      const context = await handleGetRenderContext();
+      isMounted && setOptions(context.keys.sort((a, b) => (a.name < b.name ? -1 : 1)));
     };
-    _resize();
-  }, [_update, state.value]);
+    syncInterpolation();
+    return () => {
+      isMounted = false;
+    };
+  }, [handleGetRenderContext, handleRender, selected]);
 
-  const { error, value, preview, variables, variableSource } = state;
-  const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
+  const isCustomTemplateSelected = !options.find(v => selected === `{{ ${v.name} }}`);
   return (
     <div>
       <div className="form-control form-control--outlined">
         <label>
           Environment Variable
-          <select ref={selectRef} value={value} onChange={event => _update(event.target.value)}>
+          <select
+            value={selected}
+            onChange={event => {
+              setSelected(event.target.value);
+              onChange(event.target.value);
+            }}
+          >
             <option value={"{{ 'my custom template logic' | urlencode }}"}>-- Custom --</option>
-            {variables.map((v, i) => (
-              <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
+            {options.map(v => (
+              <option key={v.name} value={`{{ ${v.name} }}`}>
                 {v.name}
               </option>
             ))}
           </select>
         </label>
       </div>
-      {isOther && (
+      {isCustomTemplateSelected && (
         <div className="form-control form-control--outlined">
-          <input type="text" defaultValue={value} onChange={event => _update(event.target.value)} />
+          <input
+            type="text"
+            defaultValue={selected}
+            onChange={event => {
+              setSelected(event.target.value);
+              onChange(event.target.value);
+            }}
+          />
         </div>
       )}
       <div className="form-control form-control--outlined">
         <label>
-          Live Preview {variableSource && ` - {source: ${variableSource} }`}
-          {error ? (
-            <textarea className="danger" value={error || 'Error'} readOnly />
-          ) : (
-            <textarea ref={textAreaRef} value={preview || ''} readOnly />
-          )}
+          Live Preview
+          <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />
         </label>
       </div>
     </div>
