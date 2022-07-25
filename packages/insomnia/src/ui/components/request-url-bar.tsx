@@ -200,7 +200,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           ) : (
             <>
               <button
-                ref={buttonRef}
                 type="button"
                 className="urlbar__send-btn"
                 onClick={send}
