@@ -18,7 +18,10 @@ import ReactDOM from 'react-dom';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
-import { KeydownBinder } from '../../keydown-binder';
+import {
+  createKeybindingsHandler,
+  useGlobalKeyboardShortcuts,
+} from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
@@ -78,15 +81,26 @@ const _getFlattenedChildren = (children: ReactNode[] | ReactNode) => {
 };
 
 export interface DropdownHandle {
-  show: (
-    filterVisible?: boolean,
-  ) => void;
+  show: (filterVisible?: boolean) => void;
   hide: () => void;
   toggle: (filterVisible?: boolean) => void;
 }
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
-  ({ right, outline, className, style, children, beside, onOpen, onHide, wide }, ref) => {
+  (
+    {
+      right,
+      outline,
+      className,
+      style,
+      children,
+      beside,
+      onOpen,
+      onHide,
+      wide,
+    },
+    ref
+  ) => {
     const [open, setOpen] = useState(false);
     // @TODO: This is a hack to force new menu every time dropdown opens
     const [uniquenessKey, setUniquenessKey] = useState(0);
@@ -99,67 +113,116 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     const dropdownListRef = useRef<HTMLDivElement>(null);
     const filterInputRef = useRef<HTMLInputElement>(null);
 
-    const _handleCheckFilterSubmit = useCallback((
-      event: React.KeyboardEvent<HTMLInputElement>
-    ) => {
-      if (event.key === 'Enter') {
-        // Listen for the Enter key and "click" on the active list item
-        const selector = `li[data-filter-index="${filterActiveIndex}"] button`;
+    const _handleCheckFilterSubmit = useCallback(
+      (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+          // Listen for the Enter key and "click" on the active list item
+          const selector = `li[data-filter-index="${filterActiveIndex}"] button`;
 
-        const button = dropdownListRef.current?.querySelector(selector);
+          const button = dropdownListRef.current?.querySelector(selector);
 
-        if (button instanceof HTMLButtonElement) {
-          button.click();
-        }
-      }
-    }, [filterActiveIndex]);
-
-    const _handleChangeFilter = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-      const newFilter = event.target.value;
-
-      // Nothing to do if the filter didn't change
-      if (newFilter === filter) {
-        return;
-      }
-
-      // Filter the list items that are filterable (have data-filter-index property)
-      const filterItems: number[] = [];
-
-      const filterableItems = dropdownListRef.current?.querySelectorAll('li');
-
-      if (filterableItems instanceof NodeList) {
-        for (const listItem of filterableItems) {
-          if (!listItem.hasAttribute('data-filter-index')) {
-            continue;
+          if (button instanceof HTMLButtonElement) {
+            button.click();
           }
+        }
+      },
+      [filterActiveIndex]
+    );
 
-          const match = fuzzyMatch(newFilter, listItem.textContent || '');
+    const _handleChangeFilter = useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newFilter = event.target.value;
 
-          if (!newFilter || match) {
-            const filterIndex = listItem.getAttribute('data-filter-index');
+        // Nothing to do if the filter didn't change
+        if (newFilter === filter) {
+          return;
+        }
 
-            if (filterIndex) {
-              filterItems.push(parseInt(filterIndex, 10));
+        // Filter the list items that are filterable (have data-filter-index property)
+        const filterItems: number[] = [];
+
+        const filterableItems = dropdownListRef.current?.querySelectorAll('li');
+
+        if (filterableItems instanceof NodeList) {
+          for (const listItem of filterableItems) {
+            if (!listItem.hasAttribute('data-filter-index')) {
+              continue;
+            }
+
+            const match = fuzzyMatch(newFilter, listItem.textContent || '');
+
+            if (!newFilter || match) {
+              const filterIndex = listItem.getAttribute('data-filter-index');
+
+              if (filterIndex) {
+                filterItems.push(parseInt(filterIndex, 10));
+              }
             }
           }
+
+          setFilter(newFilter);
+          setFilterItems(newFilter ? filterItems : null);
+          setFilterActiveIndex(filterItems[0] || -1);
+          setFilterVisible(filterVisible || newFilter.length > 0);
+        }
+      },
+      [filter, filterVisible]
+    );
+
+    const _handleDropdownNavigation = useCallback(
+      (event: KeyboardEvent) => {
+        const { key, shiftKey } = event;
+        // Handle tab and arrows to move up and down dropdown entries
+        if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
+          event.preventDefault();
+          const items = filterItems || [];
+
+          if (!filterItems) {
+            const filterableItems =
+              dropdownListRef.current?.querySelectorAll('li');
+
+            if (filterableItems instanceof NodeList) {
+              for (const li of filterableItems) {
+                if (li.hasAttribute('data-filter-index')) {
+                  const filterIndex = li.getAttribute('data-filter-index');
+                  if (filterIndex) {
+                    items.push(parseInt(filterIndex, 10));
+                  }
+                }
+              }
+            }
+          }
+
+          const i = items.indexOf(filterActiveIndex);
+
+          if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
+            const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
+            setFilterActiveIndex(nextI);
+          } else {
+            setFilterActiveIndex(items[i + 1] || items[0]);
+          }
         }
 
-        setFilter(newFilter);
-        setFilterItems(newFilter ? filterItems : null);
-        setFilterActiveIndex(filterItems[0] || -1);
-        setFilterVisible(filterVisible || newFilter.length > 0);
-      }
-    }, [filter, filterVisible]);
+        filterInputRef.current?.focus();
+      },
+      [filterActiveIndex, filterItems]
+    );
 
-    const _handleDropdownNavigation = useCallback((event: KeyboardEvent) => {
-      const { key, shiftKey } = event;
-      // Handle tab and arrows to move up and down dropdown entries
-      if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
-        event.preventDefault();
+    useGlobalKeyboardShortcuts({
+      CLOSE_DROPDOWN: () => {
+        if (open) {
+          hide();
+        }
+      },
+    });
+
+    const handleKeydown = createKeybindingsHandler({
+      'Shift+Tab': () => {
         const items = filterItems || [];
 
         if (!filterItems) {
-          const filterableItems = dropdownListRef.current?.querySelectorAll('li');
+          const filterableItems =
+            dropdownListRef.current?.querySelectorAll('li');
 
           if (filterableItems instanceof NodeList) {
             for (const li of filterableItems) {
@@ -175,31 +238,65 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
         const i = items.indexOf(filterActiveIndex);
 
-        if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
-          const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
-          setFilterActiveIndex(nextI);
-        } else {
-          setFilterActiveIndex(items[i + 1] || items[0]);
+        const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
+        setFilterActiveIndex(nextI);
+
+        filterInputRef.current?.focus();
+      },
+      ArrowDown: event => {
+        event.preventDefault();
+        const items = filterItems || [];
+
+        if (!filterItems) {
+          const filterableItems =
+            dropdownListRef.current?.querySelectorAll('li');
+
+          if (filterableItems instanceof NodeList) {
+            for (const li of filterableItems) {
+              if (li.hasAttribute('data-filter-index')) {
+                const filterIndex = li.getAttribute('data-filter-index');
+                if (filterIndex) {
+                  items.push(parseInt(filterIndex, 10));
+                }
+              }
+            }
+          }
         }
-      }
 
-      filterInputRef.current?.focus();
-    }, [filterActiveIndex, filterItems]);
+        const i = items.indexOf(filterActiveIndex);
 
-    const _handleBodyKeyDown = (event: KeyboardEvent) => {
-      if (!open) {
-        return;
-      }
+        setFilterActiveIndex(items[i + 1] || items[0]);
 
-      // Catch all key presses (like global app hotkeys) if we're open
-      event.stopPropagation();
+        filterInputRef.current?.focus();
+      },
+      ArrowUp: event => {
+        event.preventDefault();
+        const items = filterItems || [];
 
-      _handleDropdownNavigation(event);
+        if (!filterItems) {
+          const filterableItems =
+            dropdownListRef.current?.querySelectorAll('li');
 
-      executeHotKey(event, hotKeyRefs.CLOSE_DROPDOWN, () => {
-        hide();
-      });
-    };
+          if (filterableItems instanceof NodeList) {
+            for (const li of filterableItems) {
+              if (li.hasAttribute('data-filter-index')) {
+                const filterIndex = li.getAttribute('data-filter-index');
+                if (filterIndex) {
+                  items.push(parseInt(filterIndex, 10));
+                }
+              }
+            }
+          }
+        }
+
+        const i = items.indexOf(filterActiveIndex);
+
+        const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
+        setFilterActiveIndex(nextI);
+
+        filterInputRef.current?.focus();
+      },
+    });
 
     const isNearBottomOfScreen = () => {
       if (!dropdownContainerRef.current) {
@@ -207,7 +304,8 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       const bodyHeight = document.body.getBoundingClientRect().height;
-      const dropdownTop = dropdownContainerRef.current.getBoundingClientRect().top;
+      const dropdownTop =
+        dropdownContainerRef.current.getBoundingClientRect().top;
 
       return dropdownTop > bodyHeight - 200;
     };
@@ -219,7 +317,8 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       // Compute the size of all the menus
-      const dropdownBtnRect = dropdownContainerRef.current?.getBoundingClientRect();
+      const dropdownBtnRect =
+        dropdownContainerRef.current?.getBoundingClientRect();
       if (!dropdownBtnRect) {
         return;
       }
@@ -306,9 +405,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     }, [onHide]);
 
     const show = useCallback(
-      (
-        filterVisible = false,
-      ) => {
+      (filterVisible = false) => {
         setOpen(true);
         setFilterVisible(filterVisible);
         setFilter('');
@@ -414,10 +511,13 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         );
       } else {
         const noResults = filter && filterItems && filterItems.length === 0;
-        const dropdownsContainer = document.getElementById(dropdownsContainerId);
+        const dropdownsContainer =
+          document.getElementById(dropdownsContainerId);
 
         if (!dropdownsContainer) {
-          console.error('Dropdown: a #dropdowns-container element is required for a dropdown to render properly');
+          console.error(
+            'Dropdown: a #dropdowns-container element is required for a dropdown to render properly'
+          );
 
           return null;
         }
@@ -425,7 +525,12 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         finalChildren = [
           dropdownButtons[0],
           ReactDOM.createPortal(
-            <div key="item" className={menuClasses} aria-hidden={!open}>
+            <div
+              onKeyDown={handleKeydown}
+              key="item"
+              className={menuClasses}
+              aria-hidden={!open}
+            >
               <div className="dropdown__backdrop theme--transparent-overlay" />
               <div
                 key={uniquenessKey}
@@ -463,25 +568,31 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       return finalChildren;
-    }, [_handleChangeFilter, _handleCheckFilterSubmit, children, filter, filterActiveIndex, filterItems, filterVisible, menuClasses, open, uniquenessKey]);
+    }, [
+      _handleChangeFilter,
+      _handleCheckFilterSubmit,
+      children,
+      filter,
+      filterActiveIndex,
+      filterItems,
+      filterVisible,
+      handleKeydown,
+      menuClasses,
+      open,
+      uniquenessKey,
+    ]);
 
     return (
-      <KeydownBinder
-        stopMetaPropagation
-        onKeydown={_handleBodyKeyDown}
-        disabled={!open}
+      <div
+        style={style}
+        className={classes}
+        ref={dropdownContainerRef}
+        onClick={_handleClick}
+        tabIndex={-1}
+        onMouseDown={_handleMouseDown}
       >
-        <div
-          style={style}
-          className={classes}
-          ref={dropdownContainerRef}
-          onClick={_handleClick}
-          tabIndex={-1}
-          onMouseDown={_handleMouseDown}
-        >
-          {dropdownChildren}
-        </div>
-      </KeydownBinder>
+        {dropdownChildren}
+      </div>
     );
   }
 );

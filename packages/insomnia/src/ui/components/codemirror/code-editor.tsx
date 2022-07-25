@@ -10,7 +10,7 @@ import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
+import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
@@ -32,7 +32,7 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
@@ -188,10 +188,24 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawPr
   { enableNunjucks, ignoreEditorFontSettings, ...rawProps },
   ref
 ) => {
+  const editorRef = useRef<UnconnectedCodeEditor | null>(null);
+
+  useGlobalKeyboardShortcuts({
+    'BEAUTIFY_REQUEST_BODY': () => editorRef.current?._prettify(),
+  });
+
   const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
 
   return <UnconnectedCodeEditor
-    ref={ref}
+    ref={editor => {
+      if (typeof ref === 'function') {
+        ref(editor);
+      } else if (typeof ref === 'object' && ref) {
+        ref.current = editor;
+      }
+
+      editorRef.current = editor;
+    }}
     {...rawProps}
     {...derivedProps}
   />;
@@ -1295,7 +1309,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         data-editor-type={type}
         data-testid="CodeEditor"
       >
-        <KeydownBinder onKeydown={this._handleKeyDown} />
         <div
           className={classnames('editor__container', 'input', className)}
           style={styles}

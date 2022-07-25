@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import tinykeys, { type KeyBindingMap, createKeybindingsHandler } from 'tinykeys';
 
 import { AUTOBIND_CFG, isMac } from '../../common/constants';
-import { getPlatformKeyCombinations, hotKeyRefs, KeyboardShortcut } from '../../common/hotkeys';
+import { getPlatformKeyCombinations, HotKeyName, hotKeyRefs } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
 import { selectHotKeyRegistry } from '../redux/selectors';
 
@@ -87,13 +87,13 @@ export class KeydownBinder extends PureComponent<Props> {
   }
 }
 
-export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in HotKeyName]?: (event: KeyboardEvent) => any }) {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
 
   useEffect(() => {
     const finalListeners: KeyBindingMap = {};
     Object.entries(listeners).map(([key, listener]) => {
-      const keyDefinition = hotKeyRefs[key as KeyboardShortcut];
+      const keyDefinition = hotKeyRefs[key as HotKeyName];
       const bindings = hotKeyRegistry[keyDefinition.id];
 
       const keyCombList = getPlatformKeyCombinations(bindings);
@@ -119,7 +119,7 @@ export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in K
   }, [hotKeyRegistry, listeners, target]);
 }
 
-export function useGlobalKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+export function useGlobalKeyboardShortcuts(listeners: { [key in HotKeyName]?: (event: KeyboardEvent) => any }) {
   useKeyboardShortcuts(document.body, listeners);
 }
 

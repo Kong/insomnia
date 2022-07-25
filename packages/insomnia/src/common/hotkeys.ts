@@ -14,11 +14,45 @@ export interface HotKeyDefinition {
   description: string;
 }
 
+export type HotKeyName =
+  | 'WORKSPACE_SHOW_SETTINGS'
+  | 'REQUEST_SHOW_SETTINGS'
+  | 'PREFERENCES_SHOW_KEYBOARD_SHORTCUTS'
+  | 'PREFERENCES_SHOW_GENERAL'
+  | 'REQUEST_QUICK_SWITCH'
+  | 'SHOW_RECENT_REQUESTS'
+  | 'SHOW_RECENT_REQUESTS_PREVIOUS'
+  | 'PLUGIN_RELOAD'
+  | 'SHOW_AUTOCOMPLETE'
+  | 'REQUEST_SEND'
+  | 'REQUEST_SHOW_OPTIONS'
+  | 'ENVIRONMENT_SHOW_EDITOR'
+  | 'ENVIRONMENT_SHOW_SWITCH_MENU'
+  | 'REQUEST_TOGGLE_HTTP_METHOD_MENU'
+  | 'REQUEST_TOGGLE_HISTORY'
+  | 'REQUEST_FOCUS_URL'
+  | 'REQUEST_SHOW_GENERATE_CODE_EDITOR'
+  | 'SIDEBAR_FOCUS_FILTER'
+  | 'SIDEBAR_TOGGLE'
+  | 'RESPONSE_FOCUS'
+  | 'SHOW_COOKIES_EDITOR'
+  | 'REQUEST_CREATE_HTTP'
+  | 'REQUEST_SHOW_DELETE'
+  | 'REQUEST_SHOW_CREATE_FOLDER'
+  | 'REQUEST_SHOW_DUPLICATE'
+  | 'REQUEST_TOGGLE_PIN'
+  | 'CLOSE_DROPDOWN'
+  | 'CLOSE_MODAL'
+  | 'ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE'
+  | 'BEAUTIFY_REQUEST_BODY'
+  | 'GRAPHQL_EXPLORER_FOCUS_FILTER'
+  | 'FILTER_DOCUMENTS';
+
 /**
  * The collection of available hotkeys' and their definitions.
  */
 // Not using dot, because NeDB prohibits field names to contain dots.
-export const hotKeyRefs: Record<string, HotKeyDefinition> = {
+export const hotKeyRefs: Record<HotKeyName, HotKeyDefinition> = {
   WORKSPACE_SHOW_SETTINGS: {
     id: 'workspace_showSettings',
     description: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
@@ -148,8 +182,6 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
     description: 'Focus Documents Filter',
   },
 };
-
-export type KeyboardShortcut = keyof typeof hotKeyRefs;
 
 /**
  * The default key bindings values of all available hotkeys.
