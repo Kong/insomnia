@@ -402,12 +402,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _handleUpdateDownloadPath(requestId: string, downloadPath: string) {
-    updateRequestMetaByParentId(requestId, {
-      downloadPath,
-    });
-  }
-
   async _handleSetResponseFilter(requestId: string, responseFilter: string) {
     await updateRequestMetaByParentId(requestId, {
       responseFilter,
@@ -1110,7 +1104,6 @@ class App extends PureComponent<AppProps, State> {
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleSetSidebarFilter={this._handleSetSidebarFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  handleUpdateDownloadPath={this._handleUpdateDownloadPath}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   handleSidebarSort={this._sortSidebar}
                   vcs={vcs}

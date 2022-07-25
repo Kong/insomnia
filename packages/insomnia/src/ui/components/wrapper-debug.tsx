@@ -52,7 +52,6 @@ interface Props {
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleDuplicateRequest: Function;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleUpdateDownloadPath: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
   vcs: VCS | null;
@@ -75,7 +74,6 @@ export const WrapperDebug: FC<Props> = ({
   handleUpdateSettingsUseBulkParametersEditor,
   handleDuplicateRequest,
   handleSetSidebarFilter,
-  handleUpdateDownloadPath,
   handleUpdateRequestMimeType,
   headerEditorKey,
   vcs,
@@ -161,7 +159,6 @@ export const WrapperDebug: FC<Props> = ({
               handleImport={handleImport}
               handleSend={handleSendRequestWithActiveEnvironment}
               handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
-              handleUpdateDownloadPath={handleUpdateDownloadPath}
               headerEditorKey={headerEditorKey}
               request={activeRequest}
               settings={settings}

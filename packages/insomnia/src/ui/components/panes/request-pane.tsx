@@ -40,7 +40,6 @@ interface Props {
   handleImport: Function;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleUpdateDownloadPath: Function;
   headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
@@ -59,7 +58,6 @@ export const RequestPane: FC<Props> = ({
   handleImport,
   handleSend,
   handleSendAndDownload,
-  handleUpdateDownloadPath,
   headerEditorKey,
   request,
   settings,
@@ -181,7 +179,6 @@ export const RequestPane: FC<Props> = ({
             handleSendAndDownload={handleSendAndDownload}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
-            handleUpdateDownloadPath={handleUpdateDownloadPath}
             downloadPath={downloadPath}
           />
         </ErrorBoundary>

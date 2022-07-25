@@ -135,8 +135,6 @@ export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDi
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  handleUpdateDownloadPath: Function;
-
   headerEditorKey: string;
   vcs: VCS | null;
   gitVCS: GitVCS | null;

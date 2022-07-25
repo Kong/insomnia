@@ -5,6 +5,7 @@ import { useInterval } from 'react-use';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import type { Request } from '../../models/request';
+import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectHotKeyRegistry } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
@@ -24,7 +25,6 @@ interface Props {
   handleImport: Function;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleUpdateDownloadPath: Function;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
@@ -42,7 +42,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleImport,
   handleSend,
   handleSendAndDownload,
-  handleUpdateDownloadPath,
   onMethodChange,
   onUrlChange,
   request,
@@ -119,9 +118,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     if (canceled) {
       return;
     }
-    handleUpdateDownloadPath(request._id, filePaths[0]);
-  }, [handleUpdateDownloadPath, request._id]);
-  const handleClearDownloadLocation = () => handleUpdateDownloadPath(request._id, null);
+    updateRequestMetaByParentId(request._id, { downloadPath: filePaths[0] });
+  }, [request._id]);
+  const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.code === 'Enter' && request.url) {
