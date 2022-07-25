@@ -19,7 +19,7 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
 import { KeydownBinder } from '../../keydown-binder';
-import { DropdownButton } from './dropdown-button';
+import { DROPDOWN_BUTTON_DISPLAY_NAME } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
 
@@ -46,7 +46,7 @@ const isComponent = (match: string) => (child: ReactNode) =>
   ]);
 
 const isDropdownItem = isComponent(DropdownItem.name);
-const isDropdownButton = isComponent(DropdownButton.name);
+const isDropdownButton = isComponent(DROPDOWN_BUTTON_DISPLAY_NAME);
 const isDropdownDivider = isComponent(DropdownDivider.name);
 
 // This walks the children tree and returns the dropdown specific components.
