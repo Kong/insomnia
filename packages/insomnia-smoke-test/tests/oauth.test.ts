@@ -4,7 +4,11 @@ import { loadFixture } from '../playwright/paths';
 import { test } from '../playwright/test';
 
 test('can make oauth2 requests', async ({ app, page }) => {
-  test.slow();
+  if (process.platform === 'darwin') {
+    test.setTimeout(6 * 60 * 1000);
+  } else {
+    test.slow();
+  }
 
   const sendButton = page.locator('[data-testid="request-pane"] button:has-text("Send")');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
