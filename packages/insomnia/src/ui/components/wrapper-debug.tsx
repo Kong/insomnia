@@ -4,9 +4,10 @@ import { useSelector } from 'react-redux';
 import { SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
-import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { Request, RequestHeader } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
+import { VCS } from '../../sync/vcs/vcs';
 import {
   selectActiveEnvironment,
   selectActiveProject,
@@ -31,13 +32,13 @@ import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
 import { SidebarFilter } from './sidebar/sidebar-filter';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { HandleActivityChange, WrapperProps } from './wrapper';
+import type { HandleActivityChange } from './wrapper';
 
 interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
-  handleChangeEnvironment: Function;
+  handleSetActiveEnvironment: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
@@ -47,21 +48,24 @@ interface Props {
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  handleUpdateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  handleUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleUpdateRequestMethod: (r: Request, method: string) => Promise<Request>;
-  handleUpdateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
-  handleUpdateRequestUrl: (r: Request, url: string) => Promise<Request>;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
-  wrapperProps: WrapperProps;
+  handleActivateRequest: (activeRequestId: string) => void;
+  handleCopyAsCurl: Function;
+  handleDuplicateRequest: Function;
+  handleGenerateCode: Function;
+  handleGenerateCodeForActiveRequest: Function;
+  handleSetSidebarFilter: (value: string) => Promise<void>;
+  handleUpdateDownloadPath: Function;
+  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
+  headerEditorKey: string;
+  vcs: VCS | null;
 }
 export const WrapperDebug: FC<Props> = ({
   forceRefreshKey,
   gitSyncDropdown,
   handleActivityChange,
-  handleChangeEnvironment,
+  handleSetActiveEnvironment,
   handleForceUpdateRequest,
   handleForceUpdateRequestHeaders,
   handleImport,
@@ -71,29 +75,20 @@ export const WrapperDebug: FC<Props> = ({
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
   handleSidebarSort,
-  handleUpdateRequestAuthentication,
-  handleUpdateRequestBody,
-  handleUpdateRequestHeaders,
-  handleUpdateRequestMethod,
-  handleUpdateRequestParameters,
-  handleUpdateRequestUrl,
   handleUpdateSettingsUseBulkHeaderEditor,
   handleUpdateSettingsUseBulkParametersEditor,
-  wrapperProps,
-
+  handleActivateRequest,
+  handleCopyAsCurl,
+  handleDuplicateRequest,
+  handleGenerateCode,
+  handleGenerateCodeForActiveRequest,
+  handleSetSidebarFilter,
+  handleUpdateDownloadPath,
+  handleUpdateRequestMimeType,
+  headerEditorKey,
+  vcs,
 }) => {
-  const {
-    handleActivateRequest,
-    handleCopyAsCurl,
-    handleDuplicateRequest,
-    handleGenerateCode,
-    handleGenerateCodeForActiveRequest,
-    handleSetSidebarFilter,
-    handleUpdateDownloadPath,
-    handleUpdateRequestMimeType,
-    headerEditorKey,
-    vcs,
-  } = wrapperProps;
+
   const activeProject = useSelector(selectActiveProject);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -130,7 +125,7 @@ export const WrapperDebug: FC<Props> = ({
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             environments={environments}
-            handleChangeEnvironment={handleChangeEnvironment}
+            handleChangeEnvironment={handleSetActiveEnvironment}
             workspace={activeWorkspace}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
@@ -182,13 +177,7 @@ export const WrapperDebug: FC<Props> = ({
               headerEditorKey={headerEditorKey}
               request={activeRequest}
               settings={settings}
-              updateRequestAuthentication={handleUpdateRequestAuthentication}
-              updateRequestBody={handleUpdateRequestBody}
-              updateRequestHeaders={handleUpdateRequestHeaders}
-              updateRequestMethod={handleUpdateRequestMethod}
               updateRequestMimeType={handleUpdateRequestMimeType}
-              updateRequestParameters={handleUpdateRequestParameters}
-              updateRequestUrl={handleUpdateRequestUrl}
               updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
               updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
               workspace={activeWorkspace}

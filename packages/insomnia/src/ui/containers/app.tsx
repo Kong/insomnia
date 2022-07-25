@@ -1132,7 +1132,6 @@ class App extends PureComponent<AppProps, State> {
               <ErrorBoundary showAlert>
                 <Wrapper
                   ref={this._setWrapperRef}
-                  {...this.props}
                   handleActivateRequest={this._handleSetActiveRequest}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleGenerateCode={App._handleGenerateCode}

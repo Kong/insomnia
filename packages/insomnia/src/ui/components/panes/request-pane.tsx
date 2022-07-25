@@ -6,6 +6,7 @@ import { useMount } from 'react-use';
 
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { update } from '../../../models/helpers/request-operations';
 import type {
   Request,
   RequestAuthentication,
@@ -44,13 +45,7 @@ interface Props {
   headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
-  updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  updateRequestMethod: (r: Request, method: string) => Promise<Request>;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
-  updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   workspace: Workspace;
@@ -70,17 +65,37 @@ export const RequestPane: FC<Props> = ({
   headerEditorKey,
   request,
   settings,
-  updateRequestAuthentication,
-  updateRequestBody,
-  updateRequestHeaders,
-  updateRequestMethod,
   updateRequestMimeType,
-  updateRequestParameters,
-  updateRequestUrl,
   updateSettingsUseBulkHeaderEditor,
   updateSettingsUseBulkParametersEditor,
   workspace,
 }) => {
+  const updateRequestBody = (request: Request, body: RequestBody) => {
+    return update(request, { body });
+  };
+
+  const updateRequestParameters = (request: Request, parameters: RequestParameter[]) => {
+    return update(request, { parameters });
+  };
+
+  const updateRequestAuthentication = (request: Request, authentication: RequestAuthentication) => {
+    return update(request, { authentication });
+  };
+
+  const updateRequestHeaders = (request: Request, headers: RequestHeader[]) => {
+    return update(request, { headers });
+  };
+
+  const updateRequestMethod = (request: Request, method: string) => {
+    return update(request, { method });
+  };
+  const updateRequestUrl = (request: Request, url: string) => {
+    if (request.url === url) {
+      return Promise.resolve(request);
+    }
+    return update(request, { url });
+  };
+
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
     showModal(RequestSettingsModal, { request, forceEditMode });
   }, [request]);
