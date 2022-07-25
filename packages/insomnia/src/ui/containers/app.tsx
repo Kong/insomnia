@@ -30,7 +30,7 @@ import {
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
@@ -71,6 +71,7 @@ import { type WrapperClass, Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
 import {
@@ -97,19 +98,6 @@ import {
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
-
-const updateRequestMetaByParentId = async (
-  requestId: string,
-  patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>
-) => {
-  const isGrpc = isGrpcRequestId(requestId);
-
-  if (isGrpc) {
-    return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
-  } else {
-    return models.requestMeta.updateOrCreateByParentId(requestId, patch);
-  }
-};
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -283,7 +271,7 @@ class App extends PureComponent<AppProps, State> {
             ? entities.grpcRequestMetas
             : entities.requestMetas;
           const meta = Object.values<GrpcRequestMeta | RequestMeta>(entitiesToCheck).find(m => m.parentId === activeRequest._id);
-          await this._handleSetRequestPinned(activeRequest, !meta?.pinned);
+          updateRequestMetaByParentId(activeRequest._id, { pinned:!meta?.pinned });
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -439,12 +427,6 @@ class App extends PureComponent<AppProps, State> {
   async _handleSetSidebarFilter(sidebarFilter: string) {
     await this._updateActiveWorkspaceMeta({
       sidebarFilter,
-    });
-  }
-
-  async _handleSetRequestPinned(request: Request | GrpcRequest, pinned: boolean) {
-    updateRequestMetaByParentId(request._id, {
-      pinned,
     });
   }
 

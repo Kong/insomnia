@@ -15,6 +15,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -27,7 +28,6 @@ import { showError } from '../modals';
 interface Props extends Pick<DropdownProps, 'right'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
-  handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
@@ -43,7 +43,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   handleCopyAsCurl,
   handleDuplicateRequest,
   handleGenerateCode,
-  handleSetRequestPinned,
   handleShowSettings,
   isPinned,
   request,
@@ -99,8 +98,8 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   }, [handleCopyAsCurl, request]);
 
   const togglePin = useCallback(() => {
-    handleSetRequestPinned(request, !isPinned);
-  }, [handleSetRequestPinned, isPinned, request]);
+    updateRequestMetaByParentId(request._id, { pinned:!isPinned });
+  }, [isPinned, request]);
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();

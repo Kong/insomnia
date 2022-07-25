@@ -27,7 +27,6 @@ interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
   handleActivateRequest: Function;
-  handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
@@ -64,7 +63,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   handleCopyAsCurl,
   handleDuplicateRequest,
   handleGenerateCode,
-  handleSetRequestPinned,
   isActive,
   isDragging,
   isDraggingOver,
@@ -253,7 +251,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
               right
               ref={requestActionsDropdown}
               handleDuplicateRequest={handleDuplicateRequest}
-              handleSetRequestPinned={handleSetRequestPinned}
               handleGenerateCode={handleGenerateCode}
               handleCopyAsCurl={handleCopyAsCurl}
               handleShowSettings={handleShowRequestSettings}

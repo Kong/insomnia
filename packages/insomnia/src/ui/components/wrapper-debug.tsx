@@ -87,7 +87,6 @@ export const WrapperDebug: FC<Props> = ({
     handleDuplicateRequest,
     handleGenerateCode,
     handleGenerateCodeForActiveRequest,
-    handleSetRequestPinned,
     handleSetSidebarFilter,
     handleUpdateDownloadPath,
     handleUpdateRequestMimeType,
@@ -149,7 +148,6 @@ export const WrapperDebug: FC<Props> = ({
         <SidebarChildren
           childObjects={sidebarChildren}
           handleActivateRequest={handleActivateRequest}
-          handleSetRequestPinned={handleSetRequestPinned}
           handleDuplicateRequest={handleDuplicateRequest}
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
