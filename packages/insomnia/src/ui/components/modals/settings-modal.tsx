@@ -37,7 +37,7 @@ export const SettingsModal = forwardRef<ModalHandle, ModalProps>((props, ref) =>
   };
 
   useEffect(() => {
-    registerModal(modalRef.current, SETTINGS_MODAL_DISPLAYNAME);
+    registerModal(modalRef.current, SETTINGS_MODAL_DISPLAY_NAME);
   }, []);
 
   useImperativeHandle(ref, () => ({
