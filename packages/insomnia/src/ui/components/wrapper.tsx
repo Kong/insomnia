@@ -125,7 +125,6 @@ const ActivityRouter = () => {
 const spectral = initializeSpectral();
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
-  handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
@@ -382,7 +381,6 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeWorkspace,
       activeApiSpec,
       gitVCS,
-      handleActivateRequest,
       handleSidebarSort,
       vcs,
     } = this.props;
@@ -463,7 +461,6 @@ export class WrapperClass extends PureComponent<Props, State> {
 
             <RequestSwitcherModal
               ref={registerModal}
-              activateRequest={handleActivateRequest}
             />
 
             <EnvironmentEditModal

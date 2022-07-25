@@ -27,7 +27,6 @@ const mapStateToProps = (state: RootState) => ({
 });
 
 interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
-  handleActivateRequest: Function;
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
@@ -171,7 +170,7 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
             children
           ) : (
             <SidebarRequestRow
-              handleActivateRequest={noop}
+              handleSetActiveRequest={noop}
               handleDuplicateRequest={noop}
               handleCopyAsCurl={noop}
               isActive={false}

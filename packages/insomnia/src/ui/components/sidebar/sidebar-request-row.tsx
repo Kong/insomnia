@@ -26,7 +26,7 @@ import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceColl
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
-  handleActivateRequest: Function;
+  handleSetActiveRequest: Function;
   handleDuplicateRequest: Function;
   handleCopyAsCurl: Function;
   isActive: boolean;
@@ -58,7 +58,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   connectDropTarget,
   disableDragAndDrop,
   filter,
-  handleActivateRequest,
+  handleSetActiveRequest,
   handleCopyAsCurl,
   handleDuplicateRequest,
   isActive,
@@ -126,8 +126,8 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       return;
     }
 
-    handleActivateRequest(request?._id);
-  }, [isActive, request?._id, handleActivateRequest]);
+    handleSetActiveRequest(request?._id);
+  }, [isActive, request?._id, handleSetActiveRequest]);
 
   const handleShowRequestSettings = useCallback(() => {
     showModal(RequestSettingsModal, { request });

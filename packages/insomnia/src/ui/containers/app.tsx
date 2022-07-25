@@ -40,7 +40,6 @@ import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
 import { isWorkspace } from '../../models/workspace';
-import { WorkspaceMeta } from '../../models/workspace-meta';
 import * as network from '../../network/network';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
@@ -382,32 +381,24 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _updateActiveWorkspaceMeta(patch: Partial<WorkspaceMeta>) {
-    const { activeWorkspaceMeta } = this.props;
-
-    if (activeWorkspaceMeta) {
-      await models.workspaceMeta.update(activeWorkspaceMeta, patch);
-    }
-  }
-
   async _updateShowVariableSourceAndValue() {
     const { settings } = this.props;
     await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
   async _handleSetActiveRequest(activeRequestId: string) {
-    await this._updateActiveWorkspaceMeta({
-      activeRequestId,
-    });
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeRequestId });
+    }
     await updateRequestMetaByParentId(activeRequestId, {
       lastActive: Date.now(),
     });
   }
 
   async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
-    await this._updateActiveWorkspaceMeta({
-      activeEnvironmentId,
-    });
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeEnvironmentId });
+    }
     // Give it time to update and re-render
     setTimeout(() => {
       this._wrapper?._forceRequestPaneRefresh();
@@ -415,9 +406,9 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async _handleSetSidebarFilter(sidebarFilter: string) {
-    await this._updateActiveWorkspaceMeta({
-      sidebarFilter,
-    });
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { sidebarFilter });
+    }
   }
 
   _handleSetResponsePreviewMode(requestId: string, previewMode: PreviewMode) {
@@ -1123,7 +1114,6 @@ class App extends PureComponent<AppProps, State> {
               <ErrorBoundary showAlert>
                 <Wrapper
                   ref={this._setWrapperRef}
-                  handleActivateRequest={this._handleSetActiveRequest}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleCopyAsCurl={this._handleCopyAsCurl}
                   handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}

@@ -50,7 +50,6 @@ interface Props {
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
-  handleActivateRequest: (activeRequestId: string) => void;
   handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
   handleSetSidebarFilter: (value: string) => Promise<void>;
@@ -75,7 +74,6 @@ export const WrapperDebug: FC<Props> = ({
   handleSidebarSort,
   handleUpdateSettingsUseBulkHeaderEditor,
   handleUpdateSettingsUseBulkParametersEditor,
-  handleActivateRequest,
   handleCopyAsCurl,
   handleDuplicateRequest,
   handleSetSidebarFilter,
@@ -140,7 +138,6 @@ export const WrapperDebug: FC<Props> = ({
 
         <SidebarChildren
           childObjects={sidebarChildren}
-          handleActivateRequest={handleActivateRequest}
           handleDuplicateRequest={handleDuplicateRequest}
           handleCopyAsCurl={handleCopyAsCurl}
           filter={sidebarFilter || ''}
