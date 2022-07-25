@@ -1,8 +1,7 @@
-import React, { PureComponent } from 'react';
+import React, { FC } from 'react';
 
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
+import { isGrpcRequest } from '../../../models/grpc-request';
+import { isRequest } from '../../../models/request';
 import type { Node } from '../modals/export-requests-modal';
 import { RequestGroupRow } from './request-group-row';
 import { RequestRow } from './request-row';
@@ -13,21 +12,19 @@ interface Props {
   handleSetItemSelected: (...args: any[]) => any;
 }
 
-export class Tree extends PureComponent<Props> {
-  renderChildren(node?: Node | null) {
+export const Tree: FC<Props> = ({ root, handleSetRequestGroupCollapsed, handleSetItemSelected }) => {
+  const renderChildren = (node?: Node | null) => {
     if (node == null) {
       return null;
     }
 
     if (isRequest(node.doc) || isGrpcRequest(node.doc)) {
-      // Directly casting will result in error, so cast it to any first.
-      const request: Request | GrpcRequest = (node.doc as any) as Request | GrpcRequest;
       return (
         <RequestRow
           key={node.doc._id}
-          handleSetItemSelected={this.props.handleSetItemSelected}
+          handleSetItemSelected={handleSetItemSelected}
           isSelected={node.selectedRequests === node.totalRequests}
-          request={request}
+          request={node.doc}
         />
       );
     }
@@ -37,28 +34,22 @@ export class Tree extends PureComponent<Props> {
       return null;
     }
 
-    const children = node.children.map(child => this.renderChildren(child));
-    // Directly cast to RequestGroup will result in error, so cast it to any first.
-    const requestGroup: RequestGroup = (node.doc as any) as RequestGroup;
     return (
       <RequestGroupRow
         key={node.doc._id}
-        handleSetRequestGroupCollapsed={this.props.handleSetRequestGroupCollapsed}
-        handleSetItemSelected={this.props.handleSetItemSelected}
+        handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+        handleSetItemSelected={handleSetItemSelected}
         isCollapsed={node.collapsed}
         totalRequests={node.totalRequests}
         selectedRequests={node.selectedRequests}
-        requestGroup={requestGroup}
+        requestGroup={node.doc}
       >
-        {children}
+        {node.children.map(child => renderChildren(child))}
       </RequestGroupRow>
     );
-  }
+  };
 
-  render() {
-    const { root } = this.props;
-    return (
-      <ul className="tree__list tree__list-root theme--tree__list">{this.renderChildren(root)}</ul>
-    );
-  }
-}
+  return (
+    <ul className="tree__list tree__list-root theme--tree__list">{renderChildren(root)}</ul>
+  );
+};
