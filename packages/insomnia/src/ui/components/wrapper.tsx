@@ -27,7 +27,6 @@ import {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
-import { RequestGroup } from '../../models/request-group';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
@@ -133,7 +132,6 @@ export type WrapperProps = AppProps & ReturnType<typeof mapStateToProps> & Retur
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
@@ -141,7 +139,6 @@ export type WrapperProps = AppProps & ReturnType<typeof mapStateToProps> & Retur
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleSetRequestGroupCollapsed: Function;
   handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;

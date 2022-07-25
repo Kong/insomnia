@@ -36,9 +36,7 @@ interface Props {
   handleActivateRequest: Function;
   handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleGenerateCode: Function;
-  handleSetRequestGroupCollapsed: Function;
   handleSetRequestPinned: Function;
 }
 export const SidebarChildren: FC<Props> = ({
@@ -47,9 +45,7 @@ export const SidebarChildren: FC<Props> = ({
   handleActivateRequest,
   handleCopyAsCurl,
   handleDuplicateRequest,
-  handleDuplicateRequestGroup,
   handleGenerateCode,
-  handleSetRequestGroupCollapsed,
   handleSetRequestPinned,
 }) => {
   const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ rows, isInPinnedList }) => {
@@ -80,8 +76,6 @@ export const SidebarChildren: FC<Props> = ({
                 filter={filter || ''}
                 isActive={hasActiveChild(row.children, activeRequestId)}
                 handleActivateRequest={handleActivateRequest}
-                handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-                handleDuplicateRequestGroup={handleDuplicateRequestGroup}
                 isCollapsed={row.collapsed}
                 requestGroup={row.doc}
               >

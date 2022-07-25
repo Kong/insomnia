@@ -345,22 +345,6 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  static async _requestGroupDuplicate(requestGroup: RequestGroup) {
-    showPrompt({
-      title: 'Duplicate Folder',
-      defaultValue: requestGroup.name,
-      submitName: 'Create',
-      label: 'New Name',
-      selectText: true,
-      onComplete: async (name: string) => {
-        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, {
-          name,
-        });
-        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
-      },
-    });
-  }
-
   _requestDuplicate(request?: Request | GrpcRequest) {
     if (!request) {
       return;
@@ -455,12 +439,6 @@ class App extends PureComponent<AppProps, State> {
   async _handleSetSidebarFilter(sidebarFilter: string) {
     await this._updateActiveWorkspaceMeta({
       sidebarFilter,
-    });
-  }
-
-  _handleSetRequestGroupCollapsed(requestGroupId: string, collapsed: boolean) {
-    App._updateRequestGroupMetaByParentId(requestGroupId, {
-      collapsed,
     });
   }
 
@@ -1175,10 +1153,8 @@ class App extends PureComponent<AppProps, State> {
                   ref={this._setWrapperRef}
                   {...this.props}
                   handleSetRequestPinned={this._handleSetRequestPinned}
-                  handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
                   handleActivateRequest={this._handleSetActiveRequest}
                   handleDuplicateRequest={this._requestDuplicate}
-                  handleDuplicateRequestGroup={App._requestGroupDuplicate}
                   handleGenerateCode={App._handleGenerateCode}
                   handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
                   handleCopyAsCurl={this._handleCopyAsCurl}
