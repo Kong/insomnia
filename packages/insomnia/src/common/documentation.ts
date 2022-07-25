@@ -17,6 +17,7 @@ export const docsGitAccessToken = {
   gitlab: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
   bitbucket: 'https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/',
   bitbucketServer: 'https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html',
+  azureDevOps: 'https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate',
 };
 
 export const documentationLinks = {

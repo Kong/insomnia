@@ -108,6 +108,10 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               <Link href={docsGitAccessToken.bitbucketServer}>
                 Bitbucket Server {linkIcon}
               </Link>
+              {' | '}
+              <Link href={docsGitAccessToken.azureDevOps}>
+                Azure DevOps {linkIcon}
+              </Link>
             </HelpTooltip>
             <input
               required
