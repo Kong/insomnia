@@ -4,27 +4,17 @@ import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
 import { extension as mimeExtension } from 'mime-types';
 import * as path from 'path';
-import React, { createRef, PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
-import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
   AUTOBIND_CFG,
-  COLLAPSE_SIDEBAR_REMS,
-  DEFAULT_PANE_HEIGHT,
-  DEFAULT_PANE_WIDTH,
-  DEFAULT_SIDEBAR_WIDTH,
   getProductName,
   isDevelopment,
-  MAX_PANE_HEIGHT,
-  MAX_PANE_WIDTH,
-  MAX_SIDEBAR_REMS,
-  MIN_PANE_HEIGHT,
-  MIN_PANE_WIDTH,
-  MIN_SIDEBAR_REMS,
   PreviewMode,
   SortOrder,
 } from '../../common/constants';
@@ -34,7 +24,6 @@ import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import {
-  debounce,
   generateId,
   getContentDispositionHeader,
 } from '../../common/misc';
@@ -134,7 +123,7 @@ import {
   selectWorkspaceMetas,
   selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectPaneHeight, selectPaneWidth, selectSidebarChildren, selectSidebarFilter, selectSidebarHidden, selectSidebarWidth } from '../redux/sidebar-selectors';
+import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
 
 const updateRequestMetaByParentId = async (
@@ -153,13 +142,6 @@ const updateRequestMetaByParentId = async (
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
-  showDragOverlay: boolean;
-  draggingSidebar: boolean;
-  draggingPaneHorizontal: boolean;
-  draggingPaneVertical: boolean;
-  sidebarWidth: number;
-  paneWidth: number;
-  paneHeight: number;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
   forceRefreshCounter: number;
@@ -169,14 +151,8 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent<AppProps, State> {
-  private _savePaneWidth: (paneWidth: number) => void;
-  private _savePaneHeight: (paneWidth: number) => void;
-  private _saveSidebarWidth: (paneWidth: number) => void;
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _requestPaneRef = createRef<HTMLElement>();
-  private _responsePaneRef = createRef<HTMLElement>();
-  private _sidebarRef = createRef<HTMLElement>();
   private _wrapper: Wrapper | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
@@ -184,13 +160,6 @@ class App extends PureComponent<AppProps, State> {
     super(props);
 
     this.state = {
-      showDragOverlay: false,
-      draggingSidebar: false,
-      draggingPaneHorizontal: false,
-      draggingPaneVertical: false,
-      sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
-      paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
-      paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
       vcs: null,
       gitVCS: null,
       forceRefreshCounter: 0,
@@ -198,15 +167,6 @@ class App extends PureComponent<AppProps, State> {
       isMigratingChildren: false,
     };
 
-    this._savePaneWidth = debounce(paneWidth =>
-      this._updateActiveWorkspaceMeta({ paneWidth }),
-    );
-    this._savePaneHeight = debounce(paneHeight =>
-      this._updateActiveWorkspaceMeta({ paneHeight }),
-    );
-    this._saveSidebarWidth = debounce(sidebarWidth =>
-      this._updateActiveWorkspaceMeta({ sidebarWidth }),
-    );
     this._globalKeyMap = null;
     this._updateVCSLock = null;
   }
@@ -359,7 +319,9 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
-          this._handleToggleSidebar();
+          if (this.props.activeWorkspaceMeta) {
+            models.workspaceMeta.update(this.props.activeWorkspaceMeta, { sidebarHidden: !this.props.activeWorkspaceMeta.sidebarHidden });
+          }
         },
       ],
     ];
@@ -499,22 +461,6 @@ class App extends PureComponent<AppProps, State> {
     await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
-  _handleSetPaneWidth(paneWidth: number) {
-    this.setState({
-      paneWidth,
-    });
-
-    this._savePaneWidth(paneWidth);
-  }
-
-  _handleSetPaneHeight(paneHeight: number) {
-    this.setState({
-      paneHeight,
-    });
-
-    this._savePaneHeight(paneHeight);
-  }
-
   async _handleSetActiveRequest(activeRequestId: string) {
     await this._updateActiveWorkspaceMeta({
       activeRequestId,
@@ -532,20 +478,6 @@ class App extends PureComponent<AppProps, State> {
     setTimeout(() => {
       this._wrapper?._forceRequestPaneRefresh();
     }, 300);
-  }
-
-  _handleSetSidebarWidth(sidebarWidth: number) {
-    this.setState({
-      sidebarWidth,
-    });
-
-    this._saveSidebarWidth(sidebarWidth);
-  }
-
-  async _handleSetSidebarHidden(sidebarHidden: boolean) {
-    await this._updateActiveWorkspaceMeta({
-      sidebarHidden,
-    });
   }
 
   async _handleSetSidebarFilter(sidebarFilter: string) {
@@ -829,157 +761,10 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  _startDragSidebar() {
-    this.setState({
-      draggingSidebar: true,
-    });
-  }
-
-  _resetDragSidebar() {
-    // TODO: Remove setTimeout need be not triggering drag on double click
-    setTimeout(() => this._handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
-  }
-
-  _startDragPaneHorizontal() {
-    this.setState({
-      draggingPaneHorizontal: true,
-    });
-  }
-
-  _startDragPaneVertical() {
-    this.setState({
-      draggingPaneVertical: true,
-    });
-  }
-
-  _resetDragPaneHorizontal() {
-    // TODO: Remove setTimeout need be not triggering drag on double click
-    setTimeout(() => this._handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
-  }
-
-  _resetDragPaneVertical() {
-    // TODO: Remove setTimeout need be not triggering drag on double click
-    setTimeout(() => this._handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
-  }
-
-  _handleMouseMove(event: MouseEvent) {
-    if (this.state.draggingPaneHorizontal) {
-      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
-      const distance = this.props.paneWidth - this.state.paneWidth;
-
-      if (
-        !this.state.showDragOverlay &&
-        Math.abs(distance) > 0.02
-        /* % */
-      ) {
-        this.setState({
-          showDragOverlay: true,
-        });
-      }
-
-      const requestPane = this._requestPaneRef.current;
-      const responsePane = this._responsePaneRef.current;
-
-      if (requestPane && responsePane) {
-        const requestPaneWidth = requestPane.offsetWidth;
-        const responsePaneWidth = responsePane.offsetWidth;
-
-        const pixelOffset = event.clientX - requestPane.offsetLeft;
-        let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
-        paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
-
-        this._handleSetPaneWidth(paneWidth);
-      }
-    } else if (this.state.draggingPaneVertical) {
-      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
-      const distance = this.props.paneHeight - this.state.paneHeight;
-
-      if (
-        !this.state.showDragOverlay &&
-        Math.abs(distance) > 0.02
-        /* % */
-      ) {
-        this.setState({
-          showDragOverlay: true,
-        });
-      }
-
-      const requestPane = this._requestPaneRef.current;
-      const responsePane = this._responsePaneRef.current;
-
-      if (requestPane && responsePane) {
-        const requestPaneHeight = requestPane.offsetHeight;
-        const responsePaneHeight = responsePane.offsetHeight;
-        const pixelOffset = event.clientY - requestPane.offsetTop;
-        let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
-        paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
-
-        this._handleSetPaneHeight(paneHeight);
-      }
-    } else if (this.state.draggingSidebar) {
-      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
-      const distance = this.props.sidebarWidth - this.state.sidebarWidth;
-
-      if (
-        !this.state.showDragOverlay &&
-        Math.abs(distance) > 2
-        /* ems */
-      ) {
-        this.setState({
-          showDragOverlay: true,
-        });
-      }
-
-      const sidebar = this._sidebarRef.current;
-
-      if (sidebar) {
-        const currentPixelWidth = sidebar.offsetWidth;
-
-        const ratio = (event.clientX - sidebar.offsetLeft) / currentPixelWidth;
-        const width = this.state.sidebarWidth * ratio;
-        let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
-
-        if (sidebarWidth < COLLAPSE_SIDEBAR_REMS) {
-          sidebarWidth = MIN_SIDEBAR_REMS;
-        }
-
-        this._handleSetSidebarWidth(sidebarWidth);
-      }
-    }
-  }
-
-  _handleMouseUp() {
-    if (this.state.draggingSidebar) {
-      this.setState({
-        draggingSidebar: false,
-        showDragOverlay: false,
-      });
-    }
-
-    if (this.state.draggingPaneHorizontal) {
-      this.setState({
-        draggingPaneHorizontal: false,
-        showDragOverlay: false,
-      });
-    }
-
-    if (this.state.draggingPaneVertical) {
-      this.setState({
-        draggingPaneVertical: false,
-        showDragOverlay: false,
-      });
-    }
-  }
-
   _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
       executeHotKey(event, definition, callback);
     }
-  }
-
-  async _handleToggleSidebar() {
-    const sidebarHidden = !this.props.sidebarHidden;
-    await this._handleSetSidebarHidden(sidebarHidden);
   }
 
   static _handleShowSettingsModal(tabIndex?: number) {
@@ -1205,10 +990,7 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async componentDidMount() {
-    // Bind mouse and key handlers
-    document.addEventListener('mouseup', this._handleMouseUp);
-    document.addEventListener('mousemove', this._handleMouseMove);
-
+    // Bind key handlers
     this._setGlobalKeyMap();
 
     // Update title
@@ -1327,7 +1109,6 @@ class App extends PureComponent<AppProps, State> {
       },
       false,
     );
-    ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
@@ -1337,9 +1118,6 @@ class App extends PureComponent<AppProps, State> {
   }
 
   componentWillUnmount() {
-    // Remove mouse and key handlers
-    document.removeEventListener('mouseup', this._handleMouseUp);
-    document.removeEventListener('mousemove', this._handleMouseMove);
     db.offChange(this._handleDbChange);
   }
 
@@ -1407,9 +1185,6 @@ class App extends PureComponent<AppProps, State> {
 
     const { activeWorkspace } = this.props;
     const {
-      paneWidth,
-      paneHeight,
-      sidebarWidth,
       gitVCS,
       vcs,
       forceRefreshCounter,
@@ -1427,21 +1202,9 @@ class App extends PureComponent<AppProps, State> {
                 <Wrapper
                   ref={this._setWrapperRef}
                   {...this.props}
-                  paneWidth={paneWidth}
-                  paneHeight={paneHeight}
-                  sidebarWidth={sidebarWidth}
                   handleSetRequestPinned={this._handleSetRequestPinned}
                   handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
                   handleActivateRequest={this._handleSetActiveRequest}
-                  requestPaneRef={this._requestPaneRef}
-                  responsePaneRef={this._responsePaneRef}
-                  sidebarRef={this._sidebarRef}
-                  handleStartDragSidebar={this._startDragSidebar}
-                  handleResetDragSidebar={this._resetDragSidebar}
-                  handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-                  handleStartDragPaneVertical={this._startDragPaneVertical}
-                  handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-                  handleResetDragPaneVertical={this._resetDragPaneVertical}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleDuplicateRequestGroup={App._requestGroupDuplicate}
                   handleGenerateCode={App._handleGenerateCode}
@@ -1469,9 +1232,6 @@ class App extends PureComponent<AppProps, State> {
               <ErrorBoundary showAlert>
                 <Toast />
               </ErrorBoundary>
-
-              {/* Block all mouse activity by showing an overlay while dragging */}
-              {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
             </div>
           </NunjucksEnabledProvider>
         </GrpcProvider>
@@ -1505,8 +1265,6 @@ const mapStateToProps = (state: RootState) => ({
   isLoggedIn: selectIsLoggedIn(state),
   isFinishedBooting: selectIsFinishedBooting(state),
   loadStartTime: selectLoadStartTime(state),
-  paneHeight: selectPaneHeight(state),
-  paneWidth: selectPaneWidth(state),
   requestGroups: selectRequestGroups(state),
   requestMetas: selectRequestMetas(state),
   requestVersions: selectRequestVersions(state),
@@ -1518,8 +1276,6 @@ const mapStateToProps = (state: RootState) => ({
   settings: selectSettings(state),
   sidebarChildren: selectSidebarChildren(state),
   sidebarFilter: selectSidebarFilter(state),
-  sidebarHidden: selectSidebarHidden(state),
-  sidebarWidth: selectSidebarWidth(state),
   stats: selectStats(state),
   syncItems: selectSyncItems(state),
   unseenWorkspaces: selectUnseenWorkspaces(state),

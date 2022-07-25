@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
-import React, { Fragment, lazy, PureComponent, Ref, Suspense } from 'react';
+import React, { Fragment, lazy, PureComponent, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
@@ -135,19 +135,10 @@ export type WrapperProps = AppProps & {
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  requestPaneRef: Ref<HTMLElement>;
-  responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
-  sidebarRef: Ref<HTMLElement>;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleStartDragSidebar: React.MouseEventHandler;
-  handleResetDragSidebar: React.MouseEventHandler;
-  handleStartDragPaneHorizontal: React.MouseEventHandler;
-  handleStartDragPaneVertical: React.MouseEventHandler;
-  handleResetDragPaneHorizontal: React.MouseEventHandler;
-  handleResetDragPaneVertical: React.MouseEventHandler;
   handleSetRequestGroupCollapsed: Function;
   handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
@@ -155,9 +146,6 @@ export type WrapperProps = AppProps & {
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   handleUpdateDownloadPath: Function;
 
-  paneWidth: number;
-  paneHeight: number;
-  sidebarWidth: number;
   headerEditorKey: string;
   vcs: VCS | null;
   gitVCS: GitVCS | null;

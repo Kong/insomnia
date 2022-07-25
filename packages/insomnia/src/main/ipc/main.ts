@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, IpcRendererEvent } from 'electron';
 import { writeFile } from 'fs/promises';
 
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
@@ -13,6 +13,7 @@ export interface MainBridgeAPI {
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
+  on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => Function;
 }
 export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {

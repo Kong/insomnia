@@ -1,9 +1,13 @@
 import classnames from 'classnames';
-import React, { FC, forwardRef, ReactNode, useCallback } from 'react';
+import React, { FC, forwardRef, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
+import { debounce } from '../../common/misc';
+import * as models from '../../models';
 import { selectIsLoading } from '../redux/modules/global';
-import { selectActiveEnvironment, selectSettings, selectUnseenWorkspaces, selectWorkspacesForActiveProject } from '../redux/selectors';
+import { selectActiveEnvironment, selectActiveWorkspaceMeta, selectSettings, selectUnseenWorkspaces, selectWorkspacesForActiveProject } from '../redux/selectors';
+import { selectPaneHeight, selectPaneWidth, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
 import type { WrapperProps } from './wrapper';
@@ -40,31 +44,164 @@ export const PageLayout: FC<Props> = ({
   const settings = useSelector(selectSettings);
   const unseenWorkspaces = useSelector(selectUnseenWorkspaces);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
-
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const reduxPaneHeight = useSelector(selectPaneHeight);
+  const reduxPaneWidth = useSelector(selectPaneWidth);
+  const reduxSidebarWidth = useSelector(selectSidebarWidth);
   const {
-    handleResetDragSidebar,
-    handleStartDragSidebar,
     handleSetActiveEnvironment,
-    sidebarRef,
-    requestPaneRef,
-    responsePaneRef,
-    handleStartDragPaneHorizontal,
-    handleResetDragPaneHorizontal,
-    handleStartDragPaneVertical,
-    handleResetDragPaneVertical,
-    paneHeight,
-    paneWidth,
-    sidebarHidden,
-    sidebarWidth,
   } = wrapperProps;
+
+  const requestPaneRef = useRef<HTMLElement>(null);
+  const responsePaneRef = useRef<HTMLElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const [showDragOverlay, setShowDragOverlay] = useState(false);
+  const [draggingSidebar, setDraggingSidebar] = useState(false);
+  const [draggingPaneHorizontal, setDraggingPaneHorizontal] = useState(false);
+  const [draggingPaneVertical, setDraggingPaneVertical] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(reduxSidebarWidth || DEFAULT_SIDEBAR_WIDTH);
+  const [paneWidth, setPaneWidth] = useState(reduxPaneWidth || DEFAULT_PANE_WIDTH);
+  const [paneHeight, setPaneHeight] = useState(reduxPaneHeight || DEFAULT_PANE_HEIGHT);
+
+  useEffect(() => {
+    const unsubscribe = window.main.on('toggle-sidebar', () => {
+      if (activeWorkspaceMeta) {
+        models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });
+      }
+    });
+    return () => unsubscribe();
+  }, [activeWorkspaceMeta]);
+
+  const handleSetPaneWidth = useCallback((paneWidth: number) => {
+    setPaneWidth(paneWidth);
+    if (activeWorkspaceMeta) {
+      debounce(() => models.workspaceMeta.update(activeWorkspaceMeta, { paneWidth }));
+    }
+  }, [activeWorkspaceMeta]);
+  const handleSetPaneHeight = useCallback((paneHeight: number) => {
+    setPaneHeight(paneHeight);
+    if (activeWorkspaceMeta) {
+      debounce(() => models.workspaceMeta.update(activeWorkspaceMeta, { paneHeight }));
+    }
+  }, [activeWorkspaceMeta]);
+  const handleSetSidebarWidth = useCallback((sidebarWidth: number) => {
+    setSidebarWidth(sidebarWidth);
+    if (activeWorkspaceMeta) {
+      debounce(() => models.workspaceMeta.update(activeWorkspaceMeta, { sidebarWidth }));
+    }
+  }, [activeWorkspaceMeta]);
+
+  const handleMouseUp = useCallback(() => {
+    if (draggingSidebar) {
+      setDraggingSidebar(false);
+      setShowDragOverlay(false);
+    }
+    if (draggingPaneHorizontal) {
+      setDraggingPaneHorizontal(false);
+      setShowDragOverlay(false);
+    }
+    if (draggingPaneVertical) {
+      setDraggingPaneVertical(false);
+      setShowDragOverlay(false);
+    }
+  }, [draggingPaneHorizontal, draggingPaneVertical, draggingSidebar]);
+
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (draggingPaneHorizontal) {
+      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
+      const distance = reduxPaneWidth - paneWidth;
+
+      if (!showDragOverlay && Math.abs(distance) > 0.02) {
+        setShowDragOverlay(true);
+      }
+
+      if (requestPaneRef.current && responsePaneRef.current) {
+        const requestPaneWidth = requestPaneRef.current.offsetWidth;
+        const responsePaneWidth = responsePaneRef.current.offsetWidth;
+
+        const pixelOffset = event.clientX - requestPaneRef.current.offsetLeft;
+        let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
+        paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
+
+        handleSetPaneWidth(paneWidth);
+      }
+    } else if (draggingPaneVertical) {
+      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
+      const distance = reduxPaneHeight - paneHeight;
+      /* % */
+      if (!showDragOverlay && Math.abs(distance) > 0.02) {
+        setShowDragOverlay(true);
+      }
+
+      if (requestPaneRef.current && responsePaneRef.current) {
+        const requestPaneHeight = requestPaneRef.current.offsetHeight;
+        const responsePaneHeight = responsePaneRef.current.offsetHeight;
+        const pixelOffset = event.clientY - requestPaneRef.current.offsetTop;
+        let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
+        paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
+
+        handleSetPaneHeight(paneHeight);
+      }
+    } else if (draggingSidebar) {
+      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
+      const distance = reduxSidebarWidth - sidebarWidth;
+      /* ems */
+      if (!showDragOverlay && Math.abs(distance) > 2) {
+        setShowDragOverlay(true);
+      }
+
+      if (sidebarRef.current) {
+        const currentPixelWidth = sidebarRef.current.offsetWidth;
+        const ratio = (event.clientX - sidebarRef.current.offsetLeft) / currentPixelWidth;
+        const width = sidebarWidth * ratio;
+        let localSidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
+        if (localSidebarWidth < COLLAPSE_SIDEBAR_REMS) {
+          localSidebarWidth = MIN_SIDEBAR_REMS;
+        }
+        handleSetSidebarWidth(localSidebarWidth);
+      }
+    }
+  }, [draggingPaneHorizontal, draggingPaneVertical, draggingSidebar, handleSetPaneHeight, handleSetPaneWidth, handleSetSidebarWidth, paneHeight, paneWidth, reduxPaneHeight, reduxPaneWidth, reduxSidebarWidth, showDragOverlay, sidebarWidth]);
+
+  useEffect(() => {
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  function handleResetDragSidebar() {
+    // TODO: Remove setTimeout need be not triggering drag on double click
+    setTimeout(() => handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
+  }
+
+  function handleStartDragPaneHorizontal() {
+    setDraggingPaneHorizontal(true);
+  }
+
+  function handleStartDragPaneVertical() {
+    setDraggingPaneVertical(true);
+  }
+
+  function handleResetDragPaneHorizontal() {
+    // TODO: Remove setTimeout need be not triggering drag on double click
+    setTimeout(() => handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
+  }
+
+  function handleResetDragPaneVertical() {
+    // TODO: Remove setTimeout need be not triggering drag on double click
+    setTimeout(() => handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
+  }
 
   // Special request updaters
   const startDragSidebar = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
-    handleStartDragSidebar(event);
-  }, [handleStartDragSidebar]);
+    setDraggingSidebar(true);
+  }, []);
 
-  const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
+  const realSidebarWidth = activeWorkspaceMeta?.sidebarHidden ? 0 : sidebarWidth;
   const gridRows = renderPaneTwo
     ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
     : 'auto 1fr';
@@ -117,7 +254,7 @@ export const PageLayout: FC<Props> = ({
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             handleSetActiveEnvironment={handleSetActiveEnvironment}
-            hidden={sidebarHidden || false}
+            hidden={activeWorkspaceMeta?.sidebarHidden || false}
             isLoading={isLoading}
             unseenWorkspaces={unseenWorkspaces}
             width={sidebarWidth}
@@ -176,6 +313,8 @@ export const PageLayout: FC<Props> = ({
           )}
         </>
       )}
+      {/* Block all mouse activity by showing an overlay while dragging */}
+      {showDragOverlay ? <div className="blocker-overlay" /> : null}
     </div>
   );
 };
