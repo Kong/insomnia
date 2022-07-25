@@ -4,14 +4,18 @@ import { ErrorModal, ErrorModalOptions } from './error-modal';
 import { PromptModal, PromptModalOptions } from './prompt-modal';
 
 const modals: Record<string, any> = {};
+export interface ModalHandle {
+  hide(): void;
+  show(): void;
+}
 
-export function registerModal(instance: any) {
+export function registerModal(instance: any, modalName?: string) {
   if (instance === null) {
     // Modal was unmounted
     return;
   }
 
-  modals[instance.constructor.name] = instance;
+  modals[modalName ?? instance.constructor.name] = instance;
 }
 
 export function showModal(modalCls: any, ...args: any[]) {
@@ -43,7 +47,7 @@ export function hideAllModals() {
 }
 
 function _getModal(modalCls: any) {
-  const m = modals[modalCls.name || modalCls.WrappedComponent?.name];
+  const m = modals[modalCls.name || modalCls.WrappedComponent?.name || modalCls.displayName];
 
   if (!m) {
     throw new Error('Modal was not registered with the app');

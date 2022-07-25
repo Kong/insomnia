@@ -1,16 +1,14 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
-import { AUTOBIND_CFG, getAppVersion, getProductName } from '../../../common/constants';
+import { getAppVersion, getProductName } from '../../../common/constants';
 import * as models from '../../../models/index';
-import { RootState } from '../../redux/modules';
 import { selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { Account } from '../settings/account';
@@ -19,128 +17,99 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import { showModal } from './index';
+import { ModalHandle, registerModal, showModal } from './index';
+export interface SettingsModalHandle extends ModalHandle {
+  show(): void;
+  show(currentTabIndex: number): void;
+}
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
+export const SETTINGS_MODAL_DISPLAY_NAME = 'SettingsModal';
+export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
+  const settings = useSelector(selectSettings);
+  const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
+  const modalRef = useRef<Modal>(null);
+  const email = session.isLoggedIn() ? session.getFullName() : null;
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
-}
-
-interface State {
-  currentTabIndex: number | null;
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedSettingsModal extends PureComponent<Props, State> {
-  state: State = {
-    currentTabIndex: null,
-  };
-
-  modal: Modal | null = null;
-
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
-
-  async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {
-    await models.settings.update(this.props.settings, {
+  const handleUpdateKeyBindings = async (hotKeyRegistry: HotKeyRegistry) => {
+    await models.settings.update(settings, {
       hotKeyRegistry,
     });
-  }
+  };
 
-  show(currentTabIndex = 0) {
-    if (typeof currentTabIndex !== 'number') {
-      currentTabIndex = 0;
-    }
+  useEffect(() => {
+    registerModal(modalRef.current, SETTINGS_MODAL_DISPLAY_NAME);
+  }, []);
 
-    this.setState({
-      currentTabIndex,
-    });
-    this.modal?.show();
-  }
+  useImperativeHandle(ref, () => ({
+    hide(): void {
+      modalRef.current?.hide();
+    },
+    show(currentTabIndex = 0): void {
+      const tabIndex = typeof currentTabIndex !== 'number' ? 0 : currentTabIndex;
+      setCurrentTabIndex(tabIndex);
+      modalRef.current?.show();
+    },
+  }), []);
 
-  hide() {
-    this.modal?.hide();
-  }
-
-  render() {
-    const { settings } = this.props;
-    const { currentTabIndex } = this.state;
-    const email = session.isLoggedIn() ? session.getFullName() : null;
-    return (
-      <Modal ref={this._setModalRef} tall freshState {...this.props}>
-        <ModalHeader>
-          {getProductName()} Preferences
-          <span className="faint txt-sm">
+  return (
+    <Modal ref={modalRef} tall freshState {...props}>
+      <ModalHeader>
+        {getProductName()} Preferences
+        <span className="faint txt-sm">
             &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
-            {email ? ` – ${email}` : null}
-          </span>
-        </ModalHeader>
-        <ModalBody noScroll>
-          <Tabs className="react-tabs" defaultIndex={currentTabIndex ?? undefined}>
-            <TabList>
-              <Tab tabIndex="-1">
-                <Button value="General">General</Button>
-              </Tab>
-              <Tab tabIndex="-1">
-                <Button value="Import/Export">Data</Button>
-              </Tab>
-              <Tab tabIndex="-1">
-                <Button value="Themes">Themes</Button>
-              </Tab>
-              <Tab tabIndex="-1">
-                <Button value="Shortcuts">Keyboard</Button>
-              </Tab>
-              <Tab tabIndex="-1">
-                <Button value="Account">Account</Button>
-              </Tab>
-              <Tab tabIndex="-1">
-                <Button value="Plugins">Plugins</Button>
-              </Tab>
-            </TabList>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <General />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <ImportExport
-                hideSettingsModal={this.hide}
-              />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <ThemePanel />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Shortcuts
-                handleUpdateKeyBindings={this._handleUpdateKeyBindings}
-              />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Account />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins settings={settings} />
-            </TabPanel>
-          </Tabs>
-        </ModalBody>
-      </Modal>
-    );
-  }
-}
-
-export const showSettingsModal = () => showModal(SettingsModal);
-
-const mapStateToProps = (state: RootState) => ({
-  settings: selectSettings(state),
+          {email ? ` – ${email}` : null}
+        </span>
+      </ModalHeader>
+      <ModalBody noScroll>
+        <Tabs className="react-tabs" defaultIndex={currentTabIndex ?? undefined}>
+          <TabList>
+            <Tab tabIndex="-1">
+              <Button value="General">General</Button>
+            </Tab>
+            <Tab tabIndex="-1">
+              <Button value="Import/Export">Data</Button>
+            </Tab>
+            <Tab tabIndex="-1">
+              <Button value="Themes">Themes</Button>
+            </Tab>
+            <Tab tabIndex="-1">
+              <Button value="Shortcuts">Keyboard</Button>
+            </Tab>
+            <Tab tabIndex="-1">
+              <Button value="Account">Account</Button>
+            </Tab>
+            <Tab tabIndex="-1">
+              <Button value="Plugins">Plugins</Button>
+            </Tab>
+          </TabList>
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
+            <General />
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
+            <ImportExport hideSettingsModal={() => modalRef.current?.hide()}/>
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
+            <ThemePanel />
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
+            <Shortcuts
+              handleUpdateKeyBindings={handleUpdateKeyBindings}
+            />
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
+            <Account />
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
+            <Plugins settings={settings} />
+          </TabPanel>
+        </Tabs>
+      </ModalBody>
+    </Modal>
+  );
 });
-
-export const SettingsModal = connect(
-  mapStateToProps,
-  null,
-  null,
-  { forwardRef: true },
-)(UnconnectedSettingsModal);
+SettingsModal.displayName = SETTINGS_MODAL_DISPLAY_NAME;
+export const showSettingsModal = () => showModal(SettingsModal);

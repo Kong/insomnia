@@ -513,7 +513,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
             />
 
-            <SettingsModal ref={registerModal} />
+            <SettingsModal />
             <ResponseDebugModal ref={registerModal} />
 
             <RequestSwitcherModal
