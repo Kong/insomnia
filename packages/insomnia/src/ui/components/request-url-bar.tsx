@@ -163,6 +163,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLastPastedText(event.clipboardData?.getData('text/plain'));
   }, []);
 
+  const handleSendDropdownHide = useCallback(() => {
+    buttonRef.current?.blur();
+  }, []);
+
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (
@@ -215,7 +219,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                 <DropdownButton
                   ref={buttonRef}
                   className="urlbar__send-context"
-                  onClick={() => dropdownRef.current?.show()}
+                  onClick={handleSendDropdownHide}
                 >
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
