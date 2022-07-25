@@ -212,14 +212,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                 className="tall"
                 right
                 ref={dropdownRef}
-                onHide={() => {
-                  buttonRef.current?.blur();
-                }}
+                onHide={handleSendDropdownHide}
               >
                 <DropdownButton
                   ref={buttonRef}
                   className="urlbar__send-context"
-                  onClick={handleSendDropdownHide}
+                  onClick={() => dropdownRef.current?.show()}
                 >
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
