@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
-import React, { Fragment, lazy, PureComponent, Ref, Suspense } from 'react';
+import React, { Fragment, lazy, PureComponent, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 

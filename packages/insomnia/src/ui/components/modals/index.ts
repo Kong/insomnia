@@ -6,7 +6,7 @@ import { PromptModal, PromptModalOptions } from './prompt-modal';
 const modals: Record<string, any> = {};
 export interface ModalHandle {
   hide(): void;
-  show(currentTabIndex: number): void;
+  show(): void;
 }
 
 export function registerModal(instance: any, modalName?: string) {
