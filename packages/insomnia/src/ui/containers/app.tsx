@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
+import { ipcRenderer, SaveDialogOptions } from 'electron';
 import fs from 'fs';
-import HTTPSnippet from 'httpsnippet';
 import { extension as mimeExtension } from 'mime-types';
 import * as path from 'path';
 import React, { PureComponent } from 'react';
@@ -20,7 +19,6 @@ import {
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
-import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import {
@@ -350,19 +348,6 @@ class App extends PureComponent<AppProps, State> {
         models.stats.incrementCreatedRequests();
       },
     });
-  }
-
-  async _handleCopyAsCurl(request: Request) {
-    const { activeEnvironment } = this.props;
-    const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    const har = await exportHarRequest(request._id, environmentId);
-    const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert('shell', 'curl');
-
-    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
-    if (cmd) {
-      clipboard.writeText(cmd);
-    }
   }
 
   static async _updateRequestGroupMetaByParentId(requestGroupId: string, patch: Partial<RequestGroupMeta>) {
@@ -1115,7 +1100,6 @@ class App extends PureComponent<AppProps, State> {
                 <Wrapper
                   ref={this._setWrapperRef}
                   handleDuplicateRequest={this._requestDuplicate}
-                  handleCopyAsCurl={this._handleCopyAsCurl}
                   handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}

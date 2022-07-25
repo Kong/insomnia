@@ -35,13 +35,11 @@ interface RecursiveSidebarRowsProps {
 interface Props {
   childObjects: SidebarChildObjects;
   filter: string;
-  handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
 }
 export const SidebarChildren: FC<Props> = ({
   childObjects,
   filter,
-  handleCopyAsCurl,
   handleDuplicateRequest,
 }) => {
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
@@ -67,7 +65,6 @@ export const SidebarChildren: FC<Props> = ({
                 filter={isInPinnedList ? '' : filter || ''}
                 handleSetActiveRequest={setActiveRequest}
                 handleDuplicateRequest={handleDuplicateRequest}
-                handleCopyAsCurl={handleCopyAsCurl}
                 isActive={row.doc._id === activeRequestId}
                 isPinned={row.pinned}
                 disableDragAndDrop={isInPinnedList}

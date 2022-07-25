@@ -1,7 +1,10 @@
 import classnames from 'classnames';
+import { clipboard } from 'electron';
+import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { exportHarRequest } from '../../../common/har';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
@@ -30,7 +33,6 @@ interface Props extends Pick<DropdownProps, 'right'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
   handleDuplicateRequest: Function;
-  handleCopyAsCurl: Function;
   handleShowSettings: () => void;
   isPinned: Boolean;
   request: Request | GrpcRequest;
@@ -40,7 +42,6 @@ interface Props extends Pick<DropdownProps, 'right'> {
 export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   activeEnvironment,
   activeProject,
-  handleCopyAsCurl,
   handleDuplicateRequest,
   handleShowSettings,
   isPinned,
@@ -92,12 +93,20 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     showModal(GenerateCodeModal, request);
   }, [request]);
 
-  const copyAsCurl = useCallback(() => {
-    handleCopyAsCurl(request);
-  }, [handleCopyAsCurl, request]);
+  const copyAsCurl = useCallback(async () => {
+    const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    const har = await exportHarRequest(request._id, environmentId);
+    const snippet = new HTTPSnippet(har);
+    const cmd = snippet.convert('shell', 'curl');
+
+    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
+    if (cmd) {
+      clipboard.writeText(cmd);
+    }
+  }, []);
 
   const togglePin = useCallback(() => {
-    updateRequestMetaByParentId(request._id, { pinned:!isPinned });
+    updateRequestMetaByParentId(request._id, { pinned: !isPinned });
   }, [isPinned, request]);
 
   const deleteRequest = useCallback(() => {

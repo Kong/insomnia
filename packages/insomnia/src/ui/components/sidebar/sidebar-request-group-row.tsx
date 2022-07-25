@@ -172,7 +172,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
             <SidebarRequestRow
               handleSetActiveRequest={noop}
               handleDuplicateRequest={noop}
-              handleCopyAsCurl={noop}
               isActive={false}
               requestGroup={requestGroup}
               filter={filter}
