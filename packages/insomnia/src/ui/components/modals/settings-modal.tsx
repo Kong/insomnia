@@ -23,7 +23,7 @@ export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
-export const SETTINGS_MODAL_DISPLAYNAME = 'SettingsModal';
+export const SETTINGS_MODAL_DISPLAY_NAME = 'SettingsModal';
 export const SettingsModal = forwardRef<ModalHandle, ModalProps>((props, ref) => {
   const settings = useSelector(selectSettings);
   const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
