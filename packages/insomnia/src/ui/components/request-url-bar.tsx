@@ -53,6 +53,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditor>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const focusInput = useCallback(() => {
     if (inputRef.current) {
@@ -195,14 +196,24 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           ) : (
             <>
               <button
+                ref={buttonRef}
                 type="button"
                 className="urlbar__send-btn"
                 onClick={send}
               >
                 {downloadPath ? 'Download' : 'Send'}
               </button>
-              <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
+              <Dropdown
+                key="dropdown"
+                className="tall"
+                right
+                ref={dropdownRef}
+                onHide={() => {
+                  buttonRef.current?.blur();
+                }}
+              >
                 <DropdownButton
+                  ref={buttonRef}
                   className="urlbar__send-context"
                   onClick={() => dropdownRef.current?.show()}
                 >
