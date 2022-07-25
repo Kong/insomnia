@@ -5,12 +5,10 @@ import { useSelector } from 'react-redux';
 import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import * as models from '../../models';
-import { selectIsLoading } from '../redux/modules/global';
-import { selectActiveEnvironment, selectActiveWorkspaceMeta, selectSettings, selectUnseenWorkspaces, selectWorkspacesForActiveProject } from '../redux/selectors';
+import { selectActiveEnvironment, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { selectPaneHeight, selectPaneWidth, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
-import type { WrapperProps } from './wrapper';
 
 const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
   function Pane({ children, position }, ref) {
@@ -23,7 +21,6 @@ const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
 );
 
 interface Props {
-  wrapperProps: WrapperProps;
   renderPageSidebar?: ReactNode;
   renderPageHeader?: ReactNode;
   renderPageBody?: ReactNode;
@@ -37,20 +34,13 @@ export const PageLayout: FC<Props> = ({
   renderPageBody,
   renderPageHeader,
   renderPageSidebar,
-  wrapperProps,
 }) => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const isLoading = useSelector(selectIsLoading);
   const settings = useSelector(selectSettings);
-  const unseenWorkspaces = useSelector(selectUnseenWorkspaces);
-  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const reduxPaneHeight = useSelector(selectPaneHeight);
   const reduxPaneWidth = useSelector(selectPaneWidth);
   const reduxSidebarWidth = useSelector(selectSidebarWidth);
-  const {
-    handleSetActiveEnvironment,
-  } = wrapperProps;
 
   const requestPaneRef = useRef<HTMLElement>(null);
   const responsePaneRef = useRef<HTMLElement>(null);
@@ -253,12 +243,8 @@ export const PageLayout: FC<Props> = ({
             ref={sidebarRef}
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            handleSetActiveEnvironment={handleSetActiveEnvironment}
             hidden={activeWorkspaceMeta?.sidebarHidden || false}
-            isLoading={isLoading}
-            unseenWorkspaces={unseenWorkspaces}
             width={sidebarWidth}
-            workspacesForActiveProject={workspacesForActiveProject}
           >
             {renderPageSidebar}
           </Sidebar>

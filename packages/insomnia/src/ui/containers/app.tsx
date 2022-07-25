@@ -96,7 +96,6 @@ import {
   selectIsLoggedIn,
   selectSettings,
 } from '../redux/selectors';
-import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
@@ -1134,7 +1133,6 @@ class App extends PureComponent<AppProps, State> {
                 <Wrapper
                   ref={this._setWrapperRef}
                   {...this.props}
-                  handleSetRequestPinned={this._handleSetRequestPinned}
                   handleActivateRequest={this._handleSetActiveRequest}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleGenerateCode={App._handleGenerateCode}
@@ -1184,7 +1182,6 @@ const mapStateToProps = (state: RootState) => ({
   isLoggedIn: selectIsLoggedIn(state),
   isFinishedBooting: selectIsFinishedBooting(state),
   settings: selectSettings(state),
-  sidebarChildren: selectSidebarChildren(state),
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {

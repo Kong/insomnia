@@ -20,7 +20,7 @@ import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
 import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { HandleActivityChange, WrapperProps } from './wrapper';
+import type { HandleActivityChange } from './wrapper';
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
@@ -292,19 +292,16 @@ const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ e
 interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
-  wrapperProps: WrapperProps;
 }
 
 export const WrapperDesign: FC<Props> = ({
   gitSyncDropdown,
   handleActivityChange,
-  wrapperProps,
 }) => {
   const editor = createRef<UnconnectedCodeEditor>();
 
   return (
     <PageLayout
-      wrapperProps={wrapperProps}
       renderPageHeader={
         <RenderPageHeader
           gitSyncDropdown={gitSyncDropdown}

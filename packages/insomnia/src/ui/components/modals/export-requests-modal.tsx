@@ -8,13 +8,14 @@ import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { RootState } from '../../redux/modules';
 import { exportRequestsToFile } from '../../redux/modules/global';
+import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { Tree } from '../export-requests/tree';
-import { Child } from '../sidebar/sidebar-children';
 
 export interface Node {
   doc: Request | GrpcRequest | RequestGroup;
@@ -24,9 +25,7 @@ export interface Node {
   selectedRequests: number;
 }
 
-type Props = ModalProps & ReturnType<typeof mapDispatchToProps> & {
-  childObjects: Child[];
-};
+type Props = ModalProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
   treeRoot: Node | null;
@@ -85,7 +84,8 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
   }
 
   createTree() {
-    const { childObjects } = this.props;
+    const { sidebarChildren } = this.props;
+    const childObjects = sidebarChildren.all;
     const children: Node[] = childObjects.map(child => this.createNode(child));
     const totalRequests = children
       .map(child => child.totalRequests)
@@ -244,6 +244,9 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
   }
 }
 
+const mapStateToProps = (state: RootState) => ({
+  sidebarChildren: selectSidebarChildren(state),
+});
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   const bound = bindActionCreators({ exportRequestsToFile }, dispatch);
   return {
@@ -251,4 +254,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   };
 };
 
-export const ExportRequestsModal = connect(null, mapDispatchToProps)(ExportRequestsModalClass);
+export const ExportRequestsModal = connect(mapStateToProps, mapDispatchToProps)(ExportRequestsModalClass);

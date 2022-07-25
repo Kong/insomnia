@@ -139,7 +139,6 @@ export type WrapperProps = AppProps & ReturnType<typeof mapStateToProps> & Retur
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
@@ -432,7 +431,6 @@ export class WrapperClass extends PureComponent<WrapperProps, State> {
       gitVCS,
       handleActivateRequest,
       handleSidebarSort,
-      sidebarChildren,
       vcs,
     } = this.props;
 
@@ -556,7 +554,6 @@ export class WrapperClass extends PureComponent<WrapperProps, State> {
             <AddKeyCombinationModal ref={registerModal} />
             <ExportRequestsModal
               ref={registerModal}
-              childObjects={sidebarChildren.all}
             />
 
             <GrpcDispatchModalWrapper>
@@ -575,7 +572,9 @@ export class WrapperClass extends PureComponent<WrapperProps, State> {
             path="*"
             element={
               <Suspense fallback={<div />}>
-                <WrapperHome wrapperProps={this.props} />
+                <WrapperHome
+                  vcs={vcs}
+                />
               </Suspense>
             }
           />
@@ -585,9 +584,7 @@ export class WrapperClass extends PureComponent<WrapperProps, State> {
               <Suspense fallback={<div />}>
                 <WrapperUnitTest
                   gitSyncDropdown={gitSyncDropdown}
-                  wrapperProps={this.props}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  sidebarChildren={sidebarChildren}
                 />
               </Suspense>
             }
@@ -599,7 +596,6 @@ export class WrapperClass extends PureComponent<WrapperProps, State> {
                 <WrapperDesign
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  wrapperProps={this.props}
                 />
               </Suspense>
             }

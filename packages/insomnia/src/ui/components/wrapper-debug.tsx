@@ -9,9 +9,12 @@ import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
 import {
   selectActiveEnvironment,
+  selectActiveProject,
   selectActiveRequest,
   selectActiveWorkspace,
+  selectActiveWorkspaceMeta,
   selectEnvironments,
+  selectIsLoggedIn,
   selectResponseDownloadPath,
   selectSettings,
 } from '../redux/selectors';
@@ -80,8 +83,6 @@ export const WrapperDebug: FC<Props> = ({
 
 }) => {
   const {
-    activeProject,
-    activeWorkspaceMeta,
     handleActivateRequest,
     handleCopyAsCurl,
     handleDuplicateRequest,
@@ -91,9 +92,11 @@ export const WrapperDebug: FC<Props> = ({
     handleUpdateDownloadPath,
     handleUpdateRequestMimeType,
     headerEditorKey,
-    isLoggedIn,
     vcs,
   } = wrapperProps;
+  const activeProject = useSelector(selectActiveProject);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
@@ -110,7 +113,6 @@ export const WrapperDebug: FC<Props> = ({
 
   return (
     <PageLayout
-      wrapperProps={wrapperProps}
       renderPageHeader={activeWorkspace ?
         <WorkspacePageHeader
           handleActivityChange={handleActivityChange}

@@ -23,6 +23,7 @@ import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
+import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
@@ -30,10 +31,10 @@ import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
 import { EmptyStatePane } from './panes/empty-state-pane';
-import type { Child, SidebarChildObjects } from './sidebar/sidebar-children';
+import type { Child } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { HandleActivityChange, WrapperProps } from './wrapper';
+import type { HandleActivityChange } from './wrapper';
 
 const HeaderButton = styled(Button)({
   '&&': {
@@ -42,15 +43,11 @@ const HeaderButton = styled(Button)({
 });
 
 interface Props {
-  sidebarChildren: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
-  wrapperProps: WrapperProps;
 }
 
 const WrapperUnitTest: FC<Props> = ({
-  sidebarChildren,
-  wrapperProps,
   gitSyncDropdown,
   handleActivityChange,
 }) => {
@@ -72,6 +69,7 @@ const WrapperUnitTest: FC<Props> = ({
     // Enable NodeJS globals
     esversion: 8, // ES8 syntax (async/await, etc)
   };
+  const sidebarChildren = useSelector(selectSidebarChildren);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeUnitTestSuite = useSelector(selectActiveUnitTestSuite);
   const activeUnitTestSuites = useSelector(selectActiveUnitTestSuites);
@@ -302,7 +300,6 @@ const WrapperUnitTest: FC<Props> = ({
 
   return (
     <PageLayout
-      wrapperProps={wrapperProps}
       renderPageSidebar={
         <ErrorBoundary showAlert>
           <div className="unit-tests__sidebar">
