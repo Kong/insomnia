@@ -311,6 +311,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       } else {
         console.log(`Received auth box, but no login modal... ${command}`);
       }
+      break;
     }
 
     case null:
