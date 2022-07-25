@@ -23,13 +23,13 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { showError } from '../modals';
+import { showError, showModal } from '../modals';
+import { GenerateCodeModal } from '../modals/generate-code-modal';
 
 interface Props extends Pick<DropdownProps, 'right'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
   handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleShowSettings: () => void;
   isPinned: Boolean;
@@ -42,7 +42,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   activeProject,
   handleCopyAsCurl,
   handleDuplicateRequest,
-  handleGenerateCode,
   handleShowSettings,
   isPinned,
   request,
@@ -90,8 +89,8 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   }, [handleDuplicateRequest, request]);
 
   const generateCode = useCallback(() => {
-    handleGenerateCode(request);
-  }, [handleGenerateCode, request]);
+    showModal(GenerateCodeModal, request);
+  }, [request]);
 
   const copyAsCurl = useCallback(() => {
     handleCopyAsCurl(request);

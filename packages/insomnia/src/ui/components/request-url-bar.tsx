@@ -16,11 +16,11 @@ import { PromptButton } from './base/prompt-button';
 import { OneLineEditor } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { KeydownBinder } from './keydown-binder';
-import { showPrompt } from './modals/index';
+import { GenerateCodeModal } from './modals/generate-code-modal';
+import { showModal, showPrompt } from './modals/index';
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
-  handleGenerateCode: Function;
   handleImport: Function;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
@@ -40,7 +40,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   downloadPath,
   handleAutocompleteUrls,
   handleImport,
-  handleGenerateCode,
   handleSend,
   handleSendAndDownload,
   handleUpdateDownloadPath,
@@ -55,6 +54,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const inputRef = useRef<OneLineEditor>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  const handleGenerateCode = () => {
+    showModal(GenerateCodeModal, request);
+  };
   const focusInput = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.focus(true);

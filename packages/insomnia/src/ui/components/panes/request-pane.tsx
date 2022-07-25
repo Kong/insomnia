@@ -37,7 +37,6 @@ interface Props {
   forceRefreshCounter: number;
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleGenerateCode: Function;
   handleImport: Function;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
@@ -57,7 +56,6 @@ export const RequestPane: FC<Props> = ({
   forceRefreshCounter,
   forceUpdateRequest,
   forceUpdateRequestHeaders,
-  handleGenerateCode,
   handleImport,
   handleSend,
   handleSendAndDownload,
@@ -70,6 +68,7 @@ export const RequestPane: FC<Props> = ({
   updateSettingsUseBulkParametersEditor,
   workspace,
 }) => {
+
   const updateRequestBody = (request: Request, body: RequestBody) => {
     return update(request, { body });
   };
@@ -178,7 +177,6 @@ export const RequestPane: FC<Props> = ({
             onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={autocompleteUrls}
             handleImport={handleImport}
-            handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
             handleSendAndDownload={handleSendAndDownload}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}

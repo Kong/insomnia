@@ -353,15 +353,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _handleGenerateCodeForActiveRequest() {
-    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
-    App._handleGenerateCode(this.props.activeRequest);
-  }
-
-  static _handleGenerateCode(request: Request) {
-    showModal(GenerateCodeModal, request);
-  }
-
   async _handleCopyAsCurl(request: Request) {
     const { activeEnvironment } = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
@@ -1134,8 +1125,6 @@ class App extends PureComponent<AppProps, State> {
                   ref={this._setWrapperRef}
                   handleActivateRequest={this._handleSetActiveRequest}
                   handleDuplicateRequest={this._requestDuplicate}
-                  handleGenerateCode={App._handleGenerateCode}
-                  handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
                   handleCopyAsCurl={this._handleCopyAsCurl}
                   handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}

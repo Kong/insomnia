@@ -36,7 +36,6 @@ interface Props {
   handleActivateRequest: Function;
   handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
 }
 export const SidebarChildren: FC<Props> = ({
   childObjects,
@@ -44,7 +43,6 @@ export const SidebarChildren: FC<Props> = ({
   handleActivateRequest,
   handleCopyAsCurl,
   handleDuplicateRequest,
-  handleGenerateCode,
 }) => {
   const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ rows, isInPinnedList }) => {
     const activeRequest = useSelector(selectActiveRequest);
@@ -60,7 +58,6 @@ export const SidebarChildren: FC<Props> = ({
                 filter={isInPinnedList ? '' : filter || ''}
                 handleActivateRequest={handleActivateRequest}
                 handleDuplicateRequest={handleDuplicateRequest}
-                handleGenerateCode={handleGenerateCode}
                 handleCopyAsCurl={handleCopyAsCurl}
                 isActive={row.doc._id === activeRequestId}
                 isPinned={row.pinned}

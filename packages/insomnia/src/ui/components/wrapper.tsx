@@ -129,8 +129,6 @@ export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDi
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
-  handleGenerateCodeForActiveRequest: Function;
-  handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleSetResponsePreviewMode: Function;
   handleSetResponseFilter: Function;

@@ -53,8 +53,6 @@ interface Props {
   handleActivateRequest: (activeRequestId: string) => void;
   handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
-  handleGenerateCodeForActiveRequest: Function;
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleUpdateDownloadPath: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
@@ -80,8 +78,6 @@ export const WrapperDebug: FC<Props> = ({
   handleActivateRequest,
   handleCopyAsCurl,
   handleDuplicateRequest,
-  handleGenerateCode,
-  handleGenerateCodeForActiveRequest,
   handleSetSidebarFilter,
   handleUpdateDownloadPath,
   handleUpdateRequestMimeType,
@@ -146,7 +142,6 @@ export const WrapperDebug: FC<Props> = ({
           childObjects={sidebarChildren}
           handleActivateRequest={handleActivateRequest}
           handleDuplicateRequest={handleDuplicateRequest}
-          handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
           filter={sidebarFilter || ''}
         />
@@ -169,7 +164,6 @@ export const WrapperDebug: FC<Props> = ({
               forceRefreshCounter={forceRefreshKey}
               forceUpdateRequest={handleForceUpdateRequest}
               forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-              handleGenerateCode={handleGenerateCodeForActiveRequest}
               handleImport={handleImport}
               handleSend={handleSendRequestWithActiveEnvironment}
               handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
