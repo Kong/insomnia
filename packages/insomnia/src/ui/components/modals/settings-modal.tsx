@@ -107,5 +107,5 @@ export const SettingsModal = forwardRef<ModalHandle, ModalProps>((props, ref) =>
     </Modal>
   );
 });
-SettingsModal.displayName = SETTINGS_MODAL_DISPLAYNAME;
+SettingsModal.displayName = SETTINGS_MODAL_DISPLAY_NAME;
 export const showSettingsModal = () => showModal(SettingsModal);
