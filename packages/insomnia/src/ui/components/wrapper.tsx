@@ -1,8 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
 import React, { Fragment, lazy, PureComponent, Suspense } from 'react';
-import { useSelector } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import type { GlobalActivity } from '../../common/constants';
 import {
@@ -32,7 +33,9 @@ import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
+import { RootState } from '../redux/modules';
+import { setActiveActivity } from '../redux/modules/global';
+import { selectActiveActivity, selectActiveResponse, selectActiveWorkspace } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -125,10 +128,9 @@ const ActivityRouter = () => {
 
 const spectral = initializeSpectral();
 
-export type WrapperProps = AppProps & {
+export type WrapperProps = AppProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleShowSettingsModal: Function;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
@@ -170,7 +172,7 @@ const requestUpdate = (request: Request, patch: Partial<Request>) => {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class Wrapper extends PureComponent<WrapperProps, State> {
+export class WrapperClass extends PureComponent<WrapperProps, State> {
   state: State = {
     forceRefreshKey: Date.now(),
     activeGitBranch: 'no-vcs',
@@ -430,11 +432,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeWorkspace,
       activeApiSpec,
-      activeWorkspaceClientCertificates,
       gitVCS,
       handleActivateRequest,
-      handleExportRequestsToFile,
-      handleInitializeEntities,
       handleSidebarSort,
       sidebarChildren,
       vcs,
@@ -450,7 +449,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
           workspace={activeWorkspace}
           gitRepository={activeGitRepository}
           vcs={gitVCS}
-          handleInitializeEntities={handleInitializeEntities}
           handleGitBranchChanged={this._handleGitBranchChanged}
           renderDropdownButton={children => (
             <DropdownButton className="btn--clicky-small btn-sync">
@@ -500,7 +498,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
               {activeApiSpec ? <WorkspaceSettingsModal
                 ref={registerModal}
-                clientCertificates={activeWorkspaceClientCertificates}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
@@ -537,7 +534,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                     ref={registerModal}
                     vcs={gitVCS}
                     gitRepository={activeGitRepository}
-                    handleInitializeEntities={handleInitializeEntities}
                     handleGitBranchChanged={this._handleGitBranchChanged}
                   />
                 )}
@@ -564,7 +560,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             <ExportRequestsModal
               ref={registerModal}
               childObjects={sidebarChildren.all}
-              handleExportRequestsToFile={handleExportRequestsToFile}
             />
 
             <GrpcDispatchModalWrapper>
@@ -650,3 +645,14 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     );
   }
 }
+const mapStateToProps = (state: RootState) => ({
+  activeResponse: selectActiveResponse(state),
+});
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
+  const bound = bindActionCreators({ setActiveActivity }, dispatch);
+  return {
+    handleSetActiveActivity: bound.setActiveActivity,
+  };
+};
+
+export const Wrapper = connect(mapStateToProps, mapDispatchToProps)(WrapperClass);

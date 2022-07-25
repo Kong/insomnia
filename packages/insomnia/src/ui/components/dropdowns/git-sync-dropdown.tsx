@@ -16,10 +16,6 @@ import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
-import type {
-  SetupGitRepositoryCallback,
-  UpdateGitRepositoryCallback,
-} from '../../redux/modules/git';
 import * as gitActions from '../../redux/modules/git';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -32,17 +28,14 @@ import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
 
-interface Props {
-  handleInitializeEntities: typeof initializeEntities;
+type Props = ReturnType<typeof mapDispatchToProps> & {
   handleGitBranchChanged: (branch: string) => void;
   workspace: Workspace;
   vcs: GitVCS;
   gitRepository: GitRepository | null;
-  setupGitRepository: SetupGitRepositoryCallback;
-  updateGitRepository: UpdateGitRepositoryCallback;
   className?: string;
   renderDropdownButton?: (children: ReactNode) => ReactNode;
-}
+};
 
 interface State {
   initializing: boolean;
@@ -416,10 +409,11 @@ class GitSyncDropdown extends PureComponent<Props, State> {
 }
 
 function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
-  const boundGitActions = bindActionCreators(gitActions, dispatch);
+  const boundGitActions = bindActionCreators({ ...gitActions, initializeEntities }, dispatch);
   return {
     setupGitRepository: boundGitActions.setupGitRepository,
     updateGitRepository: boundGitActions.updateGitRepository,
+    handleInitializeEntities: boundGitActions.initializeEntities,
   };
 }
 

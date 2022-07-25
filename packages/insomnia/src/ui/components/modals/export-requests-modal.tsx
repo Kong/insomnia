@@ -1,11 +1,14 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { exportRequestsToFile } from '../../redux/modules/global';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -21,17 +24,16 @@ export interface Node {
   selectedRequests: number;
 }
 
-interface Props extends ModalProps {
+type Props = ModalProps & ReturnType<typeof mapDispatchToProps> & {
   childObjects: Child[];
-  handleExportRequestsToFile: Function;
-}
+};
 
 interface State {
   treeRoot: Node | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ExportRequestsModal extends PureComponent<Props, State> {
+export class ExportRequestsModalClass extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -241,3 +243,12 @@ export class ExportRequestsModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
+  const bound = bindActionCreators({ exportRequestsToFile }, dispatch);
+  return {
+    handleExportRequestsToFile: bound.exportRequestsToFile,
+  };
+};
+
+export const ExportRequestsModal = connect(null, mapDispatchToProps)(ExportRequestsModalClass);

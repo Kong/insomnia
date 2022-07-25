@@ -95,7 +95,6 @@ export const WrapperDebug: FC<Props> = ({
     handleUpdateRequestMimeType,
     headerEditorKey,
     isLoggedIn,
-    syncItems,
     vcs,
   } = wrapperProps;
 
@@ -123,7 +122,6 @@ export const WrapperDebug: FC<Props> = ({
             workspaceMeta={activeWorkspaceMeta}
             project={activeProject}
             vcs={vcs}
-            syncItems={syncItems}
           /> : isDesign(activeWorkspace) ? gitSyncDropdown : null}
         />
         : null}

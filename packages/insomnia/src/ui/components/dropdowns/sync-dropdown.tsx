@@ -22,7 +22,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectRemoteProjects } from '../../redux/selectors';
+import { selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -47,6 +47,7 @@ type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDisp
 
 const mapStateToProps = (state: RootState) => ({
   remoteProjects: selectRemoteProjects(state),
+  syncItems: selectSyncItems(state),
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {

@@ -67,23 +67,18 @@ import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
-import { Wrapper } from '../components/wrapper';
+import { type WrapperClass, Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
-import { initialize } from '../redux/modules/entities';
 import {
-  exportRequestsToFile,
   loadRequestStart,
   loadRequestStop,
   newCommand,
-  selectIsLoading,
-  setActiveActivity,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
-import { activateWorkspace } from '../redux/modules/workspace';
 import {
   selectActiveActivity,
   selectActiveApiSpec,
@@ -92,38 +87,15 @@ import {
   selectActiveGitRepository,
   selectActiveProject,
   selectActiveRequest,
-  selectActiveRequestResponses,
-  selectActiveResponse,
-  selectActiveUnitTestResult,
-  selectActiveUnitTests,
-  selectActiveUnitTestSuite,
-  selectActiveUnitTestSuites,
   selectActiveWorkspace,
-  selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectActiveWorkspaceName,
-  selectApiSpecs,
   selectEnvironments,
-  selectGitRepositories,
   selectIsFinishedBooting,
   selectIsLoggedIn,
-  selectLoadStartTime,
-  selectRequestGroups,
-  selectRequestMetas,
-  selectRequests,
-  selectRequestVersions,
-  selectResponseDownloadPath,
-  selectResponseFilter,
-  selectResponseFilterHistory,
-  selectResponsePreviewMode,
   selectSettings,
-  selectStats,
-  selectSyncItems,
-  selectUnseenWorkspaces,
-  selectWorkspaceMetas,
-  selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
+import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
 
 const updateRequestMetaByParentId = async (
@@ -153,7 +125,7 @@ interface State {
 class App extends PureComponent<AppProps, State> {
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _wrapper: Wrapper | null = null;
+  private _wrapper: WrapperClass | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: AppProps) {
@@ -771,7 +743,7 @@ class App extends PureComponent<AppProps, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(wrapper: Wrapper) {
+  _setWrapperRef(wrapper: WrapperClass) {
     this._wrapper = wrapper;
   }
 
@@ -1220,7 +1192,6 @@ class App extends PureComponent<AppProps, State> {
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleSetSidebarFilter={this._handleSetSidebarFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  handleShowSettingsModal={App._handleShowSettingsModal}
                   handleUpdateDownloadPath={this._handleUpdateDownloadPath}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   handleSidebarSort={this._sortSidebar}
@@ -1249,38 +1220,13 @@ const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
   activeGitRepository: selectActiveGitRepository(state),
   activeRequest: selectActiveRequest(state),
-  activeRequestResponses: selectActiveRequestResponses(state),
-  activeResponse: selectActiveResponse(state),
-  activeUnitTestResult: selectActiveUnitTestResult(state),
-  activeUnitTestSuite: selectActiveUnitTestSuite(state),
-  activeUnitTestSuites: selectActiveUnitTestSuites(state),
-  activeUnitTests: selectActiveUnitTests(state),
   activeWorkspace: selectActiveWorkspace(state),
-  activeWorkspaceClientCertificates: selectActiveWorkspaceClientCertificates(state),
   activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
-  apiSpecs: selectApiSpecs(state),
   environments: selectEnvironments(state),
-  gitRepositories: selectGitRepositories(state),
-  isLoading: selectIsLoading(state),
   isLoggedIn: selectIsLoggedIn(state),
   isFinishedBooting: selectIsFinishedBooting(state),
-  loadStartTime: selectLoadStartTime(state),
-  requestGroups: selectRequestGroups(state),
-  requestMetas: selectRequestMetas(state),
-  requestVersions: selectRequestVersions(state),
-  requests: selectRequests(state),
-  responseDownloadPath: selectResponseDownloadPath(state),
-  responseFilter: selectResponseFilter(state),
-  responseFilterHistory: selectResponseFilterHistory(state),
-  responsePreviewMode: selectResponsePreviewMode(state),
   settings: selectSettings(state),
   sidebarChildren: selectSidebarChildren(state),
-  sidebarFilter: selectSidebarFilter(state),
-  stats: selectStats(state),
-  syncItems: selectSyncItems(state),
-  unseenWorkspaces: selectUnseenWorkspaces(state),
-  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
-  workspaceMetas: selectWorkspaceMetas(state),
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
@@ -1289,29 +1235,17 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
-    setActiveActivity: handleSetActiveActivity,
-    activateWorkspace: handleActivateWorkspace,
-    exportRequestsToFile: handleExportRequestsToFile,
-    initialize: handleInitializeEntities,
   } = bindActionCreators({
     importUri,
     loadRequestStart,
     loadRequestStop,
     newCommand,
-    setActiveActivity,
-    activateWorkspace,
-    exportRequestsToFile,
-    initialize,
   }, dispatch);
   return {
     handleCommand,
     handleImportUri,
-    handleSetActiveActivity,
-    handleActivateWorkspace,
     handleStartLoading,
     handleStopLoading,
-    handleExportRequestsToFile,
-    handleInitializeEntities,
   };
 };
 

@@ -12,7 +12,7 @@ import * as workspaceOperations from '../../../models/helpers/workspace-operatio
 import * as models from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
-import { selectActiveWorkspaceName } from '../../redux/selectors';
+import { selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal } from '../base/modal';
@@ -62,7 +62,6 @@ const CertificateField: FC<{
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
 interface Props extends ReduxProps {
-  clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
   handleRemoveWorkspace: Function;
@@ -521,6 +520,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
 
 const mapStateToProps = (state: RootState) => ({
   activeWorkspaceName: selectActiveWorkspaceName(state),
+  clientCertificates: selectActiveWorkspaceClientCertificates(state),
 });
 
 export const WorkspaceSettingsModal = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedWorkspaceSettingsModal);
