@@ -1,9 +1,10 @@
 import { SvgIcon } from 'insomnia-components';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
 
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { selectSettings } from '../redux/selectors';
 
 const Wrapper = styled.div({
@@ -76,17 +77,31 @@ export const GitHubStarsButton = () => {
       });
   });
 
+  const starClick = useCallback(() => {
+    trackSegmentEvent(SegmentEvent.buttonClick, {
+      type: 'GitHub stars',
+      action: 'clicked star',
+    });
+  }, []);
+
+  const counterClick = useCallback(() => {
+    trackSegmentEvent(SegmentEvent.buttonClick, {
+      type: 'GitHub stars',
+      action: 'clicked stargazers',
+    });
+  }, []);
+
   const shouldShowCount = !Boolean(error) && !incognitoMode;
 
   return (
     <Wrapper>
-      <Star href={`https://github.com/${org}/${repo}`}>
+      <Star onClick={starClick} href={`https://github.com/${org}/${repo}`}>
         <Icon icon="github" />
         Star
       </Star>
 
       {shouldShowCount ? (
-        <Counter href={`https://github.com/${org}/${repo}/stargazers`}>
+        <Counter onClick={counterClick} href={`https://github.com/${org}/${repo}/stargazers`}>
           {starCount.toLocaleString()}
         </Counter>
       ) : null}
