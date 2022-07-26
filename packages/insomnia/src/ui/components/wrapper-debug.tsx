@@ -49,7 +49,6 @@ interface Props {
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleDuplicateRequest: Function;
-  handleSetSidebarFilter: (value: string) => Promise<void>;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
   vcs: VCS | null;
@@ -70,7 +69,6 @@ export const WrapperDebug: FC<Props> = ({
   handleUpdateSettingsUseBulkHeaderEditor,
   handleUpdateSettingsUseBulkParametersEditor,
   handleDuplicateRequest,
-  handleSetSidebarFilter,
   handleUpdateRequestMimeType,
   headerEditorKey,
   vcs,
@@ -124,7 +122,6 @@ export const WrapperDebug: FC<Props> = ({
 
         <SidebarFilter
           key={`${activeWorkspace._id}::filter`}
-          onChange={handleSetSidebarFilter}
           filter={sidebarFilter || ''}
         />
 

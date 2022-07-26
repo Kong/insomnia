@@ -8,29 +8,34 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { sortMethodMap } from '../../../common/sorting';
 import * as models from '../../../models';
 import { isRequestGroup } from '../../../models/request-group';
-import { selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { KeydownBinder } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
-  onChange: (value: string) => Promise<void>;
   filter: string;
 }
-export const SidebarFilter: FC<Props> = ({ filter, onChange }) => {
+export const SidebarFilter: FC<Props> = ({ filter }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
-  const handleClearFilter = useCallback(() => {
-    onChange('');
+  const handleClearFilter = useCallback(async () => {
+    if (activeWorkspaceMeta) {
+      await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: '' });
+    }
     if (inputRef.current) {
       inputRef.current.value = '';
       inputRef.current.focus();
     }
-  }, [onChange]);
-  const handleOnChange = useCallback((event: React.SyntheticEvent<HTMLInputElement>) => {
-    onChange(event.currentTarget.value);
-  }, [onChange]);
+  }, [activeWorkspaceMeta]);
+
+  const handleOnChange = useCallback(async (event: React.SyntheticEvent<HTMLInputElement>) => {
+    if (activeWorkspaceMeta) {
+      await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: event.currentTarget.value });
+    }
+  }, [activeWorkspaceMeta]);
   const handleKeydown = useCallback((event: KeyboardEvent) => {
     executeHotKey(event, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
       inputRef.current?.focus();

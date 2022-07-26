@@ -348,12 +348,6 @@ class App extends PureComponent<AppProps, State> {
     }, 300);
   }
 
-  async _handleSetSidebarFilter(sidebarFilter: string) {
-    if (this.props.activeWorkspaceMeta) {
-      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { sidebarFilter });
-    }
-  }
-
   async _handleSetResponseFilter(requestId: string, responseFilter: string) {
     await updateRequestMetaByParentId(requestId, {
       responseFilter,
@@ -1053,7 +1047,6 @@ class App extends PureComponent<AppProps, State> {
                   }
                   handleSetActiveResponse={this._handleSetActiveResponse}
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                  handleSetSidebarFilter={this._handleSetSidebarFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   vcs={vcs}
