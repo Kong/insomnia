@@ -37,7 +37,6 @@ import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { GitHubStarsButton } from './github-stars-button';
 import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
@@ -266,7 +265,6 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
             ],
             isLoading,
           }}
-          gridRight={<GitHubStarsButton />}
         />
       }
       renderPageBody={

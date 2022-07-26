@@ -8,8 +8,12 @@ import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { selectSettings } from '../redux/selectors';
 
 const Wrapper = styled.div({
-  marginLeft: 'var(--padding-md)',
+  fontSize: 'var(--font-size-xs)',
+  zIndex: 0,
+  marginLeft: -10,
   display: 'flex',
+  height: '16px',
+  alignSelf: 'center',
   '& a': {
     textDecoration: 'none !important',
     fontWeight: 'normal !important',
@@ -22,10 +26,11 @@ const Wrapper = styled.div({
 });
 
 const Star = styled.a({
-  backgroundColor: 'var(--hl-sm)',
-  padding: 'var(--padding-xxs)',
+  width: 42,
+  justifyContent: 'flex-end',
+  backgroundColor: 'var(--hl-xs)',
+  padding: '2px',
   alignItems: 'center',
-  height: '100%',
   display: 'flex',
   border: '1px solid var(--hl-sm)',
   color: 'var(--hl) !important',
@@ -40,11 +45,14 @@ const Icon = styled(SvgIcon)({
 
 const Counter = styled.a({
   alignItems: 'center',
-  padding: '0 var(--padding-xs)',
+  paddingLeft: 4,
+  paddingRight: 5,
+  padding: '0 3px',
   display: 'flex',
   fontVariantNumeric: 'tabular-nums',
   border: '1px solid var(--hl-sm)',
   borderLeft: 'none',
+  borderRadius: '0 10px 10px 0',
   ':hover': {
     color: 'var(--color-surprise) !important',
   },
