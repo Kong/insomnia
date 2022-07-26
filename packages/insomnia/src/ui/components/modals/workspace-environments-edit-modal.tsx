@@ -26,7 +26,7 @@ import { Tooltip } from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface Props extends ModalProps {
-  handleChangeEnvironment: (id: string | null) => void;
+  handleSetActiveEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
 }
 
@@ -243,7 +243,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   }
 
   async _handleDeleteEnvironment(_event: React.MouseEvent, environment?: Environment) {
-    const { handleChangeEnvironment, activeEnvironmentId } = this.props;
+    const { handleSetActiveEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
     // Don't delete the root environment
@@ -255,7 +255,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (activeEnvironmentId === environment!._id) {
-      handleChangeEnvironment(null);
+      handleSetActiveEnvironment(null);
     }
 
     // Delete the current one
@@ -417,7 +417,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   }
 
   _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (event, environment) => {
-    const { handleChangeEnvironment, activeEnvironmentId } = this.props;
+    const { handleSetActiveEnvironment, activeEnvironmentId } = this.props;
 
     if (!environment) {
       return;
@@ -427,7 +427,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
       return;
     }
 
-    handleChangeEnvironment(environment._id);
+    handleSetActiveEnvironment(environment._id);
     this._handleShowEnvironment(event, environment);
   };
 

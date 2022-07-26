@@ -397,7 +397,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
-              handleChangeEnvironment={handleSetActiveEnvironment}
+              handleSetActiveEnvironment={handleSetActiveEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />
 

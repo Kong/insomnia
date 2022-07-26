@@ -97,7 +97,7 @@ export const WrapperDebug: FC<Props> = ({
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             environments={environments}
-            handleChangeEnvironment={handleSetActiveEnvironment}
+            handleSetActiveEnvironment={handleSetActiveEnvironment}
             workspace={activeWorkspace}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>

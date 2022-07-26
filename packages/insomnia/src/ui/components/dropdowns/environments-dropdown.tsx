@@ -21,7 +21,7 @@ interface Props {
   activeEnvironment?: Environment | null;
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   environments: Environment[];
-  handleChangeEnvironment: Function;
+  handleSetActiveEnvironment: Function;
   workspace: Workspace;
 }
 
@@ -29,7 +29,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   activeEnvironment,
   environmentHighlightColorStyle,
   environments,
-  handleChangeEnvironment,
+  handleSetActiveEnvironment,
   workspace,
 }) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
@@ -85,7 +85,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
           <DropdownItem
             key={environment._id}
             value={environment._id}
-            onClick={handleChangeEnvironment}
+            onClick={handleSetActiveEnvironment}
           >
             <i
               className="fa fa-random"
@@ -97,7 +97,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
           </DropdownItem>
         ))}
 
-        <DropdownItem onClick={handleChangeEnvironment}>
+        <DropdownItem onClick={handleSetActiveEnvironment}>
           <i className="fa fa-empty" /> No Environment
         </DropdownItem>
 

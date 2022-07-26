@@ -9,7 +9,6 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { update } from '../../../models/helpers/request-operations';
 import type {
   Request,
-  RequestBody,
   RequestHeader,
   RequestParameter,
 } from '../../../models/request';
@@ -57,10 +56,6 @@ export const RequestPane: FC<Props> = ({
   updateRequestMimeType,
   workspace,
 }) => {
-
-  const updateRequestBody = (request: Request, body: RequestBody) => {
-    return update(request, { body });
-  };
 
   const updateRequestParameters = (request: Request, parameters: RequestParameter[]) => {
     return update(request, { parameters });
