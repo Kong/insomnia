@@ -32,7 +32,6 @@ import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
-import { Response } from '../../models/response';
 import { isWorkspace } from '../../models/workspace';
 import * as network from '../../network/network';
 import * as plugins from '../../plugins';
@@ -568,37 +567,6 @@ class App extends PureComponent<AppProps, State> {
     handleStopLoading(requestId);
   }
 
-  async _handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
-    const { activeEnvironment } = this.props;
-    const activeResponseId = activeResponse ? activeResponse._id : null;
-    await updateRequestMetaByParentId(requestId, {
-      activeResponseId,
-    });
-
-    let response: Response;
-
-    if (activeResponseId) {
-      // @ts-expect-error -- TSCONVERSION can return null if not found
-      response = await models.response.getById(activeResponseId);
-    } else {
-      const environmentId = activeEnvironment ? activeEnvironment._id : null;
-      // @ts-expect-error -- TSCONVERSION can return null if not found
-      response = await models.response.getLatestForRequest(requestId, environmentId);
-    }
-
-    const requestVersionId = response ? response.requestVersionId : 'n/a';
-    // @ts-expect-error -- TSCONVERSION the above line should be response?.requestVersionId ?? 'n/a'
-    const request = await models.requestVersion.restore(requestVersionId);
-
-    if (request) {
-      // Refresh app to reflect changes. Using timeout because we need to
-      // wait for the request update to propagate.
-      setTimeout(() => this._wrapper?._forceRequestPaneRefresh(), 500);
-    } else {
-      // Couldn't restore request. That's okay
-    }
-  }
-
   _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
       executeHotKey(event, definition, callback);
@@ -1045,7 +1013,6 @@ class App extends PureComponent<AppProps, State> {
                   handleSendAndDownloadRequestWithEnvironment={
                     this._handleSendAndDownloadRequestWithEnvironment
                   }
-                  handleSetActiveResponse={this._handleSetActiveResponse}
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   headerEditorKey={forceRefreshHeaderCounter + ''}

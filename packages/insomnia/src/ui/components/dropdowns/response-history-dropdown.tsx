@@ -7,6 +7,7 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -23,14 +24,12 @@ import { TimeFromNow } from '../time-from-now';
 interface Props {
   activeResponse: Response;
   className?: string;
-  handleSetActiveResponse: Function;
   requestId: string;
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
   activeResponse,
   className,
-  handleSetActiveResponse,
   requestId,
 }) => {
   const dropdownRef = useRef<DropdownHandle>(null);
@@ -46,13 +45,21 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     week: [],
     other: [],
   };
-
+  const handleSetActiveResponse = useCallback((activeResponseId: string | null = null) => {
+    if (!activeRequest) {
+      console.warn('Tried to set active response when request not active');
+      return;
+    }
+    updateRequestMetaByParentId(activeRequest._id, {
+      activeResponseId,
+    });
+  }, [activeRequest]);
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     await models.response.removeForRequest(requestId, environmentId);
 
     if (activeRequest && activeRequest._id === requestId) {
-      await handleSetActiveResponse(requestId, null);
+      handleSetActiveResponse(null);
     }
   }, [activeEnvironment, activeRequest, handleSetActiveResponse, requestId]);
 
@@ -98,7 +105,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
       <DropdownItem
         key={response._id}
         disabled={active}
-        value={response}
+        value={response._id}
         onClick={handleSetActiveResponse}
       >
         {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}

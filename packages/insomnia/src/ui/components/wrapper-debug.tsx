@@ -43,7 +43,6 @@ interface Props {
   handleImport: Function;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
-  handleSetActiveResponse: Function;
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
@@ -63,7 +62,6 @@ export const WrapperDebug: FC<Props> = ({
   handleImport,
   handleSendAndDownloadRequestWithActiveEnvironment,
   handleSendRequestWithActiveEnvironment,
-  handleSetActiveResponse,
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
   handleUpdateSettingsUseBulkHeaderEditor,
@@ -171,7 +169,6 @@ export const WrapperDebug: FC<Props> = ({
             />
             :
             <ResponsePane
-              handleSetActiveResponse={handleSetActiveResponse}
               handleSetFilter={handleSetResponseFilter}
               handleShowRequestSettings={handleShowRequestSettingsModal}
               request={activeRequest}

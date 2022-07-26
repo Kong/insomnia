@@ -31,13 +31,11 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
   handleShowRequestSettings: Function;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
-  handleSetActiveResponse,
   handleSetFilter,
   handleShowRequestSettings,
   request,
@@ -137,7 +135,6 @@ export const ResponsePane: FC<Props> = ({
           <ResponseHistoryDropdown
             activeResponse={response}
             requestId={request._id}
-            handleSetActiveResponse={handleSetActiveResponse}
             className="tall pane__header__right"
           />
         </PaneHeader>

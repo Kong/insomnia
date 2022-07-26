@@ -127,7 +127,6 @@ export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDi
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
   handleSetResponseFilter: Function;
-  handleSetActiveResponse: Function;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
@@ -262,15 +261,6 @@ export class WrapperClass extends PureComponent<Props, State> {
 
   _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
     return models.settings.update(this.props.settings, { useBulkParametersEditor });
-  }
-
-  _handleSetActiveResponse(responseId: string | null) {
-    if (!this.props.activeRequest) {
-      console.warn('Tried to set active response when request not active');
-      return;
-    }
-
-    this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   }
 
   _handleShowEnvironmentsModal() {
@@ -550,7 +540,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleImport={this._handleImport}
                   handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
                   handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
-                  handleSetActiveResponse={this._handleSetActiveResponse}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
                   handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
