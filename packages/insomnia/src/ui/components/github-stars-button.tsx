@@ -1,7 +1,10 @@
 import { SvgIcon } from 'insomnia-components';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
+
+import { selectSettings } from '../redux/selectors';
 
 const Wrapper = styled.div({
   marginLeft: 'var(--padding-md)',
@@ -47,12 +50,17 @@ const Counter = styled.a({
 });
 
 export const GitHubStarsButton = () => {
+  const { incognitoMode } = useSelector(selectSettings);
   const [starCount, setStarCount] = useState(21700);
   const [error, setError] = useState<Error | null>(null);
   const org = 'Kong';
   const repo = 'insomnia';
 
   useMount(() => {
+    if (incognitoMode) {
+      return;
+    }
+
     fetch(`https://api.github.com/repos/${org}/${repo}`)
       .then(data => data.json())
       .then(info => {
@@ -68,7 +76,7 @@ export const GitHubStarsButton = () => {
       });
   });
 
-  const shouldShowCount = !Boolean(error);
+  const shouldShowCount = !Boolean(error) && !incognitoMode;
 
   return (
     <Wrapper>
