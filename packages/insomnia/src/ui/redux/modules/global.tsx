@@ -205,6 +205,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       showModal(LoginModalHandle, {
         title: args.title,
         message: args.message,
+        reauth: true,
       });
       break;
 

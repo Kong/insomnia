@@ -1,7 +1,7 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 import * as Sentry from '@sentry/electron';
-import React, { Dispatch, FormEvent, forwardRef, MutableRefObject, RefObject, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { Dispatch, FormEvent, forwardRef, memo, MutableRefObject, RefObject, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
@@ -32,6 +32,7 @@ interface State {
 interface Options {
   title: string;
   message: string;
+  reauth: boolean;
 }
 
 interface AuthBox {
@@ -70,17 +71,22 @@ export class LoginModalHandle {
   }
 
   async show(options: Partial<Options> = {}) {
-    const { title, message } = options;
+    const { title, message, reauth } = options;
     const url = await this.getLoginUrl();
     this.setState({
       error: '',
       state: 'ready',
       title: title ?? '',
       message: message ?? '',
+      reauth: reauth ?? false,
       url,
     });
+
     this.modalRef.current?.show();
-    clickLink(url);
+
+    if (!reauth) {
+      clickLink(url);
+    }
   }
 
   hide() {
@@ -88,15 +94,7 @@ export class LoginModalHandle {
   }
 }
 
-function useStateRef<T>(state: T): Readonly<MutableRefObject<T>> {
-  const stateRef = useRef(state);
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-  return stateRef;
-}
-
-export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
+export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
   const modalRef = useRef<Modal>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
@@ -106,15 +104,20 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
     error: '',
     title: '',
     message: '',
+    reauth: false,
     url: '',
   });
 
-  const stateRef = useStateRef(state);
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useImperativeHandle(ref, () => {
     currentLoginModalHandle = new LoginModalHandle(modalRef, stateRef, setState);
     return currentLoginModalHandle;
-  }, [stateRef]);
+  }, []);
 
   // Clean up global login modal handle on unmount.
   useEffect(() => {
@@ -124,12 +127,12 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
   }, []);
 
   const reset = useCallback(() => {
-    setState({ ...state, state: 'ready', error: '' });
-  }, [state]);
+    setState(state => ({ ...state, state: 'ready', error: '' }));
+  }, []);
 
   const goToTokenEntry = useCallback(() => {
-    setState({ ...state, state: 'token-entry' });
-  }, [state]);
+    setState(state => ({ ...state, state: 'token-entry' }));
+  }, []);
 
   const submitToken = useCallback((event: FormEvent) => {
     event.preventDefault();
@@ -141,18 +144,36 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
     document.execCommand('copy');
   }, []);
 
+  const openUrl = useCallback(() => {
+    clickLink(state.url);
+  }, [state.url]);
+
   const renderBody = () => {
     switch (state.state) {
       case 'ready':
         return <>
           <b>Please login via your web browser.</b>
-          <p>
-            A new page should have opened in your default web browser.
-            To continue, please login via the browser.
-          </p>
-          <p>
-            If it did not open, copy and paste the following URL into your browser:
-          </p>
+          {state.reauth ?
+            <>
+              <p>
+                To continue logging in, click the button and continue in your web browser.
+              </p>
+              <button className="btn btn--super-compact btn--outlined" onClick={openUrl}>Log In</button>
+              <p>
+                If it did not open, copy and paste the following URL into your browser:
+              </p>
+            </>
+            :
+            <>
+              <p>
+                A new page should have opened in your default web browser.
+                To continue, please login via the browser.
+              </p>
+              <p>
+                If it did not open, copy and paste the following URL into your browser:
+              </p>
+            </>
+          }
           <div className="form-control form-control--outlined no-pad-top" style={{ 'display': 'flex' }} data-testid="LoginModal__url">
             <input
               type="text"
@@ -208,12 +229,14 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
       <ModalFooter>
         {state.state === 'error' ?
           <button className="btn" onClick={reset}>Retry</button> : null}
+        {state.state === 'ready' && state.reauth ?
+          <button className="btn" onClick={session.logout}>Log Out</button> : null}
         {state.state === 'ready' ?
           <button className="btn" onClick={goToTokenEntry}>Manually Enter Token</button> : null}
       </ModalFooter>
     </Modal>
   );
-});
+}));
 
 LoginModal.displayName = 'LoginModal';
 
