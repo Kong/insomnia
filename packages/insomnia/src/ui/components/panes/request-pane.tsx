@@ -10,7 +10,6 @@ import { update } from '../../../models/helpers/request-operations';
 import type {
   Request,
   RequestHeader,
-  RequestParameter,
 } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
@@ -57,17 +56,6 @@ export const RequestPane: FC<Props> = ({
   workspace,
 }) => {
 
-  const updateRequestParameters = (request: Request, parameters: RequestParameter[]) => {
-    return update(request, { parameters });
-  };
-
-  const updateRequestHeaders = (request: Request, headers: RequestHeader[]) => {
-    return update(request, { headers });
-  };
-
-  const updateRequestMethod = (request: Request, method: string) => {
-    return update(request, { method });
-  };
   const updateRequestUrl = (request: Request, url: string) => {
     if (request.url === url) {
       return Promise.resolve(request);
@@ -153,7 +141,6 @@ export const RequestPane: FC<Props> = ({
             key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onMethodChange={updateRequestMethod}
             onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={autocompleteUrls}
             handleImport={handleImport}
@@ -232,7 +219,6 @@ export const RequestPane: FC<Props> = ({
             >
               <RequestParametersEditor
                 key={headerEditorKey}
-                onChange={updateRequestParameters}
                 request={request}
                 bulk={settings.useBulkParametersEditor}
               />
@@ -258,7 +244,6 @@ export const RequestPane: FC<Props> = ({
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestHeadersEditor
               key={headerEditorKey}
-              onChange={updateRequestHeaders}
               request={request}
               bulk={settings.useBulkHeaderEditor}
             />

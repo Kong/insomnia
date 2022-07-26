@@ -11,6 +11,7 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
+import { update } from '../../models/helpers/request-operations';
 import type { Request } from '../../models/request';
 import * as network from '../../network/network';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
@@ -34,7 +35,6 @@ interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   handleImport: Function;
   nunjucksPowerUserMode: boolean;
-  onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
   request: Request;
   uniquenessKey: string;
@@ -48,7 +48,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   downloadPath,
   handleAutocompleteUrls,
   handleImport,
-  onMethodChange,
   onUrlChange,
   request,
   uniquenessKey,
@@ -321,6 +320,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     // NOTE: We're not actually doing the import here to avoid races with onChange
     setLastPastedText(event.clipboardData?.getData('text/plain'));
   }, []);
+  const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
 
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
@@ -333,7 +333,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       <div className="urlbar">
         <MethodDropdown
           ref={methodDropdownRef}
-          onChange={(methodValue: string) => onMethodChange(request, methodValue)}
+          onChange={methodValue => onMethodChange(methodValue)}
           method={method}
         />
         <div className="urlbar__flex__right">

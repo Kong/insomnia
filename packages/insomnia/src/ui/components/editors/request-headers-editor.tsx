@@ -1,18 +1,17 @@
 import React, { FC, useCallback } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
+import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestHeader } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
-  onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
   request: Request;
 }
 
 export const RequestHeadersEditor: FC<Props> = ({
-  onChange,
   request,
   bulk,
 }) => {
@@ -38,8 +37,8 @@ export const RequestHeadersEditor: FC<Props> = ({
       });
     }
 
-    onChange(request, headers);
-  }, [onChange, request]);
+    update(request, { headers });
+  }, [request]);
 
   let headersString = '';
   for (const header of request.headers) {
@@ -56,8 +55,8 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    onChange(request, headers);
-  }, [onChange, request]);
+    update(request, { headers });
+  }, [request]);
 
   if (bulk) {
     return (

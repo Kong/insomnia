@@ -1,22 +1,21 @@
 import React, { FC, useCallback } from 'react';
 
+import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestParameter } from '../../../models/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
-  onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
   request: Request;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
-  onChange,
   request,
   bulk,
 }) => {
   const handleBulkUpdate = useCallback((paramsString: string) => {
-    const params: {
+    const parameters: {
       name: string;
       value: string;
     }[] = [];
@@ -31,14 +30,13 @@ export const RequestParametersEditor: FC<Props> = ({
         continue;
       }
 
-      params.push({
+      parameters.push({
         name,
         value,
       });
     }
-
-    onChange(request, params);
-  }, [onChange, request]);
+    update(request, { parameters });
+  }, [request]);
 
   let paramsString = '';
   for (const param of request.parameters) {
@@ -55,8 +53,8 @@ export const RequestParametersEditor: FC<Props> = ({
   }
 
   const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
-    onChange(request, parameters);
-  }, [onChange, request]);
+    update(request, { parameters });
+  }, [request]);
 
   if (bulk) {
     return (
