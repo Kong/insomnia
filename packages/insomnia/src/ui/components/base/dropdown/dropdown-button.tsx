@@ -9,7 +9,7 @@ export const DROPDOWN_BUTTON_DISPLAY_NAME = 'DropdownButton';
 export interface DropdownButtonHandle {
   blur(): void;
 }
-export const DropdownButton = forwardRef<DropdownButtonHandle, Props>(({ noWrap, children, ...otherProps }, ref) => {
+const DropdownButtonForwarded = forwardRef<DropdownButtonHandle, Props>(({ noWrap, children, ...otherProps }, ref) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -28,4 +28,6 @@ export const DropdownButton = forwardRef<DropdownButtonHandle, Props>(({ noWrap,
     </button>
   );
 });
-DropdownButton.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
+DropdownButtonForwarded.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
+
+export const DropdownButton = Object.assign(DropdownButtonForwarded, { name: 'DROPDOWN_BUTTON_DISPLAY_NAME' });
