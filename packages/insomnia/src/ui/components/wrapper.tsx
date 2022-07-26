@@ -13,7 +13,6 @@ import {
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
 } from '../../common/constants';
-import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import { update } from '../../models/helpers/request-operations';
@@ -253,34 +252,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     }, 1000);
   }
 
-  async _handleRemoveActiveWorkspace() {
-    const { activeWorkspace, handleSetActiveActivity } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-    await models.workspace.remove(activeWorkspace);
-
-    handleSetActiveActivity(ACTIVITY_HOME);
-  }
-
-  async _handleActiveWorkspaceClearAllResponses() {
-    const { activeWorkspace } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    const docs = await db.withDescendants(activeWorkspace, models.request.type);
-    const requests = docs.filter(isRequest);
-
-    for (const req of requests) {
-      await models.response.removeForRequest(req._id);
-    }
-  }
-
   _handleSendRequestWithActiveEnvironment() {
     const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -399,8 +370,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                 ref={registerModal}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}
-                handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-                handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
               /> : null}
             </> : null}
 
