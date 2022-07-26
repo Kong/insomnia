@@ -16,7 +16,6 @@ import {
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import type { Cookie } from '../../models/cookie-jar';
 import { update } from '../../models/helpers/request-operations';
 import * as models from '../../models/index';
 import {
@@ -254,10 +253,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     }, 1000);
   }
 
-  static _handleShowModifyCookieModal(cookie: Cookie) {
-    showModal(CookieModifyModal, cookie);
-  }
-
   async _handleRemoveActiveWorkspace() {
     const { activeWorkspace, handleSetActiveActivity } = this.props;
 
@@ -390,7 +385,6 @@ export class WrapperClass extends PureComponent<Props, State> {
               {activeCookieJar ? <>
                 <CookiesModalFC
                   ref={registerModal}
-                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                 />
                 <CookieModifyModal ref={registerModal} />
               </> : null}

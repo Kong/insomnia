@@ -8,6 +8,8 @@ import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
 import { PromptButton } from './base/prompt-button';
+import { showModal } from './modals';
+import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
 
 export interface CookieListProps {
@@ -16,7 +18,6 @@ export interface CookieListProps {
   handleDeleteAll: Function;
   cookies: Cookie[];
   newCookieDomainName: string;
-  handleShowModifyCookieModal: (cookie: Cookie) => void;
 }
 
 // Use tough-cookie MAX_DATE value
@@ -27,16 +28,15 @@ const CookieRow: FC<{
   cookie: Cookie;
   index: number;
   deleteCookie: (cookie: Cookie) => void;
-  showModal: (cookie: Cookie) => void;
-}> = ({ cookie, index, deleteCookie, showModal }) => {
+}> = ({ cookie, index, deleteCookie }) => {
 
   const handleDeleteCookie = useCallback(() => {
     deleteCookie(cookie);
   }, [deleteCookie, cookie]);
 
   const handleShowModal = useCallback(() => {
-    showModal(cookie);
-  }, [showModal, cookie]);
+    showModal(CookieModifyModal, cookie);
+  }, [cookie]);
 
   const cookieString = cookieToString(ToughCookie.fromJSON(cookie));
   return <tr className="selectable" key={index}>
@@ -71,7 +71,6 @@ const CookieRow: FC<{
 export const CookieList: FC<CookieListProps> = ({
   cookies,
   handleDeleteAll,
-  handleShowModifyCookieModal,
   handleCookieAdd,
   newCookieDomainName,
   handleCookieDelete,
@@ -132,7 +131,6 @@ export const CookieList: FC<CookieListProps> = ({
             index={i}
             key={i}
             deleteCookie={handleCookieDelete}
-            showModal={handleShowModifyCookieModal}
           />
         ))}
       </tbody>

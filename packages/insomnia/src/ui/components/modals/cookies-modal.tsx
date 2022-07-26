@@ -14,11 +14,10 @@ import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { CookieList, CookieListProps } from '../cookie-list';
+import { CookieList } from '../cookie-list';
 import { showModal } from '.';
 
 interface Props extends ModalProps {
-  handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];
   handleRender: HandleRender;
   activeCookieJar: CookieJar | null;
 }
@@ -183,7 +182,7 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleShowModifyCookieModal, activeCookieJar } = this.props;
+    const { activeCookieJar } = this.props;
     const { filter } = this.state;
 
     const cookies = this._getVisibleCookies();
@@ -211,7 +210,6 @@ class CookiesModal extends PureComponent<Props, State> {
               <div className="cookie-list__list border-tops pad">
                 <CookieList
                   cookies={cookies}
-                  handleShowModifyCookieModal={handleShowModifyCookieModal}
                   handleDeleteAll={this._handleDeleteAllCookies}
                   handleCookieAdd={this._handleCookieAdd}
                   handleCookieDelete={this._handleCookieDelete} // Set the domain to the filter so that it shows up if we're filtering
