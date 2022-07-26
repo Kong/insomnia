@@ -9,7 +9,6 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { update } from '../../../models/helpers/request-operations';
 import type {
   Request,
-  RequestAuthentication,
   RequestBody,
   RequestHeader,
   RequestParameter,
@@ -205,12 +204,10 @@ export const RequestPane: FC<Props> = ({
         <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
           <BodyEditor
             key={uniqueKey}
-            handleUpdateRequestMimeType={updateRequestMimeType}
             request={request}
             workspace={workspace}
             environmentId={environmentId}
             settings={settings}
-            onChange={updateRequestBody}
             onChangeHeaders={forceUpdateRequestHeaders}
           />
         </TabPanel>
