@@ -249,7 +249,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                     <i className="fa fa-download" /> Download After Send
                   </DropdownItem>
                 )}
-                <DropdownItem onClick={handleSendAndDownload}>
+                <DropdownItem onClick={() => handleSendAndDownload()}>
                   <i className="fa fa-download" /> Send And Download
                 </DropdownItem>
               </Dropdown>
