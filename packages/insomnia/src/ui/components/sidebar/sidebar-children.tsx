@@ -8,6 +8,7 @@ import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveRequest, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
@@ -33,15 +34,14 @@ interface RecursiveSidebarRowsProps {
 }
 
 interface Props {
-  childObjects: SidebarChildObjects;
   filter: string;
   handleDuplicateRequest: Function;
 }
 export const SidebarChildren: FC<Props> = ({
-  childObjects,
   filter,
   handleDuplicateRequest,
 }) => {
+  const sidebarChildren = useSelector(selectSidebarChildren);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const setActiveRequest = (requestId: string) => {
     if (activeWorkspaceMeta) {
@@ -83,8 +83,8 @@ export const SidebarChildren: FC<Props> = ({
             ))}
       </>);
   };
-  const { all, pinned } = childObjects;
-  const showSeparator = childObjects.pinned.length > 0;
+  const { all, pinned } = sidebarChildren;
+  const showSeparator = sidebarChildren.pinned.length > 0;
   const contextMenuPortal = ReactDOM.createPortal(
     <div className="hide">
       <SidebarCreateDropdown />

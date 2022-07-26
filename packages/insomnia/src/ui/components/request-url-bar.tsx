@@ -17,7 +17,7 @@ import * as network from '../../network/network';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { loadRequestStart, loadRequestStop } from '../redux/modules/global';
-import { selectActiveEnvironment, selectHotKeyRegistry, selectSettings } from '../redux/selectors';
+import { selectActiveEnvironment, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -38,20 +38,19 @@ interface Props {
   onUrlChange: (r: Request, url: string) => Promise<Request>;
   request: Request;
   uniquenessKey: string;
-  downloadPath: string | null;
 }
 
 export interface RequestUrlBarHandle {
   focusInput: () => void;
 }
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
-  downloadPath,
   handleAutocompleteUrls,
   handleImport,
   onUrlChange,
   request,
   uniquenessKey,
 }, ref) => {
+  const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const settings = useSelector(selectSettings);

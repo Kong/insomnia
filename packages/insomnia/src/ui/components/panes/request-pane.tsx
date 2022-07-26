@@ -29,7 +29,6 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
 interface Props {
-  downloadPath: string | null;
   environmentId: string;
   forceRefreshCounter: number;
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
@@ -43,7 +42,6 @@ interface Props {
 }
 
 export const RequestPane: FC<Props> = ({
-  downloadPath,
   environmentId,
   forceRefreshCounter,
   forceUpdateRequest,
@@ -146,7 +144,6 @@ export const RequestPane: FC<Props> = ({
             handleImport={handleImport}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
-            downloadPath={downloadPath}
           />
         </ErrorBoundary>
       </PaneHeader>

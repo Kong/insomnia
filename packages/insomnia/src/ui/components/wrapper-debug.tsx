@@ -14,10 +14,9 @@ import {
   selectActiveWorkspaceMeta,
   selectEnvironments,
   selectIsLoggedIn,
-  selectResponseDownloadPath,
   selectSettings,
 } from '../redux/selectors';
-import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
+import { selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -71,9 +70,7 @@ export const WrapperDebug: FC<Props> = ({
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const environments = useSelector(selectEnvironments);
 
-  const responseDownloadPath = useSelector(selectResponseDownloadPath);
   const settings = useSelector(selectSettings);
-  const sidebarChildren = useSelector(selectSidebarChildren);
   const sidebarFilter = useSelector(selectSidebarFilter);
 
   const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
@@ -113,7 +110,6 @@ export const WrapperDebug: FC<Props> = ({
         />
 
         <SidebarChildren
-          childObjects={sidebarChildren}
           handleDuplicateRequest={handleDuplicateRequest}
           filter={sidebarFilter || ''}
         />
@@ -131,7 +127,6 @@ export const WrapperDebug: FC<Props> = ({
             />
             :
             <RequestPane
-              downloadPath={responseDownloadPath}
               environmentId={activeEnvironment ? activeEnvironment._id : ''}
               forceRefreshCounter={forceRefreshKey}
               forceUpdateRequest={handleForceUpdateRequest}
