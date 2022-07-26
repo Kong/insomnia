@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestHeader } from '../../models/request';
-import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
 import {
@@ -45,8 +44,6 @@ interface Props {
   handleSendRequestWithActiveEnvironment: () => void;
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
-  handleUpdateSettingsUseBulkHeaderEditor: Function;
-  handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleDuplicateRequest: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
@@ -64,8 +61,6 @@ export const WrapperDebug: FC<Props> = ({
   handleSendRequestWithActiveEnvironment,
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
-  handleUpdateSettingsUseBulkHeaderEditor,
-  handleUpdateSettingsUseBulkParametersEditor,
   handleDuplicateRequest,
   handleUpdateRequestMimeType,
   headerEditorKey,
@@ -154,8 +149,6 @@ export const WrapperDebug: FC<Props> = ({
               request={activeRequest}
               settings={settings}
               updateRequestMimeType={handleUpdateRequestMimeType}
-              updateSettingsUseBulkHeaderEditor={handleUpdateSettingsUseBulkHeaderEditor}
-              updateSettingsUseBulkParametersEditor={handleUpdateSettingsUseBulkParametersEditor}
               workspace={activeWorkspace}
             />}
         </ErrorBoundary>

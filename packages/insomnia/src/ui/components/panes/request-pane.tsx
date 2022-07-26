@@ -44,8 +44,6 @@ interface Props {
   request?: Request | null;
   settings: Settings;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateSettingsUseBulkHeaderEditor: Function;
-  updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   workspace: Workspace;
 }
 
@@ -62,8 +60,6 @@ export const RequestPane: FC<Props> = ({
   request,
   settings,
   updateRequestMimeType,
-  updateSettingsUseBulkHeaderEditor,
-  updateSettingsUseBulkParametersEditor,
   workspace,
 }) => {
 
@@ -106,12 +102,12 @@ export const RequestPane: FC<Props> = ({
   }, [workspace, request]);
 
   const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
-    updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
-  }, [settings, updateSettingsUseBulkHeaderEditor]);
+    models.settings.update(settings, { useBulkHeaderEditor:!settings.useBulkHeaderEditor });
+  }, [settings]);
 
   const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
-    updateSettingsUseBulkParametersEditor(!settings.useBulkParametersEditor);
-  }, [settings, updateSettingsUseBulkParametersEditor]);
+    models.settings.update(settings, { useBulkParametersEditor:!settings.useBulkParametersEditor });
+  }, [settings]);
 
   const handleImportQueryFromUrl = useCallback(() => {
     if (!request) {

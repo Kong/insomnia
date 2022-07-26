@@ -254,15 +254,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     }, 1000);
   }
 
-  // Settings updaters
-  _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
-    return models.settings.update(this.props.settings, { useBulkHeaderEditor });
-  }
-
-  _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
-    return models.settings.update(this.props.settings, { useBulkParametersEditor });
-  }
-
   _handleShowEnvironmentsModal() {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
@@ -542,8 +533,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
-                  handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                  handleUpdateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
                 />
               </Suspense>
             }
