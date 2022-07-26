@@ -25,7 +25,7 @@ import { TimeTag } from '../tags/time-tag';
 import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
-import { ResponseViewer } from '../viewers/response-viewer';
+import { ResponseViewer, ResponseViewerHandle } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
@@ -49,7 +49,7 @@ export const ResponsePane: FC<Props> = ({
   const loadStartTime = useSelector(selectLoadStartTime);
   const previewMode = useSelector(selectResponsePreviewMode);
 
-  const responseViewerRef = useRef<ResponseViewer>(null);
+  const responseViewerRef = useRef<ResponseViewerHandle>(null);
   const handleGetResponseBody = useCallback(() => {
     if (!response) {
       return null;
