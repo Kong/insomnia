@@ -3,7 +3,7 @@ import { clipboard } from 'electron';
 import fs from 'fs';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { extension as mimeExtension } from 'mime-types';
-import React, { FC, useCallback, useRef } from 'react';
+import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -49,7 +49,6 @@ export const ResponsePane: FC<Props> = ({
   const loadStartTime = useSelector(selectLoadStartTime);
   const previewMode = useSelector(selectResponsePreviewMode);
 
-  const responseViewerRef = useRef<ResponseViewer>(null);
   const handleGetResponseBody = useCallback(() => {
     if (!response) {
       return null;
@@ -110,17 +109,6 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [request, response]);
 
-  const handleTabSelect = (index: number, lastIndex: number) => {
-    if (responseViewerRef.current != null && index === 0 && index !== lastIndex) {
-      // Fix for CodeMirror editor not updating its content.
-      // Refresh must be called when the editor is visible,
-      // so use nextTick to give time for it to be visible.
-      process.nextTick(() => {
-        responseViewerRef.current?.refresh();
-      });
-    }
-  };
-
   if (!request) {
     return <BlankPane type="response" />;
   }
@@ -156,7 +144,6 @@ export const ResponsePane: FC<Props> = ({
       )}
       <Tabs
         className={classnames(paneBodyClasses, 'react-tabs')}
-        onSelect={handleTabSelect}
         forceRenderTabPanel
       >
         <TabList>
@@ -188,7 +175,7 @@ export const ResponsePane: FC<Props> = ({
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseViewer
-            ref={responseViewerRef}
+            key={response._id}
             bytes={Math.max(response.bytesContent, response.bytesRead)}
             contentType={response.contentType || ''}
             disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
