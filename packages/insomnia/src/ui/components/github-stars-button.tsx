@@ -1,7 +1,7 @@
 import { SvgIcon } from 'insomnia-components';
 import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useMount } from 'react-use';
+import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
@@ -51,6 +51,7 @@ const Counter = styled.a({
 });
 
 export const GitHubStarsButton = () => {
+  const isMounted = useMountedState();
   const { incognitoMode } = useSelector(selectSettings);
   const [starCount, setStarCount] = useState(21700);
   const [error, setError] = useState<Error | null>(null);
@@ -62,16 +63,29 @@ export const GitHubStarsButton = () => {
       return;
     }
 
+    if (!isMounted()) {
+      return;
+    }
+
     fetch(`https://api.github.com/repos/${org}/${repo}`)
       .then(data => data.json())
       .then(info => {
         if (!('watchers' in info)) {
           throw new Error('unable to get stars from GitHub API');
         }
+
+        if (!isMounted()) {
+          return;
+        }
+
         setStarCount(info.watchers);
         setError(null);
       })
       .catch(error => {
+        if (!isMounted()) {
+          return;
+        }
+
         console.error('error fetching GitHub stars', error);
         setError(error);
       });
