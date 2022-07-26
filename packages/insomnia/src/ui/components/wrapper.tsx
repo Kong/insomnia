@@ -125,8 +125,6 @@ export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDi
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
   handleSetResponseFilter: Function;
-  handleSendRequestWithEnvironment: Function;
-  handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
   vcs: VCS | null;
@@ -252,28 +250,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     }, 1000);
   }
 
-  _handleSendRequestWithActiveEnvironment() {
-    const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
-  }
-
-  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string) {
-    const {
-      activeRequest,
-      activeEnvironment,
-      handleSendAndDownloadRequestWithEnvironment,
-    } = this.props;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    await handleSendAndDownloadRequestWithEnvironment(
-      activeRequestId,
-      activeEnvironmentId,
-      filename,
-    );
-  }
-
   _handleSetResponseFilter(filter: string) {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -306,6 +282,8 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeGitRepository,
       activeWorkspace,
       activeApiSpec,
+      handleUpdateRequestMimeType,
+      handleSetActiveEnvironment,
       gitVCS,
       vcs,
     } = this.props;
@@ -419,7 +397,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
-              handleChangeEnvironment={this.props.handleSetActiveEnvironment}
+              handleChangeEnvironment={handleSetActiveEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />
 
@@ -480,13 +458,12 @@ export class WrapperClass extends PureComponent<Props, State> {
                   forceRefreshKey={this.state.forceRefreshKey}
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  handleSetActiveEnvironment={this.props.handleSetActiveEnvironment}
+                  handleSetActiveEnvironment={handleSetActiveEnvironment}
                   handleForceUpdateRequest={this._handleForceUpdateRequest}
                   handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
-                  handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
-                  handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
                   handleSetResponseFilter={this._handleSetResponseFilter}
+                  handleUpdateRequestMimeType={handleUpdateRequestMimeType}
                 />
               </Suspense>
             }

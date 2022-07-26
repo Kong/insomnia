@@ -1,7 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { ipcRenderer, SaveDialogOptions } from 'electron';
-import fs from 'fs';
-import { extension as mimeExtension } from 'mime-types';
+import { ipcRenderer } from 'electron';
 import * as path from 'path';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -21,7 +19,6 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import {
   generateId,
-  getContentDispositionHeader,
 } from '../../common/misc';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
@@ -33,7 +30,6 @@ import { Request, updateMimeType } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { isWorkspace } from '../../models/workspace';
-import * as network from '../../network/network';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
 import { fsClient } from '../../sync/git/fs-client';
@@ -50,7 +46,6 @@ import { AskModal } from '../components/modals/ask-modal';
 import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import { showSelectModal } from '../components/modals/select-modal';
@@ -67,8 +62,6 @@ import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
 import {
-  loadRequestStart,
-  loadRequestStop,
   newCommand,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
@@ -174,7 +167,6 @@ class App extends PureComponent<AppProps, State> {
           showModal(RequestSwitcherModal);
         },
       ],
-      [hotKeyRefs.REQUEST_SEND, this._handleSendShortcut],
       [
         hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
         () => {
@@ -276,14 +268,6 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
     ];
-  }
-
-  async _handleSendShortcut() {
-    const { activeRequest, activeEnvironment } = this.props;
-    await this._handleSendRequestWithEnvironment(
-      activeRequest ? activeRequest._id : 'n/a',
-      activeEnvironment ? activeEnvironment._id : 'n/a',
-    );
   }
 
   _requestDuplicate(request?: Request | GrpcRequest) {
@@ -405,166 +389,6 @@ class App extends PureComponent<AppProps, State> {
       });
     }, 500);
     return newRequest;
-  }
-
-  async _getDownloadLocation() {
-    const options: SaveDialogOptions = {
-      title: 'Select Download Location',
-      buttonLabel: 'Save',
-    };
-    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-
-    if (defaultPath) {
-      // NOTE: An error will be thrown if defaultPath is supplied but not a String
-      options.defaultPath = defaultPath;
-    }
-
-    const { filePath } = await window.dialog.showSaveDialog(options);
-    // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
-    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return filePath || null;
-  }
-
-  async _handleSendAndDownloadRequestWithEnvironment(requestId: string, environmentId: string, dir: string) {
-    const { settings, handleStartLoading, handleStopLoading } = this.props;
-    const request = await models.request.getById(requestId);
-
-    if (!request) {
-      return;
-    }
-
-    // Update request stats
-    models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, {
-      preferredHttpVersion: settings.preferredHttpVersion,
-      authenticationType: request.authentication?.type,
-      mimeType: request.body.mimeType,
-    });
-    // Start loading
-    handleStartLoading(requestId);
-
-    try {
-      const responsePatch = await network.send(requestId, environmentId);
-      const headers = responsePatch.headers || [];
-      const header = getContentDispositionHeader(headers);
-      const nameFromHeader = header ? header.value : null;
-
-      if (
-        responsePatch.bodyPath &&
-        responsePatch.statusCode &&
-        responsePatch.statusCode >= 200 &&
-        responsePatch.statusCode < 300
-      ) {
-        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-        const extension = sanitizedExtension || 'unknown';
-        const name =
-          nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename: string | null;
-
-        if (dir) {
-          filename = path.join(dir, name);
-        } else {
-          filename = await this._getDownloadLocation();
-        }
-
-        if (!filename) {
-          return;
-        }
-
-        const to = fs.createWriteStream(filename);
-        // @ts-expect-error -- TSCONVERSION
-        const readStream = models.response.getBodyStream(responsePatch);
-
-        if (!readStream) {
-          return;
-        }
-
-        readStream.pipe(to);
-
-        readStream.on('end', async () => {
-          responsePatch.error = `Saved to ${filename}`;
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-        });
-
-        readStream.on('error', async err => {
-          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-        });
-      } else {
-        // Save the bad responses so failures are shown still
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
-      }
-    } catch (err) {
-      showAlert({
-        title: 'Unexpected Request Failure',
-        message: (
-          <div>
-            <p>The request failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{err.message}</pre>
-            </code>
-          </div>
-        ),
-      });
-    } finally {
-      // Unset active response because we just made a new one
-      await updateRequestMetaByParentId(requestId, {
-        activeResponseId: null,
-      });
-      // Stop loading
-      handleStopLoading(requestId);
-    }
-  }
-
-  async _handleSendRequestWithEnvironment(requestId: string, environmentId?: string) {
-    const { handleStartLoading, handleStopLoading, settings } = this.props;
-    const request = await models.request.getById(requestId);
-
-    if (!request) {
-      return;
-    }
-
-    // Update request stats
-    models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, {
-      preferredHttpVersion: settings.preferredHttpVersion,
-      authenticationType: request.authentication?.type,
-      mimeType: request.body.mimeType,
-    });
-    handleStartLoading(requestId);
-
-    try {
-      const responsePatch = await network.send(requestId, environmentId);
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
-
-    } catch (err) {
-      if (err.type === 'render') {
-        showModal(RequestRenderErrorModal, {
-          request,
-          error: err,
-        });
-      } else {
-        showAlert({
-          title: 'Unexpected Request Failure',
-          message: (
-            <div>
-              <p>The request failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{err.message}</pre>
-              </code>
-            </div>
-          ),
-        });
-      }
-    }
-
-    // Unset active response because we just made a new one
-    await updateRequestMetaByParentId(requestId, {
-      activeResponseId: null,
-    });
-
-    // Stop loading
-    handleStopLoading(requestId);
   }
 
   _handleKeyDown(event: KeyboardEvent) {
@@ -1009,10 +833,6 @@ class App extends PureComponent<AppProps, State> {
                   ref={this._setWrapperRef}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-                  handleSendAndDownloadRequestWithEnvironment={
-                    this._handleSendAndDownloadRequestWithEnvironment
-                  }
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
@@ -1052,20 +872,14 @@ const mapStateToProps = (state: RootState) => ({
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
     importUri: handleImportUri,
-    loadRequestStart: handleStartLoading,
-    loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
   } = bindActionCreators({
     importUri,
-    loadRequestStart,
-    loadRequestStop,
     newCommand,
   }, dispatch);
   return {
     handleCommand,
     handleImportUri,
-    handleStartLoading,
-    handleStopLoading,
   };
 };
 

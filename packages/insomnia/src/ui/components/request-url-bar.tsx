@@ -1,13 +1,22 @@
+import type { SaveDialogOptions } from 'electron';
+import fs from 'fs';
+import { extension as mimeExtension } from 'mime-types';
+import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
+import { getContentDispositionHeader } from '../../common/misc';
+import * as models from '../../models';
 import type { Request } from '../../models/request';
+import * as network from '../../network/network';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectHotKeyRegistry } from '../redux/selectors';
+import { loadRequestStart, loadRequestStop } from '../redux/modules/global';
+import { selectActiveEnvironment, selectHotKeyRegistry, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -18,13 +27,12 @@ import { OneLineEditor } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { KeydownBinder } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
-import { showModal, showPrompt } from './modals/index';
+import { showAlert, showModal, showPrompt } from './modals/index';
+import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   handleImport: Function;
-  handleSend: () => void;
-  handleSendAndDownload: (filepath?: string) => Promise<void>;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
@@ -40,14 +48,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   downloadPath,
   handleAutocompleteUrls,
   handleImport,
-  handleSend,
-  handleSendAndDownload,
   onMethodChange,
   onUrlChange,
   request,
   uniquenessKey,
 }, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const settings = useSelector(selectSettings);
+  const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditor>(null);
@@ -66,6 +75,152 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
+
+  async function _getDownloadLocation() {
+    const options: SaveDialogOptions = {
+      title: 'Select Download Location',
+      buttonLabel: 'Save',
+    };
+    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+
+    if (defaultPath) {
+      // NOTE: An error will be thrown if defaultPath is supplied but not a String
+      options.defaultPath = defaultPath;
+    }
+
+    const { filePath } = await window.dialog.showSaveDialog(options);
+    // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
+    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+    return filePath || null;
+  }
+
+  const handleSendAndDownload = useCallback(async (filePath: string) => {
+    if (!request || !activeEnvironment) {
+      return;
+    }
+
+    // Update request stats
+    models.stats.incrementExecutedRequests();
+    trackSegmentEvent(SegmentEvent.requestExecute, {
+      preferredHttpVersion: settings.preferredHttpVersion,
+      authenticationType: request.authentication?.type,
+      mimeType: request.body.mimeType,
+    });
+    // Start loading
+    dispatch(loadRequestStart(request._id));
+
+    try {
+      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      const headers = responsePatch.headers || [];
+      const header = getContentDispositionHeader(headers);
+      const nameFromHeader = header ? header.value : null;
+
+      if (
+        responsePatch.bodyPath &&
+        responsePatch.statusCode &&
+        responsePatch.statusCode >= 200 &&
+        responsePatch.statusCode < 300
+      ) {
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
+        const name =
+          nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+        let filename: string | null;
+
+        if (filePath) {
+          filename = path.join(filePath, name);
+        } else {
+          filename = await _getDownloadLocation();
+        }
+
+        if (!filename) {
+          return;
+        }
+
+        const to = fs.createWriteStream(filename);
+        // @ts-expect-error -- TSCONVERSION
+        const readStream = models.response.getBodyStream(responsePatch);
+
+        if (!readStream) {
+          return;
+        }
+
+        readStream.pipe(to);
+
+        readStream.on('end', async () => {
+          responsePatch.error = `Saved to ${filename}`;
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
+        });
+
+        readStream.on('error', async err => {
+          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
+        });
+      } else {
+        // Save the bad responses so failures are shown still
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
+      }
+    } catch (err) {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{err.message}</pre>
+            </code>
+          </div>
+        ),
+      });
+    } finally {
+      // Unset active response because we just made a new one
+      await updateRequestMetaByParentId(request._id, { activeResponseId: null });
+      // Stop loading
+      dispatch(loadRequestStop(request._id));
+    }
+  }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+
+  const handleSend = useCallback(async () => {
+    if (!request || !activeEnvironment) {
+      return;
+    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
+    trackSegmentEvent(SegmentEvent.requestExecute, {
+      preferredHttpVersion: settings.preferredHttpVersion,
+      authenticationType: request.authentication?.type,
+      mimeType: request.body.mimeType,
+    });
+    dispatch(loadRequestStart(request._id));
+    try {
+      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      await models.response.create(responsePatch, settings.maxHistoryResponses);
+
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {
+          request,
+          error: err,
+        });
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+    }
+    // Unset active response because we just made a new one
+    await updateRequestMetaByParentId(request._id, { activeResponseId: null });
+    // Stop loading
+    dispatch(loadRequestStop(request._id));
+  }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
@@ -139,6 +294,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       dropdownRef.current?.toggle(true);
+    });
+    executeHotKey(event, hotKeyRefs.REQUEST_SEND, () => {
+      send();
     });
   }, [request.url, send]);
 

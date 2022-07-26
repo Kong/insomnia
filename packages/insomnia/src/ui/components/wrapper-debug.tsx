@@ -40,8 +40,6 @@ interface Props {
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
-  handleSendRequestWithActiveEnvironment: () => void;
   handleSetResponseFilter: (filter: string) => void;
   handleDuplicateRequest: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
@@ -56,8 +54,6 @@ export const WrapperDebug: FC<Props> = ({
   handleForceUpdateRequest,
   handleForceUpdateRequestHeaders,
   handleImport,
-  handleSendAndDownloadRequestWithActiveEnvironment,
-  handleSendRequestWithActiveEnvironment,
   handleSetResponseFilter,
   handleDuplicateRequest,
   handleUpdateRequestMimeType,
@@ -141,8 +137,6 @@ export const WrapperDebug: FC<Props> = ({
               forceUpdateRequest={handleForceUpdateRequest}
               forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
               handleImport={handleImport}
-              handleSend={handleSendRequestWithActiveEnvironment}
-              handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}
               headerEditorKey={headerEditorKey}
               request={activeRequest}
               settings={settings}

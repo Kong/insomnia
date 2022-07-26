@@ -38,8 +38,6 @@ interface Props {
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleSend: () => void;
-  handleSendAndDownload: (filepath?: string) => Promise<void>;
   headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
@@ -54,8 +52,6 @@ export const RequestPane: FC<Props> = ({
   forceUpdateRequest,
   forceUpdateRequestHeaders,
   handleImport,
-  handleSend,
-  handleSendAndDownload,
   headerEditorKey,
   request,
   settings,
@@ -69,10 +65,6 @@ export const RequestPane: FC<Props> = ({
 
   const updateRequestParameters = (request: Request, parameters: RequestParameter[]) => {
     return update(request, { parameters });
-  };
-
-  const updateRequestAuthentication = (request: Request, authentication: RequestAuthentication) => {
-    return update(request, { authentication });
   };
 
   const updateRequestHeaders = (request: Request, headers: RequestHeader[]) => {
@@ -171,8 +163,6 @@ export const RequestPane: FC<Props> = ({
             onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={autocompleteUrls}
             handleImport={handleImport}
-            handleSend={handleSend}
-            handleSendAndDownload={handleSendAndDownload}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
             downloadPath={downloadPath}
@@ -187,9 +177,7 @@ export const RequestPane: FC<Props> = ({
             />
           </Tab>
           <Tab tabIndex="-1">
-            <AuthDropdown
-              onChange={updateRequestAuthentication}
-            />
+            <AuthDropdown />
           </Tab>
           <Tab tabIndex="-1">
             <button>

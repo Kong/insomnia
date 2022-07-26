@@ -16,7 +16,7 @@ import {
   getAuthTypeName,
 } from '../../../common/constants';
 import * as models from '../../../models';
-import type { Request, RequestAuthentication } from '../../../models/request';
+import { update } from '../../../models/helpers/request-operations';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -38,11 +38,7 @@ const AuthItem: FC<{
 );
 AuthItem.displayName = DropdownItem.name;
 
-interface Props {
-  onChange: (request: Request, arg1: RequestAuthentication) => Promise<Request>;
-}
-
-export const AuthDropdown: FC<Props> = ({ onChange }) => {
+export const AuthDropdown: FC = () => {
   const activeRequest = useSelector(selectActiveRequest);
 
   const onClick = useCallback(async (type: string) => {
@@ -84,9 +80,8 @@ export const AuthDropdown: FC<Props> = ({ onChange }) => {
         break;
       }
     }
-    onChange(activeRequest, newAuthentication);
-  }, [onChange, activeRequest]);
-
+    update(activeRequest, { authentication:newAuthentication });
+  }, [activeRequest]);
   const isCurrent = useCallback((type: string) => {
     if (!activeRequest) {
       return false;
