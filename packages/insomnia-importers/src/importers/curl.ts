@@ -223,8 +223,8 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     body.params = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
       return {
-        name: name || '',
-        value: value || '',
+        name: decodeURIComponent(name || ''),
+        value: decodeURIComponent(value || ''),
       };
     });
   } else if (textBody) {
