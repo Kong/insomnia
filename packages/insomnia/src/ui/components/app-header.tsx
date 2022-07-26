@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import coreLogo from '../images/insomnia-logo.svg';
 import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown/account-dropdown';
+import { GitHubStarsButton } from './github-stars-button';
 
 const Header =  styled(_Header)({
   '&&': {
@@ -47,6 +48,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
       gridRight={(
         <RightWrapper>
           {gridRight}
+          <GitHubStarsButton />
           <SettingsButton />
           <AccountDropdownButton />
         </RightWrapper>
