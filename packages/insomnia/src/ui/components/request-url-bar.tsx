@@ -298,6 +298,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       send();
     });
   }, [request.url, send]);
+  const handleGlobalKeyDown = useCallback(async (event: KeyboardEvent) => {
+    executeHotKey(event, hotKeyRefs.REQUEST_SEND, () => {
+      send();
+    });
+  }, [send]);
 
   const [lastPastedText, setLastPastedText] = useState<string>();
   const handleUrlChange = useCallback(async (url: string) => {
@@ -329,93 +334,88 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (
-    <KeydownBinder onKeydown={handleKeyDown} scoped>
-      <div className="urlbar">
-        <MethodDropdown
-          ref={methodDropdownRef}
-          onChange={methodValue => onMethodChange(methodValue)}
-          method={method}
-        />
-        <div className="urlbar__flex__right">
-          <OneLineEditor
-            key={uniquenessKey}
-            ref={inputRef}
-            onPaste={handleUrlPaste}
-            forceEditor
-            type="text"
-            getAutocompleteConstants={handleAutocompleteUrls}
-            placeholder="https://api.myproduct.com/v1/users"
-            defaultValue={url}
-            onChange={handleUrlChange}
+    <KeydownBinder onKeydown={handleGlobalKeyDown}>
+      <KeydownBinder onKeydown={handleKeyDown} scoped>
+        <div className="urlbar">
+          <MethodDropdown
+            ref={methodDropdownRef}
+            onChange={methodValue => onMethodChange(methodValue)}
+            method={method}
           />
-          {isCancellable ? (
-            <button
-              type="button"
-              className="urlbar__send-btn danger"
-              onClick={handleStop}
-            >
-              Cancel
-            </button>
-          ) : (
-            <>
+          <div className="urlbar__flex__right">
+            <OneLineEditor
+              key={uniquenessKey}
+              ref={inputRef}
+              onPaste={handleUrlPaste}
+              forceEditor
+              type="text"
+              getAutocompleteConstants={handleAutocompleteUrls}
+              placeholder="https://api.myproduct.com/v1/users"
+              defaultValue={url}
+              onChange={handleUrlChange}
+            />
+            {isCancellable ? (
               <button
                 type="button"
-                className="urlbar__send-btn"
-                onClick={send}
+                className="urlbar__send-btn danger"
+                onClick={handleStop}
               >
-                {downloadPath ? 'Download' : 'Send'}
+                Cancel
               </button>
-              <Dropdown
-                key="dropdown"
-                className="tall"
-                right
-                ref={dropdownRef}
-                onHide={handleSendDropdownHide}
-              >
-                <DropdownButton
-                  ref={buttonRef}
-                  className="urlbar__send-context"
-                  onClick={() => dropdownRef.current?.show()}
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="urlbar__send-btn"
+                  onClick={send}
                 >
-                  <i className="fa fa-caret-down" />
-                </DropdownButton>
-                <DropdownDivider>Basic</DropdownDivider>
-                <DropdownItem onClick={send}>
-                  <i className="fa fa-arrow-circle-o-right" /> Send Now
-                  <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
-                </DropdownItem>
-                <DropdownItem onClick={handleGenerateCode}>
-                  <i className="fa fa-code" /> Generate Client Code
-                </DropdownItem>
-                <DropdownDivider>Advanced</DropdownDivider>
-                <DropdownItem onClick={handleSendAfterDelay}>
-                  <i className="fa fa-clock-o" /> Send After Delay
-                </DropdownItem>
-                <DropdownItem onClick={handleSendOnInterval}>
-                  <i className="fa fa-repeat" /> Repeat on Interval
-                </DropdownItem>
-                {downloadPath ? (
-                  <DropdownItem
-                    stayOpenAfterClick
-                    addIcon
-                    buttonClass={PromptButton}
-                    onClick={handleClearDownloadLocation}
+                  {downloadPath ? 'Download' : 'Send'}
+                </button>
+                <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
+                  <DropdownButton
+                    className="urlbar__send-context"
+                    onClick={() => dropdownRef.current?.show()}
                   >
-                    <i className="fa fa-stop-circle" /> Stop Auto-Download
+                    <i className="fa fa-caret-down" />
+                  </DropdownButton>
+                  <DropdownDivider>Basic</DropdownDivider>
+                  <DropdownItem onClick={send}>
+                    <i className="fa fa-arrow-circle-o-right" /> Send Now
+                    <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
                   </DropdownItem>
-                ) : (
-                  <DropdownItem onClick={handleSetDownloadLocation}>
-                    <i className="fa fa-download" /> Download After Send
+                  <DropdownItem onClick={handleGenerateCode}>
+                    <i className="fa fa-code" /> Generate Client Code
                   </DropdownItem>
-                )}
-                <DropdownItem onClick={() => handleSendAndDownload()}>
-                  <i className="fa fa-download" /> Send And Download
-                </DropdownItem>
-              </Dropdown>
-            </>
-          )}
+                  <DropdownDivider>Advanced</DropdownDivider>
+                  <DropdownItem onClick={handleSendAfterDelay}>
+                    <i className="fa fa-clock-o" /> Send After Delay
+                  </DropdownItem>
+                  <DropdownItem onClick={handleSendOnInterval}>
+                    <i className="fa fa-repeat" /> Repeat on Interval
+                  </DropdownItem>
+                  {downloadPath ? (
+                    <DropdownItem
+                      stayOpenAfterClick
+                      addIcon
+                      buttonClass={PromptButton}
+                      onClick={handleClearDownloadLocation}
+                    >
+                      <i className="fa fa-stop-circle" /> Stop Auto-Download
+                    </DropdownItem>
+                  ) : (
+                    <DropdownItem onClick={handleSetDownloadLocation}>
+                      <i className="fa fa-download" /> Download After Send
+                    </DropdownItem>
+                  )}
+                  <DropdownItem onClick={handleSendAndDownload}>
+                    <i className="fa fa-download" /> Send And Download
+                  </DropdownItem>
+                </Dropdown>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </KeydownBinder>
     </KeydownBinder>
   );
 });
