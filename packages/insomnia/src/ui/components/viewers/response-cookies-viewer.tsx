@@ -7,7 +7,6 @@ interface Props {
   cookiesSent?: boolean | null;
   cookiesStored?: boolean | null;
   headers: any[];
-  handleShowRequestSettings: Function;
 }
 
 export const ResponseCookiesViewer: FC<Props> = props => {

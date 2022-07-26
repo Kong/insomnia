@@ -32,12 +32,10 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  handleShowRequestSettings: Function;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
   handleSetFilter,
-  handleShowRequestSettings,
   request,
 }) => {
   const response = useSelector(selectActiveResponse);
@@ -200,7 +198,6 @@ export const ResponsePane: FC<Props> = ({
           <div className="scrollable pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseCookiesViewer
-                handleShowRequestSettings={handleShowRequestSettings}
                 cookiesSent={response.settingSendCookies}
                 cookiesStored={response.settingStoreCookies}
                 headers={cookieHeaders}

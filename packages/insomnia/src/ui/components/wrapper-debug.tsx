@@ -43,7 +43,6 @@ interface Props {
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
   handleSendRequestWithActiveEnvironment: () => void;
   handleSetResponseFilter: (filter: string) => void;
-  handleShowRequestSettingsModal: Function;
   handleDuplicateRequest: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
@@ -60,7 +59,6 @@ export const WrapperDebug: FC<Props> = ({
   handleSendAndDownloadRequestWithActiveEnvironment,
   handleSendRequestWithActiveEnvironment,
   handleSetResponseFilter,
-  handleShowRequestSettingsModal,
   handleDuplicateRequest,
   handleUpdateRequestMimeType,
   headerEditorKey,
@@ -163,7 +161,6 @@ export const WrapperDebug: FC<Props> = ({
             :
             <ResponsePane
               handleSetFilter={handleSetResponseFilter}
-              handleShowRequestSettings={handleShowRequestSettingsModal}
               request={activeRequest}
             />}
         </ErrorBoundary>}

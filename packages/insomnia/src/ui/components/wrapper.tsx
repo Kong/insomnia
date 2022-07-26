@@ -254,16 +254,8 @@ export class WrapperClass extends PureComponent<Props, State> {
     }, 1000);
   }
 
-  _handleShowEnvironmentsModal() {
-    showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
-  }
-
   static _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
-  }
-
-  _handleShowRequestSettingsModal() {
-    showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
   async _handleRemoveActiveWorkspace() {
@@ -532,7 +524,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
                   handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
                 />
               </Suspense>
             }
