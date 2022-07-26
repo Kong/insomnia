@@ -30,4 +30,4 @@ const DropdownButtonForwarded = forwardRef<DropdownButtonHandle, Props>(({ noWra
 });
 DropdownButtonForwarded.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
 
-export const DropdownButton = Object.assign(DropdownButtonForwarded, { name: 'DROPDOWN_BUTTON_DISPLAY_NAME' });
+export const DropdownButton = Object.assign(DropdownButtonForwarded, { name: DROPDOWN_BUTTON_DISPLAY_NAME });
