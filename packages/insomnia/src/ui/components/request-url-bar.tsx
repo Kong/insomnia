@@ -53,6 +53,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditor>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const focusInput = useCallback(() => {
     if (inputRef.current) {
@@ -72,6 +73,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } else {
       handleSend();
     }
+    inputRef.current?.focus(true);
   }, [downloadPath, handleSend, handleSendAndDownload]);
 
   useInterval(send, currentInterval ? currentInterval : null);
@@ -119,7 +121,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [handleUpdateDownloadPath, request._id]);
   const handleClearDownloadLocation = () => handleUpdateDownloadPath(request._id, null);
 
-  const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.code === 'Enter' && request.url) {
       send();
       return;
@@ -161,6 +163,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLastPastedText(event.clipboardData?.getData('text/plain'));
   }, []);
 
+  const handleSendDropdownHide = useCallback(() => {
+    buttonRef.current?.blur();
+  }, []);
+
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (
@@ -200,8 +206,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               >
                 {downloadPath ? 'Download' : 'Send'}
               </button>
-              <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
+              <Dropdown
+                key="dropdown"
+                className="tall"
+                right
+                ref={dropdownRef}
+                onHide={handleSendDropdownHide}
+              >
                 <DropdownButton
+                  ref={buttonRef}
                   className="urlbar__send-context"
                   onClick={() => dropdownRef.current?.show()}
                 >
@@ -236,7 +249,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                     <i className="fa fa-download" /> Download After Send
                   </DropdownItem>
                 )}
-                <DropdownItem onClick={handleSendAndDownload}>
+                <DropdownItem onClick={() => handleSendAndDownload()}>
                   <i className="fa fa-download" /> Send And Download
                 </DropdownItem>
               </Dropdown>
