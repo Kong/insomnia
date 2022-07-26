@@ -1,150 +1,144 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent, ReactNode } from 'react';
+import React, {
+  FunctionComponent,
+  MouseEvent,
+  PropsWithChildren,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { Button } from './button';
 
-type States =
-  | typeof STATE_DEFAULT
-  | typeof STATE_ASK
-  | typeof STATE_DONE
-  ;
+type PromptStateEnum = 'default' | 'ask' | 'done';
 
-const STATE_DEFAULT = 'default';
-const STATE_ASK = 'ask';
-const STATE_DONE = 'done';
 interface Props<T> {
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>, value?: T) => void;
+  value?: T;
+  className?: string;
   addIcon?: boolean;
-  children?: ReactNode;
   disabled?: boolean;
   confirmMessage?: string;
   doneMessage?: string;
-  value?: T;
   tabIndex?: number;
-  className?: string;
-  // TODO(TSCONVERSION) this is linked to Button not using title
   title?: string;
+  onClick?: (event: MouseEvent<HTMLButtonElement>, value?: T) => void;
 }
 
-interface State {
-  state: States;
-}
+export const PromptButton = <T, >({
+  onClick,
+  addIcon,
+  disabled,
+  confirmMessage = 'Click to confirm',
+  doneMessage = 'Done',
+  value,
+  tabIndex,
+  title,
+  className,
+  children,
+}: PropsWithChildren<Props<T>>) => {
+  // Create flag to store the state value.
+  const [state, setState] = useState<PromptStateEnum>('default');
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class PromptButton<T> extends PureComponent<Props<T>> {
-  _doneTimeout: NodeJS.Timeout | null = null;
-  _triggerTimeout: NodeJS.Timeout | null = null;
-  state: State = {
-    state: STATE_DEFAULT,
-  };
+  // Timeout instancies
+  const doneTimeout = useRef<NodeJS.Timeout | null>(null);
+  const triggerTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  _confirm(event: React.MouseEvent<HTMLButtonElement>, value?: T) {
-    if (this._triggerTimeout !== null) {
+  useEffect(() => {
+    return () => {
+      triggerTimeout.current && clearTimeout(triggerTimeout.current);
+      doneTimeout.current && clearTimeout(doneTimeout.current);
+    };
+  }, []);
+
+  const handleConfirm = (event: MouseEvent<HTMLButtonElement>) => {
+    if (triggerTimeout.current !== null) {
       // Clear existing timeouts
-      clearTimeout(this._triggerTimeout);
+      clearTimeout(triggerTimeout.current);
     }
 
     // Fire the click handler
-    this.props.onClick?.(event, value);
+    onClick?.(event, value);
+
     // Set the state to done (but delay a bit to not alarm user)
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-    this._doneTimeout = global.setTimeout(() => {
-      this.setState({
-        state: STATE_DONE,
-      });
+    doneTimeout.current = global.setTimeout(() => {
+      setState('done');
     }, 100);
     // Set a timeout to hide the confirmation
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-    this._triggerTimeout = global.setTimeout(() => {
-      this.setState({
-        state: STATE_DEFAULT,
-      });
-    }, 2000);
-  }
+    triggerTimeout.current = global.setTimeout(() => {
+      setState('default');
 
-  _ask(event: React.MouseEvent<HTMLButtonElement>) {
+      // Fire the click handler
+      onClick?.(event, value);
+    }, 2000);
+  };
+
+  const handleAsk = (event: MouseEvent<HTMLButtonElement>) => {
     // Prevent events (ex. won't close dropdown if it's in one)
     event.preventDefault();
     event.stopPropagation();
+
     // Toggle the confirmation notice
-    this.setState({
-      state: STATE_ASK,
-    });
+    setState('ask');
+
     // Set a timeout to hide the confirmation
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-    this._triggerTimeout = global.setTimeout(() => {
-      this.setState({
-        state: STATE_DEFAULT,
-      });
+    triggerTimeout.current = global.setTimeout(() => {
+      setState('default');
     }, 2000);
-  }
+  };
 
-  _handleClick(event: React.MouseEvent<HTMLButtonElement>, value?: T) {
-    const { state } = this.state;
-
-    if (state === STATE_ASK) {
-      this._confirm(event, value);
-    } else if (state === STATE_DEFAULT) {
-      this._ask(event);
-    } else {
-      // Do nothing
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (state === 'ask') {
+      handleConfirm(event);
+    } else if (state === 'default') {
+      handleAsk(event);
     }
-  }
+  };
 
-  componentWillUnmount() {
-    if (this._triggerTimeout) {
-      clearTimeout(this._triggerTimeout);
-    }
-    if (this._doneTimeout) {
-      clearTimeout(this._doneTimeout);
-    }
-  }
+  return (
+    <Button
+      onClick={handleClick}
+      disabled={disabled}
+      tabIndex={tabIndex}
+      title={title}
+      className={className}
+    >
+      <PromptMessage
+        promptState={state}
+        confirmMessage={confirmMessage}
+        doneMessage={doneMessage}
+        addIcon={Boolean(addIcon)}
+      >
+        {children}
+      </PromptMessage>
+    </Button>
+  );
+};
 
-  render() {
-    const {
-      onClick,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      children,
-      addIcon,
-      disabled,
-      confirmMessage,
-      doneMessage,
-      tabIndex,
-      ...other
-    } = this.props;
-    const { state } = this.state;
-    const finalConfirmMessage = (typeof confirmMessage === 'string'
-      ? confirmMessage
-      : 'Click to confirm'
-    ).trim();
-    const finalDoneMessage = doneMessage || 'Done';
-    let innerMsg;
-
-    if (state === STATE_ASK && addIcon) {
-      innerMsg = (
-        <span className="warning" title="Click again to confirm">
-          <i className="fa fa-exclamation-circle" />
-          {finalConfirmMessage ? <span className="space-left">{finalConfirmMessage}</span> : ''}
-        </span>
-      );
-    } else if (state === STATE_ASK) {
-      innerMsg = (
-        <span className="warning" title="Click again to confirm">
-          {finalConfirmMessage}
-        </span>
-      );
-    } else if (state === STATE_DONE) {
-      innerMsg = finalDoneMessage;
-    } else {
-      innerMsg = children;
-    }
-
+interface PromptMessageProps {
+  promptState: PromptStateEnum;
+  addIcon: boolean;
+  confirmMessage?: string;
+  doneMessage?: string;
+  children: ReactNode;
+}
+const PromptMessage: FunctionComponent<PromptMessageProps> = ({ promptState, addIcon, confirmMessage, doneMessage, children }) => {
+  if (promptState === 'ask') {
     return (
-      // TODO(TSCONVERSION) - don't spread into Button because any additional buttons props are not used
-      <Button onClick={this._handleClick} disabled={disabled} tabIndex={tabIndex} {...other}>
-        {innerMsg}
-      </Button>
+      <span className='warning' title='Click again to confirm'>
+        {addIcon && <i className='fa fa-exclamation-circle' />}
+        {confirmMessage && (
+          <span className='space-left'>{confirmMessage}</span>
+        )}
+      </span>
     );
   }
-}
+
+  if (promptState === 'done' && doneMessage) {
+    return <span className='space-left'>{doneMessage}</span>;
+  }
+
+  return <>{children}</>;
+};
