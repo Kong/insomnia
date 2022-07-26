@@ -8,6 +8,7 @@ module.exports = {
   },
   cache: false,
   modulePathIgnorePatterns: ['./src/network/.*/__mocks__'],
+  transformIgnorePatterns: ['/node_modules/(?!(@getinsomnia/api-client)/)'],
   setupFiles: ['./src/__jest__/setup.ts'],
   setupFilesAfterEnv: ['./src/__jest__/setup-after-env.ts'],
   testEnvironment: 'jsdom',
