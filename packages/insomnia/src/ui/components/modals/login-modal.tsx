@@ -193,13 +193,16 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
 
       case 'token-entry':
         return <form onSubmit={submitToken}>
-          <div className="form-control form-control--outlined no-pad-top" style={{ 'display': 'flex' }}>
+          <div
+            className="form-control form-control--outlined no-pad-top"
+            style={{ 'display': 'flex', 'flexDirection': 'column' }}
+          >
             <label>
               Token:
               <input
                 type="text"
                 ref={tokenInputRef}
-                style={{ 'marginRight': 'var(--padding-sm)' }}
+                style={{ 'marginRight': 'var(--padding-sm)', width: '100%' }}
               />
             </label>
           </div>
