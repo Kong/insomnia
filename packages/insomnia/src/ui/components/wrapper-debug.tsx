@@ -1,7 +1,6 @@
 import React, { FC, Fragment, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 
-import { SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestHeader } from '../../models/request';
@@ -47,7 +46,6 @@ interface Props {
   handleSetActiveResponse: Function;
   handleSetResponseFilter: (filter: string) => void;
   handleShowRequestSettingsModal: Function;
-  handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateSettingsUseBulkHeaderEditor: Function;
   handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleDuplicateRequest: Function;
@@ -69,7 +67,6 @@ export const WrapperDebug: FC<Props> = ({
   handleSetActiveResponse,
   handleSetResponseFilter,
   handleShowRequestSettingsModal,
-  handleSidebarSort,
   handleUpdateSettingsUseBulkHeaderEditor,
   handleUpdateSettingsUseBulkParametersEditor,
   handleDuplicateRequest,
@@ -128,7 +125,6 @@ export const WrapperDebug: FC<Props> = ({
         <SidebarFilter
           key={`${activeWorkspace._id}::filter`}
           onChange={handleSetSidebarFilter}
-          sidebarSort={handleSidebarSort}
           filter={sidebarFilter || ''}
         />
 

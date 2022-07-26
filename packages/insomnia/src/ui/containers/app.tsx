@@ -14,7 +14,6 @@ import {
   AUTOBIND_CFG,
   getProductName,
   isDevelopment,
-  SortOrder,
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
@@ -24,7 +23,6 @@ import {
   generateId,
   getContentDispositionHeader,
 } from '../../common/misc';
-import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
@@ -32,7 +30,6 @@ import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
@@ -288,44 +285,6 @@ class App extends PureComponent<AppProps, State> {
       activeRequest ? activeRequest._id : 'n/a',
       activeEnvironment ? activeEnvironment._id : 'n/a',
     );
-  }
-
-  async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
-    function __updateDoc(doc: RequestGroup | Request | GrpcRequest, metaSortKey: number) {
-      // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
-      // Which all have the .update method. How do we better filter types?
-      return models.getModel(doc.type)?.update(doc, {
-        metaSortKey,
-      });
-    }
-
-    return Promise.all(docs.map((doc, i) => __updateDoc(doc, i * 100)));
-  }
-
-  async _sortSidebar(order: SortOrder, parentId?: string) {
-    let flushId: number | undefined;
-
-    if (!this.props.activeWorkspace) {
-      return;
-    }
-
-    if (!parentId) {
-      parentId = this.props.activeWorkspace._id;
-      flushId = await db.bufferChanges();
-    }
-
-    const docs = [
-      ...(await models.requestGroup.findByParentId(parentId)),
-      ...(await models.request.findByParentId(parentId)),
-      ...(await models.grpcRequest.findByParentId(parentId)),
-    ].sort(sortMethodMap[order]);
-    await this._recalculateMetaSortKey(docs);
-    // sort RequestGroups recursively
-    await Promise.all(docs.filter(isRequestGroup).map(g => this._sortSidebar(order, g._id)));
-
-    if (flushId) {
-      await db.flushChanges(flushId);
-    }
   }
 
   _requestDuplicate(request?: Request | GrpcRequest) {
@@ -1097,7 +1056,6 @@ class App extends PureComponent<AppProps, State> {
                   handleSetSidebarFilter={this._handleSetSidebarFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
-                  handleSidebarSort={this._sortSidebar}
                   vcs={vcs}
                   gitVCS={gitVCS}
                 />

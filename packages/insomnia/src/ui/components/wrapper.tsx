@@ -12,7 +12,6 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
-  SortOrder,
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
@@ -130,7 +129,6 @@ export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDi
   handleDuplicateRequest: Function;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
-  handleSidebarSort: (sortOrder: SortOrder) => void;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
@@ -371,7 +369,6 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeWorkspace,
       activeApiSpec,
       gitVCS,
-      handleSidebarSort,
       vcs,
     } = this.props;
 
@@ -557,7 +554,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSetActiveResponse={this._handleSetActiveResponse}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
-                  handleSidebarSort={handleSidebarSort}
                   handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
                   handleUpdateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
                 />
