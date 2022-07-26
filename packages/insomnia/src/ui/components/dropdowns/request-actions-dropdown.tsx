@@ -103,7 +103,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     if (cmd) {
       clipboard.writeText(cmd);
     }
-  }, []);
+  }, [activeEnvironment, request._id]);
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
