@@ -128,7 +128,6 @@ export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDi
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
-  handleSetResponsePreviewMode: Function;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
@@ -337,12 +336,6 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeEnvironmentId,
       filename,
     );
-  }
-
-  _handleSetPreviewMode(previewMode: string) {
-    const activeRequest = this.props.activeRequest;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
   }
 
   _handleSetResponseFilter(filter: string) {
@@ -562,7 +555,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
                   handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
                   handleSetActiveResponse={this._handleSetActiveResponse}
-                  handleSetPreviewMode={this._handleSetPreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
                   handleSidebarSort={handleSidebarSort}

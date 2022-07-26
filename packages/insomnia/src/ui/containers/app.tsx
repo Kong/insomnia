@@ -14,7 +14,6 @@ import {
   AUTOBIND_CFG,
   getProductName,
   isDevelopment,
-  PreviewMode,
   SortOrder,
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
@@ -394,12 +393,6 @@ class App extends PureComponent<AppProps, State> {
     if (this.props.activeWorkspaceMeta) {
       await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { sidebarFilter });
     }
-  }
-
-  _handleSetResponsePreviewMode(requestId: string, previewMode: PreviewMode) {
-    updateRequestMetaByParentId(requestId, {
-      previewMode,
-    });
   }
 
   async _handleSetResponseFilter(requestId: string, responseFilter: string) {
@@ -1094,7 +1087,6 @@ class App extends PureComponent<AppProps, State> {
                 <Wrapper
                   ref={this._setWrapperRef}
                   handleDuplicateRequest={this._requestDuplicate}
-                  handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
                   handleSendAndDownloadRequestWithEnvironment={
