@@ -30,7 +30,7 @@ import { GrpcDispatchModalWrapper } from '../context/grpc';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { RootState } from '../redux/modules';
 import { setActiveActivity } from '../redux/modules/global';
-import { selectActiveActivity, selectActiveApiSpec, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectSettings } from '../redux/selectors';
+import { selectActiveActivity, selectActiveApiSpec, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -124,7 +124,6 @@ const ActivityRouter = () => {
 const spectral = initializeSpectral();
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
-  handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleDuplicateRequest: Function;
   handleSetResponseFilter: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
@@ -301,6 +300,16 @@ export class WrapperClass extends PureComponent<Props, State> {
     });
   }
 
+  async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeEnvironmentId });
+    }
+    // Give it time to update and re-render
+    setTimeout(() => {
+      this._forceRequestPaneRefresh();
+    }, 300);
+  }
+
   render() {
     const {
       activeCookieJar,
@@ -309,7 +318,6 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeWorkspace,
       activeApiSpec,
       handleUpdateRequestMimeType,
-      handleSetActiveEnvironment,
       gitVCS,
       vcs,
     } = this.props;
@@ -423,7 +431,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
-              handleSetActiveEnvironment={handleSetActiveEnvironment}
+              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />
 
@@ -484,7 +492,7 @@ export class WrapperClass extends PureComponent<Props, State> {
                   forceRefreshKey={this.state.forceRefreshKey}
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  handleSetActiveEnvironment={handleSetActiveEnvironment}
+                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleForceUpdateRequest={this._handleForceUpdateRequest}
                   handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
@@ -508,6 +516,7 @@ const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
   activeGitRepository: selectActiveGitRepository(state),
   activeWorkspace: selectActiveWorkspace(state),
+  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
   activeApiSpec: selectActiveApiSpec(state),
   activeResponse: selectActiveResponse(state),
   settings: selectSettings(state),

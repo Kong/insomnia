@@ -321,16 +321,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
-    if (this.props.activeWorkspaceMeta) {
-      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeEnvironmentId });
-    }
-    // Give it time to update and re-render
-    setTimeout(() => {
-      this._wrapper?._forceRequestPaneRefresh();
-    }, 300);
-  }
-
   async _handleSetResponseFilter(requestId: string, responseFilter: string) {
     await updateRequestMetaByParentId(requestId, {
       responseFilter,
@@ -833,7 +823,6 @@ class App extends PureComponent<AppProps, State> {
                   ref={this._setWrapperRef}
                   handleDuplicateRequest={this._requestDuplicate}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
                   vcs={vcs}
