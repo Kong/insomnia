@@ -1,15 +1,10 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { FC, PureComponent } from 'react';
+import React, { FC, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-
-interface State {
-  isJSON: boolean;
-}
+import { registerModal } from '.';
 
 interface HelpExample {
   code: string;
@@ -65,37 +60,42 @@ const XPathHelp: FC = () => (
     />
   </ModalBody>
 );
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class FilterHelpModal extends PureComponent<{}, State> {
-  state: State = {
-    isJSON: true,
-  };
-
-  modal: Modal | null = null;
-
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
-
-  show(isJSON: boolean) {
-    this.setState({ isJSON });
-    this.modal?.show();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  render() {
-    const { isJSON } = this.state;
-    const isXPath = !isJSON;
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>Response Filtering Help</ModalHeader>
-        {isJSON ? <JSONPathHelp /> : null}
-        {isXPath ? <XPathHelp /> : null}
-      </Modal>
-    );
-  }
+interface FilterHelpModalOptions {
+  isJSON: boolean;
 }
+export interface FilterHelpModalHandle {
+  show: (options: FilterHelpModalOptions) => void;
+  hide: () => void;
+}
+export const displayName = 'FilterHelpModal';
+export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const [state, setState] = useState<FilterHelpModalOptions>({
+    isJSON: true,
+  });
+
+  useEffect(() => {
+    registerModal(modalRef.current, displayName);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      const { isJSON } = options;
+      setState({ isJSON });
+      modalRef.current?.show();
+    },
+  }), []);
+  const { isJSON } = state;
+  const isXPath = !isJSON;
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>Response Filtering Help</ModalHeader>
+      {isJSON ? <JSONPathHelp /> : null}
+      {isXPath ? <XPathHelp /> : null}
+    </Modal>
+  );
+});
+FilterHelpModal.displayName = displayName;
