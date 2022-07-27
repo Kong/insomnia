@@ -16,7 +16,7 @@ export interface WrapperModalHandle {
   show: (options: WrapperModalOptions) => void;
   hide: () => void;
 }
-export const SETTINGS_MODAL_DISPLAY_NAME = 'WrapperModal';
+export const displayName = 'WrapperModal';
 export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<WrapperModalOptions>({
@@ -28,7 +28,7 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
   });
 
   useEffect(() => {
-    registerModal(modalRef.current, SETTINGS_MODAL_DISPLAY_NAME);
+    registerModal(modalRef.current, displayName);
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -58,4 +58,4 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
   );
 
 });
-WrapperModal.displayName = SETTINGS_MODAL_DISPLAY_NAME;
+WrapperModal.displayName = displayName;
