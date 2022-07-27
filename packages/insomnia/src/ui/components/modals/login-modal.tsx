@@ -1,7 +1,7 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 import * as Sentry from '@sentry/electron';
-import React, { Dispatch, FormEvent, forwardRef, memo, MutableRefObject, RefObject, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { Dispatch, FormEvent, forwardRef, memo, RefObject, SetStateAction, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
@@ -23,6 +23,10 @@ const sessionKeyPair = keyPair();
  */
 export let currentLoginModalHandle: LoginModalHandle | null = null;
 
+session.onLoginLogout(() => {
+  currentLoginModalHandle?.hide();
+});
+
 interface State {
   state: 'ready' | 'error' | 'token-entry' | 'loading-session';
   url: string;
@@ -43,7 +47,6 @@ interface AuthBox {
 export class LoginModalHandle {
   constructor(
     private readonly modalRef: RefObject<Modal>,
-    private readonly stateRef: Readonly<MutableRefObject<State & Options>>,
     private readonly setState: Dispatch<SetStateAction<State & Options>>,
   ) {}
 
@@ -53,12 +56,12 @@ export class LoginModalHandle {
   }
 
   async submitAuthCode(code: string) {
-    this.setState({ ...this.stateRef.current, state: 'loading-session' });
+    this.setState(state => ({ ...state, state: 'loading-session' }));
     try {
       const rawBox = await decodeBase64(code.trim());
       const boxData = open(rawBox, sessionKeyPair.publicKey, sessionKeyPair.secretKey);
       if (!boxData) {
-        this.setState({ ...this.stateRef.current, state: 'error', error: 'Invalid authentication code.' });
+        this.setState(state => ({ ...state, state: 'error', error: 'Invalid authentication code.' }));
         return;
       }
       const decoder = new TextDecoder();
@@ -66,7 +69,7 @@ export class LoginModalHandle {
       await session.absorbKey(box.token, box.key);
     } catch (e) {
       Sentry.captureException(e);
-      this.setState({ ...this.stateRef.current, state: 'error', error: `Error loading credentials: ${String(e)}` });
+      this.setState(state => ({ ...state, state: 'error', error: `Error loading credentials: ${String(e)}` }));
     }
   }
 
@@ -108,22 +111,9 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
     url: '',
   });
 
-  const stateRef = useRef(state);
-
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
   useImperativeHandle(ref, () => {
-    currentLoginModalHandle = new LoginModalHandle(modalRef, stateRef, setState);
+    currentLoginModalHandle = new LoginModalHandle(modalRef, setState);
     return currentLoginModalHandle;
-  }, []);
-
-  // Clean up global login modal handle on unmount.
-  useEffect(() => {
-    return () => {
-      currentLoginModalHandle = null;
-    };
   }, []);
 
   const reset = useCallback(() => {
