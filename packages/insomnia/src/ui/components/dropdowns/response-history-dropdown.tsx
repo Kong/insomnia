@@ -7,7 +7,6 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -23,12 +22,14 @@ import { TimeFromNow } from '../time-from-now';
 
 interface Props {
   activeResponse: Response;
+  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   className?: string;
   requestId: string;
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
   activeResponse,
+  handleSetActiveResponse,
   className,
   requestId,
 }) => {
@@ -45,21 +46,13 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     week: [],
     other: [],
   };
-  const handleSetActiveResponse = useCallback((activeResponseId: string | null = null) => {
-    if (!activeRequest) {
-      console.warn('Tried to set active response when request not active');
-      return;
-    }
-    updateRequestMetaByParentId(activeRequest._id, {
-      activeResponseId,
-    });
-  }, [activeRequest]);
+
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     await models.response.removeForRequest(requestId, environmentId);
 
     if (activeRequest && activeRequest._id === requestId) {
-      handleSetActiveResponse(null);
+      handleSetActiveResponse(requestId, null);
     }
   }, [activeEnvironment, activeRequest, handleSetActiveResponse, requestId]);
 
@@ -67,8 +60,8 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     if (activeResponse) {
       await models.response.remove(activeResponse);
     }
-    handleSetActiveResponse(null);
-  }, [activeResponse, handleSetActiveResponse]);
+    handleSetActiveResponse(requestId, null);
+  }, [activeResponse, handleSetActiveResponse, requestId]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
@@ -105,8 +98,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
       <DropdownItem
         key={response._id}
         disabled={active}
-        value={response._id}
-        onClick={handleSetActiveResponse}
+        onClick={() => handleSetActiveResponse(requestId, response)}
       >
         {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
         <StatusTag

@@ -11,6 +11,7 @@ import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
+import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
@@ -32,10 +33,12 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
+  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
   handleSetFilter,
+  handleSetActiveResponse,
   request,
 }) => {
   const response = useSelector(selectActiveResponse);
@@ -132,6 +135,7 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
+            handleSetActiveResponse={handleSetActiveResponse}
             requestId={request._id}
             className="tall pane__header__right"
           />

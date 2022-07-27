@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestHeader } from '../../models/request';
+import type { Response } from '../../models/response';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
 import {
@@ -34,6 +35,7 @@ interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: Function;
+  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
@@ -48,6 +50,7 @@ export const WrapperDebug: FC<Props> = ({
   gitSyncDropdown,
   handleActivityChange,
   handleSetActiveEnvironment,
+  handleSetActiveResponse,
   handleForceUpdateRequest,
   handleForceUpdateRequestHeaders,
   handleImport,
@@ -145,6 +148,7 @@ export const WrapperDebug: FC<Props> = ({
             <ResponsePane
               handleSetFilter={handleSetResponseFilter}
               request={activeRequest}
+              handleSetActiveResponse={handleSetActiveResponse}
             />}
         </ErrorBoundary>}
     />
