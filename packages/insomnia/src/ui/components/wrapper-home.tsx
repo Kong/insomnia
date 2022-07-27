@@ -346,7 +346,7 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
             )}
           </div>
           <div className="document-listing__footer vertically-center">
-            <a className="made-with-love" href="https://github.com/Kong/insomnia">
+            <a className="made-with-love" href="https://konghq.com/">
               Made with&nbsp;<SvgIcon icon="heart" />&nbsp;by Kong
             </a>
           </div>
