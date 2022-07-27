@@ -2,7 +2,7 @@ import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, KeyboardEventHandler, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
@@ -277,7 +277,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [request._id]);
   const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+  const handleKeyDown: KeyboardEventHandler = useCallback(event => {
     if (event.code === 'Enter' && request.url) {
       send();
       return;
@@ -285,20 +285,18 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     if (!inputRef.current) {
       return;
     }
-    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+    executeHotKey(event.nativeEvent, hotKeyRefs.REQUEST_FOCUS_URL, () => {
       inputRef.current?.focus();
       inputRef.current?.selectAll();
     });
-    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
+    executeHotKey(event.nativeEvent, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
       methodDropdownRef.current?.toggle();
     });
-    executeHotKey(event, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
+    executeHotKey(event.nativeEvent, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
       dropdownRef.current?.toggle(true);
     });
-    executeHotKey(event, hotKeyRefs.REQUEST_SEND, () => {
-      send();
-    });
   }, [request.url, send]);
+
   const handleGlobalKeyDown = useCallback(async (event: KeyboardEvent) => {
     executeHotKey(event, hotKeyRefs.REQUEST_SEND, () => {
       send();
@@ -336,94 +334,92 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const isCancellable = currentInterval || currentTimeout;
   return (
     <KeydownBinder onKeydown={handleGlobalKeyDown}>
-      <KeydownBinder onKeydown={handleKeyDown} scoped>
-        <div className="urlbar">
-          <MethodDropdown
-            ref={methodDropdownRef}
-            onChange={methodValue => onMethodChange(methodValue)}
-            method={method}
+      <div className="urlbar" onKeyDown={handleKeyDown}>
+        <MethodDropdown
+          ref={methodDropdownRef}
+          onChange={methodValue => onMethodChange(methodValue)}
+          method={method}
+        />
+        <div className="urlbar__flex__right">
+          <OneLineEditor
+            key={uniquenessKey}
+            ref={inputRef}
+            onPaste={handleUrlPaste}
+            forceEditor
+            type="text"
+            getAutocompleteConstants={handleAutocompleteUrls}
+            placeholder="https://api.myproduct.com/v1/users"
+            defaultValue={url}
+            onChange={handleUrlChange}
           />
-          <div className="urlbar__flex__right">
-            <OneLineEditor
-              key={uniquenessKey}
-              ref={inputRef}
-              onPaste={handleUrlPaste}
-              forceEditor
-              type="text"
-              getAutocompleteConstants={handleAutocompleteUrls}
-              placeholder="https://api.myproduct.com/v1/users"
-              defaultValue={url}
-              onChange={handleUrlChange}
-            />
-            {isCancellable ? (
+          {isCancellable ? (
+            <button
+              type="button"
+              className="urlbar__send-btn danger"
+              onClick={handleStop}
+            >
+              Cancel
+            </button>
+          ) : (
+            <>
               <button
                 type="button"
-                className="urlbar__send-btn danger"
-                onClick={handleStop}
+                className="urlbar__send-btn"
+                onClick={send}
               >
-                Cancel
+                {downloadPath ? 'Download' : 'Send'}
               </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="urlbar__send-btn"
-                  onClick={send}
+              <Dropdown
+                key="dropdown"
+                className="tall"
+                right
+                ref={dropdownRef}
+                onHide={handleSendDropdownHide}
+              >
+                <DropdownButton
+                  ref={buttonRef}
+                  className="urlbar__send-context"
+                  onClick={() => dropdownRef.current?.show()}
                 >
-                  {downloadPath ? 'Download' : 'Send'}
-                </button>
-                <Dropdown
-                  key="dropdown"
-                  className="tall"
-                  right
-                  ref={dropdownRef}
-                  onHide={handleSendDropdownHide}
-                >
-                  <DropdownButton
-                    ref={buttonRef}
-                    className="urlbar__send-context"
-                    onClick={() => dropdownRef.current?.show()}
+                  <i className="fa fa-caret-down" />
+                </DropdownButton>
+                <DropdownDivider>Basic</DropdownDivider>
+                <DropdownItem onClick={send}>
+                  <i className="fa fa-arrow-circle-o-right" /> Send Now
+                  <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
+                </DropdownItem>
+                <DropdownItem onClick={handleGenerateCode}>
+                  <i className="fa fa-code" /> Generate Client Code
+                </DropdownItem>
+                <DropdownDivider>Advanced</DropdownDivider>
+                <DropdownItem onClick={handleSendAfterDelay}>
+                  <i className="fa fa-clock-o" /> Send After Delay
+                </DropdownItem>
+                <DropdownItem onClick={handleSendOnInterval}>
+                  <i className="fa fa-repeat" /> Repeat on Interval
+                </DropdownItem>
+                {downloadPath ? (
+                  <DropdownItem
+                    stayOpenAfterClick
+                    addIcon
+                    buttonClass={PromptButton}
+                    onClick={handleClearDownloadLocation}
                   >
-                    <i className="fa fa-caret-down" />
-                  </DropdownButton>
-                  <DropdownDivider>Basic</DropdownDivider>
-                  <DropdownItem onClick={send}>
-                    <i className="fa fa-arrow-circle-o-right" /> Send Now
-                    <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
+                    <i className="fa fa-stop-circle" /> Stop Auto-Download
                   </DropdownItem>
-                  <DropdownItem onClick={handleGenerateCode}>
-                    <i className="fa fa-code" /> Generate Client Code
+                ) : (
+                  <DropdownItem onClick={downloadAfterSend}>
+                    <i className="fa fa-download" /> Download After Send
                   </DropdownItem>
-                  <DropdownDivider>Advanced</DropdownDivider>
-                  <DropdownItem onClick={handleSendAfterDelay}>
-                    <i className="fa fa-clock-o" /> Send After Delay
-                  </DropdownItem>
-                  <DropdownItem onClick={handleSendOnInterval}>
-                    <i className="fa fa-repeat" /> Repeat on Interval
-                  </DropdownItem>
-                  {downloadPath ? (
-                    <DropdownItem
-                      stayOpenAfterClick
-                      addIcon
-                      buttonClass={PromptButton}
-                      onClick={handleClearDownloadLocation}
-                    >
-                      <i className="fa fa-stop-circle" /> Stop Auto-Download
-                    </DropdownItem>
-                  ) : (
-                    <DropdownItem onClick={downloadAfterSend}>
-                      <i className="fa fa-download" /> Download After Send
-                    </DropdownItem>
-                  )}
-                  <DropdownItem onClick={() => sendThenSetFilePath()}>
-                    <i className="fa fa-download" /> Send And Download
-                  </DropdownItem>
-                </Dropdown>
-              </>
-            )}
-          </div>
+                )}
+                <DropdownItem onClick={() => sendThenSetFilePath()}>
+                  <i className="fa fa-download" /> Send And Download
+                </DropdownItem>
+              </Dropdown>
+            </>
+          )}
         </div>
-      </KeydownBinder>
+      </div>
     </KeydownBinder>
   );
 });
