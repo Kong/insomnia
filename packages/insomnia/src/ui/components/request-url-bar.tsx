@@ -181,7 +181,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
-    if (!request || !activeEnvironment) {
+    if (!request) {
       return;
     }
     // Update request stats
@@ -193,9 +193,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     dispatch(loadRequestStart(request._id));
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      const responsePatch = await network.send(request._id, activeEnvironment?._id);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
-
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
