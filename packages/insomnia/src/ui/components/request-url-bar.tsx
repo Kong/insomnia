@@ -92,7 +92,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     return filePath || null;
   }
 
-  const handleSendAndDownload = useCallback(async (filePath: string) => {
+  const handleSendAndDownload = useCallback(async (filePath?: string) => {
     if (!request || !activeEnvironment) {
       return;
     }
@@ -370,8 +370,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                 >
                   {downloadPath ? 'Download' : 'Send'}
                 </button>
-                <Dropdown key="dropdown" className="tall" right ref={dropdownRef}>
+                <Dropdown
+                  key="dropdown"
+                  className="tall"
+                  right
+                  ref={dropdownRef}
+                  onHide={handleSendDropdownHide}
+                >
                   <DropdownButton
+                    ref={buttonRef}
                     className="urlbar__send-context"
                     onClick={() => dropdownRef.current?.show()}
                   >
@@ -406,7 +413,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       <i className="fa fa-download" /> Download After Send
                     </DropdownItem>
                   )}
-                  <DropdownItem onClick={handleSendAndDownload}>
+                  <DropdownItem onClick={() => handleSendAndDownload()}>
                     <i className="fa fa-download" /> Send And Download
                   </DropdownItem>
                 </Dropdown>
