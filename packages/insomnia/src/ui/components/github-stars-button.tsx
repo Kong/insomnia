@@ -1,5 +1,5 @@
 import { SvgIcon } from 'insomnia-components';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
@@ -58,10 +58,19 @@ const Counter = styled.a({
   },
 });
 
+const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
+
 export const GitHubStarsButton = () => {
   const isMounted = useMountedState();
   const { incognitoMode } = useSelector(selectSettings);
-  const [starCount, setStarCount] = useState(21700);
+  const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
+  const initialState = parseInt(localStorageStars || '21700', 10);
+  const [starCount, setStarCount] = useState(initialState);
+
+  useEffect(() => {
+    localStorage.setItem(LOCALSTORAGE_GITHUB_STARS_KEY, String(starCount));
+  }, [starCount]);
+
   const [error, setError] = useState<Error | null>(null);
 
   useMount(() => {
