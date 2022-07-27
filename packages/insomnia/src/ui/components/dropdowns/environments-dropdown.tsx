@@ -6,7 +6,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import { selectHotKeyRegistry } from '../../redux/selectors';
+import { selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -20,7 +20,6 @@ import { Tooltip } from '../tooltip';
 interface Props {
   activeEnvironment?: Environment | null;
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
-  environments: Environment[];
   handleSetActiveEnvironment: Function;
   workspace: Workspace;
 }
@@ -28,10 +27,10 @@ interface Props {
 export const EnvironmentsDropdown: FC<Props> = ({
   activeEnvironment,
   environmentHighlightColorStyle,
-  environments,
   handleSetActiveEnvironment,
   workspace,
 }) => {
+  const environments = useSelector(selectEnvironments);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const dropdownRef = useRef<DropdownHandle>(null);
   const handleShowEnvironmentModal = useCallback(() => {

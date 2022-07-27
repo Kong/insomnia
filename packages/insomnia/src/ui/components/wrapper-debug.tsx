@@ -11,8 +11,6 @@ import {
   selectActiveProject,
   selectActiveRequest,
   selectActiveWorkspace,
-  selectActiveWorkspaceMeta,
-  selectEnvironments,
   selectIsLoggedIn,
   selectSettings,
 } from '../redux/selectors';
@@ -61,14 +59,12 @@ export const WrapperDebug: FC<Props> = ({
 }) => {
 
   const activeProject = useSelector(selectActiveProject);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
 
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const environments = useSelector(selectEnvironments);
 
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
@@ -82,7 +78,6 @@ export const WrapperDebug: FC<Props> = ({
           handleActivityChange={handleActivityChange}
           gridRight={isTeamSync ? <SyncDropdown
             workspace={activeWorkspace}
-            workspaceMeta={activeWorkspaceMeta}
             project={activeProject}
             vcs={vcs}
           /> : isDesign(activeWorkspace) ? gitSyncDropdown : null}
@@ -93,7 +88,6 @@ export const WrapperDebug: FC<Props> = ({
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            environments={environments}
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             workspace={activeWorkspace}
           />
