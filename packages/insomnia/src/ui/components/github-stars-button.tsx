@@ -63,8 +63,6 @@ export const GitHubStarsButton = () => {
   const { incognitoMode } = useSelector(selectSettings);
   const [starCount, setStarCount] = useState(21700);
   const [error, setError] = useState<Error | null>(null);
-  const org = 'Kong';
-  const repo = 'insomnia';
 
   useMount(() => {
     if (incognitoMode) {
@@ -75,7 +73,7 @@ export const GitHubStarsButton = () => {
       return;
     }
 
-    fetch(`https://api.github.com/repos/${org}/${repo}`)
+    fetch('https://api.github.com/repos/Kong/insomnia')
       .then(data => data.json())
       .then(info => {
         if (!('watchers' in info)) {
@@ -117,13 +115,13 @@ export const GitHubStarsButton = () => {
 
   return (
     <Wrapper>
-      <Star onClick={starClick} href={`https://github.com/${org}/${repo}`}>
+      <Star onClick={starClick} href="https://github.com/Kong/insomnia">
         <Icon icon="github" />
         Star
       </Star>
 
       {shouldShowCount ? (
-        <Counter onClick={counterClick} href={`https://github.com/${org}/${repo}/stargazers`}>
+        <Counter onClick={counterClick} href="https://github.com/Kong/insomnia/stargazers">
           {starCount.toLocaleString()}
         </Counter>
       ) : null}
