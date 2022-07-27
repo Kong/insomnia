@@ -1,6 +1,7 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 import * as Sentry from '@sentry/electron';
+import { clipboard } from 'electron';
 import React, { Dispatch, FormEvent, forwardRef, memo, RefObject, SetStateAction, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
@@ -100,7 +101,6 @@ export class LoginModalHandle {
 export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
   const modalRef = useRef<Modal>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
-  const urlInputRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState<State & Options>({
     state: 'ready',
@@ -130,9 +130,8 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
   }, []);
 
   const copyUrl = useCallback(() => {
-    urlInputRef.current?.select();
-    document.execCommand('copy');
-  }, []);
+    clipboard.writeText(state.url);
+  }, [state.url]);
 
   const openUrl = useCallback(() => {
     clickLink(state.url);
@@ -169,7 +168,6 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
               type="text"
               value={state.url}
               style={{ 'marginRight': 'var(--padding-sm)' }}
-              ref={urlInputRef}
               disabled
             />
             <button
