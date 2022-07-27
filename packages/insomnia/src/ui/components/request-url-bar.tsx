@@ -74,7 +74,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
 
-  async function _getDownloadLocation() {
+  async function setFilePathAndStoreInLocalStorage() {
     const options: SaveDialogOptions = {
       title: 'Select Download Location',
       buttonLabel: 'Save',
@@ -87,12 +87,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     const { filePath } = await window.dialog.showSaveDialog(options);
-    // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
+    if (!filePath) {
+      return null;
+    }
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return filePath || null;
+    return filePath;
   }
 
-  const handleSendAndDownload = useCallback(async (filePath?: string) => {
+  const sendThenSetFilePath = useCallback(async (filePath?: string) => {
     if (!request || !activeEnvironment) {
       return;
     }
@@ -128,7 +130,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         if (filePath) {
           filename = path.join(filePath, name);
         } else {
-          filename = await _getDownloadLocation();
+          filename = await setFilePathAndStoreInLocalStorage();
         }
 
         if (!filename) {
@@ -223,12 +225,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
-      handleSendAndDownload(downloadPath);
+      sendThenSetFilePath(downloadPath);
     } else {
       handleSend();
     }
     inputRef.current?.focus(true);
-  }, [downloadPath, handleSend, handleSendAndDownload]);
+  }, [downloadPath, handleSend, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
@@ -262,7 +264,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
   };
 
-  const handleSetDownloadLocation = useCallback(async () => {
+  const downloadAfterSend = useCallback(async () => {
     const { canceled, filePaths } = await window.dialog.showOpenDialog({
       title: 'Select Download Location',
       buttonLabel: 'Select',
@@ -409,11 +411,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       <i className="fa fa-stop-circle" /> Stop Auto-Download
                     </DropdownItem>
                   ) : (
-                    <DropdownItem onClick={handleSetDownloadLocation}>
+                    <DropdownItem onClick={downloadAfterSend}>
                       <i className="fa fa-download" /> Download After Send
                     </DropdownItem>
                   )}
-                  <DropdownItem onClick={() => handleSendAndDownload()}>
+                  <DropdownItem onClick={() => sendThenSetFilePath()}>
                     <i className="fa fa-download" /> Send And Download
                   </DropdownItem>
                 </Dropdown>
