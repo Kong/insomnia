@@ -254,4 +254,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   };
 };
 
-export const ExportRequestsModal = connect(mapStateToProps, mapDispatchToProps)(ExportRequestsModalClass);
+export const ExportRequestsModal = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef:true })(ExportRequestsModalClass);

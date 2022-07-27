@@ -436,9 +436,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             />
 
             <AddKeyCombinationModal ref={registerModal} />
-            <ExportRequestsModal
-              ref={registerModal}
-            />
+            <ExportRequestsModal ref={registerModal} />
 
             <GrpcDispatchModalWrapper>
               {dispatch => (
@@ -528,4 +526,4 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
   };
 };
 
-export const Wrapper = connect(mapStateToProps, mapDispatchToProps)(WrapperClass);
+export const Wrapper = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(WrapperClass);

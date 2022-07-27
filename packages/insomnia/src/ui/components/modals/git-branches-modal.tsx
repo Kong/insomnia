@@ -317,4 +317,4 @@ function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
   };
 }
 
-export const GitBranchesModal = connect(null, mapDispatchToProps)(GitBranchesModalClass);
+export const GitBranchesModal = connect(null, mapDispatchToProps, null, { forwardRef: true })(GitBranchesModalClass);
