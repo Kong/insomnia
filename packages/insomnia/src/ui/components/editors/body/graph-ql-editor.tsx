@@ -265,7 +265,7 @@ export const GraphQLEditor: FC<Props> = props => {
     });
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
-    _handleBodyChange(prettyQuery, prettyVariables, state.body.operationName);
+    handleBodyChange(prettyQuery, prettyVariables, state.body.operationName);
 
     // Update editor contents
     if (editorRef.current) {
@@ -282,15 +282,15 @@ export const GraphQLEditor: FC<Props> = props => {
       });
     }
   };
-  const _handleQueryUserActivity = () => {
+  const handleQueryUserActivity = () => {
     const newOperationName = getCurrentOperation();
     const { query, variables, operationName } = state.body;
     if (newOperationName !== operationName) {
-      _handleBodyChange(query, variables, newOperationName);
+      handleBodyChange(query, variables, newOperationName);
     }
   };
 
-  const _buildVariableTypes = (schema: GraphQLSchema | null): Record<string, GraphQLNonNull<any>> | null => {
+  const buildVariableTypes = (schema: GraphQLSchema | null): Record<string, GraphQLNonNull<any>> | null => {
     if (!schema) {
       return null;
     }
@@ -314,22 +314,22 @@ export const GraphQLEditor: FC<Props> = props => {
     return variableToType;
   };
 
-  const _handleRefreshSchema = () => {
+  const handleRefreshSchema = () => {
     // First, "forget" preference to hide errors so they always show
     // again after a refresh
     setState({ ...state, hideSchemaFetchErrors: false });
     fetchAndSetSchema(props.request);
   };
 
-  const _handleVariablesChange = (variables: string) => {
+  const handleVariablesChange = (variables: string) => {
     try {
-      _handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
+      handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
     } catch (err) {
       setState({ ...state, variablesSyntaxError: err.message });
     }
   };
 
-  const _handleBodyChange = (query: string, variables?: Record<string, any> | null, operationName?: string | null,) => {
+  const handleBodyChange = (query: string, variables?: Record<string, any> | null, operationName?: string | null,) => {
     let documentAST;
     try {
       documentAST = parse(query);
@@ -352,9 +352,8 @@ export const GraphQLEditor: FC<Props> = props => {
         body.operationName = newOperationName;
       }
     }
-    const newContent = JSON.stringify(body);
     setState({ ...state, variablesSyntaxError: '', body });
-    props.onChange(newContent);
+    props.onChange(JSON.stringify(body));
 
     if (!documentAST || !editorRef.current) {
       return;
@@ -386,21 +385,20 @@ export const GraphQLEditor: FC<Props> = props => {
     if (!props.request.url) {
       return '';
     }
-    const { schemaLastFetchTime, schemaIsFetching } = state;
-    if (schemaIsFetching) {
+    if (state.schemaIsFetching) {
       return 'fetching schema...';
     }
-    if (schemaLastFetchTime > 0) {
+    if (state.schemaLastFetchTime > 0) {
       return (
         <span>
-          schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
+          schema fetched <TimeFromNow timestamp={state.schemaLastFetchTime} />
         </span>
       );
     }
     return <span>schema not yet fetched</span>;
   };
 
-  const _loadAndSetLocalSchema = async () => {
+  const loadAndSetLocalSchema = async () => {
     const options: OpenDialogOptions = {
       title: 'Import GraphQL introspection schema',
       buttonLabel: 'Import',
@@ -412,22 +410,17 @@ export const GraphQLEditor: FC<Props> = props => {
         },
       ],
     };
-
     const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
-
     if (canceled) {
       return;
     }
-
     try {
       const filePath = filePaths[0]; // showOpenDialog is single select
       const file = readFileSync(filePath);
-
       const content = JSON.parse(file.toString());
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
       }
-
       setState({
         ...state,
         schema: buildClientSchema(content.data),
@@ -437,7 +430,6 @@ export const GraphQLEditor: FC<Props> = props => {
       });
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
-
       setState({
         ...state,
         schemaFetchError: {
@@ -450,7 +442,6 @@ export const GraphQLEditor: FC<Props> = props => {
   };
 
   const {
-    content,
     className,
     uniquenessKey,
   } = props;
@@ -465,26 +456,19 @@ export const GraphQLEditor: FC<Props> = props => {
     schemaLastFetchTime,
   } = state;
   const { operationName } = state.body;
-  let obj: GraphQLBody;
+  let body: GraphQLBody;
   try {
-    obj = JSON.parse(content);
+    body = JSON.parse(props.content);
   } catch (err) {
-    obj = { query: '' };
+    body = { query: '' };
   }
-  if (typeof obj.variables === 'string') {
-    obj.variables = jsonParseOr(obj.variables, '');
+  let maybeVariables;
+  if (typeof body.variables === 'string') {
+    maybeVariables = jsonParseOr(body.variables, '');
   }
-  const body: GraphQLBody = {
-    query: obj.query || '',
-    variables: obj.variables || undefined,
-    operationName: obj.operationName || undefined,
-  };
-
-  const { query } = body;
-
-  const variables = jsonPrettify(JSON.stringify(obj.variables || undefined));
-
-  const variableTypes = _buildVariableTypes(schema);
+  const query  = body.query || '';
+  const variables = jsonPrettify(JSON.stringify(maybeVariables));
+  const variableTypes = buildVariableTypes(schema);
 
   // Create portal for GraphQL Explorer
   let graphQLExplorerPortal: React.ReactPortal | null = null;
@@ -549,7 +533,7 @@ export const GraphQLEditor: FC<Props> = props => {
 
         <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
 
-        <DropdownItem onClick={_handleRefreshSchema} stayOpenAfterClick>
+        <DropdownItem onClick={handleRefreshSchema} stayOpenAfterClick>
           <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
         </DropdownItem>
         <DropdownItem
@@ -569,7 +553,7 @@ export const GraphQLEditor: FC<Props> = props => {
         <DropdownItem
           onClick={() => {
             setState({ ...state, hideSchemaFetchErrors: false });
-            _loadAndSetLocalSchema();
+            loadAndSetLocalSchema();
           }}
         >
           <i className="fa fa-file-code-o" /> Load schema from JSON
@@ -591,17 +575,17 @@ export const GraphQLEditor: FC<Props> = props => {
             // Since we're editing the query, we may be changing the operation name, so
             // Don't pass it to the body change in order to automatically re-detect it
             // based on the current cursor position.
-            _handleBodyChange(query, state.body.variables, null);
+            handleBodyChange(query, state.body.variables, null);
           }}
           onCodeMirrorInit={codeMirror => {
             editorRef = codeMirror;
             // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
             window.cm = editorRef.current;
             const { query, variables, operationName } = state.body;
-            _handleBodyChange(query, variables, operationName);
+            handleBodyChange(query, variables, operationName);
           }}
-          onCursorActivity={_handleQueryUserActivity}
-          onFocus={_handleQueryUserActivity}
+          onCursorActivity={handleQueryUserActivity}
+          onFocus={handleQueryUserActivity}
           mode="graphql"
           placeholder=""
           {...graphqlOptions}
@@ -665,7 +649,7 @@ export const GraphQLEditor: FC<Props> = props => {
             variableToType: variableTypes,
           }}
           noLint={!variableTypes}
-          onChange={_handleVariablesChange}
+          onChange={handleVariablesChange}
           mode="graphql-variables"
           placeholder=""
         />
