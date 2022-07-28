@@ -347,15 +347,15 @@ export class WrapperClass extends PureComponent<Props, State> {
           <ErrorBoundary showAlert>
             <AnalyticsModal />
             <AlertModal ref={registerModal} />
-            <ErrorModal ref={registerModal} />
+            <ErrorModal />
             <PromptModal ref={registerModal} />
             <WrapperModal />
             <LoginModal ref={registerModal} />
             <AskModal ref={registerModal} />
             <SelectModal ref={registerModal} />
-            <FilterHelpModal ref={registerModal} />
-            <RequestRenderErrorModal ref={registerModal} />
-            <GenerateConfigModal ref={registerModal} />
+            <FilterHelpModal />
+            <RequestRenderErrorModal />
+            <GenerateConfigModal />
             <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
             <CodePromptModal ref={registerModal} />
