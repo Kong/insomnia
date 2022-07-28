@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { METHOD_GRPC } from '../../../common/constants';
@@ -79,157 +79,24 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      if (modalRef.current?.isOpen()) {
-        return;
-      }
-
-      setState({
-        ...state,
-        maxRequests: typeof options.maxRequests === 'number' ? options.maxRequests : 20,
-        maxWorkspaces: typeof options.maxWorkspaces === 'number' ? options.maxWorkspaces : 20,
-        disableInput: !!options.disableInput,
-        hideNeverActiveRequests: !!options.hideNeverActiveRequests,
-        selectOnKeyup: !!options.selectOnKeyup,
-        title: options.title || null,
-        isModalVisible: false,
-      });
-      handleChangeValue('');
-      modalRef.current?.show();
-    },
-  }), [handleChangeValue, state]);
-  function _setActiveIndex(activeIndex: number) {
-    const maxIndex = state.matchedRequests.length + state.matchedWorkspaces.length;
-    setState({
-      ...state,
-      activeIndex: wrapToIndex(activeIndex, maxIndex),
-    });
-  }
   /** Return array of path segments for given request or folder */
-  function groupOf(requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] {
+  const groupOf = useCallback((requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] => {
     const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
     const currentGroupName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
-
     // It's the final parent
     if (matchedGroups.length === 0) {
       return [currentGroupName];
     }
-
     // Still has more parents
     if (currentGroupName) {
       return [...groupOf(matchedGroups[0]), currentGroupName];
     }
-
     // It's the child
     return groupOf(matchedGroups[0]);
-  }
-  function activateWorkspaceAndHide(workspace?: Workspace) {
-    if (!workspace) {
-      return;
-    }
-    dispatch(activateWorkspace({ workspace }));
-    modalRef.current?.hide();
-  }
-  function activateRequestAndHide(request?: Request | GrpcRequest) {
-    if (!request) {
-      return;
-    }
-    activateRequest(request._id);
-    modalRef.current?.hide();
-  }
-  async function createRequestFromSearch() {
-    const { searchString } = state;
+  }, [workspaceRequestsAndRequestGroups]);
 
-    if (!workspace) {
-      return;
-    }
-
-    // Create the request if nothing matched
-    const parentId = activeRequest ? activeRequest.parentId : workspace._id;
-    const patch = {
-      parentId,
-      name: searchString,
-    };
-    const request = await models.request.create(patch);
-
-    activateRequestAndHide(request);
-  }
-  async function activateCurrentIndex() {
-    const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = state;
-    if (activeIndex < matchedRequests.length) {
-      // Activate the request if there is one
-      const request = matchedRequests[activeIndex];
-      activateRequestAndHide(request);
-      return;
-    }
-    if (activeIndex < matchedRequests.length + matchedWorkspaces.length) {
-      // Activate the workspace if there is one
-      const index = activeIndex - matchedRequests.length;
-      const workspace = matchedWorkspaces[index];
-      if (workspace) {
-        activateWorkspaceAndHide(workspace);
-      }
-      return;
-    }
-    if (searchString) {
-      // Create request if no match
-      await createRequestFromSearch();
-    }
-  }
-
-  function _handleInputKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
-    const isKey = isEventKey(event as unknown as KeyboardEvent);
-    if (isKey('uparrow') || (isKey('tab') && event.shiftKey)) {
-      _setActiveIndex(state.activeIndex - 1);
-    } else if (isKey('downarrow') || isKey('tab')) {
-      _setActiveIndex(state.activeIndex + 1);
-    } else if (isKey('enter')) {
-      activateCurrentIndex();
-    } else {
-      return;
-    }
-
-    event.preventDefault();
-  }
-  function _handleKeydown(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (event.keyCode === keyboardKeys.esc.keyCode) {
-      modalRef.current?.hide();
-      return;
-    }
-
-    // Only control up/down with tab if modal is visible
-    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
-      if (state.isModalVisible) {
-        _setActiveIndex(state.activeIndex + 1);
-      }
-    });
-    // Only control up/down with tab if modal is visible
-    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
-      if (state.isModalVisible) {
-        _setActiveIndex(state.activeIndex - 1);
-      }
-    });
-  }
-
-  async function _handleKeyup(event: KeyboardEvent) {
-    const { selectOnKeyup } = state;
-    // Handle selection if unpresses all modifier keys. Ideally this would trigger once
-    // the user unpresses the hotkey that triggered this modal but we currently do not
-    // have the facilities to do that.
-    const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
-    const isActive = modalRef.current?.isOpen();
-
-    if (selectOnKeyup && isActive && !isMetaKeyDown) {
-      await activateCurrentIndex();
-      modalRef.current?.hide();
-    }
-  }
-  function handleChangeValue(searchString: string) {
+  const handleChangeValue = useCallback((searchString: string) => {
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = state;
     const lastActiveMap: Record<string, number> = {};
 
@@ -246,12 +113,10 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
-
         // If lastActive same, go by name
         if (aLA === bLA) {
           return a.name > b.name ? 1 : -1;
         }
-
         return bLA - aLA;
       });
 
@@ -266,17 +131,14 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
           score: () => {
             let finalUrl = request.url;
             let method = '';
-
             if (isRequest(request)) {
               finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
               method = request.method;
             }
-
             if (isGrpcRequest(request)) {
               finalUrl = request.url + request.protoMethodName;
               method = METHOD_GRPC;
             }
-
             const match = fuzzyMatchAll(
               searchString,
               [request.name, finalUrl, method, groupOf(request).join('/')],
@@ -286,16 +148,13 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
             );
             // Match exact Id
             const matchesId = request._id === searchString;
-
             // _id match is the highest;
             if (matchesId) {
               return Infinity;
             }
-
             if (!match) {
               return null;
             }
-
             return match.score;
           },
         }))
@@ -322,7 +181,141 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
-  }
+  }, [activeRequest, groupOf, grpcRequestMetas, requestMetas, state, workspace?._id, workspaceRequestsAndRequestGroups, workspacesForActiveProject]);
+
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      if (modalRef.current?.isOpen()) {
+        return;
+      }
+
+      setState({
+        ...state,
+        maxRequests: typeof options.maxRequests === 'number' ? options.maxRequests : 20,
+        maxWorkspaces: typeof options.maxWorkspaces === 'number' ? options.maxWorkspaces : 20,
+        disableInput: !!options.disableInput,
+        hideNeverActiveRequests: !!options.hideNeverActiveRequests,
+        selectOnKeyup: !!options.selectOnKeyup,
+        title: options.title || null,
+        isModalVisible: false,
+      });
+      handleChangeValue('');
+      modalRef.current?.show();
+    },
+  }), [handleChangeValue, state]);
+
+  const _setActiveIndex = (activeIndex: number) => {
+    const maxIndex = state.matchedRequests.length + state.matchedWorkspaces.length;
+    setState({
+      ...state,
+      activeIndex: wrapToIndex(activeIndex, maxIndex),
+    });
+  };
+
+  const activateWorkspaceAndHide = (workspace?: Workspace) => {
+    if (!workspace) {
+      return;
+    }
+    dispatch(activateWorkspace({ workspace }));
+    modalRef.current?.hide();
+  };
+  const activateRequestAndHide = (request?: Request | GrpcRequest) => {
+    if (!request) {
+      return;
+    }
+    activateRequest(request._id);
+    modalRef.current?.hide();
+  };
+  const createRequestFromSearch = async () => {
+    const { searchString } = state;
+
+    if (!workspace) {
+      return;
+    }
+
+    // Create the request if nothing matched
+    const parentId = activeRequest ? activeRequest.parentId : workspace._id;
+    const patch = {
+      parentId,
+      name: searchString,
+    };
+    const request = await models.request.create(patch);
+
+    activateRequestAndHide(request);
+  };
+  const activateCurrentIndex = async () => {
+    const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = state;
+    if (activeIndex < matchedRequests.length) {
+      // Activate the request if there is one
+      const request = matchedRequests[activeIndex];
+      activateRequestAndHide(request);
+      return;
+    }
+    if (activeIndex < matchedRequests.length + matchedWorkspaces.length) {
+      // Activate the workspace if there is one
+      const index = activeIndex - matchedRequests.length;
+      const workspace = matchedWorkspaces[index];
+      if (workspace) {
+        activateWorkspaceAndHide(workspace);
+      }
+      return;
+    }
+    if (searchString) {
+      // Create request if no match
+      await createRequestFromSearch();
+    }
+  };
+
+  const handleInputKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const isKey = isEventKey(event as unknown as KeyboardEvent);
+    if (isKey('uparrow') || (isKey('tab') && event.shiftKey)) {
+      _setActiveIndex(state.activeIndex - 1);
+    } else if (isKey('downarrow') || isKey('tab')) {
+      _setActiveIndex(state.activeIndex + 1);
+    } else if (isKey('enter')) {
+      activateCurrentIndex();
+    } else {
+      return;
+    }
+    event.preventDefault();
+  };
+  const handleKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.keyCode === keyboardKeys.esc.keyCode) {
+      modalRef.current?.hide();
+      return;
+    }
+
+    // Only control up/down with tab if modal is visible
+    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+      if (state.isModalVisible) {
+        _setActiveIndex(state.activeIndex + 1);
+      }
+    });
+    // Only control up/down with tab if modal is visible
+    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+      if (state.isModalVisible) {
+        _setActiveIndex(state.activeIndex - 1);
+      }
+    });
+  };
+
+  const handleKeyup = async (event: KeyboardEvent) => {
+    const { selectOnKeyup } = state;
+    // Handle selection if unpresses all modifier keys. Ideally this would trigger once
+    // the user unpresses the hotkey that triggered this modal but we currently do not
+    // have the facilities to do that.
+    const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
+    const isActive = modalRef.current?.isOpen();
+
+    if (selectOnKeyup && isActive && !isMetaKeyDown) {
+      await activateCurrentIndex();
+      modalRef.current?.hide();
+    }
+  };
+
   const {
     searchString,
     activeIndex,
@@ -334,7 +327,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   } = state;
   const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
   return (
-    <KeydownBinder onKeydown={_handleKeydown} onKeyup={_handleKeyup}>
+    <KeydownBinder onKeydown={handleKeydown} onKeyup={handleKeyup}>
       <Modal
         ref={modalRef}
         className={isModalVisible ? '' : 'hide'}
@@ -358,7 +351,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
         </ModalHeader>
         <ModalBody className="request-switcher">
           {!disableInput && (
-            <div className="pad" onKeyDown={_handleInputKeydown}>
+            <div className="pad" onKeyDown={handleInputKeydown}>
               <div className="form-control form-control--outlined no-margin">
                 <input
                   type="text"

@@ -60,7 +60,7 @@ import ProtoFilesModal from './modals/proto-files-modal';
 import { RequestGroupSettingsModal } from './modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 import { RequestSettingsModal } from './modals/request-settings-modal';
-import RequestSwitcherModal from './modals/request-switcher-modal';
+import { RequestSwitcherModal } from './modals/request-switcher-modal';
 import { ResponseDebugModal } from './modals/response-debug-modal';
 import { SelectModal } from './modals/select-modal';
 import { SettingsModal } from './modals/settings-modal';
