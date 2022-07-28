@@ -25,7 +25,6 @@ export interface BaseWorkspaceMeta {
   paneHeight: number;
   paneWidth: number;
   parentId: string | null;
-  previewHidden: boolean;
   sidebarFilter: string;
   sidebarHidden: boolean;
   sidebarWidth: number;
@@ -52,7 +51,6 @@ export function init(): BaseWorkspaceMeta {
     paneHeight: DEFAULT_PANE_HEIGHT,
     paneWidth: DEFAULT_PANE_WIDTH,
     parentId: null,
-    previewHidden: false,
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,

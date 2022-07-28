@@ -1,19 +1,17 @@
 import { IRuleResult } from '@stoplight/spectral-core';
-import { Button, Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, Fragment, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { Notice, NoticeTable } from 'insomnia-components';
+import React, { createRef, FC, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
-import previewIcon from '../images/icn-eye.svg';
-import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../redux/selectors';
+import { selectActiveApiSpec } from '../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
@@ -32,47 +30,6 @@ const EmptySpaceHelper = styled.div({
 });
 
 const spectral = initializeSpectral();
-
-const RenderPageHeader: FC<Pick<Props,
-  | 'gitSyncDropdown'
-  | 'handleActivityChange'
->> = ({
-  gitSyncDropdown,
-  handleActivityChange,
-}) => {
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const previewHidden = Boolean(activeWorkspaceMeta?.previewHidden);
-
-  const handleTogglePreview = useCallback(async () => {
-    if (!activeWorkspace) {
-      return;
-    }
-
-    const workspaceId = activeWorkspace._id;
-    await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
-
-    trackSegmentEvent(SegmentEvent.buttonClick, {
-      type: 'design preview toggle',
-      action: previewHidden ? 'show' : 'hide',
-    });
-  }, [activeWorkspace, previewHidden]);
-
-  return (
-    <WorkspacePageHeader
-      handleActivityChange={handleActivityChange}
-      gridRight={
-        <Fragment>
-          <Button variant="contained" onClick={handleTogglePreview}>
-            <img src={previewIcon} alt="Preview" width="15" />
-              &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
-          </Button>
-          {gitSyncDropdown}
-        </Fragment>
-      }
-    />
-  );
-};
 
 interface LintMessage extends Notice {
   range: IRuleResult['range'];
@@ -190,10 +147,9 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
 };
 
 const RenderPreview: FC = () => {
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const activeApiSpec = useSelector(selectActiveApiSpec);
 
-  if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
+  if (!activeApiSpec) {
     return null;
   }
 
@@ -302,11 +258,12 @@ export const WrapperDesign: FC<Props> = ({
 
   return (
     <PageLayout
-      renderPageHeader={
-        <RenderPageHeader
-          gitSyncDropdown={gitSyncDropdown}
+      renderPageHeader={(
+        <WorkspacePageHeader
           handleActivityChange={handleActivityChange}
-        />}
+          gridRight={gitSyncDropdown}
+        />
+      )}
       renderPaneOne={<RenderEditor editor={editor} />}
       renderPaneTwo={<RenderPreview />}
       renderPageSidebar={<RenderPageSidebar editor={editor} />}
