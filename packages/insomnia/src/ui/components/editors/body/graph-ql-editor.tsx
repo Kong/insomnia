@@ -94,12 +94,12 @@ interface State {
   automaticFetch: boolean;
   explorerVisible: boolean;
   activeReference: null | ActiveReference;
+  documentAST: null | DocumentNode;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
-  _documentAST: null | DocumentNode = null;
   _isMounted = false;
   _queryEditor: null | CodeMirror.Editor = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
@@ -120,7 +120,13 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       variables: obj.variables || undefined,
       operationName: obj.operationName || undefined,
     };
-    this._setDocumentAST(body.query);
+    let documentAST;
+    try {
+      documentAST = parse(body.query);
+    } catch (error) {
+      documentAST = null;
+    }
+
     let automaticFetch = true;
 
     try {
@@ -145,6 +151,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       activeReference: null,
       explorerVisible: false,
       automaticFetch,
+      documentAST,
     };
   }
 
@@ -160,7 +167,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       return this.state.body.operationName || null;
     }
 
-    const operations = this._documentAST ? this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition') : [];
+    const operations = this.state.documentAST ? this.state.documentAST.definitions.filter(def => def.kind === 'OperationDefinition') : [];
 
     const cursor = _queryEditor.getCursor();
 
@@ -202,30 +209,27 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
   _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
     event.preventDefault();
-
     if (reference) {
       this.setState({
         explorerVisible: true,
         activeReference: reference,
       });
     }
-
   }
 
   _handleQueryUserActivity() {
     const newOperationName = this._getCurrentOperation();
-
     const { query, variables, operationName } = this.state.body;
-
     if (newOperationName !== operationName) {
       this._handleBodyChange(query, variables, newOperationName);
     }
   }
 
   _highlightOperation(operationName: string | null) {
-    const { _documentAST, _queryEditor } = this;
+    const { _queryEditor } = this;
+    const { documentAST } = this.state;
 
-    if (!_documentAST || !_queryEditor) {
+    if (!documentAST || !_queryEditor) {
       return;
     }
 
@@ -234,7 +238,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       textMarker.clear();
     }
 
-    this._disabledOperationMarkers = _documentAST.definitions
+    this._disabledOperationMarkers = documentAST.definitions
       .filter(isOperationDefinition)
       .filter(complement(matchesOperation(operationName)))
       .filter(hasLocation)
@@ -252,15 +256,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
           className: 'cm-gql-disabled',
         });
       });
-  }
-
-  _handleQueryEditorInit(codeMirror: CodeMirror.Editor) {
-    this._queryEditor = codeMirror;
-    // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
-    window.cm = this._queryEditor;
-    const { query, variables, operationName } = this.state.body;
-
-    this._handleBodyChange(query, variables, operationName);
   }
 
   async _fetchAndSetSchema(rawRequest: Request) {
@@ -391,7 +386,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       return null;
     }
 
-    const definitions = this._documentAST ? this._documentAST.definitions : [];
+    const definitions = this.state.documentAST ? this.state.documentAST.definitions : [];
     const variableToType: Record<string, GraphQLNonNull<any>> = {};
 
     for (const definition of definitions) {
@@ -417,12 +412,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     return variableToType;
   }
 
-  _handleShowDocumentation() {
-    this.setState({
-      explorerVisible: true,
-    });
-  }
-
   _handleRefreshSchema() {
     // First, "forget" preference to hide errors so they always show
     // again after a refresh
@@ -434,19 +423,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         await this._fetchAndSetSchema(this.props.request);
       },
     );
-  }
-
-  _handleSetLocalSchema() {
-    this.setState({ hideSchemaFetchErrors: false }, this._loadAndSetLocalSchema);
-  }
-
-  async _handleToggleAutomaticFetching() {
-    const automaticFetch = !this.state.automaticFetch;
-    this.setState({
-      automaticFetch,
-    });
-
-    window.localStorage.setItem('graphql.automaticFetch', automaticFetch.toString());
   }
 
   _handlePrettify() {
@@ -467,20 +443,18 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
-  _setDocumentAST(query: string) {
-    try {
-      this._documentAST = parse(query);
-    } catch (error) {
-      this._documentAST = null;
-    }
-  }
-
   _handleBodyChange(
     query: string,
     variables?: Record<string, any> | null,
     operationName?: string | null,
   ) {
-    this._setDocumentAST(query);
+    let documentAST;
+    try {
+      documentAST = parse(query);
+    } catch (error) {
+      documentAST = null;
+    }
+    this.setState({ documentAST });
 
     const body: GraphQLBody = {
       query,
@@ -512,13 +486,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     this.props.onChange(newContent);
 
     this._highlightOperation(body.operationName || null);
-  }
-
-  _handleQueryChange(query: string) {
-    // Since we're editing the query, we may be changing the operation name, so
-    // Don't pass it to the body change in order to automatically re-detect it
-    // based on the current cursor position.
-    this._handleBodyChange(query, this.state.body.variables, null);
   }
 
   _handleVariablesChange(variables: string) {
@@ -672,7 +639,12 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             schema <i className="fa fa-wrench" />
           </DropdownButton>
 
-          <DropdownItem onClick={this._handleShowDocumentation} disabled={!schema}>
+          <DropdownItem
+            onClick={() => {
+              this.setState({ explorerVisible: true });
+            }}
+            disabled={!schema}
+          >
             <i className="fa fa-file-code-o" /> Show Documentation
           </DropdownItem>
 
@@ -681,7 +653,13 @@ export class GraphQLEditor extends PureComponent<Props, State> {
           <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
             <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
           </DropdownItem>
-          <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
+          <DropdownItem
+            onClick={() => {
+              this.setState({ automaticFetch: !this.state.automaticFetch });
+              window.localStorage.setItem('graphql.automaticFetch', this.state.automaticFetch.toString());
+            }}
+            stayOpenAfterClick
+          >
             <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
             Automatic Fetch
             <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
@@ -689,7 +667,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
           <DropdownDivider>Local GraphQL Schema</DropdownDivider>
 
-          <DropdownItem onClick={this._handleSetLocalSchema}>
+          <DropdownItem onClick={() => this.setState({ hideSchemaFetchErrors: false }, this._loadAndSetLocalSchema)}>
             <i className="fa fa-file-code-o" /> Load schema from JSON
             <HelpTooltip>
               Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
@@ -705,8 +683,20 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
             defaultValue={query}
             className={className}
-            onChange={this._handleQueryChange}
-            onCodeMirrorInit={this._handleQueryEditorInit}
+            onChange={query => {
+              // Since we're editing the query, we may be changing the operation name, so
+              // Don't pass it to the body change in order to automatically re-detect it
+              // based on the current cursor position.
+              this._handleBodyChange(query, this.state.body.variables, null);
+            }}
+            onCodeMirrorInit={codeMirror => {
+              this._queryEditor = codeMirror;
+              // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
+              window.cm = this._queryEditor;
+              const { query, variables, operationName } = this.state.body;
+
+              this._handleBodyChange(query, variables, operationName);
+            }}
             onCursorActivity={this._handleQueryUserActivity}
             onFocus={this._handleQueryUserActivity}
             mode="graphql"
