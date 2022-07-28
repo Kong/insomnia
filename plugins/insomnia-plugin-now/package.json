@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-plugin-now",
-  "version": "3.3.1-beta.4",
+  "version": "3.3.1-beta.5",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia now template tag",
   "license": "MIT",
