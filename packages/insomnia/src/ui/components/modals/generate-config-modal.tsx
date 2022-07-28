@@ -1,21 +1,19 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { parseApiSpec } from '../../../common/api-specs';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
-import { showModal } from './index';
+import { registerModal, showModal } from './index';
 
 interface Config {
   label: string;
@@ -30,133 +28,122 @@ interface State {
   activeTab: number;
 }
 
-interface ShowOptions {
+interface GenerateConfigModalOptions {
   apiSpec: ApiSpec;
   activeTabLabel: string;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class GenerateConfigModal extends PureComponent<{}, State> {
-  modal: Modal | null = null;
-
-  state: State = {
+export interface GenerateConfigModalHandle {
+  show: (options: GenerateConfigModalOptions) => void;
+  hide: () => void;
+}
+export const displayName = 'GenerateConfigModal';
+export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const [state, setState] = useState<State>({
     configs: [],
     activeTab: 0,
-  };
+  });
 
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
+  useEffect(() => {
+    registerModal(modalRef.current, displayName);
+  }, []);
 
-  async _generate(generatePlugin: ConfigGenerator, apiSpec: ApiSpec) {
-    const config: Config = {
-      content: '',
-      mimeType: 'text/yaml',
-      label: generatePlugin.label,
-      docsLink: generatePlugin.docsLink,
-      error: null,
-    };
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: async options => {
+      const configs: Config[] = [];
+      for (const p of await plugins.getConfigGenerators()) {
+        configs.push(await generateConfig(p, options.apiSpec));
+      }
+      const foundIndex = configs.findIndex(c => c.label === options.activeTabLabel);
+      setState({
+        configs,
+        activeTab: foundIndex < 0 ? 0 : foundIndex,
+      });
+      modalRef.current?.show();
+    },
+  }), []);
+
+  const generateConfig = async (generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> => {
     try {
       const result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
-      if (result.document) {
-        config.content = result.document;
-      }
-      config.error = result.error || null;
-      return config;
+      return {
+        content: result.document || '',
+        mimeType: 'text/yaml',
+        label: generatePlugin.label,
+        docsLink: generatePlugin.docsLink,
+        error: result.error || null,
+      };
     } catch (err) {
-      config.error = err.message;
-      return config;
+      return {
+        content: '',
+        mimeType: 'text/yaml',
+        label: generatePlugin.label,
+        docsLink: generatePlugin.docsLink,
+        error: err.message,
+      };
     }
-  }
+  };
 
-  async show({ activeTabLabel, apiSpec }: ShowOptions) {
-    const configs: Config[] = [];
-
-    for (const p of await plugins.getConfigGenerators()) {
-      configs.push(await this._generate(p, apiSpec));
-    }
-
-    const foundIndex = configs.findIndex(c => c.label === activeTabLabel);
-    this.setState({
+  const onSelect = (index: number) => {
+    setState({
       configs,
-      activeTab: foundIndex < 0 ? 0 : foundIndex,
-    });
-    this.modal?.show();
-  }
-
-  renderConfigTabPanel(config: Config) {
-    const linkIcon = <i className="fa fa-external-link-square" />;
-    if (config.error) {
-      return (
-        <TabPanel key={config.label}>
-          <p className="notice error margin-md">
-            {config.error}
-            {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {linkIcon}</Link></> : null}
-          </p>
-        </TabPanel>
-      );
-    }
-
-    return (
-      <TabPanel key={config.label}>
-        <CodeEditor
-          className="tall pad-top-sm"
-          defaultValue={config.content}
-          mode={config.mimeType}
-          readOnly
-        />
-      </TabPanel>
-    );
-  }
-
-  _handleTabSelect(index: number) {
-    this.setState({
       activeTab: index,
     });
-  }
+  };
+  const { configs, activeTab } = state;
+  const activeConfig = configs[activeTab];
+  return (
+    <Modal ref={modalRef} freshState tall>
+      <ModalHeader>Generate Config</ModalHeader>
+      <ModalBody className="wide">
+        <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={onSelect}>
+          <TabList>{configs.map(config =>
+            (<Tab key={config.label} tabIndex="-1">
+              <button>
+                {config.label}
+                {config.docsLink ?
+                  <>
+                    {' '}
+                    <HelpTooltip>
+                      To learn more about {config.label}
+                      <br />
+                      <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
+                    </HelpTooltip>
+                  </> : null}
+              </button>
+            </Tab>)
+          )}
+          </TabList>
+          {configs.map(config =>
+            (<TabPanel key={config.label}>
+              {config.error ?
+                <p className="notice error margin-md">
+                  {config.error}
+                  {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link></> : null}
+                </p> :
+                <CodeEditor
+                  className="tall pad-top-sm"
+                  defaultValue={config.content}
+                  mode={config.mimeType}
+                  readOnly
+                />}
+            </TabPanel>)
+          )}
+        </Tabs>
+      </ModalBody>
+      {activeConfig && (
+        <ModalFooter>
+          <CopyButton className="btn" content={activeConfig.content}>
+            Copy to Clipboard
+          </CopyButton>
+        </ModalFooter>
+      )}
+    </Modal>
+  );
+});
+GenerateConfigModal.displayName = displayName;
 
-  renderConfigTab(config: Config) {
-    const linkIcon = <i className="fa fa-external-link-square" />;
-    return (
-      <Tab key={config.label} tabIndex="-1">
-        <button>
-          {config.label}
-          {config.docsLink ?
-            <>
-              {' '}
-              <HelpTooltip>
-                To learn more about {config.label}
-                <br />
-                <Link href={config.docsLink}>Documentation {linkIcon}</Link>
-              </HelpTooltip>
-            </> : null}
-        </button>
-      </Tab>
-    );
-  }
-
-  render() {
-    const { configs, activeTab } = this.state;
-    const activeConfig = configs[activeTab];
-    return (
-      <Modal ref={this._setModalRef} freshState tall>
-        <ModalHeader>Generate Config</ModalHeader>
-        <ModalBody className="wide">
-          <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={this._handleTabSelect}>
-            <TabList>{configs.map(this.renderConfigTab)}</TabList>
-            {configs.map(this.renderConfigTabPanel)}
-          </Tabs>
-        </ModalBody>
-        {activeConfig && (
-          <ModalFooter>
-            <CopyButton className="btn" content={activeConfig.content}>
-              Copy to Clipboard
-            </CopyButton>
-          </ModalFooter>
-        )}
-      </Modal>
-    );
-  }
-}
-
-export const showGenerateConfigModal = (opts: ShowOptions) => showModal(GenerateConfigModal, opts);
+export const showGenerateConfigModal = (opts: GenerateConfigModalOptions) => showModal(GenerateConfigModal, opts);
