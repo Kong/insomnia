@@ -94,7 +94,7 @@ interface State {
   explorerVisible: boolean;
   activeReference: null | ActiveReference;
   documentAST: null | DocumentNode;
-  disabledOperationMarkers: TextMarker[];
+  disabledOperationMarkers: (TextMarker | undefined)[];
 }
 export const GraphQLEditor: FC<Props> = props => {
   let maybeBody: GraphQLBody;
@@ -143,7 +143,7 @@ export const GraphQLEditor: FC<Props> = props => {
     documentAST,
     disabledOperationMarkers: [],
   });
-  const editorRef = useRef<CodeMirror.EditorFromTextArea>(null);
+  const editorRef = useRef<CodeMirror.Editor | null>(null);
 
   const fetchAndSetSchema =  useCallback(async (rawRequest: Request) => {
     setState({ ...state, schemaIsFetching: true });
@@ -360,7 +360,7 @@ export const GraphQLEditor: FC<Props> = props => {
     }
     // Remove current query highlighting
     for (const textMarker of state.disabledOperationMarkers) {
-      textMarker.clear();
+      textMarker?.clear();
     }
     if (editorRef.current) {
       const markers = documentAST.definitions
@@ -368,7 +368,7 @@ export const GraphQLEditor: FC<Props> = props => {
         .filter(complement(matchesOperation(body.operationName || null)))
         .filter(hasLocation)
         .map(({ loc: { startToken, endToken } }) =>
-          editorRef.current.getDoc().markText({
+          editorRef.current?.getDoc().markText({
             line: startToken.line - 1,
             ch: startToken.column - 1,
           }, {
@@ -376,7 +376,8 @@ export const GraphQLEditor: FC<Props> = props => {
             ch: endToken.column - 1,
           }, {
             className: 'cm-gql-disabled',
-          }));
+          })
+        );
       setState({ ...state, disabledOperationMarkers: markers });
     }
   };
@@ -578,7 +579,7 @@ export const GraphQLEditor: FC<Props> = props => {
             handleBodyChange(query, state.body.variables, null);
           }}
           onCodeMirrorInit={codeMirror => {
-            editorRef = codeMirror;
+            editorRef.current = codeMirror;
             // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
             window.cm = editorRef.current;
             const { query, variables, operationName } = state.body;
@@ -664,4 +665,3 @@ export const GraphQLEditor: FC<Props> = props => {
     </div>
   );
 };
-GraphQLEditor.displayName = 'GraphQLEditor';
