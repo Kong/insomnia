@@ -1,10 +1,9 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { registerModal } from '.';
 
 export interface ErrorModalOptions {
   title?: string;
@@ -25,10 +24,6 @@ export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
     message: '',
     addCancel: false,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

@@ -3,7 +3,6 @@ import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, u
 import { type ModalProps, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { registerModal } from './index';
 
 interface WrapperModalOptions {
   title: string;
@@ -26,10 +25,6 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
     skinny: false,
     wide: false,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

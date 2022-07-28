@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { parseApiSpec } from '../../../common/api-specs';
@@ -13,7 +13,7 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
-import { registerModal, showModal } from './index';
+import { showModal } from './index';
 
 interface Config {
   label: string;
@@ -43,10 +43,6 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     configs: [],
     activeTab: 0,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

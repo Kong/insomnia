@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
@@ -7,7 +7,6 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { EnvironmentEditor } from '../editors/environment-editor';
-import { registerModal } from './index';
 
 interface State {
   requestGroup: RequestGroup | null;
@@ -29,10 +28,6 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     requestGroup: null,
     isValid: true,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

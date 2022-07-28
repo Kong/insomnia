@@ -1,10 +1,10 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { registerModal, showModal } from '.';
+import { showModal } from '.';
 
 export interface SelectModalOptions {
   message: string | null;
@@ -31,10 +31,6 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
     title: null,
     value: null,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

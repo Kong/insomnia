@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { strings } from '../../../common/strings';
@@ -12,7 +12,6 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
-import { registerModal } from '.';
 
 export interface ProjectSettingsModalHandle {
   show: () => void;
@@ -23,10 +22,6 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
   const modalRef = useRef<Modal>(null);
   const project = useSelector(selectActiveProject);
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

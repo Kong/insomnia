@@ -1,5 +1,5 @@
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import { Request } from '../../../models/request';
@@ -10,7 +10,7 @@ import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
-import { registerModal, showModal } from './index';
+import { showModal } from './index';
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
   request: Request | null;
@@ -26,10 +26,6 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
     error: null,
     request: null,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

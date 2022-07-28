@@ -1,10 +1,9 @@
-import React, { FC, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { FC, forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Link } from '../base/link';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { registerModal } from '.';
 
 interface HelpExample {
   code: string;
@@ -73,10 +72,6 @@ export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_,
   const [state, setState] = useState<FilterHelpModalOptions>({
     isJSON: true,
   });
-
-  useEffect(() => {
-    registerModal(modalRef.current, displayName);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
