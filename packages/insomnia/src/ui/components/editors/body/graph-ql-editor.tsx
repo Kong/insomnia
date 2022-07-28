@@ -4,7 +4,7 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
+import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import { json as jsonPrettify } from 'insomnia-prettify';
@@ -126,7 +126,7 @@ export const GraphQLEditor: FC<Props> = props => {
     }
   }
   const [state, setState] = useState<State>({
-    body:{
+    body: {
       query: maybeBody.query || '',
       variables: maybeBody.variables || undefined,
       operationName: maybeBody.operationName || undefined,
@@ -145,7 +145,7 @@ export const GraphQLEditor: FC<Props> = props => {
   });
   const editorRef = useRef<CodeMirror.Editor | null>(null);
 
-  const fetchAndSetSchema =  useCallback(async (rawRequest: Request) => {
+  const fetchAndSetSchema = useCallback(async (rawRequest: Request) => {
     setState({ ...state, schemaIsFetching: true });
     const { environmentId } = props;
     const newState = {
@@ -229,9 +229,9 @@ export const GraphQLEditor: FC<Props> = props => {
     if (!editorRef.current.hasFocus()) {
       return state.body.operationName || null;
     }
-    const operations = state.documentAST ? state.documentAST.definitions.filter(def => def.kind === 'OperationDefinition') : [];
-    const cursor = editorRef.current.getCursor();
-    const cursorIndex = editorRef.current.indexFromPos(cursor);
+    const isOperation = (def: any): def is OperationDefinitionNode => def.type === Kind.OPERATION_DEFINITION;
+    const operations = !state.documentAST ? [] : state.documentAST.definitions.filter(isOperation);
+    const cursorIndex = editorRef.current.indexFromPos(editorRef.current.getCursor());
     let operationName: string | null = null;
     const allOperationNames: (string | null)[] = [];
     // Loop through all operations to see if one contains the cursor.
@@ -241,7 +241,8 @@ export const GraphQLEditor: FC<Props> = props => {
         continue;
       }
       allOperationNames.push(operation.name.value);
-      const { start, end } = operation.loc;
+      const start = operation.loc?.start ?? 0;
+      const end = operation.loc?.end ?? 0;
       if (start <= cursorIndex && end >= cursorIndex) {
         operationName = operation.name.value;
       }
@@ -467,7 +468,7 @@ export const GraphQLEditor: FC<Props> = props => {
   if (typeof body.variables === 'string') {
     maybeVariables = jsonParseOr(body.variables, '');
   }
-  const query  = body.query || '';
+  const query = body.query || '';
   const variables = jsonPrettify(JSON.stringify(maybeVariables));
   const variableTypes = buildVariableTypes(schema);
 
