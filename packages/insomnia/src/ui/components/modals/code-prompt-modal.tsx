@@ -1,19 +1,18 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 import { MarkdownEditor } from '../markdown-editor';
+import { registerModal } from '.';
 
 const MODES: Record<string, string> = {
   'text/plain': 'Plain Text',
@@ -24,7 +23,7 @@ const MODES: Record<string, string> = {
   'text/html': 'HTML',
 };
 
-interface State {
+interface CodePromptModalOptions {
   title: string;
   defaultValue: string;
   submitName: string;
@@ -34,11 +33,18 @@ interface State {
   hideMode: boolean;
   enableRender: boolean;
   showCopyButton: boolean;
+  onChange: (value: string) => void;
+  onModeChange?: (value: string) => void;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class CodePromptModal extends PureComponent<{}, State> {
-  state: State = {
+export interface CodePromptModalHandle {
+  show: (options: CodePromptModalOptions) => void;
+  hide: () => void;
+}
+export const displayName = 'CodePromptModal';
+export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const [state, setState] = useState<CodePromptModalOptions>({
     title: 'Not Set',
     defaultValue: '',
     submitName: 'Not Set',
@@ -48,150 +54,116 @@ export class CodePromptModal extends PureComponent<{}, State> {
     hideMode: false,
     enableRender: false,
     showCopyButton: false,
+    onChange: () => { },
+    onModeChange: () => { },
+  });
+
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      const realMode = typeof options.mode === 'string' ? options.mode : 'text/plain';
+      setState({
+        ...options,
+        mode: realMode || state.mode || 'text/plain',
+      });
+      modalRef.current?.show();
+    },
+  }), [state.mode]);
+
+  const handleChangeMode = (mode: any) => {
+    setState({ ...state, mode });
+    state.onModeChange?.(mode);
   };
 
-  modal: Modal | null = null;
-  _onModeChange: Function = () => {};
-  _onChange: Function = () => {};
+  const {
+    submitName,
+    title,
+    placeholder,
+    defaultValue,
+    hint,
+    mode,
+    hideMode,
+    enableRender,
+    showCopyButton,
+    onChange,
+  } = state;
 
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
-
-  _handleChange(value: any) {
-    this._onChange(value);
-  }
-
-  _handleChangeMode(mode: any) {
-    this.setState({ mode });
-    this._onModeChange?.(mode);
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  show(options: any) {
-    const {
-      title,
-      defaultValue,
-      submitName,
-      placeholder,
-      hint,
-      mode,
-      hideMode,
-      enableRender,
-      onChange,
-      onModeChange,
-      showCopyButton,
-    } = options;
-    this._onChange = onChange;
-    this._onModeChange = onModeChange;
-    const realMode = typeof mode === 'string' ? mode : 'text/plain';
-    this.setState({
-      title,
-      defaultValue,
-      submitName,
-      placeholder,
-      hint,
-      enableRender,
-      hideMode,
-      showCopyButton,
-      mode: realMode || this.state.mode || 'text/plain',
-    });
-
-    this.modal?.show();
-  }
-
-  render() {
-    const {
-    } = this.props;
-    const {
-      submitName,
-      title,
-      placeholder,
-      defaultValue,
-      hint,
-      mode,
-      hideMode,
-      enableRender,
-      showCopyButton,
-    } = this.state;
-
-    return (
-      <Modal ref={this._setModalRef} freshState tall>
-        <ModalHeader>{title}</ModalHeader>
-        <ModalBody
-          noScroll
-          className="wide tall"
-          style={
-            showCopyButton
-              ? {
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1fr)',
-                gridTemplateRows: 'auto minmax(0, 1fr)',
-              }
-              : {
-                minHeight: '10rem',
-              }
-          }
-        >
-          <NunjucksEnabledProvider disable={!enableRender}>
-            {showCopyButton ? (
-              <div className="pad-top-sm pad-right-sm">
-                <CopyButton content={defaultValue} className="pull-right" />
-              </div>
-            ) : null}
-            {mode === 'text/x-markdown' ? (
-              <div className="pad-sm tall">
-                <MarkdownEditor
-                  tall
+  return (
+    <Modal ref={modalRef} freshState tall>
+      <ModalHeader>{title}</ModalHeader>
+      <ModalBody
+        noScroll
+        className="wide tall"
+        style={
+          showCopyButton
+            ? {
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr)',
+              gridTemplateRows: 'auto minmax(0, 1fr)',
+            }
+            : {
+              minHeight: '10rem',
+            }
+        }
+      >
+        <NunjucksEnabledProvider disable={!enableRender}>
+          {showCopyButton ? (
+            <div className="pad-top-sm pad-right-sm">
+              <CopyButton content={defaultValue} className="pull-right" />
+            </div>
+          ) : null}
+          {mode === 'text/x-markdown' ? (
+            <div className="pad-sm tall">
+              <MarkdownEditor
+                tall
+                defaultValue={defaultValue}
+                placeholder={placeholder}
+                onChange={onChange}
+                mode={mode}
+              />
+            </div>
+          ) : (
+            <div className="pad-sm pad-bottom tall">
+              <div className="form-control form-control--outlined form-control--tall tall">
+                <CodeEditor
+                  hideLineNumbers
+                  manualPrettify
+                  className="tall"
                   defaultValue={defaultValue}
                   placeholder={placeholder}
-                  onChange={this._handleChange}
+                  onChange={onChange}
                   mode={mode}
+                  enableNunjucks
                 />
               </div>
-            ) : (
-              <div className="pad-sm pad-bottom tall">
-                <div className="form-control form-control--outlined form-control--tall tall">
-                  <CodeEditor
-                    hideLineNumbers
-                    manualPrettify
-                    className="tall"
-                    defaultValue={defaultValue}
-                    placeholder={placeholder}
-                    onChange={this._handleChange}
-                    mode={mode}
-                    enableNunjucks
-                  />
-                </div>
-              </div>
-            )}
-          </NunjucksEnabledProvider>
-        </ModalBody>
-        <ModalFooter>
-          {!hideMode ? (
-            <Dropdown>
-              <DropdownButton className="btn btn--clicky margin-left-sm">
+            </div>
+          )}
+        </NunjucksEnabledProvider>
+      </ModalBody>
+      <ModalFooter>
+        {!hideMode ? (
+          <Dropdown>
+            <DropdownButton className="btn btn--clicky margin-left-sm">
+              {MODES[mode]}
+              <i className="fa fa-caret-down space-left" />
+            </DropdownButton>
+            <DropdownDivider>Editor Syntax</DropdownDivider>
+            {Object.keys(MODES).map(mode => (
+              <DropdownItem key={mode} value={mode} onClick={handleChangeMode}>
+                <i className="fa fa-code" />
                 {MODES[mode]}
-                <i className="fa fa-caret-down space-left" />
-              </DropdownButton>
-              <DropdownDivider>Editor Syntax</DropdownDivider>
-              {Object.keys(MODES).map(mode => (
-                <DropdownItem key={mode} value={mode} onClick={this._handleChangeMode}>
-                  <i className="fa fa-code" />
-                  {MODES[mode]}
-                </DropdownItem>
-              ))}
-            </Dropdown>
-          ) : null}
-          <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
-          <button className="btn" onClick={this.hide}>
-            {submitName || 'Submit'}
-          </button>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+              </DropdownItem>
+            ))}
+          </Dropdown>
+        ) : null}
+        <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
+        <button className="btn" onClick={() => modalRef.current?.hide()}>
+          {submitName || 'Submit'}
+        </button>
+      </ModalFooter>
+    </Modal>
+  );
+});
+CodePromptModal.displayName = displayName;
