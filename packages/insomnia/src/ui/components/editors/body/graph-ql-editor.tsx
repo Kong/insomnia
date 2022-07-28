@@ -106,8 +106,20 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
   constructor(props: Props) {
     super(props);
-
-    const body = GraphQLEditor._stringToGraphQL(props.content);
+    let obj: GraphQLBody;
+    try {
+      obj = JSON.parse(props.content);
+    } catch (err) {
+      obj = { query: '' };
+    }
+    if (typeof obj.variables === 'string') {
+      obj.variables = jsonParseOr(obj.variables, '');
+    }
+    const body: GraphQLBody = {
+      query: obj.query || '',
+      variables: obj.variables || undefined,
+      operationName: obj.operationName || undefined,
+    };
     this._setDocumentAST(body.query);
     let automaticFetch = true;
 
@@ -148,7 +160,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       return this.state.body.operationName || null;
     }
 
-    const operations = this._getOperations();
+    const operations = this._documentAST ? this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition') : [];
 
     const cursor = _queryEditor.getCursor();
 
@@ -184,12 +196,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     return operationName;
   }
 
-  _handleCloseExplorer() {
-    this.setState({
-      explorerVisible: false,
-    });
-  }
-
   _handleKeyDown(event: KeyboardEvent) {
     executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handlePrettify);
   }
@@ -204,10 +210,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       });
     }
 
-  }
-
-  _handleQueryFocus() {
-    this._handleQueryUserActivity();
   }
 
   _handleQueryUserActivity() {
@@ -250,26 +252,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
           className: 'cm-gql-disabled',
         });
       });
-  }
-
-  _handleViewResponse() {
-    const { schemaFetchError } = this.state;
-
-    if (!schemaFetchError || !schemaFetchError.response) {
-      return;
-    }
-
-    const { response } = schemaFetchError;
-    showModal(ResponseDebugModal, {
-      title: 'GraphQL Introspection Response',
-      response: response,
-    });
-  }
-
-  _hideSchemaFetchError() {
-    this.setState({
-      hideSchemaFetchErrors: true,
-    });
   }
 
   _handleQueryEditorInit(codeMirror: CodeMirror.Editor) {
@@ -485,14 +467,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
-  _getOperations(): any[] {
-    if (!this._documentAST) {
-      return [];
-    }
-
-    return this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition');
-  }
-
   _setDocumentAST(query: string) {
     try {
       this._documentAST = parse(query);
@@ -559,43 +533,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
-  static _stringToGraphQL(text: string): GraphQLBody {
-    let obj: GraphQLBody;
-
-    try {
-      obj = JSON.parse(text);
-    } catch (err) {
-      obj = {
-        query: '',
-      };
-    }
-
-    if (typeof obj.variables === 'string') {
-      obj.variables = jsonParseOr(obj.variables, '');
-    }
-
-    const query = obj.query || '';
-    const variables = obj.variables || null;
-    const operationName = obj.operationName || null;
-    const body: GraphQLBody = {
-      query,
-    };
-
-    if (variables) {
-      body.variables = variables;
-    }
-
-    if (operationName) {
-      body.operationName = operationName;
-    }
-
-    return body;
-  }
-
-  static _graphQLToString(body: GraphQLBody) {
-    return JSON.stringify(body);
-  }
-
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
@@ -659,8 +596,23 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       schemaLastFetchTime,
     } = this.state;
     const { operationName } = this.state.body;
+    let obj: GraphQLBody;
+    try {
+      obj = JSON.parse(content);
+    } catch (err) {
+      obj = { query: '' };
+    }
+    if (typeof obj.variables === 'string') {
+      obj.variables = jsonParseOr(obj.variables, '');
+    }
+    const body: GraphQLBody = {
+      query: obj.query || '',
+      variables: obj.variables || undefined,
+      operationName: obj.operationName || undefined,
+    };
 
-    const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
+    const { query, variables: variablesObject } = body;
+    // const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
 
     const variables = jsonPrettify(JSON.stringify(variablesObject));
 
@@ -675,7 +627,9 @@ export class GraphQLEditor extends PureComponent<Props, State> {
           key={schemaLastFetchTime}
           visible={explorerVisible}
           reference={activeReference}
-          handleClose={this._handleCloseExplorer}
+          handleClose={() => this.setState({
+            explorerVisible: false,
+          })}
         />,
         explorerContainer
       );
@@ -754,7 +708,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             onChange={this._handleQueryChange}
             onCodeMirrorInit={this._handleQueryEditorInit}
             onCursorActivity={this._handleQueryUserActivity}
-            onFocus={this._handleQueryFocus}
+            onFocus={this._handleQueryUserActivity}
             mode="graphql"
             placeholder=""
             {...graphqlOptions}
@@ -765,11 +719,26 @@ export class GraphQLEditor extends PureComponent<Props, State> {
             <div className="notice error margin no-margin-top margin-bottom-sm">
               <div className="pull-right">
                 <Tooltip position="top" message="View introspection request/response timeline">
-                  <button className="icon icon--success" onClick={this._handleViewResponse}>
+                  <button
+                    className="icon icon--success"
+                    onClick={() => {
+                      if (schemaFetchError?.response) {
+                        showModal(ResponseDebugModal, {
+                          title: 'GraphQL Introspection Response',
+                          response: schemaFetchError.response,
+                        });
+                      }
+                    }}
+                  >
                     <i className="fa fa-bug" />
                   </button>
                 </Tooltip>{' '}
-                <button className="icon" onClick={this._hideSchemaFetchError}>
+                <button
+                  className="icon"
+                  onClick={() => this.setState({
+                    hideSchemaFetchErrors: true,
+                  })}
+                >
                   <i className="fa fa-times" />
                 </button>
               </div>
