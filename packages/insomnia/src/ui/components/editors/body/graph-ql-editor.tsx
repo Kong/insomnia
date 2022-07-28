@@ -10,7 +10,7 @@ import { Maybe } from 'graphql-language-service';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import prettier from 'prettier';
 import { complement } from 'ramda';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
 
@@ -338,11 +338,7 @@ const GraphQLEditorFC: FC<Props> = async props => {
     return <span>schema not yet fetched</span>;
   };
 
-  useEffect(() => {
-    _fetchAndSetSchema(props.request);
-  }, [_fetchAndSetSchema, props.request]);
-
-  const _fetchAndSetSchema = async (rawRequest: Request) => {
+  const _fetchAndSetSchema =  useCallback(async (rawRequest: Request) => {
     setState({ ...state, schemaIsFetching: true });
     const { environmentId } = props;
     const newState = {
@@ -403,11 +399,20 @@ const GraphQLEditorFC: FC<Props> = async props => {
         response: responsePatch,
       };
     }
+    return newState;
+  }, [props, state]);
 
-    if (_isMounted) {
-      setState({ ...state, ...newState });
-    }
-  };
+  useEffect(() => {
+    let isMounted = true;
+    const init = async () => {
+      const newState = await _fetchAndSetSchema(props.request);
+      isMounted && setState({ ...state, ...newState });
+    };
+    init();
+    return () => {
+      isMounted = false;
+    };
+  }, [_fetchAndSetSchema, props.request, state]);
 
   const _loadAndSetLocalSchema = async () => {
     const options: OpenDialogOptions = {
@@ -437,9 +442,6 @@ const GraphQLEditorFC: FC<Props> = async props => {
         throw new Error('JSON file should have a data field with the introspection results');
       }
 
-      if (!_isMounted) {
-        return;
-      }
       setState({
         ...state,
         schema: buildClientSchema(content.data),
@@ -449,9 +451,7 @@ const GraphQLEditorFC: FC<Props> = async props => {
       });
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
-      if (!_isMounted) {
-        return;
-      }
+
       setState({
         ...state,
         schemaFetchError: {
@@ -474,7 +474,6 @@ const GraphQLEditorFC: FC<Props> = async props => {
     hideSchemaFetchErrors,
     variablesSyntaxError,
     schemaIsFetching,
-    automaticFetch,
     activeReference,
     explorerVisible,
     schemaLastFetchTime,
@@ -495,9 +494,9 @@ const GraphQLEditorFC: FC<Props> = async props => {
     operationName: obj.operationName || undefined,
   };
 
-  const { query, variables: variablesObject } = body;
+  const { query } = body;
 
-  const variables = jsonPrettify(JSON.stringify(variablesObject));
+  const variables = jsonPrettify(JSON.stringify(obj.variables || undefined));
 
   const variableTypes = _buildVariableTypes(schema);
 
@@ -510,9 +509,7 @@ const GraphQLEditorFC: FC<Props> = async props => {
         key={schemaLastFetchTime}
         visible={explorerVisible}
         reference={activeReference}
-        handleClose={() => setState({
-          explorerVisible: false,
-        })}
+        handleClose={() => setState({ ...state, explorerVisible: false })}
       />,
       explorerContainer
     );
@@ -583,7 +580,12 @@ const GraphQLEditorFC: FC<Props> = async props => {
 
         <DropdownDivider>Local GraphQL Schema</DropdownDivider>
 
-        <DropdownItem onClick={() => setState({ hideSchemaFetchErrors: false }, _loadAndSetLocalSchema)}>
+        <DropdownItem
+          onClick={() => {
+            setState({ ...state, hideSchemaFetchErrors: false });
+            _loadAndSetLocalSchema();
+          }}
+        >
           <i className="fa fa-file-code-o" /> Load schema from JSON
           <HelpTooltip>
             Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
