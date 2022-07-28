@@ -19,8 +19,9 @@ export function registerModal(instance: any, modalName?: string) {
 }
 
 export function showModal(modalCls: any, ...args: any[]) {
-  trackPageView(modalCls.name);
-  return _getModal(modalCls).show(...args);
+  const name = modalCls.name || modalCls.WrappedComponent?.name || modalCls.displayName;
+  trackPageView(name);
+  return _getModal(name).show(...args);
 }
 
 export function showPrompt(config: PromptModalOptions) {
@@ -46,9 +47,8 @@ export function hideAllModals() {
   }
 }
 
-function _getModal(modalCls: any) {
-  const m = modals[modalCls.name || modalCls.WrappedComponent?.name || modalCls.displayName];
-
+function _getModal(name: string) {
+  const m = modals[name];
   if (!m) {
     throw new Error('Modal was not registered with the app');
   }
