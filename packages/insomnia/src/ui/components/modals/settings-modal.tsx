@@ -1,5 +1,5 @@
 import { HotKeyRegistry } from 'insomnia-common';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -17,17 +17,17 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import { ModalHandle, registerModal, showModal } from './index';
-export interface SettingsModalHandle extends ModalHandle {
-  show(): void;
-  show(currentTabIndex: number): void;
+import { showModal } from './index';
+export interface SettingsModalHandle {
+  hide: () => void;
+  show: (currentTabIndex?: number) => void;
 }
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
-export const SETTINGS_MODAL_DISPLAY_NAME = 'SettingsModal';
+export const displayName = 'SettingsModal';
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const settings = useSelector(selectSettings);
   const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
@@ -39,10 +39,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       hotKeyRegistry,
     });
   };
-
-  useEffect(() => {
-    registerModal(modalRef.current, SETTINGS_MODAL_DISPLAY_NAME);
-  }, []);
 
   useImperativeHandle(ref, () => ({
     hide(): void {
@@ -60,7 +56,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">
-            &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
+          &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
           {email ? ` – ${email}` : null}
         </span>
       </ModalHeader>
@@ -90,7 +86,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <General />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
-            <ImportExport hideSettingsModal={() => modalRef.current?.hide()}/>
+            <ImportExport hideSettingsModal={() => modalRef.current?.hide()} />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
             <ThemePanel />
@@ -111,5 +107,5 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
     </Modal>
   );
 });
-SettingsModal.displayName = SETTINGS_MODAL_DISPLAY_NAME;
+SettingsModal.displayName = displayName;
 export const showSettingsModal = () => showModal(SettingsModal);
