@@ -159,7 +159,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
           },
         }))
         .filter(v => v.score !== null)
-        .sort((a, b) => (a.score || -Infinity) - (b.score || -Infinity))
+        .sort((a, b) => Number(a.score || -Infinity) - Number(b.score || -Infinity))
         .map(v => v.request);
     }
 
