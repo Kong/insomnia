@@ -66,7 +66,7 @@ export interface FilterHelpModalHandle {
   show: (options: FilterHelpModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'FilterHelpModal';
+
 export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<FilterHelpModalOptions>({
@@ -93,4 +93,4 @@ export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_,
     </Modal>
   );
 });
-FilterHelpModal.displayName = displayName;
+FilterHelpModal.displayName = 'FilterHelpModal';

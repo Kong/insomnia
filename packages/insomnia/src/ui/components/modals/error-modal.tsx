@@ -15,7 +15,6 @@ export interface ErrorModalHandle {
   show: (options: ErrorModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'ErrorModal';
 export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<ErrorModalOptions>({
@@ -65,4 +64,4 @@ export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
     </Modal>
   );
 });
-ErrorModal.displayName = displayName;
+ErrorModal.displayName = 'ErrorModal';

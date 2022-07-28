@@ -41,7 +41,6 @@ export interface CodePromptModalHandle {
   show: (options: CodePromptModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'CodePromptModal';
 export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<CodePromptModalOptions>({
@@ -166,4 +165,4 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     </Modal>
   );
 });
-CodePromptModal.displayName = displayName;
+CodePromptModal.displayName = 'CodePromptModal';

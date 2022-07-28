@@ -1,4 +1,4 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
 import { type ModalProps, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -15,7 +15,6 @@ export interface WrapperModalHandle {
   show: (options: WrapperModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'WrapperModal';
 export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<WrapperModalOptions>({
@@ -53,4 +52,4 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
   );
 
 });
-WrapperModal.displayName = displayName;
+WrapperModal.displayName = WrapperModal;

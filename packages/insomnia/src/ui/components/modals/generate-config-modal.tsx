@@ -36,7 +36,6 @@ export interface GenerateConfigModalHandle {
   show: (options: GenerateConfigModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'GenerateConfigModal';
 export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<State>({
@@ -140,6 +139,6 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     </Modal>
   );
 });
-GenerateConfigModal.displayName = displayName;
+GenerateConfigModal.displayName = 'GenerateConfigModal';
 
 export const showGenerateConfigModal = (opts: GenerateConfigModalOptions) => showModal(GenerateConfigModal, opts);

@@ -17,7 +17,6 @@ export interface ProjectSettingsModalHandle {
   show: () => void;
   hide: () => void;
 }
-export const displayName = 'ProjectSettingsModal';
 export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const project = useSelector(selectActiveProject);
@@ -88,6 +87,6 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
     </Modal>
   );
 });
-ProjectSettingsModal.displayName = displayName;
+ProjectSettingsModal.displayName = 'ProjectSettingsModal';
 
 export default ProjectSettingsModal;

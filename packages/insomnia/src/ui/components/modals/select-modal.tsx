@@ -22,7 +22,7 @@ export interface SelectModalHandle {
   show: (options: SelectModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'SelectModal';
+
 export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<SelectModalOptions>({
@@ -69,6 +69,6 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
     </Modal>
   );
 });
-SelectModal.displayName = displayName;
+SelectModal.displayName = 'SelectModal';
 
 export const showSelectModal = (opts: SelectModalOptions) => showModal(SelectModal, opts);

@@ -20,7 +20,6 @@ export interface EnvironmentEditModalHandle {
   show: (options: EnvironmentEditModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'EnvironmentEditModal';
 export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<Modal>(null);
   const editorRef = useRef<EnvironmentEditor>(null);
@@ -87,4 +86,4 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     </Modal >
   );
 });
-EnvironmentEditModal.displayName = displayName;
+EnvironmentEditModal.displayName = 'EnvironmentEditModal';

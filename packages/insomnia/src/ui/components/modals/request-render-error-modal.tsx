@@ -19,7 +19,7 @@ export interface RequestRenderErrorModalHandle {
   show: (options: RequestRenderErrorModalOptions) => void;
   hide: () => void;
 }
-export const displayName = 'RequestRenderErrorModal';
+
 export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<RequestRenderErrorModalOptions>({
@@ -86,4 +86,4 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
     </Modal>
   );
 });
-RequestRenderErrorModal.displayName = displayName;
+RequestRenderErrorModal.displayName = 'RequestRenderErrorModal';
