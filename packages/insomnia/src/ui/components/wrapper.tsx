@@ -352,7 +352,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <WrapperModal />
             <LoginModal ref={registerModal} />
             <AskModal ref={registerModal} />
-            <SelectModal ref={registerModal} />
+            <SelectModal />
             <FilterHelpModal />
             <RequestRenderErrorModal />
             <GenerateConfigModal />
