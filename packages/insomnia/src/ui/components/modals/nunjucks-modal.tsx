@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Workspace } from '../../../models/workspace';
 import { Modal, ModalProps } from '../base/modal';

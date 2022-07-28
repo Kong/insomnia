@@ -52,4 +52,4 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
   );
 
 });
-WrapperModal.displayName = WrapperModal;
+WrapperModal.displayName = 'WrapperModal';

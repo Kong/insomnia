@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
@@ -12,7 +12,6 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 import { MarkdownEditor } from '../markdown-editor';
-import { registerModal } from '.';
 
 const MODES: Record<string, string> = {
   'text/plain': 'Plain Text',
