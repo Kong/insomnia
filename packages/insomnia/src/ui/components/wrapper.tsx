@@ -1,8 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
 import React, { Fragment, lazy, PureComponent, Suspense } from 'react';
-import { useSelector } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import type { GlobalActivity } from '../../common/constants';
 import {
@@ -11,28 +12,25 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
-  SortOrder,
 } from '../../common/constants';
-import { database as db } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import type { Cookie } from '../../models/cookie-jar';
+import { update } from '../../models/helpers/request-operations';
 import * as models from '../../models/index';
 import {
   isRequest,
   Request,
-  RequestAuthentication,
-  RequestBody,
   RequestHeader,
-  RequestParameter,
 } from '../../models/request';
-import { RequestGroup } from '../../models/request-group';
+import { Response } from '../../models/response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
-import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { selectActiveActivity, selectActiveWorkspace } from '../redux/selectors';
+import { updateRequestMetaByParentId } from '../hooks/create-request';
+import { RootState } from '../redux/modules';
+import { setActiveActivity } from '../redux/modules/global';
+import { selectActiveActivity, selectActiveApiSpec, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -78,11 +76,11 @@ import { WrapperModal } from './modals/wrapper-modal';
 const lazyWithPreload = (
   importFn: () => Promise<{ default: React.ComponentType<any> }>
 ): [
-  React.LazyExoticComponent<React.ComponentType<any>>,
-  () => Promise<{
-    default: React.ComponentType<any>;
-  }>
-] => {
+    React.LazyExoticComponent<React.ComponentType<any>>,
+    () => Promise<{
+      default: React.ComponentType<any>;
+    }>
+  ] => {
   const LazyComponent = lazy(importFn);
   const preload = () => importFn();
 
@@ -125,27 +123,10 @@ const ActivityRouter = () => {
 
 const spectral = initializeSpectral();
 
-export type WrapperProps = AppProps & {
-  handleActivateRequest: (activeRequestId: string) => void;
-  handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleShowSettingsModal: Function;
-  handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
+export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
   handleDuplicateRequest: Function;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
-  handleGenerateCodeForActiveRequest: Function;
-  handleGenerateCode: Function;
-  handleCopyAsCurl: Function;
-  handleSetResponsePreviewMode: Function;
   handleSetResponseFilter: Function;
-  handleSetActiveResponse: Function;
-  handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleSetRequestGroupCollapsed: Function;
-  handleSetRequestPinned: Function;
-  handleSendRequestWithEnvironment: Function;
-  handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  handleUpdateDownloadPath: Function;
-
   headerEditorKey: string;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
@@ -161,16 +142,8 @@ interface State {
   activeGitBranch: string;
 }
 
-const requestUpdate = (request: Request, patch: Partial<Request>) => {
-  if (!request) {
-    throw new Error('Tried to update null request');
-  }
-
-  return models.request.update(request, patch);
-};
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class Wrapper extends PureComponent<WrapperProps, State> {
+export class WrapperClass extends PureComponent<Props, State> {
   state: State = {
     forceRefreshKey: Date.now(),
     activeGitBranch: 'no-vcs',
@@ -178,7 +151,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
   // Request updaters
   async _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
-    const newRequest = await requestUpdate(r, patch);
+    const newRequest = await update(r, patch);
     this._forceRequestPaneRefreshAfterDelay();
 
     return newRequest;
@@ -186,35 +159,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return this._handleForceUpdateRequest(r, { headers });
-  }
-
-  static _handleUpdateRequestBody(request: Request, body: RequestBody) {
-    return requestUpdate(request, { body });
-  }
-
-  static _handleUpdateRequestParameters(request: Request, parameters: RequestParameter[]) {
-    return requestUpdate(request, { parameters });
-  }
-
-  static _handleUpdateRequestAuthentication(request: Request, authentication: RequestAuthentication) {
-    return requestUpdate(request, { authentication });
-  }
-
-  static _handleUpdateRequestHeaders(request: Request, headers: RequestHeader[]) {
-    return requestUpdate(request, { headers });
-  }
-
-  static _handleUpdateRequestMethod(request: Request, method: string) {
-    return requestUpdate(request, { method });
-  }
-
-  static _handleUpdateRequestUrl(request: Request, url: string) {
-    // Don't update if we don't need to
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-
-    return requestUpdate(request, { url });
   }
 
   async _handleImport(text: string) {
@@ -246,7 +190,31 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
     return null;
   }
+  async handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
+    const { activeEnvironment } = this.props;
+    const activeResponseId = activeResponse ? activeResponse._id : null;
+    await updateRequestMetaByParentId(requestId, {
+      activeResponseId,
+    });
 
+    let response: Response | null;
+    if (activeResponseId) {
+      response = await models.response.getById(activeResponseId);
+    } else {
+      const environmentId = activeEnvironment ? activeEnvironment._id : null;
+      response = await models.response.getLatestForRequest(requestId, environmentId);
+    }
+    if (!response || !response.requestVersionId) {
+      return;
+    }
+    const request = await models.requestVersion.restore(response.requestVersionId);
+    if (!request) {
+      return;
+    }
+    // Refresh app to reflect changes. Using timeout because we need to
+    // wait for the request update to propagate.
+    setTimeout(() => this._forceRequestPaneRefresh(), 500);
+  }
   async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
     const { activeActivity, activeApiSpec, handleSetActiveActivity } = this.props;
 
@@ -307,101 +275,10 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     }, 1000);
   }
 
-  // Settings updaters
-  _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
-    return models.settings.update(this.props.settings, { useBulkHeaderEditor });
-  }
-
-  _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
-    return models.settings.update(this.props.settings, { useBulkParametersEditor });
-  }
-
-  _handleSetActiveResponse(responseId: string | null) {
-    if (!this.props.activeRequest) {
-      console.warn('Tried to set active response when request not active');
-      return;
-    }
-
-    this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
-  }
-
-  _handleShowEnvironmentsModal() {
-    showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
-  }
-
-  static _handleShowModifyCookieModal(cookie: Cookie) {
-    showModal(CookieModifyModal, cookie);
-  }
-
-  _handleShowRequestSettingsModal() {
-    showModal(RequestSettingsModal, { request: this.props.activeRequest });
-  }
-
-  async _handleRemoveActiveWorkspace() {
-    const { activeWorkspace, handleSetActiveActivity } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-    await models.workspace.remove(activeWorkspace);
-
-    handleSetActiveActivity(ACTIVITY_HOME);
-  }
-
-  async _handleActiveWorkspaceClearAllResponses() {
-    const { activeWorkspace } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    const docs = await db.withDescendants(activeWorkspace, models.request.type);
-    const requests = docs.filter(isRequest);
-
-    for (const req of requests) {
-      await models.response.removeForRequest(req._id);
-    }
-  }
-
-  _handleSendRequestWithActiveEnvironment() {
-    const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
-  }
-
-  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string) {
-    const {
-      activeRequest,
-      activeEnvironment,
-      handleSendAndDownloadRequestWithEnvironment,
-    } = this.props;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    await handleSendAndDownloadRequestWithEnvironment(
-      activeRequestId,
-      activeEnvironmentId,
-      filename,
-    );
-  }
-
-  _handleSetPreviewMode(previewMode: string) {
-    const activeRequest = this.props.activeRequest;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
-  }
-
   _handleSetResponseFilter(filter: string) {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
-  }
-
-  _handleChangeEnvironment(id: string | null) {
-    const { handleSetActiveEnvironment } = this.props;
-    handleSetActiveEnvironment(id);
   }
 
   _forceRequestPaneRefreshAfterDelay(): void {
@@ -423,6 +300,16 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
+  async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeEnvironmentId });
+    }
+    // Give it time to update and re-render
+    setTimeout(() => {
+      this._forceRequestPaneRefresh();
+    }, 300);
+  }
+
   render() {
     const {
       activeCookieJar,
@@ -430,13 +317,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeWorkspace,
       activeApiSpec,
-      activeWorkspaceClientCertificates,
+      handleUpdateRequestMimeType,
       gitVCS,
-      handleActivateRequest,
-      handleExportRequestsToFile,
-      handleInitializeEntities,
-      handleSidebarSort,
-      sidebarChildren,
       vcs,
     } = this.props;
 
@@ -450,7 +332,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
           workspace={activeWorkspace}
           gitRepository={activeGitRepository}
           vcs={gitVCS}
-          handleInitializeEntities={handleInitializeEntities}
           handleGitBranchChanged={this._handleGitBranchChanged}
           renderDropdownButton={children => (
             <DropdownButton className="btn--clicky-small btn-sync">
@@ -487,7 +368,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               {activeCookieJar ? <>
                 <CookiesModalFC
                   ref={registerModal}
-                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                 />
                 <CookieModifyModal ref={registerModal} />
               </> : null}
@@ -500,11 +380,8 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
               {activeApiSpec ? <WorkspaceSettingsModal
                 ref={registerModal}
-                clientCertificates={activeWorkspaceClientCertificates}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}
-                handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-                handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
               /> : null}
             </> : null}
 
@@ -518,7 +395,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <RequestSwitcherModal
               ref={registerModal}
-              activateRequest={handleActivateRequest}
             />
 
             <EnvironmentEditModal
@@ -537,7 +413,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                     ref={registerModal}
                     vcs={gitVCS}
                     gitRepository={activeGitRepository}
-                    handleInitializeEntities={handleInitializeEntities}
                     handleGitBranchChanged={this._handleGitBranchChanged}
                   />
                 )}
@@ -556,16 +431,12 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
-              handleChangeEnvironment={this._handleChangeEnvironment}
+              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />
 
             <AddKeyCombinationModal ref={registerModal} />
-            <ExportRequestsModal
-              ref={registerModal}
-              childObjects={sidebarChildren.all}
-              handleExportRequestsToFile={handleExportRequestsToFile}
-            />
+            <ExportRequestsModal ref={registerModal} />
 
             <GrpcDispatchModalWrapper>
               {dispatch => (
@@ -583,7 +454,9 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
             path="*"
             element={
               <Suspense fallback={<div />}>
-                <WrapperHome wrapperProps={this.props} />
+                <WrapperHome
+                  vcs={vcs}
+                />
               </Suspense>
             }
           />
@@ -593,9 +466,7 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
               <Suspense fallback={<div />}>
                 <WrapperUnitTest
                   gitSyncDropdown={gitSyncDropdown}
-                  wrapperProps={this.props}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  sidebarChildren={sidebarChildren}
                 />
               </Suspense>
             }
@@ -607,7 +478,6 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                 <WrapperDesign
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  wrapperProps={this.props}
                 />
               </Suspense>
             }
@@ -620,26 +490,13 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
                   forceRefreshKey={this.state.forceRefreshKey}
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
-                  handleChangeEnvironment={this._handleChangeEnvironment}
+                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleForceUpdateRequest={this._handleForceUpdateRequest}
                   handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
-                  handleSendAndDownloadRequestWithActiveEnvironment={this._handleSendAndDownloadRequestWithActiveEnvironment}
-                  handleSendRequestWithActiveEnvironment={this._handleSendRequestWithActiveEnvironment}
-                  handleSetActiveResponse={this._handleSetActiveResponse}
-                  handleSetPreviewMode={this._handleSetPreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
-                  handleSidebarSort={handleSidebarSort}
-                  handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
-                  handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
-                  handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
-                  handleUpdateRequestMethod={Wrapper._handleUpdateRequestMethod}
-                  handleUpdateRequestParameters={Wrapper._handleUpdateRequestParameters}
-                  handleUpdateRequestUrl={Wrapper._handleUpdateRequestUrl}
-                  handleUpdateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-                  handleUpdateSettingsUseBulkParametersEditor={this._handleUpdateSettingsUseBulkParametersEditor}
-                  wrapperProps={this.props}
+                  handleUpdateRequestMimeType={handleUpdateRequestMimeType}
+                  handleSetActiveResponse={this.handleSetActiveResponse}
                 />
               </Suspense>
             }
@@ -650,3 +507,23 @@ export class Wrapper extends PureComponent<WrapperProps, State> {
     );
   }
 }
+const mapStateToProps = (state: RootState) => ({
+  activeActivity: selectActiveActivity(state),
+  activeRequest: selectActiveRequest(state),
+  activeCookieJar: selectActiveCookieJar(state),
+  activeEnvironment: selectActiveEnvironment(state),
+  activeGitRepository: selectActiveGitRepository(state),
+  activeWorkspace: selectActiveWorkspace(state),
+  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
+  activeApiSpec: selectActiveApiSpec(state),
+  activeResponse: selectActiveResponse(state),
+  settings: selectSettings(state),
+});
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
+  const bound = bindActionCreators({ setActiveActivity }, dispatch);
+  return {
+    handleSetActiveActivity: bound.setActiveActivity,
+  };
+};
+
+export const Wrapper = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(WrapperClass);

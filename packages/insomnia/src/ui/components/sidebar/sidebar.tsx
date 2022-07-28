@@ -7,18 +7,13 @@ import {
   SIDEBAR_SKINNY_REMS,
 } from '../../../common/constants';
 import type { Environment } from '../../../models/environment';
-import type { Workspace } from '../../../models/workspace';
 
 interface Props {
   activeEnvironment: Environment | null;
   children: ReactNode;
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
-  handleSetActiveEnvironment: (...args: any[]) => any;
   hidden: boolean;
-  isLoading: boolean;
-  unseenWorkspaces: Workspace[];
   width: number;
-  workspacesForActiveProject: Workspace[];
 }
 
 export const Sidebar = memo(

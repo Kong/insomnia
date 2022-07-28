@@ -15,9 +15,10 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
 import { Modal } from '../base/modal';
@@ -31,6 +32,7 @@ import { wrapToIndex } from './utils';
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 const mapStateToProps = (state: RootState) => ({
+  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
   activeRequest: selectActiveRequest(state),
   workspace: selectActiveWorkspace(state),
   workspacesForActiveProject: selectWorkspacesForActiveProject(state),
@@ -45,10 +47,6 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
     handleActivateWorkspace: bound.activateWorkspace,
   };
 };
-
-interface Props extends ReduxProps {
-  activateRequest: (id: string) => void;
-}
 
 interface State {
   searchString: string;
@@ -66,7 +64,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestSwitcherModal extends PureComponent<Props, State> {
+class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
   _openTimeout: NodeJS.Timeout | null = null;
@@ -169,12 +167,15 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _activateRequest(request?: Request | GrpcRequest) {
+  async _activateRequest(request?: Request | GrpcRequest) {
     if (!request) {
       return;
     }
-
-    this.props.activateRequest(request._id);
+    const activeRequestId = request._id;
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeRequestId });
+    }
+    await updateRequestMetaByParentId(activeRequestId, { lastActive: Date.now() });
     this.modal?.hide();
   }
 
@@ -468,9 +469,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                         <Highlight search={searchString} text={r.name} />
                       </div>
                       <div className="margin-left-xs faint">
-                        { isRequest(r) ? <MethodTag method={r.method} /> : null}
-                        { isGrpcRequest(r) ? <GrpcTag /> : null }
-                        { <Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url } /> }
+                        {isRequest(r) ? <MethodTag method={r.method} /> : null}
+                        {isGrpcRequest(r) ? <GrpcTag /> : null}
+                        {<Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url} />}
                       </div>
                     </Button>
                   </li>

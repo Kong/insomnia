@@ -11,6 +11,7 @@ import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
+import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
@@ -31,15 +32,13 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  handleSetActiveResponse: Function;
   handleSetFilter: (filter: string) => void;
-  handleShowRequestSettings: Function;
+  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
-  handleSetActiveResponse,
   handleSetFilter,
-  handleShowRequestSettings,
+  handleSetActiveResponse,
   request,
 }) => {
   const response = useSelector(selectActiveResponse);
@@ -136,8 +135,8 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
-            requestId={request._id}
             handleSetActiveResponse={handleSetActiveResponse}
+            requestId={request._id}
             className="tall pane__header__right"
           />
         </PaneHeader>
@@ -203,7 +202,6 @@ export const ResponsePane: FC<Props> = ({
           <div className="scrollable pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseCookiesViewer
-                handleShowRequestSettings={handleShowRequestSettings}
                 cookiesSent={response.settingSendCookies}
                 cookiesStored={response.settingStoreCookies}
                 headers={cookieHeaders}

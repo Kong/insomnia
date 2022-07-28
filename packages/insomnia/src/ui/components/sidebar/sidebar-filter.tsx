@@ -1,34 +1,71 @@
 import React, { FC, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../../common/constants';
+import { database as db } from '../../../common/database';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import { sortMethodMap } from '../../../common/sorting';
+import * as models from '../../../models';
+import { isRequestGroup } from '../../../models/request-group';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { KeydownBinder } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
-  onChange: (value: string) => Promise<void>;
-  sidebarSort: (sortOrder: SortOrder) => void;
   filter: string;
 }
-export const SidebarFilter: FC<Props> = ({ filter, sidebarSort, onChange }) => {
+export const SidebarFilter: FC<Props> = ({ filter }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleClearFilter = useCallback(() => {
-    onChange('');
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+
+  const handleClearFilter = useCallback(async () => {
+    if (activeWorkspaceMeta) {
+      await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: '' });
+    }
     if (inputRef.current) {
       inputRef.current.value = '';
       inputRef.current.focus();
     }
-  }, [onChange]);
-  const handleOnChange = useCallback((event: React.SyntheticEvent<HTMLInputElement>) => {
-    onChange(event.currentTarget.value);
-  }, [onChange]);
+  }, [activeWorkspaceMeta]);
+
+  const handleOnChange = useCallback(async (event: React.SyntheticEvent<HTMLInputElement>) => {
+    if (activeWorkspaceMeta) {
+      await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: event.currentTarget.value });
+    }
+  }, [activeWorkspaceMeta]);
   const handleKeydown = useCallback((event: KeyboardEvent) => {
     executeHotKey(event, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
       inputRef.current?.focus();
     });
   }, []);
+  const sortSidebar = async (order: SortOrder, parentId?: string) => {
+    let flushId: number | undefined;
+    if (!activeWorkspace) {
+      return;
+    }
+    if (!parentId) {
+      parentId = activeWorkspace._id;
+      flushId = await db.bufferChanges();
+    }
+    const docs = [
+      ...(await models.requestGroup.findByParentId(parentId)),
+      ...(await models.request.findByParentId(parentId)),
+      ...(await models.grpcRequest.findByParentId(parentId)),
+    ].sort(sortMethodMap[order]);
+    // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
+    // Which all have the .update method. How do we better filter types?
+    await Promise.all(docs.map((doc, i) => models.getModel(doc.type)?.update(doc, { metaSortKey: i * 100 })));
+    // sort RequestGroups recursively
+    await Promise.all(docs.filter(isRequestGroup).map(g => sortSidebar(order, g._id)));
+
+    if (flushId) {
+      await db.flushChanges(flushId);
+    }
+  };
+
   return (
     <KeydownBinder onKeydown={handleKeydown}>
       <div className="sidebar__filter">
@@ -46,7 +83,7 @@ export const SidebarFilter: FC<Props> = ({ filter, sidebarSort, onChange }) => {
             </button>
           )}
         </div>
-        <SidebarSortDropdown handleSort={sidebarSort} />
+        <SidebarSortDropdown handleSort={sortSidebar} />
         <SidebarCreateDropdown />
       </div>
     </KeydownBinder>

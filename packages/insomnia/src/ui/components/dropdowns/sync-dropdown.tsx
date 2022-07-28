@@ -12,7 +12,6 @@ import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
 import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
@@ -22,7 +21,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectRemoteProjects } from '../../redux/selectors';
+import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -47,6 +46,8 @@ type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDisp
 
 const mapStateToProps = (state: RootState) => ({
   remoteProjects: selectRemoteProjects(state),
+  syncItems: selectSyncItems(state),
+  workspaceMeta: selectActiveWorkspaceMeta(state),
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
@@ -58,7 +59,6 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
 
 interface Props extends ReduxProps {
   workspace: Workspace;
-  workspaceMeta?: WorkspaceMeta;
   project: Project;
   vcs: VCS;
   syncItems: StatusCandidate[];

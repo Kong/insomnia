@@ -27,6 +27,7 @@ import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace'
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
+import { VCS } from '../../sync/vcs/vcs';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
@@ -41,7 +42,6 @@ import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
-import type { WrapperProps } from './wrapper';
 
 const CreateButton = styled(Button)({
   '&&': {
@@ -50,7 +50,7 @@ const CreateButton = styled(Button)({
 });
 
 interface Props {
-  wrapperProps: WrapperProps;
+  vcs: VCS | null;
 }
 
 function orderDashboardCards(orderBy: DashboardSortOrder) {
@@ -145,7 +145,7 @@ const mapWorkspaceToWorkspaceCard = ({
   };
 };
 
-const WrapperHome: FC<Props> = (({ wrapperProps }) => {
+const WrapperHome: FC<Props> = (({ vcs }) => {
   const sortOrder = useSelector(selectDashboardSortOrder);
   const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -187,7 +187,6 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('');
 
-  const { vcs } = wrapperProps;
   // Render each card, removing all the ones that don't match the filter
   const cards = workspacesForActiveProject
     .map(mapWorkspaceToWorkspaceCard({ workspaceMetas, apiSpecs }))
@@ -253,7 +252,6 @@ const WrapperHome: FC<Props> = (({ wrapperProps }) => {
 
   return (
     <PageLayout
-      wrapperProps={wrapperProps}
       renderPageHeader={
         <AppHeader
           breadcrumbProps={{

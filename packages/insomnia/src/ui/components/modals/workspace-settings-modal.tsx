@@ -2,17 +2,21 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { FC, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 import styled from 'styled-components';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
+import { isRequest } from '../../../models/request';
 import type { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
-import { selectActiveWorkspaceName } from '../../redux/selectors';
+import { setActiveActivity } from '../../redux/modules/global';
+import { selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal } from '../base/modal';
@@ -59,14 +63,11 @@ const CertificateField: FC<{
   );
 };
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
+type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface Props extends ReduxProps {
-  clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
-  handleRemoveWorkspace: Function;
-  handleClearAllResponses: Function;
 }
 
 interface State {
@@ -111,13 +112,33 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     this.modal = modal;
   }
 
-  _handleRemoveWorkspace() {
-    this.props.handleRemoveWorkspace();
+  async _handleRemoveWorkspace() {
+    const { activeWorkspace, handleSetActiveActivity } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
+    await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+    await models.workspace.remove(activeWorkspace);
+
+    handleSetActiveActivity(ACTIVITY_HOME);
     this.hide();
   }
 
-  _handleClearAllResponses() {
-    this.props.handleClearAllResponses();
+  async _handleClearAllResponses() {
+    const { activeWorkspace } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
+    const docs = await db.withDescendants(activeWorkspace, models.request.type);
+    const requests = docs.filter(isRequest);
+
+    for (const req of requests) {
+      await models.response.removeForRequest(req._id);
+    }
     this.hide();
   }
 
@@ -520,7 +541,16 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
 }
 
 const mapStateToProps = (state: RootState) => ({
+  activeWorkspace: selectActiveWorkspace(state),
   activeWorkspaceName: selectActiveWorkspaceName(state),
+  clientCertificates: selectActiveWorkspaceClientCertificates(state),
 });
 
-export const WorkspaceSettingsModal = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedWorkspaceSettingsModal);
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
+  const bound = bindActionCreators({ setActiveActivity }, dispatch);
+  return {
+    handleSetActiveActivity: bound.setActiveActivity,
+  };
+};
+
+export const WorkspaceSettingsModal = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(UnconnectedWorkspaceSettingsModal);

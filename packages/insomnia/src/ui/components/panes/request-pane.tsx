@@ -6,12 +6,10 @@ import { useMount } from 'react-use';
 
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { update } from '../../../models/helpers/request-operations';
 import type {
   Request,
-  RequestAuthentication,
-  RequestBody,
   RequestHeader,
-  RequestParameter,
 } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
@@ -31,56 +29,38 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
 interface Props {
-  downloadPath: string | null;
   environmentId: string;
   forceRefreshCounter: number;
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleGenerateCode: Function;
   handleImport: Function;
-  handleSend: () => void;
-  handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleUpdateDownloadPath: Function;
   headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
-  updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  updateRequestMethod: (r: Request, method: string) => Promise<Request>;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
-  updateRequestUrl: (r: Request, url: string) => Promise<Request>;
-  updateSettingsUseBulkHeaderEditor: Function;
-  updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   workspace: Workspace;
 }
 
 export const RequestPane: FC<Props> = ({
-  downloadPath,
   environmentId,
   forceRefreshCounter,
   forceUpdateRequest,
   forceUpdateRequestHeaders,
-  handleGenerateCode,
   handleImport,
-  handleSend,
-  handleSendAndDownload,
-  handleUpdateDownloadPath,
   headerEditorKey,
   request,
   settings,
-  updateRequestAuthentication,
-  updateRequestBody,
-  updateRequestHeaders,
-  updateRequestMethod,
   updateRequestMimeType,
-  updateRequestParameters,
-  updateRequestUrl,
-  updateSettingsUseBulkHeaderEditor,
-  updateSettingsUseBulkParametersEditor,
   workspace,
 }) => {
+
+  const updateRequestUrl = (request: Request, url: string) => {
+    if (request.url === url) {
+      return Promise.resolve(request);
+    }
+    return update(request, { url });
+  };
+
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
     showModal(RequestSettingsModal, { request, forceEditMode });
   }, [request]);
@@ -94,12 +74,12 @@ export const RequestPane: FC<Props> = ({
   }, [workspace, request]);
 
   const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
-    updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
-  }, [settings, updateSettingsUseBulkHeaderEditor]);
+    models.settings.update(settings, { useBulkHeaderEditor:!settings.useBulkHeaderEditor });
+  }, [settings]);
 
   const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
-    updateSettingsUseBulkParametersEditor(!settings.useBulkParametersEditor);
-  }, [settings, updateSettingsUseBulkParametersEditor]);
+    models.settings.update(settings, { useBulkParametersEditor:!settings.useBulkParametersEditor });
+  }, [settings]);
 
   const handleImportQueryFromUrl = useCallback(() => {
     if (!request) {
@@ -159,17 +139,11 @@ export const RequestPane: FC<Props> = ({
             key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onMethodChange={updateRequestMethod}
             onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={autocompleteUrls}
             handleImport={handleImport}
-            handleGenerateCode={handleGenerateCode}
-            handleSend={handleSend}
-            handleSendAndDownload={handleSendAndDownload}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
-            handleUpdateDownloadPath={handleUpdateDownloadPath}
-            downloadPath={downloadPath}
           />
         </ErrorBoundary>
       </PaneHeader>
@@ -181,9 +155,7 @@ export const RequestPane: FC<Props> = ({
             />
           </Tab>
           <Tab tabIndex="-1">
-            <AuthDropdown
-              onChange={updateRequestAuthentication}
-            />
+            <AuthDropdown />
           </Tab>
           <Tab tabIndex="-1">
             <button>
@@ -211,12 +183,10 @@ export const RequestPane: FC<Props> = ({
         <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
           <BodyEditor
             key={uniqueKey}
-            handleUpdateRequestMimeType={updateRequestMimeType}
             request={request}
             workspace={workspace}
             environmentId={environmentId}
             settings={settings}
-            onChange={updateRequestBody}
             onChangeHeaders={forceUpdateRequestHeaders}
           />
         </TabPanel>
@@ -246,7 +216,6 @@ export const RequestPane: FC<Props> = ({
             >
               <RequestParametersEditor
                 key={headerEditorKey}
-                onChange={updateRequestParameters}
                 request={request}
                 bulk={settings.useBulkParametersEditor}
               />
@@ -272,7 +241,6 @@ export const RequestPane: FC<Props> = ({
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestHeadersEditor
               key={headerEditorKey}
-              onChange={updateRequestHeaders}
               request={request}
               bulk={settings.useBulkHeaderEditor}
             />

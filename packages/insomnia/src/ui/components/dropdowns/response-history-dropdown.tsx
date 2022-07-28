@@ -22,15 +22,15 @@ import { TimeFromNow } from '../time-from-now';
 
 interface Props {
   activeResponse: Response;
+  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   className?: string;
-  handleSetActiveResponse: Function;
   requestId: string;
 }
 
 export const ResponseHistoryDropdown: FC<Props> = ({
   activeResponse,
-  className,
   handleSetActiveResponse,
+  className,
   requestId,
 }) => {
   const dropdownRef = useRef<DropdownHandle>(null);
@@ -52,7 +52,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     await models.response.removeForRequest(requestId, environmentId);
 
     if (activeRequest && activeRequest._id === requestId) {
-      await handleSetActiveResponse(requestId, null);
+      handleSetActiveResponse(requestId, null);
     }
   }, [activeEnvironment, activeRequest, handleSetActiveResponse, requestId]);
 
@@ -60,8 +60,8 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     if (activeResponse) {
       await models.response.remove(activeResponse);
     }
-    handleSetActiveResponse(null);
-  }, [activeResponse, handleSetActiveResponse]);
+    handleSetActiveResponse(requestId, null);
+  }, [activeResponse, handleSetActiveResponse, requestId]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
@@ -98,8 +98,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
       <DropdownItem
         key={response._id}
         disabled={active}
-        value={response}
-        onClick={handleSetActiveResponse}
+        onClick={() => handleSetActiveResponse(requestId, response)}
       >
         {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
         <StatusTag

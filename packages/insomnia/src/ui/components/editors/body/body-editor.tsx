@@ -12,9 +12,9 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
+import { update } from '../../../../models/helpers/request-operations';
 import type {
   Request,
-  RequestBody,
   RequestBodyParameter,
   RequestHeader,
 } from '../../../../models/request';
@@ -37,9 +37,7 @@ import { RawEditor } from './raw-editor';
 import { UrlEncodedEditor } from './url-encoded-editor';
 
 interface Props {
-  onChange: (r: Request, body: RequestBody) => Promise<Request>;
   onChangeHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
-  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -47,7 +45,6 @@ interface Props {
 }
 
 export const BodyEditor: FC<Props> = ({
-  onChange,
   onChangeHeaders,
   request,
   workspace,
@@ -56,29 +53,29 @@ export const BodyEditor: FC<Props> = ({
 }) => {
   const handleRawChange = useCallback((rawValue: string) => {
     const oldContentType = request.body.mimeType || '';
-    const newBody = newBodyRaw(rawValue, oldContentType);
-    onChange(request, newBody);
-  }, [onChange, request]);
+    const body = newBodyRaw(rawValue, oldContentType);
+    update(request, { body });
+  }, [request]);
 
   const handleGraphQLChange = useCallback((content: string) => {
-    const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
-    onChange(request, newBody);
-  }, [onChange, request]);
+    const body = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
+    update(request, { body });
+  }, [request]);
 
   const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
-    const newBody = newBodyFormUrlEncoded(parameters);
-    onChange(request, newBody);
-  }, [onChange, request]);
+    const body = newBodyFormUrlEncoded(parameters);
+    update(request, { body });
+  }, [request]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
-    const newBody = newBodyForm(parameters);
-    onChange(request, newBody);
-  }, [onChange, request]);
+    const body = newBodyForm(parameters);
+    update(request, { body });
+  }, [request]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
-    const newBody = newBodyFile(path);
-    const newRequest = await onChange(request, newBody);
+    const body = newBodyFile(path);
+    const newRequest = await update(request, { body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {

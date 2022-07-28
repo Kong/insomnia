@@ -3,9 +3,12 @@ import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import * as models from '../../../models/index';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
-import { selectActiveRequest } from '../../redux/selectors';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { selectActiveRequest, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
@@ -31,30 +34,26 @@ interface RecursiveSidebarRowsProps {
 }
 
 interface Props {
-  childObjects: SidebarChildObjects;
   filter: string;
-  handleActivateRequest: Function;
-  handleCopyAsCurl: Function;
   handleDuplicateRequest: Function;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleGenerateCode: Function;
-  handleSetRequestGroupCollapsed: Function;
-  handleSetRequestPinned: Function;
 }
 export const SidebarChildren: FC<Props> = ({
-  childObjects,
   filter,
-  handleActivateRequest,
-  handleCopyAsCurl,
   handleDuplicateRequest,
-  handleDuplicateRequestGroup,
-  handleGenerateCode,
-  handleSetRequestGroupCollapsed,
-  handleSetRequestPinned,
 }) => {
+  const sidebarChildren = useSelector(selectSidebarChildren);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const setActiveRequest = (requestId: string) => {
+    if (activeWorkspaceMeta) {
+      models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
+    }
+    updateRequestMetaByParentId(requestId, { lastActive: Date.now() });
+  };
+
   const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ rows, isInPinnedList }) => {
     const activeRequest = useSelector(selectActiveRequest);
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+
     return (
       <>
         {rows.map(row => (!isInPinnedList && row.hidden)
@@ -64,11 +63,8 @@ export const SidebarChildren: FC<Props> = ({
               <SidebarRequestRow
                 key={row.doc._id}
                 filter={isInPinnedList ? '' : filter || ''}
-                handleActivateRequest={handleActivateRequest}
-                handleSetRequestPinned={handleSetRequestPinned}
+                handleSetActiveRequest={setActiveRequest}
                 handleDuplicateRequest={handleDuplicateRequest}
-                handleGenerateCode={handleGenerateCode}
-                handleCopyAsCurl={handleCopyAsCurl}
                 isActive={row.doc._id === activeRequestId}
                 isPinned={row.pinned}
                 disableDragAndDrop={isInPinnedList}
@@ -79,9 +75,6 @@ export const SidebarChildren: FC<Props> = ({
                 key={row.doc._id}
                 filter={filter || ''}
                 isActive={hasActiveChild(row.children, activeRequestId)}
-                handleActivateRequest={handleActivateRequest}
-                handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-                handleDuplicateRequestGroup={handleDuplicateRequestGroup}
                 isCollapsed={row.collapsed}
                 requestGroup={row.doc}
               >
@@ -90,8 +83,8 @@ export const SidebarChildren: FC<Props> = ({
             ))}
       </>);
   };
-  const { all, pinned } = childObjects;
-  const showSeparator = childObjects.pinned.length > 0;
+  const { all, pinned } = sidebarChildren;
+  const showSeparator = sidebarChildren.pinned.length > 0;
   const contextMenuPortal = ReactDOM.createPortal(
     <div className="hide">
       <SidebarCreateDropdown />

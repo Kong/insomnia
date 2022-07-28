@@ -1,17 +1,21 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { RootState } from '../../redux/modules';
+import { exportRequestsToFile } from '../../redux/modules/global';
+import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { Tree } from '../export-requests/tree';
-import { Child } from '../sidebar/sidebar-children';
 
 export interface Node {
   doc: Request | GrpcRequest | RequestGroup;
@@ -21,17 +25,14 @@ export interface Node {
   selectedRequests: number;
 }
 
-interface Props extends ModalProps {
-  childObjects: Child[];
-  handleExportRequestsToFile: Function;
-}
+type Props = ModalProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
   treeRoot: Node | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ExportRequestsModal extends PureComponent<Props, State> {
+export class ExportRequestsModalClass extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -83,7 +84,8 @@ export class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   createTree() {
-    const { childObjects } = this.props;
+    const { sidebarChildren } = this.props;
+    const childObjects = sidebarChildren.all;
     const children: Node[] = childObjects.map(child => this.createNode(child));
     const totalRequests = children
       .map(child => child.totalRequests)
@@ -241,3 +243,15 @@ export class ExportRequestsModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  sidebarChildren: selectSidebarChildren(state),
+});
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
+  const bound = bindActionCreators({ exportRequestsToFile }, dispatch);
+  return {
+    handleExportRequestsToFile: bound.exportRequestsToFile,
+  };
+};
+
+export const ExportRequestsModal = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef:true })(ExportRequestsModalClass);

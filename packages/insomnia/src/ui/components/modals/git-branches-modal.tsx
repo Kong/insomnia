@@ -1,6 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -15,12 +17,11 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 
-interface Props {
+type Props = ReturnType<typeof mapDispatchToProps> & {
   vcs: GitVCS;
   gitRepository: GitRepository;
-  handleInitializeEntities: typeof initializeEntities;
   handleGitBranchChanged: (branch: string) => void;
-}
+};
 
 interface State {
   error: string;
@@ -31,7 +32,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class GitBranchesModal extends PureComponent<Props, State> {
+class GitBranchesModalClass extends PureComponent<Props, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
   _onHide?: (() => void) | null;
@@ -309,3 +310,11 @@ export class GitBranchesModal extends PureComponent<Props, State> {
     );
   }
 }
+function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
+  const boundGitActions = bindActionCreators({ initializeEntities }, dispatch);
+  return {
+    handleInitializeEntities: boundGitActions.initializeEntities,
+  };
+}
+
+export const GitBranchesModal = connect(null, mapDispatchToProps, null, { forwardRef: true })(GitBranchesModalClass);

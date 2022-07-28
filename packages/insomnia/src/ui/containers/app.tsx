@@ -1,8 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
-import fs from 'fs';
-import HTTPSnippet from 'httpsnippet';
-import { extension as mimeExtension } from 'mime-types';
+import { ipcRenderer } from 'electron';
 import * as path from 'path';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -15,33 +12,24 @@ import {
   AUTOBIND_CFG,
   getProductName,
   isDevelopment,
-  PreviewMode,
-  SortOrder,
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
-import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import {
   generateId,
-  getContentDispositionHeader,
 } from '../../common/misc';
-import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
-import { Response } from '../../models/response';
 import { isWorkspace } from '../../models/workspace';
-import { WorkspaceMeta } from '../../models/workspace-meta';
-import * as network from '../../network/network';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
 import { fsClient } from '../../sync/git/fs-client';
@@ -58,7 +46,6 @@ import { AskModal } from '../components/modals/ask-modal';
 import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import { showSelectModal } from '../components/modals/select-modal';
@@ -67,23 +54,17 @@ import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
-import { Wrapper } from '../components/wrapper';
+import { type WrapperClass, Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
-import { initialize } from '../redux/modules/entities';
 import {
-  exportRequestsToFile,
-  loadRequestStart,
-  loadRequestStop,
   newCommand,
-  selectIsLoading,
-  setActiveActivity,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
-import { activateWorkspace } from '../redux/modules/workspace';
 import {
   selectActiveActivity,
   selectActiveApiSpec,
@@ -92,52 +73,15 @@ import {
   selectActiveGitRepository,
   selectActiveProject,
   selectActiveRequest,
-  selectActiveRequestResponses,
-  selectActiveResponse,
-  selectActiveUnitTestResult,
-  selectActiveUnitTests,
-  selectActiveUnitTestSuite,
-  selectActiveUnitTestSuites,
   selectActiveWorkspace,
-  selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectActiveWorkspaceName,
-  selectApiSpecs,
   selectEnvironments,
-  selectGitRepositories,
   selectIsFinishedBooting,
   selectIsLoggedIn,
-  selectLoadStartTime,
-  selectRequestGroups,
-  selectRequestMetas,
-  selectRequests,
-  selectRequestVersions,
-  selectResponseDownloadPath,
-  selectResponseFilter,
-  selectResponseFilterHistory,
-  selectResponsePreviewMode,
   selectSettings,
-  selectStats,
-  selectSyncItems,
-  selectUnseenWorkspaces,
-  selectWorkspaceMetas,
-  selectWorkspacesForActiveProject,
 } from '../redux/selectors';
-import { selectSidebarChildren, selectSidebarFilter } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
-
-const updateRequestMetaByParentId = async (
-  requestId: string,
-  patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>
-) => {
-  const isGrpc = isGrpcRequestId(requestId);
-
-  if (isGrpc) {
-    return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
-  } else {
-    return models.requestMeta.updateOrCreateByParentId(requestId, patch);
-  }
-};
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -153,7 +97,7 @@ interface State {
 class App extends PureComponent<AppProps, State> {
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _wrapper: Wrapper | null = null;
+  private _wrapper: WrapperClass | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: AppProps) {
@@ -223,7 +167,6 @@ class App extends PureComponent<AppProps, State> {
           showModal(RequestSwitcherModal);
         },
       ],
-      [hotKeyRefs.REQUEST_SEND, this._handleSendShortcut],
       [
         hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
         () => {
@@ -311,7 +254,7 @@ class App extends PureComponent<AppProps, State> {
             ? entities.grpcRequestMetas
             : entities.requestMetas;
           const meta = Object.values<GrpcRequestMeta | RequestMeta>(entitiesToCheck).find(m => m.parentId === activeRequest._id);
-          await this._handleSetRequestPinned(activeRequest, !meta?.pinned);
+          updateRequestMetaByParentId(activeRequest._id, { pinned:!meta?.pinned });
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -325,68 +268,6 @@ class App extends PureComponent<AppProps, State> {
         },
       ],
     ];
-  }
-
-  async _handleSendShortcut() {
-    const { activeRequest, activeEnvironment } = this.props;
-    await this._handleSendRequestWithEnvironment(
-      activeRequest ? activeRequest._id : 'n/a',
-      activeEnvironment ? activeEnvironment._id : 'n/a',
-    );
-  }
-
-  async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
-    function __updateDoc(doc: RequestGroup | Request | GrpcRequest, metaSortKey: number) {
-      // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
-      // Which all have the .update method. How do we better filter types?
-      return models.getModel(doc.type)?.update(doc, {
-        metaSortKey,
-      });
-    }
-
-    return Promise.all(docs.map((doc, i) => __updateDoc(doc, i * 100)));
-  }
-
-  async _sortSidebar(order: SortOrder, parentId?: string) {
-    let flushId: number | undefined;
-
-    if (!this.props.activeWorkspace) {
-      return;
-    }
-
-    if (!parentId) {
-      parentId = this.props.activeWorkspace._id;
-      flushId = await db.bufferChanges();
-    }
-
-    const docs = [
-      ...(await models.requestGroup.findByParentId(parentId)),
-      ...(await models.request.findByParentId(parentId)),
-      ...(await models.grpcRequest.findByParentId(parentId)),
-    ].sort(sortMethodMap[order]);
-    await this._recalculateMetaSortKey(docs);
-    // sort RequestGroups recursively
-    await Promise.all(docs.filter(isRequestGroup).map(g => this._sortSidebar(order, g._id)));
-
-    if (flushId) {
-      await db.flushChanges(flushId);
-    }
-  }
-
-  static async _requestGroupDuplicate(requestGroup: RequestGroup) {
-    showPrompt({
-      title: 'Duplicate Folder',
-      defaultValue: requestGroup.name,
-      submitName: 'Create',
-      label: 'New Name',
-      selectText: true,
-      onComplete: async (name: string) => {
-        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, {
-          name,
-        });
-        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
-      },
-    });
   }
 
   _requestDuplicate(request?: Request | GrpcRequest) {
@@ -410,28 +291,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _handleGenerateCodeForActiveRequest() {
-    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
-    App._handleGenerateCode(this.props.activeRequest);
-  }
-
-  static _handleGenerateCode(request: Request) {
-    showModal(GenerateCodeModal, request);
-  }
-
-  async _handleCopyAsCurl(request: Request) {
-    const { activeEnvironment } = this.props;
-    const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    const har = await exportHarRequest(request._id, environmentId);
-    const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert('shell', 'curl');
-
-    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
-    if (cmd) {
-      clipboard.writeText(cmd);
-    }
-  }
-
   static async _updateRequestGroupMetaByParentId(requestGroupId: string, patch: Partial<RequestGroupMeta>) {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
 
@@ -448,65 +307,17 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _updateActiveWorkspaceMeta(patch: Partial<WorkspaceMeta>) {
-    const { activeWorkspaceMeta } = this.props;
-
-    if (activeWorkspaceMeta) {
-      await models.workspaceMeta.update(activeWorkspaceMeta, patch);
-    }
-  }
-
   async _updateShowVariableSourceAndValue() {
     const { settings } = this.props;
     await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
   }
 
   async _handleSetActiveRequest(activeRequestId: string) {
-    await this._updateActiveWorkspaceMeta({
-      activeRequestId,
-    });
+    if (this.props.activeWorkspaceMeta) {
+      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeRequestId });
+    }
     await updateRequestMetaByParentId(activeRequestId, {
       lastActive: Date.now(),
-    });
-  }
-
-  async _handleSetActiveEnvironment(activeEnvironmentId: string | null) {
-    await this._updateActiveWorkspaceMeta({
-      activeEnvironmentId,
-    });
-    // Give it time to update and re-render
-    setTimeout(() => {
-      this._wrapper?._forceRequestPaneRefresh();
-    }, 300);
-  }
-
-  async _handleSetSidebarFilter(sidebarFilter: string) {
-    await this._updateActiveWorkspaceMeta({
-      sidebarFilter,
-    });
-  }
-
-  _handleSetRequestGroupCollapsed(requestGroupId: string, collapsed: boolean) {
-    App._updateRequestGroupMetaByParentId(requestGroupId, {
-      collapsed,
-    });
-  }
-
-  async _handleSetRequestPinned(request: Request | GrpcRequest, pinned: boolean) {
-    updateRequestMetaByParentId(request._id, {
-      pinned,
-    });
-  }
-
-  _handleSetResponsePreviewMode(requestId: string, previewMode: PreviewMode) {
-    updateRequestMetaByParentId(requestId, {
-      previewMode,
-    });
-  }
-
-  _handleUpdateDownloadPath(requestId: string, downloadPath: string) {
-    updateRequestMetaByParentId(requestId, {
-      downloadPath,
     });
   }
 
@@ -570,197 +381,6 @@ class App extends PureComponent<AppProps, State> {
     return newRequest;
   }
 
-  async _getDownloadLocation() {
-    const options: SaveDialogOptions = {
-      title: 'Select Download Location',
-      buttonLabel: 'Save',
-    };
-    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-
-    if (defaultPath) {
-      // NOTE: An error will be thrown if defaultPath is supplied but not a String
-      options.defaultPath = defaultPath;
-    }
-
-    const { filePath } = await window.dialog.showSaveDialog(options);
-    // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
-    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return filePath || null;
-  }
-
-  async _handleSendAndDownloadRequestWithEnvironment(requestId: string, environmentId: string, dir: string) {
-    const { settings, handleStartLoading, handleStopLoading } = this.props;
-    const request = await models.request.getById(requestId);
-
-    if (!request) {
-      return;
-    }
-
-    // Update request stats
-    models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, {
-      preferredHttpVersion: settings.preferredHttpVersion,
-      authenticationType: request.authentication?.type,
-      mimeType: request.body.mimeType,
-    });
-    // Start loading
-    handleStartLoading(requestId);
-
-    try {
-      const responsePatch = await network.send(requestId, environmentId);
-      const headers = responsePatch.headers || [];
-      const header = getContentDispositionHeader(headers);
-      const nameFromHeader = header ? header.value : null;
-
-      if (
-        responsePatch.bodyPath &&
-        responsePatch.statusCode &&
-        responsePatch.statusCode >= 200 &&
-        responsePatch.statusCode < 300
-      ) {
-        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-        const extension = sanitizedExtension || 'unknown';
-        const name =
-          nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename: string | null;
-
-        if (dir) {
-          filename = path.join(dir, name);
-        } else {
-          filename = await this._getDownloadLocation();
-        }
-
-        if (!filename) {
-          return;
-        }
-
-        const to = fs.createWriteStream(filename);
-        // @ts-expect-error -- TSCONVERSION
-        const readStream = models.response.getBodyStream(responsePatch);
-
-        if (!readStream) {
-          return;
-        }
-
-        readStream.pipe(to);
-
-        readStream.on('end', async () => {
-          responsePatch.error = `Saved to ${filename}`;
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-        });
-
-        readStream.on('error', async err => {
-          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-        });
-      } else {
-        // Save the bad responses so failures are shown still
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
-      }
-    } catch (err) {
-      showAlert({
-        title: 'Unexpected Request Failure',
-        message: (
-          <div>
-            <p>The request failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{err.message}</pre>
-            </code>
-          </div>
-        ),
-      });
-    } finally {
-      // Unset active response because we just made a new one
-      await updateRequestMetaByParentId(requestId, {
-        activeResponseId: null,
-      });
-      // Stop loading
-      handleStopLoading(requestId);
-    }
-  }
-
-  async _handleSendRequestWithEnvironment(requestId: string, environmentId?: string) {
-    const { handleStartLoading, handleStopLoading, settings } = this.props;
-    const request = await models.request.getById(requestId);
-
-    if (!request) {
-      return;
-    }
-
-    // Update request stats
-    models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, {
-      preferredHttpVersion: settings.preferredHttpVersion,
-      authenticationType: request.authentication?.type,
-      mimeType: request.body.mimeType,
-    });
-    handleStartLoading(requestId);
-
-    try {
-      const responsePatch = await network.send(requestId, environmentId);
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
-
-    } catch (err) {
-      if (err.type === 'render') {
-        showModal(RequestRenderErrorModal, {
-          request,
-          error: err,
-        });
-      } else {
-        showAlert({
-          title: 'Unexpected Request Failure',
-          message: (
-            <div>
-              <p>The request failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{err.message}</pre>
-              </code>
-            </div>
-          ),
-        });
-      }
-    }
-
-    // Unset active response because we just made a new one
-    await updateRequestMetaByParentId(requestId, {
-      activeResponseId: null,
-    });
-
-    // Stop loading
-    handleStopLoading(requestId);
-  }
-
-  async _handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
-    const { activeEnvironment } = this.props;
-    const activeResponseId = activeResponse ? activeResponse._id : null;
-    await updateRequestMetaByParentId(requestId, {
-      activeResponseId,
-    });
-
-    let response: Response;
-
-    if (activeResponseId) {
-      // @ts-expect-error -- TSCONVERSION can return null if not found
-      response = await models.response.getById(activeResponseId);
-    } else {
-      const environmentId = activeEnvironment ? activeEnvironment._id : null;
-      // @ts-expect-error -- TSCONVERSION can return null if not found
-      response = await models.response.getLatestForRequest(requestId, environmentId);
-    }
-
-    const requestVersionId = response ? response.requestVersionId : 'n/a';
-    // @ts-expect-error -- TSCONVERSION the above line should be response?.requestVersionId ?? 'n/a'
-    const request = await models.requestVersion.restore(requestVersionId);
-
-    if (request) {
-      // Refresh app to reflect changes. Using timeout because we need to
-      // wait for the request update to propagate.
-      setTimeout(() => this._wrapper?._forceRequestPaneRefresh(), 500);
-    } else {
-      // Couldn't restore request. That's okay
-    }
-  }
-
   _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
       executeHotKey(event, definition, callback);
@@ -771,7 +391,7 @@ class App extends PureComponent<AppProps, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(wrapper: Wrapper) {
+  _setWrapperRef(wrapper: WrapperClass) {
     this._wrapper = wrapper;
   }
 
@@ -1201,29 +821,10 @@ class App extends PureComponent<AppProps, State> {
               <ErrorBoundary showAlert>
                 <Wrapper
                   ref={this._setWrapperRef}
-                  {...this.props}
-                  handleSetRequestPinned={this._handleSetRequestPinned}
-                  handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-                  handleActivateRequest={this._handleSetActiveRequest}
                   handleDuplicateRequest={this._requestDuplicate}
-                  handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                  handleGenerateCode={App._handleGenerateCode}
-                  handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-                  handleCopyAsCurl={this._handleCopyAsCurl}
-                  handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-                  handleSendAndDownloadRequestWithEnvironment={
-                    this._handleSendAndDownloadRequestWithEnvironment
-                  }
-                  handleSetActiveResponse={this._handleSetActiveResponse}
-                  handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                  handleSetSidebarFilter={this._handleSetSidebarFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  handleShowSettingsModal={App._handleShowSettingsModal}
-                  handleUpdateDownloadPath={this._handleUpdateDownloadPath}
                   headerEditorKey={forceRefreshHeaderCounter + ''}
-                  handleSidebarSort={this._sortSidebar}
                   vcs={vcs}
                   gitVCS={gitVCS}
                 />
@@ -1249,69 +850,25 @@ const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
   activeGitRepository: selectActiveGitRepository(state),
   activeRequest: selectActiveRequest(state),
-  activeRequestResponses: selectActiveRequestResponses(state),
-  activeResponse: selectActiveResponse(state),
-  activeUnitTestResult: selectActiveUnitTestResult(state),
-  activeUnitTestSuite: selectActiveUnitTestSuite(state),
-  activeUnitTestSuites: selectActiveUnitTestSuites(state),
-  activeUnitTests: selectActiveUnitTests(state),
   activeWorkspace: selectActiveWorkspace(state),
-  activeWorkspaceClientCertificates: selectActiveWorkspaceClientCertificates(state),
   activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
-  apiSpecs: selectApiSpecs(state),
   environments: selectEnvironments(state),
-  gitRepositories: selectGitRepositories(state),
-  isLoading: selectIsLoading(state),
   isLoggedIn: selectIsLoggedIn(state),
   isFinishedBooting: selectIsFinishedBooting(state),
-  loadStartTime: selectLoadStartTime(state),
-  requestGroups: selectRequestGroups(state),
-  requestMetas: selectRequestMetas(state),
-  requestVersions: selectRequestVersions(state),
-  requests: selectRequests(state),
-  responseDownloadPath: selectResponseDownloadPath(state),
-  responseFilter: selectResponseFilter(state),
-  responseFilterHistory: selectResponseFilterHistory(state),
-  responsePreviewMode: selectResponsePreviewMode(state),
   settings: selectSettings(state),
-  sidebarChildren: selectSidebarChildren(state),
-  sidebarFilter: selectSidebarFilter(state),
-  stats: selectStats(state),
-  syncItems: selectSyncItems(state),
-  unseenWorkspaces: selectUnseenWorkspaces(state),
-  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
-  workspaceMetas: selectWorkspaceMetas(state),
 });
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
     importUri: handleImportUri,
-    loadRequestStart: handleStartLoading,
-    loadRequestStop: handleStopLoading,
     newCommand: handleCommand,
-    setActiveActivity: handleSetActiveActivity,
-    activateWorkspace: handleActivateWorkspace,
-    exportRequestsToFile: handleExportRequestsToFile,
-    initialize: handleInitializeEntities,
   } = bindActionCreators({
     importUri,
-    loadRequestStart,
-    loadRequestStop,
     newCommand,
-    setActiveActivity,
-    activateWorkspace,
-    exportRequestsToFile,
-    initialize,
   }, dispatch);
   return {
     handleCommand,
     handleImportUri,
-    handleSetActiveActivity,
-    handleActivateWorkspace,
-    handleStartLoading,
-    handleStopLoading,
-    handleExportRequestsToFile,
-    handleInitializeEntities,
   };
 };
 

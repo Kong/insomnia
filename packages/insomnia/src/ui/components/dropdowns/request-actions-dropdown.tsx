@@ -1,7 +1,10 @@
 import classnames from 'classnames';
+import { clipboard } from 'electron';
+import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { exportHarRequest } from '../../../common/har';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
@@ -15,6 +18,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -22,15 +26,13 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { showError } from '../modals';
+import { showError, showModal } from '../modals';
+import { GenerateCodeModal } from '../modals/generate-code-modal';
 
 interface Props extends Pick<DropdownProps, 'right'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
-  handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
-  handleCopyAsCurl: Function;
   handleShowSettings: () => void;
   isPinned: Boolean;
   request: Request | GrpcRequest;
@@ -40,10 +42,7 @@ interface Props extends Pick<DropdownProps, 'right'> {
 export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   activeEnvironment,
   activeProject,
-  handleCopyAsCurl,
   handleDuplicateRequest,
-  handleGenerateCode,
-  handleSetRequestPinned,
   handleShowSettings,
   isPinned,
   request,
@@ -91,16 +90,24 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   }, [handleDuplicateRequest, request]);
 
   const generateCode = useCallback(() => {
-    handleGenerateCode(request);
-  }, [handleGenerateCode, request]);
+    showModal(GenerateCodeModal, request);
+  }, [request]);
 
-  const copyAsCurl = useCallback(() => {
-    handleCopyAsCurl(request);
-  }, [handleCopyAsCurl, request]);
+  const copyAsCurl = useCallback(async () => {
+    const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    const har = await exportHarRequest(request._id, environmentId);
+    const snippet = new HTTPSnippet(har);
+    const cmd = snippet.convert('shell', 'curl');
+
+    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
+    if (cmd) {
+      clipboard.writeText(cmd);
+    }
+  }, [activeEnvironment, request._id]);
 
   const togglePin = useCallback(() => {
-    handleSetRequestPinned(request, !isPinned);
-  }, [handleSetRequestPinned, isPinned, request]);
+    updateRequestMetaByParentId(request._id, { pinned: !isPinned });
+  }, [isPinned, request]);
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();

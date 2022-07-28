@@ -18,12 +18,11 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { showError, showModal } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any;
 }
 
@@ -34,7 +33,6 @@ interface RequestGroupActionsDropdownHandle {
 export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
   requestGroup,
   handleShowSettings,
-  handleDuplicateRequestGroup,
   ...other
 }, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
@@ -65,8 +63,20 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   }, []);
 
   const handleRequestGroupDuplicate = useCallback(() => {
-    handleDuplicateRequestGroup(requestGroup);
-  }, [requestGroup, handleDuplicateRequestGroup]);
+    showPrompt({
+      title: 'Duplicate Folder',
+      defaultValue: requestGroup.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: async (name: string) => {
+        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, {
+          name,
+        });
+        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
+      },
+    });
+  }, [requestGroup]);
 
   const createGroup = useCallback(() => {
     createRequestGroup(requestGroup._id);

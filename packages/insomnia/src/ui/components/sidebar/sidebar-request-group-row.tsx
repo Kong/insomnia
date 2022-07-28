@@ -8,6 +8,7 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSp
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
+import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveRequest } from '../../redux/selectors';
@@ -26,9 +27,6 @@ const mapStateToProps = (state: RootState) => ({
 });
 
 interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
-  handleSetRequestGroupCollapsed: Function;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleActivateRequest: Function;
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
@@ -53,8 +51,27 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
   }
 
   _handleCollapse() {
-    const { requestGroup, handleSetRequestGroupCollapsed, isCollapsed } = this.props;
-    handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
+    const { requestGroup, isCollapsed } = this.props;
+    this.handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
+  }
+  async handleSetRequestGroupCollapsed(requestGroupId: string, collapsed: boolean) {
+    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
+
+    if (requestGroupMeta) {
+      await models.requestGroupMeta.update(requestGroupMeta, {
+        collapsed,
+      });
+    } else {
+      const newPatch = Object.assign(
+        {
+          parentId: requestGroupId,
+        },
+        {
+          collapsed,
+        },
+      );
+      await models.requestGroupMeta.create(newPatch);
+    }
   }
 
   _handleShowActions(event: MouseEvent<HTMLButtonElement>) {
@@ -86,7 +103,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
       requestGroup,
       isCollapsed,
       isActive,
-      handleDuplicateRequestGroup,
       isDragging,
       isDraggingOver,
     } = this.props;
@@ -138,7 +154,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
               ref={this.dropdownRef}
-              handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleShowSettings={this._handleShowRequestGroupSettings}
               requestGroup={requestGroup}
               right
@@ -155,11 +170,8 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
             children
           ) : (
             <SidebarRequestRow
-              handleActivateRequest={noop}
+              handleSetActiveRequest={noop}
               handleDuplicateRequest={noop}
-              handleGenerateCode={noop}
-              handleCopyAsCurl={noop}
-              handleSetRequestPinned={noop}
               isActive={false}
               requestGroup={requestGroup}
               filter={filter}

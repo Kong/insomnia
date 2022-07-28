@@ -26,11 +26,8 @@ import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceColl
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
-  handleActivateRequest: Function;
-  handleSetRequestPinned: Function;
+  handleSetActiveRequest: Function;
   handleDuplicateRequest: Function;
-  handleGenerateCode: Function;
-  handleCopyAsCurl: Function;
   isActive: boolean;
   isPinned: boolean;
   request?: Request | GrpcRequest;
@@ -60,11 +57,8 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   connectDropTarget,
   disableDragAndDrop,
   filter,
-  handleActivateRequest,
-  handleCopyAsCurl,
+  handleSetActiveRequest,
   handleDuplicateRequest,
-  handleGenerateCode,
-  handleSetRequestPinned,
   isActive,
   isDragging,
   isDraggingOver,
@@ -130,8 +124,8 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       return;
     }
 
-    handleActivateRequest(request?._id);
-  }, [isActive, request?._id, handleActivateRequest]);
+    handleSetActiveRequest(request?._id);
+  }, [isActive, request?._id, handleSetActiveRequest]);
 
   const handleShowRequestSettings = useCallback(() => {
     showModal(RequestSettingsModal, { request });
@@ -253,9 +247,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
               right
               ref={requestActionsDropdown}
               handleDuplicateRequest={handleDuplicateRequest}
-              handleSetRequestPinned={handleSetRequestPinned}
-              handleGenerateCode={handleGenerateCode}
-              handleCopyAsCurl={handleCopyAsCurl}
               handleShowSettings={handleShowRequestSettings}
               request={request}
               isPinned={isPinned}
