@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { createElement, PureComponent, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, createElement, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 
@@ -16,6 +16,7 @@ interface Props {
   className?: string;
   color?: string;
   selected?: boolean;
+  widthUnset?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -40,6 +41,7 @@ export class DropdownItem extends PureComponent<Props> {
 
   render() {
     const {
+      widthUnset,
       buttonClass,
       children,
       className,
@@ -62,11 +64,16 @@ export class DropdownItem extends PureComponent<Props> {
         </div>
       </div>
     );
-    const buttonProps = {
+
+    const buttonProps: ButtonHTMLAttributes<HTMLButtonElement> = {
       type: 'button',
       onClick: this._handleClick,
       ...props,
     };
+
+    if (widthUnset) {
+      buttonProps.className = 'dropdown__item-button-unset';
+    }
     return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }
