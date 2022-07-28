@@ -31,7 +31,7 @@ import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../../base/dropdown/dropdown-item';
-import { CodeEditor, UnconnectedCodeEditor } from '../../codemirror/code-editor';
+import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
@@ -96,24 +96,19 @@ interface State {
   documentAST: null | DocumentNode;
   disabledOperationMarkers: TextMarker[];
 }
-const GraphQLEditorFC: FC<Props> = async props => {
-  let obj: GraphQLBody;
+export const GraphQLEditor: FC<Props> = props => {
+  let maybeBody: GraphQLBody;
   try {
-    obj = JSON.parse(props.content);
+    maybeBody = JSON.parse(props.content);
   } catch (err) {
-    obj = { query: '' };
+    maybeBody = { query: '' };
   }
-  if (typeof obj.variables === 'string') {
-    obj.variables = jsonParseOr(obj.variables, '');
+  if (typeof maybeBody.variables === 'string') {
+    maybeBody.variables = jsonParseOr(maybeBody.variables, '');
   }
-  const body: GraphQLBody = {
-    query: obj.query || '',
-    variables: obj.variables || undefined,
-    operationName: obj.operationName || undefined,
-  };
   let documentAST;
   try {
-    documentAST = parse(body.query);
+    documentAST = parse(maybeBody.query || '');
   } catch (error) {
     documentAST = null;
   }
@@ -131,7 +126,11 @@ const GraphQLEditorFC: FC<Props> = async props => {
     }
   }
   const [state, setState] = useState<State>({
-    body,
+    body:{
+      query: maybeBody.query || '',
+      variables: maybeBody.variables || undefined,
+      operationName: maybeBody.operationName || undefined,
+    },
     schema: null,
     schemaFetchError: null,
     schemaLastFetchTime: 0,
@@ -144,201 +143,9 @@ const GraphQLEditorFC: FC<Props> = async props => {
     documentAST,
     disabledOperationMarkers: [],
   });
-  const editorRef = useRef<UnconnectedCodeEditor>(null);
-  const _getCurrentOperation = () => {
-    if (!editorRef.current) {
-      return state.body.operationName || null;
-    }
-    // Ignore cursor position when editor isn't focused
-    if (!editorRef.current.hasFocus()) {
-      return state.body.operationName || null;
-    }
-    const operations = state.documentAST ? state.documentAST.definitions.filter(def => def.kind === 'OperationDefinition') : [];
-    const cursor = editorRef.current.getCursor();
-    const cursorIndex = editorRef.current.indexFromPos(cursor);
-    let operationName: string | null = null;
-    const allOperationNames: (string | null)[] = [];
-    // Loop through all operations to see if one contains the cursor.
-    for (let i = 0; i < operations.length; i++) {
-      const operation = operations[i];
-      if (!operation.name) {
-        continue;
-      }
-      allOperationNames.push(operation.name.value);
-      const { start, end } = operation.loc;
-      if (start <= cursorIndex && end >= cursorIndex) {
-        operationName = operation.name.value;
-      }
-    }
-    if (!operationName && operations.length > 0) {
-      operationName = state.body.operationName || null;
-    }
-    if (!allOperationNames.includes(operationName)) {
-      return null;
-    }
-    return operationName;
-  };
+  const editorRef = useRef<CodeMirror.EditorFromTextArea>(null);
 
-  const _highlightOperation = (operationName: string | null) => {
-    const { documentAST, disabledOperationMarkers } = state;
-    if (!documentAST || !editorRef.current) {
-      return;
-    }
-    // Remove current query highlighting
-    for (const textMarker of disabledOperationMarkers) {
-      textMarker.clear();
-    }
-    const markers = documentAST.definitions
-      .filter(isOperationDefinition)
-      .filter(complement(matchesOperation(operationName)))
-      .filter(hasLocation)
-      .map(({ loc: { startToken, endToken } }) =>
-        editorRef.current.getDoc().markText({
-          line: startToken.line - 1,
-          ch: startToken.column - 1,
-        }, {
-          line: endToken.line,
-          ch: endToken.column - 1,
-        }, {
-          className: 'cm-gql-disabled',
-        }));
-    setState({ ...state, disabledOperationMarkers: markers });
-  };
-  const _handlePrettify = () => {
-    const { body } = state;
-    const { variables, query } = body;
-    const prettyQuery = prettier.format(query, {
-      parser: 'graphql',
-      useTabs: props.settings.editorIndentWithTabs,
-      tabWidth: props.settings.editorIndentSize,
-    });
-    const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
-
-    _handleBodyChange(prettyQuery, prettyVariables, state.body.operationName);
-
-    // Update editor contents
-    if (editorRef.current) {
-      editorRef.current.setValue(prettyQuery);
-    }
-  };
-  const _handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
-    event.preventDefault();
-    if (reference) {
-      setState({
-        ...state,
-        explorerVisible: true,
-        activeReference: reference,
-      });
-    }
-  };
-  const _handleQueryUserActivity = () => {
-    const newOperationName = _getCurrentOperation();
-    const { query, variables, operationName } = state.body;
-    if (newOperationName !== operationName) {
-      _handleBodyChange(query, variables, newOperationName);
-    }
-  };
-
-  const _buildVariableTypes = (schema: GraphQLSchema | null): Record<string, GraphQLNonNull<any>> | null => {
-    if (!schema) {
-      return null;
-    }
-    const definitions = state.documentAST ? state.documentAST.definitions : [];
-    const variableToType: Record<string, GraphQLNonNull<any>> = {};
-    for (const definition of definitions) {
-      if (!isOperationDefinition(definition)) {
-        continue;
-      }
-      if (!definition.variableDefinitions) {
-        continue;
-      }
-      for (const { variable, type } of definition.variableDefinitions) {
-        const inputType = typeFromAST(schema, type as NonNullTypeNode);
-        if (!inputType) {
-          continue;
-        }
-        variableToType[variable.name.value] = inputType;
-      }
-    }
-    return variableToType;
-  };
-
-  const _handleRefreshSchema = () => {
-    // First, "forget" preference to hide errors so they always show
-    // again after a refresh
-    setState({ ...state, hideSchemaFetchErrors: false });
-    _fetchAndSetSchema(props.request);
-  };
-
-  const _handleVariablesChange = (variables: string) => {
-    try {
-      const variablesObj = JSON.parse(variables || 'null');
-
-      _handleBodyChange(state.body.query, variablesObj, state.body.operationName);
-    } catch (err) {
-      setState({ ...state, variablesSyntaxError: err.message });
-    }
-  };
-
-  const _handleBodyChange = (query: string, variables?: Record<string, any> | null, operationName?: string | null,) => {
-    let documentAST;
-    try {
-      documentAST = parse(query);
-    } catch (error) {
-      documentAST = null;
-    }
-    setState({ documentAST });
-
-    const body: GraphQLBody = {
-      query,
-    };
-
-    if (variables) {
-      body.variables = variables;
-    }
-
-    if (operationName) {
-      body.operationName = operationName;
-    }
-
-    // Find op if there isn't one yet
-    if (!body.operationName) {
-      const newOperationName = _getCurrentOperation();
-
-      if (newOperationName) {
-        body.operationName = newOperationName;
-      }
-    }
-
-    const newContent = JSON.stringify(body);
-
-    setState({
-      variablesSyntaxError: '',
-      body,
-    });
-    props.onChange(newContent);
-
-    _highlightOperation(body.operationName || null);
-  };
-  const renderSchemaFetchMessage = () => {
-    if (!props.request.url) {
-      return '';
-    }
-    const { schemaLastFetchTime, schemaIsFetching } = state;
-    if (schemaIsFetching) {
-      return 'fetching schema...';
-    }
-    if (schemaLastFetchTime > 0) {
-      return (
-        <span>
-          schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
-        </span>
-      );
-    }
-    return <span>schema not yet fetched</span>;
-  };
-
-  const _fetchAndSetSchema =  useCallback(async (rawRequest: Request) => {
+  const fetchAndSetSchema =  useCallback(async (rawRequest: Request) => {
     setState({ ...state, schemaIsFetching: true });
     const { environmentId } = props;
     const newState = {
@@ -405,14 +212,193 @@ const GraphQLEditorFC: FC<Props> = async props => {
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
-      const newState = await _fetchAndSetSchema(props.request);
+      const newState = await fetchAndSetSchema(props.request);
       isMounted && setState({ ...state, ...newState });
     };
     init();
     return () => {
       isMounted = false;
     };
-  }, [_fetchAndSetSchema, props.request, state]);
+  }, [fetchAndSetSchema, props.request, state]);
+
+  const getCurrentOperation = () => {
+    if (!editorRef.current) {
+      return state.body.operationName || null;
+    }
+    // Ignore cursor position when editor isn't focused
+    if (!editorRef.current.hasFocus()) {
+      return state.body.operationName || null;
+    }
+    const operations = state.documentAST ? state.documentAST.definitions.filter(def => def.kind === 'OperationDefinition') : [];
+    const cursor = editorRef.current.getCursor();
+    const cursorIndex = editorRef.current.indexFromPos(cursor);
+    let operationName: string | null = null;
+    const allOperationNames: (string | null)[] = [];
+    // Loop through all operations to see if one contains the cursor.
+    for (let i = 0; i < operations.length; i++) {
+      const operation = operations[i];
+      if (!operation.name) {
+        continue;
+      }
+      allOperationNames.push(operation.name.value);
+      const { start, end } = operation.loc;
+      if (start <= cursorIndex && end >= cursorIndex) {
+        operationName = operation.name.value;
+      }
+    }
+    if (!operationName && operations.length > 0) {
+      operationName = state.body.operationName || null;
+    }
+    if (!allOperationNames.includes(operationName)) {
+      return null;
+    }
+    return operationName;
+  };
+
+  const _handlePrettify = () => {
+    const { body } = state;
+    const { variables, query } = body;
+    const prettyQuery = prettier.format(query, {
+      parser: 'graphql',
+      useTabs: props.settings.editorIndentWithTabs,
+      tabWidth: props.settings.editorIndentSize,
+    });
+    const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
+
+    _handleBodyChange(prettyQuery, prettyVariables, state.body.operationName);
+
+    // Update editor contents
+    if (editorRef.current) {
+      editorRef.current?.setValue(prettyQuery);
+    }
+  };
+  const _handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
+    event.preventDefault();
+    if (reference) {
+      setState({
+        ...state,
+        explorerVisible: true,
+        activeReference: reference,
+      });
+    }
+  };
+  const _handleQueryUserActivity = () => {
+    const newOperationName = getCurrentOperation();
+    const { query, variables, operationName } = state.body;
+    if (newOperationName !== operationName) {
+      _handleBodyChange(query, variables, newOperationName);
+    }
+  };
+
+  const _buildVariableTypes = (schema: GraphQLSchema | null): Record<string, GraphQLNonNull<any>> | null => {
+    if (!schema) {
+      return null;
+    }
+    const definitions = state.documentAST ? state.documentAST.definitions : [];
+    const variableToType: Record<string, GraphQLNonNull<any>> = {};
+    for (const definition of definitions) {
+      if (!isOperationDefinition(definition)) {
+        continue;
+      }
+      if (!definition.variableDefinitions) {
+        continue;
+      }
+      for (const { variable, type } of definition.variableDefinitions) {
+        const inputType = typeFromAST(schema, type as NonNullTypeNode);
+        if (!inputType) {
+          continue;
+        }
+        variableToType[variable.name.value] = inputType;
+      }
+    }
+    return variableToType;
+  };
+
+  const _handleRefreshSchema = () => {
+    // First, "forget" preference to hide errors so they always show
+    // again after a refresh
+    setState({ ...state, hideSchemaFetchErrors: false });
+    fetchAndSetSchema(props.request);
+  };
+
+  const _handleVariablesChange = (variables: string) => {
+    try {
+      _handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
+    } catch (err) {
+      setState({ ...state, variablesSyntaxError: err.message });
+    }
+  };
+
+  const _handleBodyChange = (query: string, variables?: Record<string, any> | null, operationName?: string | null,) => {
+    let documentAST;
+    try {
+      documentAST = parse(query);
+    } catch (error) {
+      documentAST = null;
+    }
+    setState({ ...state, documentAST });
+    const body: GraphQLBody = { query };
+    if (variables) {
+      body.variables = variables;
+    }
+    if (operationName) {
+      body.operationName = operationName;
+    }
+    // Find op if there isn't one yet
+    if (!body.operationName) {
+      const newOperationName = getCurrentOperation();
+
+      if (newOperationName) {
+        body.operationName = newOperationName;
+      }
+    }
+    const newContent = JSON.stringify(body);
+    setState({ ...state, variablesSyntaxError: '', body });
+    props.onChange(newContent);
+
+    if (!documentAST || !editorRef.current) {
+      return;
+    }
+    // Remove current query highlighting
+    for (const textMarker of state.disabledOperationMarkers) {
+      textMarker.clear();
+    }
+    if (editorRef.current) {
+      const markers = documentAST.definitions
+        .filter(isOperationDefinition)
+        .filter(complement(matchesOperation(body.operationName || null)))
+        .filter(hasLocation)
+        .map(({ loc: { startToken, endToken } }) =>
+          editorRef.current.getDoc().markText({
+            line: startToken.line - 1,
+            ch: startToken.column - 1,
+          }, {
+            line: endToken.line,
+            ch: endToken.column - 1,
+          }, {
+            className: 'cm-gql-disabled',
+          }));
+      setState({ ...state, disabledOperationMarkers: markers });
+    }
+  };
+
+  const renderSchemaFetchMessage = () => {
+    if (!props.request.url) {
+      return '';
+    }
+    const { schemaLastFetchTime, schemaIsFetching } = state;
+    if (schemaIsFetching) {
+      return 'fetching schema...';
+    }
+    if (schemaLastFetchTime > 0) {
+      return (
+        <span>
+          schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
+        </span>
+      );
+    }
+    return <span>schema not yet fetched</span>;
+  };
 
   const _loadAndSetLocalSchema = async () => {
     const options: OpenDialogOptions = {
@@ -608,7 +594,7 @@ const GraphQLEditorFC: FC<Props> = async props => {
             _handleBodyChange(query, state.body.variables, null);
           }}
           onCodeMirrorInit={codeMirror => {
-            editorRef.current = codeMirror;
+            editorRef = codeMirror;
             // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
             window.cm = editorRef.current;
             const { query, variables, operationName } = state.body;
@@ -694,3 +680,4 @@ const GraphQLEditorFC: FC<Props> = async props => {
     </div>
   );
 };
+GraphQLEditor.displayName = 'GraphQLEditor';
