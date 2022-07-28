@@ -35,7 +35,7 @@ import { exchangeCodeForGitLabToken } from '../../../sync/git/gitlab-oauth-provi
 import { AskModal } from '../../../ui/components/modals/ask-modal';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
-import { LoginModal } from '../../components/modals/login-modal';
+import { currentLoginModalHandle, LoginModalHandle } from '../../components/modals/login-modal';
 import { SelectModal } from '../../components/modals/select-modal';
 import {
   SettingsModal,
@@ -65,6 +65,7 @@ const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
 export const COMMAND_GITHUB_OAUTH_AUTHENTICATE = 'oauth/github/authenticate';
 export const COMMAND_GITLAB_OAUTH_AUTHENTICATE = 'oauth/gitlab/authenticate';
+export const COMMAND_FINISH_AUTHENTICATION = 'app/auth/finish';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -201,9 +202,10 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       break;
 
     case COMMAND_LOGIN:
-      showModal(LoginModal, {
+      showModal(LoginModalHandle, {
         title: args.title,
         message: args.message,
+        reauth: true,
       });
       break;
 
@@ -301,6 +303,15 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
           message: error.message,
         });
       });
+      break;
+    }
+
+    case COMMAND_FINISH_AUTHENTICATION: {
+      if (currentLoginModalHandle) {
+        currentLoginModalHandle?.submitAuthCode(args.box);
+      } else {
+        console.log(`Received auth box, but no login modal... ${command}`);
+      }
       break;
     }
 

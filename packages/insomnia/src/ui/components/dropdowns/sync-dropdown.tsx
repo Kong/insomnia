@@ -31,7 +31,7 @@ import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { showError, showModal } from '../modals';
-import { LoginModal } from '../modals/login-modal';
+import { LoginModalHandle } from '../modals/login-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
@@ -219,7 +219,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   static _handleShowLoginModal() {
-    showModal(LoginModal);
+    showModal(LoginModalHandle);
   }
 
   async _handlePushChanges() {
