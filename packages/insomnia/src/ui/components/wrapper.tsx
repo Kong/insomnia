@@ -396,10 +396,7 @@ export class WrapperClass extends PureComponent<Props, State> {
               ref={registerModal}
             />
 
-            <EnvironmentEditModal
-              ref={registerModal}
-              onChange={models.requestGroup.update}
-            />
+            <EnvironmentEditModal />
 
             <GitRepositorySettingsModal ref={registerModal} />
 
