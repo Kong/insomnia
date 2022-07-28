@@ -390,7 +390,7 @@ export class WrapperClass extends PureComponent<Props, State> {
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
             />
 
-            <SettingsModal />
+            <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
             <ResponseDebugModal ref={registerModal} />
 
             <RequestSwitcherModal
