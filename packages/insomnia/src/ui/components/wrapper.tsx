@@ -403,7 +403,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             {activeWorkspace && gitVCS ? (
               <Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} gitRepository={activeGitRepository} />
-                <GitLogModal ref={registerModal} vcs={gitVCS} />
+                <GitLogModal ref={instance => registerModal(instance, 'GitLogModal')} vcs={gitVCS} />
                 {activeGitRepository !== null && (
                   <GitBranchesModal
                     ref={registerModal}
