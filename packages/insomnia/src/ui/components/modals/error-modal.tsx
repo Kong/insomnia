@@ -1,11 +1,10 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { registerModal } from '.';
 
 export interface ErrorModalOptions {
   title?: string;
@@ -13,80 +12,62 @@ export interface ErrorModalOptions {
   addCancel?: boolean;
   message?: string;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
-  modal: Modal | null = null;
-  _okCallback: (value?: unknown) => void = () => {};
-
-  state: ErrorModalOptions = {
+export interface ErrorModalHandle {
+  show: (options: ErrorModalOptions) => void;
+  hide: () => void;
+}
+export const displayName = 'ErrorModal';
+export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const [state, setState] = useState<ErrorModalOptions>({
     title: '',
     error: null,
     message: '',
     addCancel: false,
-  };
+  });
 
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
+  useEffect(() => {
+    registerModal(modalRef.current, displayName);
+  }, []);
 
-  _handleOk() {
-    this.hide();
-
-    this._okCallback();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  show(options: ErrorModalOptions = {}) {
-    const { title, error, addCancel, message } = options;
-    this.setState({
-      title,
-      error,
-      addCancel,
-      message,
-    });
-
-    this.modal?.show();
-
-    console.log('[ErrorModal]', error);
-    return new Promise(resolve => {
-      this._okCallback = resolve;
-    });
-  }
-
-  render() {
-    const { error, title, addCancel } = this.state;
-    const message = this.state.message || error?.message;
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
-        <ModalBody className="wide pad">
-          {message ? <div className="notice error pre">{message}</div> : null}
-          {error && (
-            <details>
-              <summary>Stack trace</summary>
-              <pre className="pad-top-sm force-wrap selectable">
-                <code className="wide">{error.stack || error}</code>
-              </pre>
-            </details>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <div>
-            {addCancel ? (
-              <button className="btn" onClick={this.hide}>
-                Cancel
-              </button>
-            ) : null}
-            <button className="btn" onClick={this._handleOk}>
-              Ok
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
+  const { error, title, addCancel } = state;
+  const message = state.message || error?.message;
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
+      <ModalBody className="wide pad">
+        {message ? <div className="notice error pre">{message}</div> : null}
+        {error && (
+          <details>
+            <summary>Stack trace</summary>
+            <pre className="pad-top-sm force-wrap selectable">
+              <code className="wide">{error.stack || error}</code>
+            </pre>
+          </details>
+        )}
+      </ModalBody>
+      <ModalFooter>
+        <div>
+          {addCancel ? (
+            <button className="btn" onClick={() => modalRef.current?.hide()}>
+              Cancel
             </button>
-          </div>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+          ) : null}
+          <button className="btn" onClick={() => modalRef.current?.hide()}>
+            Ok
+          </button>
+        </div>
+      </ModalFooter>
+    </Modal>
+  );
+});
+ErrorModal.displayName = displayName;
