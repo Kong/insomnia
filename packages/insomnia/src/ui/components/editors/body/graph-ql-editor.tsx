@@ -95,11 +95,11 @@ interface State {
   explorerVisible: boolean;
   activeReference: null | ActiveReference;
   documentAST: null | DocumentNode;
+  disabledOperationMarkers: TextMarker[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GraphQLEditor extends PureComponent<Props, State> {
-  _disabledOperationMarkers: TextMarker[] = [];
   _isMounted = false;
   _queryEditor: null | CodeMirror.Editor = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
@@ -152,6 +152,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       explorerVisible: false,
       automaticFetch,
       documentAST,
+      disabledOperationMarkers: [],
     };
   }
 
@@ -227,41 +228,36 @@ export class GraphQLEditor extends PureComponent<Props, State> {
 
   _highlightOperation(operationName: string | null) {
     const { _queryEditor } = this;
-    const { documentAST } = this.state;
+    const { documentAST, disabledOperationMarkers } = this.state;
 
     if (!documentAST || !_queryEditor) {
       return;
     }
 
     // Remove current query highlighting
-    for (const textMarker of this._disabledOperationMarkers) {
+    for (const textMarker of disabledOperationMarkers) {
       textMarker.clear();
     }
 
-    this._disabledOperationMarkers = documentAST.definitions
+    const markers = documentAST.definitions
       .filter(isOperationDefinition)
       .filter(complement(matchesOperation(operationName)))
       .filter(hasLocation)
-      .map(({ loc: { startToken, endToken } }) => {
-        const from = {
+      .map(({ loc: { startToken, endToken } }) =>
+        _queryEditor.getDoc().markText({
           line: startToken.line - 1,
           ch: startToken.column - 1,
-        };
-        const to = {
+        }, {
           line: endToken.line,
           ch: endToken.column - 1,
-        };
-
-        return _queryEditor.getDoc().markText(from, to, {
+        }, {
           className: 'cm-gql-disabled',
-        });
-      });
+        }));
+    this.setState({ disabledOperationMarkers: markers });
   }
 
   async _fetchAndSetSchema(rawRequest: Request) {
-    this.setState({
-      schemaIsFetching: true,
-    });
+    this.setState({ schemaIsFetching: true });
     const { environmentId } = this.props;
     const newState = {
       schema: this.state.schema,
@@ -579,7 +575,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     };
 
     const { query, variables: variablesObject } = body;
-    // const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
 
     const variables = jsonPrettify(JSON.stringify(variablesObject));
 
