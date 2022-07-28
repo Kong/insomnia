@@ -373,7 +373,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
               <NunjucksModal
                 uniqueKey={`key::${this.state.forceRefreshKey}`}
-                ref={registerModal}
+                ref={instance => registerModal(instance, 'NunjucksModal')}
                 workspace={activeWorkspace}
               />
 
