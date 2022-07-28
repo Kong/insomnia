@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-plugin-kong-portal",
-  "version": "3.3.1-beta.4",
+  "version": "3.3.1-beta.5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Kong <office@konghq.com>",
