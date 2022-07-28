@@ -16,7 +16,6 @@ export interface ModalProps {
   wide?: boolean;
   skinny?: boolean;
   noEscape?: boolean;
-  dontFocus?: boolean;
   closeOnKeyCodes?: any[];
   onShow?: Function;
   onHide?: Function;
@@ -117,10 +116,6 @@ export class Modal extends PureComponent<ModalProps, State> {
     });
 
     this.props.onShow?.();
-
-    if (this.props.dontFocus) {
-      return;
-    }
 
     // Allow instance-based onHide method
     this.onHide = options?.onHide ?? null;

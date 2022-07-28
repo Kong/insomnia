@@ -412,7 +412,6 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal
           ref={this._setModalRef}
-          dontFocus={!disableInput}
           className={isModalVisible ? '' : 'hide'}
         >
           <ModalHeader hideCloseButton>
