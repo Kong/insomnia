@@ -529,7 +529,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       }
     }
 
-    const newContent = GraphQLEditor._graphQLToString(body);
+    const newContent = JSON.stringify(body);
 
     this.setState({
       variablesSyntaxError: '',
@@ -623,16 +623,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
-  renderSelectedOperationName() {
-    const { operationName } = this.state.body;
-
-    if (!operationName) {
-      return null;
-    } else {
-      return <span title="Current operationName">{operationName}</span>;
-    }
-  }
-
   renderSchemaFetchMessage() {
     if (!this.props.request.url) {
       return '';
@@ -649,11 +639,6 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       );
     }
     return <span>schema not yet fetched</span>;
-  }
-
-  static renderMarkdown(text: string) {
-    const html = markdownToHTML(text);
-    return `<div class="markdown-preview__content">${html}</div>`;
   }
 
   render() {
@@ -673,6 +658,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
       explorerVisible,
       schemaLastFetchTime,
     } = this.state;
+    const { operationName } = this.state.body;
 
     const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
 
@@ -710,7 +696,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         },
         infoOptions: {
           schema,
-          renderDescription: GraphQLEditor.renderMarkdown,
+          renderDescription: text => `<div class="markdown-preview__content">${markdownToHTML(text)}</div>`,
           onClick: this._handleClickReference,
         },
         jumpOptions: {
@@ -794,7 +780,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
         </div>
         <div className="graphql-editor__meta">
           {this.renderSchemaFetchMessage()}
-          <div className="graphql-editor__operation-name">{this.renderSelectedOperationName()}</div>
+          <div className="graphql-editor__operation-name">{operationName ? <span title="Current operationName">{operationName}</span> : null}</div>
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables
