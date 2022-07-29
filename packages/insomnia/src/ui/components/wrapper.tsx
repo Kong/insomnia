@@ -320,6 +320,7 @@ export class WrapperClass extends PureComponent<Props, State> {
       handleUpdateRequestMimeType,
       gitVCS,
       vcs,
+      handleDuplicateRequest,
     } = this.props;
 
     // Setup git sync dropdown for use in Design/Debug pages
@@ -497,6 +498,7 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleUpdateRequestMimeType={handleUpdateRequestMimeType}
                   handleSetActiveResponse={this.handleSetActiveResponse}
+                  handleDuplicateRequest={handleDuplicateRequest}
                 />
               </Suspense>
             }

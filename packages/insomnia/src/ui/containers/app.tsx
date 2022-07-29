@@ -236,8 +236,8 @@ class App extends PureComponent<AppProps, State> {
       ],
       [
         hotKeyRefs.REQUEST_SHOW_DUPLICATE,
-        async () => {
-          await this._requestDuplicate(this.props.activeRequest || undefined);
+        () => {
+          this._requestDuplicate(this.props.activeRequest || undefined);
         },
       ],
       [
