@@ -13,8 +13,9 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalProps } from '../base/modal';
@@ -25,9 +26,6 @@ import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { wrapToIndex } from './utils';
 
-interface Props {
-  activateRequest: (id: string) => void;
-}
 interface State {
   searchString: string;
   workspacesForActiveProject: Workspace[];
@@ -52,10 +50,10 @@ interface RequestSwitcherModalOptions {
   openDelay?: number;
 }
 export interface RequestSwitcherModalHandle {
-  show: (options: RequestSwitcherModalOptions) => void;
+  show: (options?: RequestSwitcherModalOptions) => void;
   hide: () => void;
 }
-export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, ModalProps & Props>(({ activateRequest }, ref) => {
+export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<State>({
     searchString: '',
@@ -74,6 +72,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const dispatch = useDispatch();
   const activeRequest = useSelector(selectActiveRequest);
   const workspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const requestMetas = useSelector(selectRequestMetas);
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
@@ -191,15 +190,14 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       if (modalRef.current?.isOpen()) {
         return;
       }
-
       setState({
         ...state,
-        maxRequests: typeof options.maxRequests === 'number' ? options.maxRequests : 20,
-        maxWorkspaces: typeof options.maxWorkspaces === 'number' ? options.maxWorkspaces : 20,
-        disableInput: !!options.disableInput,
-        hideNeverActiveRequests: !!options.hideNeverActiveRequests,
-        selectOnKeyup: !!options.selectOnKeyup,
-        title: options.title || null,
+        maxRequests: typeof options?.maxRequests === 'number' ? options?.maxRequests : 20,
+        maxWorkspaces: typeof options?.maxWorkspaces === 'number' ? options?.maxWorkspaces : 20,
+        disableInput: !!options?.disableInput,
+        hideNeverActiveRequests: !!options?.hideNeverActiveRequests,
+        selectOnKeyup: !!options?.selectOnKeyup,
+        title: options?.title || null,
         isModalVisible: false,
       });
       handleChangeValue('');
@@ -226,7 +224,10 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     if (!request) {
       return;
     }
-    activateRequest(request._id);
+    if (activeWorkspaceMeta) {
+      models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
+    }
+    updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
     modalRef.current?.hide();
   };
   const createRequestFromSearch = async () => {
