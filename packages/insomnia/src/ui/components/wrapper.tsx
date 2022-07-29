@@ -499,6 +499,7 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleUpdateRequestMimeType={handleUpdateRequestMimeType}
                   handleSetActiveResponse={this.handleSetActiveResponse}
                   handleDuplicateRequest={handleDuplicateRequest}
+                  vcs={vcs}
                 />
               </Suspense>
             }
