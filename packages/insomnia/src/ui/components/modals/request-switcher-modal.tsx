@@ -78,21 +78,21 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
 
-  /** Return array of path segments for given request or folder */
+  /** Return array of path segments for given folders */
   const groupOf = useCallback((requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] => {
-    const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
-    const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
-    const currentGroupName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
+    const folders = workspaceRequestsAndRequestGroups.filter(isRequestGroup)
+      .filter(g => g._id === requestOrRequestGroup.parentId);
+    const folderName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
     // It's the final parent
-    if (matchedGroups.length === 0) {
-      return [currentGroupName];
+    if (folders.length === 0) {
+      return [folderName];
     }
     // Still has more parents
-    if (currentGroupName) {
-      return [...groupOf(matchedGroups[0]), currentGroupName];
+    if (folderName) {
+      return [...groupOf(folders[0]), folderName];
     }
     // It's the child
-    return groupOf(matchedGroups[0]);
+    return groupOf(folders[0]);
   }, [workspaceRequestsAndRequestGroups]);
 
   const handleChangeValue = useCallback((searchString: string) => {
@@ -138,13 +138,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
               finalUrl = request.url + request.protoMethodName;
               method = METHOD_GRPC;
             }
-            const match = fuzzyMatchAll(
-              searchString,
-              [request.name, finalUrl, method, groupOf(request).join('/')],
-              {
-                splitSpace: true,
-              },
-            );
+            const match = fuzzyMatchAll(searchString, [request.name, finalUrl, method, groupOf(request).join('/')], { splitSpace: true });
             // Match exact Id
             const matchesId = request._id === searchString;
             // _id match is the highest;
@@ -192,8 +186,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       }
       setState({
         ...state,
-        maxRequests: typeof options?.maxRequests === 'number' ? options?.maxRequests : 20,
-        maxWorkspaces: typeof options?.maxWorkspaces === 'number' ? options?.maxWorkspaces : 20,
+        maxRequests: options?.maxRequests ?? 20,
+        maxWorkspaces: options?.maxWorkspaces ?? 20,
         disableInput: !!options?.disableInput,
         hideNeverActiveRequests: !!options?.hideNeverActiveRequests,
         selectOnKeyup: !!options?.selectOnKeyup,
@@ -204,14 +198,6 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       modalRef.current?.show();
     },
   }), [handleChangeValue, state]);
-
-  const _setActiveIndex = (activeIndex: number) => {
-    const maxIndex = state.matchedRequests.length + state.matchedWorkspaces.length;
-    setState({
-      ...state,
-      activeIndex: wrapToIndex(activeIndex, maxIndex),
-    });
-  };
 
   const activateWorkspaceAndHide = (workspace?: Workspace) => {
     if (!workspace) {
@@ -231,19 +217,15 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     modalRef.current?.hide();
   };
   const createRequestFromSearch = async () => {
-    const { searchString } = state;
-
     if (!workspace) {
       return;
     }
 
     // Create the request if nothing matched
-    const parentId = activeRequest ? activeRequest.parentId : workspace._id;
-    const patch = {
-      parentId,
-      name: searchString,
-    };
-    const request = await models.request.create(patch);
+    const request = await models.request.create({
+      parentId: activeRequest ? activeRequest.parentId : workspace._id,
+      name: state.searchString,
+    });
 
     activateRequestAndHide(request);
   };
@@ -273,9 +255,15 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const isKey = isEventKey(event as unknown as KeyboardEvent);
     if (isKey('uparrow') || (isKey('tab') && event.shiftKey)) {
-      _setActiveIndex(state.activeIndex - 1);
+      setState({
+        ...state,
+        activeIndex: wrapToIndex(state.activeIndex - 1, state.matchedRequests.length + state.matchedWorkspaces.length),
+      });
     } else if (isKey('downarrow') || isKey('tab')) {
-      _setActiveIndex(state.activeIndex + 1);
+      setState({
+        ...state,
+        activeIndex: wrapToIndex(state.activeIndex + 1, state.matchedRequests.length + state.matchedWorkspaces.length),
+      });
     } else if (isKey('enter')) {
       activateCurrentIndex();
     } else {
@@ -288,30 +276,33 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       modalRef.current?.hide();
       return;
     }
-
     // Only control up/down with tab if modal is visible
     executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
       if (state.isModalVisible) {
-        _setActiveIndex(state.activeIndex + 1);
+        setState({
+          ...state,
+          activeIndex: wrapToIndex(state.activeIndex + 1, state.matchedRequests.length + state.matchedWorkspaces.length),
+        });
       }
     });
     // Only control up/down with tab if modal is visible
     executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
       if (state.isModalVisible) {
-        _setActiveIndex(state.activeIndex - 1);
+        setState({
+          ...state,
+          activeIndex: wrapToIndex(state.activeIndex - 1, state.matchedRequests.length + state.matchedWorkspaces.length),
+        });
       }
     });
   };
 
   const handleKeyup = async (event: KeyboardEvent) => {
-    const { selectOnKeyup } = state;
     // Handle selection if unpresses all modifier keys. Ideally this would trigger once
     // the user unpresses the hotkey that triggered this modal but we currently do not
     // have the facilities to do that.
     const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
-    const isActive = modalRef.current?.isOpen();
 
-    if (selectOnKeyup && isActive && !isMetaKeyDown) {
+    if (state.selectOnKeyup && modalRef.current?.isOpen() && !isMetaKeyDown) {
       await activateCurrentIndex();
       modalRef.current?.hide();
     }
