@@ -4,7 +4,7 @@ import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -24,7 +24,7 @@ export interface ResponseDebugModalHandle {
   hide: () => void;
 }
 export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProps>((_, ref) => {
-  const modalRef = useRef<Modal>(null);
+  const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     responseId: '',
     timeline: [],

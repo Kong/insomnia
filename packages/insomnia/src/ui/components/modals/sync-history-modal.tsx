@@ -5,7 +5,7 @@ import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
@@ -24,7 +24,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class SyncHistoryModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   handleRollback?: (arg0: Snapshot) => Promise<void>;
 
   state: State = {
@@ -32,7 +32,7 @@ export class SyncHistoryModal extends PureComponent<Props, State> {
     history: [],
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

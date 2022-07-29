@@ -17,7 +17,7 @@ import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/g
 import parseGitPath from '../../../sync/git/parse-git-path';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -55,7 +55,7 @@ const INITIAL_STATE: State = {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GitStagingModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   statusNames?: Record<string, string>;
   textarea: HTMLTextAreaElement | null = null;
   onCommit: null | (() => void);
@@ -66,7 +66,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
     this.onCommit = null;
   }
 
-  _setModalRef(ref: Modal) {
+  _setModalRef(ref: ModalHandle) {
     this.modal = ref;
   }
 

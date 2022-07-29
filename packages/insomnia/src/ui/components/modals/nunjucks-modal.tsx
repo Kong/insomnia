@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Workspace } from '../../../models/workspace';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -26,9 +26,9 @@ export class NunjucksModal extends PureComponent<Props, State> {
 
   _onDone: Function | null = null;
   _currentTemplate: string | null = null;
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

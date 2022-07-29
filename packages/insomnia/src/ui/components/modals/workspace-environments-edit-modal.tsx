@@ -15,7 +15,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -136,7 +136,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
   environmentEditorRef: EnvironmentEditor | null = null;
   environmentColorInputRef: HTMLInputElement | null = null;
   saveTimeout: NodeJS.Timeout | null = null;
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   editorKey = 0;
 
   state: State = {
@@ -157,7 +157,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this.environmentEditorRef = environmentEditor;
   }
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

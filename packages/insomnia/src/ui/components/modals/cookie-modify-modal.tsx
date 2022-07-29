@@ -13,7 +13,7 @@ import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { RootState } from '../../redux/modules';
 import { selectActiveCookieJar } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -31,7 +31,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _rawTimeout: NodeJS.Timeout | null = null;
   _cookieUpdateTimeout: NodeJS.Timeout | null = null;
 
@@ -40,7 +40,7 @@ export class UnconnectedCookieModifyModal extends PureComponent<Props, State> {
     rawValue: '',
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

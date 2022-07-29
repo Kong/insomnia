@@ -11,7 +11,7 @@ import type { GitRepository } from '../../../models/git-repository';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -32,8 +32,8 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitBranchesModalClass extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+export class GitBranchesModalClass extends PureComponent<Props, State> {
+  modal: ModalHandle | null = null;
   input: HTMLInputElement | null = null;
   _onHide?: (() => void) | null;
 
@@ -45,7 +45,7 @@ class GitBranchesModalClass extends PureComponent<Props, State> {
     newBranchName: '',
   };
 
-  _setModalRef(ref: Modal) {
+  _setModalRef(ref: ModalHandle) {
     this.modal = ref;
   }
 

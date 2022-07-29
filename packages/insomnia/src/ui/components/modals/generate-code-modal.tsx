@@ -10,7 +10,7 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -65,10 +65,10 @@ export class GenerateCodeModal extends PureComponent<Props, State> {
     };
   }
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _editor: UnconnectedCodeEditor | null = null;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
