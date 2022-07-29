@@ -1,3 +1,4 @@
+import { AxiosResponse } from 'axios';
 import classnames from 'classnames';
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -26,6 +27,7 @@ import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
+import { axiosRequest } from '../../../../network/axios-request';
 import * as network from '../../../../network/network';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
@@ -81,13 +83,6 @@ interface Props {
 
 interface State {
   body: GraphQLBody;
-  schema: GraphQLSchema | null;
-  schemaFetchError: {
-    message: string;
-    response: ResponsePatch | null;
-  } | null;
-  schemaLastFetchTime: number;
-  schemaIsFetching: boolean;
   hideSchemaFetchErrors: boolean;
   variablesSyntaxError: string;
   automaticFetch: boolean;
@@ -131,10 +126,6 @@ export const GraphQLEditor: FC<Props> = props => {
       variables: maybeBody.variables || undefined,
       operationName: maybeBody.operationName || undefined,
     },
-    schema: null,
-    schemaFetchError: null,
-    schemaLastFetchTime: 0,
-    schemaIsFetching: false,
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
     activeReference: null,
@@ -143,77 +134,73 @@ export const GraphQLEditor: FC<Props> = props => {
     documentAST,
     disabledOperationMarkers: [],
   });
+  const [schema, setSchema] = useState<GraphQLSchema | null>(null);
+  const [schemaFetchError, setSchemaFetchError] = useState<{
+    message: string;
+    response: ResponsePatch | null;
+  } | undefined>();
+  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
+  const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeMirror.Editor | null>(null);
 
-  const fetchAndSetSchema = useCallback(async (rawRequest: Request) => {
-    setState({ ...state, schemaIsFetching: true });
-    const { environmentId } = props;
-    const newState = {
-      schema: state.schema,
-      schemaFetchError: null as any,
-      schemaLastFetchTime: state.schemaLastFetchTime,
-      schemaIsFetching: false,
-    };
-    let responsePatch: ResponsePatch | null = null;
-    if (!rawRequest.url) {
+  const fetchAndSetSchema = useCallback(async (url: string) => {
+    if (!url) {
       return;
     }
     try {
-      const bodyJson = JSON.stringify({
-        query: getIntrospectionQuery(),
-        operationName: 'IntrospectionQuery',
-      });
-      const introspectionRequest = await db.upsert(
-        Object.assign({}, rawRequest, {
-          _id: rawRequest._id + '.graphql',
-          settingMaxTimelineDataSize: 5000,
-          parentId: rawRequest._id,
-          isPrivate: true,
-          // So it doesn't get synced or exported
-          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
-        }),
-      );
-      responsePatch = await network.send(introspectionRequest._id, environmentId);
-      const bodyBuffer = models.response.getBodyBuffer(responsePatch);
-      const status = typeof responsePatch.statusCode === 'number' ? responsePatch.statusCode : 0;
-      const error = typeof responsePatch.error === 'string' ? responsePatch.error : '';
-
+      let response:AxiosResponse;
+      let error;
+      try {
+        response = await axiosRequest({
+          url,
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          data: {
+            query: getIntrospectionQuery(),
+            operationName: 'IntrospectionQuery',
+          },
+        });
+        console.log(response);
+      } catch (err) {
+        error = err.message;
+      }
       if (error) {
-        newState.schemaFetchError = {
-          message: error,
-          response: responsePatch,
+        return {
+          schemaFetchError: { message: error },
         };
-      } else if (status < 200 || status >= 300) {
-        const renderedURL = responsePatch.url || rawRequest.url;
-        newState.schemaFetchError = {
-          message: `Got status ${status} fetching schema from "${renderedURL}"`,
-          response: responsePatch,
+      } else if (response.status < 200 || response.status >= 300) {
+        const renderedURL = response.request.res.responseUrl || url;
+        return {
+          schemaFetchError: { message: `Got status ${response.status} fetching schema from "${renderedURL}"` },
         };
-      } else if (bodyBuffer) {
-        const { data } = JSON.parse(bodyBuffer.toString());
-        newState.schema = buildClientSchema(data);
-        newState.schemaLastFetchTime = Date.now();
+      } else if (response.data) {
+        const { data } = JSON.parse(response.data.toString());
+        return {
+          schema: buildClientSchema(data),
+        };
       } else {
-        newState.schemaFetchError = {
-          message: 'No response body received when fetching schema',
-          response: responsePatch,
+        return {
+          schemaFetchError: { message: 'No response body received when fetching schema' },
         };
       }
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
-      newState.schemaFetchError = {
-        message: `Failed to fetch schema: ${err.message}`,
-        response: responsePatch,
+      return {
+        schemaFetchError: { message: `Failed to fetch schema: ${err.message}` },
       };
     }
-    return newState;
-  }, [props, state]);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
-      const newState = await fetchAndSetSchema(props.request);
-      isMounted && setState({ ...state, ...newState });
+      setSchemaIsFetching(true);
+      const newState = await fetchAndSetSchema(props.request.url);
+
+      isMounted && setSchemaFetchError(newState?.schemaFetchError);
+      isMounted && newState?.schema && setSchema(newState.schema);
+      isMounted && newState?.schema && setSchemaLastFetchTime(Date.now());
+      isMounted && setSchemaIsFetching(false);
     };
     init();
     return () => {
@@ -319,7 +306,9 @@ export const GraphQLEditor: FC<Props> = props => {
     // First, "forget" preference to hide errors so they always show
     // again after a refresh
     setState({ ...state, hideSchemaFetchErrors: false });
-    fetchAndSetSchema(props.request);
+    setSchemaIsFetching(true);
+    fetchAndSetSchema(props.request.url);
+    setSchemaIsFetching(false);
   };
 
   const handleVariablesChange = (variables: string) => {
@@ -387,13 +376,13 @@ export const GraphQLEditor: FC<Props> = props => {
     if (!props.request.url) {
       return '';
     }
-    if (state.schemaIsFetching) {
+    if (schemaIsFetching) {
       return 'fetching schema...';
     }
-    if (state.schemaLastFetchTime > 0) {
+    if (schemaLastFetchTime > 0) {
       return (
         <span>
-          schema fetched <TimeFromNow timestamp={state.schemaLastFetchTime} />
+          schema fetched <TimeFromNow timestamp={schemaLastFetchTime} />
         </span>
       );
     }
@@ -423,23 +412,17 @@ export const GraphQLEditor: FC<Props> = props => {
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
       }
-      setState({
-        ...state,
-        schema: buildClientSchema(content.data),
-        schemaLastFetchTime: Date.now(),
-        schemaFetchError: null,
-        schemaIsFetching: false,
-      });
+      setSchema(buildClientSchema(content.data));
+      setSchemaLastFetchTime(Date.now());
+      setSchemaFetchError(undefined);
+      setSchemaIsFetching(false);
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
-      setState({
-        ...state,
-        schemaFetchError: {
-          message: `Failed to fetch schema: ${err.message}`,
-          response: null,
-        },
-        schemaIsFetching: false,
+      setSchemaFetchError({
+        message: `Failed to fetch schema: ${err.message}`,
+        response: null,
       });
+      setSchemaIsFetching(false);
     }
   };
 
@@ -448,14 +431,10 @@ export const GraphQLEditor: FC<Props> = props => {
     uniquenessKey,
   } = props;
   const {
-    schema,
-    schemaFetchError,
     hideSchemaFetchErrors,
     variablesSyntaxError,
-    schemaIsFetching,
     activeReference,
     explorerVisible,
-    schemaLastFetchTime,
   } = state;
   const { operationName } = state.body;
   let body: GraphQLBody;
