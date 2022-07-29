@@ -21,7 +21,7 @@ import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { KeydownBinder } from '../keydown-binder';
@@ -65,7 +65,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _input: HTMLInputElement | null = null;
   _openTimeout: NodeJS.Timeout | null = null;
 
@@ -99,7 +99,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
     event.preventDefault();
   }
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

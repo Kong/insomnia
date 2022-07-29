@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';
 import { selectSettings } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 
 const Wrapper = styled.div({
   position: 'relative',
@@ -74,7 +74,7 @@ const ActionButtons = styled.div({
 
 export const AnalyticsModal: FC = () => {
   const { hasPromptedAnalytics } = useSelector(selectSettings);
-  const ref = useRef<Modal>(null);
+  const ref = useRef<ModalHandle>(null);
 
   const onEnable = useCallback(async () => {
     await models.settings.patch({

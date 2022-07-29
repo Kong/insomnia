@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { createRef, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -30,7 +30,7 @@ const initialState: SelectModalShowOptions = {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
-  modal = createRef<Modal>();
+  modal = createRef<ModalHandle>();
   doneButton = createRef<HTMLButtonElement>();
   state: SelectModalShowOptions = initialState;
 

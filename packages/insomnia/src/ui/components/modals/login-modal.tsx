@@ -7,7 +7,7 @@ import React, { Dispatch, FormEvent, forwardRef, memo, RefObject, SetStateAction
 import * as session from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -47,7 +47,7 @@ interface AuthBox {
 
 export class LoginModalHandle {
   constructor(
-    private readonly modalRef: RefObject<Modal>,
+    private readonly modalRef: RefObject<ModalHandle>,
     private readonly setState: Dispatch<SetStateAction<State & Options>>,
   ) {}
 
@@ -99,7 +99,7 @@ export class LoginModalHandle {
 }
 
 export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
-  const modalRef = useRef<Modal>(null);
+  const modalRef = useRef<ModalHandle>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState<State & Options>({

@@ -13,7 +13,7 @@ import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
 import { RootState } from '../../redux/modules';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { selectActiveWorkspace } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -42,7 +42,7 @@ const spinner = <i className="fa fa-spin fa-refresh" />;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ProtoFilesModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   onSave: ((arg0: string) => Promise<void>) | null;
 
   constructor(props: Props) {
@@ -51,7 +51,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     this.onSave = null;
   }
 
-  _setModalRef(ref: Modal) {
+  _setModalRef(ref: ModalHandle) {
     this.modal = ref;
   }
 

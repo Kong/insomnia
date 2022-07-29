@@ -12,7 +12,7 @@ import { isWorkspace, Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { UnconnectedCodeEditor } from '../codemirror/code-editor';
@@ -42,7 +42,7 @@ interface RequestSettingsModalOptions {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedRequestSettingsModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _editorRef = createRef<UnconnectedCodeEditor>();
 
   state: State = {
@@ -56,7 +56,7 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     justMoved: false,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

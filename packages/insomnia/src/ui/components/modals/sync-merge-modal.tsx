@@ -7,7 +7,7 @@ import type { DocumentKey, MergeConflict } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { selectSyncItems } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -24,14 +24,14 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedSyncMergeModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _handleDone?: (arg0: MergeConflict[]) => void;
 
   state: State = {
     conflicts: [],
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

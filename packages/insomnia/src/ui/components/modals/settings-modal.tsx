@@ -8,7 +8,7 @@ import { getAppVersion, getProductName } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { Account } from '../settings/account';
@@ -31,7 +31,7 @@ export const displayName = 'SettingsModal';
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const settings = useSelector(selectSettings);
   const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
-  const modalRef = useRef<Modal>(null);
+  const modalRef = useRef<ModalHandle>(null);
   const email = session.isLoggedIn() ? session.getFullName() : null;
 
   const handleUpdateKeyBindings = async (hotKeyRegistry: HotKeyRegistry) => {

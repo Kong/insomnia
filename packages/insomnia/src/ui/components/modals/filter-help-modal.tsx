@@ -3,7 +3,7 @@ import React, { FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -72,9 +72,9 @@ export class FilterHelpModal extends PureComponent<{}, State> {
     isJSON: true,
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

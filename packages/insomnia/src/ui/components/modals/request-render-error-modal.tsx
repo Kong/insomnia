@@ -5,7 +5,7 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { docsTemplateTags } from '../../../common/documentation';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -23,9 +23,9 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
     request: null,
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

@@ -11,7 +11,7 @@ import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { exportRequestsToFile } from '../../redux/modules/global';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -33,13 +33,13 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ExportRequestsModalClass extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
   state: State = {
     treeRoot: null,
   };
 
-  setModalRef(modal: Modal) {
+  setModalRef(modal: ModalHandle) {
     if (modal != null) {
       this.modal = modal;
     }
