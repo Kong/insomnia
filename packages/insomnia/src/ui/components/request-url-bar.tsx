@@ -277,7 +277,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
 
   const handleKeyDown: KeyboardEventHandler = useCallback(event => {
-    if (event.code === 'Enter' && request.url) {
+    if (!event.metaKey && !event.altKey && !event.ctrlKey && !event.shiftKey && event.code === 'Enter' && request.url) {
       send();
       return;
     }
