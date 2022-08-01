@@ -20,7 +20,7 @@ import { Tooltip } from '../tooltip';
 interface Props {
   activeEnvironment?: Environment | null;
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
-  handleSetActiveEnvironment: Function;
+  handleSetActiveEnvironment: (id: string | null) => void;
   workspace: Workspace;
 }
 
@@ -96,7 +96,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
           </DropdownItem>
         ))}
 
-        <DropdownItem onClick={handleSetActiveEnvironment}>
+        <DropdownItem value={null} onClick={handleSetActiveEnvironment}>
           <i className="fa fa-empty" /> No Environment
         </DropdownItem>
 

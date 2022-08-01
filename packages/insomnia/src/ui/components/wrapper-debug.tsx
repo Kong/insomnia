@@ -34,7 +34,7 @@ interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
-  handleSetActiveEnvironment: Function;
+  handleSetActiveEnvironment: (id: string | null) => void;
   handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
