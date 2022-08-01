@@ -242,6 +242,7 @@ const GitLabRepositoryForm = ({
           </Details>
         </AccountDetails>
         <Button
+          type="button"
           onClick={event => {
             event.preventDefault();
             event.stopPropagation();

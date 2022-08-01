@@ -304,7 +304,7 @@ const GitHubRepositoryForm = ({
             </span>
           </Details>
         </AccountDetails>
-        <Button onClick={handleSignOut}>
+        <Button type="button" onClick={handleSignOut}>
           Sign out
         </Button>
       </AccountViewContainer>
