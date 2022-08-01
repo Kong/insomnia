@@ -279,7 +279,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           bodyRect.height - dropdownBtnRect.bottom - screenMargin
         }px`;
       }
-    }, [beside, open, right, wide]);
+    }, [beside, open, right, wide, uniquenessKey]);
 
     const _handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.preventDefault();
