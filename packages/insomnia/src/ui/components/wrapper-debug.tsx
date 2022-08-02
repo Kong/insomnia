@@ -5,6 +5,7 @@ import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
+import { isWebSocketRequest } from '../../models/websocket-request';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
 import {
@@ -27,6 +28,8 @@ import { RequestPane } from './panes/request-pane';
 import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
 import { SidebarFilter } from './sidebar/sidebar-filter';
+import { WebSocketRequestPane } from './websocket-request-pane';
+import { WebSocketResponsePane } from './websocket-response-pane';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange } from './wrapper';
 
@@ -114,42 +117,56 @@ export const WrapperDebug: FC<Props> = ({
         : null}
       renderPaneOne={activeWorkspace ?
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) ?
-            <GrpcRequestPane
-              activeRequest={activeRequest}
-              environmentId={activeEnvironment ? activeEnvironment._id : ''}
-              workspaceId={activeWorkspace._id}
-              forceRefreshKey={forceRefreshKey}
-              settings={settings}
-            />
-            :
-            <RequestPane
-              environmentId={activeEnvironment ? activeEnvironment._id : ''}
-              forceRefreshCounter={forceRefreshKey}
-              forceUpdateRequest={handleForceUpdateRequest}
-              forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
-              handleImport={handleImport}
-              headerEditorKey={headerEditorKey}
-              request={activeRequest}
-              settings={settings}
-              updateRequestMimeType={handleUpdateRequestMimeType}
-              workspace={activeWorkspace}
-            />}
+          {activeRequest && (
+            isGrpcRequest(activeRequest) ? (
+              <GrpcRequestPane
+                activeRequest={activeRequest}
+                environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                workspaceId={activeWorkspace._id}
+                forceRefreshKey={forceRefreshKey}
+                settings={settings}
+              />
+            ) : (
+              isWebSocketRequest(activeRequest) ? (
+                <WebSocketRequestPane />
+              ) : (
+                <RequestPane
+                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                  forceRefreshCounter={forceRefreshKey}
+                  forceUpdateRequest={handleForceUpdateRequest}
+                  forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
+                  handleImport={handleImport}
+                  headerEditorKey={headerEditorKey}
+                  request={activeRequest}
+                  settings={settings}
+                  updateRequestMimeType={handleUpdateRequestMimeType}
+                  workspace={activeWorkspace}
+                />
+              )
+            )
+          )}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) ?
-            <GrpcResponsePane
-              activeRequest={activeRequest}
-              forceRefreshKey={forceRefreshKey}
-            />
-            :
-            <ResponsePane
-              handleSetFilter={handleSetResponseFilter}
-              request={activeRequest}
-              handleSetActiveResponse={handleSetActiveResponse}
-            />}
+          {activeRequest && (
+            isGrpcRequest(activeRequest) ? (
+              <GrpcResponsePane
+                activeRequest={activeRequest}
+                forceRefreshKey={forceRefreshKey}
+              />
+            ) : (
+              isWebSocketRequest(activeRequest) ? (
+                <WebSocketResponsePane />
+              ) : (
+                <ResponsePane
+                  handleSetFilter={handleSetResponseFilter}
+                  request={activeRequest}
+                  handleSetActiveResponse={handleSetActiveResponse}
+                />
+              )
+            )
+          )}
         </ErrorBoundary>}
     />
   );

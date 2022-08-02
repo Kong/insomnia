@@ -311,7 +311,7 @@ export const selectActiveWorkspaceEntities = createSelector(
 
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned: Record<string, boolean> = {};
-  const requests = [...entities.requests, ...entities.grpcRequests];
+  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.websocketRequests];
   const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
 
   // Default all to unpinned
@@ -341,13 +341,20 @@ export const selectActiveRequest = createSelector(
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
     const id = workspaceMeta?.activeRequestId || 'n/a';
+
     if (id in entities.requests) {
       return entities.requests[id];
-    } else if (id in entities.grpcRequests) {
-      return entities.grpcRequests[id];
-    } else {
-      return null;
     }
+
+    if (id in entities.grpcRequests) {
+      return entities.grpcRequests[id];
+    }
+
+    if (id in entities.websocketRequests) {
+      return entities.websocketRequests[id];
+    }
+
+    return null;
   },
 );
 
