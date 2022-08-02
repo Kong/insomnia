@@ -23,12 +23,12 @@ import {
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
-import { GrpcRequestMeta } from '../../models/grpc-request-meta';
+import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
-import { RequestMeta } from '../../models/request-meta';
+import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWorkspace } from '../../models/workspace';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
@@ -243,17 +243,13 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          // @ts-expect-error -- TSCONVERSION apparently entities doesn't exist on props
-          const { activeRequest, entities } = this.props;
+          const { activeRequest } = this.props;
 
           if (!activeRequest) {
             return;
           }
 
-          const entitiesToCheck = isGrpcRequest(activeRequest)
-            ? entities.grpcRequestMetas
-            : entities.requestMetas;
-          const meta = Object.values<GrpcRequestMeta | RequestMeta>(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
           updateRequestMetaByParentId(activeRequest._id, { pinned:!meta?.pinned });
         },
       ],
