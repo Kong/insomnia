@@ -62,19 +62,17 @@ export const createRequest: RequestCreator = async ({
   requestType,
   workspaceId,
 }) => {
-  let requestId = '';
-
   switch (requestType) {
     case 'gRPC': {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
-          const createdRequest = await models.grpcRequest.create({
+          const request = await models.grpcRequest.create({
             parentId,
             name: 'New Request',
             protoFileId,
           });
           models.stats.incrementCreatedRequests();
-          requestId = createdRequest._id;
+          setActiveRequest(request._id, workspaceId);
         },
       });
       break;
@@ -97,7 +95,7 @@ export const createRequest: RequestCreator = async ({
         name: 'New Request',
       });
       models.stats.incrementCreatedRequests();
-      requestId = request._id;
+      setActiveRequest(request._id, workspaceId);
       break;
     }
 
@@ -108,7 +106,7 @@ export const createRequest: RequestCreator = async ({
         name: 'New Request',
       });
       models.stats.incrementCreatedRequests();
-      requestId = request._id;
+      setActiveRequest(request._id, workspaceId);
       break;
     }
 
@@ -120,5 +118,4 @@ export const createRequest: RequestCreator = async ({
   }
 
   trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
-  setActiveRequest(requestId, workspaceId);
 };
