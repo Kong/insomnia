@@ -1,10 +1,8 @@
 import EventEmitter from 'events';
 
 class FakeIPCWebSocketAPI {
-  // this needs to actually use from ws package instead of node
   private _instanceMap =  new Map<string, WebSocket>();
 
-  // this is not necessary when using WebSocket from 'ws' since it has status. This is used to just mimic the library
   public eventEmitter$ =  new EventEmitter();
 
   public openWebsocket(uri: string, requestId: string): void {
