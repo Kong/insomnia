@@ -1,5 +1,14 @@
 import React, { FC } from 'react';
 
-export const WebSocketRequestPane: FC = () => {
-  return <div>WebSocket Request</div>;
+import { WebsocketActionBar } from './websockets/action-bar';
+
+interface Props {
+  requestId: string;
+}
+export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
+  return (
+    <div>
+      <WebsocketActionBar requestId={requestId} />
+    </div>
+  );
 };

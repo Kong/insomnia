@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ReadyState } from './types';
-import { useWebSocketListener } from './use-websocket-listener';
 
 export function useWSReadyState(requestId: string): ReadyState {
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CONNECTING);
 
-  useWebSocketListener<ReadyState>(status => {
-    setReadyState(status);
-  }, 'websocket:status', requestId);
+  useEffect(() => {
+    window.main.webSocketConnection.readyState.subscribe(
+      { requestId },
+      (incomingReadyState: ReadyState) => {
+        setReadyState(incomingReadyState);
+      }
+    );
+  }, [requestId]);
 
   return readyState;
 }
