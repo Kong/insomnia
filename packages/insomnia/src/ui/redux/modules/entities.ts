@@ -27,6 +27,7 @@ import { Stats } from '../../../models/stats';
 import { UnitTest } from '../../../models/unit-test';
 import { UnitTestResult } from '../../../models/unit-test-result';
 import { UnitTestSuite } from '../../../models/unit-test-suite';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 
@@ -70,6 +71,7 @@ export interface EntitiesState {
   protoDirectories: EntityRecord<ProtoDirectory>;
   grpcRequests: EntityRecord<GrpcRequest>;
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
+  websocketRequests: EntityRecord<WebSocketRequest>;
 }
 
 export const initialEntitiesState: EntitiesState = {
@@ -98,6 +100,7 @@ export const initialEntitiesState: EntitiesState = {
   protoDirectories: {},
   grpcRequests: {},
   grpcRequestMetas: {},
+  websocketRequests: {},
 };
 
 export function reducer(state = initialEntitiesState, action: any) {
@@ -108,6 +111,9 @@ export function reducer(state = initialEntitiesState, action: any) {
 
       for (const doc of docs) {
         const referenceName = getReducerName(doc.type);
+        if (!(freshState as any)[referenceName]) {
+          (freshState as any)[referenceName] = {};
+        }
         (freshState as any)[referenceName][doc._id] = doc;
       }
 
@@ -194,5 +200,6 @@ export async function allDocs() {
     ...(await models.protoDirectory.all()),
     ...(await models.grpcRequest.all()),
     ...(await models.grpcRequestMeta.all()),
+    ...(await models.websocketRequest.all()),
   ];
 }

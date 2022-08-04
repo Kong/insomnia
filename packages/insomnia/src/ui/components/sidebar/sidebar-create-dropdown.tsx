@@ -56,6 +56,10 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
         <i className="fa fa-plus-circle" />gRPC Request
       </DropdownItem>
 
+      <DropdownItem value="WebSocket" onClick={create}>
+        <i className="fa fa-plus-circle" />WebSocket Request
+      </DropdownItem>
+
       <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" />New Folder
         <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
