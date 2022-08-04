@@ -68,7 +68,8 @@ const webSocketConnection = {
   },
 };
 
-const main: Window['main'] & { webSocketConnection: typeof webSocketConnection } = {
+export type WSConnection = typeof webSocketConnection; // using 'WS' because main/network/websocket.ts already has WebSocketConnection reserved.
+const main: Window['main'] & { webSocketConnection: WSConnection } = {
   restart: () => ipcRenderer.send('restart'),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
