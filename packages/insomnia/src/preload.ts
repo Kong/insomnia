@@ -1,6 +1,75 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-const main: Window['main'] = {
+import type { WebsocketEvent } from './main/network/websocket';
+
+const webSocketConnection = {
+  create: (options: { requestId: string }) => {
+    return ipcRenderer.invoke('webSocketRequest.connection.create', options);
+  },
+  close: (options: { requestId: string }) => {
+    return ipcRenderer.invoke('webSocketRequest.connection.close', options);
+  },
+  readyState: {
+    getCurrent: (options: { requestId: string }) => {
+      return ipcRenderer.invoke('webSocketRequest.connection.readyState', options);
+    },
+    subscribe: (
+      options: { requestId: string },
+      listener: (readyState: WebSocket['readyState']) => any
+    ) => {
+      const channel = `webSocketRequest.connection.${options.requestId}.readyState`;
+
+      function onReadyStateChange(_event: IpcRendererEvent, readyState: WebSocket['readyState']) {
+        listener(readyState);
+      }
+
+      ipcRenderer.on(channel, onReadyStateChange);
+
+      const unsubscribe = () => {
+        ipcRenderer.off(channel, onReadyStateChange);
+      };
+
+      return unsubscribe;
+    },
+  },
+  event: {
+    findMany: (options: {
+      requestId: string;
+    }): Promise<WebsocketEvent[]> => {
+      return ipcRenderer.invoke(
+        'webSocketRequest.connection.event.findMany',
+        options
+      );
+    },
+    subscribe: (
+      options: { requestId: string },
+      listener: (webSocketEvent: WebsocketEvent) => any
+    ) => {
+      const channel = `webSocketRequest.connection.${options.requestId}.event`;
+
+      function onNewEvent(_event: IpcRendererEvent, webSocketEvent: WebsocketEvent) {
+        listener(webSocketEvent);
+      }
+
+      ipcRenderer.on(channel, onNewEvent);
+
+      const unsubscribe = () => {
+        ipcRenderer.off(channel, onNewEvent);
+      };
+
+      return unsubscribe;
+    },
+    send(options: { requestId: string; message: string }) {
+      return ipcRenderer.invoke(
+        'webSocketRequest.connection.event.send',
+        options
+      );
+    },
+  },
+};
+
+export type WSConnection = typeof webSocketConnection; // using 'WS' because main/network/websocket.ts already has WebSocketConnection reserved.
+const main: Window['main'] & { webSocketConnection: WSConnection } = {
   restart: () => ipcRenderer.send('restart'),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
@@ -12,6 +81,7 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
+  webSocketConnection,
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

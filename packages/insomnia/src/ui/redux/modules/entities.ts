@@ -71,7 +71,7 @@ export interface EntitiesState {
   protoDirectories: EntityRecord<ProtoDirectory>;
   grpcRequests: EntityRecord<GrpcRequest>;
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
-  websocketRequests: EntityRecord<WebSocketRequest>;
+  webSocketRequests: EntityRecord<WebSocketRequest>;
 }
 
 export const initialEntitiesState: EntitiesState = {
@@ -100,7 +100,7 @@ export const initialEntitiesState: EntitiesState = {
   protoDirectories: {},
   grpcRequests: {},
   grpcRequestMetas: {},
-  websocketRequests: {},
+  webSocketRequests: {},
 };
 
 export function reducer(state = initialEntitiesState, action: any) {
