@@ -13,6 +13,7 @@ export const canSync = false;
 
 export interface BaseWebSocketRequest {
   name: string;
+  url: string;
 }
 
 export type WebSocketRequest = BaseWebSocketRequest & BaseModel;
@@ -23,14 +24,16 @@ export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is Web
 
 export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
+  url: '',
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;
 
 export const create = (patch: Partial<WebSocketRequest> = {}) => {
   if (!patch.parentId) {
-    throw new Error('TODO');
+    throw new Error(`New WebSocketRequest missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
+
   return database.docCreate<WebSocketRequest>(type, patch);
 };
 
