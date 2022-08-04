@@ -94,7 +94,6 @@ export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestI
           disabled={readyState === ReadyState.OPEN}
           required
           placeholder="wss://ws-feed.exchange.coinbase.com"
-          defaultValue="wss://ws-feed.exchange.coinbase.com"
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />
