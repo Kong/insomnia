@@ -2,6 +2,7 @@ import { app, ipcMain, IpcRendererEvent } from 'electron';
 import { writeFile } from 'fs/promises';
 
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
+import { WSConnection } from '../../preload';
 import installPlugin from '../install-plugin';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 
@@ -14,6 +15,7 @@ export interface MainBridgeAPI {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => Function;
+  webSocketConnection: WSConnection;
 }
 export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
