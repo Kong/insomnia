@@ -71,7 +71,7 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestId }) => {
-  const { connect } = useWSControl(requestId);
+  const { connect, close } = useWSControl(requestId);
   const readyState = useWSReadyState(requestId);
 
   const handleSubmit = (e: any) => {
@@ -82,8 +82,8 @@ export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestI
   };
 
   useEffect(() => {
-    window.main.webSocketConnection.close({ requestId });
-  }, [requestId]);
+    close();
+  }, [close]);
 
   return (
     <>
