@@ -9,8 +9,6 @@ interface Props {
 }
 
 const StretchedPaneHeader = styled(PaneHeader)({ '&&': { alignItems: 'stretch' } });
-// const PaneHeader = styled.div({});
-
 export const WebSocketRequestPane: FunctionComponent<Props> = ({ requestId }) => {
   return (
     <Pane type="request">
