@@ -11,6 +11,7 @@ export function useWSControl(requestId: string): UseWSControl {
   const send = (message: string | Blob | ArrayBufferLike | ArrayBufferView) => {
     window.main.webSocketConnection.event.send({
       requestId,
+      // TODO: handle types later
       message: JSON.stringify(message),
     });
   };

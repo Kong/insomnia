@@ -5,86 +5,71 @@ import { ReadyState } from './types';
 import { useWSControl } from './use-ws-control';
 import { useWSReadyState } from './use-ws-ready-state';
 
-interface StateIndicatorProps {
-  readyState: ReadyState;
-}
-const StateIndicator: FunctionComponent<StateIndicatorProps> = ({ readyState }) => {
-  return <div>{ReadyState[readyState]}</div>;
-};
+const Button = styled.button({
+  paddingRight: 'var(--padding-md)',
+  paddingLeft: 'var(--padding-md)',
+  textAlign: 'center',
+  background: 'var(--color-surprise)',
+  color: 'var(--color-font-surprise)',
+  flex: '0 0 100px',
+});
 
 interface ActionButtonProps {
   requestId: string;
   readyState: ReadyState;
 }
 const ActionButton: FunctionComponent<ActionButtonProps> = ({ requestId, readyState }) => {
-  const { close, send } = useWSControl(requestId);
+  const { close } = useWSControl(requestId);
 
   if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
     return (
-      <button
+      <Button
         type="submit"
         form="websocketUrlForm"
       >
         Connect
-      </button>
-    );
-  }
-
-  if (readyState === ReadyState.OPEN) {
-    return (
-      <>
-        <button
-          type="button"
-          form="websocketMessageForm"
-          onClick={() => send(JSON.stringify({
-            type: 'subscribe',
-            channels: [
-              {
-                name: 'level2',
-                product_ids: ['BTC-USD'],
-              },
-            ],
-          }))}
-        >
-          Send
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            close();
-          }}
-        >
-          Close
-        </button>
-      </>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
+      className="urlbar__send-btn"
       type="button"
       onClick={() => {
         close();
       }}
     >
       Close
-    </button>
+    </Button>
   );
 };
 
 interface ActionBarProps {
   requestId: string;
 }
-const Container = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-});
+
 const Form = styled.form({
-  flex: '1',
+  flex: 1,
+  display: 'flex',
 });
+
 const Input = styled.input({
+  boxSizing: 'border-box',
   width: '100%',
+  height: '100%',
+  paddingRight: 'var(--padding-md)',
+  paddingLeft: 'var(--padding-md)',
 });
+
+const WebSocketIcon = styled.span({
+  color: 'var(--color-notice)',
+  display: 'flex',
+  alignItems: 'center',
+  paddingRight: 'var(--padding-md)',
+  paddingLeft: 'var(--padding-md)',
+});
+
 export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestId }) => {
   const { connect } = useWSControl(requestId);
   const readyState = useWSReadyState(requestId);
@@ -101,17 +86,18 @@ export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestI
   }, [requestId]);
 
   return (
-    <Container>
-      <StateIndicator readyState={readyState} />
-      <Form id="websocketUrlForm" onSubmit={handleSubmit}>
+    <>
+      <WebSocketIcon>WS</WebSocketIcon>
+      <Form aria-disabled={readyState === ReadyState.OPEN} id="websocketUrlForm" onSubmit={handleSubmit}>
         <Input
           name="websocketUrlInput"
+          disabled={readyState === ReadyState.OPEN}
           required
           placeholder="wss://ws-feed.exchange.coinbase.com"
           defaultValue="wss://ws-feed.exchange.coinbase.com"
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />
-    </Container>
+    </>
   );
 };
