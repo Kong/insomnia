@@ -1,5 +1,5 @@
 import { database } from '../common/database';
-import { BaseModel } from '.';
+import type { BaseModel } from '.';
 
 export const name = 'WebSocket Request';
 

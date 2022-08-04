@@ -111,6 +111,9 @@ export function reducer(state = initialEntitiesState, action: any) {
 
       for (const doc of docs) {
         const referenceName = getReducerName(doc.type);
+        if (!(freshState as any)[referenceName]) {
+          (freshState as any)[referenceName] = {};
+        }
         (freshState as any)[referenceName][doc._id] = doc;
       }
 
