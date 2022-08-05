@@ -14,9 +14,10 @@ export const canSync = false;
 export interface BaseWebSocketRequest {
   name: string;
   url: string;
+  metaSortKey: number;
 }
 
-export type WebSocketRequest = BaseWebSocketRequest & BaseModel;
+export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
 
 export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => (
   model.type === type
@@ -25,6 +26,7 @@ export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is Web
 export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
   url: '',
+  metaSortKey: -1 * Date.now(),
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;

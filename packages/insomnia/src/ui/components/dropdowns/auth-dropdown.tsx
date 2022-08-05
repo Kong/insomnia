@@ -17,6 +17,7 @@ import {
 } from '../../../common/constants';
 import * as models from '../../../models';
 import { update } from '../../../models/helpers/request-operations';
+import { isRequest } from '../../../models/request';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -46,8 +47,7 @@ export const AuthDropdown: FC = () => {
       return;
     }
 
-    if (!('authentication' in activeRequest)) {
-      // gRPC Requests don't have `authentication`
+    if (!isRequest(activeRequest)) {
       return;
     }
 
@@ -86,7 +86,7 @@ export const AuthDropdown: FC = () => {
     if (!activeRequest) {
       return false;
     }
-    if (!('authentication' in activeRequest)) {
+    if (!isRequest(activeRequest)) {
       return false;
     }
     return type === (activeRequest.authentication.type || AUTH_NONE);

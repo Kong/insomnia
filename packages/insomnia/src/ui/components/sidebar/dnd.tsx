@@ -7,13 +7,14 @@ import * as models from '../../../models';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
+import { WebSocketRequest } from '../../../models/websocket-request';
 
 export type DnDDragProps = ReturnType<typeof sourceCollect>;
 export type DnDDropProps = ReturnType<typeof targetCollect>;
 export type DnDProps =  DnDDragProps & DnDDropProps;
 
 export interface DragObject {
-  item?: GrpcRequest | Request | RequestGroup;
+  item?: GrpcRequest | Request | WebSocketRequest | RequestGroup;
 }
 
 export const sourceCollect = (connect: DragSourceConnector, monitor: DragSourceMonitor) => ({
