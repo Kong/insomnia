@@ -288,13 +288,14 @@ const parseSecurity = (
   }
 
   const supportedSchemes = security
-    .map(securityPolicy => {
-      const securityName = Object.keys(securityPolicy)[0];
-      return {
-        // @ts-expect-error the base types do not include an index but from what I can tell, they should
-        schemeDetails: securitySchemes[securityName],
-        securityScopes: securityPolicy[securityName],
-      };
+    .flatMap(securityPolicy => {
+      return Object.keys(securityPolicy).map((securityRequirement: string | number) => {
+        return {
+          // @ts-expect-error the base types do not include an index but from what I can tell, they should
+          schemeDetails: securitySchemes[securityRequirement],
+          securityScopes: securityPolicy[securityRequirement],
+        };
+      });
     })
     .filter(({ schemeDetails }) => (
       schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type)
