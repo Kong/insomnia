@@ -29,6 +29,7 @@ import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
+import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
 import { isWorkspace } from '../../models/workspace';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
@@ -266,7 +267,7 @@ class App extends PureComponent<AppProps, State> {
     ];
   }
 
-  _requestDuplicate(request?: Request | GrpcRequest) {
+  _requestDuplicate(request?: Request | GrpcRequest | WebSocketRequest) {
     if (!request) {
       return;
     }
@@ -350,6 +351,11 @@ class App extends PureComponent<AppProps, State> {
   async _handleUpdateRequestMimeType(mimeType: string | null): Promise<Request | null> {
     if (!this.props.activeRequest) {
       console.warn('Tried to update request mime-type when no active request');
+      return null;
+    }
+
+    if (isWebSocketRequest(this.props.activeRequest)) {
+      console.warn('Tried to update request mime-type on WebSocket request');
       return null;
     }
 

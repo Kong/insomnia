@@ -2,10 +2,11 @@ import React, { FC, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { GrpcRequest } from '../../../models/grpc-request';
 import * as models from '../../../models/index';
-import { isRequest, Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
+import { Request } from '../../../models/request';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveRequest, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
@@ -14,7 +15,7 @@ import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
 
 export interface Child {
-  doc: Request | GrpcRequest | RequestGroup;
+  doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
   children: Child[];
   collapsed: boolean;
   hidden: boolean;
@@ -50,16 +51,37 @@ export const SidebarChildren: FC<Props> = ({
     updateRequestMetaByParentId(requestId, { lastActive: Date.now() });
   };
 
-  const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({ rows, isInPinnedList }) => {
+  const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({
+    rows,
+    isInPinnedList,
+  }) => {
     const activeRequest = useSelector(selectActiveRequest);
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
 
     return (
       <>
-        {rows.map(row => (!isInPinnedList && row.hidden)
-          ? null
-          : (isRequest(row.doc) || isGrpcRequest(row.doc))
-            ? (
+        {rows
+          .filter(row => !(!isInPinnedList && row.hidden))
+          .map(row => {
+            if (isRequestGroup(row.doc)) {
+              return (
+                <SidebarRequestGroupRow
+                  key={row.doc._id}
+                  filter={filter || ''}
+                  isActive={hasActiveChild(row.children, activeRequestId)}
+                  isCollapsed={row.collapsed}
+                  requestGroup={row.doc}
+                >
+                  {row.children.filter(Boolean).length > 0 ? (
+                    <RecursiveSidebarRows
+                      isInPinnedList={isInPinnedList}
+                      rows={row.children}
+                    />
+                  ) : null}
+                </SidebarRequestGroupRow>
+              );
+            }
+            return (
               <SidebarRequestRow
                 key={row.doc._id}
                 filter={isInPinnedList ? '' : filter || ''}
@@ -70,19 +92,12 @@ export const SidebarChildren: FC<Props> = ({
                 disableDragAndDrop={isInPinnedList}
                 request={row.doc}
               />
-            ) : (
-              <SidebarRequestGroupRow
-                key={row.doc._id}
-                filter={filter || ''}
-                isActive={hasActiveChild(row.children, activeRequestId)}
-                isCollapsed={row.collapsed}
-                requestGroup={row.doc}
-              >
-                {row.children.filter(Boolean).length > 0 ? <RecursiveSidebarRows isInPinnedList={isInPinnedList} rows={row.children} /> : null}
-              </SidebarRequestGroupRow>
-            ))}
-      </>);
+            );
+          })}
+      </>
+    );
   };
+
   const { all, pinned } = sidebarChildren;
   const showSeparator = sidebarChildren.pinned.length > 0;
   const contextMenuPortal = ReactDOM.createPortal(

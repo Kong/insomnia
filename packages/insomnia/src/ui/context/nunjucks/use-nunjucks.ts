@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { isWebSocketRequest } from '../../../models/websocket-request';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
@@ -19,7 +20,8 @@ initializeNunjucksRenderPromiseCache();
  */
 export const useNunjucks = () => {
   const environmentId = useSelector(selectActiveEnvironment)?._id;
-  const request = useSelector(selectActiveRequest);
+  const activeRequest = useSelector(selectActiveRequest);
+  const request = activeRequest && isWebSocketRequest(activeRequest) ? null : activeRequest;
   const workspace = useSelector(selectActiveWorkspace);
 
   const fetchRenderContext = useCallback(async () => {
