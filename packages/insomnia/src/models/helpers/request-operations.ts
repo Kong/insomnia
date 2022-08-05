@@ -1,6 +1,7 @@
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import * as models from '../index';
 import { Request } from '../request';
+import { isWebSocketRequest, WebSocketRequest } from '../websocket-request';
 
 export function getById(requestId: string): Promise<Request | GrpcRequest | null> {
   return isGrpcRequestId(requestId)
@@ -8,10 +9,15 @@ export function getById(requestId: string): Promise<Request | GrpcRequest | null
     : models.request.getById(requestId);
 }
 
-export function remove(request: Request | GrpcRequest) {
-  return isGrpcRequest(request)
-    ? models.grpcRequest.remove(request)
-    : models.request.remove(request);
+export function remove(request: Request | GrpcRequest | WebSocketRequest) {
+  if (isGrpcRequest(request)) {
+    return models.grpcRequest.remove(request);
+  }
+  if (isWebSocketRequest(request)) {
+    return models.websocketRequest.remove(request);
+  } else {
+    return models.request.remove(request);
+  }
 }
 
 export function update<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
