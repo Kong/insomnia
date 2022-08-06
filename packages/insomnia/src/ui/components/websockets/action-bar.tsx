@@ -71,7 +71,7 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestId }) => {
-  const { connect, close } = useWSControl(requestId);
+  const { connect, close, wsRequest } = useWSControl(requestId);
   const readyState = useWSReadyState(requestId);
 
   const handleSubmit = (e: any) => {
@@ -94,6 +94,7 @@ export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestI
           disabled={readyState === ReadyState.OPEN}
           required
           placeholder="wss://ws-feed.exchange.coinbase.com"
+          defaultValue={wsRequest?.url}
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />
