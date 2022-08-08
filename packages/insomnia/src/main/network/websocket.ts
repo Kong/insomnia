@@ -18,22 +18,26 @@ export interface WebSocketConnection extends WebSocket {
 export type WebsocketOpenEvent = Omit<OpenEvent, 'target'> & {
   _id: string;
   requestId: string;
+  type: 'open';
 };
 
 export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
   _id: string;
   requestId: string;
   direction: 'OUTGOING' | 'INCOMING';
+  type: 'message';
 };
 
 export type WebsocketErrorEvent = Omit<ErrorEvent, 'target'> & {
   _id: string;
   requestId: string;
+  type: 'error';
 };
 
 export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
   _id: string;
   requestId: string;
+  type: 'close';
 };
 
 export type WebsocketEvent =
@@ -74,11 +78,11 @@ async function createWebSocketConnection(
     event.sender.send(readyStateChannel, ws.readyState);
     WebSocketConnections.set(options.requestId, ws);
 
-    ws.addEventListener('open', ({ type }) => {
+    ws.addEventListener('open', () => {
       const openEvent: WebsocketOpenEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
-        type,
+        type: 'open',
       };
 
       WebSocketEventLogs.set(options.requestId, [openEvent]);
@@ -87,13 +91,13 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.addEventListener('message', ({ data, type }) => {
+    ws.addEventListener('message', ({ data }) => {
       const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const messageEvent: WebsocketMessageEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         data,
-        type,
+        type: 'message',
         direction: 'INCOMING',
       };
 
@@ -101,14 +105,14 @@ async function createWebSocketConnection(
       event.sender.send(eventChannel, messageEvent);
     });
 
-    ws.addEventListener('close', ({ code, reason, type, wasClean }) => {
+    ws.addEventListener('close', ({ code, reason, wasClean }) => {
       const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const closeEvent: WebsocketCloseEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         code,
         reason,
-        type,
+        type: 'close',
         wasClean,
       };
 
