@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect } from 'react';
+import React, { FormEvent, FunctionComponent, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { WebSocketRequest } from '../../../../models/websocket-request';
@@ -81,9 +81,9 @@ export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestI
   const { create, close } = useWebSocketClient();
   const readyState = useWSReadyState(requestId);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const url = (formData.get('websocketUrlInput') as string) || '';
 
     if (!data) {
