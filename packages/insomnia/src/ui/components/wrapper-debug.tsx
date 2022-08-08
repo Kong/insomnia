@@ -157,7 +157,7 @@ export const WrapperDebug: FC<Props> = ({
               />
             ) : (
               isWebSocketRequest(activeRequest) ? (
-                <WebSocketResponsePane />
+                <WebSocketResponsePane requestId={activeRequest._id} />
               ) : (
                 <ResponsePane
                   handleSetFilter={handleSetResponseFilter}
