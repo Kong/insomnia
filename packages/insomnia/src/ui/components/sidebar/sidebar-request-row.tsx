@@ -17,6 +17,7 @@ import type { DropdownHandle } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
+import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-actions-dropdown';
 import { GrpcSpinner } from '../grpc-spinner';
 import { showModal } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -250,7 +251,15 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
             </div>
           </button>
           <div className="sidebar__actions">
-            {!isWebSocketRequest(request) && (
+            {isWebSocketRequest(request) ? (
+              <WebSocketRequestActionsDropdown
+                right
+                ref={requestActionsDropdown}
+                handleDuplicateRequest={handleDuplicateRequest}
+                request={request}
+                isPinned={isPinned}
+              />
+            ) : (
               <RequestActionsDropdown
                 right
                 ref={requestActionsDropdown}
