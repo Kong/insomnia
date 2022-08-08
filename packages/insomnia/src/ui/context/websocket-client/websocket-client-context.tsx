@@ -2,7 +2,7 @@ import React, { createContext, FC, ReactNode, useContext } from 'react';
 
 import { WebSocketClient } from './create-websocket-client';
 
-export const WebSocketClientContext = createContext<WebSocketClient | undefined>(undefined);
+const WebSocketClientContext = createContext<WebSocketClient | undefined>(undefined);
 interface Props {
   client: WebSocketClient;
   children: ReactNode;

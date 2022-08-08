@@ -5,9 +5,9 @@ import userEvent from '@testing-library/user-event';
 import EventEmitter from 'events';
 import React from 'react';
 
-import { NeDBClientContext } from '../../../context/nedb-client/nedb-client-context';
+import { NeDBClientProvider } from '../../../context/nedb-client/nedb-client-context';
 import { ReadyState } from '../../../context/websocket-client/use-ws-ready-state';
-import { WebSocketClientContext } from '../../../context/websocket-client/websocket-client-context';
+import { WebSocketClientProvider } from '../../../context/websocket-client/websocket-client-context';
 import { WebsocketActionBar } from './action-bar';
 import { mockWebSocketRequest } from './action-bar.mock';
 
@@ -51,11 +51,11 @@ describe('<WebSocketActionBar />', () => {
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(mockWebSocketRequest));
 
     render(
-      <NeDBClientContext.Provider value={mockDbClient}>
-        <WebSocketClientContext.Provider value={mockWsClient}>
+      <NeDBClientProvider client={mockDbClient}>
+        <WebSocketClientProvider client={mockWsClient}>
           <WebsocketActionBar requestId={mockWebSocketRequest._id} />
-        </WebSocketClientContext.Provider>
-      </NeDBClientContext.Provider>
+        </WebSocketClientProvider>
+      </NeDBClientProvider>
     );
 
     const urlInput: HTMLInputElement = screen.getByPlaceholderText('wss://ws-feed.exchange.coinbase.com');
@@ -78,11 +78,11 @@ describe('<WebSocketActionBar />', () => {
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(rest));
 
     render(
-      <NeDBClientContext.Provider value={mockDbClient}>
-        <WebSocketClientContext.Provider value={mockWsClient}>
+      <NeDBClientProvider client={mockDbClient}>
+        <WebSocketClientProvider client={mockWsClient}>
           <WebsocketActionBar requestId={mockWebSocketRequest._id} />
-        </WebSocketClientContext.Provider>
-      </NeDBClientContext.Provider>
+        </WebSocketClientProvider>
+      </NeDBClientProvider>
     );
 
     const urlInput: HTMLInputElement = screen.getByPlaceholderText('wss://ws-feed.exchange.coinbase.com');
@@ -108,11 +108,11 @@ describe('<WebSocketActionBar />', () => {
       mockOnReadyState.emit(`webSocketRequest.connection.${mockWebSocketRequest._id}.readyState`, ReadyState.OPEN);
     });
     render(
-      <NeDBClientContext.Provider value={mockDbClient}>
-        <WebSocketClientContext.Provider value={mockWsClient}>
+      <NeDBClientProvider client={mockDbClient}>
+        <WebSocketClientProvider client={mockWsClient}>
           <WebsocketActionBar requestId={mockWebSocketRequest._id} />
-        </WebSocketClientContext.Provider>
-      </NeDBClientContext.Provider>
+        </WebSocketClientProvider>
+      </NeDBClientProvider>
     );
 
     const urlInput: HTMLInputElement = screen.getByPlaceholderText('wss://ws-feed.exchange.coinbase.com');
@@ -142,11 +142,11 @@ describe('<WebSocketActionBar />', () => {
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(mockWebSocketRequest));
 
     render(
-      <NeDBClientContext.Provider value={mockDbClient}>
-        <WebSocketClientContext.Provider value={mockWsClient}>
+      <NeDBClientProvider client={mockDbClient}>
+        <WebSocketClientProvider client={mockWsClient}>
           <WebsocketActionBar requestId={mockWebSocketRequest._id} />
-        </WebSocketClientContext.Provider>
-      </NeDBClientContext.Provider>
+        </WebSocketClientProvider>
+      </NeDBClientProvider>
     );
 
     const urlInput: HTMLInputElement = screen.getByPlaceholderText('wss://ws-feed.exchange.coinbase.com');
@@ -174,11 +174,11 @@ describe('<WebSocketActionBar />', () => {
       mockOnReadyState.emit(`webSocketRequest.connection.${mockWebSocketRequest._id}.readyState`, ReadyState.OPEN);
     });
     render(
-      <NeDBClientContext.Provider value={mockDbClient}>
-        <WebSocketClientContext.Provider value={mockWsClient}>
+      <NeDBClientProvider client={mockDbClient}>
+        <WebSocketClientProvider client={mockWsClient}>
           <WebsocketActionBar requestId={mockWebSocketRequest._id} />
-        </WebSocketClientContext.Provider>
-      </NeDBClientContext.Provider>
+        </WebSocketClientProvider>
+      </NeDBClientProvider>
     );
 
     const urlInput: HTMLInputElement = screen.getByPlaceholderText('wss://ws-feed.exchange.coinbase.com');

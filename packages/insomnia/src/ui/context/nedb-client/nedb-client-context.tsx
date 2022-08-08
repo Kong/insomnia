@@ -2,7 +2,7 @@ import React, { createContext, FC, ReactNode, useContext } from 'react';
 
 import { NeDBClient } from './create-nedb-client';
 
-export const NeDBClientContext = createContext<NeDBClient | undefined>(undefined);
+const NeDBClientContext = createContext<NeDBClient | undefined>(undefined);
 interface Props {
   client: NeDBClient;
   children: ReactNode;
