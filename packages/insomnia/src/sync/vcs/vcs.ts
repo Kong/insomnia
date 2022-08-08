@@ -490,31 +490,6 @@ export class VCS {
     return delta;
   }
 
-  async shareWithTeam(teamId: string) {
-    const { memberKeys, projectKey: backendProjectKey } = await this._queryProjectShareInstructions(teamId);
-
-    const { privateKey } = this._assertSession();
-
-    const symmetricKey = crypt.decryptRSAWithJWK(privateKey, backendProjectKey.encSymmetricKey);
-    const keys: any[] = [];
-
-    for (const { accountId, publicKey } of memberKeys) {
-      const encSymmetricKey = crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKey);
-      keys.push({
-        accountId,
-        encSymmetricKey,
-      });
-    }
-
-    await this._queryProjectShare(teamId, keys);
-    console.log(`[sync] Shared project ${this._backendProjectId()} with ${teamId}`);
-  }
-
-  async unShareWithTeam() {
-    await this._queryProjectUnShare();
-    console.log(`[sync] Unshared project ${this._backendProjectId()}`);
-  }
-
   async _getOrCreateRemoteBackendProject(teamId: string) {
     const localProject = await this._assertBackendProject();
     let remoteProject = await this._queryProject();
@@ -1046,82 +1021,6 @@ export class VCS {
     return teams as Team[];
   }
 
-  async _queryProjectUnShare() {
-    await this._runGraphQL(
-      `
-        mutation ($id: ID!) {
-          projectUnShare(id: $id) {
-            id
-          }
-        }
-      `,
-      {
-        id: this._backendProjectId(),
-      },
-      'projectUnShare',
-    );
-  }
-
-  async _queryProjectShare(
-    teamId: string,
-    keys: {
-      accountId: string;
-      encSymmetricKey: string;
-    }[],
-  ) {
-    await this._runGraphQL(
-      `
-        mutation ($id: ID!, $teamId: ID!, $keys: [ProjectShareKeyInput!]!) {
-          projectShare(teamId: $teamId, id: $id, keys: $keys) {
-            id
-          }
-        }
-      `,
-      {
-        keys,
-        teamId,
-        id: this._backendProjectId(),
-      },
-      'projectShare',
-    );
-  }
-
-  async _queryProjectShareInstructions(
-    teamId: string,
-  ): Promise<{
-    teamId: string;
-    projectKey: {
-      encSymmetricKey: string;
-    };
-    memberKeys: {
-      accountId: string;
-      publicKey: string;
-    }[];
-  }> {
-    const { projectShareInstructions } = await this._runGraphQL(
-      `
-        query ($id: ID!, $teamId: ID!) {
-          projectShareInstructions(teamId: $teamId, id: $id) {
-            teamId
-            projectKey {
-              encSymmetricKey
-            }
-            memberKeys {
-              accountId
-              publicKey
-            }
-          }
-        }
-      `,
-      {
-        id: this._backendProjectId(),
-        teamId: teamId,
-      },
-      'projectShareInstructions',
-    );
-    return projectShareInstructions;
-  }
-
   async _queryBackendProjects(teamId?: string) {
     const { projects } = await this._runGraphQL(
       `
@@ -1231,29 +1130,17 @@ export class VCS {
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
     const teamKeys: {accountId: string; encSymmetricKey: string}[] = [];
-    let encSymmetricKey: string | undefined;
 
-    if (teamId) {
-      if (!teamPublicKeys?.length) {
-        throw new Error('teamPublicKeys must not be null or empty!');
-      }
+    if (!teamId || !teamPublicKeys?.length) {
+      throw new Error('teamId and teamPublicKeys must not be null or empty!');
+    }
 
-      // Encrypt the symmetric key with the public keys of all the team members, ourselves included
-      for (const { accountId, publicKey } of teamPublicKeys) {
-        teamKeys.push({
-          accountId,
-          encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
-        });
-      }
-    } else {
-      const { publicKey } = this._assertSession();
-
-      if (!publicKey) {
-        throw new Error('Session does not have publicKey');
-      }
-
-      // Encrypt the symmetric key with the account public key
-      encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
+    // Encrypt the symmetric key with the public keys of all the team members, ourselves included
+    for (const { accountId, publicKey } of teamPublicKeys) {
+      teamKeys.push({
+        accountId,
+        encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
+      });
     }
 
     const { projectCreate } = await this._runGraphQL(
@@ -1262,7 +1149,6 @@ export class VCS {
           $name: String!,
           $id: ID!,
           $rootDocumentId: ID!,
-          $encSymmetricKey: String,
           $teamId: ID,
           $teamKeys: [ProjectCreateKeyInput!],
         ) {
@@ -1270,7 +1156,6 @@ export class VCS {
             name: $name,
             id: $id,
             rootDocumentId: $rootDocumentId,
-            encSymmetricKey: $encSymmetricKey,
             teamId: $teamId,
             teamKeys: $teamKeys,
           ) {
@@ -1284,7 +1169,6 @@ export class VCS {
         name: workspaceName,
         id: this._backendProjectId(),
         rootDocumentId: workspaceId,
-        encSymmetricKey: encSymmetricKey,
         teamId: teamId,
         teamKeys: teamKeys,
       },
