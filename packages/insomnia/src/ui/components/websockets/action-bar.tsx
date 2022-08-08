@@ -1,9 +1,11 @@
 import React, { FunctionComponent, useEffect } from 'react';
 import styled from 'styled-components';
 
+import { WebSocketRequest } from '../../../models/websocket-request';
+import { useGetWhereQuery, useUpdateMutation } from './nedb-client-context';
 import { ReadyState } from './types';
-import { useWSControl } from './use-ws-control';
 import { useWSReadyState } from './use-ws-ready-state';
+import { useWebSocketClient } from './websocket-client-context';
 
 const Button = styled.button({
   paddingRight: 'var(--padding-md)',
@@ -19,7 +21,7 @@ interface ActionButtonProps {
   readyState: ReadyState;
 }
 const ActionButton: FunctionComponent<ActionButtonProps> = ({ requestId, readyState }) => {
-  const { close } = useWSControl(requestId);
+  const { close } = useWebSocketClient();
 
   if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
     return (
@@ -37,7 +39,7 @@ const ActionButton: FunctionComponent<ActionButtonProps> = ({ requestId, readySt
       className="urlbar__send-btn"
       type="button"
       onClick={() => {
-        close();
+        close({ requestId });
       }}
     >
       Close
@@ -71,19 +73,33 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestId }) => {
-  const { connect, close, wsRequest } = useWSControl(requestId);
+  const { data } = useGetWhereQuery<WebSocketRequest>('WebSocketRequest', { _id: requestId });
+  const { updateEntity } = useUpdateMutation<WebSocketRequest>(data);
+
+  const { create, close } = useWebSocketClient();
   const readyState = useWSReadyState(requestId);
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const url = (formData.get('websocketUrlInput') as string) || '';
-    connect(url);
+
+    if (!data) {
+      return;
+    }
+
+    if (data.url !== url) {
+      await updateEntity({ url });
+    }
+
+    create({ requestId });
   };
 
   useEffect(() => {
-    close();
-  }, [close]);
+    return () => {
+      close({ requestId });
+    };
+  }, [close, requestId]);
 
   return (
     <>
@@ -94,7 +110,7 @@ export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestI
           disabled={readyState === ReadyState.OPEN}
           required
           placeholder="wss://ws-feed.exchange.coinbase.com"
-          defaultValue={wsRequest?.url}
+          defaultValue={data?.url}
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />

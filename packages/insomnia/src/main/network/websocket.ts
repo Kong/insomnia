@@ -122,6 +122,23 @@ async function createWebSocketConnection(
       event.sender.send(eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
+
+    ws.addEventListener('error', ({ error, message, type }: ErrorEvent) => {
+      const msgs = WebSocketEventLogs.get(options.requestId) || [];
+      const errorEvent: WebsocketErrorEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        message,
+        type,
+        error,
+      };
+
+      WebSocketEventLogs.set(options.requestId, [...msgs, errorEvent]);
+      WebSocketConnections.delete(options.requestId);
+
+      event.sender.send(eventChannel, errorEvent);
+      event.sender.send(readyStateChannel, ws.readyState);
+    });
   } catch (e) {
     console.error(e);
     throw e;
@@ -179,6 +196,8 @@ async function closeWebSocketConnection(
   options: { requestId: string }
 ) {
   const ws = WebSocketConnections.get(options.requestId);
+  console.log(closeWebSocketConnection);
+  console.log(ws);
   if (!ws) {
     console.warn('No websocket found for requestId: ' + options.requestId);
     return;

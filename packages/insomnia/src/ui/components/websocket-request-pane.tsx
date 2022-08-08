@@ -4,8 +4,8 @@ import styled from 'styled-components';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { Pane, PaneHeader } from './panes/pane';
 import { WebsocketActionBar } from './websockets/action-bar';
-import { useWSControl } from './websockets/use-ws-control';
-
+import { NeDBClientProvider } from './websockets/nedb-client-context';
+import { useWebSocketClient, WebSocketClientProvider } from './websockets/websocket-client-context';
 interface Props {
   requestId: string;
 }
@@ -45,34 +45,49 @@ const Title = styled.div({
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
 });
+const StretchedPaneHeader = styled(PaneHeader)({
+  '&&': { alignItems: 'stretch' },
+});
 
-const StretchedPaneHeader = styled(PaneHeader)({ '&&': { alignItems: 'stretch' } });
-export const WebSocketRequestPane: FunctionComponent<Props> = ({ requestId }) => {
+const WebSocketRequestPaneBody: FunctionComponent<Props> = ({ requestId }) => {
+  const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
-  const { send } = useWSControl(requestId);
-  const handleSubmit = async () => {
-    const msg = editorRef.current?.getValue() || '';
-    const sanitized = msg.trim();
-    send(sanitized);
-  };
 
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    const message = editorRef.current?.getValue() || '';
+    send({ requestId, message });
+  };
   return (
-    <Pane type="request">
-      <StretchedPaneHeader>
-        <WebsocketActionBar requestId={requestId} />
-      </StretchedPaneHeader>
-      <BodyContainer>
-        <TitleWrapper>
-          <Title>Message</Title>
-          <SendButton type="submit" form="websocketMessageForm">Send</SendButton>
-        </TitleWrapper>
-        <EditorWrapper id="websocketMessageForm" onSubmit={handleSubmit}>
-          <CodeEditor
-            uniquenessKey={requestId}
-            ref={editorRef}
-          />
-        </EditorWrapper>
-      </BodyContainer>
-    </Pane>
+    <BodyContainer>
+      <TitleWrapper>
+        <Title>Message</Title>
+        <SendButton type="submit" form="websocketMessageForm">Send</SendButton>
+      </TitleWrapper>
+      <EditorWrapper id="websocketMessageForm" onSubmit={handleSubmit}>
+        <CodeEditor
+          uniquenessKey={requestId}
+          ref={editorRef}
+        />
+      </EditorWrapper>
+    </BodyContainer>
+  );
+};
+
+// requestId is something we can read from the router params in the future.
+// essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
+// currently this is blocked by the way page layout divide the panes with dragging functionality
+export const WebSocketRequestPane: FunctionComponent<Props> = ({ requestId }) => {
+  return (
+    <NeDBClientProvider>
+      <WebSocketClientProvider>
+        <Pane type="request">
+          <StretchedPaneHeader>
+            <WebsocketActionBar requestId={requestId} />
+          </StretchedPaneHeader>
+          <WebSocketRequestPaneBody requestId={requestId} />
+        </Pane>
+      </WebSocketClientProvider>
+    </NeDBClientProvider>
   );
 };
