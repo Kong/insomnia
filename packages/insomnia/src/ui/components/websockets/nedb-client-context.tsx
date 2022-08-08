@@ -63,7 +63,7 @@ export function useGetWhereQuery<T extends BaseModel>(
   type: string,
   query: GetWhereQuery<T>,
 ): UseGetWhereQuery<T> {
-  const db = useNeDBClient();
+  const dbClient = useNeDBClient();
   const memoizedQuery = useRef<GetWhereQuery<T>>(query);
 
   const [data, setData] = useState<T | null>(null);
@@ -72,7 +72,7 @@ export function useGetWhereQuery<T extends BaseModel>(
 
   const fetch = useCallback(() => {
     setLoading(true);
-    db.query
+    dbClient.query
       .getWhere(type, memoizedQuery.current)
       .then((found: T | null) => {
         setData(found);
@@ -81,7 +81,7 @@ export function useGetWhereQuery<T extends BaseModel>(
         setError(true);
         setLoading(false);
       });
-  }, [db.query, type]);
+  }, [dbClient.query, type]);
 
   useEffect(() => {
     memoizedQuery.current = query;
@@ -101,9 +101,9 @@ export function useGetWhereQuery<T extends BaseModel>(
       }
     };
 
-    const unsubscribe = window.main.on(channel, changeHandler);
+    const unsubscribe = dbClient.onChange(channel, changeHandler);
     return unsubscribe();
-  }, [type]);
+  }, [dbClient, type]);
 
   return { data, loading, error, refetch: fetch };
 }
@@ -114,7 +114,7 @@ interface UseUpdateMutation<T> {
   updateEntity: (updates: Partial<T>) => Promise<void>;
 }
 export function useUpdateMutation<T extends BaseModel>(original: T | null): UseUpdateMutation<T> {
-  const db = useNeDBClient();
+  const dbClient = useNeDBClient();
 
   const [data, setData] = useState<T | null>(original);
   const [loading, setLoading] = useState(false);
@@ -123,7 +123,7 @@ export function useUpdateMutation<T extends BaseModel>(original: T | null): UseU
   const updateEntity = useCallback(async (updates: Partial<T>): Promise<void> => {
     if (original) {
       setLoading(true);
-      return db.mutation
+      return dbClient.mutation
         .docUpdate(original, updates)
         .then((updated: T) => {
           setData(updated);
@@ -133,7 +133,7 @@ export function useUpdateMutation<T extends BaseModel>(original: T | null): UseU
           setLoading(false);
         });
     }
-  }, [db.mutation, original]);
+  }, [dbClient.mutation, original]);
 
   return { data, loading, error, updateEntity };
 }
