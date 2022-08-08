@@ -6,12 +6,12 @@ import { BaseModel } from '../../../models';
 import { useNeDBClient } from './nedb-client-context';
 
 interface UseGetWhereQuery<T> {
-    data: T | null;
-    loading: boolean;
-    error: boolean;
-    refetch: () => void;
-  }
-  type GetWhereQuery<T extends BaseModel> = ModelQuery<T> | (Query & Pick<BaseModel, '_id'>);
+  data: T | null;
+  loading: boolean;
+  error: boolean;
+  refetch: () => void;
+}
+type GetWhereQuery<T extends BaseModel> = ModelQuery<T> | (Query & Pick<BaseModel, '_id'>);
 export function useGetWhereQuery<T extends BaseModel>(
   type: string,
   query: GetWhereQuery<T>,

@@ -7,6 +7,10 @@ interface Props {
   client: WebSocketClient;
   children: ReactNode;
 }
+/**
+ * This Context is created to separate WebSocket interfaces provided by the electron ipc bridge without having to directly read from the preload.
+ * Such abstraction allows unit-testing the behaviours of UI components without having to deal with the electron interface or websocket.
+ */
 export const WebSocketClientProvider: FC<Props> = ({ client, children }) => {
   return (
     <WebSocketClientContext.Provider value={client}>
