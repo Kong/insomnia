@@ -2,10 +2,10 @@ import React, { FunctionComponent, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { WebSocketRequest } from '../../../../models/websocket-request';
-import { useGetWhereQuery, useUpdateMutation } from '../nedb-client-context';
-import { ReadyState } from '../types';
-import { useWSReadyState } from '../use-ws-ready-state';
-import { useWebSocketClient } from '../websocket-client-context';
+import { useGetWhereQuery } from '../../../context/nedb-client/use-get-qhere-query';
+import { useUpdateMutation } from '../../../context/nedb-client/use-update-mutation';
+import { ReadyState, useWSReadyState } from '../../../context/websocket-client/use-ws-ready-state';
+import { useWebSocketClient } from '../../../context/websocket-client/websocket-client-context';
 
 const Button = styled.button({
   paddingRight: 'var(--padding-md)',

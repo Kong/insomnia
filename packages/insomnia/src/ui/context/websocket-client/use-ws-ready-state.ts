@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 
-import { ReadyState } from './types';
 import { useWebSocketClient } from './websocket-client-context';
 
+export enum ReadyState {
+  CONNECTING = 0,
+  OPEN = 1,
+  CLOSING = 2,
+  CLOSED = 3,
+}
 export function useWSReadyState(requestId: string): ReadyState {
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CONNECTING);
   const { onReadyState } = useWebSocketClient();

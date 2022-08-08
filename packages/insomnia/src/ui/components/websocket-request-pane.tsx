@@ -1,11 +1,14 @@
 import React, { FunctionComponent, useRef } from 'react';
 import styled from 'styled-components';
 
+import { createNeDBClient } from '../context/nedb-client/create-nedb-client';
+import { NeDBClientProvider } from '../context/nedb-client/nedb-client-context';
+import { createWebSocketClient } from '../context/websocket-client/create-websocket-client';
+import { useWebSocketClient, WebSocketClientProvider } from '../context/websocket-client/websocket-client-context';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { Pane, PaneHeader } from './panes/pane';
 import { WebsocketActionBar } from './websockets/action-bar';
-import { createNeDBClient, NeDBClientProvider } from './websockets/nedb-client-context';
-import { createWebSocketClient, useWebSocketClient, WebSocketClientProvider } from './websockets/websocket-client-context';
+
 interface Props {
   requestId: string;
 }
