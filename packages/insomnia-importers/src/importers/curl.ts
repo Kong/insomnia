@@ -172,7 +172,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     const pair = pairsByName[paramName];
 
     if (pair && pair.length) {
-      textBodyParams = textBodyParams.concat(paramName === 'data-urlencode' ? encodeURIComponent(pair) : pair);
+      textBodyParams = textBodyParams.concat(paramName === 'data-urlencode' ? pair.map(item => encodeURIComponent(item)) : pair);
     }
   }
 
