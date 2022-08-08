@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext } from 'react';
+import React, { createContext, FC, ReactNode, useContext } from 'react';
 
 interface WebSocketClient {
   create: typeof window.main.webSocketConnection.create;
@@ -6,7 +6,7 @@ interface WebSocketClient {
   send: typeof window.main.webSocketConnection.event.send;
   onReadyState: typeof window.main.webSocketConnection.readyState.subscribe;
 }
-function createWebSocketClient(): WebSocketClient {
+export function createWebSocketClient(): WebSocketClient {
   return {
     create: window.main.webSocketConnection.create,
     close: window.main.webSocketConnection.close,
@@ -14,9 +14,12 @@ function createWebSocketClient(): WebSocketClient {
     onReadyState: window.main.webSocketConnection.readyState.subscribe,
   };
 }
-const client = createWebSocketClient();
-const WebSocketClientContext = createContext<WebSocketClient | undefined>(undefined);
-export const WebSocketClientProvider = ({ children }: { children: ReactNode }) => {
+export const WebSocketClientContext = createContext<WebSocketClient | undefined>(undefined);
+interface Props {
+  client: WebSocketClient;
+  children: ReactNode;
+}
+export const WebSocketClientProvider: FC<Props> = ({ client, children }) => {
   return (
     <WebSocketClientContext.Provider value={client}>
       {children}

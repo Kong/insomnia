@@ -1,5 +1,5 @@
 import { IpcRendererEvent } from 'electron';
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, FC, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { ChangeBufferEvent, database, ModelQuery, Query } from '../../../common/database';
 import { BaseModel } from '../../../models';
@@ -20,7 +20,7 @@ interface NeDBClient {
  * this function is created to return an object to abstract from the actual database object, so we can actually mock the behaviour of the database instead of setting it up in the jest environment.
  * @returns an object that interfaces the NeDB object wrapper (database.ts)
  */
-function createNeDBClient(): NeDBClient {
+export function createNeDBClient(): NeDBClient {
   const query = {
     all: database.all,
     getWhere: database.getWhere,
@@ -34,9 +34,13 @@ function createNeDBClient(): NeDBClient {
     onChange: window.main.on, // TODO: make a dedicated ipc channel for this
   };
 }
-const client = createNeDBClient();
-const NeDBClientContext = createContext<NeDBClient | undefined>(undefined);
-export const NeDBClientProvider = ({ children }: { children: ReactNode }) => {
+
+export const NeDBClientContext = createContext<NeDBClient | undefined>(undefined);
+interface Props {
+  client: NeDBClient;
+  children: ReactNode;
+}
+export const NeDBClientProvider: FC<Props> = ({ client, children }) => {
   return (
     <NeDBClientContext.Provider value={client}>
       {children}
