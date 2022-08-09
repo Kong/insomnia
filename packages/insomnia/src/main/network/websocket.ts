@@ -74,8 +74,6 @@ async function createWebSocketConnection(
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
 
     const ws = new WebSocket(request?.url);
-
-    event.sender.send(readyStateChannel, ws.readyState);
     WebSocketConnections.set(options.requestId, ws);
 
     ws.addEventListener('open', () => {
@@ -120,6 +118,23 @@ async function createWebSocketConnection(
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, closeEvent);
+      event.sender.send(readyStateChannel, ws.readyState);
+    });
+
+    ws.addEventListener('error', ({ error, message }: ErrorEvent) => {
+      const msgs = WebSocketEventLogs.get(options.requestId) || [];
+      const errorEvent: WebsocketErrorEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        message,
+        type: 'error',
+        error,
+      };
+
+      WebSocketEventLogs.set(options.requestId, [...msgs, errorEvent]);
+      WebSocketConnections.delete(options.requestId);
+
+      event.sender.send(eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
   } catch (e) {
