@@ -4,11 +4,11 @@ import { BaseModel } from '../../../models';
 import { useNeDBClient } from './nedb-client-context';
 
 interface UseUpdateMutation<T> {
-    data: T | null;
-    loading: boolean;
-    error: boolean;
-    updateEntity: (updates: Partial<T>) => Promise<void>;
-  }
+  data: T | null;
+  loading: boolean;
+  error: boolean;
+  updateEntity: (updates: Partial<T>) => Promise<void>;
+}
 export function useUpdateMutation<T extends BaseModel>(original: T | null): UseUpdateMutation<T> {
   const dbClient = useNeDBClient();
 
