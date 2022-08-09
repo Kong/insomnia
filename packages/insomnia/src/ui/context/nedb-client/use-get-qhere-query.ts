@@ -18,8 +18,7 @@ export function useGetWhereQuery<T extends BaseModel>(
   query: GetWhereQuery<T>,
 ): UseGetWhereQuery<T> {
   const dbClient = useNeDBClient();
-  const [queryUsed, setQuery] = useState(query);
-  
+  const [getWhereQuery, setQuery] = useState(query);
 
   useDeepCompareEffect(() => {
     setQuery(query);
@@ -32,7 +31,7 @@ export function useGetWhereQuery<T extends BaseModel>(
   const fetch = useCallback(() => {
     setLoading(true);
     dbClient.query
-      .getWhere<T>(type, queryUsed)
+      .getWhere<T>(type, getWhereQuery)
       .then((found: T | null) => {
         setData(found);
         setLoading(false);
@@ -40,14 +39,14 @@ export function useGetWhereQuery<T extends BaseModel>(
         setError(true);
         setLoading(false);
       });
-  }, [dbClient.query, type, queryUsed]);
+  }, [dbClient.query, type, getWhereQuery]);
 
   useEffect(() => {
     fetch();
   }, [fetch]);
 
   useEffect(() => {
-    const channel = `db.changes.${type}.${queryUsed._id}`;
+    const channel = `db.changes.${type}.${getWhereQuery._id}`;
     const changeHandler = (_: IpcRendererEvent, [operation, entity]: ChangeBufferEvent<T>) => {
       // TODO: add more operation case handling
       if (operation === 'update') {
@@ -58,7 +57,7 @@ export function useGetWhereQuery<T extends BaseModel>(
 
     const unsubscribe = dbClient.onChange(channel, changeHandler);
     unsubscribe();
-  }, [dbClient, type, queryUsed]);
+  }, [dbClient, type, getWhereQuery]);
 
   return { data, loading, error, refetch: fetch };
 }
