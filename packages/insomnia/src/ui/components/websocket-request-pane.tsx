@@ -71,6 +71,7 @@ const WebSocketRequestPaneBody: FC<Props> = ({ requestId }) => {
         <CodeEditor
           uniquenessKey={requestId}
           ref={editorRef}
+          defaultValue=''
         />
       </EditorWrapper>
     </BodyContainer>

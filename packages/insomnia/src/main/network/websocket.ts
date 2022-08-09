@@ -118,8 +118,6 @@ async function createWebSocketConnection(
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, closeEvent);
-      console.log('CLOSE:::::::::::::::::', readyStateChannel);
-      console.log('READY STATE:::::::::::::::::', ws.readyState);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
