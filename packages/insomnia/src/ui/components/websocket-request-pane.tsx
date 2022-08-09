@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef } from 'react';
+import React, { FC, useRef } from 'react';
 import styled from 'styled-components';
 
 import { createNeDBClient } from '../context/nedb-client/create-nedb-client';
@@ -52,7 +52,7 @@ const StretchedPaneHeader = styled(PaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
 
-const WebSocketRequestPaneBody: FunctionComponent<Props> = ({ requestId }) => {
+const WebSocketRequestPaneBody: FC<Props> = ({ requestId }) => {
   const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
@@ -82,7 +82,7 @@ const wsClient = createWebSocketClient();
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
-export const WebSocketRequestPane: FunctionComponent<Props> = ({ requestId }) => {
+export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
   return (
     <NeDBClientProvider client={nedbClient}>
       <WebSocketClientProvider client={wsClient}>

@@ -1,4 +1,4 @@
-import React, { FormEvent, FunctionComponent, useEffect } from 'react';
+import React, { FC, FormEvent, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { WebSocketRequest } from '../../../../models/websocket-request';
@@ -20,8 +20,12 @@ interface ActionButtonProps {
   requestId: string;
   readyState: ReadyState;
 }
-const ActionButton: FunctionComponent<ActionButtonProps> = ({ requestId, readyState }) => {
+const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
   const { close } = useWebSocketClient();
+
+  useEffect(() => {
+    console.log(`${requestId} - ${ReadyState[readyState]}`);
+  }, [requestId, readyState]);
 
   if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
     return (
@@ -74,7 +78,7 @@ const WebSocketIcon = styled.span({
   paddingLeft: 'var(--padding-md)',
 });
 
-export const WebsocketActionBar: FunctionComponent<ActionBarProps> = ({ requestId }) => {
+export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
   const { data } = useGetWhereQuery<WebSocketRequest>('WebSocketRequest', { _id: requestId });
   const { updateEntity } = useUpdateMutation<WebSocketRequest>(data);
 
