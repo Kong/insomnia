@@ -270,9 +270,6 @@ export const database = {
       const windows = electron.BrowserWindow.getAllWindows();
 
       for (const window of windows) {
-        changes.forEach(([operation, entity, fromSync]: ChangeBufferEvent) => {
-          window.webContents.send(`db.changes.${entity.type}.${entity._id}`, [operation, entity, fromSync]);
-        });
         window.webContents.send('db.changes', changes);
       }
     }
