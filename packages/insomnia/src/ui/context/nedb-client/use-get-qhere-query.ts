@@ -55,7 +55,7 @@ export function useGetWhereQuery<T extends BaseModel>(
     };
 
     const unsubscribe = dbClient.onChange(channel, changeHandler);
-    return unsubscribe();
+    unsubscribe();
   }, [dbClient, type]);
 
   return { data, loading, error, refetch: fetch };
