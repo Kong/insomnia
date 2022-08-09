@@ -1,11 +1,12 @@
 import React, { FC, FormEvent, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { useGetWhereQuery } from '../../context/nedb-client/use-get-where-query';
-import { useUpdateMutation } from '../../context/nedb-client/use-update-mutation';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useWebSocketClient } from '../../context/websocket-client/websocket-client-context';
+import { selectActiveRequest } from '../../redux/selectors';
 
 const Button = styled.button({
   paddingRight: 'var(--padding-md)',
@@ -75,8 +76,7 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
-  const { data } = useGetWhereQuery<WebSocketRequest>('WebSocketRequest', { _id: requestId });
-  const { updateEntity } = useUpdateMutation<WebSocketRequest>(data);
+  const request = useSelector(selectActiveRequest);
 
   const { create, close } = useWebSocketClient();
   const readyState = useWSReadyState(requestId);
@@ -86,12 +86,12 @@ export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
     const formData = new FormData(event.currentTarget);
     const url = (formData.get('websocketUrlInput') as string) || '';
 
-    if (!data) {
+    if (!request) {
       return;
     }
 
-    if (data.url !== url) {
-      await updateEntity({ url });
+    if (request.url !== url) {
+      await models.websocketRequest.update(request as WebSocketRequest, { url });
     }
 
     create({ requestId });
@@ -112,7 +112,7 @@ export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
           disabled={readyState === ReadyState.OPEN}
           required
           placeholder="wss://ws-feed.exchange.coinbase.com"
-          defaultValue={data?.url}
+          defaultValue={request?.url}
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />
