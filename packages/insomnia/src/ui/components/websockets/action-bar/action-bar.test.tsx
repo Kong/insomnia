@@ -38,6 +38,7 @@ describe('<WebSocketActionBar />', () => {
         onChangeEvent.on(channel, listener);
         return () => onChangeEvent.removeListener(channel, listener);
       },
+      getReadyState: jest.fn(),
     };
   };
 
@@ -49,6 +50,7 @@ describe('<WebSocketActionBar />', () => {
     const mockWsClient = getMockWsClient(mockOnReadyState);
 
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(mockWebSocketRequest));
+    mockWsClient.getReadyState.mockImplementation(() => Promise.resolve(0));
 
     render(
       <NeDBClientProvider client={mockDbClient}>
@@ -76,6 +78,7 @@ describe('<WebSocketActionBar />', () => {
 
     const { url, ...rest } = mockWebSocketRequest;
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(rest));
+    mockWsClient.getReadyState.mockImplementation(() => Promise.resolve(0));
 
     render(
       <NeDBClientProvider client={mockDbClient}>
@@ -104,6 +107,7 @@ describe('<WebSocketActionBar />', () => {
     const mockWsClient = getMockWsClient(mockOnReadyState);
 
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(mockWebSocketRequest));
+    mockWsClient.getReadyState.mockImplementation(() => Promise.resolve(0));
     mockWsClient.create.mockImplementation(() => {
       mockOnReadyState.emit(`webSocketRequest.connection.${mockWebSocketRequest._id}.readyState`, ReadyState.OPEN);
     });
@@ -140,6 +144,7 @@ describe('<WebSocketActionBar />', () => {
     const mockWsClient = getMockWsClient(mockOnReadyState);
 
     mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(mockWebSocketRequest));
+    mockWsClient.getReadyState.mockImplementation(() => Promise.resolve(0));
 
     render(
       <NeDBClientProvider client={mockDbClient}>
@@ -173,6 +178,7 @@ describe('<WebSocketActionBar />', () => {
     mockWsClient.create.mockImplementation(() => {
       mockOnReadyState.emit(`webSocketRequest.connection.${mockWebSocketRequest._id}.readyState`, ReadyState.OPEN);
     });
+    mockWsClient.getReadyState.mockImplementation(() => Promise.resolve(0));
     render(
       <NeDBClientProvider client={mockDbClient}>
         <WebSocketClientProvider client={mockWsClient}>
