@@ -185,4 +185,31 @@ describe('<WebSocketActionBar />', () => {
 
     expect(mockWsClient.close).toHaveBeenCalled();
   });
+
+  test('renders a correct websocket request when switching between requests', async () => {
+    const mockOnChangeEvent = new EventEmitter();
+    const mockDbClient = getMockDbClient(mockOnChangeEvent);
+
+    const mockOnReadyState = new EventEmitter();
+    const mockWsClient = getMockWsClient(mockOnReadyState);
+
+    mockDbClient.query.getWhere.mockImplementation(() => Promise.resolve(mockWebSocketRequest));
+    mockWsClient.getReadyState.mockImplementation(() => Promise.resolve(0));
+
+    render(
+      <NeDBClientProvider client={mockDbClient}>
+        <WebSocketClientProvider client={mockWsClient}>
+          <WebsocketActionBar requestId={mockWebSocketRequest._id} />
+        </WebSocketClientProvider>
+      </NeDBClientProvider>
+    );
+
+    const urlInput: HTMLInputElement = screen.getByPlaceholderText('wss://ws-feed.exchange.coinbase.com');
+    expect(urlInput).toBeDefined();
+
+    const connectBtn = screen.getByText('Connect');
+    expect(connectBtn).toBeDefined();
+
+    expect(mockWsClient.create).toHaveBeenCalled();
+  });
 });

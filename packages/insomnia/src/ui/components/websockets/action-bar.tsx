@@ -2,7 +2,7 @@ import React, { FC, FormEvent, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { useGetWhereQuery } from '../../context/nedb-client/use-get-qhere-query';
+import { useGetWhereQuery } from '../../context/nedb-client/use-get-where-query';
 import { useUpdateMutation } from '../../context/nedb-client/use-update-mutation';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useWebSocketClient } from '../../context/websocket-client/websocket-client-context';
