@@ -1,7 +1,10 @@
 import express, { urlencoded } from 'express';
+import { graphqlHTTP } from 'express-graphql';
 import { Configuration, Provider } from 'oidc-provider';
 // @ts-expect-error no typings available for this module
 import { InvalidGrant } from 'oidc-provider/lib/helpers/errors';
+
+import { root, schema } from './graphql';
 
 export const oauthRoutes = (port: number) => {
   const clientIDAuthorizationCode = 'authorization_code';
@@ -135,6 +138,12 @@ export const oauthRoutes = (port: number) => {
   registerROPC(oidc);
 
   const oauthRouter = express.Router();
+
+  oauthRouter.use('/graphql', graphqlHTTP({
+    schema: schema,
+    rootValue: root,
+    graphiql: true,
+  }));
 
   // Route for verifying that id tokens are valid for implicit id token only flows
   oauthRouter.get('/id-token', async (req, res) => {
