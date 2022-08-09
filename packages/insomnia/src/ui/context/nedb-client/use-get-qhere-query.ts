@@ -1,5 +1,6 @@
 import { IpcRendererEvent } from 'electron';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useDeepCompareEffect } from 'react-use';
 
 import { ChangeBufferEvent, ModelQuery, Query } from '../../../common/database';
 import { BaseModel } from '../../../models';
@@ -17,18 +18,21 @@ export function useGetWhereQuery<T extends BaseModel>(
   query: GetWhereQuery<T>,
 ): UseGetWhereQuery<T> {
   const dbClient = useNeDBClient();
-  const memoizedQuery = useRef<GetWhereQuery<T>>(query);
+  const [queryUsed, setQuery] = useState(query);
+  
 
-  const [queryId, setQueryId] = useState(query._id);
+  useDeepCompareEffect(() => {
+    setQuery(query);
+  }, [query]);
+
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const fetch = useCallback(() => {
     setLoading(true);
-    const query = { ...memoizedQuery.current, _id: queryId };
     dbClient.query
-      .getWhere<T>(type, query)
+      .getWhere<T>(type, queryUsed)
       .then((found: T | null) => {
         setData(found);
         setLoading(false);
@@ -36,19 +40,14 @@ export function useGetWhereQuery<T extends BaseModel>(
         setError(true);
         setLoading(false);
       });
-  }, [dbClient.query, type, queryId]);
-
-  useEffect(() => {
-    memoizedQuery.current = query;
-    setQueryId(query._id);
-  }, [query]);
+  }, [dbClient.query, type, queryUsed]);
 
   useEffect(() => {
     fetch();
   }, [fetch]);
 
   useEffect(() => {
-    const channel = `db.changes.${type}.${memoizedQuery.current._id}`;
+    const channel = `db.changes.${type}.${queryUsed._id}`;
     const changeHandler = (_: IpcRendererEvent, [operation, entity]: ChangeBufferEvent<T>) => {
       // TODO: add more operation case handling
       if (operation === 'update') {
@@ -59,7 +58,7 @@ export function useGetWhereQuery<T extends BaseModel>(
 
     const unsubscribe = dbClient.onChange(channel, changeHandler);
     unsubscribe();
-  }, [dbClient, type]);
+  }, [dbClient, type, queryUsed]);
 
   return { data, loading, error, refetch: fetch };
 }

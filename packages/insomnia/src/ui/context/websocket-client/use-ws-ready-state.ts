@@ -10,7 +10,14 @@ export enum ReadyState {
 }
 export function useWSReadyState(requestId: string): ReadyState {
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CONNECTING);
-  const { onReadyState } = useWebSocketClient();
+  const { onReadyState, getReadyState } = useWebSocketClient();
+
+  useEffect(() => {
+    getReadyState({ requestId })
+      .then((currentReadyState: ReadyState) => {
+        setReadyState(currentReadyState);
+      });
+  }, [getReadyState, requestId]);
 
   useEffect(() => {
     const unsubscribe = onReadyState(
