@@ -7,6 +7,7 @@ import gitlabApi from './gitlab-api';
 import { root, schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
+import { startWebsocketServer } from './websocket';
 
 const app = express();
 const port = 4010;
@@ -55,7 +56,9 @@ app.use('/graphql', graphqlHTTP({
 }));
 
 startGRPCServer(grpcPort).then(() => {
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`);
+    console.log(`Listening at ws://localhost:${port}`);
   });
+  startWebsocketServer(server);
 });
