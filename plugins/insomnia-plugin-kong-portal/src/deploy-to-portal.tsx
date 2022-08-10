@@ -431,7 +431,7 @@ export function getDeployToPortalComponent(options: {
         return (
           <div className="pad">
             <p className="no-pad no-margin-top">
-              The Document is now available on
+              The Document is now available on&nbsp;
               {kongPortalLegacyMode ? (
                 'Dev Portal'
               ) : (
