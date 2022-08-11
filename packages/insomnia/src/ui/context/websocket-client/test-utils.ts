@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import EventEmitter from 'events';
 
 export const getMockWsClient = (onChangeEvent: EventEmitter) => {
