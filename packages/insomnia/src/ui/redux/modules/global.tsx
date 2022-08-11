@@ -26,6 +26,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
@@ -555,7 +556,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
       dispatch(loadStop());
     },
     onDone: async selectedFormat => {
-      const requests: (GrpcRequest | Request)[] = [];
+      const requests: (GrpcRequest | Request | WebSocketRequest)[] = [];
       const privateEnvironments: Environment[] = [];
       const workspaceLookup: any = {};
 
