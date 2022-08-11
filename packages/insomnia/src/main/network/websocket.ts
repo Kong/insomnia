@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import { IncomingMessage } from 'http';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
@@ -19,32 +20,45 @@ export type WebsocketOpenEvent = Omit<OpenEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'open';
+  timestamp: number;
 };
+
+export interface WebsocketUpgradeEvent {
+  _id: string;
+  requestId: string;
+  type: 'upgrade';
+  timestamp: number;
+  statusCode: number | undefined;
+}
 
 export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
   _id: string;
   requestId: string;
   direction: 'OUTGOING' | 'INCOMING';
   type: 'message';
+  timestamp: number;
 };
 
 export type WebsocketErrorEvent = Omit<ErrorEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'error';
+  timestamp: number;
 };
 
 export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'close';
+  timestamp: number;
 };
 
 export type WebsocketEvent =
   | WebsocketOpenEvent
   | WebsocketMessageEvent
   | WebsocketErrorEvent
-  | WebsocketCloseEvent;
+  | WebsocketCloseEvent
+  | WebsocketUpgradeEvent;
 
 export type WebSocketEventLog = WebsocketEvent[];
 
@@ -76,11 +90,14 @@ async function createWebSocketConnection(
     const ws = new WebSocket(request?.url);
     WebSocketConnections.set(options.requestId, ws);
 
-    ws.addEventListener('open', () => {
+    ws.addEventListener('open', (e: OpenEvent) => {
+      console.log('open - e', e.target);
+      console.log('open - e', e.type);
       const openEvent: WebsocketOpenEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         type: 'open',
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [openEvent]);
@@ -89,7 +106,8 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.addEventListener('message', ({ data }) => {
+    ws.addEventListener('message', ({ data, target }: MessageEvent) => {
+      console.log('message-target', target);
       const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const messageEvent: WebsocketMessageEvent = {
         _id: uuidV4(),
@@ -97,10 +115,26 @@ async function createWebSocketConnection(
         data,
         type: 'message',
         direction: 'INCOMING',
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [...msgs, messageEvent]);
       event.sender.send(eventChannel, messageEvent);
+    });
+
+    ws.on('upgrade', (request: IncomingMessage) => {
+      const upgradeEvent: WebsocketUpgradeEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'upgrade',
+        timestamp: Date.now(),
+        statusCode: request.statusCode,
+      };
+
+      WebSocketEventLogs.set(options.requestId, [upgradeEvent]);
+
+      event.sender.send(eventChannel, upgradeEvent);
+      event.sender.send(readyStateChannel, ws.readyState);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
@@ -112,6 +146,7 @@ async function createWebSocketConnection(
         reason,
         type: 'close',
         wasClean,
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [...msgs, closeEvent]);
@@ -129,6 +164,7 @@ async function createWebSocketConnection(
         message,
         type: 'error',
         error,
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [...msgs, errorEvent]);
@@ -179,6 +215,7 @@ async function sendWebSocketEvent(
     data: options.message,
     direction: 'OUTGOING',
     type: 'message',
+    timestamp: Date.now(),
   };
 
   WebSocketEventLogs.set(options.requestId, [

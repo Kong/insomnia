@@ -14,6 +14,10 @@ const BodyContainer = styled.div({
   display: 'flex',
   flexDirection: 'column',
 });
+const ButtonWrapper = styled.div({
+  paddingTop: 3,
+  paddingBottom: 3,
+});
 const EditorWrapper = styled.form({
   width: '100%',
   height: '100%',
@@ -21,12 +25,13 @@ const EditorWrapper = styled.form({
   boxSizing: 'border-box',
 });
 const SendButton = styled.button({
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-  textAlign: 'center',
-  background: 'var(--color-surprise)',
-  color: 'var(--color-font-surprise)',
-  flex: '0 0 100px',
+  padding: '0 var(--padding-md)',
+  height: '100%',
+  border: '1px solid var(--hl-lg)',
+  borderRadius: 'var(--radius-md)',
+  ':hover': {
+    backgroundColor: 'var(--hl-xs)',
+  },
 });
 const TitleWrapper = styled.div({
   position: 'relative',
@@ -38,13 +43,14 @@ const TitleWrapper = styled.div({
   boxSizing: 'border-box',
   height: 'var(--line-height-sm)',
   alignItems: 'stretch',
+  borderBottom: '1px solid var(--hl-md)',
+  paddingRight: 'var(--padding-md)',
+  paddingLeft: 'var(--padding-md)',
 });
 const Title = styled.div({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
 });
 const StretchedPaneHeader = styled(PaneHeader)({
   '&&': { alignItems: 'stretch' },
@@ -63,27 +69,31 @@ const WebSocketRequestPaneBody: FC<Props> = ({ requestId }) => {
     <BodyContainer>
       <TitleWrapper>
         <Title>Message</Title>
-        <SendButton type="submit" form="websocketMessageForm">Send</SendButton>
+        <ButtonWrapper>
+          <SendButton type="submit" form="websocketMessageForm">Send</SendButton>
+        </ButtonWrapper>
       </TitleWrapper>
-      <EditorWrapper id="websocketMessageForm" onSubmit={handleSubmit}>
-        <CodeEditor
-          uniquenessKey={requestId}
-          ref={editorRef}
-          defaultValue=''
-        />
-      </EditorWrapper>
+      <div style={{ flex: 1 }}>
+        <EditorWrapper id="websocketMessageForm" onSubmit={handleSubmit}>
+          <div style={{ height: '100%' }}>
+            <CodeEditor
+              uniquenessKey={requestId}
+              ref={editorRef}
+              defaultValue=''
+            />
+          </div>
+        </EditorWrapper>
+      </div>
     </BodyContainer>
   );
 };
 
-// const nedbClient = createNeDBClient();
 const wsClient = createWebSocketClient();
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
   return (
-    // <NeDBClientProvider client={nedbClient}>
     <WebSocketClientProvider client={wsClient}>
       <Pane type="request">
         <StretchedPaneHeader>
@@ -92,6 +102,5 @@ export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
         <WebSocketRequestPaneBody requestId={requestId} />
       </Pane>
     </WebSocketClientProvider>
-    // </NeDBClientProvider>
   );
 };

@@ -542,6 +542,8 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
   508: 'Loop Detected',
   510: 'Not Extended',
   511: 'Network Authentication Required',
+  // 1000s
+  1005: 'No Status Rcvd',
 };
 
 export const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
