@@ -95,7 +95,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }
 
   const sendThenSetFilePath = useCallback(async (filePath?: string) => {
-    if (!request || !activeEnvironment) {
+    if (!request) {
       return;
     }
 
@@ -110,7 +110,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     dispatch(loadRequestStart(request._id));
 
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      const responsePatch = await network.send(request._id, activeEnvironment?._id);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? header.value : null;
