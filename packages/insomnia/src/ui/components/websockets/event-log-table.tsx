@@ -15,21 +15,11 @@ const Table = styled.table({
   borderCollapse: 'collapse',
   tableLayout: 'fixed',
   width: '100%',
-  padding: 20,
   boxSizing: 'border-box',
 });
-const TableWrapper = styled.div({
-  overflow: 'auto',
-  position: 'relative',
-  WebkitUserSelect: 'text',
-  cursor: 'text',
-  height: '100%',
+const TableCell = styled('td')({
+  border: '1px solid var(--hl-md)',
 });
-const TableCell = styled('td')(
-  {
-    border: '1px solid var(--hl-md)',
-  },
-);
 const TableRow = styled('tr')<{ isActive: boolean }>(
   ({ isActive }) => ({
     zIndex: 1,
@@ -223,26 +213,26 @@ interface Props {
 }
 export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
   return (
-    <TableWrapper>
-      <Table data-testid="EventLogTabe__Table" className="table--fancy table--compact">
-        <thead>
-          <tr>
-            <th style={{ width: 15 }} />
-            <th>Data</th>
-            <th style={{ width: 80 }}>Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {events.map(event => (
-            <EventTableRow
-              key={event._id}
-              event={event}
-              isActive={selectionId === event._id}
-              onClick={onSelect}
-            />
-          ))}
-        </tbody>
-      </Table>
-    </TableWrapper>
+    // <TableWrapper>
+    <Table data-testid="EventLogTabe__Table" className="table--fancy table--compact">
+      <thead>
+        <tr>
+          <th style={{ width: 15 }} />
+          <th>Data</th>
+          <th style={{ width: 80 }}>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {events.map(event => (
+          <EventTableRow
+            key={event._id}
+            event={event}
+            isActive={selectionId === event._id}
+            onClick={onSelect}
+          />
+        ))}
+      </tbody>
+    </Table>
+    // </TableWrapper>
   );
 };

@@ -8,7 +8,7 @@ import { act } from 'react-dom/test-utils';
 import { MockCodeEditor } from '../../../__jest__/mock-code-editor';
 import { getMockWsClient } from '../../context/websocket-client/test-utils';
 import { WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
-import { UnconnectedResponsePane } from './websocket-response-pane';
+import { ResponsePane } from './websocket-response-pane';
 
 jest.mock('../codemirror/code-editor', () => ({
   CodeEditor: MockCodeEditor,
@@ -47,7 +47,7 @@ describe('<WebSocketResponsePane />', () => {
     const mockWsClient = getMockWsClient(mockWebSocketEvent);
     render(
       <WebSocketClientProvider client={mockWsClient}>
-        <UnconnectedResponsePane requestId={mockWebSocketRequestId} />
+        <ResponsePane requestId={mockWebSocketRequestId} />
       </WebSocketClientProvider>
     );
 
@@ -66,7 +66,7 @@ describe('<WebSocketResponsePane />', () => {
     mockWsClient.event.findMany.mockImplementation(() => (mockInitialEvents));
     render(
       <WebSocketClientProvider client={mockWsClient}>
-        <UnconnectedResponsePane requestId={mockWebSocketRequestId} />
+        <ResponsePane requestId={mockWebSocketRequestId} />
       </WebSocketClientProvider>
     );
 
@@ -86,7 +86,7 @@ describe('<WebSocketResponsePane />', () => {
     mockWsClient.event.findMany.mockImplementation(() => (mockInitialEvents));
     render(
       <WebSocketClientProvider client={mockWsClient}>
-        <UnconnectedResponsePane requestId={mockWebSocketRequestId} />
+        <ResponsePane requestId={mockWebSocketRequestId} />
       </WebSocketClientProvider>
     );
 
@@ -113,7 +113,7 @@ describe('<WebSocketResponsePane />', () => {
     mockWsClient.event.findMany.mockImplementation(() => (mockInitialEvents));
     render(
       <WebSocketClientProvider client={mockWsClient}>
-        <UnconnectedResponsePane requestId={mockWebSocketRequestId} />
+        <ResponsePane requestId={mockWebSocketRequestId} />
       </WebSocketClientProvider>
     );
 
@@ -140,7 +140,7 @@ describe('<WebSocketResponsePane />', () => {
     mockWsClient.event.findMany.mockImplementation(() => (mockInitialEvents));
     const { unmount } = render(
       <WebSocketClientProvider client={mockWsClient}>
-        <UnconnectedResponsePane requestId={mockWebSocketRequestId} />
+        <ResponsePane requestId={mockWebSocketRequestId} />
       </WebSocketClientProvider>
     );
 

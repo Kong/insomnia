@@ -48,14 +48,18 @@ const EventLogTableWrapper = styled.div({
   width: '100%',
   flex: 1,
   overflowY: 'scroll',
+  padding: 'var(--padding-sm)',
+  boxSizing: 'border-box',
 });
 const EventLogViewWrapper = styled.div({
   flex: 1,
   borderTop: '1px solid var(--hl-md)',
   height: '100%',
+  boxSizing: 'content-box',
+  padding: 'var(--padding-sm)',
 });
 
-export const UnconnectedResponsePane: FC<{ requestId: string }> = ({
+export const ResponsePane: FC<{ requestId: string }> = ({
   requestId,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(
@@ -104,7 +108,7 @@ export const WebSocketResponsePane: FC<{ requestId: string }> = ({ requestId }) 
   const wsClient = createWebSocketClient();
   return (
     <WebSocketClientProvider client={wsClient}>
-      <UnconnectedResponsePane requestId={requestId} />
+      <ResponsePane requestId={requestId} />
     </WebSocketClientProvider>
   );
 };
