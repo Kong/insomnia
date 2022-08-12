@@ -17,8 +17,9 @@
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {
+    "bootstrap": "npm run build:sr",
     "prebuild": "npm run clean",
-    "build": "npm run build:app",
+    "build": "npm run build:sr && npm run build:app",
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "build:sr": "concurrently --names sr:source,sr:types \"npm run build:sr:source\" \"npm run build:sr:types\"",
