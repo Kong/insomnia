@@ -33,6 +33,7 @@
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test",
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test",
     "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test",
+    "smoke:serve": "npm run --prefix packages/insomnia-smoke-test serve",
     "hard-reset": "npm run clean && npm run bootstrap && npm run app-start",
     "type-check": "lerna run type-check",
     "changelog-image": "esr ./scripts/changelog-image/changelog-image.ts",
