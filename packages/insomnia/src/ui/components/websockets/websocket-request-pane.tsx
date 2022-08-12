@@ -1,24 +1,30 @@
 import React, { FC, useRef } from 'react';
 import styled from 'styled-components';
 
-import { createWebSocketClient } from '../context/websocket-client/create-websocket-client';
-import { useWebSocketClient, WebSocketClientProvider } from '../context/websocket-client/websocket-client-context';
-import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
-import { Pane, PaneHeader } from './panes/pane';
-import { WebsocketActionBar } from './websockets/action-bar';
+import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
+import { useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
+import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { WebsocketActionBar } from './action-bar';
 
 interface Props {
   requestId: string;
 }
-const BodyContainer = styled.div({
+const PaneBody = styled.div({
   display: 'flex',
   flexDirection: 'column',
+});
+const PaneBodyContent = styled.div({
+  flex: 1,
+});
+const EditorWrapper = styled.div({
+  height: '100%',
 });
 const ButtonWrapper = styled.div({
   paddingTop: 3,
   paddingBottom: 3,
 });
-const EditorWrapper = styled.form({
+const SendMessageForm = styled.form({
   width: '100%',
   height: '100%',
   position: 'relative',
@@ -33,7 +39,7 @@ const SendButton = styled.button({
     backgroundColor: 'var(--hl-xs)',
   },
 });
-const TitleWrapper = styled.div({
+const PaneBodyTitle = styled.div({
   position: 'relative',
   display: 'flex',
   flexDirection: 'row',
@@ -52,11 +58,11 @@ const Title = styled.div({
   justifyContent: 'center',
   alignItems: 'center',
 });
-const StretchedPaneHeader = styled(PaneHeader)({
+const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
 
-const WebSocketRequestPaneBody: FC<Props> = ({ requestId }) => {
+const WebSocketRequestForm: FC<Props> = ({ requestId }) => {
   const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
@@ -66,25 +72,15 @@ const WebSocketRequestPaneBody: FC<Props> = ({ requestId }) => {
     send({ requestId, message });
   };
   return (
-    <BodyContainer>
-      <TitleWrapper>
-        <Title>Message</Title>
-        <ButtonWrapper>
-          <SendButton type="submit" form="websocketMessageForm">Send</SendButton>
-        </ButtonWrapper>
-      </TitleWrapper>
-      <div style={{ flex: 1 }}>
-        <EditorWrapper id="websocketMessageForm" onSubmit={handleSubmit}>
-          <div style={{ height: '100%' }}>
-            <CodeEditor
-              uniquenessKey={requestId}
-              ref={editorRef}
-              defaultValue=''
-            />
-          </div>
-        </EditorWrapper>
-      </div>
-    </BodyContainer>
+    <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
+      <EditorWrapper>
+        <CodeEditor
+          uniquenessKey={requestId}
+          ref={editorRef}
+          defaultValue=''
+        />
+      </EditorWrapper>
+    </SendMessageForm>
   );
 };
 
@@ -96,10 +92,25 @@ export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
   return (
     <WebSocketClientProvider client={wsClient}>
       <Pane type="request">
-        <StretchedPaneHeader>
+        <PaneHeader>
           <WebsocketActionBar requestId={requestId} />
-        </StretchedPaneHeader>
-        <WebSocketRequestPaneBody requestId={requestId} />
+        </PaneHeader>
+        <PaneBody>
+          <PaneBodyTitle>
+            <Title>Message</Title>
+            <ButtonWrapper>
+              <SendButton
+                type="submit"
+                form="websocketMessageForm"
+              >
+                Send
+              </SendButton>
+            </ButtonWrapper>
+          </PaneBodyTitle>
+          <PaneBodyContent>
+            <WebSocketRequestForm requestId={requestId} />
+          </PaneBodyContent>
+        </PaneBody>
       </Pane>
     </WebSocketClientProvider>
   );
