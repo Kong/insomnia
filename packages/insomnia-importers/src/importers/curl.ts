@@ -172,7 +172,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     const pair = pairsByName[paramName];
 
     if (pair && pair.length) {
-      textBodyParams = textBodyParams.concat(pair);
+      textBodyParams = textBodyParams.concat(paramName === 'data-urlencode' ? pair.map(item => encodeURIComponent(item)) : pair);
     }
   }
 
@@ -223,8 +223,8 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     body.params = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
       return {
-        name: name || '',
-        value: value || '',
+        name: decodeURIComponent(name || ''),
+        value: decodeURIComponent(value || ''),
       };
     });
   } else if (textBody) {
