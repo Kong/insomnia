@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import { SvgIcon } from 'insomnia-components';
 import React, { FC, memo, useCallback } from 'react';
 import styled from 'styled-components';
@@ -46,6 +47,11 @@ const TableCellIconWrapper = styled.div({
   alignItems: 'center',
 });
 
+const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
+  const date = format(time, 'hh:mm:ss');
+  return <>{date}</>;
+};
+
 export const MessageEventTableRow = memo(
   (props: {
       event: WebsocketMessageEvent;
@@ -65,7 +71,9 @@ export const MessageEventTableRow = memo(
             {event.data}
           </TableCellTextWrapper>
         </TableCell>
-        <TableCell>{event.timestamp}</TableCell>
+        <TableCell>
+          <Timestamp time={event.timestamp} />
+        </TableCell>
       </TableRow>
     );
   }
@@ -92,7 +100,9 @@ export const CloseEventTableRow = memo(
             {event.code && `Code: ${event.code}`}
           </TableCellTextWrapper>
         </TableCell>
-        <TableCell>{event.timestamp}</TableCell>
+        <TableCell>
+          <Timestamp time={event.timestamp} />
+        </TableCell>
       </TableRow>
     );
   }
@@ -118,7 +128,9 @@ export const OpenEventTableRow = memo(
             Connected successfully
           </TableCellTextWrapper>
         </TableCell>
-        <TableCell>{props.event.timestamp}</TableCell>
+        <TableCell>
+          <Timestamp time={props.event.timestamp} />
+        </TableCell>
       </TableRow>
     );
   }
@@ -140,7 +152,9 @@ export const ErrorEventTableRow = memo(
           </TableCellIconWrapper>
         </TableCell>
         <TableCell>{event.message.slice(0, 50)}</TableCell>
-        <TableCell>{event.timestamp}</TableCell>
+        <TableCell>
+          <Timestamp time={event.timestamp} />
+        </TableCell>
       </TableRow>
     );
   }
@@ -213,8 +227,8 @@ export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
         <thead>
           <tr>
             <th style={{ width: 15 }} />
-            <th style={{ width: '60%' }}>Data</th>
-            <th>Time</th>
+            <th>Data</th>
+            <th style={{ width: 80 }}>Time</th>
           </tr>
         </thead>
         <tbody>
