@@ -22,14 +22,6 @@ export type WebsocketOpenEvent = Omit<OpenEvent, 'target'> & {
   timestamp: number;
 };
 
-export interface WebsocketUpgradeEvent {
-  _id: string;
-  requestId: string;
-  type: 'upgrade';
-  timestamp: number;
-  statusCode: number | undefined;
-}
-
 export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
   _id: string;
   requestId: string;
@@ -56,8 +48,7 @@ export type WebsocketEvent =
   | WebsocketOpenEvent
   | WebsocketMessageEvent
   | WebsocketErrorEvent
-  | WebsocketCloseEvent
-  | WebsocketUpgradeEvent;
+  | WebsocketCloseEvent;
 
 export type WebSocketEventLog = WebsocketEvent[];
 
