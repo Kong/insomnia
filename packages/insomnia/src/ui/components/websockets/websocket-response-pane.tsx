@@ -2,7 +2,9 @@ import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { WebsocketEvent } from '../../../main/network/websocket';
+import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
+import { WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { EventLogTable } from './event-log-table';
 import { EventLogView } from './event-log-view';
@@ -28,6 +30,7 @@ const PaneBodyTitle = styled.div({
   borderBottom: '1px solid var(--hl-md)',
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
+  flex: 'none',
 });
 const Title = styled.div({
   display: 'flex',
@@ -52,14 +55,13 @@ const EventLogViewWrapper = styled.div({
   height: '100%',
 });
 
-export const WebSocketResponsePane: FC<{ requestId: string }> = ({
+export const UnconnectedResponsePane: FC<{ requestId: string }> = ({
   requestId,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(
     null
   );
   const events = useWebSocketConnectionEvents({ requestId });
-
   const handleSelection = (event: WebsocketEvent) => {
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
   };
@@ -70,9 +72,7 @@ export const WebSocketResponsePane: FC<{ requestId: string }> = ({
 
   return (
     <Pane type="response">
-      <PaneHeader>
-        Response Pane Header
-      </PaneHeader>
+      <PaneHeader>{}</PaneHeader>
       <PaneBody>
         <PaneBodyTitle>
           <Title>
@@ -100,4 +100,11 @@ export const WebSocketResponsePane: FC<{ requestId: string }> = ({
   );
 };
 
-{ /* <div style={{ flex: 1, borderTop: '1px solid var(--hl-md)', height: '100%' }}></div> */ }
+export const WebSocketResponsePane: FC<{ requestId: string }> = ({ requestId }) => {
+  const wsClient = createWebSocketClient();
+  return (
+    <WebSocketClientProvider client={wsClient}>
+      <UnconnectedResponsePane requestId={requestId} />
+    </WebSocketClientProvider>
+  );
+};

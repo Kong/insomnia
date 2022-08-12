@@ -16,6 +16,7 @@ const Table = styled.table({
   tableLayout: 'fixed',
   width: '100%',
   padding: 20,
+  boxSizing: 'border-box',
 });
 const TableWrapper = styled.div({
   overflow: 'auto',
@@ -60,7 +61,7 @@ export const MessageEventTableRow = memo(
     }) => {
     const { event, isActive, onClick } = props;
     return (
-      <TableRow isActive={isActive} onClick={onClick}>
+      <TableRow data-testid="EventLogTable__EventTableRow" isActive={isActive} onClick={onClick}>
         <TableCell>
           <TableCellIconWrapper>
             {event.direction === 'OUTGOING' ? <SvgIcon icon="sent" /> : <SvgIcon icon="receive" />}
@@ -88,7 +89,7 @@ export const CloseEventTableRow = memo(
     }) => {
     const { event, isActive, onClick } = props;
     return (
-      <TableRow isActive={isActive} onClick={onClick}>
+      <TableRow data-testid="EventLogTable__EventTableRow" isActive={isActive} onClick={onClick}>
         <TableCell>
           <TableCellIconWrapper>
             <SvgIcon icon="disconnected" />
@@ -117,7 +118,7 @@ export const OpenEventTableRow = memo(
     }) => {
     const { isActive, onClick } = props;
     return (
-      <TableRow isActive={isActive} onClick={onClick}>
+      <TableRow data-testid="EventLogTable__EventTableRow" isActive={isActive} onClick={onClick}>
         <TableCell>
           <TableCellIconWrapper>
             <SvgIcon icon="ellipsis-circle2" />
@@ -145,7 +146,7 @@ export const ErrorEventTableRow = memo(
     }) => {
     const { event, isActive, onClick } = props;
     return (
-      <TableRow isActive={isActive} onClick={onClick}>
+      <TableRow data-testid="EventLogTable__EventTableRow" isActive={isActive} onClick={onClick}>
         <TableCell>
           <TableCellIconWrapper>
             <SvgIcon icon="error" />
@@ -223,7 +224,7 @@ interface Props {
 export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
   return (
     <TableWrapper>
-      <Table className="table--fancy table--compact">
+      <Table data-testid="EventLogTabe__Table" className="table--fancy table--compact">
         <thead>
           <tr>
             <th style={{ width: 15 }} />
