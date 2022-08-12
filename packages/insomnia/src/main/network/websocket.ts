@@ -1,5 +1,4 @@
 import { ipcMain } from 'electron';
-import { IncomingMessage } from 'http';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
@@ -90,9 +89,7 @@ async function createWebSocketConnection(
     const ws = new WebSocket(request?.url);
     WebSocketConnections.set(options.requestId, ws);
 
-    ws.addEventListener('open', (e: OpenEvent) => {
-      console.log('open - e', e.target);
-      console.log('open - e', e.type);
+    ws.addEventListener('open', () => {
       const openEvent: WebsocketOpenEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -106,8 +103,7 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.addEventListener('message', ({ data, target }: MessageEvent) => {
-      console.log('message-target', target);
+    ws.addEventListener('message', ({ data }: MessageEvent) => {
       const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const messageEvent: WebsocketMessageEvent = {
         _id: uuidV4(),
@@ -120,21 +116,6 @@ async function createWebSocketConnection(
 
       WebSocketEventLogs.set(options.requestId, [...msgs, messageEvent]);
       event.sender.send(eventChannel, messageEvent);
-    });
-
-    ws.on('upgrade', (request: IncomingMessage) => {
-      const upgradeEvent: WebsocketUpgradeEvent = {
-        _id: uuidV4(),
-        requestId: options.requestId,
-        type: 'upgrade',
-        timestamp: Date.now(),
-        statusCode: request.statusCode,
-      };
-
-      WebSocketEventLogs.set(options.requestId, [upgradeEvent]);
-
-      event.sender.send(eventChannel, upgradeEvent);
-      event.sender.send(readyStateChannel, ws.readyState);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
