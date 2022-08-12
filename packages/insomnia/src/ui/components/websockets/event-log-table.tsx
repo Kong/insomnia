@@ -49,7 +49,7 @@ const TableCellIconWrapper = styled.div({
 });
 
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
-  const date = format(time, 'hh:mm:ss');
+  const date = format(time, 'HH:mm:ss');
   return <>{date}</>;
 };
 
