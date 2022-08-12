@@ -22,7 +22,6 @@ const TableWrapper = styled.div({
   WebkitUserSelect: 'text',
   cursor: 'text',
   height: '100%',
-  padding: 10,
 });
 const TableCell = styled('td')(
   {

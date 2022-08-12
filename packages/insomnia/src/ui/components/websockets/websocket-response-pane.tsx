@@ -1,18 +1,21 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { WebsocketEvent } from '../../../main/network/websocket';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
+import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { EventLogTable } from './event-log-table';
 import { EventLogView } from './event-log-view';
 
-const BodyContainer = styled.div({
+const PaneHeader = styled(OriginalPaneHeader)({
+  '&&': { justifyContent: 'unset' },
+});
+const PaneBody = styled.div({
   display: 'flex',
   flexDirection: 'column',
-  height: '100%',
 });
 
-const TitleWrapper = styled.div({
+const PaneBodyTitle = styled.div({
   position: 'relative',
   display: 'flex',
   flexDirection: 'row',
@@ -32,6 +35,23 @@ const Title = styled.div({
   alignItems: 'center',
 });
 
+const PaneBodyContent = styled.div({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+});
+const EventLogTableWrapper = styled.div({
+  width: '100%',
+  flex: 1,
+  overflowY: 'scroll',
+});
+const EventLogViewWrapper = styled.div({
+  flex: 1,
+  borderTop: '1px solid var(--hl-md)',
+  height: '100%',
+});
+
 export const WebSocketResponsePane: FC<{ requestId: string }> = ({
   requestId,
 }) => {
@@ -44,32 +64,40 @@ export const WebSocketResponsePane: FC<{ requestId: string }> = ({
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     setSelectedEvent(null);
   }, []);
 
   return (
-    <BodyContainer>
-      <TitleWrapper>
-        Status Code
-      </TitleWrapper>
-      <TitleWrapper>
-        <Title>
-          Events
-        </Title>
-      </TitleWrapper>
-      <div style={{ flex: 1, overflowY: 'scroll' }}>
-        <div style={{ width: '100%' }}>
+    <Pane type="response">
+      <PaneHeader>
+        Response Pane Header
+      </PaneHeader>
+      <PaneBody>
+        <PaneBodyTitle>
+          <Title>
+            Events
+          </Title>
+        </PaneBodyTitle>
+        <PaneBodyContent>
           {Boolean(events?.length) && (
-            <EventLogTable
-              events={events}
-              onSelect={handleSelection}
-              selectionId={selectedEvent?._id}
-            />
+            <EventLogTableWrapper>
+              <EventLogTable
+                events={events}
+                onSelect={handleSelection}
+                selectionId={selectedEvent?._id}
+              />
+            </EventLogTableWrapper>
           )}
-        </div>
-      </div>
-      {selectedEvent && (<EventLogView event={selectedEvent} />)}
-    </BodyContainer>
+          {selectedEvent && (
+            <EventLogViewWrapper>
+              <EventLogView event={selectedEvent} />
+            </EventLogViewWrapper>
+          )}
+        </PaneBodyContent>
+      </PaneBody>
+    </ Pane>
   );
 };
+
+{ /* <div style={{ flex: 1, borderTop: '1px solid var(--hl-md)', height: '100%' }}></div> */ }

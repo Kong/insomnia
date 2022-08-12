@@ -1,4 +1,4 @@
-import React, { FC, useRef } from 'react';
+import React, { FC, FormEvent, useRef } from 'react';
 import styled from 'styled-components';
 
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
@@ -66,8 +66,8 @@ const WebSocketRequestForm: FC<Props> = ({ requestId }) => {
   const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const message = editorRef.current?.getValue() || '';
     send({ requestId, message });
   };
