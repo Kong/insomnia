@@ -1,4 +1,5 @@
 export interface WebSocketClient {
+    event: typeof window.main.webSocketConnection.event;
     create: typeof window.main.webSocketConnection.create;
     close: typeof window.main.webSocketConnection.close;
     send: typeof window.main.webSocketConnection.event.send;
@@ -7,6 +8,7 @@ export interface WebSocketClient {
   }
 export function createWebSocketClient(): WebSocketClient {
   return {
+    event: window.main.webSocketConnection.event,
     create: window.main.webSocketConnection.create,
     close: window.main.webSocketConnection.close,
     send: window.main.webSocketConnection.event.send,

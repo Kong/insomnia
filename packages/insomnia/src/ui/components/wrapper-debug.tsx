@@ -28,8 +28,8 @@ import { RequestPane } from './panes/request-pane';
 import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
 import { SidebarFilter } from './sidebar/sidebar-filter';
-import { WebSocketRequestPane } from './websocket-request-pane';
-import { WebSocketResponsePane } from './websocket-response-pane';
+import { WebSocketRequestPane } from './websockets/websocket-request-pane';
+import { WebSocketResponsePane } from './websockets/websocket-response-pane';
 import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange } from './wrapper';
 

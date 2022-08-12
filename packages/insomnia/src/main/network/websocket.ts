@@ -19,6 +19,7 @@ export type WebsocketOpenEvent = Omit<OpenEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'open';
+  timestamp: number;
 };
 
 export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
@@ -26,18 +27,21 @@ export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
   requestId: string;
   direction: 'OUTGOING' | 'INCOMING';
   type: 'message';
+  timestamp: number;
 };
 
 export type WebsocketErrorEvent = Omit<ErrorEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'error';
+  timestamp: number;
 };
 
 export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'close';
+  timestamp: number;
 };
 
 export type WebsocketEvent =
@@ -81,6 +85,7 @@ async function createWebSocketConnection(
         _id: uuidV4(),
         requestId: options.requestId,
         type: 'open',
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [openEvent]);
@@ -89,7 +94,7 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.addEventListener('message', ({ data }) => {
+    ws.addEventListener('message', ({ data }: MessageEvent) => {
       const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const messageEvent: WebsocketMessageEvent = {
         _id: uuidV4(),
@@ -97,6 +102,7 @@ async function createWebSocketConnection(
         data,
         type: 'message',
         direction: 'INCOMING',
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [...msgs, messageEvent]);
@@ -112,6 +118,7 @@ async function createWebSocketConnection(
         reason,
         type: 'close',
         wasClean,
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [...msgs, closeEvent]);
@@ -129,6 +136,7 @@ async function createWebSocketConnection(
         message,
         type: 'error',
         error,
+        timestamp: Date.now(),
       };
 
       WebSocketEventLogs.set(options.requestId, [...msgs, errorEvent]);
@@ -179,6 +187,7 @@ async function sendWebSocketEvent(
     data: options.message,
     direction: 'OUTGOING',
     type: 'message',
+    timestamp: Date.now(),
   };
 
   WebSocketEventLogs.set(options.requestId, [

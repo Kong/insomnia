@@ -12,11 +12,13 @@ import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
 import { SvgIcnChevronUp } from './assets/svgr/IcnChevronUp';
 import { SvgIcnClock } from './assets/svgr/IcnClock';
 import { SvgIcnCookie } from './assets/svgr/IcnCookie';
+import { SvgIcnDisconnected } from './assets/svgr/IcnDisconnected';
 import { SvgIcnDraftingCompass } from './assets/svgr/IcnDraftingCompass';
 import { SvgIcnDragGrip } from './assets/svgr/IcnDragGrip';
 import { SvgIcnElevator } from './assets/svgr/IcnElevator';
 import { SvgIcnEllipsis } from './assets/svgr/IcnEllipsis';
 import { SvgIcnEllipsisCircle } from './assets/svgr/IcnEllipsisCircle';
+import { SvgIcnEllipsisCircle2 } from './assets/svgr/IcnEllipsisCircle2';
 import { SvgIcnEmpty } from './assets/svgr/IcnEmpty';
 import { SvgIcnErrors } from './assets/svgr/IcnErrors';
 import { SvgIcnFile } from './assets/svgr/IcnFile';
@@ -43,10 +45,13 @@ import { SvgIcnPlus } from './assets/svgr/IcnPlus';
 import { SvgIcnProhibited } from './assets/svgr/IcnProhibited';
 import { SvgIcnQuestion } from './assets/svgr/IcnQuestion';
 import { SvgIcnQuestionFill } from './assets/svgr/IcnQuestionFill';
+import { SvgIcnReceive } from './assets/svgr/IcnReceive';
 import { SvgIcnSearch } from './assets/svgr/IcnSearch';
 import { SvgIcnSecCert } from './assets/svgr/IcnSecCert';
+import { SvgIcnSent } from './assets/svgr/IcnSent';
 import { SvgIcnSuccess } from './assets/svgr/IcnSuccess';
 import { SvgIcnSync } from './assets/svgr/IcnSync';
+import { SvgIcnSystemEvent } from './assets/svgr/IcnSystemEvent';
 import { SvgIcnTrashcan } from './assets/svgr/IcnTrashcan';
 import { SvgIcnTriangle } from './assets/svgr/IcnTriangle';
 import { SvgIcnUser } from './assets/svgr/IcnUser';
@@ -122,7 +127,11 @@ export const IconEnum = {
   warning: 'warning',
   warningCircle: 'warning-circle',
   x: 'x',
-
+  disconnected: 'disconnected',
+  ellipsisCircle2: 'ellipsis-circle2',
+  receive: 'receive',
+  sent: 'sent',
+  systemEvent: 'system-event',
   /** Blank icon */
   empty: 'empty',
 } as const;
@@ -224,6 +233,11 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.warningCircle]: [ThemeEnum.default, SvgIcnWarningCircle],
     [IconEnum.warning]: [ThemeEnum.notice, SvgIcnWarning],
     [IconEnum.x]: [ThemeEnum.default, SvgIcnX],
+    [IconEnum.disconnected]: [ThemeEnum.default, SvgIcnDisconnected],
+    [IconEnum.receive]: [ThemeEnum.default, SvgIcnReceive],
+    [IconEnum.sent]: [ThemeEnum.default, SvgIcnSent],
+    [IconEnum.ellipsisCircle2]: [ThemeEnum.default, SvgIcnEllipsisCircle2],
+    [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
   };
 
   render() {
