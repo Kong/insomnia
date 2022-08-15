@@ -3,12 +3,13 @@ import React, { FC, useCallback } from 'react';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestHeader } from '../../../models/request';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
-  request: Request;
+  request: Request | WebSocketRequest;
 }
 
 export const RequestHeadersEditor: FC<Props> = ({
