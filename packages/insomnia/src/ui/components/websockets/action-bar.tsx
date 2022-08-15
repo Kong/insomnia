@@ -52,6 +52,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
 
 interface ActionBarProps {
   requestId: string;
+  readyState: ReadyState;
 }
 
 const Form = styled.form({
@@ -75,11 +76,10 @@ const WebSocketIcon = styled.span({
   paddingLeft: 'var(--padding-md)',
 });
 
-export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
+export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId, readyState }) => {
   const request = useSelector(selectActiveRequest);
 
   const { create, close } = useWebSocketClient();
-  const readyState = useWSReadyState(requestId);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
