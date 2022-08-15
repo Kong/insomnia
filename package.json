@@ -20,7 +20,7 @@
     "publish": "lerna publish from-package",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules **/*.tsbuildinfo",
     "test": "lerna run --stream --parallel test",
-    "inso-start": "npm run build:sr --prefix packages/insomnia && npm start --prefix packages/insomnia-inso",
+    "inso-start": "npm start --prefix packages/insomnia-inso",
     "inso-package": "npm run build:sr --prefix packages/insomnia && npm run package --prefix packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --prefix packages/insomnia-inso",
     "watch:app": "npm run build:main.min.js --prefix packages/insomnia && npm run start:dev-server --prefix packages/insomnia",
