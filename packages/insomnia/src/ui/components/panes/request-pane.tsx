@@ -37,6 +37,7 @@ interface Props {
   headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
+  toggleBulkHeaderEditor: () => void;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   workspace: Workspace;
 }
@@ -50,6 +51,7 @@ export const RequestPane: FC<Props> = ({
   headerEditorKey,
   request,
   settings,
+  toggleBulkHeaderEditor,
   updateRequestMimeType,
   workspace,
 }) => {
@@ -72,10 +74,6 @@ export const RequestPane: FC<Props> = ({
   const autocompleteUrls = useCallback(() => {
     return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
   }, [workspace, request]);
-
-  const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkHeaderEditor:!settings.useBulkHeaderEditor });
-  }, [settings]);
 
   const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
     models.settings.update(settings, { useBulkParametersEditor:!settings.useBulkParametersEditor });
@@ -249,7 +247,7 @@ export const RequestPane: FC<Props> = ({
           <div className="pad-right text-right">
             <button
               className="margin-top-sm btn btn--clicky"
-              onClick={handleUpdateSettingsUseBulkHeaderEditor}
+              onClick={toggleBulkHeaderEditor}
             >
               {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
             </button>

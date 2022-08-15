@@ -9,9 +9,7 @@ import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebsocketActionBar } from './action-bar';
-interface Props {
-  request: WebSocketRequest;
-}
+
 const PaneBody = styled.div({
   display: 'flex',
   flexDirection: 'column',
@@ -61,7 +59,7 @@ const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
 
-const WebSocketRequestForm: FC<{requestId: string}> = ({ requestId }) => {
+const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
   const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
@@ -83,11 +81,21 @@ const WebSocketRequestForm: FC<{requestId: string}> = ({ requestId }) => {
   );
 };
 
+interface Props {
+  request: WebSocketRequest;
+  useBulkHeaderEditor: boolean;
+  toggleBulkHeaderEditor: () => void;
+}
+
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request }) => {
+export const WebSocketRequestPane: FC<Props> = ({
+  request,
+  useBulkHeaderEditor,
+  toggleBulkHeaderEditor,
+}) => {
   const wsClient = createWebSocketClient();
   return (
     <WebSocketClientProvider client={wsClient}>
@@ -124,14 +132,14 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
               <TabPanel className="react-tabs__tab-panel header-editor">
                 <RequestHeadersEditor
                   request={request}
-                  bulk={false}
+                  bulk={useBulkHeaderEditor}
                 />
                 <div className="pad-right text-right">
                   <button
                     className="margin-top-sm btn btn--clicky"
-                    onClick={() => {}}
+                    onClick={toggleBulkHeaderEditor}
                   >
-                    {false ? 'Regular Edit' : 'Bulk Edit'}
+                    {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
                   </button>
                 </div>
               </TabPanel>

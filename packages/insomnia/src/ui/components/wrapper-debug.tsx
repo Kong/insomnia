@@ -1,6 +1,7 @@
-import React, { FC, Fragment, ReactNode } from 'react';
+import React, { FC, Fragment, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
+import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { Request, RequestHeader } from '../../models/request';
@@ -77,6 +78,10 @@ export const WrapperDebug: FC<Props> = ({
 
   const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
 
+  const toggleBulkHeaderEditor = useCallback(() => {
+    models.settings.update(settings, { useBulkHeaderEditor: !settings.useBulkHeaderEditor });
+  }, [settings]);
+
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?
@@ -128,7 +133,11 @@ export const WrapperDebug: FC<Props> = ({
               />
             ) : (
               isWebSocketRequest(activeRequest) ? (
-                <WebSocketRequestPane request={activeRequest} />
+                <WebSocketRequestPane
+                  request={activeRequest}
+                  useBulkHeaderEditor={settings.useBulkHeaderEditor}
+                  toggleBulkHeaderEditor={toggleBulkHeaderEditor}
+                />
               ) : (
                 <RequestPane
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -139,6 +148,7 @@ export const WrapperDebug: FC<Props> = ({
                   headerEditorKey={headerEditorKey}
                   request={activeRequest}
                   settings={settings}
+                  toggleBulkHeaderEditor={toggleBulkHeaderEditor}
                   updateRequestMimeType={handleUpdateRequestMimeType}
                   workspace={activeWorkspace}
                 />
