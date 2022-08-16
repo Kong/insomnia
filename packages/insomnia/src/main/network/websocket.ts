@@ -78,6 +78,7 @@ async function createWebSocketConnection(
     const eventChannel = `webSocketRequest.connection.${request._id}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
 
+    // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = request.headers.filter(({ value, disabled, readOnly }) => !!value && !disabled && !readOnly)
@@ -176,6 +177,7 @@ async function sendWebSocketEvent(
   }
 
   ws.send(options.message, error => {
+    // @TODO: Render nunjucks tags in these messages
     // @TODO: We might want to set a status in the WebsocketMessageEvent
     // and update it here based on the error. e.g. status = 'sending' | 'sent' | 'error'
     if (error) {
