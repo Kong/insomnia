@@ -9,6 +9,7 @@ import {
   WebsocketEvent,
   WebsocketMessageEvent,
   WebsocketOpenEvent,
+  WebsocketUpgradeEvent,
 } from '../../../main/network/websocket';
 
 const Table = styled.table({
@@ -128,6 +129,34 @@ export const OpenEventTableRow = memo(
 );
 OpenEventTableRow.displayName = 'OpenEventTableRow';
 
+export const UpgradeEventTableRow = memo(
+  (props: {
+      event: WebsocketUpgradeEvent;
+      isActive: boolean;
+      onClick: () => void;
+    }) => {
+    const { isActive, onClick } = props;
+    return (
+      <TableRow data-testid="EventLogTable__EventTableRow" isActive={isActive} onClick={onClick}>
+        <TableCell>
+          <TableCellIconWrapper>
+            <SvgIcon icon="ellipsis-circle2" />
+          </TableCellIconWrapper>
+        </TableCell>
+        <TableCell>
+          <TableCellTextWrapper>
+            HTTP connection upgraded successfully
+          </TableCellTextWrapper>
+        </TableCell>
+        <TableCell>
+          <Timestamp time={props.event.timestamp} />
+        </TableCell>
+      </TableRow>
+    );
+  }
+);
+UpgradeEventTableRow.displayName = 'UpgradeEventTableRow';
+
 export const ErrorEventTableRow = memo(
   (props: {
       event: WebsocketErrorEvent;
@@ -174,6 +203,15 @@ export const EventTableRow = memo(
       case 'open': {
         return (
           <OpenEventTableRow
+            event={event}
+            isActive={isActive}
+            onClick={_onClick}
+          />
+        );
+      }
+      case 'upgrade': {
+        return (
+          <UpgradeEventTableRow
             event={event}
             isActive={isActive}
             onClick={_onClick}
