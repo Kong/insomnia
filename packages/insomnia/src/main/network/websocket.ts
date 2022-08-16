@@ -9,6 +9,8 @@ import {
 } from 'ws';
 
 import { websocketRequest } from '../../models';
+import { RequestHeader } from '../../models/request';
+import { DISABLE_HEADER_VALUE } from './parse-header-strings';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -76,8 +78,11 @@ async function createWebSocketConnection(
 
     const eventChannel = `webSocketRequest.connection.${request._id}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
-
-    const ws = new WebSocket(request?.url);
+    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: RequestHeader) =>
+      ({ ...acc, [name.toLowerCase() || '']: value || '' });
+    const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    const ws = new WebSocket(request?.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
 
     ws.addEventListener('open', () => {
