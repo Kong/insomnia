@@ -466,6 +466,8 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
             allowFile={allowFile}
+            readOnly={pair.readOnly}
+            hideButtons={pair.readOnly}
             pair={pair}
           />
         ))}
@@ -476,7 +478,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             hideButtons
             sortable
             noDropZone
-            readOnly
             forceInput
             index={-1}
             onChange={noop}

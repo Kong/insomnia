@@ -9,8 +9,7 @@ import {
 } from 'ws';
 
 import { websocketRequest } from '../../models';
-import { RequestHeader } from '../../models/request';
-import { DISABLE_HEADER_VALUE } from './parse-header-strings';
+import { BaseWebSocketRequest } from '../../models/websocket-request';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -78,10 +77,12 @@ async function createWebSocketConnection(
 
     const eventChannel = `webSocketRequest.connection.${request._id}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
-    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: RequestHeader) =>
+
+    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
-    const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
+    const headers = request.headers.filter(({ value, disabled, readOnly }) => !!value && !disabled && !readOnly)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+
     const ws = new WebSocket(request?.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
 
@@ -97,6 +98,10 @@ async function createWebSocketConnection(
 
       event.sender.send(eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
+    });
+
+    ws.on('upgrade', response => {
+      console.log(response.headers);
     });
 
     ws.addEventListener('message', ({ data }: MessageEvent) => {

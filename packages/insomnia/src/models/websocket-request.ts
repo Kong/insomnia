@@ -16,7 +16,7 @@ export interface BaseWebSocketRequest {
   name: string;
   url: string;
   metaSortKey: number;
-  headers: RequestHeader[];
+  headers: (RequestHeader & {readOnly?:boolean})[];
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -34,12 +34,12 @@ export const init = (): BaseWebSocketRequest => ({
   url: '',
   metaSortKey: -1 * Date.now(),
   headers: [
-    { name: 'Host', value: '' },
-    { name: 'Connection', value: 'Upgrade' },
-    { name: 'Upgrade', value: 'websocket' },
-    { name: 'Sec-WebSocket-Key', value: '' },
-    { name: 'Sec-WebSocket-Version', value: '' },
-    { name: 'Sec-WebSocket-Extensions', value: '' },
+    { name: 'Host', value: '<calculated at runtime>', readOnly: true },
+    { name: 'Connection', value: 'Upgrade', readOnly: true },
+    { name: 'Upgrade', value: 'websocket', readOnly: true },
+    { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', readOnly: true },
+    { name: 'Sec-WebSocket-Version', value: '13', readOnly: true },
+    { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', readOnly: true },
     { name: 'Sec-WebSocket-Protocol', value: '' }],
 });
 

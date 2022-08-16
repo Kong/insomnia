@@ -66,15 +66,13 @@ const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
 
 interface Props {
   request: WebSocketRequest;
-  useBulkHeaderEditor: boolean;
-  toggleBulkHeaderEditor: () => void;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-const RequestPane: FC<Props> = ({ request, useBulkHeaderEditor, toggleBulkHeaderEditor }) => {
+const RequestPane: FC<Props> = ({ request }) => {
   const readyState = useWSReadyState(request._id);
   return (
     <Pane type="request">
@@ -105,16 +103,8 @@ const RequestPane: FC<Props> = ({ request, useBulkHeaderEditor, toggleBulkHeader
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
             request={request}
-            bulk={useBulkHeaderEditor}
+            bulk={false}
           />
-          <div className="pad-right text-right">
-            <button
-              className="margin-top-sm btn btn--clicky"
-              onClick={toggleBulkHeaderEditor}
-            >
-              {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-            </button>
-          </div>
         </TabPanel>
       </Tabs>
     </Pane>
@@ -122,16 +112,12 @@ const RequestPane: FC<Props> = ({ request, useBulkHeaderEditor, toggleBulkHeader
 };
 export const WebSocketRequestPane: FC<Props> = ({
   request,
-  useBulkHeaderEditor,
-  toggleBulkHeaderEditor,
 }) => {
   const wsClient = createWebSocketClient();
   return (
     <WebSocketClientProvider client={wsClient}>
       <RequestPane
         request={request}
-        useBulkHeaderEditor={useBulkHeaderEditor}
-        toggleBulkHeaderEditor={toggleBulkHeaderEditor}
       />
     </WebSocketClientProvider>
   );
