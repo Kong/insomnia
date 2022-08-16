@@ -145,7 +145,7 @@ export const UpgradeEventTableRow = memo(
         </TableCell>
         <TableCell>
           <TableCellTextWrapper>
-            HTTP connection upgraded successfully
+            Connection upgraded to WebSocket
           </TableCellTextWrapper>
         </TableCell>
         <TableCell>
