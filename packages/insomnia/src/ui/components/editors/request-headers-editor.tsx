@@ -9,12 +9,14 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
+  isDisabled?: boolean;
   request: Request | WebSocketRequest;
 }
 
 export const RequestHeadersEditor: FC<Props> = ({
   request,
   bulk,
+  isDisabled,
 }) => {
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
@@ -83,6 +85,7 @@ export const RequestHeadersEditor: FC<Props> = ({
           handleGetAutocompleteNameConstants={getCommonHeaderNames}
           handleGetAutocompleteValueConstants={getCommonHeaderValues}
           onChange={onChangeHeaders}
+          isDisabled={isDisabled}
         />
       </div>
     </div>

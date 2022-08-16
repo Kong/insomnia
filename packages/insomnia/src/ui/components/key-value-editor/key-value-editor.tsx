@@ -41,6 +41,7 @@ interface Props {
   onDelete?: Function;
   onCreate?: Function;
   className?: string;
+  isDisabled?: boolean;
 }
 
 interface State {
@@ -435,9 +436,13 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       allowMultiline,
       sortable,
       disableDelete,
+      isDisabled,
     } = this.props;
     const { pairs } = this.state;
+
     const classes = classnames('key-value-editor', 'wide', className);
+    const hasMaxPairsAndNotExceeded = !maxPairs || pairs.length < maxPairs;
+    const showNewHeaderInput = !isDisabled && hasMaxPairsAndNotExceeded;
     return (
       <ul className={classes}>
         {pairs.map((pair, i) => (
@@ -466,13 +471,13 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
             allowFile={allowFile}
-            readOnly={pair.readOnly}
-            hideButtons={pair.readOnly}
+            readOnly={isDisabled || pair.readOnly}
+            hideButtons={isDisabled || pair.readOnly}
             pair={pair}
           />
         ))}
 
-        {!maxPairs || pairs.length < maxPairs ? (
+        {showNewHeaderInput ? (
           <Row
             key="empty-row"
             hideButtons
