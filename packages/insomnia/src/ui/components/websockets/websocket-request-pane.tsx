@@ -74,6 +74,10 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 const RequestPane: FC<Props> = ({ request }) => {
   const readyState = useWSReadyState(request._id);
+  const readOnlyRequest = {
+    ...request,
+    headers: request.headers.map(header => ({ ...header, readOnly: true })),
+  };
   return (
     <Pane type="request">
       <PaneHeader>
@@ -102,7 +106,8 @@ const RequestPane: FC<Props> = ({ request }) => {
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
-            request={request}
+            key={`${request._id}-${readyState}-header-editor`}
+            request={readyState === ReadyState.CLOSED ? request : readOnlyRequest}
             bulk={false}
           />
         </TabPanel>
