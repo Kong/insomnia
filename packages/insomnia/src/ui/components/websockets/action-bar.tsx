@@ -2,6 +2,7 @@ import React, { FC, FormEvent, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { WebsocketInstanceArgs } from '../../../main/network/websocket';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
@@ -94,7 +95,8 @@ export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
       await models.websocketRequest.update(request as WebSocketRequest, { url });
     }
 
-    create({ requestId });
+    const args: WebsocketInstanceArgs = { address: url };
+    create({ requestId, args });
   };
 
   useEffect(() => {

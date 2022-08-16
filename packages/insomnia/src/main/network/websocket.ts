@@ -1,14 +1,14 @@
 import { ipcMain } from 'electron';
+import { ClientRequestArgs } from 'http';
 import { v4 as uuidV4 } from 'uuid';
 import {
+  ClientOptions,
   CloseEvent,
   ErrorEvent,
   Event as OpenEvent,
   MessageEvent,
   WebSocket,
 } from 'ws';
-
-import { websocketRequest } from '../../models';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -52,15 +52,22 @@ export type WebsocketEvent =
 
 export type WebSocketEventLog = WebsocketEvent[];
 
+export interface WebsocketInstanceArgs {
+  address: string | URL;
+  protocols?: string | string[];
+  options?: ClientOptions | ClientRequestArgs;
+}
+
 // @TODO: Volatile state for now, later we might want to persist event logs.
 const WebSocketConnections = new Map<string, WebSocket>();
 const WebSocketEventLogs = new Map<string, WebSocketEventLog>();
 
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
-  options: { requestId: string }
+  options: { requestId: string; args: WebsocketInstanceArgs }
 ) {
-  const existingConnection = WebSocketConnections.get(options.requestId);
+  const { requestId, args } = options;
+  const existingConnection = WebSocketConnections.get(requestId);
 
   if (existingConnection) {
     console.warn('Connection still open to ' + existingConnection.url);
@@ -68,16 +75,10 @@ async function createWebSocketConnection(
   }
 
   try {
-    const request = await websocketRequest.getById(options.requestId);
+    const eventChannel = `webSocketRequest.connection.${requestId}.event`;
+    const readyStateChannel = `webSocketRequest.connection.${requestId}.readyState`;
 
-    if (!request?.url) {
-      throw new Error('No URL specified');
-    }
-
-    const eventChannel = `webSocketRequest.connection.${request._id}.event`;
-    const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
-
-    const ws = new WebSocket(request?.url);
+    const ws = new WebSocket(args.address, args.protocols, args.options);
     WebSocketConnections.set(options.requestId, ws);
 
     ws.addEventListener('open', () => {

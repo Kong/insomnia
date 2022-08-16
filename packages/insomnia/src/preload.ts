@@ -1,9 +1,12 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-import type { WebsocketEvent } from './main/network/websocket';
+import type { WebsocketEvent, WebsocketInstanceArgs } from './main/network/websocket';
 
 const webSocketConnection = {
-  create: (options: { requestId: string }) => {
+  create: (options: {
+    requestId: string;
+    args: WebsocketInstanceArgs;
+  }) => {
     return ipcRenderer.invoke('webSocketRequest.connection.create', options);
   },
   close: (options: { requestId: string }) => {
