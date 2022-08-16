@@ -23,18 +23,6 @@ const mockWebSocketRequest = {
   _id: 'ws-req_41a7383adef4406eabf0b5bd23594375',
 };
 
-{/* <WebSocketActionBar /> should render without exploding
-
-<WebSocketActionBar /> should not call 'connect' when the url field is empty
-
-<WebSocketActionBar /> should call 'connect' when Enter key is pressed with the uril field filled
-
-<WebSocketActionBar /> should call 'connect' when Connect button is clicked with the uril field filled
-
-<WebSocketActionBar /> should call 'close' when Close button is clicked
-
-<WebSocketActionBar /> should call 'close' when component is unmounted */}
-
 describe('<WebSocketActionBar />', () => {
   test('renders without exploding', async () => {
     const mockOnChangeEvent = new EventEmitter();
