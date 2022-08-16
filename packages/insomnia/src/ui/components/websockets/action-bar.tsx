@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useWebSocketClient } from '../../context/websocket-client/websocket-client-context';
 import { selectActiveRequest } from '../../redux/selectors';
 
