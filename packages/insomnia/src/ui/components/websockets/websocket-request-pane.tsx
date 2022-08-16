@@ -1,6 +1,8 @@
 import React, { FC, FormEvent, useRef } from 'react';
 import styled from 'styled-components';
 
+import { createNeDBClient } from '../../context/nedb-client/create-nedb-client';
+import { NeDBClientProvider } from '../../context/nedb-client/nedb-client-context';
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
@@ -88,30 +90,33 @@ const WebSocketRequestForm: FC<Props> = ({ requestId }) => {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
+  const nedbClient = createNeDBClient();
   const wsClient = createWebSocketClient();
   return (
-    <WebSocketClientProvider client={wsClient}>
-      <Pane type="request">
-        <PaneHeader>
-          <WebsocketActionBar requestId={requestId} />
-        </PaneHeader>
-        <PaneBody>
-          <PaneBodyTitle>
-            <Title>Message</Title>
-            <ButtonWrapper>
-              <SendButton
-                type="submit"
-                form="websocketMessageForm"
-              >
-                Send
-              </SendButton>
-            </ButtonWrapper>
-          </PaneBodyTitle>
-          <PaneBodyContent>
-            <WebSocketRequestForm requestId={requestId} />
-          </PaneBodyContent>
-        </PaneBody>
-      </Pane>
-    </WebSocketClientProvider>
+    <NeDBClientProvider client={nedbClient}>
+      <WebSocketClientProvider client={wsClient}>
+        <Pane type="request">
+          <PaneHeader>
+            <WebsocketActionBar requestId={requestId} />
+          </PaneHeader>
+          <PaneBody>
+            <PaneBodyTitle>
+              <Title>Message</Title>
+              <ButtonWrapper>
+                <SendButton
+                  type="submit"
+                  form="websocketMessageForm"
+                >
+                  Send
+                </SendButton>
+              </ButtonWrapper>
+            </PaneBodyTitle>
+            <PaneBodyContent>
+              <WebSocketRequestForm requestId={requestId} />
+            </PaneBodyContent>
+          </PaneBody>
+        </Pane>
+      </WebSocketClientProvider>
+    </NeDBClientProvider>
   );
 };

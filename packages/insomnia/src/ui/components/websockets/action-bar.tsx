@@ -1,12 +1,11 @@
-import React, { FC, FormEvent, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { ChangeEvent, FC, FormEvent, useEffect } from 'react';
 import styled from 'styled-components';
 
-import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { useGetWhereQuery } from '../../context/nedb-client/use-get-where-query';
+import { useUpdateMutation } from '../../context/nedb-client/use-update-mutation';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useWebSocketClient } from '../../context/websocket-client/websocket-client-context';
-import { selectActiveRequest } from '../../redux/selectors';
 
 const Button = styled.button({
   paddingRight: 'var(--padding-md)',
@@ -76,8 +75,14 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
-  const request = useSelector(selectActiveRequest);
-
+  const { data } = useGetWhereQuery<WebSocketRequest>(`{
+    "operationName": "getWebSocketRequest",
+    "type": "WebSocketRequest",
+    "query": {
+      "_id": "${requestId}"
+    }
+  }`);
+  const [updateRequestUrl] = useUpdateMutation<WebSocketRequest>(data);
   const { create, close } = useWebSocketClient();
   const readyState = useWSReadyState(requestId);
 
@@ -86,17 +91,22 @@ export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
     const formData = new FormData(event.currentTarget);
     const url = (formData.get('websocketUrlInput') as string) || '';
 
-    if (!request) {
+    if (!data) {
       return;
     }
 
-    if (request.url !== url) {
-      await models.websocketRequest.update(request as WebSocketRequest, { url });
+    if (data.url !== url) {
+      await updateRequestUrl({ url });
     }
 
     create({ requestId });
   };
 
+  const handleUrlChange = (inputEvent: ChangeEvent<HTMLInputElement>) => {
+    const { value } = inputEvent.target;
+    // @TODO: debounce this
+    updateRequestUrl({ url: value });
+  };
   useEffect(() => {
     return () => {
       close({ requestId });
@@ -106,13 +116,19 @@ export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
   return (
     <>
       <WebSocketIcon>WS</WebSocketIcon>
-      <Form aria-disabled={readyState === ReadyState.OPEN} id="websocketUrlForm" onSubmit={handleSubmit}>
+      <Form
+        aria-disabled={readyState === ReadyState.OPEN}
+        id="websocketUrlForm"
+        onSubmit={handleSubmit}
+      >
         <Input
+          key={data?._id}
           name="websocketUrlInput"
           disabled={readyState === ReadyState.OPEN}
           required
-          placeholder="wss://ws-feed.exchange.coinbase.com"
-          defaultValue={request?.url}
+          placeholder="wss://websocket-example"
+          defaultValue={data?.url}
+          onChange={handleUrlChange}
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />
