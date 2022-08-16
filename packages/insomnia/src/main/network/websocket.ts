@@ -29,7 +29,10 @@ export type WebsocketUpgradeEvent = Omit<Event, 'target'> & {
   requestId: string;
   type: 'upgrade';
   timestamp: number;
-  headers: IncomingMessage['headers'];
+  incomingHeaders: IncomingMessage['headers'];
+  statusCode?: number;
+  statusMessage?: string;
+  httpVersion?: string;
 };
 
 export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
@@ -110,13 +113,17 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.on('upgrade', request => {
+    ws.on('upgrade', incoming => {
+      // @TODO: We may want to add set-cookie handling here.
       const upgradeEvent: WebsocketUpgradeEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         type: 'upgrade',
         timestamp: Date.now(),
-        headers: request.headers,
+        incomingHeaders: incoming.headers,
+        statusCode: incoming.statusCode,
+        statusMessage: incoming.statusMessage,
+        httpVersion: incoming.httpVersion,
       };
 
       WebSocketEventLogs.set(options.requestId, [upgradeEvent]);
