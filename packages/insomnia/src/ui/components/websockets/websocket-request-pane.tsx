@@ -107,7 +107,7 @@ const RequestPane: FC<Props> = ({ request }) => {
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
             key={`${request._id}-${readyState}-header-editor`}
-            request={readyState === ReadyState.CLOSED ? request : readOnlyRequest}
+            request={readyState !== ReadyState.OPEN ? request : readOnlyRequest}
             bulk={false}
           />
         </TabPanel>
