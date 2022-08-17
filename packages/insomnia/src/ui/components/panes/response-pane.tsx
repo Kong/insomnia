@@ -122,7 +122,7 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
-
+  const timeline = models.response.getTimeline(response);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
@@ -212,7 +212,8 @@ export const ResponsePane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel">
           <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
-              response={response}
+              responseId={response._id}
+              timeline={timeline}
             />
           </ErrorBoundary>
         </TabPanel>

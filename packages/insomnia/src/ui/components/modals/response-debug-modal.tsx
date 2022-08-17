@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
+import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
@@ -13,16 +14,20 @@ interface ResponseDebugModalOptions {
   showBody?: boolean;
   title?: string | null;
 }
+interface State {
+  responseId?: string;
+  timeline?: ResponseTimelineEntry[];
+  title?: string | null;
+}
 export interface ResponseDebugModalHandle {
   show: (options: ResponseDebugModalOptions) => void;
   hide: () => void;
 }
 export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<Modal>(null);
-  const [state, setState] = useState<ResponseDebugModalOptions>({
+  const [state, setState] = useState<State>({
     responseId: '',
-    response: null,
-    showBody: false,
+    timeline: [],
     title: '',
   });
   useImperativeHandle(ref, () => ({
@@ -34,15 +39,20 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
       if (!response) {
         response = await models.response.getById(options.responseId || 'n/a');
       }
+      if (!response) {
+        console.error('No response found');
+        return;
+      }
+      const timeline = await models.response.getTimeline(response, options.showBody);
       setState({
-        response,
+        responseId: response._id,
+        timeline,
         title: options.title || null,
-        showBody: options.showBody,
       });
       modalRef.current?.show();
     },
   }), []);
-  const { response, title, showBody } = state;
+  const { responseId, timeline, title } = state;
   return (
     <Modal ref={modalRef} tall>
       <ModalHeader>{title || 'Response Timeline'}</ModalHeader>
@@ -53,10 +63,10 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
           }}
           className="tall"
         >
-          {response ? (
+          {(responseId && timeline) ? (
             <ResponseTimelineViewer
-              response={response}
-              showBody={showBody}
+              responseId={responseId}
+              timeline={timeline}
             />
           ) : (
             <div>No response found</div>

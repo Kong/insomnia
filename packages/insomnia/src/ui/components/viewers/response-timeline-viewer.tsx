@@ -2,17 +2,14 @@ import React, { FC } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import * as models from '../../../models';
-import type { Response } from '../../../models/response';
 import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
-  showBody?: boolean;
-  response: Response;
+  responseId: string;
+  timeline: ResponseTimelineEntry[];
 }
 
-export const ResponseTimelineViewer: FC<Props> = ({ showBody, response }) => {
-  const timeline = models.response.getTimeline(response, showBody);
+export const ResponseTimelineViewer: FC<Props> = ({ responseId, timeline }) => {
   const rows = timeline
     .map(({ name, value }, i, all) => {
       const prefixLookup: Record<ResponseTimelineEntry['name'], string> = {
@@ -39,7 +36,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ showBody, response }) => {
     .trim();
   return (
     <CodeEditor
-      key={response._id}
+      key={responseId}
       hideLineNumbers
       readOnly
       onClickLink={clickLink}
