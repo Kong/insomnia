@@ -1,5 +1,6 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
+import { RequestHeader } from './request';
 
 export const name = 'WebSocket Request';
 
@@ -9,12 +10,14 @@ export const prefix = 'ws-req';
 
 export const canDuplicate = true;
 
+// @TODO: enable this at some point
 export const canSync = false;
 
 export interface BaseWebSocketRequest {
   name: string;
   url: string;
   metaSortKey: number;
+  headers: RequestHeader[];
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -31,6 +34,7 @@ export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
   url: '',
   metaSortKey: -1 * Date.now(),
+  headers: [],
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;

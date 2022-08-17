@@ -3,19 +3,20 @@ import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
   ErrorEvent,
-  Event as OpenEvent,
+  Event,
   MessageEvent,
   WebSocket,
 } from 'ws';
 
 import { websocketRequest } from '../../models';
+import { BaseWebSocketRequest } from '../../models/websocket-request';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
   requestId: string;
 }
 
-export type WebsocketOpenEvent = Omit<OpenEvent, 'target'> & {
+export type WebsocketOpenEvent = Omit<Event, 'target'> & {
   _id: string;
   requestId: string;
   type: 'open';
@@ -77,7 +78,13 @@ async function createWebSocketConnection(
     const eventChannel = `webSocketRequest.connection.${request._id}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
 
-    const ws = new WebSocket(request?.url);
+    // @TODO: Render nunjucks tags in these headers
+    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
+      ({ ...acc, [name.toLowerCase() || '']: value || '' });
+    const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+
+    const ws = new WebSocket(request?.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
 
     ws.addEventListener('open', () => {
@@ -170,6 +177,7 @@ async function sendWebSocketEvent(
   }
 
   ws.send(options.message, error => {
+    // @TODO: Render nunjucks tags in these messages
     // @TODO: We might want to set a status in the WebsocketMessageEvent
     // and update it here based on the error. e.g. status = 'sending' | 'sent' | 'error'
     if (error) {
@@ -204,7 +212,6 @@ async function closeWebSocketConnection(
 ) {
   const ws = WebSocketConnections.get(options.requestId);
   if (!ws) {
-    console.warn('No websocket found for requestId: ' + options.requestId);
     return;
   }
   ws.close();
