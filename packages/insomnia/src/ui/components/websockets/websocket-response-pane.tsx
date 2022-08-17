@@ -1,11 +1,14 @@
 import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import { WebsocketEvent } from '../../../main/network/websocket';
+import { WebsocketEvent, WebsocketUpgradeEvent } from '../../../main/network/websocket';
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { SizeTag } from '../tags/size-tag';
+import { StatusTag } from '../tags/status-tag';
+import { TimeTag } from '../tags/time-tag';
 import { EventLogTable } from './event-log-table';
 import { EventLogView } from './event-log-view';
 
@@ -73,10 +76,19 @@ export const ResponsePane: FC<{ requestId: string }> = ({
   useEffect(() => {
     setSelectedEvent(null);
   }, []);
-
+  // @TODO: temporary workaround until response model is decided
+  const response = events.find(({ type }) => type === 'upgrade') as WebsocketUpgradeEvent;
   return (
     <Pane type="response">
-      <PaneHeader>{}</PaneHeader>
+      {!response ? <PaneHeader>{}</PaneHeader> : (
+        <PaneHeader className="row-spaced">
+          <div className="no-wrap scrollable scrollable--no-bars pad-left">
+            <StatusTag statusCode={response.statusCode || 1000} statusMessage={response.statusMessage} />
+            <TimeTag milliseconds={response.elapsedTime} />
+            <SizeTag bytesRead={0} bytesContent={0} />
+          </div>
+        </PaneHeader>
+      )}
       <PaneBody>
         <PaneBodyTitle>
           <Title>

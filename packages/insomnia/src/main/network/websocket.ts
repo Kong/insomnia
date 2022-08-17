@@ -26,6 +26,7 @@ export type WebsocketUpgradeEvent = Omit<Event, 'target'> & {
   statusCode?: number;
   statusMessage?: string;
   httpVersion?: string;
+  elapsedTime: number;
 };
 
 export type WebsocketOpenEvent = Omit<Event, 'target'> & {
@@ -99,9 +100,10 @@ async function createWebSocketConnection(
 
     const ws = new WebSocket(request?.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
-
+    const start = performance.now();
     ws.on('upgrade', incoming => {
       // @TODO: We may want to add set-cookie handling here.
+      // @TODO: We might want to write this to a Response object or create a new Response data type.
       const upgradeEvent: WebsocketUpgradeEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -113,6 +115,7 @@ async function createWebSocketConnection(
         statusCode: incoming.statusCode,
         statusMessage: incoming.statusMessage,
         httpVersion: incoming.httpVersion,
+        elapsedTime: performance.now() - start,
       };
 
       WebSocketEventLogs.set(options.requestId, [upgradeEvent]);
