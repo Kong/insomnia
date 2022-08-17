@@ -19,10 +19,10 @@ import { CodePromptModal } from '../modals/code-prompt-modal';
 import { showModal } from '../modals/index';
 
 export interface Pair {
-  id: string;
+  id?: string;
   name: string;
   value: string;
-  description: string;
+  description?: string;
   fileName?: string;
   type?: string;
   disabled?: boolean;

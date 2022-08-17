@@ -407,7 +407,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
 
   _setFocusedPair(pair: Pair) {
     if (pair) {
-      this._focusedPairId = pair.id;
+      this._focusedPairId = pair.id || 'n/a';
     } else {
       this._focusedPairId = null;
     }
@@ -446,17 +446,17 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     const hasMaxPairsAndNotExceeded = !maxPairs || pairs.length < maxPairs;
     const showNewHeaderInput = !isDisabled && hasMaxPairsAndNotExceeded;
     const readOnlyPairs = [
-      { id: '1', name: 'Connection', value: 'Upgrade', description:'' },
-      { id: '2', name: 'Upgrade', value: 'websocket', description:'' },
-      { id: '3', name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', description:'' },
-      { id: '4', name: 'Sec-WebSocket-Version', value: '13', description:'' },
-      { id: '5', name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', description:'' },
+      { name: 'Connection', value: 'Upgrade' },
+      { name: 'Upgrade', value: 'websocket' },
+      { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
+      { name: 'Sec-WebSocket-Version', value: '13' },
+      { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
     ];
     return (
       <ul className={classes}>
         {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
           <Row
-            key={pair.name}
+            key={i}
             index={i}
             displayDescription={this.state.displayDescription}
             descriptionPlaceholder={descriptionPlaceholder}
@@ -531,11 +531,9 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             onFocusDescription={this._handleAddFromDescription}
             allowMultiline={allowMultiline}
             allowFile={allowFile}
-            // @ts-expect-error -- TSCONVERSION missing defaults
             pair={{
               name: '',
               value: '',
-              description: '',
             }}
           />
         ) : null}
