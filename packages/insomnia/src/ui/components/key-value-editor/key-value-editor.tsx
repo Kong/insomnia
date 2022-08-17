@@ -42,6 +42,7 @@ interface Props {
   onCreate?: Function;
   className?: string;
   isDisabled?: boolean;
+  forceInput?: boolean;
 }
 
 interface State {
@@ -437,6 +438,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       sortable,
       disableDelete,
       isDisabled,
+      forceInput,
     } = this.props;
     const { pairs } = this.state;
 
@@ -473,6 +475,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             allowFile={allowFile}
             readOnly={isDisabled || pair.readOnly}
             hideButtons={isDisabled || pair.readOnly}
+            forceInput={forceInput}
             pair={pair}
           />
         ))}

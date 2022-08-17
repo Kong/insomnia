@@ -3,7 +3,7 @@ import React, { FC, useCallback } from 'react';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestHeader } from '../../../models/request';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -72,7 +72,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       </div>
     );
   }
-
+  const isWSRequest = isWebSocketRequest(request);
   return (
     <div className="pad-bottom scrollable-container">
       <div className="scrollable">
@@ -86,6 +86,7 @@ export const RequestHeadersEditor: FC<Props> = ({
           handleGetAutocompleteValueConstants={getCommonHeaderValues}
           onChange={onChangeHeaders}
           isDisabled={isDisabled}
+          forceInput={isWSRequest}
         />
       </div>
     </div>
