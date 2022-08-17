@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { WebsocketEvent, WebsocketUpgradeEvent } from '../../../main/network/websocket';
@@ -14,38 +15,6 @@ import { EventLogView } from './event-log-view';
 
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { justifyContent: 'unset' },
-});
-const PaneBody = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-});
-
-const PaneBodyTitle = styled.div({
-  position: 'relative',
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  background: 'var(--color-bg)',
-  color: 'var(--color-font)',
-  boxSizing: 'border-box',
-  height: 'var(--line-height-sm)',
-  alignItems: 'center',
-  borderBottom: '1px solid var(--hl-md)',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-  flex: 'none',
-});
-const Title = styled.div({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-});
-
-const PaneBodyContent = styled.div({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  flex: 1,
 });
 const EventLogTableWrapper = styled.div({
   width: '100%',
@@ -77,7 +46,7 @@ export const ResponsePane: FC<{ requestId: string }> = ({
     setSelectedEvent(null);
   }, []);
   // @TODO: temporary workaround until response model is decided
-  const response = events.find(({ type }) => type === 'upgrade') as WebsocketUpgradeEvent;
+  const response = events.slice().reverse().find(({ type }) => type === 'upgrade') as WebsocketUpgradeEvent;
   return (
     <Pane type="response">
       {!response ? <PaneHeader>{}</PaneHeader> : (
@@ -89,13 +58,16 @@ export const ResponsePane: FC<{ requestId: string }> = ({
           </div>
         </PaneHeader>
       )}
-      <PaneBody>
-        <PaneBodyTitle>
-          <Title>
-            Events
-          </Title>
-        </PaneBodyTitle>
-        <PaneBodyContent>
+      <Tabs className="pane__body theme--pane__body react-tabs">
+        <TabList>
+          <Tab tabIndex="-1" >
+            <button>Events</button>
+          </Tab>
+          <Tab tabIndex="-1" >
+            <button>Timeline</button>
+          </Tab>
+        </TabList>
+        <TabPanel className="react-tabs__tab-panel">
           {Boolean(events?.length) && (
             <EventLogTableWrapper>
               <EventLogTable
@@ -110,8 +82,11 @@ export const ResponsePane: FC<{ requestId: string }> = ({
               <EventLogView event={selectedEvent} />
             </EventLogViewWrapper>
           )}
-        </PaneBodyContent>
-      </PaneBody>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          timeline
+        </TabPanel>
+      </Tabs>
     </ Pane>
   );
 };
