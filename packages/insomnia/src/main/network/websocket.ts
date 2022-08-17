@@ -212,7 +212,6 @@ async function closeWebSocketConnection(
 ) {
   const ws = WebSocketConnections.get(options.requestId);
   if (!ws) {
-    console.warn('No websocket found for requestId: ' + options.requestId);
     return;
   }
   ws.close();
