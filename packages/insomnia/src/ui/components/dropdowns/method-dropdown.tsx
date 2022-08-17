@@ -46,7 +46,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
         // It solves the case where you try to delete more than one method at a time, because recent is updated only once
         const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
         const currentRecent = localStorageHttpMethods ? JSON.parse(localStorageHttpMethods) as string[] : [];
-        const newRecent = currentRecent.filter((m: any) => m !== methodToDelete);
+        const newRecent = currentRecent.filter(m => m !== methodToDelete);
         setRecent(newRecent);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
       },
