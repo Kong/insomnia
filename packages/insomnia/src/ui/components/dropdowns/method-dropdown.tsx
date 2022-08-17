@@ -44,7 +44,8 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
       onDeleteHint: methodToDelete => {
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to delete more than one method at a time, because recent is updated only once
-        const currentRecent = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY) as string);
+        const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
+        const currentRecent = localStorageHttpMethods ? JSON.parse(localStorageHttpMethods) as string[] : [];
         const newRecent = currentRecent.filter((m: any) => m !== methodToDelete);
         setRecent(newRecent);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(newRecent));
@@ -61,7 +62,8 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
 
         // Note: We need to read and remove the method from localStorage and not rely on react state
         // It solves the case where you try to add a new method after you deleted some others
-        const currentRecent = JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY) as string);
+        const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
+        const currentRecent = localStorageHttpMethods ? JSON.parse(localStorageHttpMethods) as string[] : [];
         // Save method as recent
         if (!currentRecent.includes(methodToAdd)) {
           const newRecent = [...currentRecent, methodToAdd];
