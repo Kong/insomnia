@@ -297,16 +297,16 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
                 >
                   <DropdownDivider>New</DropdownDivider>
                   <DropdownItem
-                    icon={<i className="fa fa-file-o" />}
-                    onClick={createDesignDocument}
-                  >
-                    Design Document
-                  </DropdownItem>
-                  <DropdownItem
                     icon={<i className="fa fa-bars" />}
                     onClick={createRequestCollection}
                   >
                     Request Collection
+                  </DropdownItem>
+                  <DropdownItem
+                    icon={<i className="fa fa-file-o" />}
+                    onClick={createDesignDocument}
+                  >
+                    Design Document
                   </DropdownItem>
                   <DropdownDivider>Import From</DropdownDivider>
                   <DropdownItem
