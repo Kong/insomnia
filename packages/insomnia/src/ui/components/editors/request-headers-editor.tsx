@@ -72,16 +72,6 @@ export const RequestHeadersEditor: FC<Props> = ({
       </div>
     );
   }
-  const isWSRequest = isWebSocketRequest(request);
-  const wsHeaders = [
-    { name: 'Connection', value: 'Upgrade', readOnly: true },
-    { name: 'Upgrade', value: 'websocket', readOnly: true },
-    { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', readOnly: true },
-    { name: 'Sec-WebSocket-Version', value: '13', readOnly: true },
-    { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', readOnly: true },
-    ...request.headers,
-  ];
-  const headers = isWSRequest ? wsHeaders : request.headers;
 
   return (
     <div className="pad-bottom scrollable-container">
@@ -91,12 +81,12 @@ export const RequestHeadersEditor: FC<Props> = ({
           namePlaceholder="header"
           valuePlaceholder="value"
           descriptionPlaceholder="description"
-          pairs={headers}
+          pairs={request.headers}
           handleGetAutocompleteNameConstants={getCommonHeaderNames}
           handleGetAutocompleteValueConstants={getCommonHeaderValues}
           onChange={onChangeHeaders}
           isDisabled={isDisabled}
-          forceInput={isWSRequest}
+          isWebSocketRequest={isWebSocketRequest(request)}
         />
       </div>
     </div>

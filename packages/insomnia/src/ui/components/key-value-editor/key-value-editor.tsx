@@ -42,7 +42,7 @@ interface Props {
   onCreate?: Function;
   className?: string;
   isDisabled?: boolean;
-  forceInput?: boolean;
+  isWebSocketRequest?: boolean;
 }
 
 interface State {
@@ -438,15 +438,34 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       sortable,
       disableDelete,
       isDisabled,
-      forceInput,
+      isWebSocketRequest,
     } = this.props;
     const { pairs } = this.state;
 
     const classes = classnames('key-value-editor', 'wide', className);
     const hasMaxPairsAndNotExceeded = !maxPairs || pairs.length < maxPairs;
     const showNewHeaderInput = !isDisabled && hasMaxPairsAndNotExceeded;
+    const readOnlyPairs = [
+      { id: '1', name: 'Connection', value: 'Upgrade', description:'' },
+      { id: '2', name: 'Upgrade', value: 'websocket', description:'' },
+      { id: '3', name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', description:'' },
+      { id: '4', name: 'Sec-WebSocket-Version', value: '13', description:'' },
+      { id: '5', name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', description:'' },
+    ];
     return (
       <ul className={classes}>
+        {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
+          <Row
+            key={pair.name}
+            index={i}
+            displayDescription={this.state.displayDescription}
+            descriptionPlaceholder={descriptionPlaceholder}
+            readOnly
+            hideButtons
+            forceInput
+            pair={pair}
+          />
+        )) : null}
         {pairs.map((pair, i) => (
           <Row
             noDelete={disableDelete}
@@ -473,9 +492,10 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
             allowFile={allowFile}
-            readOnly={isDisabled || pair.readOnly}
-            hideButtons={isDisabled || pair.readOnly}
-            forceInput={forceInput}
+            readOnly={isDisabled}
+            hideButtons={isDisabled}
+            // @TODO disabled nunjucks: remove this when nunjucks support is added
+            forceInput={isWebSocketRequest}
             pair={pair}
           />
         ))}

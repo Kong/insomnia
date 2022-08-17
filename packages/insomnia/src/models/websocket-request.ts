@@ -10,6 +10,7 @@ export const prefix = 'ws-req';
 
 export const canDuplicate = true;
 
+// @TODO: enable this at some point
 export const canSync = false;
 
 export interface BaseWebSocketRequest {
