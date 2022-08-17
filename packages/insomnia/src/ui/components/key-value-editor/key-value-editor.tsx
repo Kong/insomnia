@@ -458,6 +458,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
           <Row
             key={i}
             index={i}
+            sortable={true}
             displayDescription={this.state.displayDescription}
             descriptionPlaceholder={descriptionPlaceholder}
             readOnly
