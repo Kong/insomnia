@@ -17,7 +17,7 @@ export interface BaseWebSocketRequest {
   name: string;
   url: string;
   metaSortKey: number;
-  headers: (RequestHeader & {readOnly?:boolean})[];
+  headers: RequestHeader[];
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };

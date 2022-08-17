@@ -81,7 +81,7 @@ async function createWebSocketConnection(
     // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
-    const headers = request.headers.filter(({ value, disabled, readOnly }) => !!value && !disabled && !readOnly)
+    const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
     const ws = new WebSocket(request?.url, { headers });
