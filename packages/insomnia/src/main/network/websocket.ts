@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import { IncomingMessage } from 'http';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
@@ -15,6 +16,17 @@ export interface WebSocketConnection extends WebSocket {
   _id: string;
   requestId: string;
 }
+export type WebsocketUpgradeEvent = Omit<Event, 'target'> & {
+  _id: string;
+  requestId: string;
+  type: 'upgrade';
+  timestamp: number;
+  incomingHeaders: IncomingMessage['headers'];
+  outgoingHeaders: { [key: string]: string };
+  statusCode?: number;
+  statusMessage?: string;
+  httpVersion?: string;
+};
 
 export type WebsocketOpenEvent = Omit<Event, 'target'> & {
   _id: string;
@@ -46,6 +58,7 @@ export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
 };
 
 export type WebsocketEvent =
+  | WebsocketUpgradeEvent
   | WebsocketOpenEvent
   | WebsocketMessageEvent
   | WebsocketErrorEvent
@@ -86,6 +99,27 @@ async function createWebSocketConnection(
 
     const ws = new WebSocket(request?.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
+
+    ws.on('upgrade', incoming => {
+      // @TODO: We may want to add set-cookie handling here.
+      const upgradeEvent: WebsocketUpgradeEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'upgrade',
+        timestamp: Date.now(),
+        incomingHeaders: incoming.headers,
+        // @ts-expect-error -- private property
+        outgoingHeaders: ws._req.getHeaders(),
+        statusCode: incoming.statusCode,
+        statusMessage: incoming.statusMessage,
+        httpVersion: incoming.httpVersion,
+      };
+
+      WebSocketEventLogs.set(options.requestId, [upgradeEvent]);
+
+      event.sender.send(eventChannel, upgradeEvent);
+
+    });
 
     ws.addEventListener('open', () => {
       const openEvent: WebsocketOpenEvent = {
