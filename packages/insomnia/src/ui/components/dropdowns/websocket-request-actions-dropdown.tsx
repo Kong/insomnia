@@ -71,4 +71,4 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   );
 });
 
-WebSocketRequestActionsDropdown.displayName = 'RequestActionsDropdown';
+WebSocketRequestActionsDropdown.displayName = 'WebSocketRequestActionsDropdown';
