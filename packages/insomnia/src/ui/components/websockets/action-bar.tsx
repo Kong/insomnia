@@ -1,12 +1,8 @@
-import React, { FC, FormEvent, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { ChangeEvent, FC, FormEvent, useEffect } from 'react';
 import styled from 'styled-components';
 
-import * as models from '../../../models';
-import { WebSocketRequest } from '../../../models/websocket-request';
-import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useWebSocketClient } from '../../context/websocket-client/websocket-client-context';
-import { selectActiveRequest } from '../../redux/selectors';
 
 const Button = styled.button({
   paddingRight: 'var(--padding-md)',
@@ -52,6 +48,9 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
 
 interface ActionBarProps {
   requestId: string;
+  defaultValue: string;
+  readyState: ReadyState;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 const Form = styled.form({
@@ -75,25 +74,11 @@ const WebSocketIcon = styled.span({
   paddingLeft: 'var(--padding-md)',
 });
 
-export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
-  const request = useSelector(selectActiveRequest);
-
+export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue, onChange, readyState }) => {
   const { create, close } = useWebSocketClient();
-  const readyState = useWSReadyState(requestId);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const url = (formData.get('websocketUrlInput') as string) || '';
-
-    if (!request) {
-      return;
-    }
-
-    if (request.url !== url) {
-      await models.websocketRequest.update(request as WebSocketRequest, { url });
-    }
-
     create({ requestId });
   };
 
@@ -111,8 +96,9 @@ export const WebsocketActionBar: FC<ActionBarProps> = ({ requestId }) => {
           name="websocketUrlInput"
           disabled={readyState === ReadyState.OPEN}
           required
-          placeholder="wss://ws-feed.exchange.coinbase.com"
-          defaultValue={request?.url}
+          placeholder="wss://example.com/chat"
+          defaultValue={defaultValue}
+          onChange={onChange}
         />
       </Form>
       <ActionButton requestId={requestId} readyState={readyState} />

@@ -180,6 +180,7 @@ export const EventTableRow = memo(
           />
         );
       }
+
       case 'close': {
         return (
           <CloseEventTableRow
@@ -213,7 +214,6 @@ interface Props {
 }
 export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
   return (
-    // <TableWrapper>
     <Table data-testid="EventLogTabe__Table" className="table--fancy table--compact">
       <thead>
         <tr>
@@ -233,6 +233,5 @@ export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
         ))}
       </tbody>
     </Table>
-    // </TableWrapper>
   );
 };

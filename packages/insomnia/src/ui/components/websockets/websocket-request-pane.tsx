@@ -1,28 +1,19 @@
-import React, { FC, FormEvent, useRef } from 'react';
+import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import * as models from '../../../models';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
+import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
-import { WebsocketActionBar } from './action-bar';
+import { WebSocketActionBar } from './action-bar';
 
-interface Props {
-  requestId: string;
-}
-const PaneBody = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-});
-const PaneBodyContent = styled.div({
-  flex: 1,
-});
 const EditorWrapper = styled.div({
   height: '100%',
-});
-const ButtonWrapper = styled.div({
-  paddingTop: 3,
-  paddingBottom: 3,
 });
 const SendMessageForm = styled.form({
   width: '100%',
@@ -39,30 +30,20 @@ const SendButton = styled.button({
     backgroundColor: 'var(--hl-xs)',
   },
 });
-const PaneBodyTitle = styled.div({
-  position: 'relative',
+const PaneSendButton = styled.div({
   display: 'flex',
   flexDirection: 'row',
-  justifyContent: 'space-between',
-  background: 'var(--color-bg)',
-  color: 'var(--color-font)',
+  justifyContent: 'flex-end',
   boxSizing: 'border-box',
   height: 'var(--line-height-sm)',
-  alignItems: 'stretch',
-  borderBottom: '1px solid var(--hl-md)',
-  paddingRight: 'var(--padding-md)',
-  paddingLeft: 'var(--padding-md)',
-});
-const Title = styled.div({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
+  borderBottom: '1px solid var(--hl-lg)',
+  padding: 3,
 });
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
 
-const WebSocketRequestForm: FC<Props> = ({ requestId }) => {
+const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
   const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
@@ -84,34 +65,76 @@ const WebSocketRequestForm: FC<Props> = ({ requestId }) => {
   );
 };
 
+interface Props {
+  request: WebSocketRequest;
+}
+
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
-export const WebSocketRequestPane: FC<Props> = ({ requestId }) => {
+// TODO: @gatzjames discuss above assertion in light of request and settings drills
+const RequestPane: FC<Props> = ({ request }) => {
+  const readyState = useWSReadyState(request._id);
+  const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const url = event.currentTarget.value || '';
+    if (url !== request.url) {
+      models.websocketRequest.update(request, { url });
+    }
+  };
+
+  return (
+    <Pane type="request">
+      <PaneHeader>
+        <WebSocketActionBar
+          key={request._id}
+          requestId={request._id}
+          defaultValue={request.url}
+          readyState={readyState}
+          onChange={handleOnChange}
+        />
+      </PaneHeader>
+      <Tabs className="pane__body theme--pane__body react-tabs">
+        <TabList>
+          <Tab tabIndex="-1" >
+            <button>Message</button>
+          </Tab>
+          <Tab tabIndex="-1" >
+            <button>Headers</button>
+          </Tab>
+        </TabList>
+        <TabPanel className="react-tabs__tab-panel">
+          <PaneSendButton>
+            <SendButton
+              type="submit"
+              form="websocketMessageForm"
+              disabled={readyState !== ReadyState.OPEN}
+            >
+              Send
+            </SendButton>
+          </PaneSendButton>
+          <WebSocketRequestForm requestId={request._id} />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel header-editor">
+          <RequestHeadersEditor
+            key={`${request._id}-${readyState}-header-editor`}
+            request={request}
+            bulk={false}
+            isDisabled={readyState === ReadyState.OPEN}
+          />
+        </TabPanel>
+      </Tabs>
+    </Pane>
+  );
+};
+export const WebSocketRequestPane: FC<Props> = ({
+  request,
+}) => {
   const wsClient = createWebSocketClient();
   return (
     <WebSocketClientProvider client={wsClient}>
-      <Pane type="request">
-        <PaneHeader>
-          <WebsocketActionBar requestId={requestId} />
-        </PaneHeader>
-        <PaneBody>
-          <PaneBodyTitle>
-            <Title>Message</Title>
-            <ButtonWrapper>
-              <SendButton
-                type="submit"
-                form="websocketMessageForm"
-              >
-                Send
-              </SendButton>
-            </ButtonWrapper>
-          </PaneBodyTitle>
-          <PaneBodyContent>
-            <WebSocketRequestForm requestId={requestId} />
-          </PaneBodyContent>
-        </PaneBody>
-      </Pane>
+      <RequestPane
+        request={request}
+      />
     </WebSocketClientProvider>
   );
 };
