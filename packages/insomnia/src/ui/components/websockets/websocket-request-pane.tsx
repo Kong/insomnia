@@ -88,7 +88,7 @@ const RequestPane: FC<Props> = ({ request }) => {
         <WebSocketActionBar
           key={request._id}
           requestId={request._id}
-          requestUrl={request.url}
+          defaultValue={request.url}
           readyState={readyState}
           onChange={handleOnChange}
         />

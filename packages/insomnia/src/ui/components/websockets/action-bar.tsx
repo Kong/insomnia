@@ -48,7 +48,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
 
 interface ActionBarProps {
   requestId: string;
-  requestUrl: string;
+  defaultValue: string;
   readyState: ReadyState;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
@@ -74,7 +74,7 @@ const WebSocketIcon = styled.span({
   paddingLeft: 'var(--padding-md)',
 });
 
-export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, requestUrl, onChange, readyState }) => {
+export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue, onChange, readyState }) => {
   const { create, close } = useWebSocketClient();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -97,7 +97,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, requestUrl, 
           disabled={readyState === ReadyState.OPEN}
           required
           placeholder="wss://ws-feed.exchange.coinbase.com"
-          defaultValue={requestUrl}
+          defaultValue={defaultValue}
           onChange={onChange}
         />
       </Form>
