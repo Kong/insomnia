@@ -33,14 +33,7 @@ export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
   url: '',
   metaSortKey: -1 * Date.now(),
-  headers: [
-    { name: 'Host', value: '<calculated at runtime>', readOnly: true },
-    { name: 'Connection', value: 'Upgrade', readOnly: true },
-    { name: 'Upgrade', value: 'websocket', readOnly: true },
-    { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>', readOnly: true },
-    { name: 'Sec-WebSocket-Version', value: '13', readOnly: true },
-    { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits', readOnly: true },
-    { name: 'Sec-WebSocket-Protocol', value: '' }],
+  headers: [],
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;
