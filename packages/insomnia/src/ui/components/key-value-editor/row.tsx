@@ -19,10 +19,10 @@ import { CodePromptModal } from '../modals/code-prompt-modal';
 import { showModal } from '../modals/index';
 
 export interface Pair {
-  id: string;
+  id?: string;
   name: string;
   value: string;
-  description: string;
+  description?: string;
   fileName?: string;
   type?: string;
   disabled?: boolean;
@@ -34,11 +34,11 @@ export type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[
 type DragDirection = 0 | 1 | -1;
 
 interface Props {
-  onChange: (pair: Pair) => void;
-  onDelete: (pair: Pair) => void;
-  onFocusName: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onFocusValue: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onFocusDescription: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onChange?: (pair: Pair) => void;
+  onDelete?: (pair: Pair) => void;
+  onFocusName?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onFocusValue?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
+  onFocusDescription?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
   displayDescription: boolean;
   index: number;
   pair: Pair;
@@ -195,15 +195,15 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   }
 
   _handleFocusName(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onFocusName(this.props.pair, event);
+    this.props.onFocusName?.(this.props.pair, event);
   }
 
   _handleFocusValue(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onFocusValue(this.props.pair, event);
+    this.props.onFocusValue?.(this.props.pair, event);
   }
 
   _handleFocusDescription(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onFocusDescription(this.props.pair, event);
+    this.props.onFocusDescription?.(this.props.pair, event);
   }
 
   _handleBlurName(event: FocusEvent | React.FocusEvent<Element, Element>) {

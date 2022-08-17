@@ -6,11 +6,11 @@ import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../w
 export function getById(requestId: string): Promise<Request | GrpcRequest | WebSocketRequest | null> {
   if (isGrpcRequestId(requestId)) {
     return models.grpcRequest.getById(requestId);
-  } else if (isWebSocketRequestId(requestId)) {
-    return models.websocketRequest.getById(requestId);
-  } else {
-    return models.request.getById(requestId);
   }
+  if (isWebSocketRequestId(requestId)) {
+    return models.websocketRequest.getById(requestId);
+  }
+  return models.request.getById(requestId);
 }
 
 export function remove(request: Request | GrpcRequest | WebSocketRequest) {
@@ -19,9 +19,8 @@ export function remove(request: Request | GrpcRequest | WebSocketRequest) {
   }
   if (isWebSocketRequest(request)) {
     return models.websocketRequest.remove(request);
-  } else {
-    return models.request.remove(request);
   }
+  return models.request.remove(request);
 }
 
 export function update<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
@@ -34,10 +33,9 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.websocketRequest.update(request, patch);
-  } else {
-    // @ts-expect-error -- TSCONVERSION
-    return models.request.update(request, patch);
   }
+  // @ts-expect-error -- TSCONVERSION
+  return models.request.update(request, patch);
 }
 
 export function duplicate<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
@@ -50,8 +48,7 @@ export function duplicate<T extends object>(request: T, patch: Partial<T> = {}):
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.websocketRequest.duplicate(request, patch);
-  } else {
-    // @ts-expect-error -- TSCONVERSION
-    return models.request.duplicate(request, patch);
   }
+  // @ts-expect-error -- TSCONVERSION
+  return models.request.duplicate(request, patch);
 }

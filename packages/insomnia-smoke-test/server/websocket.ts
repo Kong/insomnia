@@ -7,9 +7,9 @@ import { WebSocketServer } from 'ws';
 export function startWebsocketServer(server: Server) {
   const wsServer = new WebSocketServer({ server });
 
-  wsServer.on('connection', ws => {
+  wsServer.on('connection', (ws, req) => {
     console.log('WebSocket connection was opened');
-
+    console.log('Upgrade headers:', req.headers);
     ws.on('message', (message, isBinary) => {
       if (isBinary) {
         ws.send(message);
