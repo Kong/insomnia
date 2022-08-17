@@ -1,7 +1,8 @@
-import React, { FC, FormEvent, useRef } from 'react';
+import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
@@ -9,7 +10,7 @@ import { useWebSocketClient, WebSocketClientProvider } from '../../context/webso
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
-import { WebsocketActionBar } from './action-bar';
+import { WebSocketActionBar } from './action-bar';
 
 const EditorWrapper = styled.div({
   height: '100%',
@@ -74,10 +75,23 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 const RequestPane: FC<Props> = ({ request }) => {
   const readyState = useWSReadyState(request._id);
+  const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const url = event.currentTarget.value || '';
+    if (url !== request.url) {
+      models.websocketRequest.update(request, { url });
+    }
+  };
+
   return (
     <Pane type="request">
       <PaneHeader>
-        <WebsocketActionBar requestId={request._id} readyState={readyState} />
+        <WebSocketActionBar
+          key={request._id}
+          requestId={request._id}
+          requestUrl={request.url}
+          readyState={readyState}
+          onChange={handleOnChange}
+        />
       </PaneHeader>
       <Tabs className="pane__body theme--pane__body react-tabs">
         <TabList>
