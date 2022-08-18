@@ -108,16 +108,22 @@ async function createWebSocketConnection(
     ws.on('upgrade', async incoming => {
       // @TODO: We may want to add set-cookie handling here.
       const timeline: ResponseTimelineEntry[] = [];
+      // request
       timeline.push({ value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() });
       timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
       timeline.push({ value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() });
 
-      timeline.push({ value: 'UPGRADE /chat HTTP/1.1\r\nHost: 127.0.0.1:4010', name: 'HeaderOut', timestamp: Date.now() });
+      timeline.push({ value: 'UPGRADE /chat HTTP/1.1', name: 'HeaderOut', timestamp: Date.now() });
       // @ts-expect-error -- private property
       const requestHeaders = Object.entries(ws._req.getHeaders()).map(([name, value]) => ({ name, value: value?.toString() || '' }));
       const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
       timeline.push({ value: headersOut, name: 'HeaderOut', timestamp: Date.now() });
-      timeline.push({ value: 'HTTP/1.1 101 Switching Protocols', name: 'HeaderIn', timestamp: Date.now() });
+
+      // response
+      const statusMessage = incoming.statusMessage || '';
+      const statusCode = incoming.statusCode || 0;
+      const httpVersion = incoming.httpVersion;
+      timeline.push({ value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() });
       const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
       const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
       timeline.push({ value: headersIn, name: 'HeaderIn', timestamp: Date.now() });
@@ -130,9 +136,9 @@ async function createWebSocketConnection(
         created: Date.now(),
         headers: responseHeaders,
         url: request.url,
-        statusCode: incoming.statusCode || 0,
-        statusMessage: incoming.statusMessage || '',
-        httpVersion: incoming.httpVersion,
+        statusCode,
+        statusMessage,
+        httpVersion,
         elapsedTime: performance.now() - start,
         timelinePath,
       };
