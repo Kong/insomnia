@@ -1,6 +1,5 @@
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
-import { IncomingMessage } from 'http';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
@@ -24,18 +23,6 @@ export interface WebSocketConnection extends WebSocket {
   _id: string;
   requestId: string;
 }
-export type WebsocketUpgradeEvent = Omit<Event, 'target'> & {
-  _id: string;
-  requestId: string;
-  type: 'upgrade';
-  timestamp: number;
-  incomingHeaders: IncomingMessage['headers'];
-  outgoingHeaders: { [key: string]: string };
-  statusCode?: number;
-  statusMessage?: string;
-  httpVersion?: string;
-  elapsedTime: number;
-};
 
 export type WebsocketOpenEvent = Omit<Event, 'target'> & {
   _id: string;
@@ -67,7 +54,6 @@ export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
 };
 
 export type WebsocketEvent =
-  | WebsocketUpgradeEvent
   | WebsocketOpenEvent
   | WebsocketMessageEvent
   | WebsocketErrorEvent
@@ -136,7 +122,6 @@ async function createWebSocketConnection(
         _id: responseId,
         parentId: request._id,
         type: 'upgrade',
-        created: Date.now(),
         headers: responseHeaders,
         url: request.url,
         statusCode,
@@ -180,7 +165,6 @@ async function createWebSocketConnection(
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
-      console.log('close', code, reason, wasClean);
       const closeEvent: WebsocketCloseEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -288,10 +272,12 @@ async function findMany(
   options: { responseId: string }
 ) {
   const response = await models.response.getById(options.responseId);
-  if (!response) {
+  if (!response || !response.bodyPath) {
     return [];
   }
-  return models.response.getBodyBuffer(response)?.toString()?.split('\n').map(e => e && JSON.parse(e)).filter(e => e) || [];
+  const body = await fs.promises.readFile(response.bodyPath);
+  return body?.toString()?.split('\n').filter(e => e?.trim())
+    .map(e => JSON.parse(e)) || [];
 }
 
 export function registerWebSocketHandlers() {

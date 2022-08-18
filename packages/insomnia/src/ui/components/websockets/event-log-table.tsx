@@ -9,7 +9,6 @@ import {
   WebsocketEvent,
   WebsocketMessageEvent,
   WebsocketOpenEvent,
-  WebsocketUpgradeEvent,
 } from '../../../main/network/websocket';
 
 const Table = styled.table({

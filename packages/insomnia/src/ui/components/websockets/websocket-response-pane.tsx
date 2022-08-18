@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -9,7 +8,6 @@ import * as models from '../../../models';
 import type { Response } from '../../../models/response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { createWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
-import { selectActiveResponse } from '../../redux/selectors';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
@@ -36,15 +34,14 @@ const EventLogViewWrapper = styled.div({
   boxSizing: 'content-box',
   padding: 'var(--padding-sm)',
 });
-export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
+export const ResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
   requestId,
+  response,
   handleSetActiveResponse,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(
     null
   );
-  // @TODO: drill this?
-  const response = useSelector(selectActiveResponse);
   const events = useWebSocketConnectionEvents({ responseId: response?._id });
   const handleSelection = (event: WebsocketEvent) => {
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
@@ -111,8 +108,9 @@ export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (req
   );
 };
 
-export const WebSocketResponsePane: FC<{ requestId: string; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
+export const WebSocketResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
   requestId,
+  response,
   handleSetActiveResponse,
 }) => {
   const wsClient = createWebSocketClient();
@@ -120,6 +118,7 @@ export const WebSocketResponsePane: FC<{ requestId: string; handleSetActiveRespo
     <WebSocketClientProvider client={wsClient}>
       <ResponsePane
         requestId={requestId}
+        response={response}
         handleSetActiveResponse={handleSetActiveResponse}
       />
     </WebSocketClientProvider>
