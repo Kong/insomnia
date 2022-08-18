@@ -6,10 +6,10 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { startWebsocketServer } from './websocket';
 
 describe('websocket smoke test server', () => {
+  jest.setTimeout(25000); // allow for slow CI environments
   const app = express();
   let server: Server;
   let wsServer: WebSocketServer;
-
   beforeEach(done => {
     server = app.listen(1234);
     wsServer = startWebsocketServer(server);
@@ -128,7 +128,6 @@ describe('websocket smoke test server', () => {
 
     it('can keep sending messages until client closes connection', async () => {
       const logSpy = jest.spyOn(console, 'log');
-      jest.setTimeout(10000);
       const messageLimit = 400;
       const { client, messages } = await createWebSocketClient('ws://localhost:1234', messageLimit);
       const payload = JSON.stringify({
