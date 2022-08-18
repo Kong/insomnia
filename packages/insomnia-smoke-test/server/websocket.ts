@@ -352,7 +352,7 @@ class WebSocketHandler {
     forceTermination,
   }: CloseCommand) => {
     if (forceTermination) {
-      setTimeout(() => {
+      global.setTimeout(() => {
         this.ws.terminate();
       }, delayMs);
       return;
@@ -404,7 +404,7 @@ class WebSocketHandler {
       this.loadTestIndex = 0;
     }
 
-    this.loadIntervalTimeout = setInterval(() => {
+    this.loadIntervalTimeout = global.setInterval(() => {
       if (this.loadTestCount > (stopAfter || Infinity)) {
         stop();
         return;
