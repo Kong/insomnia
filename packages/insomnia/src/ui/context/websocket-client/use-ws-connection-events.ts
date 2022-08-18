@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { WebsocketEvent } from '../../../main/network/websocket';
 import { useWebSocketClient } from './websocket-client-context';
 
-export function useWebSocketConnectionEvents({ requestId, responseId }: { requestId: string; responseId: string }) {
+export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
   const { event: { findMany, subscribe } } = useWebSocketClient();
   // @TODO - This list can grow to thousands of events in a chatty websocket connection.
   // It's worth investigating an LRU cache that keeps the last X number of messages.
@@ -22,7 +22,7 @@ export function useWebSocketConnectionEvents({ requestId, responseId }: { reques
     async function fetchAndSubscribeToEvents() {
       // Fetch all existing events for this connection
       const allEvents = await findMany({
-        requestId,
+        responseId,
       });
       if (isMounted) {
         setEvents(allEvents);
@@ -44,7 +44,7 @@ export function useWebSocketConnectionEvents({ requestId, responseId }: { reques
       isMounted = false;
       unsubscribe();
     };
-  }, [requestId, responseId, findMany, subscribe]);
+  }, [responseId, findMany, subscribe]);
 
   return events;
 }

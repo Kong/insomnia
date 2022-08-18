@@ -45,7 +45,7 @@ export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (req
   );
   // @TODO: drill this?
   const response = useSelector(selectActiveResponse);
-  const events = useWebSocketConnectionEvents({ requestId, responseId: response?._id });
+  const events = useWebSocketConnectionEvents({ responseId: response?._id });
   const handleSelection = (event: WebsocketEvent) => {
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
   };

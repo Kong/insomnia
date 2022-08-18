@@ -12,6 +12,7 @@ import {
   WebSocket,
 } from 'ws';
 
+import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import type { Response } from '../../models/response';
@@ -90,7 +91,7 @@ async function createWebSocketConnection(
 
   try {
     const request = await websocketRequest.getById(options.requestId);
-    const responseId = uuidV4();
+    const responseId = generateId('res');
     if (!request?.url) {
       throw new Error('No URL specified');
     }
@@ -134,7 +135,6 @@ async function createWebSocketConnection(
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
-        requestVersionId: options.requestId,
         type: 'upgrade',
         created: Date.now(),
         headers: responseHeaders,
@@ -149,6 +149,7 @@ async function createWebSocketConnection(
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
     });
 
     ws.addEventListener('open', () => {
@@ -282,11 +283,11 @@ async function closeWebSocketConnection(
   ws.close();
 }
 
-async function getWebSocketConnectionEvents(
+async function findMany(
   _event: Electron.IpcMainInvokeEvent,
-  options: { requestId: string }
+  options: { responseId: string }
 ) {
-  const response = await models.response.getLatestByParentId(options.requestId);
+  const response = await models.response.getById(options.responseId);
   if (!response) {
     return [];
   }
@@ -298,5 +299,5 @@ export function registerWebSocketHandlers() {
   ipcMain.handle('webSocketRequest.connection.readyState', getWebSocketReadyState);
   ipcMain.handle('webSocketRequest.connection.event.send', sendWebSocketEvent);
   ipcMain.handle('webSocketRequest.connection.close', closeWebSocketConnection);
-  ipcMain.handle('webSocketRequest.connection.event.findMany', getWebSocketConnectionEvents);
+  ipcMain.handle('webSocketRequest.connection.event.findMany', findMany);
 }

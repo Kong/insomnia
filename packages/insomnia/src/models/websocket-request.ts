@@ -18,6 +18,7 @@ export interface BaseWebSocketRequest {
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
+  description: string;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -35,6 +36,7 @@ export const init = (): BaseWebSocketRequest => ({
   url: '',
   metaSortKey: -1 * Date.now(),
   headers: [],
+  description: '',
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;

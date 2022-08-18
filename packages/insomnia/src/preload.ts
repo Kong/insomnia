@@ -34,7 +34,7 @@ const webSocketConnection = {
   },
   event: {
     findMany: (options: {
-      requestId: string;
+      responseId: string;
     }): Promise<WebsocketEvent[]> => {
       return ipcRenderer.invoke(
         'webSocketRequest.connection.event.findMany',

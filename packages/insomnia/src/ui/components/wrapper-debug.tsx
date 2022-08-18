@@ -12,6 +12,7 @@ import {
   selectActiveEnvironment,
   selectActiveProject,
   selectActiveRequest,
+  selectActiveResponse,
   selectActiveWorkspace,
   selectIsLoggedIn,
   selectSettings,
@@ -69,9 +70,9 @@ export const WrapperDebug: FC<Props> = ({
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
-
+  const activeResponse = useSelector(selectActiveResponse);
   const activeWorkspace = useSelector(selectActiveWorkspace);
-
+  console.log('wrapper', activeResponse._id);
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
 
@@ -160,6 +161,7 @@ export const WrapperDebug: FC<Props> = ({
             ) : (
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketResponsePane
+                  key={activeResponse._id}
                   requestId={activeRequest._id}
                   handleSetActiveResponse={handleSetActiveResponse}
                 />
