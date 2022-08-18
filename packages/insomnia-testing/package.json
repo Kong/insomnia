@@ -2,7 +2,7 @@
   "private": false,
   "name": "insomnia-testing",
   "license": "Apache-2.0",
-  "version": "3.5.0",
+  "version": "3.5.1-beta.0",
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
