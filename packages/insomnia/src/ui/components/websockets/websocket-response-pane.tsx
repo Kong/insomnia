@@ -10,7 +10,7 @@ import type { Response } from '../../../models/response';
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
-import {  selectActiveResponse } from '../../redux/selectors';
+import { selectActiveResponse } from '../../redux/selectors';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
@@ -44,9 +44,9 @@ export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (req
   const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(
     null
   );
-    // @TODO: drill this?
+  // @TODO: drill this?
   const response = useSelector(selectActiveResponse);
-  const events = useWebSocketConnectionEvents({ requestId, responseId: response._id });
+  const events = useWebSocketConnectionEvents({ requestId, responseId: response?._id });
   const handleSelection = (event: WebsocketEvent) => {
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
   };

@@ -42,10 +42,10 @@ const webSocketConnection = {
       );
     },
     subscribe: (
-      options: { requestId: string },
+      options: { responseId: string },
       listener: (webSocketEvent: WebsocketEvent) => any
     ) => {
-      const channel = `webSocketRequest.connection.${options.requestId}.event`;
+      const channel = `webSocketRequest.connection.${options.responseId}.event`;
 
       function onNewEvent(_event: IpcRendererEvent, webSocketEvent: WebsocketEvent) {
         listener(webSocketEvent);

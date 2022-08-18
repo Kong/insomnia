@@ -12,7 +12,9 @@ export function useWebSocketConnectionEvents({ requestId, responseId }: { reques
 
   useEffect(() => {
     let isMounted = true;
-    let unsubscribe = () => { };
+    let unsubscribe = () => {
+      setEvents([]);
+    };
 
     // @TODO - There is a possible race condition here.
     // Subscribe should probably ask for events after a given event.id so we can make sure
@@ -27,7 +29,7 @@ export function useWebSocketConnectionEvents({ requestId, responseId }: { reques
       }
       // Subscribe to new events and update the state.
       unsubscribe = subscribe(
-        { requestId },
+        { responseId },
         event => {
           if (isMounted) {
             setEvents(events => events.concat([event]));
