@@ -14,6 +14,7 @@ export const getMockWsClient = (onChangeEvent: EventEmitter) => {
         onChangeEvent.on(channel, listener);
         return () => onChangeEvent.removeListener(channel, listener);
       },
+      clearToSend: jest.fn(),
     },
     create: jest.fn(),
     close: jest.fn(),

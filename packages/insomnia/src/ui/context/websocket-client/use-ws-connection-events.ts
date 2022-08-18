@@ -4,7 +4,7 @@ import { WebsocketEvent } from '../../../main/network/websocket';
 import { useWebSocketClient } from './websocket-client-context';
 
 export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
-  const { event: { findMany, subscribe } } = useWebSocketClient();
+  const { event: { findMany, subscribe, clearToSend } } = useWebSocketClient();
   // @TODO - This list can grow to thousands of events in a chatty websocket connection.
   // It's worth investigating an LRU cache that keeps the last X number of messages.
   // We'd also need to expand the findMany API to support pagination.
@@ -30,12 +30,15 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
       // Subscribe to new events and update the state.
       unsubscribe = subscribe(
         { responseId },
-        event => {
+        events => {
           if (isMounted) {
-            setEvents(events => events.concat([event]));
+            setEvents(allEvents => allEvents.concat(events));
           }
+          window.requestAnimationFrame(clearToSend);
         }
       );
+
+      clearToSend();
     }
 
     fetchAndSubscribeToEvents();
@@ -44,7 +47,7 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
       isMounted = false;
       unsubscribe();
     };
-  }, [responseId, findMany, subscribe]);
+  }, [responseId, findMany, subscribe, clearToSend]);
 
   return events;
 }

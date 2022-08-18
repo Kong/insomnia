@@ -64,6 +64,25 @@ export type WebSocketEventLog = WebsocketEvent[];
 const WebSocketConnections = new Map<string, WebSocket>();
 const fileStreams = new Map<string, fs.WriteStream>();
 
+// Flow control state
+let clearToSend = true;
+const sendQueueMap = new Map<string, WebSocketEventLog>();
+
+function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebsocketEvent) {
+  if (clearToSend) {
+    target.send(eventChannel, [wsEvent]);
+    clearToSend = false;
+    return;
+  }
+
+  const sendQueue = sendQueueMap.get(eventChannel);
+  if (sendQueue) {
+    sendQueue.push(wsEvent);
+  } else {
+    sendQueueMap.set(eventChannel, [wsEvent]);
+  }
+}
+
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
@@ -146,7 +165,7 @@ async function createWebSocketConnection(
       };
 
       fileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
-      event.sender.send(eventChannel, openEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -161,7 +180,7 @@ async function createWebSocketConnection(
       };
 
       fileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-      event.sender.send(eventChannel, messageEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, messageEvent);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
@@ -179,7 +198,7 @@ async function createWebSocketConnection(
       fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
-      event.sender.send(eventChannel, closeEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -199,7 +218,7 @@ async function createWebSocketConnection(
       fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
-      event.sender.send(eventChannel, errorEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
   } catch (e) {
@@ -253,7 +272,7 @@ async function sendWebSocketEvent(
     return;
   }
   const eventChannel = `webSocketRequest.connection.${response._id}.event`;
-  event.sender.send(eventChannel, lastMessage);
+  dispatchWebSocketEvent(event.sender, eventChannel, lastMessage);
 }
 
 async function closeWebSocketConnection(
@@ -280,12 +299,29 @@ async function findMany(
     .map(e => JSON.parse(e)) || [];
 }
 
+function signalClearToSend(event: Electron.IpcMainInvokeEvent) {
+  const nextChannel = sendQueueMap.keys().next();
+  if (nextChannel.done) {
+    clearToSend = true;
+    return;
+  }
+
+  const sendQueue = sendQueueMap.get(nextChannel.value);
+  if (!sendQueue) {
+    return;
+  }
+
+  event.sender.send(nextChannel.value, sendQueue);
+  sendQueueMap.delete(nextChannel.value);
+}
+
 export function registerWebSocketHandlers() {
   ipcMain.handle('webSocketRequest.connection.create', createWebSocketConnection);
   ipcMain.handle('webSocketRequest.connection.readyState', getWebSocketReadyState);
   ipcMain.handle('webSocketRequest.connection.event.send', sendWebSocketEvent);
   ipcMain.handle('webSocketRequest.connection.close', closeWebSocketConnection);
   ipcMain.handle('webSocketRequest.connection.event.findMany', findMany);
+  ipcMain.handle('webSocketRequest.connection.clearToSend', signalClearToSend);
 }
 
 electron.app.on('window-all-closed', () => {
