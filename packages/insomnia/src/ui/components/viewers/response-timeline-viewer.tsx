@@ -36,7 +36,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ responseId, timeline }) => {
     .trim();
   return (
     <CodeEditor
-      key={responseId}
+      key={responseId + timeline.length}
       hideLineNumbers
       readOnly
       onClickLink={clickLink}
