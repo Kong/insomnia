@@ -13,6 +13,8 @@ import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
+import { storeTimeline } from '../../network/network';
+import { ResponseTimelineEntry } from './libcurl-promise';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -105,7 +107,21 @@ async function createWebSocketConnection(
     const start = performance.now();
     ws.on('upgrade', async incoming => {
       // @TODO: We may want to add set-cookie handling here.
+      const timeline: ResponseTimelineEntry[] = [];
+      timeline.push({ value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() });
+
+      timeline.push({ value: 'UPGRADE /chat HTTP/1.1\r\nHost: 127.0.0.1:4010', name: 'HeaderOut', timestamp: Date.now() });
+      // @ts-expect-error -- private property
+      const requestHeaders = Object.entries(ws._req.getHeaders()).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+      const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+      timeline.push({ value: headersOut, name: 'HeaderOut', timestamp: Date.now() });
+      timeline.push({ value: 'HTTP/1.1 101 Switching Protocols', name: 'HeaderIn', timestamp: Date.now() });
       const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+      const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+      timeline.push({ value: headersIn, name: 'HeaderIn', timestamp: Date.now() });
+      const timelinePath = await storeTimeline(timeline);
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
@@ -118,11 +134,10 @@ async function createWebSocketConnection(
         statusMessage: incoming.statusMessage || '',
         httpVersion: incoming.httpVersion,
         elapsedTime: performance.now() - start,
+        timelinePath,
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
-      // @ts-expect-error -- private property
-      const requestHeaders = Object.entries(ws._req.getHeaders()).map(([name, value]) => ({ name, value: value?.toString() || '' }));
       models.websocketRequest.update(request, { headers: requestHeaders });
     });
 

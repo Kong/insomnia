@@ -451,7 +451,7 @@ async function _applyResponsePluginHooks(
 
 }
 
-function storeTimeline(timeline: ResponseTimelineEntry[]) {
+export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
   const timelineStr = JSON.stringify(timeline, null, '\t');
   const timelineHash = uuidv4();
   const responsesDir = pathJoin(getDataDirectory(), 'responses');

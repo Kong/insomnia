@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
-import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebsocketEvent } from '../../../main/network/websocket';
+import * as models from '../../../models';
 import type { Response } from '../../../models/response';
 import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
@@ -36,9 +36,6 @@ const EventLogViewWrapper = styled.div({
   boxSizing: 'content-box',
   padding: 'var(--padding-sm)',
 });
-const fakeResponse: { _id: string } = {
-  _id: 'test',
-};
 export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
   requestId,
   handleSetActiveResponse,
@@ -56,18 +53,7 @@ export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (req
   useEffect(() => {
     setSelectedEvent(null);
   }, []);
-  const timeline: ResponseTimelineEntry[] = [];
-  // if (response) {
-  //   timeline.push({ value: 'Preparing request to ws://example.com/chat', name: 'Text', timestamp: Date.now() });
-  //   timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-  //   timeline.push({ value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() });
-  //   timeline.push({ value: 'UPGRADE /chat HTTP/1.1\r\nHost: 127.0.0.1:4010', name: 'HeaderOut', timestamp: Date.now() });
-  //   const headersOut = activeRequest?.headers.map(([k, v]) => `${k}: ${v}`).join('\n');
-  //   timeline.push({ value: headersOut, name: 'HeaderOut', timestamp: Date.now() });
-  //   timeline.push({ value: 'HTTP/1.1 101 Switching Protocols', name: 'HeaderIn', timestamp: Date.now() });
-  //   const headersIn = response.headers.map(({ name, value }) => `${name}: ${value}`).join('\n');
-  //   timeline.push({ value: headersIn, name: 'HeaderIn', timestamp: Date.now() });
-  // }
+  const timeline = models.response.getTimeline(response);
 
   return (
     <Pane type="response">
