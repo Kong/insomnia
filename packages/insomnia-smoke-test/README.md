@@ -4,6 +4,8 @@ This project contains the smoke testing suite for Insomnia and Inso.
 
 Tests for the Electron app are written using [Playwright](https://github.com/microsoft/playwright)  while tests for the CLI use [execa](https://github.com/sindresorhus/execa).
 
+For details about the example Express server used in smoke tests refer to [this other document](docs/express.md).
+
 ## Structure
 
 | Folder       | Purpose                           |
@@ -52,7 +54,7 @@ It's possible to run the smoke tests for:
 
 - A `build`, the JS bundle that is loaded into an electron client
 - A `package`, the executable binary (e.g. `.dmg` or `.exe`)
-  
+
 For `build`:
 
 ```shell
@@ -75,6 +77,25 @@ npm run test:smoke:package
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
 
+### Express server
+
+As API clients, Insomnia and Inso CLI require some sort of "live" running API to act as a target to interact with for our smoke tests.
+
+We've solved this problem with a local example Express server. Currently it supports the following requests:
+
+- HTTP
+- gRPC
+- WebSockets
+- ...
+
+To run the example Express server manually, you can run:
+
+```shell
+npm run serve --prefix packages/insomnia-smoke-test
+```
+
+You can find more details of our Express server in [this document](docs/express.md).
+
 ### Show trace viewer
 
 Each time you run a playwright test a trace.zip will be generated, this is useful for debugging CI. [docs](https://playwright.dev/docs/trace-viewer)
@@ -95,7 +116,7 @@ With the extension installed, in a terminal, run the watcher
 npm run watch:app
 ```
 
-You can now run and debug playwright tests, either from the `Testing` tab, or by going into one of the test files and clicking the run button.  
+You can now run and debug playwright tests, either from the `Testing` tab, or by going into one of the test files and clicking the run button.
 If no tests appear, you may need to run "Refresh playwright tests". This can be done from the command palette, or by using the button at the top of the `Testing` tab.
 
 ## Run Inso CLI smoke tests
