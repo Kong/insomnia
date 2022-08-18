@@ -101,34 +101,6 @@ export const CloseEventTableRow = memo(
 );
 CloseEventTableRow.displayName = 'CloseEventTableRow';
 
-export const UpgradeEventTableRow = memo(
-  (props: {
-      event: WebsocketUpgradeEvent;
-      isActive: boolean;
-      onClick: () => void;
-    }) => {
-    const { isActive, onClick } = props;
-    return (
-      <TableRow data-testid="EventLogTable__EventTableRow" isActive={isActive} onClick={onClick}>
-        <TableCell>
-          <TableCellIconWrapper>
-            <SvgIcon icon="ellipsis-circle2" />
-          </TableCellIconWrapper>
-        </TableCell>
-        <TableCell>
-          <TableCellTextWrapper>
-            Connection upgraded to WebSocket
-          </TableCellTextWrapper>
-        </TableCell>
-        <TableCell>
-          <Timestamp time={props.event.timestamp} />
-        </TableCell>
-      </TableRow>
-    );
-  }
-);
-UpgradeEventTableRow.displayName = 'UpgradeEventTableRow';
-
 export const OpenEventTableRow = memo(
   (props: {
       event: WebsocketOpenEvent;
@@ -203,15 +175,6 @@ export const EventTableRow = memo(
       case 'open': {
         return (
           <OpenEventTableRow
-            event={event}
-            isActive={isActive}
-            onClick={_onClick}
-          />
-        );
-      }
-      case 'upgrade': {
-        return (
-          <UpgradeEventTableRow
             event={event}
             isActive={isActive}
             onClick={_onClick}
