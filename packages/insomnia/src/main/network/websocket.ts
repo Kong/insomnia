@@ -287,3 +287,12 @@ export function registerWebSocketHandlers() {
   ipcMain.handle('webSocketRequest.connection.close', closeWebSocketConnection);
   ipcMain.handle('webSocketRequest.connection.event.findMany', findMany);
 }
+
+electron.app.on('window-all-closed', () => {
+  WebSocketConnections.forEach(ws => {
+    ws.close();
+  });
+  fileStreams.forEach(stream => {
+    stream.end();
+  });
+});
