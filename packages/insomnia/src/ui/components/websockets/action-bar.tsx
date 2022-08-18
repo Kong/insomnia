@@ -81,7 +81,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue
     event.preventDefault();
     create({ requestId });
   };
-
+  // @TODO: remove this when we want to test multiple open connections
   useEffect(() => {
     return () => {
       close({ requestId });
