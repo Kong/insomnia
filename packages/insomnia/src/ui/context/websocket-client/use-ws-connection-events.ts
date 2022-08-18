@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { WebsocketEvent } from '../../../main/network/websocket';
 import { useWebSocketClient } from './websocket-client-context';
 
-export function useWebSocketConnectionEvents({ requestId }: { requestId: string }) {
+export function useWebSocketConnectionEvents({ requestId, responseId }: { requestId: string; responseId: string }) {
   const { event: { findMany, subscribe } } = useWebSocketClient();
   // @TODO - This list can grow to thousands of events in a chatty websocket connection.
   // It's worth investigating an LRU cache that keeps the last X number of messages.
@@ -12,7 +12,7 @@ export function useWebSocketConnectionEvents({ requestId }: { requestId: string 
 
   useEffect(() => {
     let isMounted = true;
-    let unsubscribe = () => {};
+    let unsubscribe = () => { };
 
     // @TODO - There is a possible race condition here.
     // Subscribe should probably ask for events after a given event.id so we can make sure
@@ -42,7 +42,7 @@ export function useWebSocketConnectionEvents({ requestId }: { requestId: string 
       isMounted = false;
       unsubscribe();
     };
-  }, [requestId, findMany, subscribe]);
+  }, [requestId, responseId, findMany, subscribe]);
 
   return events;
 }

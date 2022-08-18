@@ -138,7 +138,6 @@ async function createWebSocketConnection(
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
-      models.websocketRequest.update(request, { headers: requestHeaders });
     });
 
     ws.addEventListener('open', () => {

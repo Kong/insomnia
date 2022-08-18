@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebsocketEvent } from '../../../main/network/websocket';
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
@@ -43,17 +44,20 @@ export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (req
   const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(
     null
   );
-  const events = useWebSocketConnectionEvents({ requestId });
+    // @TODO: drill this?
+  const response = useSelector(selectActiveResponse);
+  const events = useWebSocketConnectionEvents({ requestId, responseId: response._id });
   const handleSelection = (event: WebsocketEvent) => {
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
   };
-  // @TODO: drill this?
-  const response = useSelector(selectActiveResponse);
 
   useEffect(() => {
     setSelectedEvent(null);
   }, []);
-  const timeline = models.response.getTimeline(response);
+  let timeline: ResponseTimelineEntry[] = [];
+  if (response) {
+    timeline = models.response.getTimeline(response);
+  }
 
   return (
     <Pane type="response">
@@ -99,7 +103,7 @@ export const ResponsePane: FC<{ requestId: string; handleSetActiveResponse: (req
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseTimelineViewer
-            responseId={response._id}
+            responseId={response?._id || ''}
             timeline={timeline}
           />
         </TabPanel>
