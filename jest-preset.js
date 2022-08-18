@@ -10,6 +10,10 @@ module.exports = {
   resetMocks: true,
   resetModules: true,
   testEnvironment: 'node',
+  modulePathIgnorePatterns : [
+    'insomnia-smoke-test/tests/',
+    'insomnia-smoke-test/cli/',
+  ],
   testRegex: ['.+\\.test\\.tsx?$'],
   transform: { '^.+\\.tsx?$': 'ts-jest' },
   verbose: false,
