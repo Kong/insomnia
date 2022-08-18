@@ -6,7 +6,10 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { startWebsocketServer } from './websocket';
 
 describe('websocket smoke test server', () => {
-  jest.setTimeout(25000); // allow for slow CI environments
+  let timeout: number;
+  process.platform === 'win32' ? timeout = 60000 : timeout = 25000;
+  jest.setTimeout(timeout); // allow for slow CI environments and slower Windows GH machines
+
   const app = express();
   let server: Server;
   let wsServer: WebSocketServer;
