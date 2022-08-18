@@ -4,9 +4,8 @@ import styled from 'styled-components';
 
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
+import { createWebSocketClient, useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
