@@ -61,9 +61,9 @@ export type WebsocketEvent =
 
 export type WebSocketEventLog = WebsocketEvent[];
 
-// @TODO: Volatile state for now, later we might want to persist event logs.
 const WebSocketConnections = new Map<string, WebSocket>();
-const WebSocketFileStreams = new Map<string, fs.WriteStream>();
+const fileStreams = new Map<string, fs.WriteStream>();
+
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
@@ -97,7 +97,7 @@ async function createWebSocketConnection(
     const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
     mkdirp.sync(responsesDir);
     const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
-    WebSocketFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+    fileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
     ws.on('upgrade', async incoming => {
       // @TODO: We may want to add set-cookie handling here.
       const timeline: ResponseTimelineEntry[] = [];
@@ -145,7 +145,7 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      fileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       event.sender.send(eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
@@ -160,7 +160,7 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+      fileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       event.sender.send(eventChannel, messageEvent);
     });
 
@@ -175,8 +175,8 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketFileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
-      WebSocketFileStreams.get(options.requestId)?.end();
+      fileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
+      fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, closeEvent);
@@ -195,8 +195,8 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketFileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
-      WebSocketFileStreams.get(options.requestId)?.end();
+      fileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
+      fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, errorEvent);
@@ -246,7 +246,7 @@ async function sendWebSocketEvent(
     timestamp: Date.now(),
   };
 
-  WebSocketFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
+  fileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
   const response = await models.response.getLatestByParentId(options.requestId);
   if (!response) {
     console.error('something went wrong');
@@ -276,7 +276,7 @@ async function findMany(
     return [];
   }
   const body = await fs.promises.readFile(response.bodyPath);
-  return body?.toString()?.split('\n').filter(e => e?.trim())
+  return body.toString().split('\n').filter(e => e?.trim())
     .map(e => JSON.parse(e)) || [];
 }
 

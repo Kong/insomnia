@@ -26,7 +26,7 @@ const SendButton = styled.button({
   border: '1px solid var(--hl-lg)',
   borderRadius: 'var(--radius-md)',
   ':hover': {
-    backgroundColor: 'var(--hl-xs)',
+    filter: 'brightness(0.8)',
   },
 });
 const PaneSendButton = styled.div({
