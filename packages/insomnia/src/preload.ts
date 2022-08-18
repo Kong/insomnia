@@ -59,7 +59,7 @@ const webSocketConnection = {
 
       return unsubscribe;
     },
-    send(options: { requestId: string; message: string | Blob | ArrayBufferLike | ArrayBufferView }) {
+    send(options: { requestId: string; message: string }) {
       return ipcRenderer.invoke(
         'webSocketRequest.connection.event.send',
         options

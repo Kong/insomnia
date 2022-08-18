@@ -156,7 +156,7 @@ export async function getLatestForRequest(
   return response || null;
 }
 
-export async function create(patch: Record<string, any> = {}, maxResponses = 20) {
+export async function create(patch: Partial<Response> = {}, maxResponses = 20) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }

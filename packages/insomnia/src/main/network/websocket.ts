@@ -10,6 +10,8 @@ import {
 } from 'ws';
 
 import { websocketRequest } from '../../models';
+import * as models from '../../models';
+import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 
 export interface WebSocketConnection extends WebSocket {
@@ -84,7 +86,7 @@ async function createWebSocketConnection(
 
   try {
     const request = await websocketRequest.getById(options.requestId);
-
+    const responseId = uuidV4();
     if (!request?.url) {
       throw new Error('No URL specified');
     }
@@ -98,30 +100,30 @@ async function createWebSocketConnection(
     const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
-    const ws = new WebSocket(request?.url, { headers });
+    const ws = new WebSocket(request.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
     const start = performance.now();
-    ws.on('upgrade', incoming => {
+    ws.on('upgrade', async incoming => {
       // @TODO: We may want to add set-cookie handling here.
-      // @TODO: We might want to write this to a Response object or create a new Response data type.
-      const upgradeEvent: WebsocketUpgradeEvent = {
-        _id: uuidV4(),
-        requestId: options.requestId,
+      const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+      const responsePatch: Partial<Response> = {
+        _id: responseId,
+        parentId: request._id,
+        requestVersionId: options.requestId,
         type: 'upgrade',
-        timestamp: Date.now(),
-        incomingHeaders: incoming.headers,
-        // @ts-expect-error -- private property
-        outgoingHeaders: ws._req.getHeaders(),
-        statusCode: incoming.statusCode,
-        statusMessage: incoming.statusMessage,
+        created: Date.now(),
+        headers: responseHeaders,
+        url: request.url,
+        statusCode: incoming.statusCode || 0,
+        statusMessage: incoming.statusMessage || '',
         httpVersion: incoming.httpVersion,
         elapsedTime: performance.now() - start,
       };
-
-      WebSocketEventLogs.set(options.requestId, [upgradeEvent]);
-
-      event.sender.send(eventChannel, upgradeEvent);
-
+      const settings = await models.settings.getOrCreate();
+      models.response.create(responsePatch, settings.maxHistoryResponses);
+      // @ts-expect-error -- private property
+      const requestHeaders = Object.entries(ws._req.getHeaders()).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+      models.websocketRequest.update(request, { headers: requestHeaders });
     });
 
     ws.addEventListener('open', () => {
