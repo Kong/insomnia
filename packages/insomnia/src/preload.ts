@@ -34,7 +34,7 @@ const webSocketConnection = {
   },
   event: {
     findMany: (options: {
-      requestId: string;
+      responseId: string;
     }): Promise<WebsocketEvent[]> => {
       return ipcRenderer.invoke(
         'webSocketRequest.connection.event.findMany',
@@ -42,10 +42,10 @@ const webSocketConnection = {
       );
     },
     subscribe: (
-      options: { requestId: string },
+      options: { responseId: string },
       listener: (webSocketEvent: WebsocketEvent) => any
     ) => {
-      const channel = `webSocketRequest.connection.${options.requestId}.event`;
+      const channel = `webSocketRequest.connection.${options.responseId}.event`;
 
       function onNewEvent(_event: IpcRendererEvent, webSocketEvent: WebsocketEvent) {
         listener(webSocketEvent);
@@ -59,7 +59,7 @@ const webSocketConnection = {
 
       return unsubscribe;
     },
-    send(options: { requestId: string; message: string | Blob | ArrayBufferLike | ArrayBufferView }) {
+    send(options: { requestId: string; message: string }) {
       return ipcRenderer.invoke(
         'webSocketRequest.connection.event.send',
         options

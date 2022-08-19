@@ -2,9 +2,11 @@ import deepEqual from 'deep-equal';
 
 import { database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
+import * as requestOperations from '../models/helpers/request-operations';
+import { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
-import * as models from './index';
 import { isRequest, Request } from './request';
+import { isWebSocketRequest, WebSocketRequest } from './websocket-request';
 
 export const name = 'Request Version';
 
@@ -51,9 +53,9 @@ export function getById(id: string) {
   return db.get<RequestVersion>(type, id);
 }
 
-export async function create(request: Request) {
-  if (!isRequest(request)) {
-    throw new Error(`New ${type} was not given a valid ${models.request.type} instance`);
+export async function create(request: Request | WebSocketRequest | GrpcRequest) {
+  if (!isRequest(request) && !isWebSocketRequest(request)) {
+    throw new Error(`New ${type} was not given a valid ${request.type} instance`);
   }
 
   const parentId = request._id;
@@ -90,7 +92,7 @@ export async function restore(requestVersionId: string) {
   }
 
   const requestPatch = decompressObject(requestVersion.compressedRequest);
-  const originalRequest = await models.request.getById(requestPatch._id);
+  const originalRequest = await requestOperations.getById(requestPatch._id);
 
   if (!originalRequest) {
     return null;
@@ -101,20 +103,18 @@ export async function restore(requestVersionId: string) {
     delete requestPatch[field];
   }
 
-  return models.request.update(originalRequest, requestPatch);
+  return requestOperations.update(originalRequest, requestPatch);
 }
-
-function _diffRequests(rOld: Request | null, rNew: Request) {
+function _diffRequests(rOld: Request | WebSocketRequest | null, rNew: Request | WebSocketRequest) {
   if (!rOld) {
     return true;
   }
 
-  for (const key of Object.keys(rOld) as (keyof Request)[]) {
+  for (const key of Object.keys(rOld) as (keyof typeof rOld)[]) {
     // Skip fields that aren't useful
     if (FIELDS_TO_IGNORE.includes(key)) {
       continue;
     }
-
     if (!deepEqual(rOld[key], rNew[key])) {
       return true;
     }
