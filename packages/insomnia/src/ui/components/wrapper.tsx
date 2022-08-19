@@ -388,7 +388,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             />
 
             <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
-            <ResponseDebugModal ref={registerModal} />
+            <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
             <RequestSwitcherModal
               ref={registerModal}

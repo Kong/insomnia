@@ -180,7 +180,6 @@ export const EventTableRow = memo(
           />
         );
       }
-
       case 'close': {
         return (
           <CloseEventTableRow
