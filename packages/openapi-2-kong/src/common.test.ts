@@ -242,6 +242,18 @@ describe('common', () => {
     it('does not convert to regex if no variables present', () => {
       expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz$');
     });
+
+    it('converts variables with invalid characters to regex with underscores', () => {
+      expect(pathVariablesToRegex('/foo/{bar@var}/{baz-var}')).toBe('/foo/(?<bar_var>[^\\/]+)/(?<baz_var>[^\\/]+)$');
+    });
+
+    it('does not convert invalid characters not in a variable name', () => {
+      expect(pathVariablesToRegex('/foo-bar/baz')).not.toBe('/foo_bar/baz$');
+    });
+
+    it('does not convert numbers in a variable name', () => {
+      expect(pathVariablesToRegex('/foo/{bar9}/{baz6}')).toBe('/foo/(?<bar9>[^\\/]+)/(?<baz6>[^\\/]+)$');
+    });
   });
 
   describe('getPluginNameFromKey()', () => {

@@ -65,9 +65,17 @@ export function generateSlug(str: string, options: SlugifyOptions = {}) {
 /** characters in curly braces not immediately followed by `://`, e.g. `{foo}` will match but `{foo}://` will not. */
 const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
+// Any character that isn't allowed in a regex capturing group
+const invalidPathVariableCharacters = /[^\w]/g;
+
 export function pathVariablesToRegex(p: string) {
-  // match anything except whitespace and '/'
-  const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/]+)');
+  const result = p
+    // match anything except whitespace and '/'
+    .replace(pathVariableSearchValue, (_match, b) => {
+      // replace all invalid with an underscore, so that the regex remains valid
+      const validCapturingGroupName = b.replace(invalidPathVariableCharacters, '_');
+      return `(?<${validCapturingGroupName}>[^\\/]+)`;
+    });
   // add a line ending because it is a regex
   return result + '$';
 }
