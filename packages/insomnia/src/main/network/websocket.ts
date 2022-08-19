@@ -64,17 +64,28 @@ export type WebSocketEventLog = WebsocketEvent[];
 const WebSocketConnections = new Map<string, WebSocket>();
 const fileStreams = new Map<string, fs.WriteStream>();
 
-// Flow control state
+// Flow control state.
+
+// CTS flag; When set, the renderer thread is accepting new WebSocket events.
 let clearToSend = true;
+
+// Send queue map; holds batches of events for each event channel, to be sent upon receiving a CTS signal.
 const sendQueueMap = new Map<string, WebSocketEventLog>();
 
-function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebsocketEvent) {
+/**
+ * Dispatches a websocket event to a renderer, using batching control flow logic.
+ * When CTS is set, the events are sent immediately.
+ * If CTS is cleared, the events are batched into the send queue.
+ */
+function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebsocketEvent): void {
+  // If the CTS flag is already set, just send immediately.
   if (clearToSend) {
     target.send(eventChannel, [wsEvent]);
     clearToSend = false;
     return;
   }
 
+  // Otherwise, append to send queue for this event channel.
   const sendQueue = sendQueueMap.get(eventChannel);
   if (sendQueue) {
     sendQueue.push(wsEvent);
@@ -299,13 +310,19 @@ async function findMany(
     .map(e => JSON.parse(e)) || [];
 }
 
+/**
+ * Sets the CTS flag; sent when the UI is ready for more events.
+ */
 function signalClearToSend(event: Electron.IpcMainInvokeEvent) {
   const nextChannel = sendQueueMap.keys().next();
+
+  // There are no pending events; just set the CTS flag.
   if (nextChannel.done) {
     clearToSend = true;
     return;
   }
 
+  // We have batched events; immediately send one batch.
   const sendQueue = sendQueueMap.get(nextChannel.value);
   if (!sendQueue) {
     return;

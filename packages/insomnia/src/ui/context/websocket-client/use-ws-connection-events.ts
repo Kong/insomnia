@@ -34,6 +34,10 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
           if (isMounted) {
             setEvents(allEvents => allEvents.concat(events));
           }
+
+          // Wait to give the CTS signal until we've rendered a frame.
+          // This gives the UI a chance to render and respond to user interactions between receiving events.
+          // Note that we do this even if the component isn't mounted, to ensure that CTS gets set even if a race occurs.
           window.requestAnimationFrame(clearToSend);
         }
       );
