@@ -71,9 +71,9 @@ const invalidPathVariableCharacters = /[^\w]/g;
 export function pathVariablesToRegex(p: string) {
   const result = p
     // match anything except whitespace and '/'
-    .replace(pathVariableSearchValue, (_match, b) => {
+    .replace(pathVariableSearchValue, (_match, pathVariableString) => {
       // replace all invalid with an underscore, so that the regex remains valid
-      const validCapturingGroupName = b.replace(invalidPathVariableCharacters, '_');
+      const validCapturingGroupName = pathVariableString.replace(invalidPathVariableCharacters, '_');
       return `(?<${validCapturingGroupName}>[^\\/]+)`;
     });
   // add a line ending because it is a regex
