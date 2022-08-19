@@ -4,9 +4,8 @@ import styled from 'styled-components';
 
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { createWebSocketClient } from '../../context/websocket-client/create-websocket-client';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
+import { createWebSocketClient, useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
@@ -27,7 +26,7 @@ const SendButton = styled.button({
   border: '1px solid var(--hl-lg)',
   borderRadius: 'var(--radius-md)',
   ':hover': {
-    backgroundColor: 'var(--hl-xs)',
+    filter: 'brightness(0.8)',
   },
 });
 const PaneSendButton = styled.div({
@@ -119,7 +118,7 @@ const RequestPane: FC<Props> = ({ request }) => {
             key={`${request._id}-${readyState}-header-editor`}
             request={request}
             bulk={false}
-            isDisabled={readyState === ReadyState.OPEN}
+            isDisabled={readyState !== ReadyState.CLOSED}
           />
         </TabPanel>
       </Tabs>

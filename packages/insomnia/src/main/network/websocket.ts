@@ -1,4 +1,7 @@
-import { ipcMain } from 'electron';
+import electron, { ipcMain } from 'electron';
+import fs from 'fs';
+import mkdirp from 'mkdirp';
+import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
@@ -8,8 +11,13 @@ import {
   WebSocket,
 } from 'ws';
 
+import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
+import * as models from '../../models';
+import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
+import { storeTimeline } from '../../network/network';
+import { ResponseTimelineEntry } from './libcurl-promise';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -53,9 +61,8 @@ export type WebsocketEvent =
 
 export type WebSocketEventLog = WebsocketEvent[];
 
-// @TODO: Volatile state for now, later we might want to persist event logs.
 const WebSocketConnections = new Map<string, WebSocket>();
-const WebSocketEventLogs = new Map<string, WebSocketEventLog>();
+const fileStreams = new Map<string, fs.WriteStream>();
 
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
@@ -70,12 +77,12 @@ async function createWebSocketConnection(
 
   try {
     const request = await websocketRequest.getById(options.requestId);
-
+    const responseId = generateId('res');
     if (!request?.url) {
       throw new Error('No URL specified');
     }
 
-    const eventChannel = `webSocketRequest.connection.${request._id}.event`;
+    const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
 
     // @TODO: Render nunjucks tags in these headers
@@ -84,8 +91,51 @@ async function createWebSocketConnection(
     const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
-    const ws = new WebSocket(request?.url, { headers });
+    const ws = new WebSocket(request.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
+    const start = performance.now();
+    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+    mkdirp.sync(responsesDir);
+    const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
+    fileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+    ws.on('upgrade', async incoming => {
+      // @TODO: We may want to add set-cookie handling here.
+      const timeline: ResponseTimelineEntry[] = [];
+      // request
+      timeline.push({ value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+      // @ts-expect-error -- private property
+      const internalRequest = ws._req;
+      timeline.push({ value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() });
+      timeline.push({ value: internalRequest._header, name: 'HeaderOut', timestamp: Date.now() });
+
+      // response
+      const statusMessage = incoming.statusMessage || '';
+      const statusCode = incoming.statusCode || 0;
+      const httpVersion = incoming.httpVersion;
+      timeline.push({ value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() });
+      const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+      const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+      timeline.push({ value: headersIn, name: 'HeaderIn', timestamp: Date.now() });
+      const timelinePath = await storeTimeline(timeline);
+      const responsePatch: Partial<Response> = {
+        _id: responseId,
+        parentId: request._id,
+        type: 'upgrade',
+        headers: responseHeaders,
+        url: request.url,
+        statusCode,
+        statusMessage,
+        httpVersion,
+        elapsedTime: performance.now() - start,
+        timelinePath,
+        bodyPath: responseBodyPath,
+        bodyCompression: null,
+      };
+      const settings = await models.settings.getOrCreate();
+      models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+    });
 
     ws.addEventListener('open', () => {
       const openEvent: WebsocketOpenEvent = {
@@ -95,14 +145,12 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketEventLogs.set(options.requestId, [openEvent]);
-
+      fileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       event.sender.send(eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
     ws.addEventListener('message', ({ data }: MessageEvent) => {
-      const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const messageEvent: WebsocketMessageEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -112,12 +160,11 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketEventLogs.set(options.requestId, [...msgs, messageEvent]);
+      fileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       event.sender.send(eventChannel, messageEvent);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
-      const msgs = WebSocketEventLogs.get(options.requestId) || [];
       const closeEvent: WebsocketCloseEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -128,7 +175,8 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketEventLogs.set(options.requestId, [...msgs, closeEvent]);
+      fileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
+      fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, closeEvent);
@@ -136,7 +184,8 @@ async function createWebSocketConnection(
     });
 
     ws.addEventListener('error', ({ error, message }: ErrorEvent) => {
-      const msgs = WebSocketEventLogs.get(options.requestId) || [];
+      console.error(error);
+
       const errorEvent: WebsocketErrorEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -146,7 +195,8 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      WebSocketEventLogs.set(options.requestId, [...msgs, errorEvent]);
+      fileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
+      fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, errorEvent);
@@ -187,8 +237,6 @@ async function sendWebSocketEvent(
     }
   });
 
-  const connectionMessages = WebSocketEventLogs.get(options.requestId) || [];
-
   const lastMessage: WebsocketMessageEvent = {
     _id: uuidV4(),
     requestId: options.requestId,
@@ -198,11 +246,13 @@ async function sendWebSocketEvent(
     timestamp: Date.now(),
   };
 
-  WebSocketEventLogs.set(options.requestId, [
-    ...connectionMessages,
-    lastMessage,
-  ]);
-  const eventChannel = `webSocketRequest.connection.${options.requestId}.event`;
+  fileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
+  const response = await models.response.getLatestByParentId(options.requestId);
+  if (!response) {
+    console.error('something went wrong');
+    return;
+  }
+  const eventChannel = `webSocketRequest.connection.${response._id}.event`;
   event.sender.send(eventChannel, lastMessage);
 }
 
@@ -217,12 +267,17 @@ async function closeWebSocketConnection(
   ws.close();
 }
 
-async function getWebSocketConnectionEvents(
+async function findMany(
   _event: Electron.IpcMainInvokeEvent,
-  options: { requestId: string }
+  options: { responseId: string }
 ) {
-  const connectionMessages = WebSocketEventLogs.get(options.requestId) || [];
-  return connectionMessages;
+  const response = await models.response.getById(options.responseId);
+  if (!response || !response.bodyPath) {
+    return [];
+  }
+  const body = await fs.promises.readFile(response.bodyPath);
+  return body.toString().split('\n').filter(e => e?.trim())
+    .map(e => JSON.parse(e)) || [];
 }
 
 export function registerWebSocketHandlers() {
@@ -230,5 +285,11 @@ export function registerWebSocketHandlers() {
   ipcMain.handle('webSocketRequest.connection.readyState', getWebSocketReadyState);
   ipcMain.handle('webSocketRequest.connection.event.send', sendWebSocketEvent);
   ipcMain.handle('webSocketRequest.connection.close', closeWebSocketConnection);
-  ipcMain.handle('webSocketRequest.connection.event.findMany', getWebSocketConnectionEvents);
+  ipcMain.handle('webSocketRequest.connection.event.findMany', findMany);
 }
+
+electron.app.on('window-all-closed', () => {
+  WebSocketConnections.forEach(ws => {
+    ws.close();
+  });
+});

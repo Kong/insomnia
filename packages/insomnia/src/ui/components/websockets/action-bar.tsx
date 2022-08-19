@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, FormEvent, useEffect } from 'react';
+import React, { ChangeEvent, FC, FormEvent } from 'react';
 import styled from 'styled-components';
 
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
@@ -11,6 +11,9 @@ const Button = styled.button({
   background: 'var(--color-surprise)',
   color: 'var(--color-font-surprise)',
   flex: '0 0 100px',
+  ':hover': {
+    filter: 'brightness(0.8)',
+  },
 });
 
 interface ActionButtonProps {
@@ -75,18 +78,12 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue, onChange, readyState }) => {
-  const { create, close } = useWebSocketClient();
+  const { create } = useWebSocketClient();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     create({ requestId });
   };
-
-  useEffect(() => {
-    return () => {
-      close({ requestId });
-    };
-  }, [close, requestId]);
 
   return (
     <>

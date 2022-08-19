@@ -4,6 +4,7 @@ import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
 
@@ -163,7 +164,7 @@ export async function create(patch: Record<string, any> = {}, maxResponses = 20)
 
   const { parentId } = patch;
   // Create request version snapshot
-  const request = await models.request.getById(parentId);
+  const request = await requestOperations.getById(parentId);
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
