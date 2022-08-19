@@ -56,7 +56,7 @@ export function getById(id: string) {
 
 export async function create(request: Request | WebSocketRequest | GrpcRequest) {
   if (!isRequest(request) && !isWebSocketRequest(request)) {
-    throw new Error(`New ${type} was not given a valid ${models.request.type} instance`);
+    throw new Error(`New ${type} was not given a valid ${request.type} instance`);
   }
 
   const parentId = request._id;
