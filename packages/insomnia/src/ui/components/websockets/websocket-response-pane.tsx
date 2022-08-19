@@ -34,6 +34,12 @@ const EventLogViewWrapper = styled.div({
   boxSizing: 'content-box',
   padding: 'var(--padding-sm)',
 });
+const PaneBodyContent = styled.div({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+});
 export const ResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
   requestId,
   response,
@@ -82,20 +88,22 @@ export const ResponsePane: FC<{ requestId: string; response: Response; handleSet
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
-          {Boolean(events?.length) && (
-            <EventLogTableWrapper>
-              <EventLogTable
-                events={events}
-                onSelect={handleSelection}
-                selectionId={selectedEvent?._id}
-              />
-            </EventLogTableWrapper>
-          )}
-          {selectedEvent && (
-            <EventLogViewWrapper>
-              <EventLogView event={selectedEvent} />
-            </EventLogViewWrapper>
-          )}
+          <PaneBodyContent>
+            {Boolean(events?.length) && (
+              <EventLogTableWrapper>
+                <EventLogTable
+                  events={events}
+                  onSelect={handleSelection}
+                  selectionId={selectedEvent?._id}
+                />
+              </EventLogTableWrapper>
+            )}
+            {selectedEvent && (
+              <EventLogViewWrapper>
+                <EventLogView event={selectedEvent} />
+              </EventLogViewWrapper>
+            )}
+          </PaneBodyContent>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseTimelineViewer
