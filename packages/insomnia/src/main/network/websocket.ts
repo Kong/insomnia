@@ -16,7 +16,6 @@ import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
-import { storeTimeline } from '../../network/network';
 import { ResponseTimelineEntry } from './libcurl-promise';
 
 export interface WebSocketConnection extends WebSocket {
@@ -62,7 +61,8 @@ export type WebsocketEvent =
 export type WebSocketEventLog = WebsocketEvent[];
 
 const WebSocketConnections = new Map<string, WebSocket>();
-const fileStreams = new Map<string, fs.WriteStream>();
+const eventLogFileStreams = new Map<string, fs.WriteStream>();
+const timelineFileStreams = new Map<string, fs.WriteStream>();
 
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
@@ -95,27 +95,31 @@ async function createWebSocketConnection(
     const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
     mkdirp.sync(responsesDir);
     const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
-    fileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+    eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+    const timelinePath = path.join(responsesDir, uuidV4() + '.timeline');
+    timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+
     ws.on('upgrade', async incoming => {
-      // @TODO: We may want to add set-cookie handling here.
-      const timeline: ResponseTimelineEntry[] = [];
-      // request
-      timeline.push({ value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
       // @ts-expect-error -- private property
       const internalRequest = ws._req;
-      timeline.push({ value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: internalRequest._header, name: 'HeaderOut', timestamp: Date.now() });
-
       // response
       const statusMessage = incoming.statusMessage || '';
       const statusCode = incoming.statusCode || 0;
       const httpVersion = incoming.httpVersion;
-      timeline.push({ value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() });
       const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
       const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
-      timeline.push({ value: headersIn, name: 'HeaderIn', timestamp: Date.now() });
-      const timelinePath = await storeTimeline(timeline);
+
+      // @TODO: We may want to add set-cookie handling here.
+      const timeline = [
+        { value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() },
+        { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+        { value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() },
+        { value: internalRequest._header, name: 'HeaderOut', timestamp: Date.now() },
+        { value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
+        { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
+      ];
+      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
@@ -143,7 +147,7 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       event.sender.send(eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
@@ -158,7 +162,8 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: data.toString(), name: 'DataIn', timestamp: Date.now() }) + '\n');
       event.sender.send(eventChannel, messageEvent);
     });
 
@@ -173,8 +178,10 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
-      fileStreams.get(options.requestId)?.end();
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.end();
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Closing connection with code ${code}`, name: 'Text', timestamp: Date.now() }) + '\n');
+      timelineFileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, closeEvent);
@@ -193,8 +200,10 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
-      fileStreams.get(options.requestId)?.end();
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.end();
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'Something went wrong', name: 'Text', timestamp: Date.now() }) + '\n');
+      timelineFileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
       event.sender.send(eventChannel, errorEvent);
@@ -208,7 +217,7 @@ async function createWebSocketConnection(
       statusMessage: 'Error',
       error: e.message || 'Something went wrong',
       elapsedTime: 0,
-      httpVersion:'',
+      httpVersion: '',
       statusCode: 0,
       headers: [],
     };
@@ -256,7 +265,7 @@ async function sendWebSocketEvent(
     timestamp: Date.now(),
   };
 
-  fileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
+  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
   const response = await models.response.getLatestByParentId(options.requestId);
   if (!response) {
     console.error('something went wrong');
