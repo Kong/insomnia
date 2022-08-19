@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { createWebSocketClient, useWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
@@ -43,13 +42,12 @@ const PaneHeader = styled(OriginalPaneHeader)({
 });
 
 const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
-  const { send } = useWebSocketClient();
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
-    send({ requestId, message });
+    window.main.webSocketConnection.event.send({ requestId, message });
   };
   return (
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
@@ -72,7 +70,7 @@ interface Props {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-const RequestPane: FC<Props> = ({ request }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request }) => {
   const readyState = useWSReadyState(request._id);
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
     const url = event.currentTarget.value || '';
@@ -123,17 +121,5 @@ const RequestPane: FC<Props> = ({ request }) => {
         </TabPanel>
       </Tabs>
     </Pane>
-  );
-};
-export const WebSocketRequestPane: FC<Props> = ({
-  request,
-}) => {
-  const wsClient = createWebSocketClient();
-  return (
-    <WebSocketClientProvider client={wsClient}>
-      <RequestPane
-        request={request}
-      />
-    </WebSocketClientProvider>
   );
 };

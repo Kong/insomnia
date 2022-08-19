@@ -7,7 +7,6 @@ import { WebsocketEvent } from '../../../main/network/websocket';
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
-import { createWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
@@ -40,7 +39,7 @@ const PaneBodyContent = styled.div({
   flexDirection: 'column',
   flex: 1,
 });
-export const ResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
+export const WebSocketResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
   requestId,
   response,
   handleSetActiveResponse,
@@ -113,22 +112,5 @@ export const ResponsePane: FC<{ requestId: string; response: Response; handleSet
         </TabPanel>
       </Tabs>
     </ Pane>
-  );
-};
-
-export const WebSocketResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
-  requestId,
-  response,
-  handleSetActiveResponse,
-}) => {
-  const wsClient = createWebSocketClient();
-  return (
-    <WebSocketClientProvider client={wsClient}>
-      <ResponsePane
-        requestId={requestId}
-        response={response}
-        handleSetActiveResponse={handleSetActiveResponse}
-      />
-    </WebSocketClientProvider>
   );
 };

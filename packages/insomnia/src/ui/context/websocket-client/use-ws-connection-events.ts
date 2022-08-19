@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { WebsocketEvent } from '../../../main/network/websocket';
-import { useWebSocketClient } from './websocket-client-context';
 
 export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
-  const { event: { findMany, subscribe } } = useWebSocketClient();
   // @TODO - This list can grow to thousands of events in a chatty websocket connection.
   // It's worth investigating an LRU cache that keeps the last X number of messages.
   // We'd also need to expand the findMany API to support pagination.
@@ -21,14 +19,14 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     // we don't lose any.
     async function fetchAndSubscribeToEvents() {
       // Fetch all existing events for this connection
-      const allEvents = await findMany({
+      const allEvents = await window.main.webSocketConnection.event.findMany({
         responseId,
       });
       if (isMounted) {
         setEvents(allEvents);
       }
       // Subscribe to new events and update the state.
-      unsubscribe = subscribe(
+      unsubscribe = window.main.webSocketConnection.event.subscribe(
         { responseId },
         event => {
           if (isMounted) {
@@ -44,7 +42,7 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
       isMounted = false;
       unsubscribe();
     };
-  }, [responseId, findMany, subscribe]);
+  }, [responseId]);
 
   return events;
 }

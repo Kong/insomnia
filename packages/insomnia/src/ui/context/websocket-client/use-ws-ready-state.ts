@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import { useWebSocketClient } from './websocket-client-context';
-
 export enum ReadyState {
   CONNECTING = 0,
   OPEN = 1,
@@ -10,17 +8,16 @@ export enum ReadyState {
 }
 export function useWSReadyState(requestId: string): ReadyState {
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CLOSED);
-  const { onReadyState, getReadyState } = useWebSocketClient();
 
   useEffect(() => {
-    getReadyState({ requestId })
+    window.main.webSocketConnection.readyState.getCurrent({ requestId })
       .then((currentReadyState: ReadyState) => {
         setReadyState(currentReadyState);
       });
-  }, [getReadyState, requestId]);
+  }, [requestId]);
 
   useEffect(() => {
-    const unsubscribe = onReadyState(
+    const unsubscribe = window.main.webSocketConnection.readyState.subscribe(
       { requestId },
       (incomingReadyState: ReadyState) => {
         setReadyState(incomingReadyState);
@@ -28,7 +25,7 @@ export function useWSReadyState(requestId: string): ReadyState {
     );
 
     return unsubscribe;
-  }, [onReadyState, requestId]);
+  }, [requestId]);
 
   return readyState;
 }
