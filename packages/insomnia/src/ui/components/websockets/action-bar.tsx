@@ -88,7 +88,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue
         <Input
           name="websocketUrlInput"
           disabled={readyState === ReadyState.OPEN}
-          required
           placeholder="wss://example.com/chat"
           defaultValue={defaultValue}
           onChange={onChange}

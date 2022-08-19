@@ -13,6 +13,7 @@ import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
+import { ResponseErrorViewer } from '../viewers/response-error-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogTable } from './event-log-table';
@@ -98,20 +99,23 @@ export const WebSocketResponsePane: FC<{ requestId: string; response: Response; 
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
           <PaneBodyContent>
-            {Boolean(events?.length) && (
-              <EventLogTableWrapper>
-                <EventLogTable
-                  events={events}
-                  onSelect={handleSelection}
-                  selectionId={selectedEvent?._id}
-                />
-              </EventLogTableWrapper>
-            )}
-            {selectedEvent && (
-              <EventLogViewWrapper>
-                <EventLogView event={selectedEvent} />
-              </EventLogViewWrapper>
-            )}
+            {response?.error ? <ResponseErrorViewer url={response.url} error={response.error} />
+              : <>
+                {Boolean(events?.length) && (
+                  <EventLogTableWrapper>
+                    <EventLogTable
+                      events={events}
+                      onSelect={handleSelection}
+                      selectionId={selectedEvent?._id}
+                    />
+                  </EventLogTableWrapper>
+                )}
+                {selectedEvent && (
+                  <EventLogViewWrapper>
+                    <EventLogView event={selectedEvent} />
+                  </EventLogViewWrapper>
+                )}
+              </>}
           </PaneBodyContent>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel scrollable-container">

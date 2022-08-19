@@ -104,14 +104,12 @@ async function createWebSocketConnection(
     console.warn('Connection still open to ' + existingConnection.url);
     return;
   }
-
+  const request = await websocketRequest.getById(options.requestId);
+  const responseId = generateId('res');
+  if (!request) {
+    return;
+  }
   try {
-    const request = await websocketRequest.getById(options.requestId);
-    const responseId = generateId('res');
-    if (!request?.url) {
-      throw new Error('No URL specified');
-    }
-
     const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
 
@@ -233,8 +231,20 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
   } catch (e) {
-    console.error(e);
-    throw e;
+    console.error('message', e);
+    const responsePatch = {
+      _id: generateId('res'),
+      parentId: request._id,
+      statusMessage: 'Error',
+      error: e.message || 'Something went wrong',
+      elapsedTime: 0,
+      httpVersion:'',
+      statusCode: 0,
+      headers: [],
+    };
+    const settings = await models.settings.getOrCreate();
+    models.response.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
   }
 }
 
