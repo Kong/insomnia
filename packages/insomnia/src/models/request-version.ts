@@ -5,7 +5,6 @@ import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
-import * as models from './index';
 import { isRequest, Request } from './request';
 import { isWebSocketRequest, WebSocketRequest } from './websocket-request';
 
