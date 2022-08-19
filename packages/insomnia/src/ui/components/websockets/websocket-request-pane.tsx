@@ -118,7 +118,7 @@ const RequestPane: FC<Props> = ({ request }) => {
             key={`${request._id}-${readyState}-header-editor`}
             request={request}
             bulk={false}
-            isDisabled={readyState === ReadyState.OPEN}
+            isDisabled={readyState !== ReadyState.CLOSED}
           />
         </TabPanel>
       </Tabs>

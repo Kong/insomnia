@@ -9,7 +9,7 @@ export enum ReadyState {
   CLOSED = 3,
 }
 export function useWSReadyState(requestId: string): ReadyState {
-  const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CONNECTING);
+  const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CLOSED);
   const { onReadyState, getReadyState } = useWebSocketClient();
 
   useEffect(() => {

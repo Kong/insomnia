@@ -292,7 +292,4 @@ electron.app.on('window-all-closed', () => {
   WebSocketConnections.forEach(ws => {
     ws.close();
   });
-  fileStreams.forEach(stream => {
-    stream.end();
-  });
 });

@@ -57,7 +57,7 @@ export const ResponsePane: FC<{ requestId: string; response: Response; handleSet
 
   return (
     <Pane type="response">
-      {!response ? <PaneHeader>{ }</PaneHeader> : (
+      {!response ? <PaneHeader /> : (
         <PaneHeader className="row-spaced">
           <div className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
