@@ -15,7 +15,9 @@ export function startWebsocketServer(server: Server) {
         ws.send(message);
         return;
       }
-
+      if (message.toString() === 'close') {
+        ws.close(1003, 'Invalid message type');
+      }
       ws.send(message.toString());
     });
 
