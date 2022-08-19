@@ -2,7 +2,6 @@ import React, { ChangeEvent, FC, FormEvent } from 'react';
 import styled from 'styled-components';
 
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { useWebSocketClient } from '../../context/websocket-client/websocket-client-context';
 
 const Button = styled.button({
   paddingRight: 'var(--padding-md)',
@@ -21,7 +20,6 @@ interface ActionButtonProps {
   readyState: ReadyState;
 }
 const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
-  const { close } = useWebSocketClient();
 
   if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
     return (
@@ -41,7 +39,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
       name="websocketActionCloseBtn"
       type="button"
       onClick={() => {
-        close({ requestId });
+        window.main.webSocketConnection.close({ requestId });
       }}
     >
       Close
@@ -78,11 +76,9 @@ const WebSocketIcon = styled.span({
 });
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue, onChange, readyState }) => {
-  const { create } = useWebSocketClient();
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    create({ requestId });
+    window.main.webSocketConnection.create({ requestId });
   };
 
   return (
