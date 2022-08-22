@@ -40,44 +40,56 @@ const PaneBodyContent = styled.div({
   flexDirection: 'column',
   flex: 1,
 });
-export const WebSocketResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
+export const WebSocketResponsePane: FC<{ requestId: string; response: Response | null; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> =
+  ({
+    requestId,
+    response,
+    handleSetActiveResponse,
+  }) => {
+    if (!response) {
+      return (
+        <Pane type="response">
+          <PaneHeader />
+        </Pane>
+      );
+    }
+    return <WebSocketActiveResponsePane requestId={requestId} response={response} handleSetActiveResponse={handleSetActiveResponse} />;
+  };
+
+const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
   requestId,
   response,
   handleSetActiveResponse,
 }) => {
-  const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(
-    null
-  );
-  const events = useWebSocketConnectionEvents({ responseId: response?._id });
+  const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(null);
+  const events = useWebSocketConnectionEvents({ responseId: response._id });
   const handleSelection = (event: WebsocketEvent) => {
     setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
   useEffect(() => {
     setSelectedEvent(null);
-  }, []);
+  }, [response._id]);
+
   let timeline: ResponseTimelineEntry[] = [];
   if (response) {
     timeline = models.response.getTimeline(response);
   }
-
   return (
     <Pane type="response">
-      {!response ? <PaneHeader /> : (
-        <PaneHeader className="row-spaced">
-          <div className="no-wrap scrollable scrollable--no-bars pad-left">
-            <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
-            <TimeTag milliseconds={response.elapsedTime} />
-            <SizeTag bytesRead={0} bytesContent={0} />
-          </div>
-          <ResponseHistoryDropdown
-            activeResponse={response}
-            handleSetActiveResponse={handleSetActiveResponse}
-            requestId={requestId}
-            className="tall pane__header__right"
-          />
-        </PaneHeader>
-      )}
+      <PaneHeader className="row-spaced">
+        <div className="no-wrap scrollable scrollable--no-bars pad-left">
+          <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
+          <TimeTag milliseconds={response.elapsedTime} />
+          <SizeTag bytesRead={0} bytesContent={0} />
+        </div>
+        <ResponseHistoryDropdown
+          activeResponse={response}
+          handleSetActiveResponse={handleSetActiveResponse}
+          requestId={requestId}
+          className="tall pane__header__right"
+        />
+      </PaneHeader>
       <Tabs className="pane__body theme--pane__body react-tabs">
         <TabList>
           <Tab tabIndex="-1" >
@@ -89,7 +101,7 @@ export const WebSocketResponsePane: FC<{ requestId: string; response: Response; 
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
           <PaneBodyContent>
-            {response?.error ? <ResponseErrorViewer url={response.url} error={response.error} />
+            {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
                 {Boolean(events?.length) && (
                   <EventLogTableWrapper>
@@ -110,7 +122,7 @@ export const WebSocketResponsePane: FC<{ requestId: string; response: Response; 
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseTimelineViewer
-            responseId={response?._id || ''}
+            responseId={response._id}
             timeline={timeline}
           />
         </TabPanel>
