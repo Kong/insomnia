@@ -4,11 +4,11 @@ import React, { FC, memo, useCallback } from 'react';
 import styled from 'styled-components';
 
 import {
-  WebsocketCloseEvent,
-  WebsocketErrorEvent,
-  WebsocketEvent,
-  WebsocketMessageEvent,
-  WebsocketOpenEvent,
+  WebSocketCloseEvent,
+  WebSocketErrorEvent,
+  WebSocketEvent,
+  WebSocketMessageEvent,
+  WebSocketOpenEvent,
 } from '../../../main/network/websocket';
 
 const Table = styled.table({
@@ -45,7 +45,7 @@ const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
 
 export const MessageEventTableRow = memo(
   (props: {
-      event: WebsocketMessageEvent;
+      event: WebSocketMessageEvent;
       isActive: boolean;
       onClick: () => void;
     }) => {
@@ -73,7 +73,7 @@ MessageEventTableRow.displayName = 'MessageEventTableRow';
 
 export const CloseEventTableRow = memo(
   (props: {
-      event: WebsocketCloseEvent;
+      event: WebSocketCloseEvent;
       isActive: boolean;
       onClick: () => void;
     }) => {
@@ -102,7 +102,7 @@ CloseEventTableRow.displayName = 'CloseEventTableRow';
 
 export const OpenEventTableRow = memo(
   (props: {
-      event: WebsocketOpenEvent;
+      event: WebSocketOpenEvent;
       isActive: boolean;
       onClick: () => void;
     }) => {
@@ -130,7 +130,7 @@ OpenEventTableRow.displayName = 'OpenEventTableRow';
 
 export const ErrorEventTableRow = memo(
   (props: {
-      event: WebsocketErrorEvent;
+      event: WebSocketErrorEvent;
       isActive: boolean;
       onClick: () => void;
     }) => {
@@ -154,9 +154,9 @@ ErrorEventTableRow.displayName = 'ErrorEventTableRow';
 
 export const EventTableRow = memo(
   (props: {
-      event: WebsocketEvent;
+      event: WebSocketEvent;
       isActive: boolean;
-      onClick: (event: WebsocketEvent) => void;
+      onClick: (event: WebSocketEvent) => void;
     }) => {
     const { event, isActive, onClick } = props;
     const _onClick = useCallback(() => onClick(event), [event, onClick]);
@@ -207,9 +207,9 @@ export const EventTableRow = memo(
 EventTableRow.displayName = 'EventTableRow';
 
 interface Props {
-  events: WebsocketEvent[];
+  events: WebSocketEvent[];
   selectionId?: string;
-  onSelect: (event: WebsocketEvent) => void;
+  onSelect: (event: WebSocketEvent) => void;
 }
 export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
   return (

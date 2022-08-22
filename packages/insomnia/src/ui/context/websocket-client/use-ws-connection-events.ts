@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { WebsocketEvent } from '../../../main/network/websocket';
+import { WebSocketEvent } from '../../../main/network/websocket';
 
 export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
   // @TODO - This list can grow to thousands of events in a chatty websocket connection.
   // It's worth investigating an LRU cache that keeps the last X number of messages.
   // We'd also need to expand the findMany API to support pagination.
-  const [events, setEvents] = useState<WebsocketEvent[]>([]);
+  const [events, setEvents] = useState<WebSocketEvent[]>([]);
 
   useEffect(() => {
     let isMounted = true;
