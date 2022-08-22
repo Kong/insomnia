@@ -108,6 +108,14 @@ async function createWebSocketConnection(
   if (!request) {
     return;
   }
+
+  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+  mkdirp.sync(responsesDir);
+  const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
+  eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+  const timelinePath = path.join(responsesDir, uuidV4() + '.timeline');
+  timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+
   try {
     const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
@@ -118,15 +126,9 @@ async function createWebSocketConnection(
     const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
+    const start = performance.now();
     const ws = new WebSocket(request.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
-    const start = performance.now();
-    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-    mkdirp.sync(responsesDir);
-    const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
-    eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
-    const timelinePath = path.join(responsesDir, uuidV4() + '.timeline');
-    timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
 
     ws.on('upgrade', async incoming => {
       // @ts-expect-error -- private property
@@ -218,7 +220,7 @@ async function createWebSocketConnection(
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.addEventListener('error', ({ error, message }: ErrorEvent) => {
+    ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
       console.error(error);
 
       const errorEvent: WebsocketErrorEvent = {
@@ -240,29 +242,37 @@ async function createWebSocketConnection(
 
       dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
+
+      const responsePatch = {
+        _id: responseId,
+        parentId: request._id,
+        timelinePath,
+        statusMessage: 'Error',
+        error: message || 'Something went wrong',
+      };
+      const settings = await models.settings.getOrCreate();
+      models.response.create(responsePatch, settings.maxHistoryResponses);
     });
   } catch (e) {
-    console.error('message', e);
+    console.error('unhandled error:', e);
     const error = e.message || 'Something went wrong';
-    const responsePatch = {
-      _id: generateId('res'),
-      parentId: request._id,
-      statusMessage: 'Error',
-      error: e.message || 'Something went wrong',
-      elapsedTime: 0,
-      httpVersion: '',
-      statusCode: 0,
-      headers: [],
-    };
-    const settings = await models.settings.getOrCreate();
-    models.response.create(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+
     eventLogFileStreams.get(options.requestId)?.end();
     eventLogFileStreams.delete(options.requestId);
     timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: error, name: 'Text', timestamp: Date.now() }) + '\n');
     timelineFileStreams.get(options.requestId)?.end();
     timelineFileStreams.delete(options.requestId);
     WebSocketConnections.delete(options.requestId);
+
+    const settings = await models.settings.getOrCreate();
+    const responsePatch = {
+      _id: responseId,
+      parentId: request._id,
+      timelinePath,
+      statusMessage: 'Error',
+      error,
+    };
+    models.response.create(responsePatch, settings.maxHistoryResponses);
   }
 }
 
