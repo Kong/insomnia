@@ -64,6 +64,36 @@ export type WebSocketEventLog = WebsocketEvent[];
 const WebSocketConnections = new Map<string, WebSocket>();
 const fileStreams = new Map<string, fs.WriteStream>();
 
+// Flow control state.
+
+// CTS flag; When set, the renderer thread is accepting new WebSocket events.
+let clearToSend = true;
+
+// Send queue map; holds batches of events for each event channel, to be sent upon receiving a CTS signal.
+const sendQueueMap = new Map<string, WebSocketEventLog>();
+
+/**
+ * Dispatches a websocket event to a renderer, using batching control flow logic.
+ * When CTS is set, the events are sent immediately.
+ * If CTS is cleared, the events are batched into the send queue.
+ */
+function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebsocketEvent): void {
+  // If the CTS flag is already set, just send immediately.
+  if (clearToSend) {
+    target.send(eventChannel, [wsEvent]);
+    clearToSend = false;
+    return;
+  }
+
+  // Otherwise, append to send queue for this event channel.
+  const sendQueue = sendQueueMap.get(eventChannel);
+  if (sendQueue) {
+    sendQueue.push(wsEvent);
+  } else {
+    sendQueueMap.set(eventChannel, [wsEvent]);
+  }
+}
+
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
@@ -146,7 +176,7 @@ async function createWebSocketConnection(
       };
 
       fileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
-      event.sender.send(eventChannel, openEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -161,7 +191,7 @@ async function createWebSocketConnection(
       };
 
       fileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-      event.sender.send(eventChannel, messageEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, messageEvent);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
@@ -179,7 +209,7 @@ async function createWebSocketConnection(
       fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
-      event.sender.send(eventChannel, closeEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -199,7 +229,7 @@ async function createWebSocketConnection(
       fileStreams.get(options.requestId)?.end();
       WebSocketConnections.delete(options.requestId);
 
-      event.sender.send(eventChannel, errorEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
   } catch (e) {
@@ -253,7 +283,7 @@ async function sendWebSocketEvent(
     return;
   }
   const eventChannel = `webSocketRequest.connection.${response._id}.event`;
-  event.sender.send(eventChannel, lastMessage);
+  dispatchWebSocketEvent(event.sender, eventChannel, lastMessage);
 }
 
 async function closeWebSocketConnection(
@@ -280,12 +310,35 @@ async function findMany(
     .map(e => JSON.parse(e)) || [];
 }
 
+/**
+ * Sets the CTS flag; sent when the UI is ready for more events.
+ */
+function signalClearToSend(event: Electron.IpcMainInvokeEvent) {
+  const nextChannel = sendQueueMap.keys().next();
+
+  // There are no pending events; just set the CTS flag.
+  if (nextChannel.done) {
+    clearToSend = true;
+    return;
+  }
+
+  // We have batched events; immediately send one batch.
+  const sendQueue = sendQueueMap.get(nextChannel.value);
+  if (!sendQueue) {
+    return;
+  }
+
+  event.sender.send(nextChannel.value, sendQueue);
+  sendQueueMap.delete(nextChannel.value);
+}
+
 export function registerWebSocketHandlers() {
   ipcMain.handle('webSocketRequest.connection.create', createWebSocketConnection);
   ipcMain.handle('webSocketRequest.connection.readyState', getWebSocketReadyState);
   ipcMain.handle('webSocketRequest.connection.event.send', sendWebSocketEvent);
   ipcMain.handle('webSocketRequest.connection.close', closeWebSocketConnection);
   ipcMain.handle('webSocketRequest.connection.event.findMany', findMany);
+  ipcMain.handle('webSocketRequest.connection.clearToSend', signalClearToSend);
 }
 
 electron.app.on('window-all-closed', () => {
