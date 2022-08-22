@@ -43,12 +43,12 @@ const webSocketConnection = {
     },
     subscribe: (
       options: { responseId: string },
-      listener: (webSocketEvent: WebsocketEvent) => any
+      listener: (webSocketEvents: WebsocketEvent[]) => any
     ) => {
       const channel = `webSocketRequest.connection.${options.responseId}.event`;
 
-      function onNewEvent(_event: IpcRendererEvent, webSocketEvent: WebsocketEvent) {
-        listener(webSocketEvent);
+      function onNewEvent(_event: IpcRendererEvent, webSocketEvents: WebsocketEvent[]) {
+        listener(webSocketEvents);
       }
 
       ipcRenderer.on(channel, onNewEvent);
@@ -64,6 +64,9 @@ const webSocketConnection = {
         'webSocketRequest.connection.event.send',
         options
       );
+    },
+    clearToSend: () => {
+      return ipcRenderer.invoke('webSocketRequest.connection.clearToSend');
     },
   },
 };
