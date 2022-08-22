@@ -22,14 +22,14 @@ export interface WebSocketConnection extends WebSocket {
   requestId: string;
 }
 
-export type WebsocketOpenEvent = Omit<Event, 'target'> & {
+export type WebSocketOpenEvent = Omit<Event, 'target'> & {
   _id: string;
   requestId: string;
   type: 'open';
   timestamp: number;
 };
 
-export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
+export type WebSocketMessageEvent = Omit<MessageEvent, 'target'> & {
   _id: string;
   requestId: string;
   direction: 'OUTGOING' | 'INCOMING';
@@ -37,27 +37,27 @@ export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
   timestamp: number;
 };
 
-export type WebsocketErrorEvent = Omit<ErrorEvent, 'target'> & {
+export type WebSocketErrorEvent = Omit<ErrorEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'error';
   timestamp: number;
 };
 
-export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
+export type WebSocketCloseEvent = Omit<CloseEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'close';
   timestamp: number;
 };
 
-export type WebsocketEvent =
-  | WebsocketOpenEvent
-  | WebsocketMessageEvent
-  | WebsocketErrorEvent
-  | WebsocketCloseEvent;
+export type WebSocketEvent =
+  | WebSocketOpenEvent
+  | WebSocketMessageEvent
+  | WebSocketErrorEvent
+  | WebSocketCloseEvent;
 
-export type WebSocketEventLog = WebsocketEvent[];
+export type WebSocketEventLog = WebSocketEvent[];
 
 const WebSocketConnections = new Map<string, WebSocket>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
@@ -140,7 +140,7 @@ async function createWebSocketConnection(
     });
 
     ws.addEventListener('open', () => {
-      const openEvent: WebsocketOpenEvent = {
+      const openEvent: WebSocketOpenEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         type: 'open',
@@ -154,7 +154,7 @@ async function createWebSocketConnection(
     });
 
     ws.addEventListener('message', ({ data }: MessageEvent) => {
-      const messageEvent: WebsocketMessageEvent = {
+      const messageEvent: WebSocketMessageEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         data,
@@ -169,7 +169,7 @@ async function createWebSocketConnection(
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
-      const closeEvent: WebsocketCloseEvent = {
+      const closeEvent: WebSocketCloseEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         code,
@@ -194,7 +194,7 @@ async function createWebSocketConnection(
     ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
       console.error(error);
 
-      const errorEvent: WebsocketErrorEvent = {
+      const errorEvent: WebSocketErrorEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         message,
@@ -267,7 +267,7 @@ async function sendWebSocketEvent(
 
   ws.send(options.message, error => {
     // @TODO: Render nunjucks tags in these messages
-    // @TODO: We might want to set a status in the WebsocketMessageEvent
+    // @TODO: We might want to set a status in the WebSocketMessageEvent
     // and update it here based on the error. e.g. status = 'sending' | 'sent' | 'error'
     if (error) {
       console.error(error);
@@ -276,7 +276,7 @@ async function sendWebSocketEvent(
     }
   });
 
-  const lastMessage: WebsocketMessageEvent = {
+  const lastMessage: WebSocketMessageEvent = {
     _id: uuidV4(),
     requestId: options.requestId,
     data: options.message,

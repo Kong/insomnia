@@ -3,7 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import { WebsocketEvent } from '../../../main/network/websocket';
+import { WebSocketEvent } from '../../../main/network/websocket';
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
@@ -61,10 +61,10 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
   response,
   handleSetActiveResponse,
 }) => {
-  const [selectedEvent, setSelectedEvent] = useState<WebsocketEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
   const events = useWebSocketConnectionEvents({ responseId: response._id });
-  const handleSelection = (event: WebsocketEvent) => {
-    setSelectedEvent((selected: WebsocketEvent | null) => selected?._id === event._id ? null : event);
+  const handleSelection = (event: WebSocketEvent) => {
+    setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
   useEffect(() => {

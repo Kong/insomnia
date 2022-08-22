@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import EventEmitter from 'events';
 
-import { WebsocketEvent } from '../../../main/network/websocket';
+import { WebSocketEvent } from '../../../main/network/websocket';
 import { ReadyState } from './use-ws-ready-state';
 
 export const getMockWsClient = (onChangeEvent: EventEmitter) => {
@@ -9,7 +9,7 @@ export const getMockWsClient = (onChangeEvent: EventEmitter) => {
     event: {
       findMany: jest.fn(),
       send: jest.fn(),
-      subscribe: (options: { requestId: string }, listener: (event: WebsocketEvent) => any) => {
+      subscribe: (options: { requestId: string }, listener: (event: WebSocketEvent) => any) => {
         const channel = `webSocketRequest.connection.${options.requestId}.event`;
         onChangeEvent.on(channel, listener);
         return () => onChangeEvent.removeListener(channel, listener);

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-import type { WebsocketEvent } from './main/network/websocket';
+import type { WebSocketEvent } from './main/network/websocket';
 
 const webSocketConnection = {
   create: (options: { requestId: string }) => {
@@ -35,7 +35,7 @@ const webSocketConnection = {
   event: {
     findMany: (options: {
       responseId: string;
-    }): Promise<WebsocketEvent[]> => {
+    }): Promise<WebSocketEvent[]> => {
       return ipcRenderer.invoke(
         'webSocketRequest.connection.event.findMany',
         options
@@ -43,11 +43,11 @@ const webSocketConnection = {
     },
     subscribe: (
       options: { responseId: string },
-      listener: (webSocketEvent: WebsocketEvent) => any
+      listener: (webSocketEvent: WebSocketEvent) => any
     ) => {
       const channel = `webSocketRequest.connection.${options.responseId}.event`;
 
-      function onNewEvent(_event: IpcRendererEvent, webSocketEvent: WebsocketEvent) {
+      function onNewEvent(_event: IpcRendererEvent, webSocketEvent: WebSocketEvent) {
         listener(webSocketEvent);
       }
 
