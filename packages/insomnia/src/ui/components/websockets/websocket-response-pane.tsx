@@ -1,10 +1,10 @@
+import fs from 'fs';
 import React, { FC, useEffect, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
-import * as models from '../../../models';
 import type { Response } from '../../../models/response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -64,6 +64,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
   handleSetActiveResponse,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const events = useWebSocketConnectionEvents({ responseId: response._id });
   const handleSelection = (event: WebSocketEvent) => {
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
@@ -73,10 +74,20 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     setSelectedEvent(null);
   }, [response._id]);
 
-  let timeline: ResponseTimelineEntry[] = [];
-  if (response) {
-    timeline = models.response.getTimeline(response);
-  }
+  useEffect(() => {
+    let isMounted = true;
+    const fn = async () => {
+      const rawBuffer = await fs.promises.readFile(response.timelinePath);
+      const timelineString = rawBuffer.toString();
+      const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
+      isMounted && setTimeline(timelineParsed);
+    };
+    fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [response.timelinePath, events.length]);
+
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
