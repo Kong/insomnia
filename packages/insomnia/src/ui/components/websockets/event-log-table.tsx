@@ -206,6 +206,12 @@ export const EventTableRow = memo(
 );
 EventTableRow.displayName = 'EventTableRow';
 
+const TableHeadRow = styled('tr')({
+  position: 'sticky',
+  backgroundColor: 'var(--color-bg)',
+  top: 'calc(-0.5rem - 1px)',
+});
+
 interface Props {
   events: WebSocketEvent[];
   selectionId?: string;
@@ -215,11 +221,11 @@ export const EventLogTable: FC<Props> = ({ events, onSelect, selectionId }) => {
   return (
     <Table data-testid="EventLogTabe__Table" className="table--fancy table--compact">
       <thead>
-        <tr>
+        <TableHeadRow>
           <th style={{ width: 15 }} />
           <th>Data</th>
           <th style={{ width: 80 }}>Time</th>
-        </tr>
+        </TableHeadRow>
       </thead>
       <tbody>
         {events.map(event => (
