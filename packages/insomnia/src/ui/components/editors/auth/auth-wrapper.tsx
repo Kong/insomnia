@@ -1,5 +1,4 @@
 import React, { FC, ReactNode } from 'react';
-import { useSelector } from 'react-redux';
 
 import {
   AUTH_ASAP,
@@ -13,12 +12,11 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
-import { isRequest } from '../../../../models/request';
-import { selectActiveRequest } from '../../../redux/selectors';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
 import { BearerAuth } from './bearer-auth';
+import { useAuthSettings } from './components/auth-context';
 import { DigestAuth } from './digest-auth';
 import { HawkAuth } from './hawk-auth';
 import { NetrcAuth } from './netrc-auth';
@@ -26,21 +24,20 @@ import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
-export const AuthWrapper: FC = () => {
-  const request = useSelector(selectActiveRequest);
+export const AuthWrapper: FC<{ requestId: string }> = ({ requestId }) => {
+  const { authentication } = useAuthSettings();
 
-  if (!request || !isRequest(request)) {
+  if (!authentication?.type) {
     return null;
   }
 
-  const { authentication: { type } } = request;
-
+  const { type } = authentication;
   let authBody: ReactNode = null;
 
   if (type === AUTH_BASIC) {
     authBody = <BasicAuth />;
   } else if (type === AUTH_OAUTH_2) {
-    authBody = <OAuth2Auth />;
+    authBody = <OAuth2Auth requestId={requestId} />;
   } else if (type === AUTH_HAWK) {
     authBody = <HawkAuth />;
   } else if (type === AUTH_OAUTH_1) {

@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FC, ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { useActiveRequest } from '../../../../hooks/use-active-request';
+import { useAuthSettings } from './auth-context';
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+  const { authentication, patchAuth } = useAuthSettings();
 
   const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0].value;
 

@@ -2,9 +2,9 @@ import React, { FC, ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
-import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { showModal } from '../../../modals';
 import { CodePromptModal } from '../../../modals/code-prompt-modal';
+import { useAuthSettings } from './auth-context';
 import { AuthRow } from './auth-row';
 
 const PRIVATE_KEY_PLACEHOLDER = `
@@ -27,7 +27,7 @@ interface Props {
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+  const { authentication, patchAuth } = useAuthSettings();
   const { handleGetRenderContext, handleRender } = useNunjucks();
 
   const privateKey = authentication[property];

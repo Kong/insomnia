@@ -7,7 +7,7 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import { useActiveRequest } from '../../../hooks/use-active-request';
+import { useAuthSettings } from './components/auth-context';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
 import { AuthSelectRow } from './components/auth-select-row';
@@ -33,7 +33,7 @@ const signatureMethodOptions: {name: string; value: OAuth1SignatureMethod}[] = [
 }];
 
 export const OAuth1Auth: FC = () => {
-  const { activeRequest: { authentication: { signatureMethod } } } = useActiveRequest();
+  const { authentication } = useAuthSettings();
 
   return (
     <AuthTableBody>
@@ -42,7 +42,7 @@ export const OAuth1Auth: FC = () => {
       <AuthInputRow label='Token Key' property='tokenKey' />
       <AuthInputRow label='Token Secret' property='tokenSecret' />
       <AuthSelectRow label='Signature Method' property='signatureMethod' options={signatureMethodOptions} />
-      {signatureMethod === SIGNATURE_METHOD_RSA_SHA1 && <AuthPrivateKeyRow label='Private Key' property='privateKey' />}
+      {authentication?.signatureMethod === SIGNATURE_METHOD_RSA_SHA1 && <AuthPrivateKeyRow label='Private Key' property='privateKey' />}
       <AuthInputRow label='Callback URL' property='callback' />
       <AuthInputRow label='Version' property='version' />
       <AuthInputRow label='Timestamp' property='timestamp' help={blankForDefault} />

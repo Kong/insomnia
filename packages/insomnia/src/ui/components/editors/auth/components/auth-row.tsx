@@ -1,8 +1,8 @@
 import classnames from 'classnames';
 import React, { FC, ReactNode } from 'react';
 
-import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { HelpTooltip } from '../../../help-tooltip';
+import { useAuthSettings } from './auth-context';
 
 interface Props {
   labelFor: string;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const AuthRow: FC<Props> = ({ labelFor, label, help, disabled, children }) => {
-  const { activeRequest: { authentication } } = useActiveRequest();
+  const { authentication } = useAuthSettings();
 
   return (
     <tr key={labelFor}>

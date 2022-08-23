@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 
 import * as models from '../../models';
 import { isRequest, Request } from '../../models/request';
+import { isWebSocketRequest } from '../../models/websocket-request';
 import { selectActiveRequest } from '../redux/selectors';
 
 export const useActiveRequest = () => {
@@ -12,7 +13,7 @@ export const useActiveRequest = () => {
     throw new Error('Tried to load null request');
   }
 
-  if (!isRequest(activeRequest)) {
+  if (!isRequest(activeRequest) || !isWebSocketRequest(activeRequest)) {
     throw new Error('Expected to load Request');
   }
 

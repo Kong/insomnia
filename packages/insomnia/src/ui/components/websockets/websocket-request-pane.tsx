@@ -3,12 +3,16 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import * as models from '../../../models';
+import { RequestAuthentication } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { AuthSettingsProvider } from '../editors/auth/components/auth-context';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
+import { AuthDropdown } from './auth-dropdown';
+import { AuthWrapper } from './auth-wrapper';
 
 const EditorWrapper = styled.div({
   height: '100%',
@@ -79,6 +83,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
     }
   };
 
+  const handleAuthUpdate = (authentication: RequestAuthentication) => {
+    models.websocketRequest.update(request, { authentication });
+  };
   return (
     <Pane type="request">
       <PaneHeader>
@@ -97,6 +104,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
           </Tab>
           <Tab tabIndex="-1" >
             <button>Headers</button>
+          </Tab>
+          <Tab tabIndex="-1" >
+            <AuthDropdown request={request} />
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
@@ -118,6 +128,14 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
             bulk={false}
             isDisabled={readyState !== ReadyState.CLOSED}
           />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <AuthSettingsProvider
+            authentication={request.authentication}
+            onAuthUpdate={handleAuthUpdate}
+          >
+            <AuthWrapper request={request} />
+          </AuthSettingsProvider>
         </TabPanel>
       </Tabs>
     </Pane>

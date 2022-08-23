@@ -1,6 +1,7 @@
+import { AuthType } from '../common/constants';
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { RequestHeader } from './request';
+import { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'WebSocket Request';
 
@@ -18,6 +19,34 @@ export interface BaseWebSocketRequest {
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
+  authentication: RequestAuthentication;
+}
+
+export function newAuth(type: AuthType, oldAuth: RequestAuthentication = {}): RequestAuthentication {
+  switch (type) {
+    // No Auth
+    case 'none':
+      return {};
+
+    // HTTP Basic Authentication
+    case 'basic':
+      return {
+        type,
+        useISO88591: oldAuth.useISO88591 || false,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
+    case 'digest':
+
+    // Types needing no defaults
+    case 'bearer':
+    default:
+      return {
+        type,
+      };
+  }
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -35,9 +64,26 @@ export const init = (): BaseWebSocketRequest => ({
   url: '',
   metaSortKey: -1 * Date.now(),
   headers: [],
+  authentication: {},
 });
+/**
+ * Ensure the request.authentication.type property is added
+ * @param request
+ */
+function migrateAuthType(request: WebSocketRequest) {
+  const isAuthSet = request.authentication && request.authentication.username;
 
-export const migrate = (doc: WebSocketRequest) => doc;
+  if (isAuthSet && !request.authentication.type) {
+    request.authentication.type = 'basic';
+  }
+
+  return request;
+}
+
+export const migrate = (doc: WebSocketRequest) => {
+  doc = migrateAuthType(doc);
+  return doc;
+};
 
 export const create = (patch: Partial<WebSocketRequest> = {}) => {
   if (!patch.parentId) {

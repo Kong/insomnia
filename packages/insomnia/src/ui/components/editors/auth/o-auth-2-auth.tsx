@@ -22,13 +22,13 @@ import {
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
-import { useActiveRequest } from '../../../hooks/use-active-request';
 import { selectActiveOAuth2Token } from '../../../redux/selectors';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
 import { AuthAccordion } from './components/auth-accordion';
+import { useAuthSettings } from './components/auth-context';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
@@ -248,8 +248,8 @@ const getFieldsForGrantType = (authentication: Request['authentication']) => {
   };
 };
 
-export const OAuth2Auth: FC = () => {
-  const { activeRequest: { authentication } } = useActiveRequest();
+export const OAuth2Auth: FC<{ requestId: string }> = ({ requestId }) => {
+  const { authentication } = useAuthSettings();
   const { basic, advanced } = getFieldsForGrantType(authentication);
 
   return (
@@ -278,7 +278,7 @@ export const OAuth2Auth: FC = () => {
         </AuthAccordion>
       </AuthTableBody>
       <div className='pad'>
-        <OAuth2Tokens />
+        <OAuth2Tokens requestId={requestId} />
       </div>
     </>
   );
@@ -333,15 +333,18 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
   );
 };
 
-const OAuth2TokenInput: FC<{label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>}> = ({ label, property }) => {
-  const { activeRequest } = useActiveRequest();
+const OAuth2TokenInput: FC<{
+  label: string;
+  property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>;
+  requestId: string;
+}> = ({ label, property, requestId }) => {
   const token = useSelector(selectActiveOAuth2Token);
 
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     if (token) {
       await models.oAuth2Token.update(token, { [property]: value });
     } else {
-      await models.oAuth2Token.create({ [property]: value, parentId: activeRequest._id });
+      await models.oAuth2Token.create({ [property]: value, parentId: requestId });
     }
   };
 
@@ -419,9 +422,9 @@ const OAuth2Error: FC = () => {
   return debugButton;
 };
 
-const useActiveOAuth2Token = () => {
+const useActiveOAuth2Token = (requestId: string) => {
   const token = useSelector(selectActiveOAuth2Token);
-  const { activeRequest: { authentication, _id: requestId } } = useActiveRequest();
+  const { authentication } = useAuthSettings();
   const { handleRender } = useNunjucks();
 
   const clearTokens = useCallback(async () => {
@@ -452,8 +455,8 @@ const useActiveOAuth2Token = () => {
   return { error, loading, token, clearTokens, refreshToken };
 };
 
-const OAuth2Tokens: FC = () => {
-  const { token, clearTokens, refreshToken, loading, error } = useActiveOAuth2Token();
+const OAuth2Tokens: FC<{ requestId: string }> = ({ requestId }) => {
+  const { token, clearTokens, refreshToken, loading, error } = useActiveOAuth2Token(requestId);
 
   return (
     <div className='notice subtle text-left'>
@@ -463,9 +466,9 @@ const OAuth2Tokens: FC = () => {
         </p>
       )}
       <OAuth2Error />
-      <OAuth2TokenInput label='Refresh Token' property='refreshToken' />
-      <OAuth2TokenInput label='Identity Token' property='identityToken' />
-      <OAuth2TokenInput label='Access Token' property='accessToken' />
+      <OAuth2TokenInput requestId={requestId} label='Refresh Token' property='refreshToken' />
+      <OAuth2TokenInput requestId={requestId} label='Identity Token' property='identityToken' />
+      <OAuth2TokenInput requestId={requestId} label='Access Token' property='accessToken' />
       <div className='pad-top text-right'>
         {token ? (
           <button className="btn btn--clicky" onClick={clearTokens}>

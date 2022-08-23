@@ -1,8 +1,8 @@
 import React, { FC, ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { Button } from '../../../base/button';
+import { useAuthSettings } from './auth-context';
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -24,7 +24,7 @@ export const AuthToggleRow: FC<Props> = ({
   onTitle = 'Disable item',
   offTitle = 'Enable item',
 }) => {
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+  const { authentication, patchAuth } = useAuthSettings();
 
   const databaseValue = Boolean(authentication[property]);
   const toggle = useCallback(

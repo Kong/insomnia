@@ -3,10 +3,10 @@ import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { selectSettings } from '../../../../redux/selectors';
 import { Button } from '../../../base/button';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
+import { useAuthSettings } from './auth-context';
 import { AuthRow } from './auth-row';
 
 interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompleteConstants' | 'mode'> {
@@ -18,7 +18,7 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
 
 export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, mode, help }) => {
   const { showPasswords } = useSelector(selectSettings);
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+  const { authentication, patchAuth } = useAuthSettings();
 
   const [masked, toggleMask] = useToggle(true);
   const canBeMasked = !showPasswords && mask;

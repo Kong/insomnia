@@ -9,6 +9,7 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { update } from '../../../models/helpers/request-operations';
 import type {
   Request,
+  RequestAuthentication,
   RequestHeader,
 } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
@@ -16,6 +17,7 @@ import type { Workspace } from '../../../models/workspace';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
+import { AuthSettingsProvider } from '../editors/auth/components/auth-context';
 import { BodyEditor } from '../editors/body/body-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
@@ -131,6 +133,10 @@ export const RequestPane: FC<Props> = ({
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
   const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
+  const handleAuthUpdate = (authentication: RequestAuthentication) => {
+    models.request.update(request, { authentication });
+  };
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -193,7 +199,12 @@ export const RequestPane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel scrollable-container">
           <div className="scrollable">
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-              <AuthWrapper />
+              <AuthSettingsProvider
+                authentication={request.authentication}
+                onAuthUpdate={handleAuthUpdate}
+              >
+                <AuthWrapper requestId={request._id} />
+              </AuthSettingsProvider>
             </ErrorBoundary>
           </div>
         </TabPanel>

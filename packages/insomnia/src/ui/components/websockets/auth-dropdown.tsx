@@ -1,11 +1,9 @@
 import React, { FC, ReactElement, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
 import { AuthType, getAuthTypeName } from '../../../common/constants';
 import * as models from '../../../models';
 import { update } from '../../../models/helpers/request-operations';
-import { isRequest } from '../../../models/request';
-import { selectActiveRequest } from '../../redux/selectors';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -31,7 +29,7 @@ const AuthItem: FC<{
   type: AuthType;
   nameOverride?: string;
   isCurrent: (type: string) => boolean;
-  onClick: (type: string) => void;
+  onClick: (type: AuthType) => void;
 }> = ({ type, nameOverride, isCurrent, onClick }) => (
   <DropdownItem onClick={onClick} value={type}>
     {<i className={`fa fa-${isCurrent(type) ? 'check' : 'empty'}`} />}{' '}
@@ -42,27 +40,27 @@ AuthItem.displayName = DropdownItem.name;
 
 interface Props {
   authTypes?: AuthType[];
+  request: WebSocketRequest;
 }
-export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
-  const activeRequest = useSelector(selectActiveRequest);
-  const onClick = useCallback(async (type: string) => {
-    if (!activeRequest) {
+export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, request }) => {
+  const onClick = useCallback(async (type: AuthType) => {
+    if (!request) {
       return;
     }
 
-    if (!isRequest(activeRequest)) {
+    if (!isWebSocketRequest(request)) {
       return;
     }
 
-    const { authentication } = activeRequest;
-
+    const { authentication } = request;
+    console.log('authentication', authentication);
     if (type === authentication.type) {
       // Type didn't change
       return;
     }
 
-    const newAuthentication = models.request.newAuth(type, authentication);
-    const defaultAuthentication = models.request.newAuth(authentication.type);
+    const newAuthentication = models.websocketRequest.newAuth(type, authentication);
+    const defaultAuthentication = models.websocketRequest.newAuth(authentication.type);
 
     // Prompt the user if fields will change between new and old
     for (const key of Object.keys(authentication)) {
@@ -83,19 +81,19 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
         break;
       }
     }
-    update(activeRequest, { authentication:newAuthentication });
-  }, [activeRequest]);
+    update(request, { authentication:newAuthentication });
+  }, [request]);
   const isCurrent = useCallback((type: string) => {
-    if (!activeRequest) {
+    if (!request) {
       return false;
     }
-    if (!isRequest(activeRequest)) {
+    if (!isWebSocketRequest(request)) {
       return false;
     }
-    return type === (activeRequest.authentication.type || 'none');
-  }, [activeRequest]);
+    return type === (request.authentication?.type || 'none');
+  }, [request]);
 
-  if (!activeRequest) {
+  if (!request) {
     return null;
   }
 
@@ -105,7 +103,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
     <Dropdown beside>
       <DropdownDivider>Auth Types</DropdownDivider>
       <DropdownButton className="tall">
-        {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+        {'authentication' in request ? getAuthTypeName(request.authentication.type) || 'Auth' : 'Auth'}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
       {authTypes.reduce<ReactElement[]>((acc: ReactElement[], authType: AuthType) => {
