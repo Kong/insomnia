@@ -3,6 +3,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import { getSetCookieHeaders } from '../../../common/misc';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
 import type { Response } from '../../../models/response';
@@ -13,6 +14,7 @@ import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
+import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseErrorViewer } from '../viewers/response-error-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
@@ -88,6 +90,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     };
   }, [response.timelinePath, events.length]);
 
+  const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
@@ -114,6 +117,14 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
               {response?.headers.length > 0 && (
                 <span className="bubble">{response.headers.length}</span>
               )}
+            </button>
+          </Tab>
+          <Tab tabIndex="-1">
+            <button>
+              Cookies{' '}
+              {cookieHeaders.length ? (
+                <span className="bubble">{cookieHeaders.length}</span>
+              ) : null}
             </button>
           </Tab>
           <Tab tabIndex="-1" >
@@ -143,9 +154,20 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel scrollable-container">
           <div className="scrollable pad">
-            {response && <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseHeadersViewer headers={response.headers} />
-            </ErrorBoundary>}
+            </ErrorBoundary>
+          </div>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel scrollable-container">
+          <div className="scrollable pad">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+              <ResponseCookiesViewer
+                cookiesSent={response.settingSendCookies}
+                cookiesStored={response.settingStoreCookies}
+                headers={cookieHeaders}
+              />
+            </ErrorBoundary>
           </div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">

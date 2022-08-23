@@ -153,7 +153,6 @@ async function createWebSocketConnection(
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
-        type: 'upgrade',
         headers: responseHeaders,
         url: request.url,
         statusCode,
@@ -163,6 +162,8 @@ async function createWebSocketConnection(
         timelinePath,
         bodyPath: responseBodyPath,
         bodyCompression: null,
+        settingSendCookies: true,
+        settingStoreCookies: true,
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
