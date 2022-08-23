@@ -76,7 +76,7 @@ const sendQueueMap = new Map<string, WebSocketEventLog>();
  * When CTS is set, the events are sent immediately.
  * If CTS is cleared, the events are batched into the send queue.
  */
-function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebsocketEvent): void {
+function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void {
   // If the CTS flag is already set, just send immediately.
   if (clearToSend) {
     target.send(eventChannel, [wsEvent]);
