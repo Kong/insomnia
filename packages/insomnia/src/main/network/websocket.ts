@@ -16,22 +16,20 @@ import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
-import { storeTimeline } from '../../network/network';
-import { ResponseTimelineEntry } from './libcurl-promise';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
   requestId: string;
 }
 
-export type WebsocketOpenEvent = Omit<Event, 'target'> & {
+export type WebSocketOpenEvent = Omit<Event, 'target'> & {
   _id: string;
   requestId: string;
   type: 'open';
   timestamp: number;
 };
 
-export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
+export type WebSocketMessageEvent = Omit<MessageEvent, 'target'> & {
   _id: string;
   requestId: string;
   direction: 'OUTGOING' | 'INCOMING';
@@ -39,30 +37,31 @@ export type WebsocketMessageEvent = Omit<MessageEvent, 'target'> & {
   timestamp: number;
 };
 
-export type WebsocketErrorEvent = Omit<ErrorEvent, 'target'> & {
+export type WebSocketErrorEvent = Omit<ErrorEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'error';
   timestamp: number;
 };
 
-export type WebsocketCloseEvent = Omit<CloseEvent, 'target'> & {
+export type WebSocketCloseEvent = Omit<CloseEvent, 'target'> & {
   _id: string;
   requestId: string;
   type: 'close';
   timestamp: number;
 };
 
-export type WebsocketEvent =
-  | WebsocketOpenEvent
-  | WebsocketMessageEvent
-  | WebsocketErrorEvent
-  | WebsocketCloseEvent;
+export type WebSocketEvent =
+  | WebSocketOpenEvent
+  | WebSocketMessageEvent
+  | WebSocketErrorEvent
+  | WebSocketCloseEvent;
 
-export type WebSocketEventLog = WebsocketEvent[];
+export type WebSocketEventLog = WebSocketEvent[];
 
 const WebSocketConnections = new Map<string, WebSocket>();
-const fileStreams = new Map<string, fs.WriteStream>();
+const eventLogFileStreams = new Map<string, fs.WriteStream>();
+const timelineFileStreams = new Map<string, fs.WriteStream>();
 
 // Flow control state.
 
@@ -77,7 +76,7 @@ const sendQueueMap = new Map<string, WebSocketEventLog>();
  * When CTS is set, the events are sent immediately.
  * If CTS is cleared, the events are batched into the send queue.
  */
-function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebsocketEvent): void {
+function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void {
   // If the CTS flag is already set, just send immediately.
   if (clearToSend) {
     target.send(eventChannel, [wsEvent]);
@@ -104,14 +103,20 @@ async function createWebSocketConnection(
     console.warn('Connection still open to ' + existingConnection.url);
     return;
   }
+  const request = await websocketRequest.getById(options.requestId);
+  const responseId = generateId('res');
+  if (!request) {
+    return;
+  }
+
+  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+  mkdirp.sync(responsesDir);
+  const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
+  eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+  const timelinePath = path.join(responsesDir, uuidV4() + '.timeline');
+  timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
 
   try {
-    const request = await websocketRequest.getById(options.requestId);
-    const responseId = generateId('res');
-    if (!request?.url) {
-      throw new Error('No URL specified');
-    }
-
     const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
 
@@ -121,33 +126,30 @@ async function createWebSocketConnection(
     const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
+    const start = performance.now();
     const ws = new WebSocket(request.url, { headers });
     WebSocketConnections.set(options.requestId, ws);
-    const start = performance.now();
-    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-    mkdirp.sync(responsesDir);
-    const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
-    fileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+
     ws.on('upgrade', async incoming => {
-      // @TODO: We may want to add set-cookie handling here.
-      const timeline: ResponseTimelineEntry[] = [];
-      // request
-      timeline.push({ value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
       // @ts-expect-error -- private property
       const internalRequest = ws._req;
-      timeline.push({ value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: internalRequest._header, name: 'HeaderOut', timestamp: Date.now() });
-
       // response
       const statusMessage = incoming.statusMessage || '';
       const statusCode = incoming.statusCode || 0;
       const httpVersion = incoming.httpVersion;
-      timeline.push({ value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() });
       const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
       const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
-      timeline.push({ value: headersIn, name: 'HeaderIn', timestamp: Date.now() });
-      const timelinePath = await storeTimeline(timeline);
+
+      // @TODO: We may want to add set-cookie handling here.
+      [
+        { value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() },
+        { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+        { value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() },
+        { value: internalRequest._header, name: 'HeaderOut', timestamp: Date.now() },
+        { value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
+        { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
+      ].map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
@@ -168,20 +170,21 @@ async function createWebSocketConnection(
     });
 
     ws.addEventListener('open', () => {
-      const openEvent: WebsocketOpenEvent = {
+      const openEvent: WebSocketOpenEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         type: 'open',
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n');
       dispatchWebSocketEvent(event.sender, eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
     ws.addEventListener('message', ({ data }: MessageEvent) => {
-      const messageEvent: WebsocketMessageEvent = {
+      const messageEvent: WebSocketMessageEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         data,
@@ -190,12 +193,12 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       dispatchWebSocketEvent(event.sender, eventChannel, messageEvent);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
-      const closeEvent: WebsocketCloseEvent = {
+      const closeEvent: WebSocketCloseEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         code,
@@ -205,18 +208,22 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
-      fileStreams.get(options.requestId)?.end();
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.end();
+      eventLogFileStreams.delete(options.requestId);
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Closing connection with code ${code}`, name: 'Text', timestamp: Date.now() }) + '\n');
+      timelineFileStreams.get(options.requestId)?.end();
+      timelineFileStreams.delete(options.requestId);
       WebSocketConnections.delete(options.requestId);
 
       dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
-    ws.addEventListener('error', ({ error, message }: ErrorEvent) => {
+    ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
       console.error(error);
 
-      const errorEvent: WebsocketErrorEvent = {
+      const errorEvent: WebSocketErrorEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
         message,
@@ -225,16 +232,47 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      fileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
-      fileStreams.get(options.requestId)?.end();
+      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
+      eventLogFileStreams.get(options.requestId)?.end();
+      eventLogFileStreams.delete(options.requestId);
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+      timelineFileStreams.get(options.requestId)?.end();
+      timelineFileStreams.delete(options.requestId);
       WebSocketConnections.delete(options.requestId);
 
       dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
+
+      const responsePatch = {
+        _id: responseId,
+        parentId: request._id,
+        timelinePath,
+        statusMessage: 'Error',
+        error: message || 'Something went wrong',
+      };
+      const settings = await models.settings.getOrCreate();
+      models.response.create(responsePatch, settings.maxHistoryResponses);
     });
   } catch (e) {
-    console.error(e);
-    throw e;
+    console.error('unhandled error:', e);
+    const error = e.message || 'Something went wrong';
+
+    eventLogFileStreams.get(options.requestId)?.end();
+    eventLogFileStreams.delete(options.requestId);
+    timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: error, name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineFileStreams.get(options.requestId)?.end();
+    timelineFileStreams.delete(options.requestId);
+    WebSocketConnections.delete(options.requestId);
+
+    const settings = await models.settings.getOrCreate();
+    const responsePatch = {
+      _id: responseId,
+      parentId: request._id,
+      timelinePath,
+      statusMessage: 'Error',
+      error,
+    };
+    models.response.create(responsePatch, settings.maxHistoryResponses);
   }
 }
 
@@ -258,7 +296,7 @@ async function sendWebSocketEvent(
 
   ws.send(options.message, error => {
     // @TODO: Render nunjucks tags in these messages
-    // @TODO: We might want to set a status in the WebsocketMessageEvent
+    // @TODO: We might want to set a status in the WebSocketMessageEvent
     // and update it here based on the error. e.g. status = 'sending' | 'sent' | 'error'
     if (error) {
       console.error(error);
@@ -267,7 +305,7 @@ async function sendWebSocketEvent(
     }
   });
 
-  const lastMessage: WebsocketMessageEvent = {
+  const lastMessage: WebSocketMessageEvent = {
     _id: uuidV4(),
     requestId: options.requestId,
     data: options.message,
@@ -276,7 +314,8 @@ async function sendWebSocketEvent(
     timestamp: Date.now(),
   };
 
-  fileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
+  timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: options.message, name: 'DataOut', timestamp: Date.now() }) + '\n');
+  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
   const response = await models.response.getLatestByParentId(options.requestId);
   if (!response) {
     console.error('something went wrong');
