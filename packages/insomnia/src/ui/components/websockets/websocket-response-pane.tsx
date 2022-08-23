@@ -70,6 +70,11 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
+  const setActiveResponseAndDisconnect: typeof handleSetActiveResponse = (requestId, response) => {
+    handleSetActiveResponse(requestId, response);
+    window.main.webSocketConnection.close({ requestId });
+  };
+
   useEffect(() => {
     setSelectedEvent(null);
   }, [response._id]);
@@ -98,7 +103,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          handleSetActiveResponse={handleSetActiveResponse}
+          handleSetActiveResponse={setActiveResponseAndDisconnect}
           requestId={requestId}
           className="tall pane__header__right"
         />
