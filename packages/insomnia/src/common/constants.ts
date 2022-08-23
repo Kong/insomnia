@@ -284,6 +284,20 @@ export const AUTH_NETRC = 'netrc';
 export const AUTH_ASAP = 'asap';
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
+export type AuthType =
+  | 'none'
+  | 'oauth2'
+  | 'oauth1'
+  | 'basic'
+  | 'digest'
+  | 'bearer'
+  | 'ntlm'
+  | 'hawk'
+  | 'iam'
+  | 'netrc'
+  | 'asap'
+  | 'sha256'
+  | 'sha1';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';

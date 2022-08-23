@@ -1,20 +1,7 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, ReactElement, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import {
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
-  AUTH_BASIC,
-  AUTH_BEARER,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NONE,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
-  getAuthTypeName,
-} from '../../../common/constants';
+import { AuthType, getAuthTypeName } from '../../../common/constants';
 import * as models from '../../../models';
 import { update } from '../../../models/helpers/request-operations';
 import { isRequest } from '../../../models/request';
@@ -26,8 +13,22 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
+const defaultTypes: AuthType[] = [
+  'basic',
+  'digest',
+  'oauth1',
+  'oauth2',
+  'ntlm',
+  'iam',
+  'bearer',
+  'hawk',
+  'asap',
+  'netrc',
+  'none',
+];
+
 const AuthItem: FC<{
-  type: string;
+  type: AuthType;
   nameOverride?: string;
   isCurrent: (type: string) => boolean;
   onClick: (type: string) => void;
@@ -39,7 +40,10 @@ const AuthItem: FC<{
 );
 AuthItem.displayName = DropdownItem.name;
 
-export const AuthDropdown: FC = () => {
+interface Props {
+  authTypes?: AuthType[];
+}
+export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
   const activeRequest = useSelector(selectActiveRequest);
 
   const onClick = useCallback(async (type: string) => {
@@ -89,7 +93,7 @@ export const AuthDropdown: FC = () => {
     if (!isRequest(activeRequest)) {
       return false;
     }
-    return type === (activeRequest.authentication.type || AUTH_NONE);
+    return type === (activeRequest.authentication.type || 'none');
   }, [activeRequest]);
 
   if (!activeRequest) {
@@ -105,18 +109,23 @@ export const AuthDropdown: FC = () => {
         {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
-      <AuthItem type={AUTH_BASIC} {...itemProps} />
-      <AuthItem type={AUTH_DIGEST} {...itemProps} />
-      <AuthItem type={AUTH_OAUTH_1} {...itemProps} />
-      <AuthItem type={AUTH_OAUTH_2} {...itemProps} />
-      <AuthItem type={AUTH_NTLM} {...itemProps} />
-      <AuthItem type={AUTH_AWS_IAM} {...itemProps} />
-      <AuthItem type={AUTH_BEARER} {...itemProps} />
-      <AuthItem type={AUTH_HAWK} {...itemProps} />
-      <AuthItem type={AUTH_ASAP} {...itemProps} />
-      <AuthItem type={AUTH_NETRC} {...itemProps} />
-      <DropdownDivider>Other</DropdownDivider>
-      <AuthItem type={AUTH_NONE} nameOverride="No Authentication" {...itemProps} />
+      {authTypes.reduce<ReactElement[]>((acc: ReactElement[], authType: AuthType) => {
+        if (authType === 'none') {
+          return acc.concat([
+            <DropdownDivider key="divider-other">
+              Other
+            </DropdownDivider>,
+            <AuthItem
+              key={authType}
+              type={authType}
+              nameOverride="No Authentication"
+              {...itemProps}
+            />,
+          ]);
+        }
+
+        return acc.concat(<AuthItem key={authType} type={authType} {...itemProps} />);
+      }, [])}
     </Dropdown>
   );
 };
