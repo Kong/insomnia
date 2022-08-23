@@ -9,10 +9,12 @@ import type { Response } from '../../../models/response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { createWebSocketClient, WebSocketClientProvider } from '../../context/websocket-client/websocket-client-context';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
+import { ErrorBoundary } from '../error-boundary';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
+import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogTable } from './event-log-table';
 import { EventLogView } from './event-log-view';
@@ -83,6 +85,14 @@ export const ResponsePane: FC<{ requestId: string; response: Response; handleSet
           <Tab tabIndex="-1" >
             <button>Events</button>
           </Tab>
+          <Tab tabIndex="-1">
+            <button>
+              Headers{' '}
+              {response?.headers.length > 0 && (
+                <span className="bubble">{response.headers.length}</span>
+              )}
+            </button>
+          </Tab>
           <Tab tabIndex="-1" >
             <button>Timeline</button>
           </Tab>
@@ -104,6 +114,13 @@ export const ResponsePane: FC<{ requestId: string; response: Response; handleSet
               </EventLogViewWrapper>
             )}
           </PaneBodyContent>
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel scrollable-container">
+          <div className="scrollable pad">
+            {response && <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+              <ResponseHeadersViewer headers={response.headers} />
+            </ErrorBoundary>}
+          </div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseTimelineViewer
