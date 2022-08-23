@@ -1,9 +1,9 @@
 import React, { FC } from 'react';
 
-import { WebsocketEvent } from '../../../main/network/websocket';
+import { WebSocketEvent } from '../../../main/network/websocket';
 import { CodeEditor } from '../codemirror/code-editor';
 interface Props {
-  event: WebsocketEvent;
+  event: WebSocketEvent;
 }
 export const EventLogView: FC<Props> = ({ event }) => {
   return (

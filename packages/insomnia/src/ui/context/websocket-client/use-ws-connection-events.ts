@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { WebsocketEvent } from '../../../main/network/websocket';
-import { useWebSocketClient } from './websocket-client-context';
+import { WebSocketEvent } from '../../../main/network/websocket';
 
 export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
-  const { event: { findMany, subscribe, clearToSend } } = useWebSocketClient();
   // @TODO - This list can grow to thousands of events in a chatty websocket connection.
   // It's worth investigating an LRU cache that keeps the last X number of messages.
   // We'd also need to expand the findMany API to support pagination.
-  const [events, setEvents] = useState<WebsocketEvent[]>([]);
+  const [events, setEvents] = useState<WebSocketEvent[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -21,14 +19,14 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     // we don't lose any.
     async function fetchAndSubscribeToEvents() {
       // Fetch all existing events for this connection
-      const allEvents = await findMany({
+      const allEvents = await window.main.webSocketConnection.event.findMany({
         responseId,
       });
       if (isMounted) {
         setEvents(allEvents);
       }
       // Subscribe to new events and update the state.
-      unsubscribe = subscribe(
+      unsubscribe = window.main.webSocketConnection.event.subscribe(
         { responseId },
         events => {
           if (isMounted) {
@@ -38,11 +36,11 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
           // Wait to give the CTS signal until we've rendered a frame.
           // This gives the UI a chance to render and respond to user interactions between receiving events.
           // Note that we do this even if the component isn't mounted, to ensure that CTS gets set even if a race occurs.
-          window.requestAnimationFrame(clearToSend);
+          window.requestAnimationFrame(window.main.webSocketConnection.event.clearToSend);
         }
       );
 
-      clearToSend();
+      window.main.webSocketConnection.event.clearToSend();
     }
 
     fetchAndSubscribeToEvents();
@@ -51,7 +49,7 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
       isMounted = false;
       unsubscribe();
     };
-  }, [responseId, findMany, subscribe, clearToSend]);
+  }, [responseId]);
 
   return events;
 }

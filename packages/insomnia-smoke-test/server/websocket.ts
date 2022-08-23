@@ -4,7 +4,7 @@ import { WebSocketServer } from 'ws';
 /**
  * Starts an echo WebSocket server that receives messages from a client and echoes them back.
  */
-export function startWebsocketServer(server: Server) {
+export function startWebSocketServer(server: Server) {
   const wsServer = new WebSocketServer({ server });
 
   wsServer.on('connection', (ws, req) => {
@@ -15,7 +15,9 @@ export function startWebsocketServer(server: Server) {
         ws.send(message);
         return;
       }
-
+      if (message.toString() === 'close') {
+        ws.close(1003, 'Invalid message type');
+      }
       ws.send(message.toString());
     });
 
