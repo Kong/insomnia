@@ -314,6 +314,7 @@ async function sendWebSocketEvent(
     timestamp: Date.now(),
   };
 
+  timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: options.message, name: 'DataOut', timestamp: Date.now() }) + '\n');
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
   const response = await models.response.getLatestByParentId(options.requestId);
   if (!response) {
