@@ -214,6 +214,7 @@ async function createWebSocketConnection(
       timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Closing connection with code ${code}`, name: 'Text', timestamp: Date.now() }) + '\n');
       timelineFileStreams.get(options.requestId)?.end();
       timelineFileStreams.delete(options.requestId);
+      sendQueueMap.delete(eventChannel);
       WebSocketConnections.delete(options.requestId);
 
       dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
