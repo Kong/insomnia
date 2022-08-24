@@ -1,17 +1,102 @@
 import React, { FC, ReactElement, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
-import { AuthType, getAuthTypeName } from '../../../common/constants';
-import * as models from '../../../models';
-import { update } from '../../../models/helpers/request-operations';
-import { isRequest } from '../../../models/request';
-import { selectActiveRequest } from '../../redux/selectors';
+import { AuthType, getAuthTypeName, HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
+import { RequestAuthentication } from '../../../models/request';
+import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
+import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { useAuthSettings } from '../editors/auth/components/auth-context';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
+
+function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
+  switch (type) {
+    // No Auth
+    case 'none':
+      return {};
+
+    // HTTP Basic Authentication
+    case 'basic':
+      return {
+        type,
+        useISO88591: oldAuth.useISO88591 || false,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
+    case 'digest':
+    case 'ntlm':
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
+    case 'oauth1':
+      return {
+        type,
+        disabled: false,
+        signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
+        consumerKey: '',
+        consumerSecret: '',
+        tokenKey: '',
+        tokenSecret: '',
+        privateKey: '',
+        version: '1.0',
+        nonce: '',
+        timestamp: '',
+        callback: '',
+      };
+
+    // OAuth 2.0
+    case 'oauth2':
+      return {
+        type,
+        grantType: GRANT_TYPE_AUTHORIZATION_CODE,
+      };
+
+    // Aws IAM
+    case 'iam':
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        accessKeyId: oldAuth.accessKeyId || '',
+        secretAccessKey: oldAuth.secretAccessKey || '',
+        sessionToken: oldAuth.sessionToken || '',
+      };
+
+    // Hawk
+    case 'hawk':
+      return {
+        type,
+        algorithm: HAWK_ALGORITHM_SHA256,
+      };
+
+    // Atlassian ASAP
+    case 'asap':
+      return {
+        type,
+        issuer: '',
+        subject: '',
+        audience: '',
+        additionalClaims: '',
+        keyId: '',
+        privateKey: '',
+      };
+
+    // Types needing no defaults
+    case 'netrc':
+    default:
+      return {
+        type,
+      };
+  }
+}
 
 const defaultTypes: AuthType[] = [
   'basic',
@@ -30,7 +115,7 @@ const defaultTypes: AuthType[] = [
 const AuthItem: FC<{
   type: AuthType;
   nameOverride?: string;
-  isCurrent: (type: string) => boolean;
+  isCurrent: (type: AuthType) => boolean;
   onClick: (type: string) => void;
 }> = ({ type, nameOverride, isCurrent, onClick }) => (
   <DropdownItem onClick={onClick} value={type}>
@@ -44,25 +129,15 @@ interface Props {
   authTypes?: AuthType[];
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
-  const activeRequest = useSelector(selectActiveRequest);
+  const { authentication, patchAuth } = useAuthSettings();
   const onClick = useCallback(async (type: string) => {
-    if (!activeRequest) {
-      return;
-    }
-
-    if (!isRequest(activeRequest)) {
-      return;
-    }
-
-    const { authentication } = activeRequest;
-
     if (type === authentication.type) {
       // Type didn't change
       return;
     }
 
-    const newAuthentication = models.request.newAuth(type, authentication);
-    const defaultAuthentication = models.request.newAuth(authentication.type);
+    const newAuthentication = makeNewAuth(type, authentication);
+    const defaultAuthentication = makeNewAuth(authentication.type);
 
     // Prompt the user if fields will change between new and old
     for (const key of Object.keys(authentication)) {
@@ -83,21 +158,12 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
         break;
       }
     }
-    update(activeRequest, { authentication:newAuthentication });
-  }, [activeRequest]);
-  const isCurrent = useCallback((type: string) => {
-    if (!activeRequest) {
-      return false;
-    }
-    if (!isRequest(activeRequest)) {
-      return false;
-    }
-    return type === (activeRequest.authentication.type || 'none');
-  }, [activeRequest]);
 
-  if (!activeRequest) {
-    return null;
-  }
+    patchAuth(newAuthentication);
+  }, [authentication, patchAuth]);
+  const isCurrent = useCallback((type: AuthType) => {
+    return type === (authentication.type || 'none');
+  }, [authentication]);
 
   const itemProps = { onClick, isCurrent };
 
@@ -105,7 +171,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
     <Dropdown beside>
       <DropdownDivider>Auth Types</DropdownDivider>
       <DropdownButton className="tall">
-        {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+        {authentication ? getAuthTypeName(authentication.type) || 'Auth' : 'Auth'}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
       {authTypes.reduce<ReactElement[]>((acc: ReactElement[], authType: AuthType) => {
@@ -123,7 +189,13 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
           ]);
         }
 
-        return acc.concat(<AuthItem key={authType} type={authType} {...itemProps} />);
+        return acc.concat(
+          <AuthItem
+            key={authType}
+            type={authType}
+            {...itemProps}
+          />
+        );
       }, [])}
     </Dropdown>
   );

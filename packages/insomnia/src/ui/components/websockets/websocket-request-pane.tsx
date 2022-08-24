@@ -2,17 +2,18 @@ import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import { AuthType } from '../../../common/constants';
 import * as models from '../../../models';
 import { RequestAuthentication } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { AuthDropdown } from '../dropdowns/auth-dropdown';
+import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { AuthSettingsProvider } from '../editors/auth/components/auth-context';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
-import { AuthDropdown } from './auth-dropdown';
-import { AuthWrapper } from './auth-wrapper';
 
 const EditorWrapper = styled.div({
   height: '100%',
@@ -44,6 +45,8 @@ const PaneSendButton = styled.div({
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
+
+const supportedAuthTypes: AuthType[] = ['basic', 'digest', 'bearer'];
 
 const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
@@ -97,47 +100,47 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
           onChange={handleOnChange}
         />
       </PaneHeader>
-      <Tabs className="pane__body theme--pane__body react-tabs">
-        <TabList>
-          <Tab tabIndex="-1" >
-            <button>Message</button>
-          </Tab>
-          <Tab tabIndex="-1" >
-            <button>Headers</button>
-          </Tab>
-          <Tab tabIndex="-1" >
-            <AuthDropdown request={request} />
-          </Tab>
-        </TabList>
-        <TabPanel className="react-tabs__tab-panel">
-          <PaneSendButton>
-            <SendButton
-              type="submit"
-              form="websocketMessageForm"
-              disabled={readyState !== ReadyState.OPEN}
-            >
-              Send
-            </SendButton>
-          </PaneSendButton>
-          <WebSocketRequestForm requestId={request._id} />
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel header-editor">
-          <RequestHeadersEditor
-            key={`${request._id}-${readyState}-header-editor`}
-            request={request}
-            bulk={false}
-            isDisabled={readyState !== ReadyState.CLOSED}
-          />
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel">
-          <AuthSettingsProvider
-            authentication={request.authentication}
-            onAuthUpdate={handleAuthUpdate}
-          >
-            <AuthWrapper request={request} />
-          </AuthSettingsProvider>
-        </TabPanel>
-      </Tabs>
+      <AuthSettingsProvider
+        authentication={request.authentication}
+        onAuthUpdate={handleAuthUpdate}
+      >
+        <Tabs className="pane__body theme--pane__body react-tabs">
+          <TabList>
+            <Tab tabIndex="-1" >
+              <button>Message</button>
+            </Tab>
+            <Tab tabIndex="-1" >
+              <button>Headers</button>
+            </Tab>
+            <Tab tabIndex="-1" >
+              <AuthDropdown authTypes={supportedAuthTypes} />
+            </Tab>
+          </TabList>
+          <TabPanel className="react-tabs__tab-panel">
+            <PaneSendButton>
+              <SendButton
+                type="submit"
+                form="websocketMessageForm"
+                disabled={readyState !== ReadyState.OPEN}
+              >
+                Send
+              </SendButton>
+            </PaneSendButton>
+            <WebSocketRequestForm requestId={request._id} />
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel header-editor">
+            <RequestHeadersEditor
+              key={`${request._id}-${readyState}-header-editor`}
+              request={request}
+              bulk={false}
+              isDisabled={readyState !== ReadyState.CLOSED}
+            />
+          </TabPanel>
+          <TabPanel className="react-tabs__tab-panel">
+            <AuthWrapper requestId={request._id} />
+          </TabPanel>
+        </Tabs>
+      </AuthSettingsProvider>
     </Pane>
   );
 };

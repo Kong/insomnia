@@ -1,17 +1,5 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC } from 'react';
 
-import {
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
-  AUTH_BASIC,
-  AUTH_BEARER,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
-} from '../../../../common/constants';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
@@ -24,54 +12,76 @@ import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
-export const AuthWrapper: FC<{ requestId: string }> = ({ requestId }) => {
+const AuthBody: FC<{
+  requestId: string;
+}> = ({ requestId }) => {
   const { authentication } = useAuthSettings();
+  switch (authentication?.type) {
+    case 'basic': {
+      return <BasicAuth />;
+    }
 
-  if (!authentication?.type) {
-    return null;
+    case 'oauth2': {
+      return <OAuth2Auth requestId={requestId} />;
+    }
+
+    case 'hawk': {
+      return <HawkAuth />;
+    }
+
+    case 'oauth1': {
+      return <OAuth1Auth />;
+    }
+
+    case 'digest': {
+      return <DigestAuth />;
+    }
+
+    case 'ntlm': {
+      return <NTLMAuth />;
+    }
+
+    case 'bearer': {
+      return <BearerAuth />;
+    }
+
+    case 'iam': {
+      return <AWSAuth />;
+    }
+
+    case 'netrc': {
+      return <NetrcAuth />;
+    }
+
+    case 'asap': {
+      return <AsapAuth />;
+    }
+
+    default: {
+      return (
+        <div className="vertically-center text-center">
+          <p className="pad super-faint text-sm text-center">
+            <i
+              className="fa fa-unlock-alt"
+              style={{
+                fontSize: '8rem',
+                opacity: 0.3,
+              }}
+            />
+            <br />
+            <br />
+            Select an auth type from above
+          </p>
+        </div>
+      );
+    }
   }
+};
 
-  const { type } = authentication;
-  let authBody: ReactNode = null;
-
-  if (type === AUTH_BASIC) {
-    authBody = <BasicAuth />;
-  } else if (type === AUTH_OAUTH_2) {
-    authBody = <OAuth2Auth requestId={requestId} />;
-  } else if (type === AUTH_HAWK) {
-    authBody = <HawkAuth />;
-  } else if (type === AUTH_OAUTH_1) {
-    authBody = <OAuth1Auth />;
-  } else if (type === AUTH_DIGEST) {
-    authBody = <DigestAuth />;
-  } else if (type === AUTH_NTLM) {
-    authBody = <NTLMAuth />;
-  } else if (type === AUTH_BEARER) {
-    authBody = <BearerAuth />;
-  } else if (type === AUTH_AWS_IAM) {
-    authBody = <AWSAuth />;
-  } else if (type === AUTH_NETRC) {
-    authBody = <NetrcAuth />;
-  } else if (type === AUTH_ASAP) {
-    authBody = <AsapAuth />;
-  } else {
-    authBody = (
-      <div className="vertically-center text-center">
-        <p className="pad super-faint text-sm text-center">
-          <i
-            className="fa fa-unlock-alt"
-            style={{
-              fontSize: '8rem',
-              opacity: 0.3,
-            }}
-          />
-          <br />
-          <br />
-          Select an auth type from above
-        </p>
-      </div>
-    );
-  }
-
-  return <div className='tall'>{authBody}</div>;
+export const AuthWrapper: FC<{ requestId: string }> = ({ requestId }) => {
+  return (
+    <div className='tall'>
+      <AuthBody requestId={requestId} />
+    </div>
+  );
 };

@@ -1,16 +1,7 @@
 import { deconstructQueryStringToParams } from 'insomnia-url';
 
 import {
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
   AUTH_BASIC,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NONE,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
@@ -18,14 +9,11 @@ import {
   CONTENT_TYPE_JSON,
   CONTENT_TYPE_OTHER,
   getContentTypeFromHeaders,
-  HAWK_ALGORITHM_SHA256,
   METHOD_GET,
   METHOD_POST,
 } from '../common/constants';
 import { database as db } from '../common/database';
 import { getContentTypeHeader } from '../common/misc';
-import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
-import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import type { BaseModel } from './index';
 
 export const name = 'Request';
@@ -119,92 +107,6 @@ export function init(): BaseRequest {
     settingRebuildPath: true,
     settingFollowRedirects: 'global',
   };
-}
-
-export function newAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
-  switch (type) {
-    // No Auth
-    case AUTH_NONE:
-      return {};
-
-    // HTTP Basic Authentication
-    case AUTH_BASIC:
-      return {
-        type,
-        useISO88591: oldAuth.useISO88591 || false,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
-      };
-
-    case AUTH_DIGEST:
-    case AUTH_NTLM:
-      return {
-        type,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
-      };
-
-    case AUTH_OAUTH_1:
-      return {
-        type,
-        disabled: false,
-        signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
-        consumerKey: '',
-        consumerSecret: '',
-        tokenKey: '',
-        tokenSecret: '',
-        privateKey: '',
-        version: '1.0',
-        nonce: '',
-        timestamp: '',
-        callback: '',
-      };
-
-    // OAuth 2.0
-    case AUTH_OAUTH_2:
-      return {
-        type,
-        grantType: GRANT_TYPE_AUTHORIZATION_CODE,
-      };
-
-    // Aws IAM
-    case AUTH_AWS_IAM:
-      return {
-        type,
-        disabled: oldAuth.disabled || false,
-        accessKeyId: oldAuth.accessKeyId || '',
-        secretAccessKey: oldAuth.secretAccessKey || '',
-        sessionToken: oldAuth.sessionToken || '',
-      };
-
-    // Hawk
-    case AUTH_HAWK:
-      return {
-        type,
-        algorithm: HAWK_ALGORITHM_SHA256,
-      };
-
-    // Atlassian ASAP
-    case AUTH_ASAP:
-      return {
-        type,
-        issuer: '',
-        subject: '',
-        audience: '',
-        additionalClaims: '',
-        keyId: '',
-        privateKey: '',
-      };
-
-    // Types needing no defaults
-    case AUTH_NETRC:
-    default:
-      return {
-        type,
-      };
-  }
 }
 
 export function newBodyNone(): RequestBody {

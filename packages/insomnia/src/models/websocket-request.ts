@@ -1,4 +1,3 @@
-import { AuthType } from '../common/constants';
 import { database } from '../common/database';
 import type { BaseModel } from '.';
 import { RequestAuthentication, RequestHeader } from './request';
@@ -20,33 +19,6 @@ export interface BaseWebSocketRequest {
   metaSortKey: number;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
-}
-
-export function newAuth(type: AuthType, oldAuth: RequestAuthentication = {}): RequestAuthentication {
-  switch (type) {
-    // No Auth
-    case 'none':
-      return {};
-
-    // HTTP Basic Authentication
-    case 'basic':
-      return {
-        type,
-        useISO88591: oldAuth.useISO88591 || false,
-        disabled: oldAuth.disabled || false,
-        username: oldAuth.username || '',
-        password: oldAuth.password || '',
-      };
-
-    case 'digest':
-
-    // Types needing no defaults
-    case 'bearer':
-    default:
-      return {
-        type,
-      };
-  }
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
