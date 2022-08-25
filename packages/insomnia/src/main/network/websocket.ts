@@ -208,14 +208,9 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
-      eventLogFileStreams.get(options.requestId)?.end();
-      eventLogFileStreams.delete(options.requestId);
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Closing connection with code ${code}`, name: 'Text', timestamp: Date.now() }) + '\n');
-      timelineFileStreams.get(options.requestId)?.end();
-      timelineFileStreams.delete(options.requestId);
       sendQueueMap.delete(eventChannel);
-      WebSocketConnections.delete(options.requestId);
+      const message = `Closing connection with code ${code}`;
+      closeRequest(request._id, message, closeEvent);
 
       dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
@@ -233,13 +228,7 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
-      eventLogFileStreams.get(options.requestId)?.end();
-      eventLogFileStreams.delete(options.requestId);
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
-      timelineFileStreams.get(options.requestId)?.end();
-      timelineFileStreams.delete(options.requestId);
-      WebSocketConnections.delete(options.requestId);
+      closeRequest(request._id, message, errorEvent);
 
       dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
@@ -259,12 +248,7 @@ async function createWebSocketConnection(
     console.error('unhandled error:', e);
     const message = e.message || 'Something went wrong';
 
-    eventLogFileStreams.get(options.requestId)?.end();
-    eventLogFileStreams.delete(options.requestId);
-    timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
-    timelineFileStreams.get(options.requestId)?.end();
-    timelineFileStreams.delete(options.requestId);
-    WebSocketConnections.delete(options.requestId);
+    closeRequest(request._id, message);
 
     const settings = await models.settings.getOrCreate();
     const responsePatch = {
@@ -277,6 +261,18 @@ async function createWebSocketConnection(
     models.response.create(responsePatch, settings.maxHistoryResponses);
     models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
   }
+}
+
+async function closeRequest(requestId: string, message: string, event?: WebSocketCloseEvent | WebSocketErrorEvent,) {
+  if (event) {
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+  }
+  eventLogFileStreams.get(requestId)?.end();
+  eventLogFileStreams.delete(requestId);
+  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams.get(requestId)?.end();
+  timelineFileStreams.delete(requestId);
+  WebSocketConnections.delete(requestId);
 }
 
 function getWebSocketReadyState(
