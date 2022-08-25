@@ -253,14 +253,15 @@ async function createWebSocketConnection(
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
     });
   } catch (e) {
     console.error('unhandled error:', e);
-    const error = e.message || 'Something went wrong';
+    const message = e.message || 'Something went wrong';
 
     eventLogFileStreams.get(options.requestId)?.end();
     eventLogFileStreams.delete(options.requestId);
-    timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: error, name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
     timelineFileStreams.get(options.requestId)?.end();
     timelineFileStreams.delete(options.requestId);
     WebSocketConnections.delete(options.requestId);
@@ -271,9 +272,10 @@ async function createWebSocketConnection(
       parentId: request._id,
       timelinePath,
       statusMessage: 'Error',
-      error,
+      error: message,
     };
     models.response.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
   }
 }
 
