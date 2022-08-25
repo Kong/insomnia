@@ -9,7 +9,7 @@ interface Props {
 }
 
 export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
-  const editor = useRef<UnconnectedCodeEditor>(null);
+  const editorRef = useRef<UnconnectedCodeEditor>(null);
   const rows = timeline
     .map(({ name, value }, i, all) => {
       const prefixLookup: Record<ResponseTimelineEntry['name'], string> = {
@@ -36,14 +36,14 @@ export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
     .trim();
 
   useEffect(() => {
-    if (editor.current) {
-      editor.current?.codeMirror?.setValue(rows);
+    if (editorRef.current) {
+      editorRef.current.codeMirror?.setValue(rows);
     }
   }, [rows]);
 
   return (
     <CodeEditor
-      ref={editor}
+      ref={editorRef}
       hideLineNumbers
       readOnly
       onClickLink={clickLink}
