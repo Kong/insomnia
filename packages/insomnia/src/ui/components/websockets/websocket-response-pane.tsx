@@ -163,8 +163,9 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
           <div className="scrollable pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseCookiesViewer
-                cookiesSent={response.settingSendCookies}
-                cookiesStored={response.settingStoreCookies}
+                // @TODO: Implement cookie storing and sending
+                cookiesSent={false}
+                cookiesStored={false}
                 headers={cookieHeaders}
               />
             </ErrorBoundary>

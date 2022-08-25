@@ -162,8 +162,6 @@ async function createWebSocketConnection(
         timelinePath,
         bodyPath: responseBodyPath,
         bodyCompression: null,
-        settingSendCookies: true,
-        settingStoreCookies: true,
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
