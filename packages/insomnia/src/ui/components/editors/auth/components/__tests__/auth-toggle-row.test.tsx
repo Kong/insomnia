@@ -2,34 +2,21 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React, { FC } from 'react';
-import { useSelector } from 'react-redux';
 
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
 import * as models from '../../../../../../models';
-import { Request, RequestAuthentication } from '../../../../../../models/request';
-import { selectActiveRequest } from '../../../../../redux/selectors';
-import { AuthSettingsProvider } from '../auth-context';
+import { MockedAuthSettingsProvider } from '../../__tests__/mocked-auth-settings-provider';
 import { AuthToggleRow } from '../auth-toggle-row';
 
 const Wrapper: FC = ({ children }) => {
-  const activeRequest = useSelector(selectActiveRequest) as Request;
-
-  // This is inevitable as we are testing this in the unit test. Ideally we should mock it and just confirm if it was called. This is becoming an integration test, and it shouldn't be.
-  const handleAuthUpdate = (authentication: RequestAuthentication) => {
-    models.request.update(activeRequest, { authentication });
-  };
-
   return (
-    <AuthSettingsProvider
-      authentication={activeRequest.authentication}
-      onAuthUpdate={handleAuthUpdate}
-    >
+    <MockedAuthSettingsProvider>
       <table>
         <tbody>{children}</tbody>
       </table>
-    </AuthSettingsProvider>
+    </MockedAuthSettingsProvider>
   );
 };
 

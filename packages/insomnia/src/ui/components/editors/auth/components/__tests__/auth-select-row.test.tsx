@@ -7,9 +7,8 @@ import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
 import * as models from '../../../../../../models';
+import { MockedAuthSettingsProvider } from '../../__tests__/mocked-auth-settings-provider';
 import { AuthSelectRow } from '../auth-select-row';
-
-const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
 
 const options = [{
   name: 'opt-1',
@@ -18,6 +17,16 @@ const options = [{
   name: 'opt-2',
   value: 'val-2',
 }];
+
+const Wrapper: FC = ({ children }) => {
+  return (
+    <MockedAuthSettingsProvider>
+      <table>
+        <tbody>{children}</tbody>
+      </table>
+    </MockedAuthSettingsProvider>
+  );
+};
 
 describe('<AuthSelectRow />', () => {
   beforeEach(globalBeforeEach);
@@ -29,7 +38,7 @@ describe('<AuthSelectRow />', () => {
     // Render
     const { findByLabelText } = render(
       <AuthSelectRow label='selectLabel' property='selectProperty' options={options} />,
-      { wrapper: withReduxStore(store, Table) }
+      { wrapper: withReduxStore(store, Wrapper) }
     );
 
     // Assert
@@ -57,7 +66,7 @@ describe('<AuthSelectRow />', () => {
     // Render
     const { findByLabelText } = render(
       <AuthSelectRow label='selectLabel' property='selectProperty' options={options} />,
-      { wrapper: withReduxStore(store, Table) }
+      { wrapper: withReduxStore(store, Wrapper) }
     );
 
     // Assert

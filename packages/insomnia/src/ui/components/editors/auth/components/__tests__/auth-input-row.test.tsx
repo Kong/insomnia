@@ -8,13 +8,22 @@ import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mo
 import { MockCodeEditor } from '../../../../../../__jest__/mock-code-editor';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
 import * as models from '../../../../../../models';
+import { MockedAuthSettingsProvider } from '../../__tests__/mocked-auth-settings-provider';
 import { AuthInputRow } from '../auth-input-row';
 
 jest.mock('../../../../codemirror/code-editor', () => ({
   CodeEditor: MockCodeEditor,
 }));
 
-const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
+const Wrapper: FC = ({ children }) => {
+  return (
+    <MockedAuthSettingsProvider>
+      <table>
+        <tbody>{children}</tbody>
+      </table>
+    </MockedAuthSettingsProvider>
+  );
+};
 
 describe('<AuthInputRow />', () => {
   beforeEach(globalBeforeEach);
@@ -27,7 +36,7 @@ describe('<AuthInputRow />', () => {
     // Render with mask enabled
     const { findByLabelText, findByTestId } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' mask />,
-      { wrapper: withReduxStore(store, Table) }
+      { wrapper: withReduxStore(store, Wrapper) }
     );
 
     let input = await findByLabelText('inputLabel');
@@ -56,7 +65,7 @@ describe('<AuthInputRow />', () => {
     // Render with mask enabled
     const { findByLabelText, queryAllByTestId } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' mask />,
-      { wrapper: withReduxStore(store, Table) }
+      { wrapper: withReduxStore(store, Wrapper) }
     );
 
     // Assert
@@ -72,7 +81,7 @@ describe('<AuthInputRow />', () => {
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,
-      { wrapper: withReduxStore(store, Table) }
+      { wrapper: withReduxStore(store, Wrapper) }
     );
 
     // This is a function because the underlying component changes as the element gets focus
@@ -97,7 +106,7 @@ describe('<AuthInputRow />', () => {
 
     const { findByLabelText } = render(
       <AuthInputRow label='inputLabel' property='inputProperty' />,
-      { wrapper: withReduxStore(store, Table) }
+      { wrapper: withReduxStore(store, Wrapper) }
     );
 
     // Assert
