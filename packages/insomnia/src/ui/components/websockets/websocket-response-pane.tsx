@@ -70,7 +70,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
-  const setActiveResponseAndDisconnect: typeof handleSetActiveResponse = (requestId, response) => {
+  const setActiveResponseAndDisconnect = (requestId: string, response: Response) => {
     handleSetActiveResponse(requestId, response);
     window.main.webSocketConnection.close({ requestId });
   };
