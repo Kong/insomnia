@@ -76,7 +76,7 @@ const sendQueueMap = new Map<string, WebSocketEventLog>();
  * When CTS is set, the events are sent immediately.
  * If CTS is cleared, the events are batched into the send queue.
  */
-function dispatchWebSocketEvent(requestId:string, target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void {
+function dispatchWebSocketEvent(requestId: string, target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void {
   // If the CTS flag is already set, just send immediately.
   if (clearToSend) {
     target.send(eventChannel, [wsEvent]);
@@ -209,7 +209,7 @@ async function createWebSocketConnection(
       };
 
       const message = `Closing connection with code ${code}`;
-      closeRequest(request._id, message, closeEvent);
+      deleteRequestMaps(request._id, message, closeEvent);
 
       dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
@@ -227,42 +227,35 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      closeRequest(request._id, message, errorEvent);
+      deleteRequestMaps(request._id, message, errorEvent);
 
       dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
 
-      const responsePatch = {
-        _id: responseId,
-        parentId: request._id,
-        timelinePath,
-        statusMessage: 'Error',
-        error: message || 'Something went wrong',
-      };
-      const settings = await models.settings.getOrCreate();
-      models.response.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+      createErrorResponse(responseId, request._id, timelinePath, message || 'Something went wrong');
     });
   } catch (e) {
     console.error('unhandled error:', e);
-    const message = e.message || 'Something went wrong';
 
-    closeRequest(request._id, message);
-
-    const settings = await models.settings.getOrCreate();
-    const responsePatch = {
-      _id: responseId,
-      parentId: request._id,
-      timelinePath,
-      statusMessage: 'Error',
-      error: message,
-    };
-    models.response.create(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+    deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    createErrorResponse(responseId, request._id, timelinePath, e.message || 'Something went wrong');
   }
 }
 
-async function closeRequest(requestId: string, message: string, event?: WebSocketCloseEvent | WebSocketErrorEvent,) {
+async function createErrorResponse(responseId: string, requestId: string, timelinePath: string, message: string) {
+  const settings = await models.settings.getOrCreate();
+  const responsePatch = {
+    _id: responseId,
+    parentId: requestId,
+    timelinePath,
+    statusMessage: 'Error',
+    error: message,
+  };
+  models.response.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
+}
+
+async function deleteRequestMaps(requestId: string, message: string, event?: WebSocketCloseEvent | WebSocketErrorEvent,) {
   if (event) {
     eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
   }
