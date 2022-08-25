@@ -116,7 +116,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
             key={`${request._id}-${readyState}-header-editor`}
             request={request}
             bulk={false}
-            isDisabled={readyState !== ReadyState.CLOSED}
+            isDisabled={readyState === ReadyState.OPEN}
           />
         </TabPanel>
       </Tabs>
