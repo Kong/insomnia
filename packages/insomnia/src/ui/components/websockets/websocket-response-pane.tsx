@@ -155,7 +155,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseTimelineViewer
-            responseId={response._id}
+            key={response._id}
             timeline={timeline}
           />
         </TabPanel>

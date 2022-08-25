@@ -212,7 +212,7 @@ export const ResponsePane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel">
           <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
-              responseId={response._id}
+              key={response._id}
               timeline={timeline}
             />
           </ErrorBoundary>

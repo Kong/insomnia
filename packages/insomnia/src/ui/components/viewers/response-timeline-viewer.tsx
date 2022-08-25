@@ -1,15 +1,15 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 
 import { clickLink } from '../../../common/electron-helpers';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import { CodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 interface Props {
-  responseId: string;
   timeline: ResponseTimelineEntry[];
 }
 
-export const ResponseTimelineViewer: FC<Props> = ({ responseId, timeline }) => {
+export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
+  const editor = useRef<UnconnectedCodeEditor>(null);
   const rows = timeline
     .map(({ name, value }, i, all) => {
       const prefixLookup: Record<ResponseTimelineEntry['name'], string> = {
@@ -34,9 +34,16 @@ export const ResponseTimelineViewer: FC<Props> = ({ responseId, timeline }) => {
     .filter(r => r !== null)
     .join('\n')
     .trim();
+
+  useEffect(() => {
+    if (editor.current) {
+      editor.current?.codeMirror?.setValue(rows);
+    }
+  }, [rows]);
+
   return (
     <CodeEditor
-      key={responseId + timeline.length}
+      ref={editor}
       hideLineNumbers
       readOnly
       onClickLink={clickLink}
