@@ -1,7 +1,9 @@
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
+import { setDefaultProtocol } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import path from 'path';
+import { KeyObject, PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
@@ -16,6 +18,7 @@ import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
+import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
@@ -95,7 +98,7 @@ function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: stri
 
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
-  options: { requestId: string }
+  options: { requestId: string; workspaceId: string }
 ) {
   const existingConnection = WebSocketConnections.get(options.requestId);
 
@@ -126,8 +129,41 @@ async function createWebSocketConnection(
     const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
+    const settings = await models.settings.getOrCreate();
     const start = performance.now();
-    const ws = new WebSocket(request.url, { headers });
+
+    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), request.url));
+    const pemCertificates: string[] = [];
+    const pemCertificateKeys: KeyObject[] = [];
+    const pfxCertificates: PxfObject[] = [];
+
+    filteredClientCertificates.forEach(clientCertificate => {
+      const { passphrase, cert, key, pfx } = clientCertificate;
+
+      if (cert) {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+      }
+
+      if (key) {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
+      }
+
+      if (pfx) {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
+      }
+    });
+
+    const ws = new WebSocket(request.url, {
+      headers,
+      cert: pemCertificates,
+      key: pemCertificateKeys,
+      pfx: pfxCertificates,
+      rejectUnauthorized: settings.validateSSL,
+    });
     WebSocketConnections.set(options.requestId, ws);
 
     ws.on('upgrade', async incoming => {

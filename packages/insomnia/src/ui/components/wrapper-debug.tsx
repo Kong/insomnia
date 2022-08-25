@@ -130,6 +130,7 @@ export const WrapperDebug: FC<Props> = ({
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketRequestPane
                   request={activeRequest}
+                  workspaceId={activeWorkspace._id}
                 />
               ) : (
                 <RequestPane
