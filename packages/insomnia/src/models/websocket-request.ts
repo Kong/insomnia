@@ -39,6 +39,8 @@ export const init = (): BaseWebSocketRequest => ({
   authentication: {},
 });
 
+export const migrate = (doc: WebSocketRequest) => doc;
+
 export const create = (patch: Partial<WebSocketRequest> = {}) => {
   if (!patch.parentId) {
     throw new Error(`New WebSocketRequest missing \`parentId\`: ${JSON.stringify(patch)}`);

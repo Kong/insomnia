@@ -37,6 +37,7 @@ export const OAuth1Auth: FC = () => {
 
   return (
     <AuthTableBody>
+      <AuthToggleRow label="Enabled" property="disabled" invert />
       <AuthInputRow label='Consumer Key' property='consumerKey' />
       <AuthInputRow label='Consumer Secret' property='consumerSecret' />
       <AuthInputRow label='Token Key' property='tokenKey' />

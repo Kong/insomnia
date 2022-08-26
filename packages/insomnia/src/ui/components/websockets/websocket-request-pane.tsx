@@ -2,6 +2,7 @@ import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import { AuthType } from '../../../common/constants';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
@@ -11,6 +12,8 @@ import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
+
+const supportedAuthTypes: AuthType[] = ['basic', 'digest', 'bearer'];
 
 const EditorWrapper = styled.div({
   height: '100%',
@@ -103,7 +106,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
             <button>Headers</button>
           </Tab>
           <Tab tabIndex="-1" >
-            <AuthDropdown />
+            <AuthDropdown authTypes={supportedAuthTypes} />
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
@@ -127,7 +130,10 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
-          <AuthWrapper />
+          <AuthWrapper
+            key={`${request._id}-${readyState}-auth-header`}
+            disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
+          />
         </TabPanel>
       </Tabs>
     </Pane>

@@ -12,6 +12,7 @@ interface Props {
   help?: ReactNode;
   onTitle?: string;
   offTitle?: string;
+  disabled?: boolean;
 }
 
 const ToggleIcon: FC<{isOn: boolean}> = ({ isOn }) => isOn ? <i data-testid="toggle-is-on" className="fa fa-check-square-o" /> : <i data-testid="toggle-is-off" className="fa fa-square-o" />;
@@ -23,6 +24,7 @@ export const AuthToggleRow: FC<Props> = ({
   invert,
   onTitle = 'Disable item',
   offTitle = 'Enable item',
+  disabled = false,
 }) => {
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
@@ -38,13 +40,14 @@ export const AuthToggleRow: FC<Props> = ({
   const title = isActuallyOn ? onTitle : offTitle;
 
   return (
-    <AuthRow labelFor={id} label={label} help={help}>
+    <AuthRow labelFor={id} label={label} help={help} disabled={disabled}>
       <Button
         className="btn btn--super-duper-compact"
         id={id}
         onClick={toggle}
         value={!databaseValue}
         title={title}
+        disabled={disabled}
       >
         <ToggleIcon isOn={isActuallyOn} />
       </Button>

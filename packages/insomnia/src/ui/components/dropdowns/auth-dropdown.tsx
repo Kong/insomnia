@@ -1,18 +1,8 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, ReactElement, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
-  AUTH_ASAP,
-  AUTH_AWS_IAM,
-  AUTH_BASIC,
-  AUTH_BEARER,
-  AUTH_DIGEST,
-  AUTH_HAWK,
-  AUTH_NETRC,
-  AUTH_NONE,
-  AUTH_NTLM,
-  AUTH_OAUTH_1,
-  AUTH_OAUTH_2,
+  AuthType,
   getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
@@ -28,14 +18,28 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
+const defaultTypes: AuthType[] = [
+  'basic',
+  'digest',
+  'oauth1',
+  'oauth2',
+  'ntlm',
+  'iam',
+  'bearer',
+  'hawk',
+  'asap',
+  'netrc',
+  'none',
+];
+
 function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
   switch (type) {
     // No Auth
-    case AUTH_NONE:
+    case 'none':
       return {};
 
     // HTTP Basic Authentication
-    case AUTH_BASIC:
+    case 'basic':
       return {
         type,
         useISO88591: oldAuth.useISO88591 || false,
@@ -44,8 +48,8 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
         password: oldAuth.password || '',
       };
 
-    case AUTH_DIGEST:
-    case AUTH_NTLM:
+    case 'digest':
+    case 'ntlm':
       return {
         type,
         disabled: oldAuth.disabled || false,
@@ -53,7 +57,7 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
         password: oldAuth.password || '',
       };
 
-    case AUTH_OAUTH_1:
+    case 'oauth1':
       return {
         type,
         disabled: false,
@@ -70,14 +74,14 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       };
 
     // OAuth 2.0
-    case AUTH_OAUTH_2:
+    case 'oauth2':
       return {
         type,
         grantType: GRANT_TYPE_AUTHORIZATION_CODE,
       };
 
     // Aws IAM
-    case AUTH_AWS_IAM:
+    case 'iam':
       return {
         type,
         disabled: oldAuth.disabled || false,
@@ -87,14 +91,14 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       };
 
     // Hawk
-    case AUTH_HAWK:
+    case 'hawk':
       return {
         type,
         algorithm: HAWK_ALGORITHM_SHA256,
       };
 
     // Atlassian ASAP
-    case AUTH_ASAP:
+    case 'asap':
       return {
         type,
         issuer: '',
@@ -106,7 +110,7 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       };
 
     // Types needing no defaults
-    case AUTH_NETRC:
+    case 'netrc':
     default:
       return {
         type,
@@ -115,10 +119,10 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
 }
 
 const AuthItem: FC<{
-  type: string;
+  type: AuthType;
   nameOverride?: string;
-  isCurrent: (type: string) => boolean;
-  onClick: (type: string) => void;
+  isCurrent: (type: AuthType) => boolean;
+  onClick: (type: AuthType) => void;
 }> = ({ type, nameOverride, isCurrent, onClick }) => (
   <DropdownItem onClick={onClick} value={type}>
     {<i className={`fa fa-${isCurrent(type) ? 'check' : 'empty'}`} />}{' '}
@@ -127,10 +131,13 @@ const AuthItem: FC<{
 );
 AuthItem.displayName = DropdownItem.name;
 
-export const AuthDropdown: FC = () => {
+interface Props {
+  authTypes?: AuthType[];
+}
+export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
   const activeRequest = useSelector(selectActiveRequest);
 
-  const onClick = useCallback(async (type: string) => {
+  const onClick = useCallback(async (type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return;
     }
@@ -166,11 +173,11 @@ export const AuthDropdown: FC = () => {
     }
     update(activeRequest, { authentication:newAuthentication });
   }, [activeRequest]);
-  const isCurrent = useCallback((type: string) => {
+  const isCurrent = useCallback((type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;
     }
-    return type === (activeRequest.authentication.type || AUTH_NONE);
+    return type === (activeRequest.authentication.type || 'none');
   }, [activeRequest]);
 
   if (!activeRequest) {
@@ -186,18 +193,29 @@ export const AuthDropdown: FC = () => {
         {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
-      <AuthItem type={AUTH_BASIC} {...itemProps} />
-      <AuthItem type={AUTH_DIGEST} {...itemProps} />
-      <AuthItem type={AUTH_OAUTH_1} {...itemProps} />
-      <AuthItem type={AUTH_OAUTH_2} {...itemProps} />
-      <AuthItem type={AUTH_NTLM} {...itemProps} />
-      <AuthItem type={AUTH_AWS_IAM} {...itemProps} />
-      <AuthItem type={AUTH_BEARER} {...itemProps} />
-      <AuthItem type={AUTH_HAWK} {...itemProps} />
-      <AuthItem type={AUTH_ASAP} {...itemProps} />
-      <AuthItem type={AUTH_NETRC} {...itemProps} />
-      <DropdownDivider>Other</DropdownDivider>
-      <AuthItem type={AUTH_NONE} nameOverride="No Authentication" {...itemProps} />
+      {authTypes.reduce<ReactElement[]>((acc: ReactElement[], authType: AuthType) => {
+        if (authType === 'none') {
+          return acc.concat([
+            <DropdownDivider key="divider-other">
+              Other
+            </DropdownDivider>,
+            <AuthItem
+              key={authType}
+              type={authType}
+              nameOverride="No Authentication"
+              {...itemProps}
+            />,
+          ]);
+        }
+
+        return acc.concat(
+          <AuthItem
+            key={authType}
+            type={authType}
+            {...itemProps}
+          />
+        );
+      }, [])}
     </Dropdown>
   );
 };
