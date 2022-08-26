@@ -1,11 +1,13 @@
 import * as grpc from '@grpc/grpc-js';
 import { Call, ServiceError } from '@grpc/grpc-js';
+import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import callCache from './call-cache';
+import formatGrpcProxyUrl from './format-grpc-proxy-url';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
 import parseGrpcUrl from './parse-grpc-url';
@@ -13,10 +15,10 @@ import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
 import * as protoLoader from './proto-loader';
 import { ResponseCallbacks } from './response-callbacks';
 
-const _createClient = (
+const _createClient = async (
   req: GrpcRequest,
   respond: ResponseCallbacks,
-): ServiceClient | undefined => {
+): Promise<ServiceClient | undefined> => {
   const { url, enableTls } = parseGrpcUrl(req.url);
 
   if (!url) {
@@ -24,11 +26,27 @@ const _createClient = (
     return undefined;
   }
 
+  const settings = await models.settings.getOrCreate();
+  const { proxyEnabled, httpProxy, noProxy } = settings;
+  if (proxyEnabled) {
+    const { url: proxyUrl, error } = formatGrpcProxyUrl(httpProxy);
+    if (error) {
+      respond.sendError(req._id, error);
+      return undefined;
+    }
+    process.env.grpc_proxy = proxyUrl;
+    process.env.no_grpc_proxy = noProxy;
+  }
+
+  const channelOptions: ChannelOptions = { 'grpc.enable_http_proxy': settings.proxyEnabled ? 1 : 0 };
+
   const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
-  console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
+  console.log(
+    `[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`
+  );
   // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
   const Client = grpc.makeGenericClientConstructor({});
-  return new Client(url, credentials);
+  return new Client(url, credentials, channelOptions);
 };
 
 const _makeUnaryRequest = (
@@ -174,7 +192,7 @@ export const start = async (
   const methodType = getMethodType(method);
 
   // Create client
-  const client = _createClient(request, respond);
+  const client = await _createClient(request, respond);
 
   if (!client) {
     return;
