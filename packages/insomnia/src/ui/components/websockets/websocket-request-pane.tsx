@@ -64,13 +64,14 @@ const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
 
 interface Props {
   request: WebSocketRequest;
+  workspaceId: string;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
   const readyState = useWSReadyState(request._id);
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
     const url = event.currentTarget.value || '';
@@ -85,6 +86,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request }) => {
         <WebSocketActionBar
           key={request._id}
           requestId={request._id}
+          workspaceId={workspaceId}
           defaultValue={request.url}
           readyState={readyState}
           onChange={handleOnChange}
