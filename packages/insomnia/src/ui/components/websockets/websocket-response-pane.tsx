@@ -70,7 +70,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
-  const setActiveResponseAndDisconnect = (requestId: string, response: Response) => {
+  const setActiveResponseAndDisconnect = (requestId: string, response: Response | null) => {
     handleSetActiveResponse(requestId, response);
     window.main.webSocketConnection.close({ requestId });
   };
@@ -83,7 +83,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     let isMounted = true;
     const fn = async () => {
       // @TODO: this needs to fs.watch or tail the file, instead of reading the whole thing on every event.
-      // or alternatively a throtlle to keep it from reading too frequently
+      // or alternatively a throttle to keep it from reading too frequently
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
