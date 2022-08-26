@@ -3,7 +3,7 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import type { WebSocketEvent } from './main/network/websocket';
 
 const webSocketConnection = {
-  create: (options: { requestId: string }) => {
+  create: (options: { requestId: string; workspaceId: string }) => {
     return ipcRenderer.invoke('webSocketRequest.connection.create', options);
   },
   close: (options: { requestId: string }) => {

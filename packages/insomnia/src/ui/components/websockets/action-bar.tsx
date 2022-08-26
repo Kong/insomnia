@@ -49,6 +49,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
 
 interface ActionBarProps {
   requestId: string;
+  workspaceId: string;
   defaultValue: string;
   readyState: ReadyState;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -75,10 +76,10 @@ const WebSocketIcon = styled.span({
   paddingLeft: 'var(--padding-md)',
 });
 
-export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, defaultValue, onChange, readyState }) => {
+export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, workspaceId, defaultValue, onChange, readyState }) => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    window.main.webSocketConnection.create({ requestId });
+    window.main.webSocketConnection.create({ requestId, workspaceId });
   };
 
   return (
