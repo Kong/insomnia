@@ -59,6 +59,7 @@ export interface Settings {
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
+  grpcHttpProxy: string;
   showVariableSourceAndValue: boolean;
   lightTheme: string;
   lineWrapping?: boolean;
@@ -66,11 +67,13 @@ export interface Settings {
   maxRedirects: number;
   maxTimelineDataSizeKB: number;
   noProxy: string;
+  grpcNoProxy: string;
   nunjucksPowerUserMode: boolean;
   pluginConfig: PluginConfigMap;
   pluginPath: string;
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;
+  grpcProxyEnabled: boolean;
 
   /** If true, won’t make any network requests other than the requests you ask it to send. This configuration controls Send Usage Stats (`enableAnalytics`) and Allow Notification Requests (`allowNotificationRequests`). */
   incognitoMode: boolean;

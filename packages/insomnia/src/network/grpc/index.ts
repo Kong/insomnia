@@ -27,18 +27,18 @@ const _createClient = async (
   }
 
   const settings = await models.settings.getOrCreate();
-  const { proxyEnabled, httpProxy, noProxy } = settings;
-  if (proxyEnabled) {
-    const { url: proxyUrl, error } = formatGrpcProxyUrl(httpProxy);
+  const { grpcProxyEnabled, grpcHttpProxy, grpcNoProxy } = settings;
+  if (grpcProxyEnabled) {
+    const { url: proxyUrl, error } = formatGrpcProxyUrl(grpcHttpProxy);
     if (error) {
       respond.sendError(req._id, error);
       return undefined;
     }
     process.env.grpc_proxy = proxyUrl;
-    process.env.no_grpc_proxy = noProxy;
+    process.env.no_grpc_proxy = grpcNoProxy;
   }
 
-  const channelOptions: ChannelOptions = { 'grpc.enable_http_proxy': settings.proxyEnabled ? 1 : 0 };
+  const channelOptions: ChannelOptions = { 'grpc.enable_http_proxy': grpcProxyEnabled ? 1 : 0 };
 
   const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
   console.log(
