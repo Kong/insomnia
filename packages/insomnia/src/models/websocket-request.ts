@@ -1,6 +1,6 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { RequestHeader } from './request';
+import { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'WebSocket Request';
 
@@ -18,6 +18,7 @@ export interface BaseWebSocketRequest {
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
+  authentication: RequestAuthentication;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -35,9 +36,8 @@ export const init = (): BaseWebSocketRequest => ({
   url: '',
   metaSortKey: -1 * Date.now(),
   headers: [],
+  authentication: {},
 });
-
-export const migrate = (doc: WebSocketRequest) => doc;
 
 export const create = (patch: Partial<WebSocketRequest> = {}) => {
   if (!patch.parentId) {

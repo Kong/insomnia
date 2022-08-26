@@ -14,10 +14,12 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
   getAuthTypeName,
+  HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import * as models from '../../../models';
 import { update } from '../../../models/helpers/request-operations';
-import { isRequest } from '../../../models/request';
+import { RequestAuthentication } from '../../../models/request';
+import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
+import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -25,6 +27,92 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
+
+function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
+  switch (type) {
+    // No Auth
+    case AUTH_NONE:
+      return {};
+
+    // HTTP Basic Authentication
+    case AUTH_BASIC:
+      return {
+        type,
+        useISO88591: oldAuth.useISO88591 || false,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
+    case AUTH_DIGEST:
+    case AUTH_NTLM:
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
+    case AUTH_OAUTH_1:
+      return {
+        type,
+        disabled: false,
+        signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
+        consumerKey: '',
+        consumerSecret: '',
+        tokenKey: '',
+        tokenSecret: '',
+        privateKey: '',
+        version: '1.0',
+        nonce: '',
+        timestamp: '',
+        callback: '',
+      };
+
+    // OAuth 2.0
+    case AUTH_OAUTH_2:
+      return {
+        type,
+        grantType: GRANT_TYPE_AUTHORIZATION_CODE,
+      };
+
+    // Aws IAM
+    case AUTH_AWS_IAM:
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        accessKeyId: oldAuth.accessKeyId || '',
+        secretAccessKey: oldAuth.secretAccessKey || '',
+        sessionToken: oldAuth.sessionToken || '',
+      };
+
+    // Hawk
+    case AUTH_HAWK:
+      return {
+        type,
+        algorithm: HAWK_ALGORITHM_SHA256,
+      };
+
+    // Atlassian ASAP
+    case AUTH_ASAP:
+      return {
+        type,
+        issuer: '',
+        subject: '',
+        audience: '',
+        additionalClaims: '',
+        keyId: '',
+        privateKey: '',
+      };
+
+    // Types needing no defaults
+    case AUTH_NETRC:
+    default:
+      return {
+        type,
+      };
+  }
+}
 
 const AuthItem: FC<{
   type: string;
@@ -43,11 +131,7 @@ export const AuthDropdown: FC = () => {
   const activeRequest = useSelector(selectActiveRequest);
 
   const onClick = useCallback(async (type: string) => {
-    if (!activeRequest) {
-      return;
-    }
-
-    if (!isRequest(activeRequest)) {
+    if (!activeRequest || !('authentication' in activeRequest)) {
       return;
     }
 
@@ -58,8 +142,8 @@ export const AuthDropdown: FC = () => {
       return;
     }
 
-    const newAuthentication = models.request.newAuth(type, authentication);
-    const defaultAuthentication = models.request.newAuth(authentication.type);
+    const newAuthentication = makeNewAuth(type, authentication);
+    const defaultAuthentication = makeNewAuth(authentication.type);
 
     // Prompt the user if fields will change between new and old
     for (const key of Object.keys(authentication)) {
@@ -83,10 +167,7 @@ export const AuthDropdown: FC = () => {
     update(activeRequest, { authentication:newAuthentication });
   }, [activeRequest]);
   const isCurrent = useCallback((type: string) => {
-    if (!activeRequest) {
-      return false;
-    }
-    if (!isRequest(activeRequest)) {
+    if (!activeRequest || !('authentication' in activeRequest)) {
       return false;
     }
     return type === (activeRequest.authentication.type || AUTH_NONE);

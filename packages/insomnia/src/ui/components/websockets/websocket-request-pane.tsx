@@ -6,6 +6,8 @@ import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { AuthDropdown } from '../dropdowns/auth-dropdown';
+import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
@@ -100,6 +102,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
           <Tab tabIndex="-1" >
             <button>Headers</button>
           </Tab>
+          <Tab tabIndex="-1" >
+            <AuthDropdown />
+          </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
           <PaneSendButton>
@@ -120,6 +125,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
           />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <AuthWrapper />
         </TabPanel>
       </Tabs>
     </Pane>

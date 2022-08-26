@@ -13,7 +13,6 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
-import { isRequest } from '../../../../models/request';
 import { selectActiveRequest } from '../../../redux/selectors';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
@@ -29,7 +28,7 @@ import { OAuth2Auth } from './o-auth-2-auth';
 export const AuthWrapper: FC = () => {
   const request = useSelector(selectActiveRequest);
 
-  if (!request || !isRequest(request)) {
+  if (!request || !('authentication' in request)) {
     return null;
   }
 
