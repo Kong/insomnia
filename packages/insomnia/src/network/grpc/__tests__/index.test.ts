@@ -1,9 +1,11 @@
+/* tslint:disable */
 import { createBuilder } from '@develohpanda/fluent-builder';
 import * as grpcJs from '@grpc/grpc-js';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { grpcMocks } from '../../../__mocks__/@grpc/grpc-js';
+import * as models from '../../../models';
 import { grpcMethodDefinitionSchema } from '../../../ui/context/grpc/__schemas__';
 import { grpcIpcMessageParamsSchema } from '../__schemas__/grpc-ipc-message-params-schema';
 import { grpcIpcRequestParamsSchema } from '../__schemas__/grpc-ipc-request-params-schema';
@@ -143,6 +145,86 @@ describe('grpc', () => {
       expect(respond.sendStatus).toHaveBeenCalledWith(params.request._id, status);
       // Cleanup / End the stream
       grpcMocks.getMockCall().emit('end');
+    });
+
+    describe('proxy', () => {
+      const originEnv = process.env;
+      interface GRPCProxyMockUserSettings {
+        // mocking only what we need to run axiosRequest
+        grpcProxyEnabled: boolean;
+        grpcHttpProxy: string;
+        grpcNoProxy: string;
+      }
+
+      beforeAll(() => {
+        jest.spyOn(models.settings, 'getOrCreate');
+      });
+
+      beforeEach(() => {
+        jest.resetModules();
+      })
+
+      afterEach(() => {
+        process.env = originEnv;
+      })
+
+      it('should make a proxy enabled client when it is enabled in setting', async () => {
+        // Arrange
+        const mockInsomniaConfigPanelUserSettings: GRPCProxyMockUserSettings = {
+          grpcProxyEnabled: true,
+          grpcHttpProxy: 'http://some.proxy.com:8080',
+          grpcNoProxy: '',
+        };
+
+        (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+        const params = requestParamsBuilder
+          .request({
+            _id: 'id',
+            url: 'grpcb.in:9000',
+            metadata: [],
+          })
+          .build();
+        const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
+        protoLoader.getSelectedMethod.mockResolvedValue(bidiMethod);
+        // Act
+        await grpc.start(params, respond);
+        // Assert
+        expect(grpcMocks.mockConstructor).toHaveBeenCalledTimes(1);
+        expect(grpcMocks.mockConstructor.mock.calls[0][0]).toBe('grpcb.in:9000');
+        expect(grpcMocks.mockConstructor.mock.calls[0][2]).toMatchObject({'grpc.enable_http_proxy': 1});
+        expect(process.env.grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcHttpProxy);
+        expect(process.env.no_grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcNoProxy);
+        // Cleanup / End the stream
+        grpcMocks.getMockCall().emit('end');
+      });
+
+      it('should exit if proxy url protocol is not supported', async () => {
+        const mockInsomniaConfigPanelUserSettings: GRPCProxyMockUserSettings = {
+          grpcProxyEnabled: true,
+          grpcHttpProxy: 'https://some.proxy.com:8080',
+          grpcNoProxy: '',
+        };
+
+        (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+        const params = requestParamsBuilder
+          .request({
+            _id: 'id',
+            url: 'grpcb.in:9000',
+            metadata: [],
+          })
+          .build();
+        const bidiMethod = methodBuilder.requestStream(true).responseStream(true).build();
+        protoLoader.getSelectedMethod.mockResolvedValue(bidiMethod);
+        // Act
+        await grpc.start(params, respond);
+        // Assert
+        expect(respond.sendStart).not.toHaveBeenCalled();
+        expect(respond.sendError).toHaveBeenCalledWith(
+          params.request._id,
+          new Error(`"https:" scheme not supported in GRPC proxy URI`),
+        );
+      });
+
     });
 
     describe('unary', () => {
