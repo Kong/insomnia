@@ -114,6 +114,11 @@ Search for, discover, and install plugins from the Insomnia [Plugin Hub](https:/
 - [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) - A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
 - [Swaggymnia](https://github.com/mlabouardy/swaggymnia) - Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
+## Parede de Tecnologia
+
+![JS Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/480px-Unofficial_JavaScript_logo_2.svg.png)
+![TS Logo](https://w7.pngwing.com/pngs/915/519/png-transparent-typescript-hd-logo-thumbnail.png)
+![Nodejs Logo](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfp3Zd_zL88GPcod-6sbx8hfS7-_YX_syeiA&usqp=CAU)
 ## License
 
 [MIT](LICENSE) &copy; [Insomnia](https://insomnia.rest)
