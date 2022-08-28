@@ -1,5 +1,21 @@
 # Insomnia API Client
 
+## Parede de Tecnologia
+
+|Linguagem||Runtime|Monorepo|
+|-|-|-|-|
+|<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/480px-Unofficial_JavaScript_logo_2.svg.png" alt="JS Logo" height="100"></img>|<img src="https://w7.pngwing.com/pngs/915/519/png-transparent-typescript-hd-logo-thumbnail.png" alt="TS Logo" height="100"></img>|<img src="https://cdn.icon-icons.com/icons2/2415/PNG/512/nodejs_plain_logo_icon_146409.png" alt="Nodejs Logo" height="100"></img>|<img src="https://i.ibb.co/bFFMbNZ/asdasdasdas.png" alt="Lerna Logo" height="100"></img>|
+
+|Testes||Interface Gráfica||
+|-|-|-|-|
+|<img src="https://seeklogo.com/images/J/jest-logo-F9901EBBF7-seeklogo.com.png" alt="Jest Logo" height="100"></img>|<img src="https://seeklogo.com/images/M/mocha-logo-66DA231220-seeklogo.com.png" alt="Mocha Logo" height="100"></img>|<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/2300px-React-icon.svg.png" alt="React Logo" height="100"></img>|<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Electron_Software_Framework_Logo.svg/1200px-Electron_Software_Framework_Logo.svg.png" alt="Electron Logo" height="100"></img>|
+
+|Bundler, etc.|
+|-|
+|<img src="https://camo.githubusercontent.com/61e102d7c605ff91efedb9d7e47c1c4a07cef59d3e1da202fd74f4772122ca4e/68747470733a2f2f766974656a732e6465762f6c6f676f2e737667" alt="Vite Logo" height="100"></img>|
+
+---
+
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 
@@ -114,11 +130,6 @@ Search for, discover, and install plugins from the Insomnia [Plugin Hub](https:/
 - [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) - A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
 - [Swaggymnia](https://github.com/mlabouardy/swaggymnia) - Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
-## Parede de Tecnologia
-
-![JS Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/480px-Unofficial_JavaScript_logo_2.svg.png)
-![TS Logo](https://w7.pngwing.com/pngs/915/519/png-transparent-typescript-hd-logo-thumbnail.png)
-![Nodejs Logo](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfp3Zd_zL88GPcod-6sbx8hfS7-_YX_syeiA&usqp=CAU)
 ## License
 
 [MIT](LICENSE) &copy; [Insomnia](https://insomnia.rest)
