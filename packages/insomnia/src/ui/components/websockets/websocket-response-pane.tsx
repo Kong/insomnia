@@ -70,6 +70,11 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
+  const setActiveResponseAndDisconnect = (requestId: string, response: Response | null) => {
+    handleSetActiveResponse(requestId, response);
+    window.main.webSocketConnection.close({ requestId });
+  };
+
   useEffect(() => {
     setSelectedEvent(null);
   }, [response._id]);
@@ -77,6 +82,8 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
+      // @TODO: this needs to fs.watch or tail the file, instead of reading the whole thing on every event.
+      // or alternatively a throttle to keep it from reading too frequently
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
@@ -98,7 +105,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          handleSetActiveResponse={handleSetActiveResponse}
+          handleSetActiveResponse={setActiveResponseAndDisconnect}
           requestId={requestId}
           className="tall pane__header__right"
         />
@@ -150,7 +157,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <ResponseTimelineViewer
-            responseId={response._id}
+            key={response._id}
             timeline={timeline}
           />
         </TabPanel>

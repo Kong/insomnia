@@ -65,7 +65,7 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
         >
           {(responseId && timeline) ? (
             <ResponseTimelineViewer
-              responseId={responseId}
+              key={responseId}
               timeline={timeline}
             />
           ) : (
