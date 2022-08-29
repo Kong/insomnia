@@ -168,6 +168,10 @@ describe('grpc', () => {
         process.env = originEnv;
       });
 
+      afterAll(() => {
+        (models.settings.getOrCreate as unknown as jest.Mock).mockRestore();
+      });
+
       it('should make a proxy enabled client when it is enabled in setting', async () => {
         // Arrange
         const mockInsomniaConfigPanelUserSettings: GRPCProxyMockUserSettings = {
