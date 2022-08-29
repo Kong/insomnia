@@ -29,7 +29,6 @@ const defaultTypes: AuthType[] = [
   'hawk',
   'asap',
   'netrc',
-  'none',
 ];
 
 function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
@@ -172,7 +171,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         break;
       }
     }
-    update(activeRequest, { authentication:newAuthentication });
+    update(activeRequest, { authentication: newAuthentication });
   }, [activeRequest]);
   const isCurrent = useCallback((type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
@@ -194,29 +193,21 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
-      {authTypes.reduce<ReactElement[]>((acc: ReactElement[], authType: AuthType) => {
-        if (authType === 'none') {
-          return acc.concat([
-            <DropdownDivider key="divider-other">
-              Other
-            </DropdownDivider>,
-            <AuthItem
-              key={authType}
-              type={authType}
-              nameOverride="No Authentication"
-              {...itemProps}
-            />,
-          ]);
-        }
-
-        return acc.concat(
-          <AuthItem
-            key={authType}
-            type={authType}
-            {...itemProps}
-          />
-        );
-      }, [])}
+      {authTypes.map(authType =>
+        <AuthItem
+          key={authType}
+          type={authType}
+          {...itemProps}
+        />)}
+      <DropdownDivider key="divider-other">
+        Other
+      </DropdownDivider>
+      <AuthItem
+        key="none"
+        type="none"
+        nameOverride="No Authentication"
+        {...itemProps}
+      />
     </Dropdown>
   );
 };
