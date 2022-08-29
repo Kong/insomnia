@@ -12,10 +12,12 @@ import callCache from '../call-cache';
 import * as grpc from '../index';
 import * as protoLoader from '../proto-loader';
 import { ResponseCallbacks as ResponseCallbacksMock } from '../response-callbacks';
+import isValidGrpcProxyUrl from '../is-valid-grpc-proxy-url';
 
 jest.mock('../response-callbacks');
 jest.mock('../proto-loader');
 jest.mock('@grpc/grpc-js');
+jest.mock('../is-valid-grpc-proxy-url');
 
 const requestParamsBuilder = createBuilder(grpcIpcRequestParamsSchema);
 const messageParamsBuilder = createBuilder(grpcIpcMessageParamsSchema);
@@ -175,6 +177,8 @@ describe('grpc', () => {
         };
 
         (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+        (isValidGrpcProxyUrl as unknown as jest.Mock).mockImplementation(() => ({ error: null }));
+
         const params = requestParamsBuilder
           .request({
             _id: 'id',
@@ -202,7 +206,10 @@ describe('grpc', () => {
           grpcNoProxy: '',
         };
 
+        const error = new Error('"https:" scheme not supported in GRPC proxy URI');
         (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+        (isValidGrpcProxyUrl as unknown as jest.Mock).mockImplementation(() => ({ error }));
+
         const params = requestParamsBuilder
           .request({
             _id: 'id',
@@ -218,7 +225,7 @@ describe('grpc', () => {
         expect(respond.sendStart).not.toHaveBeenCalled();
         expect(respond.sendError).toHaveBeenCalledWith(
           params.request._id,
-          new Error(`"https:" scheme not supported in GRPC proxy URI`),
+          error,
         );
       });
 
