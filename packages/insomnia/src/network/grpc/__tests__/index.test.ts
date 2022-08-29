@@ -9,10 +9,10 @@ import { grpcMethodDefinitionSchema } from '../../../ui/context/grpc/__schemas__
 import { grpcIpcMessageParamsSchema } from '../__schemas__/grpc-ipc-message-params-schema';
 import { grpcIpcRequestParamsSchema } from '../__schemas__/grpc-ipc-request-params-schema';
 import callCache from '../call-cache';
+import ensureGrpcProxyUrlIsValid from '../ensure-grpc-proxy-url-is-valid';
 import * as grpc from '../index';
 import * as protoLoader from '../proto-loader';
 import { ResponseCallbacks as ResponseCallbacksMock } from '../response-callbacks';
-import isValidGrpcProxyUrl from '../is-valid-grpc-proxy-url';
 
 jest.mock('../response-callbacks');
 jest.mock('../proto-loader');
@@ -162,11 +162,11 @@ describe('grpc', () => {
 
       beforeEach(() => {
         jest.resetModules();
-      })
+      });
 
       afterEach(() => {
         process.env = originEnv;
-      })
+      });
 
       it('should make a proxy enabled client when it is enabled in setting', async () => {
         // Arrange
@@ -177,7 +177,7 @@ describe('grpc', () => {
         };
 
         (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
-        (isValidGrpcProxyUrl as unknown as jest.Mock).mockImplementation(() => ({ error: null }));
+        (ensureGrpcProxyUrlIsValid as unknown as jest.Mock).mockImplementation(() => ({ error: null }));
 
         const params = requestParamsBuilder
           .request({
@@ -192,7 +192,7 @@ describe('grpc', () => {
         await grpc.start(params, respond);
         // Assert
         expect(grpcMocks.mockConstructor).toHaveBeenCalledTimes(1);
-        expect(grpcMocks.mockConstructor.mock.calls[0][2]).toMatchObject({'grpc.enable_http_proxy': 1});
+        expect(grpcMocks.mockConstructor.mock.calls[0][2]).toMatchObject({ 'grpc.enable_http_proxy': 1 });
         expect(process.env.grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcProxy);
         expect(process.env.no_grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcNoProxy);
         // Cleanup / End the stream
@@ -208,7 +208,7 @@ describe('grpc', () => {
 
         const error = new Error('"https:" scheme not supported in GRPC proxy URI');
         (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
-        (isValidGrpcProxyUrl as unknown as jest.Mock).mockImplementation(() => ({ error }));
+        (ensureGrpcProxyUrlIsValid as unknown as jest.Mock).mockImplementation(() => ({ error }));
 
         const params = requestParamsBuilder
           .request({

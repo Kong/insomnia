@@ -8,7 +8,7 @@ import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import callCache from './call-cache';
-import isValidGrpcProxyUrl from './is-valid-grpc-proxy-url';
+import ensureGrpcProxyUrlIsValid from './ensure-grpc-proxy-url-is-valid';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
 import parseGrpcUrl from './parse-grpc-url';
@@ -31,7 +31,7 @@ const _createClient = async (
   const { grpcProxyEnabled, grpcProxy, grpcNoProxy } = settings;
   if (grpcProxyEnabled && grpcProxy) {
     const proxyUrl = setDefaultProtocol(grpcProxy);
-    const { error } = isValidGrpcProxyUrl(proxyUrl);
+    const { error } = ensureGrpcProxyUrlIsValid(proxyUrl);
     if (error) {
       respond.sendError(req._id, error);
       return undefined;
