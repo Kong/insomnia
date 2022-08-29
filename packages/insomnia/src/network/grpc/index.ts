@@ -2,12 +2,13 @@ import * as grpc from '@grpc/grpc-js';
 import { Call, ServiceError } from '@grpc/grpc-js';
 import { ChannelOptions } from '@grpc/grpc-js/build/src/channel-options';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
+import { setDefaultProtocol } from 'insomnia-url';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import callCache from './call-cache';
-import formatGrpcProxyUrl from './format-grpc-proxy-url';
+import isValidGrpcProxyUrl from './is-valid-grpc-proxy-url';
 import type { GrpcMethodDefinition } from './method';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
 import parseGrpcUrl from './parse-grpc-url';
@@ -27,9 +28,10 @@ const _createClient = async (
   }
 
   const settings = await models.settings.getOrCreate();
-  const { grpcProxyEnabled, grpcHttpProxy, grpcNoProxy } = settings;
-  if (grpcProxyEnabled) {
-    const { url: proxyUrl, error } = formatGrpcProxyUrl(grpcHttpProxy);
+  const { grpcProxyEnabled, grpcProxy, grpcNoProxy } = settings;
+  if (grpcProxyEnabled && grpcProxy) {
+    const proxyUrl = setDefaultProtocol(grpcProxy);
+    const { error } = isValidGrpcProxyUrl(proxyUrl);
     if (error) {
       respond.sendError(req._id, error);
       return undefined;
