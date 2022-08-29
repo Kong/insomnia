@@ -20,6 +20,7 @@ MD033:
   allowed_elements:
     - details # there is no markdown equivalent for accordions
     - summary # there is no markdown equivalent for accordions
+    - img # there is no markdown equivalent for accordions
 
 # MD029 - Ordered list item prefix
 # Plain and simple, markdown parsers do not respect the numbering you use for ordered lists.  It only leads to confusion and misconception to allow otherwise.
