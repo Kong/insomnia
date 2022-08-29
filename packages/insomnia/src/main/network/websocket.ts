@@ -244,13 +244,9 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(closeEvent) + '\n');
-      eventLogFileStreams.get(options.requestId)?.end();
-      eventLogFileStreams.delete(options.requestId);
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Closing connection with code ${code}`, name: 'Text', timestamp: Date.now() }) + '\n');
-      timelineFileStreams.get(options.requestId)?.end();
-      timelineFileStreams.delete(options.requestId);
-      WebSocketConnections.delete(options.requestId);
+      sendQueueMap.delete(eventChannel);
+      const message = `Closing connection with code ${code}`;
+      deleteRequestMaps(request._id, message, closeEvent);
 
       dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
@@ -268,48 +264,44 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
-      eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(errorEvent) + '\n');
-      eventLogFileStreams.get(options.requestId)?.end();
-      eventLogFileStreams.delete(options.requestId);
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
-      timelineFileStreams.get(options.requestId)?.end();
-      timelineFileStreams.delete(options.requestId);
-      WebSocketConnections.delete(options.requestId);
+      deleteRequestMaps(request._id, message, errorEvent);
 
       dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
 
-      const responsePatch = {
-        _id: responseId,
-        parentId: request._id,
-        timelinePath,
-        statusMessage: 'Error',
-        error: message || 'Something went wrong',
-      };
-      const settings = await models.settings.getOrCreate();
-      models.response.create(responsePatch, settings.maxHistoryResponses);
+      createErrorResponse(responseId, request._id, timelinePath, message || 'Something went wrong');
     });
   } catch (e) {
     console.error('unhandled error:', e);
-    const error = e.message || 'Something went wrong';
 
-    eventLogFileStreams.get(options.requestId)?.end();
-    eventLogFileStreams.delete(options.requestId);
-    timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: error, name: 'Text', timestamp: Date.now() }) + '\n');
-    timelineFileStreams.get(options.requestId)?.end();
-    timelineFileStreams.delete(options.requestId);
-    WebSocketConnections.delete(options.requestId);
-
-    const settings = await models.settings.getOrCreate();
-    const responsePatch = {
-      _id: responseId,
-      parentId: request._id,
-      timelinePath,
-      statusMessage: 'Error',
-      error,
-    };
-    models.response.create(responsePatch, settings.maxHistoryResponses);
+    deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    createErrorResponse(responseId, request._id, timelinePath, e.message || 'Something went wrong');
   }
+}
+
+async function createErrorResponse(responseId: string, requestId: string, timelinePath: string, message: string) {
+  const settings = await models.settings.getOrCreate();
+  const responsePatch = {
+    _id: responseId,
+    parentId: requestId,
+    timelinePath,
+    statusMessage: 'Error',
+    error: message,
+  };
+  models.response.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
+}
+
+async function deleteRequestMaps(requestId: string, message: string, event?: WebSocketCloseEvent | WebSocketErrorEvent,) {
+  if (event) {
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+  }
+  eventLogFileStreams.get(requestId)?.end();
+  eventLogFileStreams.delete(requestId);
+  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams.get(requestId)?.end();
+  timelineFileStreams.delete(requestId);
+  WebSocketConnections.delete(requestId);
 }
 
 function getWebSocketReadyState(
