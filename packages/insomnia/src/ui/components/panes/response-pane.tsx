@@ -154,7 +154,7 @@ export const ResponsePane: FC<Props> = ({
           </Tab>
           <Tab tabIndex="-1">
             <Button>
-              Header{' '}
+              Headers{' '}
               {response.headers.length > 0 && (
                 <span className="bubble">{response.headers.length}</span>
               )}
@@ -162,7 +162,7 @@ export const ResponsePane: FC<Props> = ({
           </Tab>
           <Tab tabIndex="-1">
             <Button>
-              Cookie{' '}
+              Cookies{' '}
               {cookieHeaders.length ? (
                 <span className="bubble">{cookieHeaders.length}</span>
               ) : null}

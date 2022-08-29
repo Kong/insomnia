@@ -189,7 +189,6 @@ async function createWebSocketConnection(
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
-        type: 'upgrade',
         headers: responseHeaders,
         url: request.url,
         statusCode,
