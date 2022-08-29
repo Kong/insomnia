@@ -133,8 +133,9 @@ AuthItem.displayName = DropdownItem.name;
 
 interface Props {
   authTypes?: AuthType[];
+  disabled?: boolean;
 }
-export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
+export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
   const activeRequest = useSelector(selectActiveRequest);
 
   const onClick = useCallback(async (type: AuthType) => {
@@ -189,7 +190,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes }) => {
   return (
     <Dropdown beside>
       <DropdownDivider>Auth Types</DropdownDivider>
-      <DropdownButton className="tall">
+      <DropdownButton className="tall" disabled={disabled}>
         {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>

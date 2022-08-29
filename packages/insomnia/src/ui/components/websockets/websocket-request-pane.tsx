@@ -78,6 +78,7 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
   const readyState = useWSReadyState(request._id);
+  const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
     const url = event.currentTarget.value || '';
     if (url !== request.url) {
@@ -106,7 +107,10 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
             <button>Headers</button>
           </Tab>
           <Tab tabIndex="-1" >
-            <AuthDropdown authTypes={supportedAuthTypes} />
+            <AuthDropdown
+              authTypes={supportedAuthTypes}
+              disabled={disabled}
+            />
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
@@ -131,7 +135,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
-            key={`${request._id}-${readyState}-auth-header`}
+            key={`${request._id}-${request.authentication.type}-auth-header`}
             disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
           />
         </TabPanel>
