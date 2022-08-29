@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, useCallback } from 'react';
+import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
