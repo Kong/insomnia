@@ -2,13 +2,18 @@ import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
+import { AuthType } from '../../../common/constants';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { AuthDropdown } from '../dropdowns/auth-dropdown';
+import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
+
+const supportedAuthTypes: AuthType[] = ['basic', 'digest', 'bearer'];
 
 const EditorWrapper = styled.div({
   height: '100%',
@@ -73,6 +78,7 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
   const readyState = useWSReadyState(request._id);
+  const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
     const url = event.currentTarget.value || '';
     if (url !== request.url) {
@@ -100,6 +106,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
           <Tab tabIndex="-1" >
             <button>Headers</button>
           </Tab>
+          <Tab tabIndex="-1" >
+            <AuthDropdown
+              authTypes={supportedAuthTypes}
+              disabled={disabled}
+            />
+          </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
           <PaneSendButton>
@@ -119,6 +131,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
+          />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <AuthWrapper
+            key={`${request._id}-${request.authentication.type}-auth-header`}
+            disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
           />
         </TabPanel>
       </Tabs>
