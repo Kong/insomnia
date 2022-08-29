@@ -379,7 +379,7 @@ export const General: FC = () => {
 
       <div className="form-row pad-top-sm">
         <MaskedSetting
-          label='GRPC Proxy'
+          label='GRPC proxy'
           setting='grpcProxy'
           help="Only support HTTP Proxy at the moment"
           placeholder="localhost:8005"
