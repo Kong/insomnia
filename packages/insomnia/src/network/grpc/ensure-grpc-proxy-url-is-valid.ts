@@ -4,7 +4,6 @@ const ensureGrpcProxyUrlIsValid = (url: string): {
   // url should have supported protocol
 
   const { protocol } = new URL(url);
-  console.log({ protocol, url });
   if (!isSupportedProtocol(protocol)) {
     return {
       error: new Error(`"${protocol}" scheme not supported in GRPC proxy URI`),
