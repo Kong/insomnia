@@ -14,9 +14,10 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
   property: string;
   help?: ReactNode;
   mask?: boolean;
+  disabled?: boolean;
 }
 
-export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, mode, help }) => {
+export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, mode, help, disabled = false }) => {
   const { showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
@@ -32,13 +33,14 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
   const id = toKebabCase(label);
 
   return (
-    <AuthRow labelFor={id} label={label} help={help}>
+    <AuthRow labelFor={id} label={label} help={help} disabled={disabled}>
       <OneLineEditor
         id={id}
         type={isMasked ? 'password' : 'text'}
         mode={mode}
         onChange={onChange}
         disabled={authentication.disabled}
+        readOnly={disabled}
         defaultValue={authentication[property] || ''}
         getAutocompleteConstants={getAutocompleteConstants}
       />
@@ -47,6 +49,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
           className="btn btn--super-duper-compact pointer"
           onClick={onClick}
           value={isMasked}
+          disabled={disabled}
         >
           {isMasked ? <i className="fa fa-eye" data-testid="reveal-password-icon" /> : <i className="fa fa-eye-slash" data-testid="mask-password-icon" />}
         </Button>
