@@ -68,7 +68,7 @@ const timelineFileStreams = new Map<string, fs.WriteStream>();
 // CTS flag; When set, the renderer thread is accepting new WebSocket events.
 let clearToSend = true;
 
-// Send queue map; holds batches of events for each event requestId, to be sent upon receiving a CTS signal.
+// Send queue map; holds batches of events for each event channel, to be sent upon receiving a CTS signal.
 const sendQueueMap = new Map<string, WebSocketEventLog>();
 
 /**
@@ -76,7 +76,7 @@ const sendQueueMap = new Map<string, WebSocketEventLog>();
  * When CTS is set, the events are sent immediately.
  * If CTS is cleared, the events are batched into the send queue.
  */
-function dispatchWebSocketEvent(requestId: string, target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void {
+function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void {
   // If the CTS flag is already set, just send immediately.
   if (clearToSend) {
     target.send(eventChannel, [wsEvent]);
@@ -85,11 +85,11 @@ function dispatchWebSocketEvent(requestId: string, target: Electron.WebContents,
   }
 
   // Otherwise, append to send queue for this event channel.
-  const sendQueue = sendQueueMap.get(requestId);
+  const sendQueue = sendQueueMap.get(eventChannel);
   if (sendQueue) {
     sendQueue.push(wsEvent);
   } else {
-    sendQueueMap.set(requestId, [wsEvent]);
+    sendQueueMap.set(eventChannel, [wsEvent]);
   }
 }
 
@@ -179,7 +179,7 @@ async function createWebSocketConnection(
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n');
-      dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, openEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -194,7 +194,7 @@ async function createWebSocketConnection(
       };
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-      dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, messageEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, messageEvent);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
@@ -208,10 +208,11 @@ async function createWebSocketConnection(
         timestamp: Date.now(),
       };
 
+      sendQueueMap.delete(eventChannel);
       const message = `Closing connection with code ${code}`;
       deleteRequestMaps(request._id, message, closeEvent);
 
-      dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, closeEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -229,7 +230,7 @@ async function createWebSocketConnection(
 
       deleteRequestMaps(request._id, message, errorEvent);
 
-      dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, errorEvent);
+      dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
 
       createErrorResponse(responseId, request._id, timelinePath, message || 'Something went wrong');
@@ -264,7 +265,6 @@ async function deleteRequestMaps(requestId: string, message: string, event?: Web
   timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
-  sendQueueMap.delete(requestId);
   WebSocketConnections.delete(requestId);
 }
 
@@ -314,7 +314,7 @@ async function sendWebSocketEvent(
     return;
   }
   const eventChannel = `webSocketRequest.connection.${response._id}.event`;
-  dispatchWebSocketEvent(options.requestId, event.sender, eventChannel, lastMessage);
+  dispatchWebSocketEvent(event.sender, eventChannel, lastMessage);
 }
 
 async function closeWebSocketConnection(
@@ -345,22 +345,22 @@ async function findMany(
  * Sets the CTS flag; sent when the UI is ready for more events.
  */
 function signalClearToSend(event: Electron.IpcMainInvokeEvent) {
-  const nextRequestId = sendQueueMap.keys().next();
+  const nextChannel = sendQueueMap.keys().next();
 
   // There are no pending events; just set the CTS flag.
-  if (nextRequestId.done) {
+  if (nextChannel.done) {
     clearToSend = true;
     return;
   }
 
   // We have batched events; immediately send one batch.
-  const sendQueue = sendQueueMap.get(nextRequestId.value);
+  const sendQueue = sendQueueMap.get(nextChannel.value);
   if (!sendQueue) {
     return;
   }
 
-  event.sender.send(nextRequestId.value, sendQueue);
-  sendQueueMap.delete(nextRequestId.value);
+  event.sender.send(nextChannel.value, sendQueue);
+  sendQueueMap.delete(nextChannel.value);
 }
 
 export function registerWebSocketHandlers() {
