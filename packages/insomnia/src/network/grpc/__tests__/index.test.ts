@@ -1,4 +1,3 @@
-/* tslint:disable */
 import { createBuilder } from '@develohpanda/fluent-builder';
 import * as grpcJs from '@grpc/grpc-js';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
@@ -150,9 +149,8 @@ describe('grpc', () => {
     describe('proxy', () => {
       const originEnv = process.env;
       interface GRPCProxyMockUserSettings {
-        // mocking only what we need to run axiosRequest
         grpcProxyEnabled: boolean;
-        grpcHttpProxy: string;
+        grpcProxy: string;
         grpcNoProxy: string;
       }
 
@@ -172,7 +170,7 @@ describe('grpc', () => {
         // Arrange
         const mockInsomniaConfigPanelUserSettings: GRPCProxyMockUserSettings = {
           grpcProxyEnabled: true,
-          grpcHttpProxy: 'http://some.proxy.com:8080',
+          grpcProxy: 'http://some.proxy.com:8080',
           grpcNoProxy: '',
         };
 
@@ -190,18 +188,17 @@ describe('grpc', () => {
         await grpc.start(params, respond);
         // Assert
         expect(grpcMocks.mockConstructor).toHaveBeenCalledTimes(1);
-        expect(grpcMocks.mockConstructor.mock.calls[0][0]).toBe('grpcb.in:9000');
         expect(grpcMocks.mockConstructor.mock.calls[0][2]).toMatchObject({'grpc.enable_http_proxy': 1});
-        expect(process.env.grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcHttpProxy);
+        expect(process.env.grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcProxy);
         expect(process.env.no_grpc_proxy).toBe(mockInsomniaConfigPanelUserSettings.grpcNoProxy);
         // Cleanup / End the stream
         grpcMocks.getMockCall().emit('end');
       });
 
-      it('should exit if proxy url protocol is not supported', async () => {
+      it('should exit if proxy url is invalid', async () => {
         const mockInsomniaConfigPanelUserSettings: GRPCProxyMockUserSettings = {
           grpcProxyEnabled: true,
-          grpcHttpProxy: 'https://some.proxy.com:8080',
+          grpcProxy: 'https://some.proxy.com:8080',
           grpcNoProxy: '',
         };
 

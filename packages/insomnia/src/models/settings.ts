@@ -60,7 +60,7 @@ export function init(): BaseSettings {
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
-    grpcHttpProxy: '',
+    grpcProxy: '',
     incognitoMode: false,
     lightTheme: getAppDefaultLightTheme(),
     maxHistoryResponses: 20,

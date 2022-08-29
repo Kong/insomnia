@@ -59,7 +59,7 @@ export interface Settings {
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
-  grpcHttpProxy: string;
+  grpcProxy: string;
   showVariableSourceAndValue: boolean;
   lightTheme: string;
   lineWrapping?: boolean;
