@@ -17,7 +17,7 @@ import { ResponseCallbacks as ResponseCallbacksMock } from '../response-callback
 jest.mock('../response-callbacks');
 jest.mock('../proto-loader');
 jest.mock('@grpc/grpc-js');
-jest.mock('../is-valid-grpc-proxy-url');
+jest.mock('../ensure-grpc-proxy-url-is-valid.ts');
 
 const requestParamsBuilder = createBuilder(grpcIpcRequestParamsSchema);
 const messageParamsBuilder = createBuilder(grpcIpcMessageParamsSchema);
