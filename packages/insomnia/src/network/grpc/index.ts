@@ -24,7 +24,7 @@ const _createClient = async (
 
   if (!url) {
     respond.sendError(req._id, new Error('URL not specified'));
-    return undefined;
+    return;
   }
 
   const settings = await models.settings.getOrCreate();
@@ -34,7 +34,7 @@ const _createClient = async (
     const { error } = ensureGrpcProxyUrlIsValid(proxyUrl);
     if (error) {
       respond.sendError(req._id, error);
-      return undefined;
+      return;
     }
     process.env.grpc_proxy = proxyUrl;
     process.env.no_grpc_proxy = grpcNoProxy;
@@ -332,7 +332,7 @@ const _parseMessage = (
     // TODO: How do we want to handle this case, where the message cannot be parsed?
     //  Currently an error will be shown, but the stream will not be cancelled.
     respond.sendError(requestId, error);
-    return undefined;
+    return;
   }
 };
 
@@ -348,7 +348,7 @@ const _parseMetadata = (
         grpcMetadata.add(entry.name, entry.value);
       } catch (err) {
         respond.sendError(requestId, err);
-        return undefined;
+        return;
       }
     }
   }
