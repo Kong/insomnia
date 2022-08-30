@@ -16,8 +16,11 @@ import {
 import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
+import { RequestAuthentication } from '../../models/request';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
+import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
+import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 
 export interface WebSocketConnection extends WebSocket {
@@ -122,11 +125,11 @@ async function createWebSocketConnection(
   try {
     const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
-
+    const authHeader = await getAuthHeader(request.authentication);
     // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
-    const headers = request.headers.filter(({ value, disabled }) => !!value && !disabled)
+    const headers = request.headers.concat(authHeader ?? []).filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
     const settings = await models.settings.getOrCreate();
@@ -412,3 +415,33 @@ electron.app.on('window-all-closed', () => {
     ws.close();
   });
 });
+
+export async function getAuthHeader(authentication: RequestAuthentication) {
+  if (!authentication || authentication.disabled) {
+    return;
+  }
+
+  switch (authentication.type) {
+    case 'basic': {
+      const { username, password, useISO88591 } = authentication;
+      const encoding = useISO88591 ? 'latin1' : 'utf8';
+      console.log('?????????/');
+      const header = getBasicAuthHeader(username, password, encoding);
+      console.log('header', header);
+      return header;
+    }
+
+    case 'bearer': {
+      const { token, prefix } = authentication;
+      return getBearerAuthHeader(token, prefix);
+    }
+
+    case 'digest': {
+      return;
+    }
+
+    default: {
+      return;
+    }
+  }
+}
