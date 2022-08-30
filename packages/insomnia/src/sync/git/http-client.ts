@@ -6,6 +6,10 @@ export const httpClient = {
     let response;
     let body: Buffer | null = null;
 
+    if (config.headers && !config.headers.Accept) {
+      config.headers.Accept = '*/*';
+    }
+
     if (Array.isArray(config.body)) {
       body = Buffer.concat(config.body);
     }
