@@ -425,9 +425,7 @@ export async function getAuthHeader(authentication: RequestAuthentication) {
     case 'basic': {
       const { username, password, useISO88591 } = authentication;
       const encoding = useISO88591 ? 'latin1' : 'utf8';
-      console.log('?????????/');
       const header = getBasicAuthHeader(username, password, encoding);
-      console.log('header', header);
       return header;
     }
 
