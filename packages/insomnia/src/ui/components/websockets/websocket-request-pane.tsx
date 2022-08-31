@@ -104,13 +104,13 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
             <button>Message</button>
           </Tab>
           <Tab tabIndex="-1" >
-            <button>Headers</button>
-          </Tab>
-          <Tab tabIndex="-1" >
             <AuthDropdown
               authTypes={supportedAuthTypes}
               disabled={disabled}
             />
+          </Tab>
+          <Tab tabIndex="-1" >
+            <button>Headers</button>
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
@@ -125,18 +125,18 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
           </PaneSendButton>
           <WebSocketRequestForm requestId={request._id} />
         </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <AuthWrapper
+            key={`${request._id}-${request.authentication.type}-auth-header`}
+            disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
+          />
+        </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
             key={`${request._id}-${readyState}-header-editor`}
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
-          />
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel">
-          <AuthWrapper
-            key={`${request._id}-${request.authentication.type}-auth-header`}
-            disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
           />
         </TabPanel>
       </Tabs>

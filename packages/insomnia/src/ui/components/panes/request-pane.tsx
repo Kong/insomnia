@@ -165,7 +165,7 @@ export const RequestPane: FC<Props> = ({
           </Tab>
           <Tab tabIndex="-1">
             <button>
-              Header
+              Headers
               {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
             </button>
           </Tab>
