@@ -8,6 +8,7 @@ import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { RootState } from '../../redux/modules';
 import { exportRequestsToFile } from '../../redux/modules/global';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
@@ -18,7 +19,7 @@ import { ModalHeader } from '../base/modal-header';
 import { Tree } from '../export-requests/tree';
 
 export interface Node {
-  doc: Request | GrpcRequest | RequestGroup;
+  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup;
   children: Node[];
   collapsed: boolean;
   totalRequests: number;
@@ -67,7 +68,7 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
   }
 
   getSelectedRequestIds(node: Node): string[] {
-    const docIsRequest = isRequest(node.doc) || isGrpcRequest(node.doc);
+    const docIsRequest = isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc);
 
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
@@ -117,7 +118,7 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
     let totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
-    const docIsRequest = isRequest(item.doc) || isGrpcRequest(item.doc);
+    const docIsRequest = isRequest(item.doc) || isWebSocketRequest(item.doc) || isGrpcRequest(item.doc);
 
     if (docIsRequest) {
       totalRequests++;

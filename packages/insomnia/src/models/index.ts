@@ -9,6 +9,7 @@ import {
   EXPORT_TYPE_REQUEST_GROUP,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
+  EXPORT_TYPE_WEBSOCKET_REQUEST,
   EXPORT_TYPE_WORKSPACE,
 } from '../common/constants';
 import { generateId, pluralize } from '../common/misc';
@@ -210,6 +211,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
 export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_REQUEST]: request,
+  [EXPORT_TYPE_WEBSOCKET_REQUEST]: websocketRequest,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,

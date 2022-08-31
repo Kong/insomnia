@@ -197,6 +197,7 @@ async function createWebSocketConnection(
         elapsedTime: performance.now() - start,
         timelinePath,
         bodyPath: responseBodyPath,
+        // NOTE: required for legacy zip workaround
         bodyCompression: null,
       };
       const settings = await models.settings.getOrCreate();
