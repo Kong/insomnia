@@ -16,7 +16,7 @@ import {
 import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
-import { RequestAuthentication } from '../../models/request';
+import { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
@@ -125,7 +125,7 @@ async function createWebSocketConnection(
   try {
     const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
-    const authHeader = await getAuthHeader(request.authentication);
+    const authHeader = getAuthHeader(request.authentication);
     // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
@@ -416,7 +416,7 @@ electron.app.on('window-all-closed', () => {
   });
 });
 
-export async function getAuthHeader(authentication: RequestAuthentication) {
+export function getAuthHeader(authentication: RequestAuthentication): RequestHeader | undefined {
   if (!authentication || authentication.disabled) {
     return;
   }
