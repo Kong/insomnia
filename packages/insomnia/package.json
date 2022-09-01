@@ -196,6 +196,7 @@
     "react-sortable-hoc": "^2.0.0",
     "react-tabs": "^3.2.3",
     "react-use": "^17.2.4",
+    "react-virtual": "2.10.4",
     "redux": "^4.1.2",
     "redux-mock-store": "^1.5.4",
     "redux-thunk": "^2.4.1",
