@@ -18,32 +18,35 @@ import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseErrorViewer } from '../viewers/response-error-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
-import { EventLogTable } from './event-log-table';
 import { EventLogView } from './event-log-view';
+import { EventView } from './event-view';
 
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { justifyContent: 'unset' },
 });
+
 const EventLogTableWrapper = styled.div({
   width: '100%',
   flex: 1,
-  overflowY: 'scroll',
+  overflow: 'hidden',
   padding: 'var(--padding-sm)',
   boxSizing: 'border-box',
 });
-const EventLogViewWrapper = styled.div({
+
+const EventViewWrapper = styled.div({
   flex: 1,
   borderTop: '1px solid var(--hl-md)',
   height: '100%',
-  boxSizing: 'content-box',
   padding: 'var(--padding-sm)',
 });
+
 const PaneBodyContent = styled.div({
   height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  flex: 1,
+  width: '100%',
+  display: 'grid',
+  gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
 });
+
 export const WebSocketResponsePane: FC<{ requestId: string; response: Response | null; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> =
   ({
     requestId,
@@ -144,7 +147,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
               : <>
                 {Boolean(events?.length) && (
                   <EventLogTableWrapper>
-                    <EventLogTable
+                    <EventLogView
                       events={events}
                       onSelect={handleSelection}
                       selectionId={selectedEvent?._id}
@@ -152,9 +155,9 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
                   </EventLogTableWrapper>
                 )}
                 {selectedEvent && (
-                  <EventLogViewWrapper>
-                    <EventLogView event={selectedEvent} />
-                  </EventLogViewWrapper>
+                  <EventViewWrapper>
+                    <EventView event={selectedEvent} />
+                  </EventViewWrapper>
                 )}
               </>}
           </PaneBodyContent>
