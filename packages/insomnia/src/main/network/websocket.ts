@@ -116,7 +116,7 @@ async function createWebSocketConnection(
   mkdirp.sync(responsesDir);
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
-  const timelinePath = path.join(responsesDir, uuidV4() + '.timeline');
+  const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
 
   try {
