@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 
 import { isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest } from '../../../models/request';
+import { isWebSocketRequest } from '../../../models/websocket-request';
 import type { Node } from '../modals/export-requests-modal';
 import { RequestGroupRow } from './request-group-row';
 import { RequestRow } from './request-row';
@@ -18,7 +19,7 @@ export const Tree: FC<Props> = ({ root, handleSetRequestGroupCollapsed, handleSe
       return null;
     }
 
-    if (isRequest(node.doc) || isGrpcRequest(node.doc)) {
+    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc)) {
       return (
         <RequestRow
           key={node.doc._id}
