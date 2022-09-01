@@ -17,12 +17,10 @@ export function useWSReadyState(requestId: string): ReadyState {
   }, [requestId]);
 
   useEffect(() => {
-    const unsubscribe = window.main.webSocketConnection.readyState.subscribe(
-      { requestId },
-      (incomingReadyState: ReadyState) => {
+    const unsubscribe = window.main.on(`webSocket.${requestId}.readyState`,
+      (_, incomingReadyState: ReadyState) => {
         setReadyState(incomingReadyState);
-      }
-    );
+      });
 
     return unsubscribe;
   }, [requestId]);

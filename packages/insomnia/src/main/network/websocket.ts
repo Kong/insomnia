@@ -121,7 +121,7 @@ const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMes
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string; workspaceId: string }
-) {
+): Promise<void> {
   const existingConnection = WebSocketConnections.get(options.requestId);
 
   if (existingConnection) {
@@ -142,8 +142,9 @@ async function createWebSocketConnection(
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
 
   try {
-    const eventChannel = `webSocketRequest.connection.${responseId}.event`;
-    const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
+    const eventChannel = `webSocket.${responseId}.event`;
+    const readyStateChannel = `webSocket.${request._id}.readyState`;
+
     // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
@@ -349,17 +350,16 @@ async function deleteRequestMaps(requestId: string, message: string, event?: Web
   WebSocketConnections.delete(requestId);
 }
 
-function getWebSocketReadyState(
-  _event: Electron.IpcMainInvokeEvent,
+async function getWebSocketReadyState(
   options: { requestId: string }
-): WebSocketConnection['readyState'] {
-  return WebSocketConnections.get(options.requestId)?.readyState ?? 0;
+): Promise<WebSocketConnection['readyState']> {
+  return Promise.resolve(WebSocketConnections.get(options.requestId)?.readyState ?? 0);
 }
 
 async function sendWebSocketEvent(
   event: Electron.IpcMainInvokeEvent,
   options: { message: string; requestId: string }
-) {
+): Promise<void> {
   const ws = WebSocketConnections.get(options.requestId);
 
   if (!ws) {
@@ -399,9 +399,8 @@ async function sendWebSocketEvent(
 }
 
 async function closeWebSocketConnection(
-  _event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
-) {
+): Promise<void> {
   const ws = WebSocketConnections.get(options.requestId);
   if (!ws) {
     return;
@@ -410,9 +409,8 @@ async function closeWebSocketConnection(
 }
 
 async function findMany(
-  _event: Electron.IpcMainInvokeEvent,
   options: { responseId: string }
-) {
+): Promise<WebSocketEvent[]> {
   const response = await models.response.getById(options.responseId);
   if (!response || !response.bodyPath) {
     return [];
@@ -425,7 +423,7 @@ async function findMany(
 /**
  * Sets the CTS flag; sent when the UI is ready for more events.
  */
-function signalClearToSend(event: Electron.IpcMainInvokeEvent) {
+function signalClearToSend(event: Electron.IpcMainInvokeEvent): void {
   const nextChannel = sendQueueMap.keys().next();
 
   // There are no pending events; just set the CTS flag.
@@ -444,13 +442,25 @@ function signalClearToSend(event: Electron.IpcMainInvokeEvent) {
   sendQueueMap.delete(nextChannel.value);
 }
 
+export interface WebSocketBridgeAPI {
+  create: (options: { requestId: string; workspaceId: string }) => void;
+  close: typeof closeWebSocketConnection;
+  readyState: {
+    getCurrent: typeof getWebSocketReadyState;
+  };
+  event: {
+    findMany: typeof findMany;
+    send: (options: { requestId: string; message: string }) => void;
+    clearToSend: () => void;
+  };
+}
 export function registerWebSocketHandlers() {
-  ipcMain.handle('webSocketRequest.connection.create', createWebSocketConnection);
-  ipcMain.handle('webSocketRequest.connection.readyState', getWebSocketReadyState);
-  ipcMain.handle('webSocketRequest.connection.event.send', sendWebSocketEvent);
-  ipcMain.handle('webSocketRequest.connection.close', closeWebSocketConnection);
-  ipcMain.handle('webSocketRequest.connection.event.findMany', findMany);
-  ipcMain.handle('webSocketRequest.connection.clearToSend', signalClearToSend);
+  ipcMain.handle('webSocket.create', createWebSocketConnection);
+  ipcMain.handle('webSocket.event.send', sendWebSocketEvent);
+  ipcMain.handle('webSocket.clearToSend', signalClearToSend);
+  ipcMain.handle('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
+  ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
+  ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 }
 
 electron.app.on('window-all-closed', () => {

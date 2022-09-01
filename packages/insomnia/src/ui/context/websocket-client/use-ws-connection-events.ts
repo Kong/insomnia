@@ -19,16 +19,13 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     // we don't lose any.
     async function fetchAndSubscribeToEvents() {
       // Fetch all existing events for this connection
-      const allEvents = await window.main.webSocketConnection.event.findMany({
-        responseId,
-      });
+      const allEvents = await window.main.webSocketConnection.event.findMany({ responseId });
       if (isMounted) {
         setEvents(allEvents);
       }
       // Subscribe to new events and update the state.
-      unsubscribe = window.main.webSocketConnection.event.subscribe(
-        { responseId },
-        events => {
+      unsubscribe = window.main.on(`webSocket.${responseId}.event`,
+        (_, events: WebSocketEvent[]) => {
           if (isMounted) {
             setEvents(allEvents => allEvents.concat(events));
           }
