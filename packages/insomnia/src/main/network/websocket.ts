@@ -394,7 +394,7 @@ async function sendWebSocketEvent(
     console.error('something went wrong');
     return;
   }
-  const eventChannel = `webSocketRequest.connection.${response._id}.event`;
+  const eventChannel = `webSocket.${response._id}.event`;
   dispatchWebSocketEvent(event.sender, eventChannel, lastMessage);
 }
 

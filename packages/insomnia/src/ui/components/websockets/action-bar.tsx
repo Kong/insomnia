@@ -39,7 +39,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
       name="websocketActionCloseBtn"
       type="button"
       onClick={() => {
-        window.main.webSocketConnection.close({ requestId });
+        window.main.webSocket.close({ requestId });
       }}
     >
       Close
@@ -79,7 +79,7 @@ const WebSocketIcon = styled.span({
 export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, workspaceId, defaultValue, onChange, readyState }) => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    window.main.webSocketConnection.create({ requestId, workspaceId });
+    window.main.webSocket.create({ requestId, workspaceId });
   };
 
   return (

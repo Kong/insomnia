@@ -10,7 +10,7 @@ export function useWSReadyState(requestId: string): ReadyState {
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CLOSED);
 
   useEffect(() => {
-    window.main.webSocketConnection.readyState.getCurrent({ requestId })
+    window.main.webSocket.readyState.getCurrent({ requestId })
       .then((currentReadyState: ReadyState) => {
         setReadyState(currentReadyState);
       });

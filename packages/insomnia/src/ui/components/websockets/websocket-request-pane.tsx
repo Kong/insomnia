@@ -52,7 +52,7 @@ const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
-    window.main.webSocketConnection.event.send({ requestId, message });
+    window.main.webSocket.event.send({ requestId, message });
   };
   return (
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>

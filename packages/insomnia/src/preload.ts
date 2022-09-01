@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
-const webSocketConnection: WebSocketBridgeAPI = {
+const webSocket: WebSocketBridgeAPI = {
   create: options => ipcRenderer.invoke('webSocket.create', options),
   close: options => ipcRenderer.invoke('webSocket.close', options),
   readyState: {
@@ -27,7 +27,7 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
-  webSocketConnection,
+  webSocket,
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
