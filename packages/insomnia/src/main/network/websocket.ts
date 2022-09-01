@@ -1,5 +1,6 @@
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
+import { IncomingMessage } from 'http';
 import { setDefaultProtocol } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -13,6 +14,7 @@ import {
   WebSocket,
 } from 'ws';
 
+import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
@@ -99,6 +101,23 @@ function dispatchWebSocketEvent(target: Electron.WebContents, eventChannel: stri
   }
 }
 
+const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
+  const statusMessage = incomingMessage.statusMessage || '';
+  const statusCode = incomingMessage.statusCode || 0;
+  const httpVersion = incomingMessage.httpVersion;
+  const responseHeaders = Object.entries(incomingMessage.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+  const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+  const timeline = [
+    { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+    { value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() },
+    { value: clientRequestHeaders, name: 'HeaderOut', timestamp: Date.now() },
+    { value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
+    { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
+  ];
+  return { timeline, responseHeaders, statusCode, statusMessage, httpVersion };
+};
+
 async function createWebSocketConnection(
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string; workspaceId: string }
@@ -125,11 +144,24 @@ async function createWebSocketConnection(
   try {
     const eventChannel = `webSocketRequest.connection.${responseId}.event`;
     const readyStateChannel = `webSocketRequest.connection.${request._id}.readyState`;
-    const authHeader = getAuthHeader(request.authentication);
     // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
-    const headers = request.headers.concat(authHeader ?? []).filter(({ value, disabled }) => !!value && !disabled)
+    const headers = request.headers;
+    if (request.authentication.disabled === false) {
+      if (request.authentication.type === AUTH_BASIC) {
+        const { username, password, useISO88591 } = request.authentication;
+        const encoding = useISO88591 ? 'latin1' : 'utf8';
+        headers.push(getBasicAuthHeader(username, password, encoding));
+      }
+      if (request.authentication.type === AUTH_BEARER) {
+        const { token, prefix } = request.authentication;
+        headers.push(getBearerAuthHeader(token, prefix));
+      }
+    }
+
+    const lowerCasedEnabledHeaders = headers
+      .filter(({ value, disabled }) => !!value && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
     const settings = await models.settings.getOrCreate();
@@ -161,34 +193,20 @@ async function createWebSocketConnection(
     });
 
     const ws = new WebSocket(request.url, {
-      headers,
+      headers: lowerCasedEnabledHeaders,
       cert: pemCertificates,
       key: pemCertificateKeys,
       pfx: pfxCertificates,
       rejectUnauthorized: settings.validateSSL,
+      followRedirects: true,
     });
     WebSocketConnections.set(options.requestId, ws);
 
-    ws.on('upgrade', async incoming => {
+    ws.on('upgrade', async incomingMessage => {
       // @ts-expect-error -- private property
-      const internalRequest = ws._req;
-      // response
-      const statusMessage = incoming.statusMessage || '';
-      const statusCode = incoming.statusCode || 0;
-      const httpVersion = incoming.httpVersion;
-      const responseHeaders = Object.entries(incoming.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
-      const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
-
-      // @TODO: We may want to add set-cookie handling here.
-      [
-        { value: `Preparing request to ${request.url}`, name: 'Text', timestamp: Date.now() },
-        { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
-        { value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() },
-        { value: internalRequest._header, name: 'HeaderOut', timestamp: Date.now() },
-        { value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
-        { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
-      ].map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
-
+      const internalRequestHeader = ws._req._header;
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(request.url, incomingMessage, internalRequestHeader);
+      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
@@ -200,11 +218,36 @@ async function createWebSocketConnection(
         elapsedTime: performance.now() - start,
         timelinePath,
         bodyPath: responseBodyPath,
+        // NOTE: required for legacy zip workaround
         bodyCompression: null,
       };
       const settings = await models.settings.getOrCreate();
       models.response.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+    });
+    ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
+      // @ts-expect-error -- private property
+      const internalRequestHeader = clientRequest._header;
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(request.url, incomingMessage, internalRequestHeader);
+      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+      const responsePatch: Partial<Response> = {
+        _id: responseId,
+        parentId: request._id,
+        headers: responseHeaders,
+        url: request.url,
+        statusCode,
+        statusMessage,
+        httpVersion,
+        elapsedTime: performance.now() - start,
+        timelinePath,
+        bodyPath: responseBodyPath,
+        // NOTE: required for legacy zip workaround
+        bodyCompression: null,
+      };
+      const settings = await models.settings.getOrCreate();
+      models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+      deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
     ws.addEventListener('open', () => {
