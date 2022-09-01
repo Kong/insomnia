@@ -18,7 +18,6 @@ import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
-import { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
@@ -458,31 +457,3 @@ electron.app.on('window-all-closed', () => {
     ws.close();
   });
 });
-
-export function getAuthHeader(authentication: RequestAuthentication): RequestHeader | undefined {
-  if (!authentication || authentication.disabled) {
-    return;
-  }
-
-  switch (authentication.type) {
-    case 'basic': {
-      const { username, password, useISO88591 } = authentication;
-      const encoding = useISO88591 ? 'latin1' : 'utf8';
-      const header = getBasicAuthHeader(username, password, encoding);
-      return header;
-    }
-
-    case 'bearer': {
-      const { token, prefix } = authentication;
-      return getBearerAuthHeader(token, prefix);
-    }
-
-    case 'digest': {
-      return;
-    }
-
-    default: {
-      return;
-    }
-  }
-}
