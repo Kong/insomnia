@@ -3,17 +3,17 @@ import styled from 'styled-components';
 
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 
-const Button = styled.button({
+const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
   textAlign: 'center',
-  background: 'var(--color-surprise)',
+  background: warning ? 'var(--color-danger)' : 'var(--color-surprise)',
   color: 'var(--color-font-surprise)',
   flex: '0 0 100px',
   ':hover': {
     filter: 'brightness(0.8)',
   },
-});
+}));
 
 interface ActionButtonProps {
   requestId: string;
@@ -38,11 +38,12 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
       className="urlbar__send-btn"
       name="websocketActionCloseBtn"
       type="button"
+      warning
       onClick={() => {
         window.main.webSocketConnection.close({ requestId });
       }}
     >
-      Close
+      Disconnect
     </Button>
   );
 };
@@ -72,11 +73,25 @@ const WebSocketIcon = styled.span({
   color: 'var(--color-notice)',
   display: 'flex',
   alignItems: 'center',
-  paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
 });
 
+const ConnectionStatus = styled.span({
+  color: 'var(--color-success)',
+  display: 'flex',
+  alignItems: 'center',
+  paddingLeft: 'var(--padding-md)',
+});
+const ConnectionCircle = styled.span({
+  backgroundColor: 'var(--color-success)',
+  marginRight: 'var(--padding-sm)',
+  width: 10,
+  height: 10,
+  borderRadius: '50%',
+});
+
 export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, workspaceId, defaultValue, onChange, readyState }) => {
+  const isOpen = readyState === ReadyState.OPEN;
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     window.main.webSocketConnection.create({ requestId, workspaceId });
@@ -84,8 +99,14 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, workspaceId,
 
   return (
     <>
-      <WebSocketIcon>WS</WebSocketIcon>
-      <Form aria-disabled={readyState === ReadyState.OPEN} id="websocketUrlForm" onSubmit={handleSubmit}>
+      {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
+      {isOpen && (
+        <ConnectionStatus>
+          <ConnectionCircle />
+          Connected
+        </ConnectionStatus>
+      )}
+      <Form aria-disabled={isOpen} id="websocketUrlForm" onSubmit={handleSubmit}>
         <Input
           name="websocketUrlInput"
           disabled={readyState === ReadyState.OPEN}
