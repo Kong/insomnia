@@ -103,7 +103,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, workspaceId,
       {isOpen && (
         <ConnectionStatus>
           <ConnectionCircle />
-          Connected
+          CONNECTED
         </ConnectionStatus>
       )}
       <Form aria-disabled={isOpen} id="websocketUrlForm" onSubmit={handleSubmit}>
