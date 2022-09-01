@@ -13,7 +13,7 @@ import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
 
-const supportedAuthTypes: AuthType[] = ['basic', 'digest', 'bearer'];
+const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
 
 const EditorWrapper = styled.div({
   height: '100%',
