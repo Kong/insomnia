@@ -3,6 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { AuthType } from '../../../common/constants';
+import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
@@ -46,21 +47,33 @@ const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
 
-const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
+const WebSocketRequestForm: FC<{ request: WebSocketRequest; environmentId: string }> = ({ request, environmentId }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
-    window.main.webSocket.event.send({ requestId, message });
+
+    // Render any nunjucks tag in the message
+    const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+    const renderedMessage = await render(message, renderContext);
+
+    // TODO: Handle error in rendering because of non-existent variable etc...
+
+    window.main.webSocket.event.send({ requestId: request._id, message: renderedMessage });
   };
+  // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
+  // To allow for disabling rendering of messages based on a per-request setting.
+  // Same as with regular requests
+
   return (
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
       <EditorWrapper>
         <CodeEditor
-          uniquenessKey={requestId}
+          uniquenessKey={request._id}
           ref={editorRef}
           defaultValue=''
+          enableNunjucks
         />
       </EditorWrapper>
     </SendMessageForm>
@@ -70,13 +83,14 @@ const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
 interface Props {
   request: WebSocketRequest;
   workspaceId: string;
+  environmentId: string;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId }) => {
   const readyState = useWSReadyState(request._id);
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -123,7 +137,11 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
               Send
             </SendButton>
           </PaneSendButton>
-          <WebSocketRequestForm requestId={request._id} />
+          <WebSocketRequestForm
+            key={`${environmentId}::${request._id}`} // Needed to ensure nunjucks rendering updates on environment change
+            request={request}
+            environmentId={environmentId}
+          />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
