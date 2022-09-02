@@ -19,6 +19,7 @@ import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
+import { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
@@ -120,7 +121,13 @@ const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMes
 
 const createWebSocketConnection = async (
   event: Electron.IpcMainInvokeEvent,
-  options: { requestId: string; workspaceId: string }
+  options: {
+    requestId: string;
+    workspaceId: string;
+    url: string;
+    headers: RequestHeader[];
+    authentication: RequestAuthentication;
+  }
 ): Promise<void> => {
   const existingConnection = WebSocketConnections.get(options.requestId);
 
@@ -150,18 +157,17 @@ const createWebSocketConnection = async (
     const eventChannel = `webSocket.${responseId}.event`;
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
-    // @TODO: Render nunjucks tags in these headers
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
-    const headers = request.headers;
-    if (request.authentication.disabled === false) {
-      if (request.authentication.type === AUTH_BASIC) {
-        const { username, password, useISO88591 } = request.authentication;
+    const headers = options.headers;
+    if (options.authentication.disabled === false) {
+      if (options.authentication.type === AUTH_BASIC) {
+        const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
-      if (request.authentication.type === AUTH_BEARER) {
-        const { token, prefix } = request.authentication;
+      if (options.authentication.type === AUTH_BEARER) {
+        const { token, prefix } = options.authentication;
         headers.push(getBearerAuthHeader(token, prefix));
       }
     }
@@ -174,7 +180,7 @@ const createWebSocketConnection = async (
     const start = performance.now();
 
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), request.url));
+    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), options.url));
     const pemCertificates: string[] = [];
     const pemCertificateKeys: KeyObject[] = [];
     const pfxCertificates: PxfObject[] = [];
@@ -198,7 +204,7 @@ const createWebSocketConnection = async (
       }
     });
 
-    const ws = new WebSocket(request.url, {
+    const ws = new WebSocket(options.url, {
       headers: lowerCasedEnabledHeaders,
       cert: pemCertificates,
       key: pemCertificateKeys,
@@ -211,14 +217,14 @@ const createWebSocketConnection = async (
     ws.on('upgrade', async incomingMessage => {
       // @ts-expect-error -- private property
       const internalRequestHeader = ws._req._header;
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(request.url, incomingMessage, internalRequestHeader);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: request.url,
+        url: options.url,
         statusCode,
         statusMessage,
         httpVersion,
@@ -235,14 +241,14 @@ const createWebSocketConnection = async (
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
       // @ts-expect-error -- private property
       const internalRequestHeader = clientRequest._header;
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(request.url, incomingMessage, internalRequestHeader);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: request.url,
+        url: options.url,
         statusCode,
         statusMessage,
         httpVersion,
@@ -376,7 +382,6 @@ const sendWebSocketEvent = async (
   }
 
   ws.send(options.message, error => {
-    // @TODO: Render nunjucks tags in these messages
     // @TODO: We might want to set a status in the WebSocketMessageEvent
     // and update it here based on the error. e.g. status = 'sending' | 'sent' | 'error'
     if (error) {
@@ -450,7 +455,13 @@ const signalClearToSend = (event: Electron.IpcMainInvokeEvent): void => {
 };
 
 export interface WebSocketBridgeAPI {
-  create: (options: { requestId: string; workspaceId: string }) => void;
+  create: (options: {
+    requestId: string;
+    workspaceId: string;
+    url: string;
+    headers: RequestHeader[];
+    authentication: RequestAuthentication;
+  }) => void;
   close: typeof closeWebSocketConnection;
   readyState: {
     getCurrent: typeof getWebSocketReadyState;
