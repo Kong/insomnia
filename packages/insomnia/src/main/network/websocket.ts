@@ -353,7 +353,7 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Web
 const getWebSocketReadyState = async (
   options: { requestId: string }
 ): Promise<WebSocketConnection['readyState']> => {
-  return Promise.resolve(WebSocketConnections.get(options.requestId)?.readyState ?? 0);
+  return WebSocketConnections.get(options.requestId)?.readyState ?? 0;
 };
 
 const sendWebSocketEvent = async (
