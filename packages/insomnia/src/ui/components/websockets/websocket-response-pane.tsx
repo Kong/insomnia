@@ -77,7 +77,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
 
   const setActiveResponseAndDisconnect = (requestId: string, response: Response | null) => {
     handleSetActiveResponse(requestId, response);
-    window.main.webSocketConnection.close({ requestId });
+    window.main.webSocket.close({ requestId });
   };
 
   useEffect(() => {
