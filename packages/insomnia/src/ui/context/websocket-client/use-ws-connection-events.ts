@@ -19,16 +19,14 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     // we don't lose any.
     async function fetchAndSubscribeToEvents() {
       // Fetch all existing events for this connection
-      const allEvents = await window.main.webSocketConnection.event.findMany({
-        responseId,
-      });
+      const allEvents = await window.main.webSocket.event.findMany({ responseId });
       if (isMounted) {
         setEvents(allEvents);
       }
       // Subscribe to new events and update the state.
-      unsubscribe = window.main.webSocketConnection.event.subscribe(
-        { responseId },
-        events => {
+      unsubscribe = window.main.on(`webSocket.${responseId}.event`,
+        (_, events: WebSocketEvent[]) => {
+          console.log('received events', events);
           if (isMounted) {
             setEvents(allEvents => allEvents.concat(events));
           }
@@ -36,11 +34,11 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
           // Wait to give the CTS signal until we've rendered a frame.
           // This gives the UI a chance to render and respond to user interactions between receiving events.
           // Note that we do this even if the component isn't mounted, to ensure that CTS gets set even if a race occurs.
-          window.requestAnimationFrame(window.main.webSocketConnection.event.clearToSend);
+          window.requestAnimationFrame(window.main.webSocket.event.clearToSend);
         }
       );
 
-      window.main.webSocketConnection.event.clearToSend();
+      window.main.webSocket.event.clearToSend();
     }
 
     fetchAndSubscribeToEvents();

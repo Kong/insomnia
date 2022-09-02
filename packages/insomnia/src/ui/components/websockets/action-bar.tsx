@@ -40,7 +40,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
       type="button"
       warning
       onClick={() => {
-        window.main.webSocketConnection.close({ requestId });
+        window.main.webSocket.close({ requestId });
       }}
     >
       Disconnect
@@ -94,7 +94,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ requestId, workspaceId,
   const isOpen = readyState === ReadyState.OPEN;
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    window.main.webSocketConnection.create({ requestId, workspaceId });
+    window.main.webSocket.create({ requestId, workspaceId });
   };
 
   return (
