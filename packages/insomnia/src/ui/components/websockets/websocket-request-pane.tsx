@@ -93,20 +93,23 @@ interface Props {
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId }) => {
   const readyState = useWSReadyState(request._id);
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
-  const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const url = event.currentTarget.value || '';
+  const handleOnChange = (url: string) => {
     if (url !== request.url) {
       models.websocketRequest.update(request, { url });
     }
   };
+
+  // TODO: Check if we need any keys/force refresh here to correctly update rendering of nunjucks tags
+  // Definitely needed for headers
 
   return (
     <Pane type="request">
       <PaneHeader>
         <WebSocketActionBar
           key={request._id}
-          requestId={request._id}
+          request={request}
           workspaceId={workspaceId}
+          environmentId={environmentId}
           defaultValue={request.url}
           readyState={readyState}
           onChange={handleOnChange}
