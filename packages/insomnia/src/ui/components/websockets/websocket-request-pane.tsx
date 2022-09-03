@@ -1,5 +1,6 @@
-import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
+import React, { FC, FormEvent, useEffect, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import { usePrevious } from 'react-use';
 import styled from 'styled-components';
 
 import { AuthType } from '../../../common/constants';
@@ -92,12 +93,23 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId }) => {
   const readyState = useWSReadyState(request._id);
+  const preEnvironmentId = usePrevious(environmentId);
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
     if (url !== request.url) {
       models.websocketRequest.update(request, { url });
     }
   };
+
+  useEffect(() => {
+    if (environmentId === preEnvironmentId) {
+      return;
+    }
+
+    if (readyState === ReadyState.OPEN) {
+      window.main.webSocket.close({ requestId: request._id });
+    }
+  }, [environmentId, preEnvironmentId, readyState, request]);
 
   // TODO: Check if we need any keys/force refresh here to correctly update rendering of nunjucks tags
   // Definitely needed for headers
