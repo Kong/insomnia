@@ -18,6 +18,7 @@ import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { generateId } from '../../common/misc';
 import { websocketRequest } from '../../models';
 import * as models from '../../models';
+import { Environment } from '../../models/environment';
 import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
@@ -140,6 +141,11 @@ const createWebSocketConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
 
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const responseEnvironmentId = environment ? environment._id : null;
+
   try {
     const eventChannel = `webSocket.${responseId}.event`;
     const readyStateChannel = `webSocket.${request._id}.readyState`;
@@ -210,6 +216,7 @@ const createWebSocketConnection = async (
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
+        environmentId: responseEnvironmentId,
         headers: responseHeaders,
         url: request.url,
         statusCode,
@@ -233,6 +240,7 @@ const createWebSocketConnection = async (
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
+        environmentId: responseEnvironmentId,
         headers: responseHeaders,
         url: request.url,
         statusCode,
@@ -314,21 +322,22 @@ const createWebSocketConnection = async (
       dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
 
-      createErrorResponse(responseId, request._id, timelinePath, message || 'Something went wrong');
+      createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
     });
   } catch (e) {
     console.error('unhandled error:', e);
 
     deleteRequestMaps(request._id, e.message || 'Something went wrong');
-    createErrorResponse(responseId, request._id, timelinePath, e.message || 'Something went wrong');
+    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
   }
 };
 
-const createErrorResponse = async (responseId: string, requestId: string, timelinePath: string, message: string) => {
+const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
   const settings = await models.settings.getOrCreate();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,
+    environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
     error: message,
