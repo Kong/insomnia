@@ -1,18 +1,18 @@
-import React, { ChangeEvent, FC, FormEvent, useRef } from 'react';
+import React, { ChangeEvent, FC, FormEvent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
-import { AuthType } from '../../../common/constants';
+import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
+import { PayloadTypeDropdown } from '../dropdowns/payload-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
-
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
 
 const EditorWrapper = styled.div({
@@ -46,9 +46,16 @@ const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
 
-const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
-  const editorRef = useRef<UnconnectedCodeEditor>(null);
+interface FormProps {
+  requestId: string;
+  payloadType: string;
+}
 
+const WebSocketRequestForm: FC<FormProps> = ({
+  requestId,
+  payloadType,
+}) => {
+  const editorRef = useRef<UnconnectedCodeEditor>(null);
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
@@ -59,6 +66,7 @@ const WebSocketRequestForm: FC<{ requestId: string }> = ({ requestId }) => {
       <EditorWrapper>
         <CodeEditor
           uniquenessKey={requestId}
+          mode={payloadType}
           ref={editorRef}
           defaultValue=''
         />
@@ -85,6 +93,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
       models.websocketRequest.update(request, { url });
     }
   };
+  const [payloadType, setPayloadType] = useState(CONTENT_TYPE_JSON);
 
   return (
     <Pane type="request">
@@ -101,9 +110,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
       <Tabs className="pane__body theme--pane__body react-tabs">
         <TabList>
           <Tab tabIndex="-1" >
-            <button>Message</button>
+            <PayloadTypeDropdown payloadType={payloadType} onClick={setPayloadType} />
           </Tab>
-          <Tab tabIndex="-1" >
+          <Tab tabIndex="-1">
             <AuthDropdown
               authTypes={supportedAuthTypes}
               disabled={disabled}
@@ -123,7 +132,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
               Send
             </SendButton>
           </PaneSendButton>
-          <WebSocketRequestForm requestId={request._id} />
+          <WebSocketRequestForm requestId={request._id} payloadType={payloadType} />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
