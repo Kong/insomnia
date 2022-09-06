@@ -40,7 +40,6 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.click('text=Connect');
   await expect(statusTag).toContainText('101 Switching Protocols');
   await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
-  await expect(responseBody).toContainText('WebSocket connection established');
   await expect(responseBody).toContainText('> authorization: Bearer insomnia-cool-token-!!!1112113243111');
 
   // Can handle redirects
