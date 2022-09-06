@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, FormEvent, useRef, useState } from 'react';
+import React, { FC, FormEvent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -12,6 +12,8 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { PayloadTypeDropdown } from '../dropdowns/payload-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { showAlert, showModal } from '../modals';
+import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
@@ -63,18 +65,37 @@ const WebSocketRequestForm: FC<FormProps> = ({
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
 
-    // Render any nunjucks tag in the message
-    const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-    const renderedMessage = await render(message, renderContext);
+    try {
+      // Render any nunjucks tag in the message
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      const renderedMessage = await render(message, renderContext);
 
-    // TODO: Handle error in rendering because of non-existent variable etc...
-
-    window.main.webSocket.event.send({ requestId: request._id, message: renderedMessage });
+      window.main.webSocket.event.send({ requestId: request._id, message: renderedMessage });
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {
+          request,
+          error: err,
+        });
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+    }
   };
+
   // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
   // To allow for disabling rendering of messages based on a per-request setting.
   // Same as with regular requests
-
   return (
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
       <EditorWrapper>

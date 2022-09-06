@@ -496,7 +496,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             readOnly={isDisabled}
             hideButtons={isDisabled}
             pair={pair}
-            // TODO: Look if there's an easy way to disable the "Edit variable" modal or something here..
           />
         ))}
 

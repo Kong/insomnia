@@ -5,6 +5,8 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/r
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor } from '../codemirror/one-line-editor';
+import { showAlert, showModal } from '../modals';
+import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 
 const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
   paddingRight: 'var(--padding-md)',
@@ -99,33 +101,48 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Render any nunjucks tag in the message
-    const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+    try {
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
 
-    // TODO: Should we filter out disabled headers/authentication here, as we do in getRenderedRequestAndContext?
+      const { url, headers, authentication } = request;
 
-    const { url, headers, authentication } = request;
+      // Render any nunjucks tags in the url/headers/authentication settings
+      const rendered = await render({
+        url,
+        headers,
+        authentication,
+      }, renderContext);
 
-    const rendered = await render({
-      url,
-      headers,
-      authentication,
-    }, renderContext);
-
-    // TODO: Handle error in rendering
-
-    window.main.webSocket.create({
-      requestId: request._id,
-      workspaceId,
-      url: rendered.url,
-      headers: rendered.headers,
-      authentication: rendered.authentication,
-    });
+      window.main.webSocket.create({
+        requestId: request._id,
+        workspaceId,
+        url: rendered.url,
+        headers: rendered.headers,
+        authentication: rendered.authentication,
+      });
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {
+          request,
+          error: err,
+        });
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+    }
   };
 
   const uniquenessKey = `${environmentId}::${request._id}`;
-
-  // TODO: Use getAutocompleteConstants to get existing websocket URLs?
 
   // TODO: How do we handle if you switch to an environment where the variable no longer resolves, and the connection is active?
   // Close the websockets on environment change always, since it also messes with history?
