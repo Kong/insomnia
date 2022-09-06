@@ -25,5 +25,5 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
   await expect(responseBody).toContainText('WebSocket connection established');
 
-  await page.click('text=Close');
+  await page.click('text=Disconnect');
 });
