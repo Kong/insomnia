@@ -420,6 +420,10 @@ const closeWebSocketConnection = async (
   ws.close();
 };
 
+const closeAllWebSocketConnections = (): void => {
+  WebSocketConnections.forEach(ws => ws.close());
+};
+
 const findMany = async (
   options: { responseId: string }
 ): Promise<WebSocketEvent[]> => {
@@ -463,6 +467,7 @@ export interface WebSocketBridgeAPI {
     authentication: RequestAuthentication;
   }) => void;
   close: typeof closeWebSocketConnection;
+  closeAll: typeof closeAllWebSocketConnections;
   readyState: {
     getCurrent: typeof getWebSocketReadyState;
   };
@@ -477,6 +482,7 @@ export const registerWebSocketHandlers = () => {
   ipcMain.handle('webSocket.event.send', sendWebSocketEvent);
   ipcMain.handle('webSocket.clearToSend', signalClearToSend);
   ipcMain.handle('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
+  ipcMain.handle('webSocket.closeAll', closeAllWebSocketConnections);
   ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
   ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };

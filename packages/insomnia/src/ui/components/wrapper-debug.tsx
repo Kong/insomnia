@@ -1,4 +1,4 @@
-import React, { FC, Fragment, ReactNode } from 'react';
+import React, { FC, Fragment, ReactNode, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { isGrpcRequest } from '../../models/grpc-request';
@@ -76,6 +76,13 @@ export const WrapperDebug: FC<Props> = ({
   const sidebarFilter = useSelector(selectSidebarFilter);
 
   const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
+
+  // Close all websocket connections when the active environment changes
+  useEffect(() => {
+    return () => {
+      window.main.webSocket.closeAll();
+    };
+  }, [activeEnvironment?._id]);
 
   return (
     <PageLayout

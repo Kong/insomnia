@@ -5,6 +5,7 @@ import type { WebSocketBridgeAPI } from './main/network/websocket';
 const webSocket: WebSocketBridgeAPI = {
   create: options => ipcRenderer.invoke('webSocket.create', options),
   close: options => ipcRenderer.invoke('webSocket.close', options),
+  closeAll: () => ipcRenderer.invoke('webSocket.closeAll'),
   readyState: {
     getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
   },
