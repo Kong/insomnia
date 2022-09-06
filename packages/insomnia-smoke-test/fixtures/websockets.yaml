@@ -36,21 +36,6 @@ resources:
       username: user
       password: password
     _type: websocket_request
-  - _id: ws-req_adcce29c84ed497fbe69abac3df48867
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1662451303201
-    created: 1662451298316
-    name: basic-auth (fail)
-    url: ws://localhost:4010/basic-auth
-    metaSortKey: -1661942202773
-    headers: []
-    authentication:
-      type: basic
-      useISO88591: false
-      disabled: false
-      username: user
-      password: fail
-    _type: websocket_request
   - _id: ws-req_2157c597bcbb4614b64c7c99c6f7a982
     parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
     modified: 1662451369688
@@ -62,19 +47,6 @@ resources:
     authentication:
       type: bearer
       token: insomnia-cool-token-!!!1112113243111
-      disabled: false
-    _type: websocket_request
-  - _id: ws-req_7a98a4adb9f44c0a84d989d69180c839
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1662451400034
-    created: 1662451393778
-    name: bearer (fail)
-    url: ws://localhost:4010/bearer
-    metaSortKey: -1661942202673
-    headers: []
-    authentication:
-      type: bearer
-      token: ""
       disabled: false
     _type: websocket_request
   - _id: ws-req_6b9c944a7f034fcb8b0a92e5442538d7

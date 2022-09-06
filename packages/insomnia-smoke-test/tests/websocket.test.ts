@@ -26,4 +26,28 @@ test('can make websocket connection', async ({ app, page }) => {
   await expect(responseBody).toContainText('WebSocket connection established');
 
   await page.click('text=Disconnect');
+  await expect(responseBody).toContainText('Closing connection with code 1005');
+
+  // Can connect with Basic Auth
+  await page.click('button:has-text("basic-auth")');
+  await page.click('text=Connect');
+  await expect(statusTag).toContainText('101 Switching Protocols');
+  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await expect(responseBody).toContainText('> authorization: Basic dXNlcjpwYXNzd29yZA==');
+
+  // Can connect with Bearer Auth
+  await page.click('button:has-text("bearer")');
+  await page.click('text=Connect');
+  await expect(statusTag).toContainText('101 Switching Protocols');
+  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await expect(responseBody).toContainText('WebSocket connection established');
+  await expect(responseBody).toContainText('> authorization: Bearer insomnia-cool-token-!!!1112113243111');
+
+  // Can handle redirects
+  await page.click('button:has-text("redirect")');
+  await page.click('text=Connect');
+  await expect(statusTag).toContainText('101 Switching Protocols');
+  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await expect(responseBody).toContainText('WebSocket connection established');
+
 });
