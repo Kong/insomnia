@@ -115,13 +115,14 @@ interface Props {
   request: WebSocketRequest;
   workspaceId: string;
   environmentId: string;
+  forceRefreshKey: number;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
   const readyState = useWSReadyState(request._id);
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
@@ -131,14 +132,13 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
   };
   const [payloadType, setPayloadType] = useState(CONTENT_TYPE_JSON);
 
-  // TODO: Check if we need any keys/force refresh here to correctly update rendering of nunjucks tags
-  // Definitely needed for headers
+  const uniqueKey = `${forceRefreshKey}::${request._id}`;
 
   return (
     <Pane type="request">
       <PaneHeader>
         <WebSocketActionBar
-          key={request._id}
+          key={uniqueKey}
           request={request}
           workspaceId={workspaceId}
           environmentId={environmentId}
@@ -173,7 +173,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             </SendButton>
           </PaneSendButton>
           <WebSocketRequestForm
-            key={`${environmentId}::${request._id}`} // Needed to ensure nunjucks rendering updates on environment change
+            key={uniqueKey}
             request={request}
             payloadType={payloadType}
             environmentId={environmentId}
@@ -181,13 +181,13 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
-            key={`${request._id}-${request.authentication.type}-auth-header`}
+            key={`${uniqueKey}-${request.authentication.type}-auth-header`}
             disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
-            key={`${request._id}-${readyState}-header-editor`}
+            key={`${uniqueKey}-${readyState}-header-editor`}
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}

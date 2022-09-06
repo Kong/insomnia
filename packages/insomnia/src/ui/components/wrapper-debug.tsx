@@ -132,6 +132,7 @@ export const WrapperDebug: FC<Props> = ({
                   request={activeRequest}
                   workspaceId={activeWorkspace._id}
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                  forceRefreshKey={forceRefreshKey}
                 />
               ) : (
                 <RequestPane

@@ -142,11 +142,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     }
   };
 
-  const uniquenessKey = `${environmentId}::${request._id}`;
-
-  // TODO: How do we handle if you switch to an environment where the variable no longer resolves, and the connection is active?
-  // Close the websockets on environment change always, since it also messes with history?
-
   return (
     <>
       {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
@@ -163,7 +158,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}
             onChange={onChange}
-            key={uniquenessKey}
             type="text"
             forceEditor
           />
