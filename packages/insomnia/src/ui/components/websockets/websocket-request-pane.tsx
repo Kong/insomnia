@@ -9,7 +9,7 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
-import { PayloadTypeDropdown } from '../dropdowns/payload-type-dropdown';
+import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { showAlert, showModal } from '../modals';
@@ -52,13 +52,15 @@ const PaneHeader = styled(OriginalPaneHeader)({
 
 interface FormProps {
   request: WebSocketRequest;
-  payloadType: string;
+  changePreviewMode: (previewMode: string) => void;
+  previewMode: string;
   environmentId: string;
 }
 
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
-  payloadType,
+  previewMode,
+  changePreviewMode,
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
@@ -67,24 +69,28 @@ const WebSocketRequestForm: FC<FormProps> = ({
     let isMounted = true;
     const fn = async () => {
       const payload = await models.webSocketPayload.getByParentId(request._id);
-      isMounted && payload && editorRef.current?.codeMirror?.setValue(payload?.value || '');
+      if (isMounted && payload) {
+        editorRef.current?.codeMirror?.setValue(payload?.value || '');
+        changePreviewMode(payload.mode);
+      }
     };
     fn();
     return () => {
       isMounted = false;
     };
-  }, [request._id]);
+  }, [changePreviewMode, request._id]);
 
   const onChange = async (value: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(request._id);
     if (payload) {
-      await models.webSocketPayload.update(payload, { value });
+      await models.webSocketPayload.update(payload, { value, mode: previewMode });
       return;
     }
     await models.webSocketPayload.create({
       parentId: request._id,
       value,
+      mode: previewMode,
     });
   };
 
@@ -128,7 +134,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       <EditorWrapper>
         <CodeEditor
           uniquenessKey={request._id}
-          mode={payloadType}
+          mode={previewMode}
           ref={editorRef}
           defaultValue=''
           onChange={onChange}
@@ -158,7 +164,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
       models.webSocketRequest.update(request, { url });
     }
   };
-  const [payloadType, setPayloadType] = useState(CONTENT_TYPE_JSON);
+  const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
   const uniqueKey = `${forceRefreshKey}::${request._id}`;
 
@@ -178,7 +184,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
       <Tabs className="pane__body theme--pane__body react-tabs">
         <TabList>
           <Tab tabIndex="-1" >
-            <PayloadTypeDropdown payloadType={payloadType} onClick={setPayloadType} />
+            <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={setPreviewMode} />
           </Tab>
           <Tab tabIndex="-1">
             <AuthDropdown
@@ -203,7 +209,8 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           <WebSocketRequestForm
             key={uniqueKey}
             request={request}
-            payloadType={payloadType}
+            previewMode={previewMode}
+            changePreviewMode={setPreviewMode}
             environmentId={environmentId}
           />
         </TabPanel>
