@@ -495,8 +495,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             allowFile={allowFile}
             readOnly={isDisabled}
             hideButtons={isDisabled}
-            // @TODO disabled nunjucks: remove this when nunjucks support is added
-            forceInput={isWebSocketRequest}
             pair={pair}
           />
         ))}
