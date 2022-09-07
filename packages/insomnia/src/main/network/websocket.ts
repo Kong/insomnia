@@ -96,7 +96,7 @@ const dispatchWebSocketEvent = (target: Electron.WebContents, eventChannel: stri
   // Otherwise, append to send queue for this event channel.
   const sendQueue = sendQueueMap.get(eventChannel);
   if (sendQueue) {
-    sendQueue.push(wsEvent);
+    sendQueue.unshift(wsEvent);
   } else {
     sendQueueMap.set(eventChannel, [wsEvent]);
   }
@@ -433,7 +433,7 @@ const findMany = async (
   }
   const body = await fs.promises.readFile(response.bodyPath);
   return body.toString().split('\n').filter(e => e?.trim())
-    .map(e => JSON.parse(e)) || [];
+    .map(e => JSON.parse(e)).reverse() || [];
 };
 
 /**
