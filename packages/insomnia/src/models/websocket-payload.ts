@@ -19,6 +19,10 @@ export interface BaseWebSocketPayload {
 
 export type WebSocketPayload = BaseModel & BaseWebSocketPayload & { type: typeof type };
 
+export const isWebSocketPayload = (model: Pick<BaseModel, 'type'>): model is WebSocketPayload => (
+  model.type === type
+);
+
 export const isWebSocketPayloadId = (id: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
