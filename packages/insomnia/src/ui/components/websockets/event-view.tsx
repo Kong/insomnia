@@ -29,7 +29,7 @@ const PreviewPaneButtons = styled.div({
   boxSizing: 'border-box',
   height: 'var(--line-height-sm)',
   borderBottom: '1px solid var(--hl-lg)',
-  padding: 'var(--padding-sm)',
+  padding: 'var(--padding-sm) var(--padding-md)',
 });
 
 const PreviewPaneContents = styled.div({
