@@ -62,6 +62,14 @@ const WebSocketRequestForm: FC<FormProps> = ({
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const onChange = (value: string) => {
+    // @TODO: update payload model
+    // const payload = await models.websocketPayload.create({
+    //   parentId,
+    //   value: '',
+    // });
+    console.log(value);
+  };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
@@ -105,6 +113,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
           mode={payloadType}
           ref={editorRef}
           defaultValue=''
+          onChange={onChange}
           enableNunjucks
         />
       </EditorWrapper>
