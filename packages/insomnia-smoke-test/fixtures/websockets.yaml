@@ -12,7 +12,7 @@ resources:
     metaSortKey: -1661942202873
     headers: []
     authentication: {}
-    _type: websocket_request
+    _type: web_socket_request
   - _id: wrk_db59cf2b74764e6a80c0dcbcf3d67130
     parentId: null
     modified: 1661942194367
@@ -35,7 +35,7 @@ resources:
       disabled: false
       username: user
       password: password
-    _type: websocket_request
+    _type: web_socket_request
   - _id: ws-req_2157c597bcbb4614b64c7c99c6f7a982
     parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
     modified: 1662451369688
@@ -48,7 +48,7 @@ resources:
       type: bearer
       token: insomnia-cool-token-!!!1112113243111
       disabled: false
-    _type: websocket_request
+    _type: web_socket_request
   - _id: ws-req_6b9c944a7f034fcb8b0a92e5442538d7
     parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
     modified: 1662451456879
@@ -58,7 +58,7 @@ resources:
     metaSortKey: -1661942202623
     headers: []
     authentication: {}
-    _type: websocket_request
+    _type: web_socket_request
   - _id: env_78d7375877d288dfb527a256e6d7e92dce4ff968
     parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
     modified: 1661942194375
