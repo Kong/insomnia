@@ -37,7 +37,6 @@ const EventViewWrapper = styled.div({
   flex: 1,
   borderTop: '1px solid var(--hl-md)',
   height: '100%',
-  padding: 'var(--padding-sm)',
 });
 
 const PaneBodyContent = styled.div({
@@ -156,7 +155,10 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
                 )}
                 {selectedEvent && (
                   <EventViewWrapper>
-                    <EventView event={selectedEvent} />
+                    <EventView
+                      requestId={requestId}
+                      event={selectedEvent}
+                    />
                   </EventViewWrapper>
                 )}
               </>}
