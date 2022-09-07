@@ -9,6 +9,7 @@ import type { GlobalActivity } from '../../common/constants';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
+  ACTIVITY_RULESET,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
@@ -91,6 +92,9 @@ const [WrapperDebug, preloadWrapperDebug] = lazyWithPreload(
 const [WrapperDesign, preloadWrapperDesign] = lazyWithPreload(
   () => import('./wrapper-design')
 );
+const [WrapperRuleset, preloadWrapperRuleset] = lazyWithPreload(
+  () => import('./wrapper-ruleset')
+);
 const [WrapperUnitTest, preloadWrapperUnitTest] = lazyWithPreload(
   () => import('./wrapper-unit-test')
 );
@@ -99,6 +103,7 @@ preloadWrapperHome();
 preloadWrapperDebug();
 preloadWrapperDesign();
 preloadWrapperUnitTest();
+preloadWrapperRuleset();
 
 const ActivityRouter = () => {
   const selectedActivity = useSelector(selectActiveActivity);
@@ -473,6 +478,17 @@ export class WrapperClass extends PureComponent<Props, State> {
             element={
               <Suspense fallback={<div />}>
                 <WrapperDesign
+                  gitSyncDropdown={gitSyncDropdown}
+                  handleActivityChange={this._handleWorkspaceActivityChange}
+                />
+              </Suspense>
+            }
+          />
+          <Route
+            path={ACTIVITY_RULESET}
+            element={
+              <Suspense fallback={<div />}>
+                <WrapperRuleset
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
                 />

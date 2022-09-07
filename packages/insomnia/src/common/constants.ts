@@ -164,10 +164,12 @@ export const MAX_EDITOR_FONT_SIZE = 24;
 // Activities
 export type GlobalActivity =
   | 'spec'
+  | 'ruleset'
   | 'debug'
   | 'unittest'
   | 'home';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
+export const ACTIVITY_RULESET: GlobalActivity = 'ruleset';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
@@ -178,6 +180,7 @@ export const isWorkspaceActivity = (activity?: string): activity is GlobalActivi
 export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
+    case ACTIVITY_RULESET:
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
       return true;
@@ -194,6 +197,7 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
       return true;
 
     case ACTIVITY_SPEC:
+    case ACTIVITY_RULESET:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
     default:
@@ -204,6 +208,7 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
 export const isValidActivity = (activity: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
+    case ACTIVITY_RULESET:
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:

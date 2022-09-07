@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 import type { GlobalActivity } from '../../../common/constants';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_RULESET, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../common/constants';
 import { isDesign, Workspace } from '../../../models/workspace';
 import { HandleActivityChange } from '../wrapper';
 
@@ -81,6 +81,15 @@ export const ActivityToggle: FunctionComponent<Props> = ({
         }}
       >
         Design
+      </StyledLink>
+      <StyledLink
+        to={ACTIVITY_RULESET}
+        className={activity === ACTIVITY_RULESET ? 'active' : undefined }
+        onClick={e => {
+          onChange(e, ACTIVITY_RULESET);
+        }}
+      >
+        Ruleset
       </StyledLink>
       <StyledLink
         to={ACTIVITY_DEBUG}

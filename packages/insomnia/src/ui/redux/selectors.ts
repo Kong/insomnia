@@ -4,6 +4,7 @@ import { ValueOf } from 'type-fest';
 import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { ApiSpecRuleset } from '../../models/api-spec-ruleset';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
@@ -207,7 +208,7 @@ export const selectActiveApiSpecRuleset = createSelector(
     const activeSpec = rulesets.find(rs => rs.parentId === activeWorkspace._id);
 
     if (!activeSpec) {
-      return { parentId: activeWorkspace._id, contents: 'extends: "spectral:oas"', type: 'ApiSpecRuleset' };
+      return { parentId: activeWorkspace._id, contents: 'extends: "spectral:oas"', type: 'ApiSpecRuleset' } as ApiSpecRuleset;
     }
 
     return activeSpec;

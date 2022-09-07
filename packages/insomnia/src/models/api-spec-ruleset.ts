@@ -12,8 +12,8 @@ export const canDuplicate = true;
 
 export const canSync = false;
 
-interface BaseApiSpecRuleset {
-  name: string;
+export interface BaseApiSpecRuleset {
+  fileName: string;
   contentType: 'json' | 'yaml';
   contents: string;
 }
@@ -26,7 +26,7 @@ export const isApiSpecRuleset = (model: Pick<BaseModel, 'type'>): model is ApiSp
 
 export function init(): BaseApiSpecRuleset {
   return {
-    name: `New ${strings.ruleset.singular}`,
+    fileName: `New ${strings.document.singular}`,
     contents: '',
     contentType: 'yaml',
   };
@@ -67,8 +67,8 @@ export async function all() {
   return db.all<ApiSpecRuleset>(type);
 }
 
-export function update(apiSpec: ApiSpecRuleset, patch: Partial<ApiSpecRuleset> = {}) {
-  return db.docUpdate(apiSpec, patch);
+export function update(ApiSpecRuleset: ApiSpecRuleset, patch: Partial<ApiSpecRuleset> = {}) {
+  return db.docUpdate(ApiSpecRuleset, patch);
 }
 
 export function removeWhere(parentId: string) {
