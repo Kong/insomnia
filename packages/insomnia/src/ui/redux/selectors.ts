@@ -191,6 +191,29 @@ export const selectActiveApiSpec = createSelector(
   }
 );
 
+export const selectAllApiSpecRulesets = createSelector(
+  selectEntitiesLists,
+  entities => entities.apiSpecRulesets,
+);
+
+export const selectActiveApiSpecRuleset = createSelector(
+  selectAllApiSpecRulesets,
+  selectActiveWorkspace,
+  (rulesets, activeWorkspace) => {
+    if (!activeWorkspace) {
+      // There should never be an active api spec without an active workspace
+      return undefined;
+    }
+    const activeSpec = rulesets.find(rs => rs.parentId === activeWorkspace._id);
+
+    if (!activeSpec) {
+      return { parentId: activeWorkspace._id, contents: 'extends: "spectral:oas"', type: 'ApiSpecRuleset' };
+    }
+
+    return activeSpec;
+  }
+);
+
 export const selectActiveWorkspaceName = createSelector(
   selectActiveWorkspace,
   selectActiveApiSpec,

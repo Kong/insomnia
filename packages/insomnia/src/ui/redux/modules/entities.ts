@@ -5,6 +5,7 @@ import { pluralize } from '../../../common/misc';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
+import { ApiSpecRuleset } from '../../../models/api-spec-ruleset';
 import { ClientCertificate } from '../../../models/client-certificate';
 import { CookieJar } from '../../../models/cookie-jar';
 import { Environment } from '../../../models/environment';
@@ -54,6 +55,7 @@ export interface EntitiesState {
   gitRepositories: EntityRecord<GitRepository>;
   cookieJars: EntityRecord<CookieJar>;
   apiSpecs: EntityRecord<ApiSpec>;
+  apiSpecRulesets: EntityRecord<ApiSpecRuleset>;
   requestGroups: EntityRecord<RequestGroup>;
   requestGroupMetas: EntityRecord<RequestGroupMeta>;
   requests: EntityRecord<Request>;
@@ -82,6 +84,7 @@ export const initialEntitiesState: EntitiesState = {
   gitRepositories: {},
   cookieJars: {},
   apiSpecs: {},
+  apiSpecRulesets: {},
   requestGroups: {},
   requestGroupMetas: {},
   requests: {},
@@ -187,6 +190,7 @@ export async function allDocs() {
     ...(await models.oAuth2Token.all()),
     ...(await models.clientCertificate.all()),
     ...(await models.apiSpec.all()),
+    ...(await models.apiSpecRuleset.all()),
     ...(await models.unitTestSuite.all()),
     ...(await models.unitTest.all()),
     ...(await models.unitTestResult.all()),

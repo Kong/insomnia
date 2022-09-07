@@ -68,6 +68,7 @@ import { importUri } from '../redux/modules/import';
 import {
   selectActiveActivity,
   selectActiveApiSpec,
+  selectActiveApiSpecRuleset,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
@@ -841,6 +842,7 @@ const mapStateToProps = (state: RootState) => ({
   activeActivity: selectActiveActivity(state),
   activeProject: selectActiveProject(state),
   activeApiSpec: selectActiveApiSpec(state),
+  activeApiSpecRuleset: selectActiveApiSpecRuleset(state),
   activeWorkspaceName: selectActiveWorkspaceName(state),
   activeCookieJar: selectActiveCookieJar(state),
   activeEnvironment: selectActiveEnvironment(state),
