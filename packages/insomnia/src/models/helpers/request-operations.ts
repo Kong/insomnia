@@ -8,7 +8,7 @@ export function getById(requestId: string): Promise<Request | GrpcRequest | WebS
     return models.grpcRequest.getById(requestId);
   }
   if (isWebSocketRequestId(requestId)) {
-    return models.websocketRequest.getById(requestId);
+    return models.webSocketRequest.getById(requestId);
   }
   return models.request.getById(requestId);
 }
@@ -18,7 +18,7 @@ export function remove(request: Request | GrpcRequest | WebSocketRequest) {
     return models.grpcRequest.remove(request);
   }
   if (isWebSocketRequest(request)) {
-    return models.websocketRequest.remove(request);
+    return models.webSocketRequest.remove(request);
   }
   return models.request.remove(request);
 }
@@ -32,7 +32,7 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
   // @ts-expect-error -- TSCONVERSION
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return models.websocketRequest.update(request, patch);
+    return models.webSocketRequest.update(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   return models.request.update(request, patch);
@@ -47,7 +47,7 @@ export function duplicate<T extends object>(request: T, patch: Partial<T> = {}):
   // @ts-expect-error -- TSCONVERSION
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
-    return models.websocketRequest.duplicate(request, patch);
+    return models.webSocketRequest.duplicate(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   return models.request.duplicate(request, patch);

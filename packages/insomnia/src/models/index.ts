@@ -36,7 +36,7 @@ import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
 import * as _unitTestSuite from './unit-test-suite';
-import * as _websocketRequest from './websocket-request';
+import * as _webSocketRequest from './websocket-request';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 
@@ -77,7 +77,7 @@ export const protoFile = _protoFile;
 export const protoDirectory = _protoDirectory;
 export const grpcRequest = _grpcRequest;
 export const grpcRequestMeta = _grpcRequestMeta;
-export const websocketRequest = _websocketRequest;
+export const webSocketRequest = _webSocketRequest;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
@@ -111,7 +111,7 @@ export function all() {
     protoDirectory,
     grpcRequest,
     grpcRequestMeta,
-    websocketRequest,
+    webSocketRequest,
   ] as const;
 }
 
@@ -211,7 +211,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
 
 export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_REQUEST]: request,
-  [EXPORT_TYPE_WEBSOCKET_REQUEST]: websocketRequest,
+  [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,

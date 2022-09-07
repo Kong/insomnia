@@ -563,7 +563,7 @@ export async function getRenderContextAncestors(base?: Request | GrpcRequest | W
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,
     models.grpcRequest.type,
-    models.websocketRequest.type,
+    models.webSocketRequest.type,
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,

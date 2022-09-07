@@ -200,6 +200,6 @@ export async function allDocs() {
     ...(await models.protoDirectory.all()),
     ...(await models.grpcRequest.all()),
     ...(await models.grpcRequestMeta.all()),
-    ...(await models.websocketRequest.all()),
+    ...(await models.webSocketRequest.all()),
   ];
 }

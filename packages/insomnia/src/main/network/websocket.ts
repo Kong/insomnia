@@ -16,7 +16,7 @@ import {
 
 import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { generateId } from '../../common/misc';
-import { websocketRequest } from '../../models';
+import { webSocketRequest } from '../../models';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
@@ -135,7 +135,7 @@ const createWebSocketConnection = async (
     console.warn('Connection still open to ' + existingConnection.url);
     return;
   }
-  const request = await websocketRequest.getById(options.requestId);
+  const request = await webSocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
