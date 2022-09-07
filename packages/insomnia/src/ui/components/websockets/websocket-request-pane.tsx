@@ -207,12 +207,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />
           </Tab>
           <Tab tabIndex="-1">
-            <AuthDropdown
-              authTypes={supportedAuthTypes}
-              disabled={disabled}
-            />
+            <AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />
           </Tab>
-          <Tab tabIndex="-1" >
+          <Tab tabIndex="-1">
             <button>Headers</button>
           </Tab>
         </TabList>
@@ -255,7 +252,10 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
             key={`${uniqueKey}-${request.authentication.type}-auth-header`}
-            disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
+            disabled={
+              readyState === ReadyState.OPEN ||
+              readyState === ReadyState.CLOSING
+            }
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
