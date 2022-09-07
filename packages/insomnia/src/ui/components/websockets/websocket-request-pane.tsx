@@ -52,47 +52,29 @@ const PaneHeader = styled(OriginalPaneHeader)({
 
 interface FormProps {
   request: WebSocketRequest;
-  changePreviewMode: (previewMode: string) => void;
   previewMode: string;
+  initialValue: string;
   environmentId: string;
+  createOrUpdatePayload: (payload: string, mode: string) => Promise<void>;
 }
 
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
   previewMode,
-  changePreviewMode,
+  initialValue,
+  createOrUpdatePayload,
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
-
   useEffect(() => {
     let isMounted = true;
-    const fn = async () => {
-      const payload = await models.webSocketPayload.getByParentId(request._id);
-      if (isMounted && payload) {
-        editorRef.current?.codeMirror?.setValue(payload?.value || '');
-        changePreviewMode(payload.mode);
-      }
-    };
-    fn();
+    if (isMounted) {
+      editorRef.current?.codeMirror?.setValue(initialValue);
+    }
     return () => {
       isMounted = false;
     };
-  }, [changePreviewMode, request._id]);
-
-  const onChange = async (value: string) => {
-    // @TODO: multiple payloads
-    const payload = await models.webSocketPayload.getByParentId(request._id);
-    if (payload) {
-      await models.webSocketPayload.update(payload, { value, mode: previewMode });
-      return;
-    }
-    await models.webSocketPayload.create({
-      parentId: request._id,
-      value,
-      mode: previewMode,
-    });
-  };
+  }, [initialValue]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -137,7 +119,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
           mode={previewMode}
           ref={editorRef}
           defaultValue=''
-          onChange={onChange}
+          onChange={v => createOrUpdatePayload(v, previewMode)}
           enableNunjucks
         />
       </EditorWrapper>
@@ -158,6 +140,7 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
   const readyState = useWSReadyState(request._id);
+
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
     if (url !== request.url) {
@@ -165,6 +148,41 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
     }
   };
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
+  const [initialValue, setInitialValue] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fn = async () => {
+      const payload = await models.webSocketPayload.getByParentId(request._id);
+      if (isMounted && payload) {
+        setInitialValue(payload?.value || '');
+        setPreviewMode(payload.mode);
+      }
+    };
+    fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [request._id]);
+
+  const changeMode = (mode: string) => {
+    setPreviewMode(mode);
+    createOrUpdatePayload(initialValue, mode);
+  };
+
+  const createOrUpdatePayload = async (value: string, mode: string) => {
+    // @TODO: multiple payloads
+    const payload = await models.webSocketPayload.getByParentId(request._id);
+    if (payload) {
+      await models.webSocketPayload.update(payload, { value, mode });
+      return;
+    }
+    await models.webSocketPayload.create({
+      parentId: request._id,
+      value,
+      mode,
+    });
+  };
 
   const uniqueKey = `${forceRefreshKey}::${request._id}`;
 
@@ -184,7 +202,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
       <Tabs className="pane__body theme--pane__body react-tabs">
         <TabList>
           <Tab tabIndex="-1" >
-            <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={setPreviewMode} />
+            <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />
           </Tab>
           <Tab tabIndex="-1">
             <AuthDropdown
@@ -210,7 +228,8 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             key={uniqueKey}
             request={request}
             previewMode={previewMode}
-            changePreviewMode={setPreviewMode}
+            initialValue={initialValue}
+            createOrUpdatePayload={createOrUpdatePayload}
             environmentId={environmentId}
           />
         </TabPanel>
