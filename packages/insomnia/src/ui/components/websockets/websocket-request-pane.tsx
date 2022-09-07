@@ -1,8 +1,9 @@
-import React, { ChangeEvent, FC, FormEvent, useRef, useState } from 'react';
+import React, { FC, FormEvent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
+import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
@@ -11,6 +12,8 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { PayloadTypeDropdown } from '../dropdowns/payload-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { showAlert, showModal } from '../modals';
+import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
@@ -47,28 +50,61 @@ const PaneHeader = styled(OriginalPaneHeader)({
 });
 
 interface FormProps {
-  requestId: string;
+  request: WebSocketRequest;
   payloadType: string;
+  environmentId: string;
 }
 
 const WebSocketRequestForm: FC<FormProps> = ({
-  requestId,
+  request,
   payloadType,
+  environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
-    window.main.webSocket.event.send({ requestId, message });
+
+    try {
+      // Render any nunjucks tag in the message
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      const renderedMessage = await render(message, renderContext);
+
+      window.main.webSocket.event.send({ requestId: request._id, message: renderedMessage });
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {
+          request,
+          error: err,
+        });
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+    }
   };
+
+  // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
+  // To allow for disabling rendering of messages based on a per-request setting.
+  // Same as with regular requests
   return (
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
       <EditorWrapper>
         <CodeEditor
-          uniquenessKey={requestId}
+          uniquenessKey={request._id}
           mode={payloadType}
           ref={editorRef}
           defaultValue=''
+          enableNunjucks
         />
       </EditorWrapper>
     </SendMessageForm>
@@ -78,30 +114,34 @@ const WebSocketRequestForm: FC<FormProps> = ({
 interface Props {
   request: WebSocketRequest;
   workspaceId: string;
+  environmentId: string;
+  forceRefreshKey: number;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
   const readyState = useWSReadyState(request._id);
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
-  const handleOnChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const url = event.currentTarget.value || '';
+  const handleOnChange = (url: string) => {
     if (url !== request.url) {
       models.websocketRequest.update(request, { url });
     }
   };
   const [payloadType, setPayloadType] = useState(CONTENT_TYPE_JSON);
 
+  const uniqueKey = `${forceRefreshKey}::${request._id}`;
+
   return (
     <Pane type="request">
       <PaneHeader>
         <WebSocketActionBar
-          key={request._id}
-          requestId={request._id}
+          key={uniqueKey}
+          request={request}
           workspaceId={workspaceId}
+          environmentId={environmentId}
           defaultValue={request.url}
           readyState={readyState}
           onChange={handleOnChange}
@@ -132,17 +172,22 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId }) => {
               Send
             </SendButton>
           </PaneSendButton>
-          <WebSocketRequestForm requestId={request._id} payloadType={payloadType} />
+          <WebSocketRequestForm
+            key={uniqueKey}
+            request={request}
+            payloadType={payloadType}
+            environmentId={environmentId}
+          />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
-            key={`${request._id}-${request.authentication.type}-auth-header`}
+            key={`${uniqueKey}-${request.authentication.type}-auth-header`}
             disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
-            key={`${request._id}-${readyState}-header-editor`}
+            key={`${uniqueKey}-${readyState}-header-editor`}
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}

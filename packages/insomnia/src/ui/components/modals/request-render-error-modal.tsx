@@ -4,6 +4,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { docsTemplateTags } from '../../../common/documentation';
+import { isRequest } from '../../../models/request';
 import { Link } from '../base/link';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -58,7 +59,7 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
             Failed to render <strong>{fullPath}</strong> prior to sending
           </p>
           <div className="pad-top-sm">
-            {error.path.match(/^body/) && (
+            {error.path.match(/^body/) && isRequest(request) && (
               <button
                 className="btn btn--clicky margin-right-sm"
                 onClick={this._handleShowRequestSettings}
