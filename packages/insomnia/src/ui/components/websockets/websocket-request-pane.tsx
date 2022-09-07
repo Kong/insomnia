@@ -29,6 +29,7 @@ const SendMessageForm = styled.form({
 });
 const SendButton = styled.button({
   padding: '0 var(--padding-md)',
+  marginLeft: 'var(--padding-xs)',
   height: '100%',
   border: '1px solid var(--hl-lg)',
   borderRadius: 'var(--radius-md)',
@@ -127,7 +128,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
     if (url !== request.url) {
-      models.websocketRequest.update(request, { url });
+      models.webSocketRequest.update(request, { url });
     }
   };
   const [payloadType, setPayloadType] = useState(CONTENT_TYPE_JSON);
