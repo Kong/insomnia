@@ -5,7 +5,7 @@ export const name = 'WebSocket Payload';
 
 export const type = 'WebSocketPayload';
 
-export const prefix = 'ws-msg';
+export const prefix = 'ws-payload';
 
 export const canDuplicate = true;
 
@@ -14,7 +14,7 @@ export const canSync = false;
 
 export interface BaseWebSocketPayload {
   value: string;
-  mode: 'application/json' | 'text/plain';
+  mode: string;
 }
 
 export type WebSocketPayload = BaseModel & BaseWebSocketPayload & { type: typeof type };
