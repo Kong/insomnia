@@ -160,7 +160,7 @@ const createWebSocketConnection = async (
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
-    if (options.authentication.disabled === false) {
+    if (!options.authentication.disabled) {
       if (options.authentication.type === AUTH_BASIC) {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
