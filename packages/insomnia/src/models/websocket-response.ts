@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 import { database as db, Query } from '../common/database';
-import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -185,31 +184,4 @@ export function getLatestByParentId(parentId: string) {
   return db.getMostRecentlyModified<WebSocketResponse>(type, {
     parentId,
   });
-}
-
-export function getTimeline(response: WebSocketResponse, showBody?: boolean) {
-  const { timelinePath, eventLogPath } = response;
-
-  // No body, so return empty Buffer
-  if (!timelinePath) {
-    return [];
-  }
-
-  try {
-    const rawBuffer = fs.readFileSync(timelinePath);
-    const timelineString = rawBuffer.toString();
-    const timeline = JSON.parse(timelineString) as ResponseTimelineEntry[];
-    const body: ResponseTimelineEntry[] = showBody ? [
-      {
-        name: 'DataOut',
-        timestamp: Date.now(),
-        value: fs.readFileSync(eventLogPath).toString(),
-      },
-    ] : [];
-    const output = [...timeline, ...body];
-    return output;
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return [];
-  }
 }
