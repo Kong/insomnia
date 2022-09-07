@@ -62,14 +62,12 @@ const WebSocketRequestForm: FC<FormProps> = ({
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
-  const [payloadValue, setPayloadValue] = useState('');
 
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
       const payload = await models.webSocketPayload.getByParentId(request._id);
-      console.log('loading in', payload?.value);
-      isMounted && payload && setPayloadValue(payload.value);
+      isMounted && payload && editorRef.current?.codeMirror?.setValue(payload?.value || '');
     };
     fn();
     return () => {
@@ -89,6 +87,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       value,
     });
   };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
@@ -131,7 +130,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
           uniquenessKey={request._id}
           mode={payloadType}
           ref={editorRef}
-          defaultValue={payloadValue}
+          defaultValue=''
           onChange={onChange}
           enableNunjucks
         />
