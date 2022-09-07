@@ -34,7 +34,7 @@ Good pull requests (patches, improvements, new features) are a fantastic help. T
 
 **Please ask first** before embarking on any significant pull request (e.g. implementing features, refactoring code, porting to a different language), otherwise, you risk spending a lot of time working on something that might not get accepted into the project.
 
-If you plan on helping with development, please read the [Develop Insomnia](./README.md#develop-insomnia) section of the README for how to get started. The [Development Overview](./DEVELOPMENT.md) may also prove useful for a general overview of the application architecture.
+If you plan on helping with development, please read the [Develop Insomnia](README.md#develop-insomnia) section of the README for how to get started. The [Development Overview](DEVELOPMENT.md) may also prove useful for a general overview of the application architecture.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owner to license your work under the same license as that used by the project.
 
