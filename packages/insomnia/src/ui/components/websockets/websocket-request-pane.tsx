@@ -1,4 +1,4 @@
-import React, { FC, FormEvent, useRef, useState } from 'react';
+import React, { FC, FormEvent, useEffect, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -62,13 +62,32 @@ const WebSocketRequestForm: FC<FormProps> = ({
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
-  const onChange = (value: string) => {
-    // @TODO: update payload model
-    // const payload = await models.websocketPayload.create({
-    //   parentId,
-    //   value: '',
-    // });
-    console.log(value);
+  const [payloadValue, setPayloadValue] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fn = async () => {
+      const payload = await models.webSocketPayload.getByParentId(request._id);
+      console.log('loading in', payload?.value);
+      isMounted && payload && setPayloadValue(payload.value);
+    };
+    fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [request._id]);
+
+  const onChange = async (value: string) => {
+    // @TODO: multiple payloads
+    const payload = await models.webSocketPayload.getByParentId(request._id);
+    if (payload) {
+      await models.webSocketPayload.update(payload, { value });
+      return;
+    }
+    await models.webSocketPayload.create({
+      parentId: request._id,
+      value,
+    });
   };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -112,7 +131,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
           uniquenessKey={request._id}
           mode={payloadType}
           ref={editorRef}
-          defaultValue=''
+          defaultValue={payloadValue}
           onChange={onChange}
           enableNunjucks
         />
