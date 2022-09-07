@@ -1,13 +1,15 @@
 import fs from 'fs';
 import React, { FC, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
-import type { Response } from '../../../models/response';
+import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
+import { selectActiveResponse } from '../../redux/selectors';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
@@ -46,12 +48,12 @@ const PaneBodyContent = styled.div({
   gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
 });
 
-export const WebSocketResponsePane: FC<{ requestId: string; response: Response | null; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> =
+export const WebSocketResponsePane: FC<{ requestId: string; handleSetActiveResponse: (requestId: string, activeResponse: WebSocketResponse | null) => void }> =
   ({
     requestId,
-    response,
     handleSetActiveResponse,
   }) => {
+    const response = useSelector(selectActiveResponse) as WebSocketResponse | null;
     if (!response) {
       return (
         <Pane type="response">
@@ -62,7 +64,7 @@ export const WebSocketResponsePane: FC<{ requestId: string; response: Response |
     return <WebSocketActiveResponsePane requestId={requestId} response={response} handleSetActiveResponse={handleSetActiveResponse} />;
   };
 
-const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void }> = ({
+const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse; handleSetActiveResponse: (requestId: string, activeResponse: WebSocketResponse | null) => void }> = ({
   requestId,
   response,
   handleSetActiveResponse,
@@ -74,7 +76,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: Response; h
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
-  const setActiveResponseAndDisconnect = (requestId: string, response: Response | null) => {
+  const setActiveResponseAndDisconnect = (requestId: string, response: WebSocketResponse | null) => {
     handleSetActiveResponse(requestId, response);
     window.main.webSocket.close({ requestId });
   };

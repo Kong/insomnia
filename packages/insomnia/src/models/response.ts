@@ -62,19 +62,19 @@ export function init(): BaseResponse {
     contentType: '',
     url: '',
     bytesRead: 0,
-    bytesContent: -1,
     // -1 means that it was legacy and this property didn't exist yet
+    bytesContent: -1,
     elapsedTime: 0,
     headers: [],
-    timelinePath: '',
     // Actual timelines are stored on the filesystem
-    bodyPath: '',
+    timelinePath: '',
     // Actual bodies are stored on the filesystem
-    bodyCompression: '__NEEDS_MIGRATION__',
+    bodyPath: '',
     // For legacy bodies
+    bodyCompression: '__NEEDS_MIGRATION__',
     error: '',
-    requestVersionId: null,
     // Things from the request
+    requestVersionId: null,
     settingStoreCookies: null,
     settingSendCookies: null,
     // Responses sent before environment filtering will have a special value

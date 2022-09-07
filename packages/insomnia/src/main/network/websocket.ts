@@ -20,8 +20,8 @@ import { webSocketRequest } from '../../models';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
-import type { Response } from '../../models/response';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
+import type { WebSocketResponse } from '../../models/websocket-response';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
@@ -220,7 +220,7 @@ const createWebSocketConnection = async (
       const internalRequestHeader = ws._req._header;
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
-      const responsePatch: Partial<Response> = {
+      const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
@@ -231,12 +231,10 @@ const createWebSocketConnection = async (
         httpVersion,
         elapsedTime: performance.now() - start,
         timelinePath,
-        bodyPath: responseBodyPath,
-        // NOTE: required for legacy zip workaround
-        bodyCompression: null,
+        eventLogPath: responseBodyPath,
       };
       const settings = await models.settings.getOrCreate();
-      models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
     });
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
@@ -244,7 +242,7 @@ const createWebSocketConnection = async (
       const internalRequestHeader = clientRequest._header;
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
-      const responsePatch: Partial<Response> = {
+      const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
@@ -255,12 +253,10 @@ const createWebSocketConnection = async (
         httpVersion,
         elapsedTime: performance.now() - start,
         timelinePath,
-        bodyPath: responseBodyPath,
-        // NOTE: required for legacy zip workaround
-        bodyCompression: null,
+        eventLogPath: responseBodyPath,
       };
       const settings = await models.settings.getOrCreate();
-      models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
@@ -349,7 +345,7 @@ const createErrorResponse = async (responseId: string, requestId: string, enviro
     statusMessage: 'Error',
     error: message,
   };
-  models.response.create(responsePatch, settings.maxHistoryResponses);
+  models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
 };
 
@@ -402,7 +398,7 @@ const sendWebSocketEvent = async (
   };
 
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const response = await models.response.getLatestByParentId(options.requestId);
+  const response = await models.webSocketResponse.getLatestByParentId(options.requestId);
   if (!response) {
     console.error('something went wrong');
     return;
@@ -428,11 +424,11 @@ const closeAllWebSocketConnections = (): void => {
 const findMany = async (
   options: { responseId: string }
 ): Promise<WebSocketEvent[]> => {
-  const response = await models.response.getById(options.responseId);
-  if (!response || !response.bodyPath) {
+  const response = await models.webSocketResponse.getById(options.responseId);
+  if (!response || !response.eventLogPath) {
     return [];
   }
-  const body = await fs.promises.readFile(response.bodyPath);
+  const body = await fs.promises.readFile(response.eventLogPath);
   return body.toString().split('\n').filter(e => e?.trim())
     // Parse the message
     .map(e => JSON.parse(e))

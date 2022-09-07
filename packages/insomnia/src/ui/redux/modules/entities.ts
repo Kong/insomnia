@@ -28,6 +28,7 @@ import { UnitTest } from '../../../models/unit-test';
 import { UnitTestResult } from '../../../models/unit-test-result';
 import { UnitTestSuite } from '../../../models/unit-test-suite';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { WebSocketResponse } from '../../../models/websocket-response';
 import { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 
@@ -72,6 +73,7 @@ export interface EntitiesState {
   grpcRequests: EntityRecord<GrpcRequest>;
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
   webSocketRequests: EntityRecord<WebSocketRequest>;
+  webSocketResponses: EntityRecord<WebSocketResponse>;
 }
 
 export const initialEntitiesState: EntitiesState = {
@@ -101,6 +103,7 @@ export const initialEntitiesState: EntitiesState = {
   grpcRequests: {},
   grpcRequestMetas: {},
   webSocketRequests: {},
+  webSocketResponses: {},
 };
 
 export function reducer(state = initialEntitiesState, action: any) {
@@ -201,5 +204,6 @@ export async function allDocs() {
     ...(await models.grpcRequest.all()),
     ...(await models.grpcRequestMeta.all()),
     ...(await models.webSocketRequest.all()),
+    ...(await models.webSocketResponse.all()),
   ];
 }

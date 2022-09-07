@@ -43,7 +43,7 @@ export interface BaseWebSocketResponse {
 
 export type WebSocketResponse = BaseModel & BaseWebSocketResponse;
 
-export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => (
+export const isWebSocketResponse = (model: Pick<BaseModel, 'type'>): model is WebSocketResponse => (
   model.type === type
 );
 
