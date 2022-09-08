@@ -11,6 +11,7 @@ import {
   PLUGIN_PATH,
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
+import { clickLink } from '../../../common/electron-helpers';
 import { delay } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
@@ -330,7 +331,19 @@ export class Plugins extends PureComponent<Props, State> {
         <hr />
 
         <div className="text-right">
-          <Button onClick={this._handleCreatePlugin}>Generate New Plugin</Button>
+          <Button
+            onClick={() => {
+              clickLink('https://insomnia.rest/plugins');
+            }}
+          >
+            Browse Plugin Hub
+          </Button>
+          <Button
+            style={{
+              marginLeft: '0.3em',
+            }}
+            onClick={this._handleCreatePlugin}
+          >Generate New Plugin</Button>
           <Button
             style={{
               marginLeft: '0.3em',
