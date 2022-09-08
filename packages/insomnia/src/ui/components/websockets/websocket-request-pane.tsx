@@ -14,8 +14,10 @@ import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
+import { EmptyStatePane } from '../panes/empty-state-pane';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { WebSocketActionBar } from './action-bar';
+
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
 
 const EditorWrapper = styled.div({
@@ -205,38 +207,55 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />
           </Tab>
           <Tab tabIndex="-1">
-            <AuthDropdown
-              authTypes={supportedAuthTypes}
-              disabled={disabled}
-            />
+            <AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />
           </Tab>
-          <Tab tabIndex="-1" >
+          <Tab tabIndex="-1">
             <button>Headers</button>
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">
-          <PaneSendButton>
-            <SendButton
-              type="submit"
-              form="websocketMessageForm"
-              disabled={readyState !== ReadyState.OPEN}
-            >
-              Send
-            </SendButton>
-          </PaneSendButton>
-          <WebSocketRequestForm
-            key={uniqueKey}
-            request={request}
-            previewMode={previewMode}
-            initialValue={initialValue}
-            createOrUpdatePayload={createOrUpdatePayload}
-            environmentId={environmentId}
-          />
+          {!disabled && (
+            <EmptyStatePane
+              icon={<i className="fa fa-paper-plane" />}
+              documentationLinks={[
+                {
+                  title: 'Introduction to Insomnia',
+                  url: 'https://docs.insomnia.rest/insomnia/get-started',
+                },
+              ]}
+              title="Enter a URL and connect to a WebSocket server to start sending data"
+              secondaryAction="Select a payload type from above to send data to the connection"
+            />
+          )}
+          {disabled && (
+            <>
+              <PaneSendButton>
+                <SendButton
+                  type="submit"
+                  form="websocketMessageForm"
+                  disabled={readyState !== ReadyState.OPEN}
+                >
+                  Send
+                </SendButton>
+              </PaneSendButton>
+              <WebSocketRequestForm
+                key={uniqueKey}
+                request={request}
+                previewMode={previewMode}
+                initialValue={initialValue}
+                createOrUpdatePayload={createOrUpdatePayload}
+                environmentId={environmentId}
+              />
+            </>
+          )}
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
             key={`${uniqueKey}-${request.authentication.type}-auth-header`}
-            disabled={readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING}
+            disabled={
+              readyState === ReadyState.OPEN ||
+              readyState === ReadyState.CLOSING
+            }
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
