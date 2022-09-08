@@ -23,12 +23,21 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
       if (isMounted) {
         setEvents(allEvents);
       }
+
+      const afterLatestEvent = (event: WebSocketEvent, prevEvents: WebSocketEvent[]) => {
+        if (prevEvents.length === 0) {
+          return true;
+        }
+
+        return event.timestamp > prevEvents[0]?.timestamp;
+      };
+
       // Subscribe to new events and update the state.
       unsubscribe = window.main.on(`webSocket.${responseId}.event`,
         (_, events: WebSocketEvent[]) => {
           console.log('received events', events);
           if (isMounted) {
-            setEvents(allEvents => allEvents.concat(events));
+            setEvents(prevEvents => events.filter(event => afterLatestEvent(event, prevEvents)).concat(prevEvents));
           }
 
           // Wait to give the CTS signal until we've rendered a frame.
