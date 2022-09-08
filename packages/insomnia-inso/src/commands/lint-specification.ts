@@ -1,10 +1,12 @@
 import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
 import { oas } from '@stoplight/spectral-rulesets';
+const { bundleAndLoadRuleset } = require("@stoplight/spectral-ruleset-bundler/with-loader");
 import fs from 'fs';
 import path from 'path';
 
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
+import { ApiSpecRuleset } from '../db/models/types';
 import { InsoError } from '../errors';
 import type { GlobalOptions } from '../get-options';
 import { logger } from '../logger';
@@ -18,7 +20,7 @@ export async function lintSpecification(
   const db = await loadDb({
     workingDir,
     appDataDir,
-    filterTypes: ['ApiSpec'],
+    filterTypes: ['ApiSpec', 'ApiSpecRuleset'],
     src,
   });
 
@@ -51,7 +53,22 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  await spectral.setRuleset(oas as RulesetDefinition);
+
+  let providedRuleset: ApiSpecRuleset | undefined;
+  if (specFromDb?.parentId){
+    providedRuleset = db.ApiSpecRuleset.find(
+      ruleset => specFromDb.parentId === ruleset.parentId
+    );
+  }
+
+  if (providedRuleset && providedRuleset.contents){
+    const r = await bundleAndLoadRuleset("file:///inso.custom-spectral-config.yaml", {
+      fs: { promises: { readFile: () => { return providedRuleset!.contents; }}  as any}
+    })
+    spectral.setRuleset(r);
+  } else {
+    await spectral.setRuleset(oas as RulesetDefinition);
+  }
 
   const results = (await spectral.run(specContent)).filter(result => (
     result.severity === 0 // filter for errors only

@@ -15,6 +15,13 @@ export interface BaseApiSpec {
 
 export type ApiSpec = BaseModel & BaseApiSpec;
 
+export interface BaseApiSpecRuleset {
+    fileName: string;
+    contents: string;
+}
+
+export type ApiSpecRuleset = BaseModel & BaseApiSpecRuleset;
+
 interface BaseUnitTestSuite {
     name: string;
 }

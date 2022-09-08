@@ -8,6 +8,7 @@ import insomniaAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
 import type {
   ApiSpec,
+  ApiSpecRuleset,
   BaseModel,
   Environment,
   UnitTest,
@@ -17,6 +18,7 @@ import type {
 
 export interface Database {
   ApiSpec: ApiSpec[];
+  ApiSpecRuleset: ApiSpecRuleset[];
   Environment: Environment[];
   Request: BaseModel[];
   RequestGroup: BaseModel[];
@@ -27,6 +29,7 @@ export interface Database {
 
 export const emptyDb = (): Database => ({
   ApiSpec: [],
+  ApiSpecRuleset: [],
   Environment: [],
   Request: [],
   RequestGroup: [],
