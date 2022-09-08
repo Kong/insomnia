@@ -41,7 +41,7 @@ export const ResponsePane: FC<Props> = ({
   handleSetActiveResponse,
   request,
 }) => {
-  const response = useSelector(selectActiveResponse);
+  const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);

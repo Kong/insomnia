@@ -6,13 +6,13 @@ import { isRemoteProject } from '../../models/project';
 import { Request, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { WebSocketResponse } from '../../models/websocket-response';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
 import {
   selectActiveEnvironment,
   selectActiveProject,
   selectActiveRequest,
-  selectActiveResponse,
   selectActiveWorkspace,
   selectIsLoggedIn,
   selectSettings,
@@ -39,7 +39,7 @@ interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: (id: string | null) => void;
-  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
+  handleSetActiveResponse: (requestId: string, activeResponse: Response | WebSocketResponse | null) => void;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
@@ -64,13 +64,11 @@ export const WrapperDebug: FC<Props> = ({
   headerEditorKey,
   vcs,
 }) => {
-
   const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
-  const activeResponse = useSelector(selectActiveResponse);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
@@ -171,7 +169,6 @@ export const WrapperDebug: FC<Props> = ({
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketResponsePane
                   requestId={activeRequest._id}
-                  response={activeResponse}
                   handleSetActiveResponse={handleSetActiveResponse}
                 />
               ) : (
