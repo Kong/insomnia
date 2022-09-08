@@ -119,7 +119,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
           mode={previewMode}
           ref={editorRef}
           defaultValue=''
-          onChange={v => createOrUpdatePayload(v, previewMode)}
+          onChange={value => createOrUpdatePayload(value, previewMode)}
           enableNunjucks
         />
       </EditorWrapper>
