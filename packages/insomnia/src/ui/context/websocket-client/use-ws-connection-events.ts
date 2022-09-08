@@ -24,8 +24,12 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
         setEvents(allEvents);
       }
 
-      const afterLatestEvent = (event: WebSocketEvent) => {
-        return event.timestamp > allEvents[0].timestamp;
+      const afterLatestEvent = (event: WebSocketEvent, prevEvents: WebSocketEvent[]) => {
+        if (prevEvents.length === 0) {
+          return true;
+        }
+
+        return event.timestamp > prevEvents[0]?.timestamp;
       };
 
       // Subscribe to new events and update the state.
@@ -33,7 +37,7 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
         (_, events: WebSocketEvent[]) => {
           console.log('received events', events);
           if (isMounted) {
-            setEvents(allEvents => events.filter(afterLatestEvent).concat(allEvents));
+            setEvents(prevEvents => events.filter(event => afterLatestEvent(event, prevEvents)).concat(prevEvents));
           }
 
           // Wait to give the CTS signal until we've rendered a frame.
