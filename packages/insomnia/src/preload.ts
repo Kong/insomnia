@@ -12,7 +12,6 @@ const webSocket: WebSocketBridgeAPI = {
   event: {
     findMany: options => ipcRenderer.invoke('webSocket.event.findMany', options),
     send: options => ipcRenderer.invoke('webSocket.event.send', options),
-    clearToSend: () => ipcRenderer.invoke('webSocket.clearToSend'),
   },
 };
 
