@@ -1,9 +1,10 @@
 import fs from 'fs';
 
-import { database as db, Query } from '../common/database';
+import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
+import { ResponseHeader } from './response';
 
 export const name = 'WebSocket Response';
 
@@ -15,11 +16,6 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-export interface WebSocketResponseHeader {
-  name: string;
-  value: string;
-}
-
 export interface BaseWebSocketResponse {
   environmentId: string | null;
   statusCode: number;
@@ -28,14 +24,13 @@ export interface BaseWebSocketResponse {
   contentType: string;
   url: string;
   elapsedTime: number;
-  headers: WebSocketResponseHeader[];
+  headers: ResponseHeader[];
   // Event logs are stored on the filesystem
   eventLogPath: string;
   // Actual timelines are stored on the filesystem
   timelinePath: string;
   error: string;
   requestVersionId: string | null;
-  // Things from the request
   settingStoreCookies: boolean | null;
   settingSendCookies: boolean | null;
 }
@@ -55,18 +50,13 @@ export function init(): BaseWebSocketResponse {
     url: '',
     elapsedTime: 0,
     headers: [],
-    // Actual timelines are stored on the filesystem
     timelinePath: '',
-    // Actual bodies are stored on the filesystem
     eventLogPath: '',
     error: '',
     requestVersionId: null,
-    // Things from the request
     settingStoreCookies: null,
     settingSendCookies: null,
-    // Responses sent before environment filtering will have a special value
-    // so they don't show up at all when filtering is on.
-    environmentId: '__LEGACY__',
+    environmentId: null,
   };
 }
 
@@ -116,32 +106,6 @@ export async function removeForRequest(parentId: string, environmentId?: string 
 
 export function remove(response: WebSocketResponse) {
   return db.remove(response);
-}
-
-async function _findRecentForRequest(
-  requestId: string,
-  environmentId: string | null,
-  limit: number,
-) {
-  const query: Query = {
-    parentId: requestId,
-  };
-
-  // Filter responses by environment if setting is enabled
-  if ((await models.settings.getOrCreate()).filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
-
-  return db.findMostRecentlyModified<WebSocketResponse>(type, query, limit);
-}
-
-export async function getLatestForRequest(
-  requestId: string,
-  environmentId: string | null,
-) {
-  const responses = await _findRecentForRequest(requestId, environmentId, 1);
-  const response = responses[0];
-  return response || null;
 }
 
 export async function create(patch: Partial<WebSocketResponse> = {}, maxResponses = 20) {
