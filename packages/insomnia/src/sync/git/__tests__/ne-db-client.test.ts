@@ -49,6 +49,7 @@ describe('NeDBClient', () => {
       expect(await neDbClient.readdir(GIT_CLONE_DIR)).toEqual([GIT_INSOMNIA_DIR_NAME]);
       expect(await neDbClient.readdir(GIT_INSOMNIA_DIR)).toEqual([
         models.apiSpec.type,
+        models.apiSpecRuleset.type,
         models.environment.type,
         models.grpcRequest.type,
         models.protoDirectory.type,

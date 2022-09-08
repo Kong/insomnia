@@ -143,6 +143,7 @@ export class NeDBClient {
         models.requestGroup.type,
         models.request.type,
         models.apiSpec.type,
+        models.apiSpecRuleset.type,
         models.unitTestSuite.type,
         models.unitTest.type,
         models.grpcRequest.type,
