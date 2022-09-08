@@ -45,13 +45,26 @@ Location: ws://localhost:4010
 `);
   return;
 };
+const return401withBody = (socket: Socket) => {
+  socket.end(`HTTP/1.1 401 Unauthorized
+
+  <!doctype html>
+  <html>
+  <body>
+  <div>
+    <h1>401 Unauthorized</h1>
+  </div>
+  </body>
+  </html>`);
+  return;
+};
 const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket, head: Buffer) => {
   if (request.url === '/redirect') {
     return redirectOnSuccess(socket);
   }
   if (request.url === '/bearer') {
     if (request.headers.authorization !== 'Bearer insomnia-cool-token-!!!1112113243111') {
-      socket.end('HTTP/1.1 401 Unauthorized\n\n');
+      return401withBody(socket);
       return;
     }
     return redirectOnSuccess(socket);
@@ -59,7 +72,7 @@ const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket,
   if (request.url === '/basic-auth') {
     // login with user:password
     if (request.headers.authorization !== 'Basic dXNlcjpwYXNzd29yZA==') {
-      socket.end('HTTP/1.1 401 Unauthorized\n\n');
+      return401withBody(socket);
       return;
     }
     return redirectOnSuccess(socket);

@@ -5,17 +5,17 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 interface Props {
-  payloadType: string;
-  onClick: (payloadType: string) => void;
+  previewMode: string;
+  onClick: (previewMode: string) => void;
 }
-export const PayloadTypeDropdown: FC<Props> = ({ payloadType, onClick }) => {
+export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }) => {
   return (
     <Dropdown>
       <DropdownButton className="tall">
         {{
           [CONTENT_TYPE_JSON]: 'JSON',
           [CONTENT_TYPE_PLAINTEXT]: 'Raw',
-        }[payloadType]}
+        }[previewMode]}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
       <DropdownItem onClick={onClick} value={CONTENT_TYPE_JSON}>

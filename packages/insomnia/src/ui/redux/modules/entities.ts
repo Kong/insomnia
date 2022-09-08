@@ -27,6 +27,7 @@ import { Stats } from '../../../models/stats';
 import { UnitTest } from '../../../models/unit-test';
 import { UnitTestResult } from '../../../models/unit-test-result';
 import { UnitTestSuite } from '../../../models/unit-test-suite';
+import { WebSocketPayload } from '../../../models/websocket-payload';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { Workspace } from '../../../models/workspace';
@@ -72,6 +73,7 @@ export interface EntitiesState {
   protoDirectories: EntityRecord<ProtoDirectory>;
   grpcRequests: EntityRecord<GrpcRequest>;
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
+  webSocketPayloads: EntityRecord<WebSocketPayload>;
   webSocketRequests: EntityRecord<WebSocketRequest>;
   webSocketResponses: EntityRecord<WebSocketResponse>;
 }
@@ -102,6 +104,7 @@ export const initialEntitiesState: EntitiesState = {
   protoDirectories: {},
   grpcRequests: {},
   grpcRequestMetas: {},
+  webSocketPayloads: {},
   webSocketRequests: {},
   webSocketResponses: {},
 };
@@ -203,6 +206,7 @@ export async function allDocs() {
     ...(await models.protoDirectory.all()),
     ...(await models.grpcRequest.all()),
     ...(await models.grpcRequestMeta.all()),
+    ...(await models.webSocketPayload.all()),
     ...(await models.webSocketRequest.all()),
     ...(await models.webSocketResponse.all()),
   ];

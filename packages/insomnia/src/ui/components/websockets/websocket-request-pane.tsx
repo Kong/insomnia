@@ -1,4 +1,4 @@
-import React, { FC, FormEvent, useRef, useState } from 'react';
+import React, { FC, FormEvent, useEffect, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -9,7 +9,7 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
-import { PayloadTypeDropdown } from '../dropdowns/payload-type-dropdown';
+import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { showAlert, showModal } from '../modals';
@@ -52,16 +52,30 @@ const PaneHeader = styled(OriginalPaneHeader)({
 
 interface FormProps {
   request: WebSocketRequest;
-  payloadType: string;
+  previewMode: string;
+  initialValue: string;
   environmentId: string;
+  createOrUpdatePayload: (payload: string, mode: string) => Promise<void>;
 }
 
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
-  payloadType,
+  previewMode,
+  initialValue,
+  createOrUpdatePayload,
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
+  useEffect(() => {
+    let isMounted = true;
+    if (isMounted) {
+      editorRef.current?.codeMirror?.setValue(initialValue);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [initialValue]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = editorRef.current?.getValue() || '';
@@ -102,9 +116,10 @@ const WebSocketRequestForm: FC<FormProps> = ({
       <EditorWrapper>
         <CodeEditor
           uniquenessKey={request._id}
-          mode={payloadType}
+          mode={previewMode}
           ref={editorRef}
           defaultValue=''
+          onChange={value => createOrUpdatePayload(value, previewMode)}
           enableNunjucks
         />
       </EditorWrapper>
@@ -125,13 +140,49 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
   const readyState = useWSReadyState(request._id);
+
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
     if (url !== request.url) {
       models.webSocketRequest.update(request, { url });
     }
   };
-  const [payloadType, setPayloadType] = useState(CONTENT_TYPE_JSON);
+  const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
+  const [initialValue, setInitialValue] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fn = async () => {
+      const payload = await models.webSocketPayload.getByParentId(request._id);
+      if (isMounted && payload) {
+        setInitialValue(payload?.value || '');
+        setPreviewMode(payload.mode);
+      }
+    };
+    fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [request._id]);
+
+  const changeMode = (mode: string) => {
+    setPreviewMode(mode);
+    createOrUpdatePayload(initialValue, mode);
+  };
+
+  const createOrUpdatePayload = async (value: string, mode: string) => {
+    // @TODO: multiple payloads
+    const payload = await models.webSocketPayload.getByParentId(request._id);
+    if (payload) {
+      await models.webSocketPayload.update(payload, { value, mode });
+      return;
+    }
+    await models.webSocketPayload.create({
+      parentId: request._id,
+      value,
+      mode,
+    });
+  };
 
   const uniqueKey = `${forceRefreshKey}::${request._id}`;
 
@@ -151,7 +202,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
       <Tabs className="pane__body theme--pane__body react-tabs">
         <TabList>
           <Tab tabIndex="-1" >
-            <PayloadTypeDropdown payloadType={payloadType} onClick={setPayloadType} />
+            <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />
           </Tab>
           <Tab tabIndex="-1">
             <AuthDropdown
@@ -176,7 +227,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           <WebSocketRequestForm
             key={uniqueKey}
             request={request}
-            payloadType={payloadType}
+            previewMode={previewMode}
+            initialValue={initialValue}
+            createOrUpdatePayload={createOrUpdatePayload}
             environmentId={environmentId}
           />
         </TabPanel>
