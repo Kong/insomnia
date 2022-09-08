@@ -3,6 +3,7 @@ import { Insomnia4Data } from 'insomnia-importers';
 import YAML from 'yaml';
 
 import { isApiSpec } from '../models/api-spec';
+import { isApiSpecRuleset } from '../models/api-spec-ruleset';
 import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
 import { isGrpcRequest } from '../models/grpc-request';
@@ -19,6 +20,7 @@ import { resetKeys } from '../sync/ignore-keys';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import {
   EXPORT_TYPE_API_SPEC,
+  EXPORT_TYPE_API_SPEC_RULESET,
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_GRPC_REQUEST,
@@ -171,6 +173,7 @@ export async function exportRequestsData(
         isCookieJar(d) ||
         isEnvironment(d) ||
         isApiSpec(d) ||
+        isApiSpecRuleset(d) ||
         isUnitTestSuite(d) ||
         isUnitTest(d) ||
         isProtoFile(d) ||
@@ -195,7 +198,8 @@ export async function exportRequestsData(
           isWorkspace(d) ||
           isCookieJar(d) ||
           isEnvironment(d) ||
-          isApiSpec(d)
+          isApiSpec(d) ||
+          isApiSpecRuleset(d)
         )
       ) {
         return false;
@@ -240,6 +244,9 @@ export async function exportRequestsData(
       } else if (isApiSpec(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_API_SPEC;
+      } else if (isApiSpecRuleset(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
+        d._type = EXPORT_TYPE_API_SPEC_RULESET;
       }
 
       // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?

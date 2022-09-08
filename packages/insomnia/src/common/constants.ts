@@ -560,5 +560,6 @@ export const EXPORT_TYPE_WORKSPACE = 'workspace';
 export const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 export const EXPORT_TYPE_ENVIRONMENT = 'environment';
 export const EXPORT_TYPE_API_SPEC = 'api_spec';
+export const EXPORT_TYPE_API_SPEC_RULESET = 'api_spec_ruleset';
 export const EXPORT_TYPE_PROTO_FILE = 'proto_file';
 export const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
