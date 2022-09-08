@@ -96,7 +96,8 @@ const dispatchWebSocketEvent = (target: Electron.WebContents, eventChannel: stri
   // Otherwise, append to send queue for this event channel.
   const sendQueue = sendQueueMap.get(eventChannel);
   if (sendQueue) {
-    sendQueue.push(wsEvent);
+    // Add the event to the top of queue so that the latest message is first.
+    sendQueue.unshift(wsEvent);
   } else {
     sendQueueMap.set(eventChannel, [wsEvent]);
   }
@@ -433,7 +434,10 @@ const findMany = async (
   }
   const body = await fs.promises.readFile(response.bodyPath);
   return body.toString().split('\n').filter(e => e?.trim())
-    .map(e => JSON.parse(e)) || [];
+    // Parse the message
+    .map(e => JSON.parse(e))
+    // Reverse the list of messages so that we get the latest message first
+    .reverse() || [];
 };
 
 /**
