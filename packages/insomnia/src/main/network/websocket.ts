@@ -72,37 +72,6 @@ const WebSocketConnections = new Map<string, WebSocket>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-// Flow control state.
-
-// CTS flag; When set, the renderer thread is accepting new WebSocket events.
-let clearToSend = true;
-
-// Send queue map; holds batches of events for each event channel, to be sent upon receiving a CTS signal.
-const sendQueueMap = new Map<string, WebSocketEventLog>();
-
-/**
- * Dispatches a websocket event to a renderer, using batching control flow logic.
- * When CTS is set, the events are sent immediately.
- * If CTS is cleared, the events are batched into the send queue.
- */
-const dispatchWebSocketEvent = (target: Electron.WebContents, eventChannel: string, wsEvent: WebSocketEvent): void => {
-  // If the CTS flag is already set, just send immediately.
-  if (clearToSend) {
-    target.send(eventChannel, [wsEvent]);
-    clearToSend = false;
-    return;
-  }
-
-  // Otherwise, append to send queue for this event channel.
-  const sendQueue = sendQueueMap.get(eventChannel);
-  if (sendQueue) {
-    // Add the event to the top of queue so that the latest message is first.
-    sendQueue.unshift(wsEvent);
-  } else {
-    sendQueueMap.set(eventChannel, [wsEvent]);
-  }
-};
-
 const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
   const statusMessage = incomingMessage.statusMessage || '';
   const statusCode = incomingMessage.statusCode || 0;
@@ -155,7 +124,6 @@ const createWebSocketConnection = async (
   const responseEnvironmentId = environment ? environment._id : null;
 
   try {
-    const eventChannel = `webSocket.${responseId}.event`;
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
@@ -274,7 +242,6 @@ const createWebSocketConnection = async (
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n');
-      dispatchWebSocketEvent(event.sender, eventChannel, openEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -289,7 +256,6 @@ const createWebSocketConnection = async (
       };
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-      dispatchWebSocketEvent(event.sender, eventChannel, messageEvent);
     });
 
     ws.addEventListener('close', ({ code, reason, wasClean }) => {
@@ -303,11 +269,8 @@ const createWebSocketConnection = async (
         timestamp: Date.now(),
       };
 
-      sendQueueMap.delete(eventChannel);
       const message = `Closing connection with code ${code}`;
       deleteRequestMaps(request._id, message, closeEvent);
-
-      dispatchWebSocketEvent(event.sender, eventChannel, closeEvent);
       event.sender.send(readyStateChannel, ws.readyState);
     });
 
@@ -324,10 +287,7 @@ const createWebSocketConnection = async (
       };
 
       deleteRequestMaps(request._id, message, errorEvent);
-
-      dispatchWebSocketEvent(event.sender, eventChannel, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
-
       createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
     });
   } catch (e) {
@@ -371,7 +331,6 @@ const getWebSocketReadyState = async (
 };
 
 const sendWebSocketEvent = async (
-  event: Electron.IpcMainInvokeEvent,
   options: { message: string; requestId: string }
 ): Promise<void> => {
   const ws = WebSocketConnections.get(options.requestId);
@@ -406,8 +365,6 @@ const sendWebSocketEvent = async (
     console.error('something went wrong');
     return;
   }
-  const eventChannel = `webSocket.${response._id}.event`;
-  dispatchWebSocketEvent(event.sender, eventChannel, lastMessage);
 };
 
 const closeWebSocketConnection = async (
@@ -439,28 +396,6 @@ const findMany = async (
     .reverse() || [];
 };
 
-/**
- * Sets the CTS flag; sent when the UI is ready for more events.
- */
-const signalClearToSend = (event: Electron.IpcMainInvokeEvent): void => {
-  const nextChannel = sendQueueMap.keys().next();
-
-  // There are no pending events; just set the CTS flag.
-  if (nextChannel.done) {
-    clearToSend = true;
-    return;
-  }
-
-  // We have batched events; immediately send one batch.
-  const sendQueue = sendQueueMap.get(nextChannel.value);
-  if (!sendQueue) {
-    return;
-  }
-
-  event.sender.send(nextChannel.value, sendQueue);
-  sendQueueMap.delete(nextChannel.value);
-};
-
 export interface WebSocketBridgeAPI {
   create: (options: {
     requestId: string;
@@ -477,13 +412,11 @@ export interface WebSocketBridgeAPI {
   event: {
     findMany: typeof findMany;
     send: (options: { requestId: string; message: string }) => void;
-    clearToSend: () => void;
   };
 }
 export const registerWebSocketHandlers = () => {
   ipcMain.handle('webSocket.create', createWebSocketConnection);
-  ipcMain.handle('webSocket.event.send', sendWebSocketEvent);
-  ipcMain.handle('webSocket.clearToSend', signalClearToSend);
+  ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
   ipcMain.handle('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
   ipcMain.handle('webSocket.closeAll', closeAllWebSocketConnections);
   ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
