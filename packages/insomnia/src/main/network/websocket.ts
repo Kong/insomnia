@@ -238,6 +238,9 @@ const createWebSocketConnection = async (
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
     });
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
+      incomingMessage.on('data', chunk => {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
+      });
       // @ts-expect-error -- private property
       const internalRequestHeader = clientRequest._header;
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);

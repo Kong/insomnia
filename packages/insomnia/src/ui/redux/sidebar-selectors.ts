@@ -21,7 +21,7 @@ export const shouldShowInSidebar = (model: BaseModel): boolean =>
   isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
 
 export const shouldIgnoreChildrenOf = (model: SidebarModel): boolean =>
-  isRequest(model) || isGrpcRequest(model);
+  isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model);
 
 export const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
   if (a.metaSortKey === b.metaSortKey) {
