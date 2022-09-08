@@ -39,8 +39,8 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
         <CodeEditor
           manualPrettify
           ref={editor}
-          lintOptions={{ delay: 1000 }}
-          mode="openapi"
+          lintOptions={{ lint: false }}
+          mode="yaml"
           defaultValue={contents}
           onChange={onCodeEditorChange}
           uniquenessKey={uniquenessKey}
@@ -60,7 +60,6 @@ const EmptySpaceHelper = styled.div({
 });
 
 const RenderPageSidebar: FC = () => {
-
   return (
     <EmptySpaceHelper>
      <p>These custom rulesets are Spectral-compatible: <br /><br />

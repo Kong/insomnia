@@ -31,7 +31,7 @@ import { GrpcDispatchModalWrapper } from '../context/grpc';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { RootState } from '../redux/modules';
 import { setActiveActivity } from '../redux/modules/global';
-import { selectActiveActivity, selectActiveApiSpec, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
+import { selectActiveActivity, selectActiveApiSpec, selectActiveApiSpecRuleset, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
@@ -121,7 +121,9 @@ const ActivityRouter = () => {
   return null;
 };
 
-const spectral = initializeSpectral();
+// Loading linting rules is done async, so we add a stub
+// that returns no errors until they're loaded
+let spectral: any = {run: () => {return []}};
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
   handleDuplicateRequest: Function;
@@ -216,7 +218,7 @@ export class WrapperClass extends PureComponent<Props, State> {
     setTimeout(() => this._forceRequestPaneRefresh(), 500);
   }
   async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
-    const { activeActivity, activeApiSpec, handleSetActiveActivity } = this.props;
+    const { activeActivity, activeApiSpec, activeApiSpecRuleset, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
     if (workspaceId && nextActivity !== ACTIVITY_HOME) {
@@ -247,7 +249,8 @@ export class WrapperClass extends PureComponent<Props, State> {
     // Handle switching away from the spec design activity. For this, we want to generate
     // requests that can be accessed from debug or test.
     // If there are errors in the spec, show the user a warning first
-    const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
+    spectral = await initializeSpectral(activeApiSpecRuleset!);
+    const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError)
     if (activeApiSpec.contents && results && results.length) {
       showModal(AlertModal, {
         title: 'Error Generating Configuration',
@@ -532,6 +535,7 @@ const mapStateToProps = (state: RootState) => ({
   activeWorkspace: selectActiveWorkspace(state),
   activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
   activeApiSpec: selectActiveApiSpec(state),
+  activeApiSpecRuleset: selectActiveApiSpecRuleset(state),
   activeResponse: selectActiveResponse(state),
   settings: selectSettings(state),
 });

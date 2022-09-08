@@ -8,10 +8,10 @@ import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { debounce } from '../../common/misc';
-import { initializeSpectral, isLintError } from '../../common/spectral';
+import { initializeSpectral } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
-import { selectActiveApiSpec } from '../redux/selectors';
+import { selectActiveApiSpec, selectActiveApiSpecRuleset } from '../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
@@ -28,8 +28,6 @@ const EmptySpaceHelper = styled.div({
   padding: '2em',
   textAlign: 'center',
 });
-
-const spectral = initializeSpectral();
 
 interface LintMessage extends Notice {
   range: IRuleResult['range'];
@@ -72,8 +70,13 @@ const useDesignEmptyState = () => {
 
 const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
+  const activeApiSpecRuleset = useSelector(selectActiveApiSpecRuleset);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
+
+  // Force a lint when showing the editor
+  editor.current?._codemirrorSmartSetOption('lint', false);
+  editor.current?._codemirrorSmartSetOption('lint', true);
 
   const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
 
@@ -90,21 +93,22 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   }, [activeApiSpec]);
 
   useAsync(async () => {
-    // Lint only if spec has content
-    if (contents && contents.length !== 0) {
-      const results: LintMessage[] = (await spectral.run(contents))
-        .filter(isLintError)
-        .map(({ severity, code, message, range }) => ({
-          type: severity === 0 ? 'error' : 'warning',
-          message: `${code} ${message}`,
-          line: range.start.line,
-          // Attach range that will be returned to our click handler
-          range,
-        }));
-      setLintMessages(results);
-    } else {
-      setLintMessages([]);
-    }
+    initializeSpectral(activeApiSpecRuleset!).then(async spectral => {
+      // Lint only if spec has content
+      if (contents && contents.length !== 0) {
+        const results: LintMessage[] = (await spectral.run(contents))
+          .map(({ severity, code, message, range }) => ({
+            type: severity === 0 ? 'error' : 'warning',
+            message: `${code} ${message}`,
+            line: range.start.line,
+            // Attach range that will be returned to our click handler
+            range,
+          }));
+        setLintMessages(results);
+      } else {
+        setLintMessages([]);
+      }
+    });
   }, [contents]);
 
   const handleScrollToSelection = useCallback((notice: LintMessage) => {

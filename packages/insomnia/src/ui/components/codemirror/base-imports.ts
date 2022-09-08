@@ -73,7 +73,6 @@ import 'codemirror-graphql/variables/mode';
 import './modes/nunjucks';
 import './modes/curl';
 import './modes/openapi';
-import './lint/openapi';
 import './lint/javascript-async-lint';
 import './extensions/autocomplete';
 import './extensions/clickable';
