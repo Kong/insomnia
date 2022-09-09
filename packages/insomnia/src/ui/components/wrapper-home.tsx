@@ -343,8 +343,15 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
                 No documents found for <strong>{filter}</strong>
               </p>
             )}
-            {!filter && cards.length === 0 && (
-              <WrapperHomeEmptyStatePane createRequestCollection={createRequestCollection} createDesignDocument={createDesignDocument} importFromFile={importFromFile} importFromURL={importFromURL} importFromClipboard={importFromClipboard} importFromGit={importFromGit} />
+            {!filter && !cards.length && (
+              <WrapperHomeEmptyStatePane
+                createRequestCollection={createRequestCollection}
+                createDesignDocument={createDesignDocument}
+                importFromFile={importFromFile}
+                importFromURL={importFromURL}
+                importFromClipboard={importFromClipboard}
+                importFromGit={importFromGit}
+              />
             )}
           </div>
           <div className="document-listing__footer vertically-center">

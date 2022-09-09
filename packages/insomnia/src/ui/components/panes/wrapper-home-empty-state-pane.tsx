@@ -47,12 +47,12 @@ const Title = styled.div({
 });
 
 interface Props {
-  createRequestCollection: any;
-  createDesignDocument: any;
-  importFromFile: any;
-  importFromURL: any;
-  importFromClipboard: any;
-  importFromGit: any;
+  createRequestCollection: () => void;
+  createDesignDocument: () => void;
+  importFromFile: () => void;
+  importFromURL: () => void;
+  importFromClipboard: () => void;
+  importFromGit: () => void;
 }
 
 export const WrapperHomeEmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFromFile, importFromURL, importFromClipboard, importFromGit }) => {
