@@ -41,6 +41,7 @@
     "@types/oidc-provider": "^7.8.1",
     "@types/ramda": "^0.27.45",
     "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "execa": "^5.0.0",
@@ -57,6 +58,7 @@
     "ramda-adjunct": "^2.34.0",
     "ts-node": "^9.1.1",
     "uuid": "^8.3.2",
+    "ws": "^8.8.1",
     "xvfb-maybe": "^0.2.1"
   }
 }

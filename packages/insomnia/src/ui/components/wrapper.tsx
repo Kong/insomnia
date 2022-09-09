@@ -23,6 +23,7 @@ import {
   RequestHeader,
 } from '../../models/request';
 import { Response } from '../../models/response';
+import { WebSocketResponse } from '../../models/websocket-response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
@@ -185,7 +186,8 @@ export class WrapperClass extends PureComponent<Props, State> {
 
     return null;
   }
-  async handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
+
+  async handleSetActiveResponse(requestId: string, activeResponse: Response | WebSocketResponse | null = null) {
     const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
     await updateRequestMetaByParentId(requestId, {
@@ -388,7 +390,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             />
 
             <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
-            <ResponseDebugModal ref={registerModal} />
+            <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
             <RequestSwitcherModal
               ref={registerModal}

@@ -6,6 +6,7 @@ import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
+import { isResponse } from '../../../models/response';
 import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -36,7 +37,7 @@ export const PreviewModeDropdown: FC<Props> = ({
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!response || !request || !isRequest(request)) {
+    if (!response || !request || !isRequest(request) || !isResponse(response)) {
       console.warn('Nothing to download');
       return;
     }
@@ -61,7 +62,7 @@ export const PreviewModeDropdown: FC<Props> = ({
   }, [request, response]);
 
   const exportDebugFile = useCallback(async () => {
-    if (!response || !request) {
+    if (!response || !request || !isResponse(response)) {
       console.warn('Nothing to download');
       return;
     }

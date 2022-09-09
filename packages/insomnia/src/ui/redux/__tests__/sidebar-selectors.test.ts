@@ -17,7 +17,7 @@ const grpcRequestModelBuilder = createBuilder(grpcRequestModelSchema);
 
 describe('shouldShowInSidebar', () => {
   const allTypes = models.types();
-  const supported = [models.request.type, models.requestGroup.type, models.grpcRequest.type];
+  const supported = [models.request.type, models.requestGroup.type, models.grpcRequest.type, models.webSocketRequest.type];
   const unsupported = difference(allTypes, supported);
 
   it.each(supported)('should show %s in sidebar', type => {

@@ -47,7 +47,10 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
   const create = useCallback((requestType: CreateRequestType) => {
     if (activeWorkspaceId) {
-      createRequest({ parentId: requestGroup._id, requestType, workspaceId: activeWorkspaceId });
+      createRequest({
+        parentId: requestGroup._id,
+        requestType, workspaceId: activeWorkspaceId,
+      });
     }
   }, [activeWorkspaceId, requestGroup._id]);
 
@@ -141,6 +144,10 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
       <DropdownItem value="gRPC" onClick={create}>
         <i className="fa fa-plus-circle" />New gRPC Request
+      </DropdownItem>
+
+      <DropdownItem value="WebSocket" onClick={create}>
+        <i className="fa fa-plus-circle" />WebSocket Request
       </DropdownItem>
 
       <DropdownItem onClick={createGroup}>

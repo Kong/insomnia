@@ -260,7 +260,6 @@ export const database = {
       console.log(`[db] Dropped ${changes.length} changes.`);
       return;
     }
-
     // Notify local listeners too
     for (const fn of changeListeners) {
       await fn(changes);
@@ -685,9 +684,9 @@ function getDBFilePath(modelType: string) {
 let bufferingChanges = false;
 let bufferChangesId = 1;
 
-export type ChangeBufferEvent = [
+export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
   event: string,
-  doc: BaseModel,
+  doc: T,
   fromSync: boolean
 ];
 

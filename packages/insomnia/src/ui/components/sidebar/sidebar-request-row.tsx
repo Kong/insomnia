@@ -7,8 +7,9 @@ import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { Request } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
@@ -16,11 +17,13 @@ import type { DropdownHandle } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
+import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-actions-dropdown';
 import { GrpcSpinner } from '../grpc-spinner';
 import { showModal } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
+import { WebSocketTag } from '../tags/websocket-tag';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 interface RawProps {
@@ -30,7 +33,7 @@ interface RawProps {
   handleDuplicateRequest: Function;
   isActive: boolean;
   isPinned: boolean;
-  request?: Request | GrpcRequest;
+  request?: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
 }
 
@@ -138,7 +141,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       return;
     }
 
-    if (isGrpcRequest(request)) {
+    if (!isRequest(request)) {
       return;
     }
 
@@ -203,12 +206,17 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       </li>
     );
   } else {
-    const methodTag =
-      isGrpcRequest(request) ? (
-        <GrpcTag />
-      ) : (
-        <MethodTag method={request.method} override={methodOverrideValue} />
-      );
+
+    let methodTag = null;
+
+    if (isGrpcRequest(request)) {
+      methodTag = <GrpcTag />;
+    } else if (isWebSocketRequest(request)) {
+      methodTag = <WebSocketTag />;
+    } else if (isRequest(request)) {
+      methodTag = <MethodTag method={request.method} override={methodOverrideValue} />;
+    }
+
     node = (
       <li ref={nodeRef} className={classes}>
         <div
@@ -243,17 +251,27 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
             </div>
           </button>
           <div className="sidebar__actions">
-            <RequestActionsDropdown
-              right
-              ref={requestActionsDropdown}
-              handleDuplicateRequest={handleDuplicateRequest}
-              handleShowSettings={handleShowRequestSettings}
-              request={request}
-              isPinned={isPinned}
-              requestGroup={requestGroup}
-              activeEnvironment={activeEnvironment}
-              activeProject={activeProject}
-            />
+            {isWebSocketRequest(request) ? (
+              <WebSocketRequestActionsDropdown
+                right
+                ref={requestActionsDropdown}
+                handleDuplicateRequest={handleDuplicateRequest}
+                request={request}
+                isPinned={isPinned}
+              />
+            ) : (
+              <RequestActionsDropdown
+                right
+                ref={requestActionsDropdown}
+                handleDuplicateRequest={handleDuplicateRequest}
+                handleShowSettings={handleShowRequestSettings}
+                request={request}
+                isPinned={isPinned}
+                requestGroup={requestGroup}
+                activeEnvironment={activeEnvironment}
+                activeProject={activeProject}
+              />
+            )}
           </div>
           {isPinned && (
             <div className="sidebar__item__icon-pin">

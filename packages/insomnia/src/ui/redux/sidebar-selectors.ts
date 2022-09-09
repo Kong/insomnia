@@ -6,6 +6,7 @@ import type { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { isWebSocketRequest } from '../../models/websocket-request';
 import {
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
@@ -17,10 +18,10 @@ import {
 type SidebarModel = Request | GrpcRequest | RequestGroup;
 
 export const shouldShowInSidebar = (model: BaseModel): boolean =>
-  isRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
+  isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
 
 export const shouldIgnoreChildrenOf = (model: SidebarModel): boolean =>
-  isRequest(model) || isGrpcRequest(model);
+  isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model);
 
 export const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
   if (a.metaSortKey === b.metaSortKey) {

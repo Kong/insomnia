@@ -1,12 +1,13 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { FC, Fragment, useCallback, useRef } from 'react';
+import React, { Fragment, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
-import type { Response } from '../../../models/response';
+import { Response } from '../../../models/response';
+import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -20,26 +21,26 @@ import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
 
-interface Props {
-  activeResponse: Response;
-  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
+interface Props<GenericResponse extends Response | WebSocketResponse> {
+  activeResponse: GenericResponse;
+  handleSetActiveResponse: (requestId: string, activeResponse: GenericResponse | null) => void;
   className?: string;
   requestId: string;
 }
 
-export const ResponseHistoryDropdown: FC<Props> = ({
+export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
   activeResponse,
   handleSetActiveResponse,
   className,
   requestId,
-}) => {
+}: Props<GenericResponse>) => {
   const dropdownRef = useRef<DropdownHandle>(null);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const responses = useSelector(selectActiveRequestResponses);
+  const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
   const activeRequest = useSelector(selectActiveRequest);
   const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
-  const categories: Record<string, Response[]> = {
+  const categories: Record<string, GenericResponse[]> = {
     minutes: [],
     hours: [],
     today: [],
@@ -49,16 +50,24 @@ export const ResponseHistoryDropdown: FC<Props> = ({
 
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    await models.response.removeForRequest(requestId, environmentId);
+    if (isWebSocketResponse(activeResponse)) {
+      await models.webSocketResponse.removeForRequest(requestId, environmentId);
+    } else {
+      await models.response.removeForRequest(requestId, environmentId);
+    }
 
     if (activeRequest && activeRequest._id === requestId) {
       handleSetActiveResponse(requestId, null);
     }
-  }, [activeEnvironment, activeRequest, handleSetActiveResponse, requestId]);
+  }, [activeEnvironment, activeRequest, activeResponse, handleSetActiveResponse, requestId]);
 
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
-      await models.response.remove(activeResponse);
+      if (isWebSocketResponse(activeResponse)) {
+        await models.webSocketResponse.remove(activeResponse);
+      } else {
+        await models.response.remove(activeResponse);
+      }
     }
     handleSetActiveResponse(requestId, null);
   }, [activeResponse, handleSetActiveResponse, requestId]);
@@ -89,7 +98,7 @@ export const ResponseHistoryDropdown: FC<Props> = ({
     categories.other.push(response);
   });
 
-  const renderResponseRow = (response: Response) => {
+  const renderResponseRow = (response: GenericResponse) => {
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
@@ -114,12 +123,14 @@ export const ResponseHistoryDropdown: FC<Props> = ({
           tooltipDelay={1000}
         />
         <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
-        <SizeTag
-          bytesRead={response.bytesRead}
-          bytesContent={response.bytesContent}
-          small
-          tooltipDelay={1000}
-        />
+        {!isWebSocketResponse(response) && (
+          <SizeTag
+            bytesRead={response.bytesRead}
+            bytesContent={response.bytesContent}
+            small
+            tooltipDelay={1000}
+          />
+        )}
         {!response.requestVersionId ?
           <i
             className="icon fa fa-info-circle"

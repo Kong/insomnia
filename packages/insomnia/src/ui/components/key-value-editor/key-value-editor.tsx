@@ -41,6 +41,8 @@ interface Props {
   onDelete?: Function;
   onCreate?: Function;
   className?: string;
+  isDisabled?: boolean;
+  isWebSocketRequest?: boolean;
 }
 
 interface State {
@@ -405,7 +407,7 @@ export class KeyValueEditor extends PureComponent<Props, State> {
 
   _setFocusedPair(pair: Pair) {
     if (pair) {
-      this._focusedPairId = pair.id;
+      this._focusedPairId = pair.id || 'n/a';
     } else {
       this._focusedPairId = null;
     }
@@ -435,11 +437,36 @@ export class KeyValueEditor extends PureComponent<Props, State> {
       allowMultiline,
       sortable,
       disableDelete,
+      isDisabled,
+      isWebSocketRequest,
     } = this.props;
     const { pairs } = this.state;
+
     const classes = classnames('key-value-editor', 'wide', className);
+    const hasMaxPairsAndNotExceeded = !maxPairs || pairs.length < maxPairs;
+    const showNewHeaderInput = !isDisabled && hasMaxPairsAndNotExceeded;
+    const readOnlyPairs = [
+      { name: 'Connection', value: 'Upgrade' },
+      { name: 'Upgrade', value: 'websocket' },
+      { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
+      { name: 'Sec-WebSocket-Version', value: '13' },
+      { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
+    ];
     return (
       <ul className={classes}>
+        {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
+          <Row
+            key={i}
+            index={i}
+            sortable={true}
+            displayDescription={this.state.displayDescription}
+            descriptionPlaceholder={descriptionPlaceholder}
+            readOnly
+            hideButtons
+            forceInput
+            pair={pair}
+          />
+        )) : null}
         {pairs.map((pair, i) => (
           <Row
             noDelete={disableDelete}
@@ -466,17 +493,18 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
             allowFile={allowFile}
+            readOnly={isDisabled}
+            hideButtons={isDisabled}
             pair={pair}
           />
         ))}
 
-        {!maxPairs || pairs.length < maxPairs ? (
+        {showNewHeaderInput ? (
           <Row
             key="empty-row"
             hideButtons
             sortable
             noDropZone
-            readOnly
             forceInput
             index={-1}
             onChange={noop}
@@ -502,11 +530,9 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             onFocusDescription={this._handleAddFromDescription}
             allowMultiline={allowMultiline}
             allowFile={allowFile}
-            // @ts-expect-error -- TSCONVERSION missing defaults
             pair={{
               name: '',
               value: '',
-              description: '',
             }}
           />
         ) : null}
