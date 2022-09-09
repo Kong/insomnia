@@ -12,6 +12,7 @@ import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { Workspace } from '../../../models/workspace';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
@@ -29,7 +30,7 @@ import { wrapToIndex } from './utils';
 interface State {
   searchString: string;
   workspacesForActiveProject: Workspace[];
-  matchedRequests: (Request | GrpcRequest)[];
+  matchedRequests: (Request | WebSocketRequest | GrpcRequest)[];
   matchedWorkspaces: Workspace[];
   activeIndex: number;
   maxRequests: number;
@@ -79,7 +80,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
 
   /** Return array of path segments for given folders */
-  const groupOf = useCallback((requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] => {
+  const groupOf = useCallback((requestOrRequestGroup: Request | WebSocketRequest | GrpcRequest | RequestGroup): string[] => {
     const folders = workspaceRequestsAndRequestGroups.filter(isRequestGroup)
       .filter(g => g._id === requestOrRequestGroup.parentId);
     const folderName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
@@ -108,7 +109,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = (workspaceRequestsAndRequestGroups
-      .filter(child => isRequest(child) || isGrpcRequest(child)) as (Request | GrpcRequest)[])
+      .filter(child => isRequest(child) || isWebSocketRequest(child) || isGrpcRequest(child)) as (Request | WebSocketRequest | GrpcRequest)[])
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -206,7 +207,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     dispatch(activateWorkspace({ workspace }));
     modalRef.current?.hide();
   };
-  const activateRequestAndHide = (request?: Request | GrpcRequest) => {
+  const activateRequestAndHide = (request?: Request | WebSocketRequest | GrpcRequest) => {
     if (!request) {
       return;
     }
@@ -355,7 +356,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
             </div>
           )}
           <ul>
-            {matchedRequests.map((r: Request | GrpcRequest, i) => {
+            {matchedRequests.map((r: Request | WebSocketRequest | GrpcRequest, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
                 'btn btn--expandable-small wide text-left pad-bottom',
