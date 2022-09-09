@@ -142,9 +142,8 @@ const createWebSocketConnection = async (
     }
 
     const lowerCasedEnabledHeaders = headers
-      .filter(({ value, disabled }) => !!value && !disabled)
+      .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
-
     const settings = await models.settings.getOrCreate();
     const start = performance.now();
 
