@@ -12,6 +12,7 @@ import { useWebSocketConnectionEvents } from '../../context/websocket-client/use
 import { selectActiveResponse } from '../../redux/selectors';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
+import { EmptyStatePane } from '../panes/empty-state-pane';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -58,6 +59,17 @@ export const WebSocketResponsePane: FC<{ requestId: string; handleSetActiveRespo
       return (
         <Pane type="response">
           <PaneHeader />
+          <EmptyStatePane
+            icon={<i className="fa fa-paper-plane" />}
+            documentationLinks={[
+              {
+                title: 'Introduction to Insomnia',
+                url: 'https://docs.insomnia.rest/insomnia/get-started',
+              },
+            ]}
+            title="Enter a URL and connect to a WebSocket server to start sending data"
+            secondaryAction="Select a payload type from above to send data to the connection"
+          />
         </Pane>
       );
     }
