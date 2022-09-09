@@ -59,7 +59,7 @@
     "eslint-plugin-react-hooks": "^4.3.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "jest": "^28.1.0",
-    "lerna": "^4.0.0",
+    "lerna": "^5.5.1",
     "markdownlint-cli2": "^0.2.0",
     "rimraf": "^3.0.2",
     "svg-text-to-path": "^1.1.2",
