@@ -41,6 +41,7 @@ import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown
 import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
+import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 
 const CreateButton = styled(Button)({
@@ -206,7 +207,7 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async (workspace: Workspace) => {
-      // Don't mark for sync if not logged in at the time of creation
+        // Don't mark for sync if not logged in at the time of creation
         if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
           await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
@@ -341,6 +342,16 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
               <p className="notice subtle">
                 No documents found for <strong>{filter}</strong>
               </p>
+            )}
+            {!filter && !cards.length && (
+              <WrapperHomeEmptyStatePane
+                createRequestCollection={createRequestCollection}
+                createDesignDocument={createDesignDocument}
+                importFromFile={importFromFile}
+                importFromURL={importFromURL}
+                importFromClipboard={importFromClipboard}
+                importFromGit={importFromGit}
+              />
             )}
           </div>
           <div className="document-listing__footer vertically-center">
