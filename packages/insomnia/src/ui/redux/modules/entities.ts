@@ -73,9 +73,9 @@ export interface EntitiesState {
   protoDirectories: EntityRecord<ProtoDirectory>;
   grpcRequests: EntityRecord<GrpcRequest>;
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
-  webSocketPayloads: EntityRecord<WebSocketPayload>;
-  webSocketRequests: EntityRecord<WebSocketRequest>;
-  webSocketResponses: EntityRecord<WebSocketResponse>;
+  websocketPayloads: EntityRecord<WebSocketPayload>;
+  websocketRequests: EntityRecord<WebSocketRequest>;
+  websocketResponses: EntityRecord<WebSocketResponse>;
 }
 
 export const initialEntitiesState: EntitiesState = {
@@ -104,9 +104,9 @@ export const initialEntitiesState: EntitiesState = {
   protoDirectories: {},
   grpcRequests: {},
   grpcRequestMetas: {},
-  webSocketPayloads: {},
-  webSocketRequests: {},
-  webSocketResponses: {},
+  websocketPayloads: {},
+  websocketRequests: {},
+  websocketResponses: {},
 };
 
 export function reducer(state = initialEntitiesState, action: any) {
@@ -206,8 +206,8 @@ export async function allDocs() {
     ...(await models.protoDirectory.all()),
     ...(await models.grpcRequest.all()),
     ...(await models.grpcRequestMeta.all()),
-    ...(await models.webSocketPayload.all()),
-    ...(await models.webSocketRequest.all()),
-    ...(await models.webSocketResponse.all()),
+    ...(await models.websocketPayload.all()),
+    ...(await models.websocketRequest.all()),
+    ...(await models.websocketResponse.all()),
   ];
 }

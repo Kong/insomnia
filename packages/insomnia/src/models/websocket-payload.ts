@@ -3,7 +3,7 @@ import type { BaseModel } from '.';
 
 export const name = 'WebSocket Payload';
 
-export const type = 'WebSocketPayload';
+export const type = 'WebsocketPayload';
 
 export const prefix = 'ws-payload';
 

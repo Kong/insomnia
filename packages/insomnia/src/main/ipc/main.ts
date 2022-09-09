@@ -15,7 +15,7 @@ export interface MainBridgeAPI {
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
-  webSocket: WebSocketBridgeAPI;
+  websocket: WebSocketBridgeAPI;
 }
 export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {

@@ -8,7 +8,7 @@ import { ResponseHeader } from './response';
 
 export const name = 'WebSocket Response';
 
-export const type = 'WebSocketResponse';
+export const type = 'WebsocketResponse';
 
 export const prefix = 'ws-res';
 

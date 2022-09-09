@@ -111,10 +111,11 @@ export const createRequest: RequestCreator = async ({
     }
 
     case 'WebSocket': {
-      const request = await models.webSocketRequest.create({
+      const request = await models.websocketRequest.create({
         parentId,
         name: 'New WebSocket Request',
       });
+      console.log(request._id);
       models.stats.incrementCreatedRequests();
       setActiveRequest(request._id, workspaceId);
       break;

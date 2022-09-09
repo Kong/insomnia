@@ -43,7 +43,7 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
       type="button"
       warning
       onClick={() => {
-        window.main.webSocket.close({ requestId });
+        window.main.websocket.close({ requestId });
       }}
     >
       Disconnect
@@ -111,7 +111,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         authentication,
       }, renderContext);
 
-      window.main.webSocket.create({
+      window.main.websocket.create({
         requestId: request._id,
         workspaceId,
         url: rendered.url,

@@ -4,7 +4,7 @@ import { RequestAuthentication, RequestHeader } from './request';
 
 export const name = 'WebSocket Request';
 
-export const type = 'WebSocketRequest';
+export const type = 'WebsocketRequest';
 
 export const prefix = 'ws-req';
 

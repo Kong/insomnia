@@ -78,7 +78,7 @@ export const WrapperDebug: FC<Props> = ({
   // Close all websocket connections when the active environment changes
   useEffect(() => {
     return () => {
-      window.main.webSocket.closeAll();
+      window.main.websocket.closeAll();
     };
   }, [activeEnvironment?._id]);
 

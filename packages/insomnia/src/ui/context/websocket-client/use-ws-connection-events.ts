@@ -9,7 +9,7 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     () => {
       let isMounted = true;
       const fn = async () => {
-        const allEvents = await window.main.webSocket.event.findMany({ responseId });
+        const allEvents = await window.main.websocket.event.findMany({ responseId });
         if (isMounted) {
           setEvents(allEvents);
         }

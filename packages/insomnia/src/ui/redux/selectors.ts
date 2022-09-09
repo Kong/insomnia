@@ -314,7 +314,7 @@ export const selectActiveWorkspaceEntities = createSelector(
 
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned: Record<string, boolean> = {};
-  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.webSocketRequests];
+  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.websocketRequests];
   const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
 
   // Default all to unpinned
@@ -353,8 +353,8 @@ export const selectActiveRequest = createSelector(
       return entities.grpcRequests[id];
     }
 
-    if (id in entities.webSocketRequests) {
-      return entities.webSocketRequests[id];
+    if (id in entities.websocketRequests) {
+      return entities.websocketRequests[id];
     }
 
     return null;
@@ -442,7 +442,7 @@ export const selectActiveRequestResponses = createSelector(
   (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
 
-    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ?  entities.webSocketResponses : entities.responses;
+    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ?  entities.websocketResponses : entities.responses;
 
     // Filter responses down if the setting is enabled
     return responses.filter(response => {

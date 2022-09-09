@@ -51,7 +51,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     if (isWebSocketResponse(activeResponse)) {
-      await models.webSocketResponse.removeForRequest(requestId, environmentId);
+      await models.websocketResponse.removeForRequest(requestId, environmentId);
     } else {
       await models.response.removeForRequest(requestId, environmentId);
     }
@@ -64,7 +64,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
-        await models.webSocketResponse.remove(activeResponse);
+        await models.websocketResponse.remove(activeResponse);
       } else {
         await models.response.remove(activeResponse);
       }

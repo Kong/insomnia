@@ -90,7 +90,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
 
   const setActiveResponseAndDisconnect = (requestId: string, response: WebSocketResponse | null) => {
     handleSetActiveResponse(requestId, response);
-    window.main.webSocket.close({ requestId });
+    window.main.websocket.close({ requestId });
   };
 
   useEffect(() => {

@@ -16,7 +16,7 @@ import {
 
 import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { generateId } from '../../common/misc';
-import { webSocketRequest } from '../../models';
+import { websocketRequest } from '../../models';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
@@ -105,7 +105,7 @@ const createWebSocketConnection = async (
     console.warn('Connection still open to ' + existingConnection.url);
     return;
   }
-  const request = await webSocketRequest.getById(options.requestId);
+  const request = await websocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -124,7 +124,7 @@ const createWebSocketConnection = async (
   const responseEnvironmentId = environment ? environment._id : null;
 
   try {
-    const readyStateChannel = `webSocket.${request._id}.readyState`;
+    const readyStateChannel = `websocket.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
@@ -202,7 +202,7 @@ const createWebSocketConnection = async (
         eventLogPath: responseBodyPath,
       };
       const settings = await models.settings.getOrCreate();
-      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      models.websocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
     });
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
@@ -227,7 +227,7 @@ const createWebSocketConnection = async (
         eventLogPath: responseBodyPath,
       };
       const settings = await models.settings.getOrCreate();
-      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      models.websocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
@@ -308,7 +308,7 @@ const createErrorResponse = async (responseId: string, requestId: string, enviro
     statusMessage: 'Error',
     error: message,
   };
-  models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+  models.websocketResponse.create(responsePatch, settings.maxHistoryResponses);
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
 };
 
@@ -360,7 +360,7 @@ const sendWebSocketEvent = async (
   };
 
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const response = await models.webSocketResponse.getLatestByParentId(options.requestId);
+  const response = await models.websocketResponse.getLatestByParentId(options.requestId);
   if (!response) {
     console.error('something went wrong');
     return;
@@ -384,7 +384,7 @@ const closeAllWebSocketConnections = (): void => {
 const findMany = async (
   options: { responseId: string }
 ): Promise<WebSocketEvent[]> => {
-  const response = await models.webSocketResponse.getById(options.responseId);
+  const response = await models.websocketResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }
@@ -415,12 +415,12 @@ export interface WebSocketBridgeAPI {
   };
 }
 export const registerWebSocketHandlers = () => {
-  ipcMain.handle('webSocket.create', createWebSocketConnection);
-  ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
-  ipcMain.handle('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
-  ipcMain.handle('webSocket.closeAll', closeAllWebSocketConnections);
-  ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
-  ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  ipcMain.handle('websocket.create', createWebSocketConnection);
+  ipcMain.handle('websocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
+  ipcMain.handle('websocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
+  ipcMain.handle('websocket.closeAll', closeAllWebSocketConnections);
+  ipcMain.handle('websocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
+  ipcMain.handle('websocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 
 electron.app.on('window-all-closed', () => {

@@ -2,16 +2,16 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
-const webSocket: WebSocketBridgeAPI = {
-  create: options => ipcRenderer.invoke('webSocket.create', options),
-  close: options => ipcRenderer.invoke('webSocket.close', options),
-  closeAll: () => ipcRenderer.invoke('webSocket.closeAll'),
+const websocket: WebSocketBridgeAPI = {
+  create: options => ipcRenderer.invoke('websocket.create', options),
+  close: options => ipcRenderer.invoke('websocket.close', options),
+  closeAll: () => ipcRenderer.invoke('websocket.closeAll'),
   readyState: {
-    getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
+    getCurrent: options => ipcRenderer.invoke('websocket.readyState', options),
   },
   event: {
-    findMany: options => ipcRenderer.invoke('webSocket.event.findMany', options),
-    send: options => ipcRenderer.invoke('webSocket.event.send', options),
+    findMany: options => ipcRenderer.invoke('websocket.event.findMany', options),
+    send: options => ipcRenderer.invoke('websocket.event.send', options),
   },
 };
 
@@ -27,7 +27,7 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
-  webSocket,
+  websocket,
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

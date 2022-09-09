@@ -86,7 +86,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
       const renderedMessage = await render(message, renderContext);
 
-      window.main.webSocket.event.send({ requestId: request._id, message: renderedMessage });
+      window.main.websocket.event.send({ requestId: request._id, message: renderedMessage });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -135,17 +135,13 @@ interface Props {
   forceRefreshKey: number;
 }
 
-// requestId is something we can read from the router params in the future.
-// essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
-// currently this is blocked by the way page layout divide the panes with dragging functionality
-// TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
   const readyState = useWSReadyState(request._id);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
     if (url !== request.url) {
-      models.webSocketRequest.update(request, { url });
+      models.websocketRequest.update(request, { url });
     }
   };
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
@@ -154,7 +150,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      const payload = await models.webSocketPayload.getByParentId(request._id);
+      const payload = await models.websocketPayload.getByParentId(request._id);
       if (isMounted && payload) {
         setInitialValue(payload.value);
         setPreviewMode(payload.mode);
@@ -173,12 +169,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
 
   const createOrUpdatePayload = async (value: string, mode: string) => {
     // @TODO: multiple payloads
-    const payload = await models.webSocketPayload.getByParentId(request._id);
+    const payload = await models.websocketPayload.getByParentId(request._id);
     if (payload) {
-      await models.webSocketPayload.update(payload, { value, mode });
+      await models.websocketPayload.update(payload, { value, mode });
       return;
     }
-    await models.webSocketPayload.create({
+    await models.websocketPayload.create({
       parentId: request._id,
       value,
       mode,
