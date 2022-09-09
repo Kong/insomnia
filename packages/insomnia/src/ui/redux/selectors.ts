@@ -12,7 +12,7 @@ import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { type Response } from '../../models/response';
 import { UnitTestResult } from '../../models/unit-test-result';
-import { isWebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
 import { type WebSocketResponse } from '../../models/websocket-response';
 import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
@@ -334,8 +334,8 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      entity => isRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
-    ) as (Request | GrpcRequest | RequestGroup)[];
+      entity => isRequest(entity) || isWebSocketRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
+    ) as (Request | WebSocketRequest | GrpcRequest | RequestGroup)[];
   },
 );
 
