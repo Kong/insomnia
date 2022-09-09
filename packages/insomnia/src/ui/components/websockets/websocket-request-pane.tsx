@@ -34,6 +34,9 @@ const SendButton = styled.button({
   ':hover': {
     filter: 'brightness(0.8)',
   },
+  ':enabled': {
+    background: 'var(--color-surprise)',
+  },
 });
 const PaneSendButton = styled.div({
   display: 'flex',
