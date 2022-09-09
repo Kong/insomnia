@@ -29,7 +29,6 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
   if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
     return (
       <Button
-        name="websocketActionConnectBtn"
         type="submit"
         form="websocketUrlForm"
       >
@@ -41,7 +40,6 @@ const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
   return (
     <Button
       className="urlbar__send-btn"
-      name="websocketActionCloseBtn"
       type="button"
       warning
       onClick={() => {
