@@ -89,7 +89,7 @@ function getIcon(event: WebSocketEvent): SvgIconProps['icon'] {
       }
     }
     case 'open': {
-      return 'ellipsis-circle2';
+      return 'checkmark-circle';
     }
     case 'close': {
       return 'disconnected';

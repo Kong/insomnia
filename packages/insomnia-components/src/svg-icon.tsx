@@ -8,6 +8,7 @@ import { SvgIcnBrackets } from './assets/svgr/IcnBrackets';
 import { SvgIcnBug } from './assets/svgr/IcnBug';
 import { SvgIcnBurgerMenu } from './assets/svgr/IcnBurgerMenu';
 import { SvgIcnCheckmark } from './assets/svgr/IcnCheckmark';
+import { SvgIcnCheckmarkCircle } from './assets/svgr/IcnCheckmarkCircle';
 import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
 import { SvgIcnChevronUp } from './assets/svgr/IcnChevronUp';
 import { SvgIcnClock } from './assets/svgr/IcnClock';
@@ -18,7 +19,6 @@ import { SvgIcnDragGrip } from './assets/svgr/IcnDragGrip';
 import { SvgIcnElevator } from './assets/svgr/IcnElevator';
 import { SvgIcnEllipsis } from './assets/svgr/IcnEllipsis';
 import { SvgIcnEllipsisCircle } from './assets/svgr/IcnEllipsisCircle';
-import { SvgIcnEllipsisCircle2 } from './assets/svgr/IcnEllipsisCircle2';
 import { SvgIcnEmpty } from './assets/svgr/IcnEmpty';
 import { SvgIcnErrors } from './assets/svgr/IcnErrors';
 import { SvgIcnFile } from './assets/svgr/IcnFile';
@@ -128,7 +128,7 @@ export const IconEnum = {
   warningCircle: 'warning-circle',
   x: 'x',
   disconnected: 'disconnected',
-  ellipsisCircle2: 'ellipsis-circle2',
+  checkmarkCircle: 'checkmark-circle',
   receive: 'receive',
   sent: 'sent',
   systemEvent: 'system-event',
@@ -236,7 +236,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.disconnected]: [ThemeEnum.default, SvgIcnDisconnected],
     [IconEnum.receive]: [ThemeEnum.default, SvgIcnReceive],
     [IconEnum.sent]: [ThemeEnum.default, SvgIcnSent],
-    [IconEnum.ellipsisCircle2]: [ThemeEnum.default, SvgIcnEllipsisCircle2],
+    [IconEnum.checkmarkCircle]: [ThemeEnum.default, SvgIcnCheckmarkCircle],
     [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
   };
 
