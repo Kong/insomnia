@@ -33,7 +33,7 @@ import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
 import ProjectSettingsModal from '../components/modals/project-settings-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
-import ProtoFilesModal from '../components/modals/proto-files-modal';
+import { ProtoFilesModal } from '../components/modals/proto-files-modal';
 import { RequestGroupSettingsModal } from '../components/modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
@@ -302,7 +302,7 @@ const App = () => {
                 <GrpcDispatchModalWrapper>
                   {dispatch => (
                     <ProtoFilesModal
-                      ref={registerModal}
+                      ref={instance => registerModal(instance, 'ProtoFilesModal')}
                       grpcDispatch={dispatch}
                     />
                   )}

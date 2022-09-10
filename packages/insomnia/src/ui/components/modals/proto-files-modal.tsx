@@ -1,195 +1,119 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AsyncButton } from 'insomnia-components';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
-import type { ProtoDirectory } from '../../../models/proto-directory';
 import type { ProtoFile } from '../../../models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';
 import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
-import { RootState } from '../../redux/modules';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { selectActiveWorkspace } from '../../redux/selectors';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { ProtoFileList } from '../proto-file/proto-file-list';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
-  grpcDispatch: GrpcDispatch;
+export interface ProtoFilesModalOptions {
+  selectedId?: string;
+  onSave?: (arg0: string) => Promise<void>;
 }
-
-interface State {
-  selectedProtoFileId: string;
+export interface ProtoFilesModalHandle {
+  show: (options: ProtoFilesModalOptions) => void;
+  hide: () => void;
 }
+type Props = ModalProps & { grpcDispatch: GrpcDispatch };
+export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcDispatch }, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const [state, setState] = useState<ProtoFilesModalOptions>({
+    selectedId: '',
+  });
 
-interface ProtoFilesModalOptions {
-  preselectProtoFileId?: string;
-  onSave: (arg0: string) => Promise<void>;
-}
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: ({ onSave, selectedId }) => {
+      setState({ onSave, selectedId });
+      modalRef.current?.show();
+    },
+  }), []);
 
-const INITIAL_STATE: State = {
-  selectedProtoFileId: '',
-};
+  const workspace = useSelector(selectActiveWorkspace);
+  const protoDirectories = useSelector(selectExpandedActiveProtoDirectories);
 
-const spinner = <i className="fa fa-spin fa-refresh" />;
+  const selectFile = (selectedId: string) => setState({ selectedId, onSave: state.onSave });
+  const clearSelection = () => setState({ selectedId: '', onSave: state.onSave });
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class ProtoFilesModal extends PureComponent<Props, State> {
-  modal: ModalHandle | null = null;
-  onSave: ((arg0: string) => Promise<void>) | null;
+  const handleUpdate = async (protoFile: ProtoFile) => protoManager.updateFile(protoFile, async updatedId => {
+    const action = await grpcActions.invalidateMany(updatedId);
+    grpcDispatch(action);
+    sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
+  });
 
-  constructor(props: Props) {
-    super(props);
-    this.state = INITIAL_STATE;
-    this.onSave = null;
+  if (!workspace) {
+    return null;
   }
-
-  _setModalRef(ref: ModalHandle) {
-    this.modal = ref;
-  }
-
-  async show(options: ProtoFilesModalOptions) {
-    this.onSave = options.onSave;
-    this.setState({
-      selectedProtoFileId: options.preselectProtoFileId || '',
-    });
-    this.modal?.show();
-  }
-
-  async _handleSave(event: React.SyntheticEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    this.hide();
-
-    if (typeof this.onSave === 'function' && this.state.selectedProtoFileId) {
-      await this.onSave(this.state.selectedProtoFileId);
-    }
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  _handleSelect(id: string) {
-    this.setState({
-      selectedProtoFileId: id,
-    });
-  }
-
-  _handleDeleteFile(protoFile: ProtoFile) {
-    return protoManager.deleteFile(protoFile, deletedId => {
-      // if the deleted protoFile was previously selected, clear the selection
-      if (this.state.selectedProtoFileId === deletedId) {
-        this.setState({
-          selectedProtoFileId: '',
-        });
-      }
-    });
-  }
-
-  _handleDeleteDirectory(protoDirectory: ProtoDirectory) {
-    return protoManager.deleteDirectory(protoDirectory, deletedIds => {
-      // if previously selected protoFile has been deleted, clear the selection
-      if (deletedIds.includes(this.state.selectedProtoFileId)) {
-        this.setState({
-          selectedProtoFileId: '',
-        });
-      }
-    });
-  }
-
-  _handleAdd() {
-    const { workspace } = this.props;
-
-    if (!workspace) {
-      return;
-    }
-
-    return protoManager.addFile(workspace._id, createdId => {
-      this.setState({
-        selectedProtoFileId: createdId,
-      });
-    });
-  }
-
-  _handleUpload(protoFile: ProtoFile) {
-    const { grpcDispatch } = this.props;
-    return protoManager.updateFile(protoFile, async updatedId => {
-      const action = await grpcActions.invalidateMany(updatedId);
-      grpcDispatch(action);
-      sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
-    });
-  }
-
-  _handleAddDirectory() {
-    const { workspace } = this.props;
-
-    if (!workspace) {
-      return;
-    }
-
-    return protoManager.addDirectory(workspace._id);
-  }
-
-  _handleRename(protoFile: ProtoFile, name?: string) {
-    return protoManager.renameFile(protoFile, name);
-  }
-
-  render() {
-    const { protoDirectories } = this.props;
-    const { selectedProtoFileId } = this.state;
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>Select Proto File</ModalHeader>
-        <ModalBody className="wide pad">
-          <div className="row-spaced margin-bottom bold">
-            Files
-            <span>
-              <AsyncButton
-                className="margin-right-sm"
-                onClick={this._handleAddDirectory}
-                loadingNode={spinner}
-              >
-                Add Directory
-              </AsyncButton>
-              <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
-                Add Proto File
-              </AsyncButton>
-            </span>
-          </div>
-          <ProtoFileList
-            protoDirectories={protoDirectories}
-            selectedId={selectedProtoFileId}
-            handleSelect={this._handleSelect}
-            handleUpdate={this._handleUpload}
-            handleDelete={this._handleDeleteFile}
-            handleRename={this._handleRename}
-            handleDeleteDirectory={this._handleDeleteDirectory}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <div>
-            <button className="btn" onClick={this._handleSave} disabled={!selectedProtoFileId}>
-              Save
-            </button>
-          </div>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  protoDirectories: selectExpandedActiveProtoDirectories(state),
-  workspace: selectActiveWorkspace(state),
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>Select Proto File</ModalHeader>
+      <ModalBody className="wide pad">
+        <div className="row-spaced margin-bottom bold">
+          Files
+          <span>
+            <AsyncButton
+              className="margin-right-sm"
+              onClick={() => protoManager.addDirectory(workspace._id)}
+              loadingNode={<i className="fa fa-spin fa-refresh" />}
+            >
+              Add Directory
+            </AsyncButton>
+            <AsyncButton
+              onClick={() => protoManager.addFile(workspace._id, selectFile)}
+              loadingNode={<i className="fa fa-spin fa-refresh" />}
+            >
+              Add Proto File
+            </AsyncButton>
+          </span>
+        </div>
+        <ProtoFileList
+          protoDirectories={protoDirectories}
+          selectedId={state.selectedId}
+          handleSelect={selectFile}
+          handleUpdate={handleUpdate}
+          handleRename={(protoFile: ProtoFile, name?: string) => protoManager.renameFile(protoFile, name)}
+          handleDelete={protoFile => protoManager.deleteFile(protoFile, deletedId => {
+            if (state.selectedId === deletedId) {
+              clearSelection();
+            }
+          })
+          }
+          handleDeleteDirectory={protoDirectory => protoManager.deleteDirectory(protoDirectory, deletedIds => {
+            if (state.selectedId && deletedIds.includes(state.selectedId)) {
+              clearSelection();
+            }
+          })}
+        />
+      </ModalBody>
+      <ModalFooter>
+        <div>
+          <button
+            className="btn"
+            onClick={event => {
+              event.preventDefault();
+              modalRef.current?.hide();
+              if (typeof state.onSave === 'function' && state.selectedId) {
+                state.onSave(state.selectedId);
+              }
+            }}
+            disabled={!state.selectedId}
+          >
+            Save
+          </button>
+        </div>
+      </ModalFooter>
+    </Modal >
+  );
 });
-
-export default connect(mapStateToProps, null, null, {
-  forwardRef: true,
-})(ProtoFilesModal);
+ProtoFilesModal.displayName = 'ProtoFilesModal';
