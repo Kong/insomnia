@@ -432,7 +432,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             />
 
             <AddKeyCombinationModal ref={registerModal} />
-            <ExportRequestsModal ref={registerModal} />
+            <ExportRequestsModal ref={instance => registerModal(instance, 'ExportRequestsModal')} />
 
             <GrpcDispatchModalWrapper>
               {dispatch => (
