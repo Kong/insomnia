@@ -40,7 +40,7 @@ export const GitLogModal = forwardRef<GitLogModalHandle, ModalProps & Props>(({ 
       });
       modalRef.current?.show();
     },
-  }), []);
+  }), [vcs]);
   const { logs, branch } = state;
   return (
     <Modal ref={modalRef}>
