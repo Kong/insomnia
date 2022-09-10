@@ -44,7 +44,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
   const _handleSelectChange = (event: React.SyntheticEvent<HTMLSelectElement>) => {
     setState({ message, title, options, onCancel, noEscape, value: event.currentTarget.value });
   };
-  const { message, title, options, value, onCancel, noEscape } = state;
+  const { message, title, options, value, onCancel, noEscape, onDone } = state;
 
   return (
     <Modal ref={modalRef} onCancel={onCancel} noEscape={noEscape}>
@@ -62,7 +62,13 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
         </div>
       </ModalBody>
       <ModalFooter>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
+        <button
+          className="btn"
+          onClick={async () => {
+            await onDone?.(value);
+            modalRef.current?.hide();
+          }}
+        >
           Done
         </button>
       </ModalFooter>
