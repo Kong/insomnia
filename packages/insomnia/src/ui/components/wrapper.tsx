@@ -357,7 +357,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
             <GenerateConfigModal ref={instance => registerModal(instance, 'GenerateConfigModal')} />
             <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
-            <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
+            <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')}  vcs={vcs || undefined} />
             <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
             <RequestSettingsModal ref={registerModal} />
             <RequestGroupSettingsModal ref={registerModal} />

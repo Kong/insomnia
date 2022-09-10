@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { createRef, FC, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
+import React, { createRef, FC, forwardRef, ForwardRefRenderFunction, PureComponent, useImperativeHandle, useRef, useState } from 'react';
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,7 +17,7 @@ import { initializeLocalBackendProjectAndMarkForSync } from '../../../sync/vcs/i
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveProject, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -117,41 +117,43 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
 
 const WorkspaceDuplicateModalInternal = forwardRef(WorkspaceDuplicateModalInternalWithRef);
 
-interface Props {
+type Props = ModalProps & {
   vcs?: VCS;
+};
+
+interface ErrorModalOptions {
+  workspace: Workspace;
+  apiSpec: ApiSpec;
+  onDone?: () => void;
 }
-
-interface State {
-  options?: Options;
+export interface WorkspaceDuplicateModalHandle {
+  show: (options: ErrorModalOptions) => void;
+  hide: () => void;
 }
+export const WorkspaceDuplicateModal = forwardRef<WorkspaceDuplicateModalHandle, Props>(({ vcs }, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const [state, setState] = useState<ErrorModalOptions>({});
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class WorkspaceDuplicateModal extends PureComponent<Props, State> {
-  state: State = { };
-  modal = createRef<Modal>();
-
-  show(options: Options) {
-    this.setState({ options }, () => {
-      this.modal?.current?.show();
-    });
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: (options: ErrorModalOptions) => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
+  if (state) {
+    return <WorkspaceDuplicateModalInternal
+      ref={modalRef}
+      workspace={state.workspace}
+      apiSpec={state.apiSpec}
+      onDone={state.onDone}
+      vcs={vcs}
+      hide={() => modalRef.current?.hide()}
+    />;
+  } else {
+    return null;
   }
-
-  hide() {
-    this.modal?.current?.hide();
-  }
-
-  render() {
-    if (this.state.options) {
-      return <WorkspaceDuplicateModalInternal
-        ref={this.modal}
-        {...this.state.options}
-        {...this.props}
-        hide={this.hide}
-      />;
-    } else {
-      return null;
-    }
-  }
-}
-
-export const showWorkspaceDuplicateModal = (options: Options) => showModal(WorkspaceDuplicateModal, options);
+});
+WorkspaceDuplicateModal.displayName = 'WorkspaceDuplicateModal';

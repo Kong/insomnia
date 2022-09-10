@@ -21,7 +21,7 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
-import { showWorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
+import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 
 interface Props {
   workspace: Workspace;
@@ -33,7 +33,7 @@ const spinner = <i className="fa fa-refresh fa-spin" />;
 
 const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
   const handleDuplicate = useCallback(() => {
-    showWorkspaceDuplicateModal({ workspace, apiSpec });
+    showModal(WorkspaceDuplicateModal, { workspace, apiSpec });
   }, [workspace, apiSpec]);
 
   const workspaceName = getWorkspaceName(workspace, apiSpec);

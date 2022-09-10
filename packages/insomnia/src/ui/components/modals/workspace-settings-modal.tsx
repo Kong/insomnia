@@ -26,7 +26,8 @@ import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
-import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
+import { showModal } from '.';
+import { WorkspaceDuplicateModal } from './workspace-duplicate-modal';
 
 const CertificateFields = styled.div({
   display: 'flex',
@@ -144,7 +145,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
 
   _handleDuplicateWorkspace() {
     const { workspace, apiSpec } = this.props;
-    showWorkspaceDuplicateModal({ workspace, apiSpec, onDone: this.hide });
+    showModal(WorkspaceDuplicateModal, { workspace, apiSpec, onDone: this.hide });
   }
 
   _handleToggleCertificateForm() {
