@@ -62,12 +62,11 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
   }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
   const handleAddKeyCombination = useCallback((hotKeyRefId: string) => {
-    showModal(
-      AddKeyCombinationModal,
+    showModal(AddKeyCombinationModal, {
       hotKeyRefId,
       checkKeyCombinationDuplicate,
       addKeyCombination,
-    );
+    });
   }, [addKeyCombination, checkKeyCombinationDuplicate]);
 
   const handleRemoveKeyCombination = useCallback(({ hotKeyRefId, keyComb }: { hotKeyRefId: string; keyComb: KeyCombination }) => {
