@@ -232,7 +232,7 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
         async () => {
-          showModal(GenerateCodeModal, this.props.activeRequest);
+          showModal(GenerateCodeModal, { request: this.props.activeRequest });
         },
       ],
       [
@@ -251,7 +251,7 @@ class App extends PureComponent<AppProps, State> {
           }
 
           const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
-          updateRequestMetaByParentId(activeRequest._id, { pinned:!meta?.pinned });
+          updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],

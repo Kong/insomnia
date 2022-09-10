@@ -385,7 +385,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             </> : null}
 
             <GenerateCodeModal
-              ref={registerModal}
+              ref={instance => registerModal(instance, 'GenerateCodeModal')}
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
             />
 
