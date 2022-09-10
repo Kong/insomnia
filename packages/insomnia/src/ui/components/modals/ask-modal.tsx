@@ -1,118 +1,88 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-
 interface State {
   title: string;
   message: string;
   yesText: string;
   noText: string;
   loading: boolean;
+  onDone?: (success: boolean) => Promise<void>;
 }
-
-interface AskModalOptions {
+export interface AskModalOptions {
   title?: string;
   message?: string;
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class AskModal extends PureComponent<{}, State> {
-  state: State = {
+export interface AskModalHandle {
+  show: (options: AskModalOptions) => void;
+  hide: () => void;
+}
+export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const [state, setState] = useState<State>({
     title: '',
     message: '',
     yesText: 'Yes',
     noText: 'No',
     loading: false,
-  };
+    onDone: async () => {},
+  });
 
-  modal: Modal | null = null;
-  yesButton: HTMLButtonElement | null = null;
-
-  _doneCallback: AskModalOptions['onDone'];
-  _promiseCallback: (value: boolean | PromiseLike<boolean>) => void = () => {};
-
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
-
-  _setYesButtonRef(yesButton: HTMLButtonElement) {
-    this.yesButton = yesButton;
-  }
-
-  async _handleYes() {
-    this.setState({
-      loading: true,
-    });
-
-    // Wait for the callback to finish before closing
-    await this._doneCallback?.(true);
-
-    this._promiseCallback(true);
-
-    this.hide();
-  }
-
-  async _handleNo() {
-    this.hide();
-    await this._doneCallback?.(false);
-
-    this._promiseCallback(false);
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  show({ title, message, onDone, yesText, noText }: AskModalOptions = {}) {
-    this._doneCallback = onDone;
-    this.setState({
-      title: title || 'Confirm',
-      message: message || 'No message provided',
-      yesText: yesText || 'Yes',
-      noText: noText || 'No',
-      loading: false,
-    });
-    this.modal?.show();
-
-    setTimeout(() => {
-      this.yesButton?.focus();
-    }, 100);
-
-    return new Promise<boolean>(resolve => {
-      this._promiseCallback = resolve;
-    });
-  }
-
-  render() {
-    const { message, title, yesText, noText, loading } = this.state;
-    return (
-      <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
-        <ModalHeader>{title || 'Confirm?'}</ModalHeader>
-        <ModalBody className="wide pad">{message}</ModalBody>
-        <ModalFooter>
-          <div>
-            <button className="btn" onClick={this._handleNo}>
-              {noText}
-            </button>
-            <button
-              ref={this._setYesButtonRef}
-              className="btn"
-              onClick={this._handleYes}
-              disabled={loading}
-            >
-              {loading && <i className="fa fa-refresh fa-spin" />} {yesText}
-            </button>
-          </div>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: ({ title, message, onDone, yesText, noText }) => {
+      setState({
+        title: title || 'Confirm',
+        message: message || 'No message provided',
+        yesText: yesText || 'Yes',
+        noText: noText || 'No',
+        loading: false,
+        onDone,
+      });
+      modalRef.current?.show();
+    },
+  }), []);
+  const { message, title, yesText, noText, loading, onDone } = state;
+  return (
+    <Modal ref={modalRef} noEscape closeOnKeyCodes={[13]}>
+      <ModalHeader>{title || 'Confirm?'}</ModalHeader>
+      <ModalBody className="wide pad">{message}</ModalBody>
+      <ModalFooter>
+        <div>
+          <button
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+              onDone?.(false);
+            }}
+          >
+            {noText}
+          </button>
+          <button
+            className="btn"
+            onClick={async () => {
+              setState({
+                ...state,
+                loading: true,
+              });
+              await onDone?.(true);
+              modalRef.current?.hide();
+            }}
+            disabled={loading}
+          >
+            {loading && <i className="fa fa-refresh fa-spin" />} {yesText}
+          </button>
+        </div>
+      </ModalFooter>
+    </Modal>
+  );
+});
+AskModal.displayName = 'AskModal';

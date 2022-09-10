@@ -351,7 +351,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <PromptModal ref={instance => registerModal(instance, 'PromptModal')} />
             <WrapperModal ref={instance => registerModal(instance, 'WrapperModal')} />
             <LoginModal ref={registerModal} />
-            <AskModal ref={registerModal} />
+            <AskModal ref={instance => registerModal(instance, 'AskModal')} />
             <SelectModal ref={instance => registerModal(instance, 'SelectModal')} />
             <FilterHelpModal ref={instance => registerModal(instance, 'FilterHelpModal')} />
             <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
