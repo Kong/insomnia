@@ -5,7 +5,7 @@ import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import type { BaseRequest, Request } from '../../../models/request';
+import type { Request } from '../../../models/request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
@@ -71,71 +71,6 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     },
   }), [state, workspacesForActiveProject]);
 
-  async function _updateRequestSettingBoolean(event: React.SyntheticEvent<HTMLInputElement>) {
-    if (!state.request) {
-      // Should never happen
-      return;
-    }
-
-    const value = event.currentTarget.checked;
-    const setting = event.currentTarget.name;
-    // @ts-expect-error -- TSCONVERSION request settings only exist for regular requests, the types should filter down and exit if grpc
-    const request = await models.request.update(state.request, {
-      [setting]: value,
-    });
-    setState({
-      ...state, request });
-  }
-
-  async function _updateRequestSettingString(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
-    if (!state.request) {
-      // Should never happen
-      return;
-    }
-
-    const value = event.currentTarget.value;
-    const setting = event.currentTarget.name;
-    // @ts-expect-error -- TSCONVERSION request settings only exist for regular requests, the types should filter down and exit if grpc
-    const request = await models.request.update(state.request, {
-      [setting]: value,
-    });
-    setState({
-      ...state, request });
-  }
-
-  async function _handleNameChange(name: string) {
-    const { request: originalRequest } = state;
-
-    if (!originalRequest) {
-      return;
-    }
-
-    const patch = {
-      name,
-    };
-    const updatedRequest = isGrpcRequest(originalRequest)
-      ? await models.grpcRequest.update(originalRequest, patch)
-      : await models.request.update(originalRequest, patch);
-    setState({
-      ...state,
-      request: updatedRequest });
-  }
-
-  async function _handleDescriptionChange(description: string) {
-    if (!state.request) {
-      return;
-    }
-
-    // @ts-expect-error -- TSCONVERSION description only exists for regular requests at the moment, the types should filter down and exit if grpc
-    const request = await models.request.update(state.request, {
-      description,
-    });
-    setState({
-      ...state,
-      request,
-      defaultPreviewMode: false,
-    });
-  }
   async function _handleMoveToWorkspace() {
     const { activeWorkspaceIdToCopyTo, request } = state;
     if (!request || !activeWorkspaceIdToCopyTo) {
@@ -194,27 +129,18 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     }, 2000);
     models.stats.incrementCreatedRequests();
   }
-  function renderCheckboxInput(setting: keyof BaseRequest) {
-    const { request } = state;
-
-    if (!request) {
-      return;
-    }
-
-    return (
-      <input
-        type="checkbox"
-        name={setting}
-        // @ts-expect-error -- mapping unsoundness
-        checked={request[setting]}
-        onChange={_updateRequestSettingBoolean}
-      />
-    );
-  }
   const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace } = state;
   if (!request) {
     return null;
   }
+  const toggleCheckBox = async (event:any) => {
+    const updated = await requestOperations.update(request, {
+      [event.currentTarget.name]: event.currentTarget.checked,
+    });
+    setState({
+      ...state, request: updated,
+    });
+  };
   return (
     <Modal ref={modalRef} freshState>
       <ModalHeader>
@@ -233,7 +159,13 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                 type="text"
                 placeholder={request.url || 'My Request'}
                 defaultValue={request.name}
-                onChange={_handleNameChange}
+                onChange={async name => {
+                  const updatedRequest = await requestOperations.update(request, { name });
+                  setState({
+                    ...state,
+                    request: updatedRequest,
+                  });
+                }}
               />
             </label>
           </div>
@@ -254,7 +186,16 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       defaultPreviewMode={defaultPreviewMode}
                       placeholder="Write a description"
                       defaultValue={request.description}
-                      onChange={_handleDescriptionChange}
+                      onChange={async (description: string) => {
+                        const updated = await models.request.update(request, {
+                          description,
+                        });
+                        setState({
+                          ...state,
+                          request: updated,
+                          defaultPreviewMode: false,
+                        });
+                      }}
                     />
                   ) : (
                     <button
@@ -270,19 +211,34 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     <div className="form-control form-control--thin">
                       <label>
                         Send cookies automatically
-                        {renderCheckboxInput('settingSendCookies')}
+                        <input
+                          type="checkbox"
+                          name="settingSendCookies"
+                          checked={request['settingSendCookies']}
+                          onChange={toggleCheckBox}
+                        />
                       </label>
                     </div>
                     <div className="form-control form-control--thin">
                       <label>
                         Store cookies automatically
-                        {renderCheckboxInput('settingStoreCookies')}
+                        <input
+                          type="checkbox"
+                          name="settingStoreCookies"
+                          checked={request['settingStoreCookies']}
+                          onChange={toggleCheckBox}
+                        />
                       </label>
                     </div>
                     <div className="form-control form-control--thin">
                       <label>
                         Automatically encode special characters in URL
-                        {renderCheckboxInput('settingEncodeUrl')}
+                        <input
+                          type="checkbox"
+                          name="settingEncodeUrl"
+                          checked={request['settingEncodeUrl']}
+                          onChange={toggleCheckBox}
+                        />
                         <HelpTooltip position="top" className="space-left">
                           Automatically encode special characters at send time (does not apply to query
                           parameters editor)
@@ -292,7 +248,12 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     <div className="form-control form-control--thin">
                       <label>
                         Skip rendering of request body
-                        {renderCheckboxInput('settingDisableRenderRequestBody')}
+                        <input
+                          type="checkbox"
+                          name="settingDisableRenderRequestBody"
+                          checked={request['settingDisableRenderRequestBody']}
+                          onChange={toggleCheckBox}
+                        />
                         <HelpTooltip position="top" className="space-left">
                           Disable rendering of environment variables and tags for the request body
                         </HelpTooltip>
@@ -306,7 +267,12 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                           URL's path part and that is supposed to be removed according to RFC 3986 section
                           5.2.4
                         </HelpTooltip>
-                        {renderCheckboxInput('settingRebuildPath')}
+                        <input
+                          type="checkbox"
+                          name="settingRebuildPath"
+                          checked={request['settingRebuildPath']}
+                          onChange={toggleCheckBox}
+                        />
                       </label>
                     </div>
                   </div>
@@ -314,10 +280,15 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     <label>
                       Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
                       <select
-                      // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
+                        // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
                         defaultValue={state.request?.settingFollowRedirects}
                         name="settingFollowRedirects"
-                        onChange={_updateRequestSettingString}
+                        onChange={async event => {
+                          const updated = await models.request.update(request, {
+                            [event.currentTarget.name]: event.currentTarget.value,
+                          });
+                          setState({ ...state, request: updated });
+                        }}
                       >
                         <option value={'global'}>Use global setting</option>
                         <option value={'off'}>Don't follow redirects</option>
@@ -384,4 +355,5 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     </Modal>
   );
 });
+
 RequestSettingsModal.displayName = 'RequestSettingsModal';
