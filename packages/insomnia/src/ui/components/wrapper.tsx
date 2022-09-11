@@ -378,7 +378,7 @@ export class WrapperClass extends PureComponent<Props, State> {
               />
 
               {activeApiSpec ? <WorkspaceSettingsModal
-                ref={registerModal}
+                ref={instance => registerModal(instance, 'WorkspaceSettingsModal')}
                 workspace={activeWorkspace}
                 apiSpec={activeApiSpec}
               /> : null}
