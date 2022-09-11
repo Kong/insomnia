@@ -46,22 +46,17 @@ export interface WorkspaceDuplicateModalHandle {
 export const WorkspaceDuplicateModal = forwardRef<WorkspaceDuplicateModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<Modal>(null);
   const [state, setState] = useState<ErrorModalOptions>({});
-
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
-    show: (options: ErrorModalOptions) => {
-      setState(options);
+    show: ({ workspace, apiSpec, onDone }: ErrorModalOptions) => {
+      setState({ workspace, apiSpec, onDone });
       modalRef.current?.show();
     },
   }), []);
-  const dispatch = useDispatch();
 
-  const projects = useSelector(selectProjects);
   const activeProject = useSelector(selectActiveProject);
-  const isLoggedIn = useSelector(selectIsLoggedIn);
-
   const {
     register,
     handleSubmit,
@@ -73,6 +68,9 @@ export const WorkspaceDuplicateModal = forwardRef<WorkspaceDuplicateModalHandle,
       },
     });
 
+  const dispatch = useDispatch();
+  const projects = useSelector(selectProjects);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
   const onSubmit = useCallback(async ({ projectId, newName }: FormFields) => {
     const duplicateToProject = projects.find(project => project._id === projectId);
     if (!duplicateToProject) {
