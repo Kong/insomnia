@@ -172,7 +172,7 @@ class App extends PureComponent<AppProps, State> {
         hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
         () => {
           const { activeWorkspace } = this.props;
-          showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
+          showModal(WorkspaceEnvironmentsEditModal, { workspace: activeWorkspace });
         },
       ],
       [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],

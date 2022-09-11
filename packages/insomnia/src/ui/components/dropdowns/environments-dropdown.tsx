@@ -34,7 +34,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const dropdownRef = useRef<DropdownHandle>(null);
   const handleShowEnvironmentModal = useCallback(() => {
-    showModal(WorkspaceEnvironmentsEditModal, workspace);
+    showModal(WorkspaceEnvironmentsEditModal, { workspace });
   }, [workspace]);
 
   const onKeydown = useCallback((event: KeyboardEvent) => {

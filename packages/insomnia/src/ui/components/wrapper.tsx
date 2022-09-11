@@ -426,7 +426,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             ) : null}
 
             <WorkspaceEnvironmentsEditModal
-              ref={registerModal}
+              ref={instance => registerModal(instance, 'WorkspaceEnvironmentsEditModal')}
               handleSetActiveEnvironment={this._handleSetActiveEnvironment}
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />

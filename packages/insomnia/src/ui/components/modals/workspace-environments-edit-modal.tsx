@@ -1,9 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { Fragment, PureComponent } from 'react';
+import React, { forwardRef, Fragment,  useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
@@ -131,51 +129,27 @@ const SidebarList = SortableContainer<SidebarListProps>(
   ),
 );
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
-  environmentEditorRef: EnvironmentEditor | null = null;
-  environmentColorInputRef: HTMLInputElement | null = null;
-  saveTimeout: NodeJS.Timeout | null = null;
-  modal: Modal | null = null;
-  editorKey = 0;
+export interface WorkspaceEnvironmentsEditModalOptions {
+  workspace?: Workspace;
+}
+export interface WorkspaceEnvironmentsEditModalHandle {
+  show: (options: WorkspaceEnvironmentsEditModalOptions) => void;
+  hide: () => void;
+}
+export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, Props>((props, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const editorRef = useRef<EnvironmentEditor>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  state: State = {
+  const [state, setState] = useState<State>({
     workspace: null,
     isValid: true,
     subEnvironments: [],
     rootEnvironment: null,
     selectedEnvironmentId: null,
-  };
+  });
 
-  colorChangeTimeout: NodeJS.Timeout | null = null;
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  _setEditorRef(environmentEditor: EnvironmentEditor) {
-    this.environmentEditorRef = environmentEditor;
-  }
-
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
-
-  async show(workspace: Workspace) {
-    const { activeEnvironmentId } = this.props;
-
-    // Default to showing the currently active environment
-    if (activeEnvironmentId) {
-      this.setState({
-        selectedEnvironmentId: activeEnvironmentId,
-      });
-    }
-
-    await this._load(workspace);
-    this.modal?.show();
-  }
-
-  async _load(workspace: Workspace | null, environmentToSelect: Environment | null = null) {
+  const _load = useCallback(async (workspace: Workspace | null, environmentToSelect: Environment | null = null) => {
     if (!workspace) {
       console.warn('Failed to reload environment editor without Workspace');
       return;
@@ -187,25 +161,48 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
 
     if (environmentToSelect) {
       selectedEnvironmentId = environmentToSelect._id;
-    } else if (this.state.workspace && workspace._id !== this.state.workspace._id) {
+    } else if (state.workspace && workspace._id !== state.workspace._id) {
       // We've changed workspaces, so load the root one
       selectedEnvironmentId = rootEnvironment._id;
     } else {
       // We haven't changed workspaces, so try loading the last environment, and fall back
       // to the root one
-      selectedEnvironmentId = this.state.selectedEnvironmentId || rootEnvironment._id;
+      selectedEnvironmentId = state.selectedEnvironmentId || rootEnvironment._id;
     }
 
-    this.setState({
+    setState({
+      ...state,
       workspace,
       rootEnvironment,
       subEnvironments,
       selectedEnvironmentId,
     });
-  }
+  }, [state]);
 
-  async _handleAddEnvironment(isPrivate = false) {
-    const { rootEnvironment, workspace } = this.state;
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: ({ workspace }) => {
+      if (!workspace) {
+        return;
+      }
+      const { activeEnvironmentId } = props;
+      // Default to showing the currently active environment
+      if (activeEnvironmentId) {
+        setState({
+          ...state,
+          selectedEnvironmentId: activeEnvironmentId,
+        });
+      }
+
+      _load(workspace);
+      modalRef.current?.show();
+    },
+  }), [_load, props, state]);
+
+  async function _handleAddEnvironment(isPrivate = false) {
+    const { rootEnvironment, workspace } = state;
 
     if (!rootEnvironment) {
       console.warn('Failed to add environment. Unknown root environment');
@@ -217,34 +214,34 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
       parentId,
       isPrivate,
     });
-    await this._load(workspace, environment);
+    await _load(workspace, environment);
   }
 
-  _handleShowEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  function _handleShowEnvironment(_event: React.MouseEvent, environment?: Environment) {
     // Don't allow switching if the current one has errors
-    if (this.environmentEditorRef && !this.environmentEditorRef.isValid()) {
+    if (editorRef.current && !editorRef.current.isValid()) {
       return;
     }
 
-    if (environment === this._getSelectedEnvironment()) {
+    if (environment === _getSelectedEnvironment()) {
       return;
     }
 
-    const { workspace } = this.state;
-    this._load(workspace, environment);
+    const { workspace } = state;
+    _load(workspace, environment);
   }
 
-  async _handleDuplicateEnvironment(_event: React.MouseEvent, environment?: Environment) {
-    const { workspace } = this.state;
+  async function _handleDuplicateEnvironment(_event: React.MouseEvent, environment?: Environment) {
+    const { workspace } = state;
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const newEnvironment = await models.environment.duplicate(environment!);
-    await this._load(workspace, newEnvironment);
+    await _load(workspace, newEnvironment);
   }
 
-  async _handleDeleteEnvironment(_event: React.MouseEvent, environment?: Environment) {
-    const { handleSetActiveEnvironment, activeEnvironmentId } = this.props;
-    const { rootEnvironment, workspace } = this.state;
+  async function _handleDeleteEnvironment(_event: React.MouseEvent, environment?: Environment) {
+    const { handleSetActiveEnvironment, activeEnvironmentId } = props;
+    const { rootEnvironment, workspace } = state;
 
     // Don't delete the root environment
     if (environment === rootEnvironment) {
@@ -262,10 +259,10 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await models.environment.remove(environment!);
-    await this._load(workspace, rootEnvironment);
+    await _load(workspace, rootEnvironment);
   }
 
-  async _updateEnvironment(
+  async function _updateEnvironment(
     environment: Environment | null,
     patch: Partial<Environment>,
     refresh = true,
@@ -274,7 +271,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
       return;
     }
 
-    const { workspace } = this.state;
+    const { workspace } = state;
     // NOTE: Fetch the environment first because it might not be up to date.
     // For example, editing the body updates silently.
     const realEnvironment = await models.environment.getById(environment._id);
@@ -286,80 +283,60 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     await models.environment.update(realEnvironment, patch);
 
     if (refresh) {
-      await this._load(workspace);
+      await _load(workspace);
     }
   }
 
-  async _handleChangeEnvironmentName(environment: Environment, name?: string) {
-    await this._updateEnvironment(environment, {
-      name,
-    });
+  async function _handleChangeEnvironmentName(environment: Environment, name?: string) {
+    _updateEnvironment(environment, { name });
   }
 
-  _handleChangeEnvironmentColor(environment: Environment | null, color: string | null) {
-    if (this.colorChangeTimeout !== null) {
-      clearTimeout(this.colorChangeTimeout);
-    }
-    this.colorChangeTimeout = setTimeout(async () => {
-      await this._updateEnvironment(environment, { color });
-    }, DEBOUNCE_MILLIS);
+  function _handleChangeEnvironmentColor(environment: Environment | null, color: string | null) {
+    _updateEnvironment(environment, { color });
   }
 
-  _didChange() {
-    this._saveChanges();
+  function _didChange() {
+    _saveChanges();
 
     // Call this last in case component unmounted
-    const isValid = this.environmentEditorRef ? this.environmentEditorRef.isValid() : false;
+    const isValid = editorRef.current ? editorRef.current.isValid() : false;
 
-    if (this.state.isValid !== isValid) {
-      this.setState({
+    if (state.isValid !== isValid) {
+      setState({
+        ...state,
         isValid,
       });
     }
   }
 
-  _getSelectedEnvironment(): Environment | null {
-    const { selectedEnvironmentId, subEnvironments, rootEnvironment } = this.state;
-
+  const _getSelectedEnvironment = (): Environment | null => {
+    const { selectedEnvironmentId, subEnvironments, rootEnvironment } = state;
     if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
       return rootEnvironment;
     } else {
       return subEnvironments.find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
     }
-  }
+  };
 
-  componentDidMount() {
-    db.onChange(async changes => {
-      const { selectedEnvironmentId } = this.state;
+  // @TODO: ensure changes from sync cause re-render
 
-      for (const change of changes) {
-        const [, doc, fromSync] = change;
-
-        // Force an editor refresh if any changes from sync come in
-        if (doc._id === selectedEnvironmentId && fromSync) {
-          this.editorKey = doc.modified;
-          await this._load(this.state.workspace);
-        }
-      }
-    });
-  }
-
-  _handleSortEnd: SortEndHandler = results => {
+  const _handleSortEnd: SortEndHandler = results => {
     const { oldIndex, newIndex } = results;
 
     if (newIndex === oldIndex) {
       return;
     }
 
-    const { subEnvironments } = this.state;
+    const { subEnvironments } = state;
     const newSubEnvironments = arrayMove(subEnvironments, oldIndex, newIndex);
-    this.setState({
+    setState({
+      ...state,
       subEnvironments: newSubEnvironments,
     });
     // Do this last so we don't block the sorting
     db.bufferChanges();
 
-    Promise.all(newSubEnvironments.map((environment, index) => this._updateEnvironment(
+    Promise.all(newSubEnvironments.map((environment, index) => _updateEnvironment(
       environment,
       { metaSortKey: index },
       false,
@@ -368,25 +345,22 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     });
   };
 
-  _handleClickColorChange(environment: Environment) {
+  function _handleClickColorChange(environment: Environment) {
     if (!environment.color) {
       // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
-      this._handleChangeEnvironmentColor(environment, '#7d69cb');
+      _handleChangeEnvironmentColor(environment, '#7d69cb');
     }
-
-    this.environmentColorInputRef?.click();
+    inputRef.current?.click();
   }
 
-  _saveChanges() {
+  function _saveChanges() {
     // Only save if it's valid
-    if (!this.environmentEditorRef || !this.environmentEditorRef.isValid()) {
+    if (!editorRef.current || !editorRef.current?.isValid()) {
       return;
     }
-
     let patch: Partial<Environment>;
-
     try {
-      const data = this.environmentEditorRef.getValue();
+      const data = editorRef.current?.getValue();
       patch = {
         data: data?.object,
         dataPropertyOrder: data && data.propertyOrder,
@@ -396,210 +370,193 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
       return;
     }
 
-    const selectedEnvironment = this._getSelectedEnvironment();
+    const selectedEnvironment = _getSelectedEnvironment();
 
     if (selectedEnvironment) {
-      if (this.saveTimeout !== null) {
-        clearTimeout(this.saveTimeout);
-      }
-      this.saveTimeout = setTimeout(async () => {
-        await this._updateEnvironment(selectedEnvironment, patch);
-      }, DEBOUNCE_MILLIS * 4);
+      _updateEnvironment(selectedEnvironment, patch);
     }
   }
 
-  handleInputColorChage(event: React.ChangeEvent<HTMLInputElement>) {
-    this._handleChangeEnvironmentColor(this._getSelectedEnvironment(), event.target.value);
+  function handleInputColorChage(event: React.ChangeEvent<HTMLInputElement>) {
+    _handleChangeEnvironmentColor(_getSelectedEnvironment(), event.target.value);
   }
 
-  unsetColor(environment: Environment) {
-    this._handleChangeEnvironmentColor(environment, null);
+  function unsetColor(environment: Environment) {
+    _handleChangeEnvironmentColor(environment, null);
   }
 
-  _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (event, environment) => {
-    const { handleSetActiveEnvironment, activeEnvironmentId } = this.props;
-
+  const _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (event, environment) => {
+    const { handleSetActiveEnvironment, activeEnvironmentId } = props;
     if (!environment) {
       return;
     }
-
     if (environment._id === activeEnvironmentId) {
       return;
     }
-
     handleSetActiveEnvironment(environment._id);
-    this._handleShowEnvironment(event, environment);
+    _handleShowEnvironment(event, environment);
   };
+  const { subEnvironments, rootEnvironment, isValid } = state;
 
-  render() {
-    const {
-      activeEnvironmentId,
-    } = this.props;
-    const { subEnvironments, rootEnvironment, isValid } = this.state;
+  const selectedEnvironment = _getSelectedEnvironment();
 
-    const selectedEnvironment = this._getSelectedEnvironment();
-
-    if (this.environmentColorInputRef !== null) {
-      this.environmentColorInputRef.value = selectedEnvironment?.color || '';
-    }
-
-    const environmentInfo = {
-      object: selectedEnvironment ? selectedEnvironment.data : {},
-      propertyOrder: selectedEnvironment && selectedEnvironment.dataPropertyOrder,
-    };
-
-    return (
-      <Modal ref={this._setModalRef} wide tall {...this.props}>
-        <ModalHeader>Manage Environments</ModalHeader>
-        <ModalBody noScroll className="env-modal">
-          <div className="env-modal__sidebar">
-            <li
-              className={classnames('env-modal__sidebar-root-item', {
-                'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
-              })}
-            >
-              <Button onClick={this._handleShowEnvironment} value={rootEnvironment ?? undefined}>
-                {ROOT_ENVIRONMENT_NAME}
-                <HelpTooltip className="space-left">
-                  The variables in this environment are always available, regardless of which
-                  sub-environment is active. Useful for storing default or fallback values.
-                </HelpTooltip>
-              </Button>
-            </li>
-            <div className="pad env-modal__sidebar-heading">
-              <h3 className="no-margin">Sub Environments</h3>
-              <Dropdown right>
-                <DropdownButton>
-                  <i className="fa fa-plus-circle" />
-                  <i className="fa fa-caret-down" />
-                </DropdownButton>
-                <DropdownItem onClick={this._handleAddEnvironment} value={false}>
-                  <i className="fa fa-eye" /> Environment
-                </DropdownItem>
-                <DropdownItem
-                  onClick={this._handleAddEnvironment}
-                  value={true}
-                  title="Environment will not be exported or synced"
-                >
-                  <i className="fa fa-eye-slash" /> Private Environment
-                </DropdownItem>
-              </Dropdown>
-            </div>
-            <SidebarList
-              activeEnvironmentId={activeEnvironmentId}
-              handleActivateEnvironment={this._handleActivateEnvironment}
-              environments={subEnvironments}
-              selectedEnvironment={selectedEnvironment}
-              showEnvironment={this._handleShowEnvironment}
-              changeEnvironmentName={this._handleChangeEnvironmentName}
-              onSortEnd={this._handleSortEnd}
-              helperClass="env-modal__sidebar-item--dragging"
-              transitionDuration={0}
-              useWindowAsScrollContainer={false}
-            />
+  if (inputRef.current) {
+    inputRef.current.value = selectedEnvironment?.color || '';
+  }
+  const environmentInfo = {
+    object: selectedEnvironment ? selectedEnvironment.data : {},
+    propertyOrder: selectedEnvironment && selectedEnvironment.dataPropertyOrder,
+  };
+  return (
+    <Modal ref={modalRef} wide tall {...props}>
+      <ModalHeader>Manage Environments</ModalHeader>
+      <ModalBody noScroll className="env-modal">
+        <div className="env-modal__sidebar">
+          <li
+            className={classnames('env-modal__sidebar-root-item', {
+              'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
+            })}
+          >
+            <Button onClick={_handleShowEnvironment} value={rootEnvironment ?? undefined}>
+              {ROOT_ENVIRONMENT_NAME}
+              <HelpTooltip className="space-left">
+                The variables in this environment are always available, regardless of which
+                sub-environment is active. Useful for storing default or fallback values.
+              </HelpTooltip>
+            </Button>
+          </li>
+          <div className="pad env-modal__sidebar-heading">
+            <h3 className="no-margin">Sub Environments</h3>
+            <Dropdown right>
+              <DropdownButton>
+                <i className="fa fa-plus-circle" />
+                <i className="fa fa-caret-down" />
+              </DropdownButton>
+              <DropdownItem onClick={_handleAddEnvironment} value={false}>
+                <i className="fa fa-eye" /> Environment
+              </DropdownItem>
+              <DropdownItem
+                onClick={_handleAddEnvironment}
+                value={true}
+                title="Environment will not be exported or synced"
+              >
+                <i className="fa fa-eye-slash" /> Private Environment
+              </DropdownItem>
+            </Dropdown>
           </div>
-          <div className="env-modal__main">
-            <div className="env-modal__main__header">
-              <h1>
-                {rootEnvironment === selectedEnvironment ? (
-                  ROOT_ENVIRONMENT_NAME
-                ) : (
-                  <Editable
-                    singleClick
-                    className="wide"
-                    onSubmit={name => {
-                      if (!selectedEnvironment || !name) {
-                        return;
-                      }
-                      this._handleChangeEnvironmentName(selectedEnvironment, name);
-                    }}
-                    value={selectedEnvironment ? selectedEnvironment.name : ''}
-                  />
-                )}
-              </h1>
+          <SidebarList
+            activeEnvironmentId={props.activeEnvironmentId}
+            handleActivateEnvironment={_handleActivateEnvironment}
+            environments={subEnvironments}
+            selectedEnvironment={selectedEnvironment}
+            showEnvironment={_handleShowEnvironment}
+            changeEnvironmentName={_handleChangeEnvironmentName}
+            onSortEnd={_handleSortEnd}
+            helperClass="env-modal__sidebar-item--dragging"
+            transitionDuration={0}
+            useWindowAsScrollContainer={false}
+          />
+        </div>
+        <div className="env-modal__main">
+          <div className="env-modal__main__header">
+            <h1>
+              {rootEnvironment === selectedEnvironment ? (
+                ROOT_ENVIRONMENT_NAME
+              ) : (
+                <Editable
+                  singleClick
+                  className="wide"
+                  onSubmit={name => {
+                    if (!selectedEnvironment || !name) {
+                      return;
+                    }
+                    _handleChangeEnvironmentName(selectedEnvironment, name);
+                  }}
+                  value={selectedEnvironment ? selectedEnvironment.name : ''}
+                />
+              )}
+            </h1>
 
-              {selectedEnvironment && rootEnvironment !== selectedEnvironment ? (
-                <Fragment>
-                  <input
-                    className="hidden"
-                    type="color"
-                    ref={ref => {
-                      this.environmentColorInputRef = ref;
-                    }}
-                    onChange={this.handleInputColorChage}
-                  />
+            {selectedEnvironment && rootEnvironment !== selectedEnvironment ? (
+              <Fragment>
+                <input
+                  className="hidden"
+                  type="color"
+                  ref={inputRef}
+                  onChange={handleInputColorChage}
+                />
 
-                  <Dropdown className="space-right" right>
-                    <DropdownButton className="btn btn--clicky">
-                      {selectedEnvironment.color && (
-                        <i
-                          className="fa fa-circle space-right"
-                          style={{
-                            color: selectedEnvironment.color,
-                          }}
-                        />
-                      )}
-                      Color <i className="fa fa-caret-down" />
-                    </DropdownButton>
-
-                    <DropdownItem value={selectedEnvironment} onClick={this._handleClickColorChange}>
+                <Dropdown className="space-right" right>
+                  <DropdownButton className="btn btn--clicky">
+                    {selectedEnvironment.color && (
                       <i
-                        className="fa fa-circle"
+                        className="fa fa-circle space-right"
                         style={{
-                          ...(selectedEnvironment.color ? { color: selectedEnvironment.color } : {}),
+                          color: selectedEnvironment.color,
                         }}
                       />
-                      {selectedEnvironment.color ? 'Change Color' : 'Assign Color'}
-                    </DropdownItem>
+                    )}
+                    Color <i className="fa fa-caret-down" />
+                  </DropdownButton>
 
-                    <DropdownItem
-                      value={selectedEnvironment}
-                      onClick={this.unsetColor}
-                      disabled={!selectedEnvironment.color}
-                    >
-                      <i className="fa fa-minus-circle" />
-                      Unset Color
-                    </DropdownItem>
-                  </Dropdown>
+                  <DropdownItem value={selectedEnvironment} onClick={_handleClickColorChange}>
+                    <i
+                      className="fa fa-circle"
+                      style={{
+                        ...(selectedEnvironment.color ? { color: selectedEnvironment.color } : {}),
+                      }}
+                    />
+                    {selectedEnvironment.color ? 'Change Color' : 'Assign Color'}
+                  </DropdownItem>
 
-                  <Button
+                  <DropdownItem
                     value={selectedEnvironment}
-                    onClick={this._handleDuplicateEnvironment}
-                    className="btn btn--clicky space-right"
+                    onClick={unsetColor}
+                    disabled={!selectedEnvironment.color}
                   >
-                    <i className="fa fa-copy" /> Duplicate
-                  </Button>
+                    <i className="fa fa-minus-circle" />
+                    Unset Color
+                  </DropdownItem>
+                </Dropdown>
 
-                  <PromptButton
-                    value={selectedEnvironment}
-                    onClick={this._handleDeleteEnvironment}
-                    className="btn btn--clicky"
-                  >
-                    <i className="fa fa-trash-o" />
-                  </PromptButton>
-                </Fragment>
-              ) : null}
-            </div>
-            <div className="env-modal__editor">
-              <EnvironmentEditor
-                ref={this._setEditorRef}
-                key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
-                environmentInfo={environmentInfo}
-                didChange={this._didChange}
-              />
-            </div>
+                <Button
+                  value={selectedEnvironment}
+                  onClick={_handleDuplicateEnvironment}
+                  className="btn btn--clicky space-right"
+                >
+                  <i className="fa fa-copy" /> Duplicate
+                </Button>
+
+                <PromptButton
+                  value={selectedEnvironment}
+                  onClick={_handleDeleteEnvironment}
+                  className="btn btn--clicky"
+                >
+                  <i className="fa fa-trash-o" />
+                </PromptButton>
+              </Fragment>
+            ) : null}
           </div>
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left italic txt-sm">
-            * Environment data can be used for&nbsp;
-            <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
+          <div className="env-modal__editor">
+            <EnvironmentEditor
+              ref={editorRef}
+              key={`${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
+              environmentInfo={environmentInfo}
+              didChange={_didChange}
+            />
           </div>
-          <button className="btn" disabled={!isValid} onClick={this.hide}>
-            Done
-          </button>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+        </div>
+      </ModalBody>
+      <ModalFooter>
+        <div className="margin-left italic txt-sm">
+          * Environment data can be used for&nbsp;
+          <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
+        </div>
+        <button className="btn" disabled={!isValid} onClick={() => modalRef.current?.hide()}>
+          Done
+        </button>
+      </ModalFooter>
+    </Modal>
+  );
+});
+WorkspaceEnvironmentsEditModal.displayName = 'WorkspaceEnvironmentsEditModal';
