@@ -256,16 +256,6 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     this.modal?.hide();
   }
 
-  renderModalHeader() {
-    const { workspace } = this.props;
-    return (
-      <ModalHeader key={`header::${workspace._id}`}>
-        {getWorkspaceLabel(workspace).singular} Settings{' '}
-        <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
-      </ModalHeader>
-    );
-  }
-
   renderCertificate(certificate: ClientCertificate) {
     return (
       <div className="row-spaced" key={certificate._id}>
@@ -305,7 +295,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     );
   }
 
-  renderModalBody() {
+  render() {
     const {
       clientCertificates,
       workspace,
@@ -323,219 +313,217 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
       defaultPreviewMode,
     } = this.state;
     return (
-      <ModalBody key={`body::${workspace._id}`} noScroll>
-        <Tabs forceRenderTabPanel className="react-tabs">
-          <TabList>
-            <Tab tabIndex="-1">
-              <button>Overview</button>
-            </Tab>
-            <Tab tabIndex="-1">
-              <button>Client Certificates</button>
-            </Tab>
-          </TabList>
-          <TabPanel className="react-tabs__tab-panel pad scrollable pad-top-sm">
-            <div className="form-control form-control--outlined">
-              <label>
-                Name
-                <DebouncedInput
-                  // @ts-expect-error -- TSCONVERSION props are spread into an input element
-                  type="text"
-                  delay={500}
-                  placeholder="Awesome API"
-                  defaultValue={activeWorkspaceName}
-                  onChange={this._handleRename}
-                />
-              </label>
-            </div>
-            <div>
-              {showDescription ? (
-                <MarkdownEditor
-                  className="margin-top"
-                  defaultPreviewMode={defaultPreviewMode}
-                  placeholder="Write a description"
-                  defaultValue={workspace.description}
-                  onChange={this._handleDescriptionChange}
-                />
-              ) : (
-                <button
-                  onClick={this._handleAddDescription}
-                  className="btn btn--outlined btn--super-duper-compact"
-                >
-                  Add Description
-                </button>
-              )}
-            </div>
-            <h2>Actions</h2>
-            <div className="form-control form-control--padded">
-              <PromptButton
-                onClick={this._handleRemoveWorkspace}
-                addIcon
-                className="width-auto btn btn--clicky inline-block"
-              >
-                <i className="fa fa-trash-o" /> Delete
-              </PromptButton>
-              <button
-                onClick={this._handleDuplicateWorkspace}
-                className="width-auto btn btn--clicky inline-block space-left"
-              >
-                <i className="fa fa-copy" /> Duplicate
-              </button>
-              <PromptButton
-                onClick={this._handleClearAllResponses}
-                addIcon
-                className="width-auto btn btn--clicky inline-block space-left"
-              >
-                <i className="fa fa-trash-o" /> Clear All Responses
-              </PromptButton>
-            </div>
-          </TabPanel>
-          <TabPanel className="react-tabs__tab-panel pad scrollable">
-            {!showAddCertificateForm ? (
-              <div>
-                {clientCertificates.length === 0 ? (
-                  <p className="notice surprise margin-top-sm">
-                    You have not yet added any certificates
-                  </p>
-                ) : null}
-
-                {publicCertificates.length > 0
-                  ? publicCertificates.map(this.renderCertificate)
-                  : null}
-
-                {privateCertificates.length > 0 ? (
-                  <div>
-                    <h2>
-                      Private Certificates
-                      <HelpTooltip position="right" className="space-left">
-                        Private certificates will not by synced.
-                      </HelpTooltip>
-                    </h2>
-                    {privateCertificates.map(this.renderCertificate)}
-                  </div>
-                ) : null}
-                <hr className="hr--spaced" />
-                <div className="text-center">
-                  <button
-                    className="btn btn--clicky auto"
-                    onClick={this._handleToggleCertificateForm}
-                  >
-                    New Certificate
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={this._handleCreateCertificate}>
-                <div className="form-control form-control--outlined no-pad-top">
-                  <label>
-                    Host
-                    <HelpTooltip position="right" className="space-left">
-                      The host for which this client certificate is valid. Port number is optional
-                      and * can be used as a wildcard.
-                    </HelpTooltip>
-                    <input
-                      type="text"
-                      required
-                      placeholder="my-api.com"
-                      autoFocus
-                      onChange={this._handleCreateHostChange}
-                    />
-                  </label>
-                </div>
-                <div className="form-row">
-                  <div className="form-control width-auto">
-                    <label>
-                      PFX <span className="faint">(or PKCS12)</span>
-                      <FileInputButton
-                        className="btn btn--clicky"
-                        onChange={this._handleCreatePfxChange}
-                        path={pfxPath}
-                        showFileName
-                      />
-                    </label>
-                  </div>
-                  <div className="text-center">
-                    <br />
-                    <br />
-                    &nbsp;&nbsp;Or&nbsp;&nbsp;
-                  </div>
-                  <div className="row-fill">
-                    <div className="form-control">
-                      <label>
-                        CRT File
-                        <FileInputButton
-                          className="btn btn--clicky"
-                          name="Cert"
-                          onChange={this._handleCreateCrtChange}
-                          path={crtPath}
-                          showFileName
-                        />
-                      </label>
-                    </div>
-                    <div className="form-control">
-                      <label>
-                        Key File
-                        <FileInputButton
-                          className="btn btn--clicky"
-                          name="Key"
-                          onChange={this._handleCreateKeyChange}
-                          path={keyPath}
-                          showFileName
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
+      <Modal ref={this._handleSetModalRef} freshState>
+        {workspace ?
+          <ModalHeader key={`header::${workspace._id}`}>
+            {getWorkspaceLabel(workspace).singular} Settings{' '}
+            <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
+          </ModalHeader> : null}
+        {workspace ?
+          <ModalBody key={`body::${workspace._id}`} noScroll>
+            <Tabs forceRenderTabPanel className="react-tabs">
+              <TabList>
+                <Tab tabIndex="-1">
+                  <button>Overview</button>
+                </Tab>
+                <Tab tabIndex="-1">
+                  <button>Client Certificates</button>
+                </Tab>
+              </TabList>
+              <TabPanel className="react-tabs__tab-panel pad scrollable pad-top-sm">
                 <div className="form-control form-control--outlined">
                   <label>
-                    Passphrase
-                    <input
-                      type="password"
-                      placeholder="•••••••••••"
-                      onChange={this._handleCreatePassphraseChange}
+                    Name
+                    <DebouncedInput
+                      // @ts-expect-error -- TSCONVERSION props are spread into an input element
+                      type="text"
+                      delay={500}
+                      placeholder="Awesome API"
+                      defaultValue={activeWorkspaceName}
+                      onChange={this._handleRename}
                     />
                   </label>
                 </div>
-                <div className="form-control form-control--slim">
-                  <label>
-                    Private
-                    <HelpTooltip className="space-left">
-                      Private certificates will not be synced
-                    </HelpTooltip>
-                    <input
-                      type="checkbox"
-                      // @ts-expect-error -- TSCONVERSION boolean not valid
-                      value={isPrivate}
-                      onChange={this._handleCreateIsPrivateChange}
+                <div>
+                  {showDescription ? (
+                    <MarkdownEditor
+                      className="margin-top"
+                      defaultPreviewMode={defaultPreviewMode}
+                      placeholder="Write a description"
+                      defaultValue={workspace.description}
+                      onChange={this._handleDescriptionChange}
                     />
-                  </label>
+                  ) : (
+                    <button
+                      onClick={this._handleAddDescription}
+                      className="btn btn--outlined btn--super-duper-compact"
+                    >
+                      Add Description
+                    </button>
+                  )}
                 </div>
-                <br />
-                <div className="pad-top text-right">
-                  <button
-                    type="button"
-                    className="btn btn--super-compact space-right"
-                    onClick={this._handleToggleCertificateForm}
+                <h2>Actions</h2>
+                <div className="form-control form-control--padded">
+                  <PromptButton
+                    onClick={this._handleRemoveWorkspace}
+                    addIcon
+                    className="width-auto btn btn--clicky inline-block"
                   >
-                    Cancel
+                    <i className="fa fa-trash-o" /> Delete
+                  </PromptButton>
+                  <button
+                    onClick={this._handleDuplicateWorkspace}
+                    className="width-auto btn btn--clicky inline-block space-left"
+                  >
+                    <i className="fa fa-copy" /> Duplicate
                   </button>
-                  <button className="btn btn--clicky space-right" type="submit">
-                    Create Certificate
-                  </button>
+                  <PromptButton
+                    onClick={this._handleClearAllResponses}
+                    addIcon
+                    className="width-auto btn btn--clicky inline-block space-left"
+                  >
+                    <i className="fa fa-trash-o" /> Clear All Responses
+                  </PromptButton>
                 </div>
-              </form>
-            )}
-          </TabPanel>
-        </Tabs>
-      </ModalBody>
-    );
-  }
+              </TabPanel>
+              <TabPanel className="react-tabs__tab-panel pad scrollable">
+                {!showAddCertificateForm ? (
+                  <div>
+                    {clientCertificates.length === 0 ? (
+                      <p className="notice surprise margin-top-sm">
+                        You have not yet added any certificates
+                      </p>
+                    ) : null}
 
-  render() {
-    const { workspace } = this.props;
-    return (
-      <Modal ref={this._handleSetModalRef} freshState>
-        {workspace ? this.renderModalHeader() : null}
-        {workspace ? this.renderModalBody() : null}
+                    {publicCertificates.length > 0
+                      ? publicCertificates.map(this.renderCertificate)
+                      : null}
+
+                    {privateCertificates.length > 0 ? (
+                      <div>
+                        <h2>
+                          Private Certificates
+                          <HelpTooltip position="right" className="space-left">
+                            Private certificates will not by synced.
+                          </HelpTooltip>
+                        </h2>
+                        {privateCertificates.map(this.renderCertificate)}
+                      </div>
+                    ) : null}
+                    <hr className="hr--spaced" />
+                    <div className="text-center">
+                      <button
+                        className="btn btn--clicky auto"
+                        onClick={this._handleToggleCertificateForm}
+                      >
+                        New Certificate
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={this._handleCreateCertificate}>
+                    <div className="form-control form-control--outlined no-pad-top">
+                      <label>
+                        Host
+                        <HelpTooltip position="right" className="space-left">
+                          The host for which this client certificate is valid. Port number is optional
+                          and * can be used as a wildcard.
+                        </HelpTooltip>
+                        <input
+                          type="text"
+                          required
+                          placeholder="my-api.com"
+                          autoFocus
+                          onChange={this._handleCreateHostChange}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-control width-auto">
+                        <label>
+                          PFX <span className="faint">(or PKCS12)</span>
+                          <FileInputButton
+                            className="btn btn--clicky"
+                            onChange={this._handleCreatePfxChange}
+                            path={pfxPath}
+                            showFileName
+                          />
+                        </label>
+                      </div>
+                      <div className="text-center">
+                        <br />
+                        <br />
+                    &nbsp;&nbsp;Or&nbsp;&nbsp;
+                      </div>
+                      <div className="row-fill">
+                        <div className="form-control">
+                          <label>
+                            CRT File
+                            <FileInputButton
+                              className="btn btn--clicky"
+                              name="Cert"
+                              onChange={this._handleCreateCrtChange}
+                              path={crtPath}
+                              showFileName
+                            />
+                          </label>
+                        </div>
+                        <div className="form-control">
+                          <label>
+                            Key File
+                            <FileInputButton
+                              className="btn btn--clicky"
+                              name="Key"
+                              onChange={this._handleCreateKeyChange}
+                              path={keyPath}
+                              showFileName
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="form-control form-control--outlined">
+                      <label>
+                        Passphrase
+                        <input
+                          type="password"
+                          placeholder="•••••••••••"
+                          onChange={this._handleCreatePassphraseChange}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control form-control--slim">
+                      <label>
+                        Private
+                        <HelpTooltip className="space-left">
+                          Private certificates will not be synced
+                        </HelpTooltip>
+                        <input
+                          type="checkbox"
+                          // @ts-expect-error -- TSCONVERSION boolean not valid
+                          value={isPrivate}
+                          onChange={this._handleCreateIsPrivateChange}
+                        />
+                      </label>
+                    </div>
+                    <br />
+                    <div className="pad-top text-right">
+                      <button
+                        type="button"
+                        className="btn btn--super-compact space-right"
+                        onClick={this._handleToggleCertificateForm}
+                      >
+                        Cancel
+                      </button>
+                      <button className="btn btn--clicky space-right" type="submit">
+                        Create Certificate
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </TabPanel>
+            </Tabs>
+          </ModalBody> : null}
       </Modal>
     );
   }
