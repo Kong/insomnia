@@ -360,7 +360,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')}  vcs={vcs || undefined} />
             <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
             <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
-            <RequestGroupSettingsModal ref={registerModal} />
+            <RequestGroupSettingsModal ref={instance => registerModal(instance, 'RequestGroupSettingsModal')} />
 
             {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
