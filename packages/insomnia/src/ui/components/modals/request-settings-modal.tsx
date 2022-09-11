@@ -1,67 +1,78 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { createRef, PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import type { BaseRequest, Request } from '../../../models/request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
-import { RootState } from '../../redux/modules';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
+export interface RequestSettingsModalOptions {
+  request: Request | GrpcRequest;
+  forceEditMode?: boolean;
 }
-
 interface State {
   request: Request | GrpcRequest | null;
   showDescription: boolean;
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
-  workspacesForActiveProject: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
 }
-
-interface RequestSettingsModalOptions {
-  request: Request | GrpcRequest;
-  forceEditMode: boolean;
+export interface RequestSettingsModalHandle {
+  show: (options: RequestSettingsModalOptions) => void;
+  hide: () => void;
 }
+export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const editorRef = useRef<UnconnectedCodeEditor>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedRequestSettingsModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
-  _editorRef = createRef<UnconnectedCodeEditor>();
-
-  state: State = {
+  const [state, setState] = useState<State>({
     request: null,
     showDescription: false,
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
-    workspacesForActiveProject: [],
     justCopied: false,
     justMoved: false,
-  };
+  });
+  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: async ({ request, forceEditMode }) => {
+      const hasDescription = !!request.description;
+      // Find workspaces for use with moving workspace
+      const ancestors = await db.withAncestors(request);
+      const doc = ancestors.find(isWorkspace);
+      const workspaceId = doc ? doc._id : 'should-never-happen';
+      const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
+      setState({
+        ...state,
+        request,
+        workspace: workspace,
+        activeWorkspaceIdToCopyTo: null,
+        showDescription: forceEditMode || hasDescription,
+        defaultPreviewMode: hasDescription && !forceEditMode,
+      });
 
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
+      modalRef.current?.show();
+    },
+  }), [state, workspacesForActiveProject]);
 
-  async _updateRequestSettingBoolean(event: React.SyntheticEvent<HTMLInputElement>) {
-    if (!this.state.request) {
+  async function _updateRequestSettingBoolean(event: React.SyntheticEvent<HTMLInputElement>) {
+    if (!state.request) {
       // Should never happen
       return;
     }
@@ -69,14 +80,15 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     const value = event.currentTarget.checked;
     const setting = event.currentTarget.name;
     // @ts-expect-error -- TSCONVERSION request settings only exist for regular requests, the types should filter down and exit if grpc
-    const request = await models.request.update(this.state.request, {
+    const request = await models.request.update(state.request, {
       [setting]: value,
     });
-    this.setState({ request });
+    setState({
+      ...state, request });
   }
 
-  async _updateRequestSettingString(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
-    if (!this.state.request) {
+  async function _updateRequestSettingString(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
+    if (!state.request) {
       // Should never happen
       return;
     }
@@ -84,14 +96,15 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     const value = event.currentTarget.value;
     const setting = event.currentTarget.name;
     // @ts-expect-error -- TSCONVERSION request settings only exist for regular requests, the types should filter down and exit if grpc
-    const request = await models.request.update(this.state.request, {
+    const request = await models.request.update(state.request, {
       [setting]: value,
     });
-    this.setState({ request });
+    setState({
+      ...state, request });
   }
 
-  async _handleNameChange(name: string) {
-    const { request: originalRequest } = this.state;
+  async function _handleNameChange(name: string) {
+    const { request: originalRequest } = state;
 
     if (!originalRequest) {
       return;
@@ -103,47 +116,35 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     const updatedRequest = isGrpcRequest(originalRequest)
       ? await models.grpcRequest.update(originalRequest, patch)
       : await models.request.update(originalRequest, patch);
-    this.setState({ request: updatedRequest });
+    setState({
+      ...state,
+      request: updatedRequest });
   }
 
-  async _handleDescriptionChange(description: string) {
-    if (!this.state.request) {
+  async function _handleDescriptionChange(description: string) {
+    if (!state.request) {
       return;
     }
 
     // @ts-expect-error -- TSCONVERSION description only exists for regular requests at the moment, the types should filter down and exit if grpc
-    const request = await models.request.update(this.state.request, {
+    const request = await models.request.update(state.request, {
       description,
     });
-    this.setState({
+    setState({
+      ...state,
       request,
       defaultPreviewMode: false,
     });
   }
-
-  _handleAddDescription() {
-    this.setState({ showDescription: true });
-  }
-
-  _handleUpdateMoveCopyWorkspace(event: React.SyntheticEvent<HTMLSelectElement>) {
-    const { value } = event.currentTarget;
-    const workspaceId = value === '__NULL__' ? null : value;
-    this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
-  }
-
-  async _handleMoveToWorkspace() {
-    const { activeWorkspaceIdToCopyTo, request } = this.state;
-
+  async function _handleMoveToWorkspace() {
+    const { activeWorkspaceIdToCopyTo, request } = state;
     if (!request || !activeWorkspaceIdToCopyTo) {
       return;
     }
-
     const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-
     if (!workspace) {
       return;
     }
-
     const patch = {
       metaSortKey: -1e9,
       // Move to top of sort order
@@ -151,27 +152,27 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     };
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     await requestOperations.update(request, patch);
-    this.setState({
+    setState({
+      ...state,
       justMoved: true,
     });
     setTimeout(() => {
-      this.setState({ justMoved: false });
+      setState({
+        ...state,
+        justMoved: false,
+      });
     }, 2000);
   }
 
-  async _handleCopyToWorkspace() {
-    const { activeWorkspaceIdToCopyTo, request } = this.state;
-
+  async function _handleCopyToWorkspace() {
+    const { activeWorkspaceIdToCopyTo, request } = state;
     if (!request || !activeWorkspaceIdToCopyTo) {
       return;
     }
-
     const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-
     if (!workspace) {
       return;
     }
-
     const patch = {
       metaSortKey: -1e9,
       // Move to top of sort order
@@ -181,51 +182,20 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
     };
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     await requestOperations.duplicate(request, patch);
-    this.setState({
+    setState({
+      ...state,
       justCopied: true,
     });
     setTimeout(() => {
-      this.setState({
+      setState({
+        ...state,
         justCopied: false,
       });
     }, 2000);
     models.stats.incrementCreatedRequests();
   }
-
-  async show({ request, forceEditMode }: RequestSettingsModalOptions) {
-    const { workspacesForActiveProject } = this.props;
-    const hasDescription = !!request.description;
-    // Find workspaces for use with moving workspace
-    const ancestors = await db.withAncestors(request);
-    const doc = ancestors.find(isWorkspace);
-    const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
-    this.setState(
-      {
-        request,
-        workspace: workspace,
-        activeWorkspaceIdToCopyTo: null,
-        showDescription: forceEditMode || hasDescription,
-        defaultPreviewMode: hasDescription && !forceEditMode,
-      },
-      () => {
-        this.modal?.show();
-
-        if (forceEditMode) {
-          setTimeout(() => {
-            this._editorRef.current?.focus();
-          }, 400);
-        }
-      },
-    );
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  renderCheckboxInput(setting: keyof BaseRequest) {
-    const { request } = this.state;
+  function renderCheckboxInput(setting: keyof BaseRequest) {
+    const { request } = state;
 
     if (!request) {
       return;
@@ -237,237 +207,181 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
         name={setting}
         // @ts-expect-error -- mapping unsoundness
         checked={request[setting]}
-        onChange={this._updateRequestSettingBoolean}
+        onChange={_updateRequestSettingBoolean}
       />
     );
   }
-
-  _renderDescription() {
-    const {
-    } = this.props;
-    const { showDescription, defaultPreviewMode, request } = this.state;
-
-    // Don't show description if it doesn't exist, or if it is a gRPC request
-    if (!request || isGrpcRequest(request)) {
-      return null;
-    }
-
-    return showDescription ? (
-      <MarkdownEditor
-        ref={this._editorRef}
-        className="margin-top"
-        defaultPreviewMode={defaultPreviewMode}
-        placeholder="Write a description"
-        defaultValue={request.description}
-        onChange={this._handleDescriptionChange}
-      />
-    ) : (
-      <button
-        onClick={this._handleAddDescription}
-        className="btn btn--outlined btn--super-duper-compact"
-      >
-        Add Description
-      </button>
-    );
-  }
-
-  _renderFeatureRequestPrompt() {
-    const { request } = this.state;
-
-    // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
-    if (request && isGrpcRequest(request)) {
-      return (
-        <p className="faint italic">
-          Are there any gRPC settings you expect to see? Create a{' '}
-          <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
-        </p>
-      );
-    }
-
+  const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace } = state;
+  if (!request) {
     return null;
   }
-
-  render() {
-    const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace } = this.state;
-    const { workspacesForActiveProject } = this.props;
-    if (!request) {
-      return null;
-    }
-
-    return (
-      <Modal ref={this._setModalRef} freshState>
-        <ModalHeader>
-          Request Settings{' '}
-          <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
-        </ModalHeader>
-        <ModalBody className="pad">
-          <div>
-            <div className="form-control form-control--outlined">
-              <label>
-                Name{' '}
-                <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
-                <DebouncedInput
-                  delay={500}
-                  // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
-                  type="text"
-                  placeholder={request.url || 'My Request'}
-                  defaultValue={request.name}
-                  onChange={this._handleNameChange}
-                />
-              </label>
-            </div>
-            {isGrpcRequest(request)
-              ? (
-                <p className="faint italic">
-                  Are there any gRPC settings you expect to see? Create a{' '}
-                  <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
-                </p>
-              )
-              : (
+  return (
+    <Modal ref={modalRef} freshState>
+      <ModalHeader>
+        Request Settings{' '}
+        <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
+      </ModalHeader>
+      <ModalBody className="pad">
+        <div>
+          <div className="form-control form-control--outlined">
+            <label>
+              Name{' '}
+              <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
+              <DebouncedInput
+                delay={500}
+                // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
+                type="text"
+                placeholder={request.url || 'My Request'}
+                defaultValue={request.name}
+                onChange={_handleNameChange}
+              />
+            </label>
+          </div>
+          {isGrpcRequest(request)
+            ? (
+              <p className="faint italic">
+                Are there any gRPC settings you expect to see? Create a{' '}
+                <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
+              </p>
+            )
+            : (
+              <>
                 <>
-                  <>
-                    {showDescription ? (
-                      <MarkdownEditor
-                        ref={this._editorRef}
-                        className="margin-top"
-                        defaultPreviewMode={defaultPreviewMode}
-                        placeholder="Write a description"
-                        defaultValue={request.description}
-                        onChange={this._handleDescriptionChange}
-                      />
-                    ) : (
-                      <button
-                        onClick={this._handleAddDescription}
-                        className="btn btn--outlined btn--super-duper-compact"
-                      >
-                        Add Description
-                      </button>
-                    )}
-                  </>
-                  <>
-                    <div className="pad-top pad-bottom">
-                      <div className="form-control form-control--thin">
-                        <label>
-                          Send cookies automatically
-                          {this.renderCheckboxInput('settingSendCookies')}
-                        </label>
-                      </div>
-                      <div className="form-control form-control--thin">
-                        <label>
-                          Store cookies automatically
-                          {this.renderCheckboxInput('settingStoreCookies')}
-                        </label>
-                      </div>
-                      <div className="form-control form-control--thin">
-                        <label>
-                          Automatically encode special characters in URL
-                          {this.renderCheckboxInput('settingEncodeUrl')}
-                          <HelpTooltip position="top" className="space-left">
-                            Automatically encode special characters at send time (does not apply to query
-                            parameters editor)
-                          </HelpTooltip>
-                        </label>
-                      </div>
-                      <div className="form-control form-control--thin">
-                        <label>
-                          Skip rendering of request body
-                          {this.renderCheckboxInput('settingDisableRenderRequestBody')}
-                          <HelpTooltip position="top" className="space-left">
-                            Disable rendering of environment variables and tags for the request body
-                          </HelpTooltip>
-                        </label>
-                      </div>
-                      <div className="form-control form-control--thin">
-                        <label>
-                          Rebuild path dot sequences
-                          <HelpTooltip position="top" className="space-left">
-                            This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
-                            URL's path part and that is supposed to be removed according to RFC 3986 section
-                            5.2.4
-                          </HelpTooltip>
-                          {this.renderCheckboxInput('settingRebuildPath')}
-                        </label>
-                      </div>
-                    </div>
-                    <div className="form-control form-control--outlined">
+                  {showDescription ? (
+                    <MarkdownEditor
+                      ref={editorRef}
+                      className="margin-top"
+                      defaultPreviewMode={defaultPreviewMode}
+                      placeholder="Write a description"
+                      defaultValue={request.description}
+                      onChange={_handleDescriptionChange}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setState({ ...state, showDescription: true })}
+                      className="btn btn--outlined btn--super-duper-compact"
+                    >
+                      Add Description
+                    </button>
+                  )}
+                </>
+                <>
+                  <div className="pad-top pad-bottom">
+                    <div className="form-control form-control--thin">
                       <label>
-                        Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
-                        <select
-                          // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-                          defaultValue={this.state.request?.settingFollowRedirects}
-                          name="settingFollowRedirects"
-                          onChange={this._updateRequestSettingString}
-                        >
-                          <option value={'global'}>Use global setting</option>
-                          <option value={'off'}>Don't follow redirects</option>
-                          <option value={'on'}>Follow redirects</option>
-                        </select>
+                        Send cookies automatically
+                        {renderCheckboxInput('settingSendCookies')}
                       </label>
                     </div>
-                  </>
-                  <hr />
-                  <div className="form-row">
-                    <div className="form-control form-control--outlined">
+                    <div className="form-control form-control--thin">
                       <label>
-                        Move/Copy to Workspace
+                        Store cookies automatically
+                        {renderCheckboxInput('settingStoreCookies')}
+                      </label>
+                    </div>
+                    <div className="form-control form-control--thin">
+                      <label>
+                        Automatically encode special characters in URL
+                        {renderCheckboxInput('settingEncodeUrl')}
                         <HelpTooltip position="top" className="space-left">
-                          Copy or move the current request to a new workspace. It will be placed at the root of
-                          the new workspace's folder structure.
+                          Automatically encode special characters at send time (does not apply to query
+                          parameters editor)
                         </HelpTooltip>
-                        <select
-                          value={activeWorkspaceIdToCopyTo || '__NULL__'}
-                          onChange={this._handleUpdateMoveCopyWorkspace}
-                        >
-                          <option value="__NULL__">-- Select Workspace --</option>
-                          {workspacesForActiveProject.map(w => {
-                            if (workspace && workspace._id === w._id) {
-                              return null;
-                            }
-
-                            return (
-                              <option key={w._id} value={w._id}>
-                                {w.name}
-                              </option>
-                            );
-                          })}
-                        </select>
                       </label>
                     </div>
-                    <div className="form-control form-control--no-label width-auto">
-                      <button
-                        disabled={justCopied || !activeWorkspaceIdToCopyTo}
-                        className="btn btn--clicky"
-                        onClick={this._handleCopyToWorkspace}
-                      >
-                        {justCopied ? 'Copied!' : 'Copy'}
-                      </button>
+                    <div className="form-control form-control--thin">
+                      <label>
+                        Skip rendering of request body
+                        {renderCheckboxInput('settingDisableRenderRequestBody')}
+                        <HelpTooltip position="top" className="space-left">
+                          Disable rendering of environment variables and tags for the request body
+                        </HelpTooltip>
+                      </label>
                     </div>
-                    <div className="form-control form-control--no-label width-auto">
-                      <button
-                        disabled={justMoved || !activeWorkspaceIdToCopyTo}
-                        className="btn btn--clicky"
-                        onClick={this._handleMoveToWorkspace}
-                      >
-                        {justMoved ? 'Moved!' : 'Move'}
-                      </button>
+                    <div className="form-control form-control--thin">
+                      <label>
+                        Rebuild path dot sequences
+                        <HelpTooltip position="top" className="space-left">
+                          This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
+                          URL's path part and that is supposed to be removed according to RFC 3986 section
+                          5.2.4
+                        </HelpTooltip>
+                        {renderCheckboxInput('settingRebuildPath')}
+                      </label>
                     </div>
                   </div>
-                </>)
-            }
-          </div>
-        </ModalBody>
-      </Modal>
-    );
-  }
-}
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
+                      <select
+                      // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
+                        defaultValue={state.request?.settingFollowRedirects}
+                        name="settingFollowRedirects"
+                        onChange={_updateRequestSettingString}
+                      >
+                        <option value={'global'}>Use global setting</option>
+                        <option value={'off'}>Don't follow redirects</option>
+                        <option value={'on'}>Follow redirects</option>
+                      </select>
+                    </label>
+                  </div>
+                </>
+                <hr />
+                <div className="form-row">
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Move/Copy to Workspace
+                      <HelpTooltip position="top" className="space-left">
+                        Copy or move the current request to a new workspace. It will be placed at the root of
+                        the new workspace's folder structure.
+                      </HelpTooltip>
+                      <select
+                        value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                        onChange={event => {
+                          const { value } = event.currentTarget;
+                          const workspaceId = value === '__NULL__' ? null : value;
+                          setState({ ...state, activeWorkspaceIdToCopyTo: workspaceId });
+                        }}
+                      >
+                        <option value="__NULL__">-- Select Workspace --</option>
+                        {workspacesForActiveProject.map(w => {
+                          if (workspace && workspace._id === w._id) {
+                            return null;
+                          }
 
-const mapStateToProps = (state: RootState) => ({
-  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+                          return (
+                            <option key={w._id} value={w._id}>
+                              {w.name}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="form-control form-control--no-label width-auto">
+                    <button
+                      disabled={justCopied || !activeWorkspaceIdToCopyTo}
+                      className="btn btn--clicky"
+                      onClick={_handleCopyToWorkspace}
+                    >
+                      {justCopied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="form-control form-control--no-label width-auto">
+                    <button
+                      disabled={justMoved || !activeWorkspaceIdToCopyTo}
+                      className="btn btn--clicky"
+                      onClick={_handleMoveToWorkspace}
+                    >
+                      {justMoved ? 'Moved!' : 'Move'}
+                    </button>
+                  </div>
+                </div>
+              </>)
+          }
+        </div>
+      </ModalBody>
+    </Modal>
+  );
 });
-
-export const RequestSettingsModal = connect(
-  mapStateToProps,
-  null,
-  null,
-  { forwardRef: true },
-)(UnconnectedRequestSettingsModal);
+RequestSettingsModal.displayName = 'RequestSettingsModal';
