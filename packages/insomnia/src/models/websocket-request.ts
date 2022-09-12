@@ -14,6 +14,7 @@ export const canSync = true;
 
 export interface BaseWebSocketRequest {
   name: string;
+  description: string;
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
@@ -44,6 +45,7 @@ export const init = (): BaseWebSocketRequest => ({
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,
+  description: '',
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;
