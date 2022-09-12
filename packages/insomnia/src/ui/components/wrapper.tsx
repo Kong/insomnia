@@ -346,7 +346,7 @@ export class WrapperClass extends PureComponent<Props, State> {
         <div key="modals" className="modals">
           <ErrorBoundary showAlert>
             <AnalyticsModal />
-            <AlertModal ref={registerModal} />
+            <AlertModal ref={instance => registerModal(instance, 'AlertModal')} />
             <ErrorModal ref={instance => registerModal(instance, 'ErrorModal')} />
             <PromptModal ref={instance => registerModal(instance, 'PromptModal')} />
             <WrapperModal ref={instance => registerModal(instance, 'WrapperModal')} />

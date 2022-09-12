@@ -726,8 +726,10 @@ class App extends PureComponent<AppProps, State> {
             </span>
           ),
           addCancel: true,
+          onConfirm: () => {
+            handleImportUri(uri, { workspaceId: activeWorkspace?._id });
+          },
         });
-        handleImportUri(uri, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
