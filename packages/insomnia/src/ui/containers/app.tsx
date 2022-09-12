@@ -51,6 +51,7 @@ import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import { showSelectModal } from '../components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+import { WebSocketRequestSettingsModal } from '../components/modals/websocket-request-settings-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
@@ -149,9 +150,14 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_SETTINGS,
         () => {
-          if (this.props.activeRequest) {
+          const { activeRequest } = this.props;
+          if (activeRequest && isWebSocketRequest(activeRequest)) {
+            showModal(WebSocketRequestSettingsModal, {
+              request: activeRequest,
+            });
+          } else if (activeRequest) {
             showModal(RequestSettingsModal, {
-              request: this.props.activeRequest,
+              request: activeRequest,
             });
           }
         },
