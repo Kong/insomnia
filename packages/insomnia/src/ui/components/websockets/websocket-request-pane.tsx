@@ -20,7 +20,7 @@ import { WebSocketActionBar } from './action-bar';
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
 
 const EditorWrapper = styled.div({
-  height: '100%',
+  height: '90%',
 });
 const SendMessageForm = styled.form({
   width: '100%',
@@ -116,6 +116,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
       <EditorWrapper>
         <CodeEditor
+          manualPrettify
           uniquenessKey={request._id}
           mode={previewMode}
           ref={editorRef}

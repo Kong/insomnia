@@ -23,34 +23,6 @@ const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
   },
 }));
 
-interface ActionButtonProps {
-  requestId: string;
-  readyState: ReadyState;
-}
-const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
-
-  if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
-    return (
-      <Button
-        type="submit"
-        form="websocketUrlForm"
-      >
-        Connect
-      </Button>
-    );
-  }
-
-  return (
-    <Button
-      className="urlbar__send-btn"
-      type="button"
-      warning
-    >
-      Disconnect
-    </Button>
-  );
-};
-
 interface ActionBarProps {
   request: WebSocketRequest;
   workspaceId: string;
@@ -156,6 +128,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     });
   }, [handleSubmit]);
 
+  const isConnectingOrClosed = readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED;
   return (
     <KeydownBinder onKeydown={handleGlobalKeyDown}>
       {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
@@ -189,7 +162,9 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
           />
         </StyledUrlBar>
       </Form>
-      <ActionButton requestId={request._id} readyState={readyState} />
+      {isConnectingOrClosed
+        ? <Button type="submit" form="websocketUrlForm">Connect</Button>
+        : <Button className="urlbar__send-btn" type="button" warning>Disconnect</Button>}
     </KeydownBinder>
   );
 };
