@@ -161,10 +161,10 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
             forceEditor
           />
         </StyledUrlBar>
+        {isConnectingOrClosed
+          ? <Button type="submit">Connect</Button>
+          : <Button type="submit" warning>Disconnect</Button>}
       </Form>
-      {isConnectingOrClosed
-        ? <Button type="submit" form="websocketUrlForm">Connect</Button>
-        : <Button className="urlbar__send-btn" type="button" warning>Disconnect</Button>}
     </KeydownBinder>
   );
 };
