@@ -221,88 +221,6 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
     this.textarea?.focus();
   }
 
-  renderTable(keys: DocumentKey[], title: ReactNode) {
-    const { status, lookupMap } = this.state;
-
-    if (keys.length === 0) {
-      return null;
-    }
-
-    let allUnChecked = true;
-    let allChecked = true;
-
-    for (const key of keys.sort()) {
-      if (!status.stage[key]) {
-        allChecked = false;
-      }
-
-      if (!status.unstaged[key]) {
-        allUnChecked = false;
-      }
-    }
-
-    const indeterminate = !allChecked && !allUnChecked;
-    return (
-      <div className="pad-top">
-        <strong>{title}</strong>
-        <table className="table--fancy table--outlined margin-top-sm">
-          <thead>
-            <tr>
-              <th>
-                <label className="wide no-pad">
-                  <span className="txt-md">
-                    <IndeterminateCheckbox
-                      className="space-right"
-                      checked={allChecked}
-                      onChange={() => this._handleAllToggle(keys, allUnChecked)}
-                      indeterminate={indeterminate}
-                    />
-                  </span>{' '}
-                  name
-                </label>
-              </th>
-              <th className="text-right ">Changes</th>
-              <th className="text-right">Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {keys.map(key => {
-              if (!lookupMap[key]) {
-                return null;
-              }
-
-              const { entry, type, checked, changes } = lookupMap[key];
-              return (
-                <tr key={key} className="table--no-outline-row">
-                  <td>
-                    <label className="no-pad wide">
-                      <input
-                        className="space-right"
-                        type="checkbox"
-                        checked={checked}
-                        name={key}
-                        onChange={this._handleStageToggle}
-                      />{' '}
-                      {entry.name}
-                    </label>
-                  </td>
-                  <td className="text-right">{changes ? changes.join(', ') : '--'}</td>
-                  <td className="text-right">
-                    <OperationTooltip
-                      entry={entry}
-                      type={type}
-                      changes={changes || []}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
   render() {
     const { status, message, error, branch } = this.state;
     const nonAddedKeys: string[] = [];
@@ -348,9 +266,22 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
               </label>
             </div>
           </div>
-
-          {this.renderTable(nonAddedKeys, 'Modified Objects')}
-          {this.renderTable(addedKeys, 'Unversioned Objects')}
+          <ChangesTable
+            keys={nonAddedKeys}
+            title='Modified Objects'
+            status={status}
+            lookupMap={this.state.lookupMap}
+            toggleAll={this._handleAllToggle}
+            toggleOne={this._handleStageToggle}
+          />
+          <ChangesTable
+            keys={addedKeys}
+            title='Unversioned Objects'
+            status={status}
+            lookupMap={this.state.lookupMap}
+            toggleAll={this._handleAllToggle}
+            toggleOne={this._handleStageToggle}
+          />
         </ModalBody>
         <ModalFooter>
           <div className="margin-left italic txt-sm">
@@ -424,5 +355,95 @@ const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
         <i className="fa fa-question-circle info" /> {operationType}
       </Tooltip>
     </Fragment>
+  );
+};
+interface ChangesTableProps {
+  keys: DocumentKey[];
+  title: ReactNode;
+  status: Status;
+  lookupMap: LookupMap;
+  toggleAll: (keys: DocumentKey[], doStage: boolean) => void;
+  toggleOne: (event: React.SyntheticEvent<HTMLInputElement>) => void;
+}
+const ChangesTable = ({
+  keys,
+  title,
+  status,
+  lookupMap,
+  toggleAll,
+  toggleOne,
+}: ChangesTableProps) => {
+  if (keys.length === 0) {
+    return null;
+  }
+  let allUnChecked = true;
+  let allChecked = true;
+  for (const key of keys.sort()) {
+    if (!status.stage[key]) {
+      allChecked = false;
+    }
+    if (!status.unstaged[key]) {
+      allUnChecked = false;
+    }
+  }
+  const indeterminate = !allChecked && !allUnChecked;
+  return (
+    <div className="pad-top">
+      <strong>{title}</strong>
+      <table className="table--fancy table--outlined margin-top-sm">
+        <thead>
+          <tr>
+            <th>
+              <label className="wide no-pad">
+                <span className="txt-md">
+                  <IndeterminateCheckbox
+                    className="space-right"
+                    checked={allChecked}
+                    onChange={() => toggleAll(keys, allUnChecked)}
+                    indeterminate={indeterminate}
+                  />
+                </span>{' '}
+                name
+              </label>
+            </th>
+            <th className="text-right ">Changes</th>
+            <th className="text-right">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {keys.map(key => {
+            if (!lookupMap[key]) {
+              return null;
+            }
+
+            const { entry, type, checked, changes } = lookupMap[key];
+            return (
+              <tr key={key} className="table--no-outline-row">
+                <td>
+                  <label className="no-pad wide">
+                    <input
+                      className="space-right"
+                      type="checkbox"
+                      checked={checked}
+                      name={key}
+                      onChange={toggleOne}
+                    />{' '}
+                    {entry.name}
+                  </label>
+                </td>
+                <td className="text-right">{changes ? changes.join(', ') : '--'}</td>
+                <td className="text-right">
+                  <OperationTooltip
+                    entry={entry}
+                    type={type}
+                    changes={changes || []}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 };
