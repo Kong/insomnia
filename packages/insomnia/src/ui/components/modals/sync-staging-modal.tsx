@@ -221,40 +221,6 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
     this.textarea?.focus();
   }
 
-  static renderOperation(entry: StageEntry, type: string, changes: string[]) {
-    let child: JSX.Element | null = null;
-    let message = '';
-
-    // @ts-expect-error -- TSCONVERSION type narrowing
-    if (entry.added) {
-      child = <i className="fa fa-plus-circle success" />;
-      message = 'Added';
-      // @ts-expect-error -- TSCONVERSION type narrowing
-    } else if (entry.modified) {
-      child = <i className="fa fa-circle faded" />;
-      message = `Modified (${changes.join(', ')})`;
-      // @ts-expect-error -- TSCONVERSION type narrowing
-    } else if (entry.deleted) {
-      child = <i className="fa fa-minus-circle danger" />;
-      message = 'Deleted';
-    } else {
-      child = <i className="fa fa-question-circle info" />;
-      message = 'Unknown';
-    }
-
-    if (type === models.workspace.type) {
-      type = strings.collection.singular;
-    }
-
-    return (
-      <Fragment>
-        <Tooltip message={message}>
-          {child} {type}
-        </Tooltip>
-      </Fragment>
-    );
-  }
-
   renderTable(keys: DocumentKey[], title: ReactNode) {
     const { status, lookupMap } = this.state;
 
@@ -322,7 +288,11 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
                   </td>
                   <td className="text-right">{changes ? changes.join(', ') : '--'}</td>
                   <td className="text-right">
-                    {SyncStagingModal.renderOperation(entry, type, changes || [])}
+                    <OperationTooltip
+                      entry={entry}
+                      type={type}
+                      changes={changes || []}
+                    />
                   </td>
                 </tr>
               );
@@ -410,3 +380,49 @@ export const SyncStagingModal = connect(
   null,
   { forwardRef: true },
 )(UnconnectedSyncStagingModal);
+
+interface OperationTooltipProps {
+  entry: StageEntry;
+  type: string;
+  changes: string[];
+}
+const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
+  const operationType = type === models.workspace.type ? type = strings.collection.singular : type;
+  // @ts-expect-error -- TSCONVERSION type narrowing
+  if (entry.added) {
+    return (
+      <Fragment>
+        <Tooltip message="Added">
+          <i className="fa fa-plus-circle success" /> {operationType}
+        </Tooltip>
+      </Fragment>
+    );
+  }
+  // @ts-expect-error -- TSCONVERSION type narrowing
+  if (entry.modified) {
+    return (
+      <Fragment>
+        <Tooltip message={`Modified (${changes.join(', ')})`}>
+          <i className="fa fa-circle faded" /> {operationType}
+        </Tooltip>
+      </Fragment>
+    );
+  }
+  // @ts-expect-error -- TSCONVERSION type narrowing
+  if (entry.deleted) {
+    return (
+      <Fragment>
+        <Tooltip message="Deleted">
+          <i className="fa fa-minus-circle danger" /> {operationType}
+        </Tooltip>
+      </Fragment>
+    );
+  }
+  return (
+    <Fragment>
+      <Tooltip message="Unknown">
+        <i className="fa fa-question-circle info" /> {operationType}
+      </Tooltip>
+    </Fragment>
+  );
+};
