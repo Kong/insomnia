@@ -140,7 +140,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
       )}
       <Form
         aria-disabled={isOpen}
-        id="websocketUrlForm"
         onSubmit={event => {
           event.preventDefault();
           handleSubmit();
@@ -150,8 +149,9 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
           <OneLineEditor
             ref={editorRef}
             onKeyDown={event => {
-              event.preventDefault();
-              event.key === 'Enter' && handleSubmit();
+              if (event.key === 'Enter') {
+                handleSubmit();
+              }
             }}
             disabled={readyState === ReadyState.OPEN}
             placeholder="wss://example.com/chat"
