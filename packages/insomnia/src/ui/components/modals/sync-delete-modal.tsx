@@ -1,5 +1,5 @@
 import { Button } from 'insomnia-components';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { strings } from '../../../common/strings';
