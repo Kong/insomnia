@@ -23,6 +23,7 @@ import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-
 import { GrpcSpinner } from '../grpc-spinner';
 import { showModal, showPrompt } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
+import { WebSocketRequestSettingsModal } from '../modals/websocket-request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
@@ -164,6 +165,10 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     showModal(RequestSettingsModal, { request });
   }, [request]);
 
+  const handleShowWebSocketRequestSettings = useCallback(() => {
+    showModal(WebSocketRequestSettingsModal, { request });
+  }, [request]);
+
   const [methodOverrideValue, setMethodOverrideValue] = useState<string | null>(null);
 
   useEffect(() => {
@@ -295,6 +300,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                 handleDuplicateRequest={handleDuplicateRequest}
                 request={request}
                 isPinned={isPinned}
+                handleShowSettings={handleShowWebSocketRequestSettings}
               />
             ) : (
               <RequestActionsDropdown

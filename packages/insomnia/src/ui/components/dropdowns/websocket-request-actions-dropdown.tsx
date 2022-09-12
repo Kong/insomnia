@@ -18,11 +18,13 @@ interface Props extends Pick<DropdownProps, 'right'> {
   handleDuplicateRequest: Function;
   isPinned: Boolean;
   request: WebSocketRequest;
+  handleShowSettings: () => void;
 }
 
 export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   handleDuplicateRequest,
   isPinned,
+  handleShowSettings,
   request,
   right,
 }, ref) => {
@@ -67,6 +69,11 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       </DropdownItem>
 
       <DropdownDivider />
+
+      <DropdownItem onClick={handleShowSettings}>
+        <i className="fa fa-wrench" /> Settings
+        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_SETTINGS.id]} />
+      </DropdownItem>
     </Dropdown>
   );
 });
