@@ -109,10 +109,6 @@ export class GitStagingModal extends PureComponent<Props, State> {
     }
   }
 
-  _hideModal() {
-    this.modal?.hide();
-  }
-
   async _toggleAll(items: Item[], forceAdd = false) {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
@@ -273,38 +269,6 @@ export class GitStagingModal extends PureComponent<Props, State> {
     );
   }
 
-  renderOperation(item: Item) {
-    let child: JSX.Element | null = null;
-    let message = '';
-    let type = item.type;
-
-    if (item.status.includes('added')) {
-      child = <i className="fa fa-plus-circle success" />;
-      message = 'Added';
-    } else if (item.status.includes('modified')) {
-      child = <i className="fa fa-circle faded" />;
-      message = 'Modified';
-    } else if (item.status.includes('deleted')) {
-      child = <i className="fa fa-minus-circle danger" />;
-      message = 'Deleted';
-    } else {
-      child = <i className="fa fa-question-circle info" />;
-      message = 'Unknown';
-    }
-
-    if (type === models.workspace.type) {
-      type = strings.document.singular;
-    }
-
-    return (
-      <Fragment>
-        <Tooltip message={message}>
-          {child} {type}
-        </Tooltip>
-      </Fragment>
-    );
-  }
-
   async _handleRollback(items: Item[]) {
     const { vcs } = this.props;
     const files = items
@@ -331,125 +295,47 @@ export class GitStagingModal extends PureComponent<Props, State> {
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback_all'), providerName });
   }
 
-  renderItem(item: Item) {
-    const { path: gitPath, staged, editable } = item;
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const docName = this.statusNames![gitPath] || 'n/a';
-    return (
-      <tr key={gitPath} className="table--no-outline-row">
-        <td>
-          <label className="no-pad wide">
-            <input
-              disabled={!editable}
-              className="space-right"
-              type="checkbox"
-              checked={staged}
-              name={gitPath}
-              onChange={this._handleToggleOne}
-            />{' '}
-            {docName}
-          </label>
-        </td>
-        <td className="text-right">
-          {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
-            <button
-              className="btn btn--micro space-right"
-              onClick={() => this._handleRollbackSingle(item)}
-            >
-              <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
-            </button>
-          </Tooltip>}
-          {this.renderOperation(item)}
-        </td>
-      </tr>
-    );
-  }
-
-  renderTable(title: string, items: Item[], rollbackLabel: string) {
-    if (items.length === 0) {
-      return null;
-    }
-
-    const allStaged = items.every(i => i.staged);
-    const allUnstaged = items.every(i => !i.staged);
-    return (
-      <div className="pad-top">
-        <strong>{title}</strong>
-        <PromptButton
-          className="btn pull-right btn--micro"
-          onClick={() => this._handleRollbackAll(items)}
-        >
-          {rollbackLabel}
-        </PromptButton>
-        <table className="table--fancy table--outlined margin-top-sm">
-          <thead>
-            <tr className="table--no-outline-row">
-              <th>
-                <label className="wide no-pad">
-                  <span className="txt-md">
-                    <IndeterminateCheckbox
-                      className="space-right"
-                      // @ts-expect-error -- TSCONVERSION
-                      type="checkbox"
-                      checked={allStaged}
-                      onChange={() => this._toggleAll(items, !allStaged)}
-                      indeterminate={!allStaged && !allUnstaged}
-                    />
-                  </span>{' '}
-                  name
-                </label>
-              </th>
-              <th className="text-right">Description</th>
-            </tr>
-          </thead>
-          <tbody>{items.map(this.renderItem)}</tbody>
-        </table>
-      </div>
-    );
-  }
-
-  _renderEmpty() {
-    const { loading } = this.state;
-
-    if (loading) {
-      return <>Loading...</>;
-    }
-
-    return <>No changes to commit.</>;
-  }
-
-  _renderItems(items: Item[]) {
-    const { message } = this.state;
-    const newItems = items.filter(i => i.status.includes('added'));
-    const existingItems = items.filter(i => !i.status.includes('added'));
-    return (
-      <>
-        <div className="form-control form-control--outlined">
-          <textarea
-            ref={this._setTextareaRef}
-            rows={3}
-            required
-            placeholder="A descriptive message to describe changes made"
-            defaultValue={message}
-            onChange={this._handleMessageChange}
-          />
-        </div>
-        {this.renderTable('Modified Objects', existingItems, 'Rollback all')}
-        {this.renderTable('Unversioned Objects', newItems, 'Delete all')}
-      </>
-    );
-  }
-
   render() {
     const { items, branch, loading } = this.state;
     const itemsList = Object.keys(items).map(k => items[k]);
     const hasChanges = !!itemsList.length;
+    const newItems = itemsList.filter(i => i.status.includes('added'));
+    const existingItems = itemsList.filter(i => !i.status.includes('added'));
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>Commit Changes</ModalHeader>
         <ModalBody className="wide pad">
-          {hasChanges ? this._renderItems(itemsList) : this._renderEmpty()}
+          {hasChanges ? <>
+            <div className="form-control form-control--outlined">
+              <textarea
+                ref={this._setTextareaRef}
+                rows={3}
+                required
+                placeholder="A descriptive message to describe changes made"
+                defaultValue={this.state.message}
+                onChange={this._handleMessageChange}
+              />
+            </div>
+            <ChangesTable
+              title="Modified Objects"
+              rollbackLabel='Rollback all'
+              items={existingItems}
+              rollbackAll={this._handleRollbackAll}
+              rollbackOne={this._handleRollbackSingle}
+              toggleAll={this._toggleAll}
+              toggleOne={this._handleToggleOne}
+            />
+            <ChangesTable
+              title="Unversioned Objects"
+              rollbackLabel='Delete all'
+              items={newItems}
+              rollbackAll={this._handleRollbackAll}
+              rollbackOne={this._handleRollbackSingle}
+              toggleAll={this._toggleAll}
+              toggleOne={this._handleToggleOne}
+            />
+          </>
+            : this.state.loading ? <>Loading...</> : <>No changes to commit.</>}
         </ModalBody>
         <ModalFooter>
           <div className="margin-left italic txt-sm">
@@ -457,7 +343,7 @@ export class GitStagingModal extends PureComponent<Props, State> {
             {loading && <i className="fa fa-refresh fa-spin" />}
           </div>
           <div>
-            <button className="btn" onClick={this._hideModal}>
+            <button className="btn" onClick={() => this.modal?.hide()}>
               Close
             </button>
             <button className="btn" onClick={this._handleCommit} disabled={loading || !hasChanges}>
@@ -469,3 +355,120 @@ export class GitStagingModal extends PureComponent<Props, State> {
     );
   }
 }
+
+const OperationTooltip = ({ item }: { item: Item }) => {
+  const type = item.type === models.workspace.type ? strings.document.singular : item.type;
+  if (item.status.includes('added')) {
+    return (
+      <Tooltip message="Added">
+        <i className="fa fa-plus-circle success" /> {type}
+      </Tooltip>
+    );
+  }
+  if (item.status.includes('modified')) {
+    return (
+      <Tooltip message="Modified">
+        <i className="fa fa-plus-circle faded" /> {type}
+      </Tooltip>
+    );
+  }
+  if (item.status.includes('deleted')) {
+    return (
+      <Tooltip message="Deleted">
+        <i className="fa fa-minus-circle danger" /> {type}
+      </Tooltip>
+    );
+  }
+  return (
+    <Tooltip message="Unknown">
+      <i className="fa fa-question-circle info" /> {type}
+    </Tooltip>
+  );
+};
+interface ChangeTableProps {
+  items: Item[];
+  title: string;
+  rollbackLabel: string;
+  statusNames?: Record<string, string>;
+  rollbackAll: (items: Item[]) => void;
+  rollbackOne: (item: Item) => void;
+  toggleAll: (items: Item[], forceAdd: boolean) => void;
+  toggleOne: (event: React.SyntheticEvent<HTMLInputElement>) => void;
+}
+const ChangesTable = ({
+  items,
+  title,
+  rollbackLabel,
+  statusNames,
+  rollbackAll,
+  rollbackOne,
+  toggleAll,
+  toggleOne,
+}: ChangeTableProps) => {
+  if (items.length === 0) {
+    return null;
+  }
+  const allStaged = items.every(i => i.staged);
+  const allUnstaged = items.every(i => !i.staged);
+  return (
+    <div className="pad-top">
+      <strong>{title}</strong>
+      <PromptButton
+        className="btn pull-right btn--micro"
+        onClick={() => rollbackAll(items)}
+      >
+        {rollbackLabel}
+      </PromptButton>
+      <table className="table--fancy table--outlined margin-top-sm">
+        <thead>
+          <tr className="table--no-outline-row">
+            <th>
+              <label className="wide no-pad">
+                <span className="txt-md">
+                  <IndeterminateCheckbox
+                    className="space-right"
+                    // @ts-expect-error -- TSCONVERSION
+                    type="checkbox"
+                    checked={allStaged}
+                    onChange={() => toggleAll(items, !allStaged)}
+                    indeterminate={!allStaged && !allUnstaged}
+                  />
+                </span>{' '}
+                name
+              </label>
+            </th>
+            <th className="text-right">Description</th>
+          </tr>
+        </thead>
+        <tbody>{items.map(item => (
+          <tr key={item.path} className="table--no-outline-row">
+            <td>
+              <label className="no-pad wide">
+                <input
+                  disabled={!item.editable}
+                  className="space-right"
+                  type="checkbox"
+                  checked={item.staged}
+                  name={item.path}
+                  onChange={toggleOne}
+                />{' '}
+                {statusNames?.[item.path] || 'n/a'}
+              </label>
+            </td>
+            <td className="text-right">
+              {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
+                <button
+                  className="btn btn--micro space-right"
+                  onClick={() => rollbackOne(item)}
+                >
+                  <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
+                </button>
+              </Tooltip>}
+              <OperationTooltip item={item} />
+            </td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+};
