@@ -36,6 +36,7 @@ const SendButton = styled.button({
   },
   ':enabled': {
     background: 'var(--color-surprise)',
+    color: 'var(--color-font-surprise)',
   },
 });
 const PaneSendButton = styled.div({
