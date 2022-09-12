@@ -417,7 +417,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
             {activeWorkspace && vcs ? (
               <Fragment>
-                <SyncStagingModal ref={registerModal} vcs={vcs} />
+                <SyncStagingModal ref={instance => registerModal(instance, 'SyncStagingModal')} vcs={vcs} />
                 <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} vcs={vcs} />
                 <SyncBranchesModal ref={instance => registerModal(instance, 'SyncBranchesModal')}  vcs={vcs} />
                 <SyncDeleteModal ref={instance => registerModal(instance, 'SyncDeleteModal')} vcs={vcs} />

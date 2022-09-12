@@ -1,28 +1,23 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { Fragment, PureComponent, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
 import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { RootState } from '../../redux/modules';
 import { selectSyncItems } from '../../redux/selectors';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { Tooltip } from '../tooltip';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
+type Props = ModalProps & {
   vcs: VCS;
-}
+};
 
 type LookupMap = Record<string, {
   entry: StageEntry;
@@ -31,147 +26,55 @@ type LookupMap = Record<string, {
   checked: boolean;
 }>;
 
-interface State {
+export interface SyncStagingModalOptions {
   status: Status;
   message: string;
   error: string;
   branch: string;
   lookupMap: LookupMap;
+  onSnapshot: () => Promise<void>;
+  handlePush: () => Promise<void>;
 }
 
-const _initialState: State = {
-  status: {
-    stage: {},
-    unstaged: {},
-    key: '',
-  },
-  branch: '',
-  error: '',
-  message: '',
-  lookupMap: {},
-};
+export interface SyncStagingModalHandle {
+  show: (options: SyncStagingModalOptions) => void;
+  hide: () => void;
+}
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
-  _onSnapshot: (() => void) | null = null;
-  _handlePush: (() => Promise<void>) | null = null;
-  textarea: HTMLTextAreaElement | null = null;
-  state = _initialState;
+export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs }, ref) => {
+  const modalRef = useRef<Modal>(null);
+  const syncItems = useSelector(selectSyncItems);
+  const [state, setState] = useState<SyncStagingModalOptions>({
+    status: {
+      stage: {},
+      unstaged: {},
+      key: '',
+    },
+    branch: '',
+    error: '',
+    message: '',
+    lookupMap: {},
+    onSnapshot: async () => { },
+    handlePush: async () => { },
+  });
 
-  _setModalRef(modal: Modal) {
-    this.modal = modal;
-  }
-
-  _setTextAreaRef(textarea: HTMLTextAreaElement) {
-    this.textarea = textarea;
-  }
-
-  _handleClearError() {
-    this.setState({ error: '' });
-  }
-
-  _handleMessageChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    this.setState({ message: event.currentTarget.value });
-  }
-
-  async _handleStageToggle(event: React.SyntheticEvent<HTMLInputElement>) {
-    const { vcs } = this.props;
-    const { status } = this.state;
-    const id = event.currentTarget.name;
-    const isStaged = !!status.stage[id];
-    const newStage = isStaged
-      ? await vcs.unstage(status.stage, [status.stage[id]])
-      : await vcs.stage(status.stage, [status.unstaged[id]]);
-    await this.refreshMainAttributes({}, newStage);
-  }
-
-  async _handleAllToggle(keys: DocumentKey[], doStage: boolean) {
-    const { vcs } = this.props;
-    const { status } = this.state;
-    let stage;
-
-    if (doStage) {
-      const entries: StageEntry[] = [];
-
-      for (const k of Object.keys(status.unstaged)) {
-        if (keys.includes(k)) {
-          entries.push(status.unstaged[k]);
-        }
-      }
-
-      stage = await vcs.stage(status.stage, entries);
-    } else {
-      const entries: StageEntry[] = [];
-
-      for (const k of Object.keys(status.stage)) {
-        if (keys.includes(k)) {
-          entries.push(status.stage[k]);
-        }
-      }
-
-      stage = await vcs.unstage(status.stage, entries);
-    }
-
-    await this.refreshMainAttributes({}, stage);
-  }
-
-  async _handleTakeSnapshotAndPush() {
-    const success = await this._handleTakeSnapshot();
-
-    if (success) {
-      this._handlePush?.();
-    }
-  }
-
-  async _handleTakeSnapshot() {
-    const { vcs } = this.props;
-    const {
-      message,
-      status: { stage },
-    } = this.state;
-
-    try {
-      await vcs.takeSnapshot(stage, message);
-    } catch (err) {
-      this.setState({
-        error: err.message,
-      });
-      return false;
-    }
-
-    this._onSnapshot?.();
-    await this.refreshMainAttributes({
-      message: '',
-      error: '',
-    });
-    this.hide();
-    return true;
-  }
-
-  async refreshMainAttributes(newState: Partial<State> = {}, newStage: Stage = {}) {
-    const { vcs, syncItems } = this.props;
+  const refreshMainAttributes = useCallback(async (newStage: Stage = {}) => {
     const branch = await vcs.getBranch();
     const status = await vcs.status(syncItems, newStage);
     const lookupMap: LookupMap = {};
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
-
     for (const key of allKeys) {
       const item = syncItems.find(si => si.key === key);
       const oldDoc: BaseModel | null = await vcs.blobFromLastSnapshot(key);
       const doc = (item && item.document) || oldDoc;
       const entry = status.stage[key] || status.unstaged[key];
-
       if (!entry || !doc) {
         continue;
       }
-
       let changes: string[] | null = null;
-
       if (item && item.document && oldDoc) {
         changes = describeChanges(item.document, oldDoc);
       }
-
       lookupMap[key] = {
         changes,
         entry: entry,
@@ -179,138 +82,187 @@ export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
         checked: !!status.stage[key],
       };
     }
-
-    // @ts-expect-error -- TSCONVERSION
-    this.setState({
+    setState({
+      ...state,
       status,
       branch,
       lookupMap,
       error: '',
-      ...newState,
     });
-  }
+  }, [state, syncItems, vcs]);
 
-  hide() {
-    this.modal?.hide();
-  }
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: async ({ onSnapshot, handlePush }) => {
+      modalRef.current?.show();
+      // Reset state
+      setState({
+        status: {
+          stage: {},
+          unstaged: {},
+          key: '',
+        },
+        branch: '',
+        error: '',
+        message: '',
+        lookupMap: {},
+        onSnapshot,
+        handlePush,
+      });
+      // Add everything to stage by default except new items
+      const status: Status = await vcs.status(syncItems, {});
+      const toStage: StageEntry[] = [];
+      for (const key of Object.keys(status.unstaged)) {
+        // @ts-expect-error -- TSCONVERSION
+        if (status.unstaged[key].added) {
+          // Don't automatically stage added resources
+          continue;
+        }
+        toStage.push(status.unstaged[key]);
+      }
+      const stage = await vcs.stage(status.stage, toStage);
+      await refreshMainAttributes(stage);
+    },
+  }), [refreshMainAttributes, syncItems, vcs]);
 
-  async show(options: { onSnapshot?: () => any; handlePush: () => Promise<void> }) {
-    const { vcs, syncItems } = this.props;
-    this.modal?.show();
+  const handleStageToggle = async (event: React.SyntheticEvent<HTMLInputElement>) => {
+    const { status } = state;
+    const id = event.currentTarget.name;
+    const isStaged = !!status.stage[id];
+    const newStage = isStaged
+      ? await vcs.unstage(status.stage, [status.stage[id]])
+      : await vcs.stage(status.stage, [status.unstaged[id]]);
+    await refreshMainAttributes(newStage);
+  };
+
+  const handleAllToggle = async (keys: DocumentKey[], doStage: boolean) => {
+    const { status } = state;
+    let stage;
+    if (doStage) {
+      const entries: StageEntry[] = [];
+      for (const k of Object.keys(status.unstaged)) {
+        if (keys.includes(k)) {
+          entries.push(status.unstaged[k]);
+        }
+      }
+      stage = await vcs.stage(status.stage, entries);
+    } else {
+      const entries: StageEntry[] = [];
+      for (const k of Object.keys(status.stage)) {
+        if (keys.includes(k)) {
+          entries.push(status.stage[k]);
+        }
+      }
+      stage = await vcs.unstage(status.stage, entries);
+    }
+    await refreshMainAttributes(stage);
+  };
+
+  const handleTakeSnapshotAndPush = async () => {
+    const success = await handleTakeSnapshot();
+    if (success) {
+      state.handlePush?.();
+    }
+  };
+
+  const handleTakeSnapshot = async () => {
+    const {
+      message,
+      status: { stage },
+      onSnapshot,
+    } = state;
+    try {
+      await vcs.takeSnapshot(stage, message);
+    } catch (err) {
+      setState({
+        ...state,
+        error: err.message,
+      });
+      return false;
+    }
+    onSnapshot?.();
+    setState({ ...state, message: '', error: '' });
+    await refreshMainAttributes();
+    modalRef.current?.hide();
+    return true;
+  };
+
+  const { status, message, error, branch } = state;
+  const nonAddedKeys: string[] = [];
+  const addedKeys: string[] = [];
+  const allMap = { ...status.stage, ...status.unstaged };
+  const allKeys = Object.keys(allMap);
+
+  for (const key of allKeys) {
     // @ts-expect-error -- TSCONVERSION
-    this._onSnapshot = options.onSnapshot;
-    this._handlePush = options.handlePush;
-    // Reset state
-    this.setState(_initialState);
-    // Add everything to stage by default except new items
-    const status: Status = await vcs.status(syncItems, {});
-    const toStage: StageEntry[] = [];
-
-    for (const key of Object.keys(status.unstaged)) {
-      // @ts-expect-error -- TSCONVERSION
-      if (status.unstaged[key].added) {
-        // Don't automatically stage added resources
-        continue;
-      }
-
-      toStage.push(status.unstaged[key]);
+    if (allMap[key].added) {
+      addedKeys.push(key);
+    } else {
+      nonAddedKeys.push(key);
     }
-
-    const stage = await vcs.stage(status.stage, toStage);
-    await this.refreshMainAttributes({}, stage);
-    this.textarea?.focus();
   }
-
-  render() {
-    const { status, message, error, branch } = this.state;
-    const nonAddedKeys: string[] = [];
-    const addedKeys: string[] = [];
-    const allMap = { ...status.stage, ...status.unstaged };
-    const allKeys = Object.keys(allMap);
-
-    for (const key of allKeys) {
-      // @ts-expect-error -- TSCONVERSION
-      if (allMap[key].added) {
-        addedKeys.push(key);
-      } else {
-        nonAddedKeys.push(key);
-      }
-    }
-
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>Create Snapshot</ModalHeader>
-        <ModalBody className="wide pad">
-          {error && (
-            <p className="notice error margin-bottom-sm no-margin-top">
-              <button className="pull-right icon" onClick={this._handleClearError}>
-                <i className="fa fa-times" />
-              </button>
-              {error}
-            </p>
-          )}
-
-          <div className="form-group">
-            <div className="form-control form-control--outlined">
-              <label>
-                Snapshot Message
-                <textarea
-                  ref={this._setTextAreaRef}
-                  cols={30}
-                  rows={3}
-                  onChange={this._handleMessageChange}
-                  value={message}
-                  placeholder="This is a helpful message that describe the changes made in this snapshot"
-                  required
-                />
-              </label>
-            </div>
-          </div>
-          <ChangesTable
-            keys={nonAddedKeys}
-            title='Modified Objects'
-            status={status}
-            lookupMap={this.state.lookupMap}
-            toggleAll={this._handleAllToggle}
-            toggleOne={this._handleStageToggle}
-          />
-          <ChangesTable
-            keys={addedKeys}
-            title='Unversioned Objects'
-            status={status}
-            lookupMap={this.state.lookupMap}
-            toggleAll={this._handleAllToggle}
-            toggleOne={this._handleStageToggle}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left italic txt-sm">
-            <i className="fa fa-code-fork" /> {branch}
-          </div>
-          <div>
-            <button className="btn" onClick={this._handleTakeSnapshot}>
-              Create
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>Create Snapshot</ModalHeader>
+      <ModalBody className="wide pad">
+        {error && (
+          <p className="notice error margin-bottom-sm no-margin-top">
+            <button className="pull-right icon" onClick={() => setState({ ...state, error: '' })}>
+              <i className="fa fa-times" />
             </button>
-            <button className="btn" onClick={this._handleTakeSnapshotAndPush}>
-              Create and Push
-            </button>
+            {error}
+          </p>
+        )}
+        <div className="form-group">
+          <div className="form-control form-control--outlined">
+            <label>
+              Snapshot Message
+              <textarea
+                cols={30}
+                rows={3}
+                onChange={event => setState({ ...state, message: event.currentTarget.value })}
+                value={message}
+                placeholder="This is a helpful message that describe the changes made in this snapshot"
+                required
+              />
+            </label>
           </div>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  syncItems: selectSyncItems(state),
+        </div>
+        <ChangesTable
+          keys={nonAddedKeys}
+          title='Modified Objects'
+          status={status}
+          lookupMap={state.lookupMap}
+          toggleAll={handleAllToggle}
+          toggleOne={handleStageToggle}
+        />
+        <ChangesTable
+          keys={addedKeys}
+          title='Unversioned Objects'
+          status={status}
+          lookupMap={state.lookupMap}
+          toggleAll={handleAllToggle}
+          toggleOne={handleStageToggle}
+        />
+      </ModalBody>
+      <ModalFooter>
+        <div className="margin-left italic txt-sm">
+          <i className="fa fa-code-fork" /> {branch}
+        </div>
+        <div>
+          <button className="btn" onClick={handleTakeSnapshot}>
+            Create
+          </button>
+          <button className="btn" onClick={handleTakeSnapshotAndPush}>
+            Create and Push
+          </button>
+        </div>
+      </ModalFooter>
+    </Modal>
+  );
 });
-
-export const SyncStagingModal = connect(
-  mapStateToProps,
-  null,
-  null,
-  { forwardRef: true },
-)(UnconnectedSyncStagingModal);
 
 interface OperationTooltipProps {
   entry: StageEntry;
@@ -322,39 +274,31 @@ const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
   // @ts-expect-error -- TSCONVERSION type narrowing
   if (entry.added) {
     return (
-      <Fragment>
-        <Tooltip message="Added">
-          <i className="fa fa-plus-circle success" /> {operationType}
-        </Tooltip>
-      </Fragment>
+      <Tooltip message="Added">
+        <i className="fa fa-plus-circle success" /> {operationType}
+      </Tooltip>
     );
   }
   // @ts-expect-error -- TSCONVERSION type narrowing
   if (entry.modified) {
     return (
-      <Fragment>
-        <Tooltip message={`Modified (${changes.join(', ')})`}>
-          <i className="fa fa-circle faded" /> {operationType}
-        </Tooltip>
-      </Fragment>
+      <Tooltip message={`Modified (${changes.join(', ')})`}>
+        <i className="fa fa-circle faded" /> {operationType}
+      </Tooltip>
     );
   }
   // @ts-expect-error -- TSCONVERSION type narrowing
   if (entry.deleted) {
     return (
-      <Fragment>
-        <Tooltip message="Deleted">
-          <i className="fa fa-minus-circle danger" /> {operationType}
-        </Tooltip>
-      </Fragment>
+      <Tooltip message="Deleted">
+        <i className="fa fa-minus-circle danger" /> {operationType}
+      </Tooltip>
     );
   }
   return (
-    <Fragment>
-      <Tooltip message="Unknown">
-        <i className="fa fa-question-circle info" /> {operationType}
-      </Tooltip>
-    </Fragment>
+    <Tooltip message="Unknown">
+      <i className="fa fa-question-circle info" /> {operationType}
+    </Tooltip>
   );
 };
 interface ChangesTableProps {
@@ -447,3 +391,4 @@ const ChangesTable = ({
     </div>
   );
 };
+SyncStagingModal.displayName = 'SyncStagingModal';
