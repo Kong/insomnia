@@ -89,4 +89,6 @@ export async function duplicate(request: WebSocketRequest, patch: Partial<WebSoc
 
 export const getById = (_id: string) => database.getWhere<WebSocketRequest>(type, { _id });
 
+export const findByParentId = (parentId: string) => database.find<WebSocketRequest>(type, { parentId });
+
 export const all = () => database.all<WebSocketRequest>(type);
