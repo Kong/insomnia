@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
+import { workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
@@ -12,8 +13,8 @@ import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { createRequest } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
+import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -31,7 +32,6 @@ import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceColl
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
-  handleSetActiveRequest: Function;
   handleDuplicateRequest: Function;
   isActive: boolean;
   isPinned: boolean;
@@ -62,7 +62,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   connectDropTarget,
   disableDragAndDrop,
   filter,
-  handleSetActiveRequest,
   handleDuplicateRequest,
   isActive,
   isDragging,
@@ -75,10 +74,22 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const activeWorkspaceId = activeWorkspace?._id;
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const handleSetActiveRequest = useCallback(() => {
+    if (!request || isActive) {
+      return;
+    }
 
+    if (activeWorkspaceMeta) {
+      workspaceMeta.update(activeWorkspaceMeta, {
+        activeRequestId: request._id,
+      });
+    }
+    updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
+  }, [activeWorkspaceMeta, isActive, request]);
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
     setDragDirection,
@@ -123,14 +134,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       workspaceId: activeWorkspaceId,
     });
   }, [requestGroup?._id, activeWorkspaceId]);
-
-  const handleRequestActivate = useCallback(() => {
-    if (isActive) {
-      return;
-    }
-
-    handleSetActiveRequest(request?._id);
-  }, [isActive, request?._id, handleSetActiveRequest]);
 
   const handleShowRequestSettings = useCallback(() => {
     showModal(RequestSettingsModal, { request });
@@ -228,7 +231,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
         >
           <button
             className="wide"
-            onClick={handleRequestActivate}
+            onClick={handleSetActiveRequest}
             onContextMenu={handleShowRequestActions}
           >
             <div className="sidebar__clickable">

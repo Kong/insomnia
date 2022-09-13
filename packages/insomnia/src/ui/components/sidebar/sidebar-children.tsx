@@ -3,12 +3,10 @@ import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 
 import { GrpcRequest } from '../../../models/grpc-request';
-import * as models from '../../../models/index';
 import { Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveRequest, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { selectActiveRequest } from '../../redux/selectors';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
@@ -29,13 +27,6 @@ export interface SidebarChildObjects {
 function hasActiveChild(children: Child[], activeRequestId: string): boolean {
   return !!children.find(c => c.doc._id === activeRequestId || hasActiveChild(c.children || [], activeRequestId));
 }
-interface RecursiveSidebarRowsProps {
-  rows: Child[];
-  isInPinnedList: boolean;
-  filter: string;
-  setActiveRequest: (requestId: string) => void;
-  handleDuplicateRequest: Function;
-}
 
 interface Props {
   filter: string;
@@ -46,15 +37,6 @@ export const SidebarChildren: FC<Props> = ({
   handleDuplicateRequest,
 }) => {
   const sidebarChildren = useSelector(selectSidebarChildren);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const setActiveRequest = (requestId: string) => {
-    if (activeWorkspaceMeta) {
-      models.workspaceMeta.update(activeWorkspaceMeta, {
-        activeRequestId: requestId,
-      });
-    }
-    updateRequestMetaByParentId(requestId, { lastActive: Date.now() });
-  };
 
   const { all, pinned } = sidebarChildren;
   const showSeparator = sidebarChildren.pinned.length > 0;
@@ -70,7 +52,6 @@ export const SidebarChildren: FC<Props> = ({
         <RecursiveSidebarRows
           filter={filter}
           handleDuplicateRequest={handleDuplicateRequest}
-          setActiveRequest={setActiveRequest}
           isInPinnedList={true}
           rows={pinned}
         />
@@ -84,7 +65,6 @@ export const SidebarChildren: FC<Props> = ({
         <RecursiveSidebarRows
           filter={filter}
           handleDuplicateRequest={handleDuplicateRequest}
-          setActiveRequest={setActiveRequest}
           isInPinnedList={false}
           rows={all}
         />
@@ -94,11 +74,17 @@ export const SidebarChildren: FC<Props> = ({
   );
 };
 
+interface RecursiveSidebarRowsProps {
+  rows: Child[];
+  isInPinnedList: boolean;
+  filter: string;
+  handleDuplicateRequest: Function;
+}
+
 const RecursiveSidebarRows = ({
   rows,
   isInPinnedList,
   filter,
-  setActiveRequest,
   handleDuplicateRequest,
 }: RecursiveSidebarRowsProps) => {
   const activeRequest = useSelector(selectActiveRequest);
@@ -123,7 +109,6 @@ const RecursiveSidebarRows = ({
                     isInPinnedList={isInPinnedList}
                     rows={row.children}
                     filter={filter}
-                    setActiveRequest={setActiveRequest}
                     handleDuplicateRequest={handleDuplicateRequest}
                   />
                 ) : null}
@@ -134,7 +119,6 @@ const RecursiveSidebarRows = ({
             <SidebarRequestRow
               key={row.doc._id}
               filter={isInPinnedList ? '' : filter || ''}
-              handleSetActiveRequest={setActiveRequest}
               handleDuplicateRequest={handleDuplicateRequest}
               isActive={row.doc._id === activeRequestId}
               isPinned={row.pinned}
