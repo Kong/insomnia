@@ -32,7 +32,6 @@ const EventLogTableWrapper = styled.div({
   width: '100%',
   flex: 1,
   overflow: 'hidden',
-  padding: 'var(--padding-sm)',
   boxSizing: 'border-box',
 });
 

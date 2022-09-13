@@ -67,7 +67,7 @@ const EventLog = styled('div')({
   width: '100%',
   height: '100%',
   overflow: 'hidden',
-  border: '1px solid var(--hl-md)',
+  borderTop: '1px solid var(--hl-md)',
 });
 
 const EventIconCell = styled('div')({
