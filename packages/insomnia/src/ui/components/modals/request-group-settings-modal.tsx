@@ -7,7 +7,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { Modal } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { UnconnectedCodeEditor } from '../codemirror/code-editor';
