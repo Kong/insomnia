@@ -1,5 +1,6 @@
 import React, {
   forwardRef,
+  useCallback,
   useImperativeHandle,
   useRef,
   useState,
@@ -55,43 +56,52 @@ export const WebSocketRequestSettingsModal = forwardRef<RequestSettingsModalHand
     selectWorkspacesForActiveProject
   );
 
-  async function handleNameChange(name: string) {
-    const { request: originalRequest } = state;
+  const { showDescription, defaultPreviewMode, request } = state;
 
-    if (!originalRequest) {
-      return;
-    }
-
+  const handleNameChange = useCallback((name: string) => {
     const patch = {
       name,
     };
-    const updatedRequest = await models.webSocketRequest.update(
-      originalRequest,
-      patch
-    );
-    setState({ ...state, request: updatedRequest });
-  }
-
-  async function handleDescriptionChange(description: string) {
-    if (!state.request) {
-      return;
+    async function update() {
+      if (!request) {
+        return;
+      }
+      const updatedRequest = await models.webSocketRequest.update(
+        request,
+        patch
+      );
+      setState(state => ({ ...state, request: updatedRequest }));
     }
 
-    const request = await models.webSocketRequest.update(state.request, {
-      description,
-    });
-    setState({
-      ...state,
-      request,
-      defaultPreviewMode: false,
-    });
-  }
+    update();
+  }, [request]);
 
-  function handleAddDescription() {
-    setState({ ...state, showDescription: true });
-  }
+  const handleDescriptionChange = useCallback((description: string) => {
 
-  async function show({ request, forceEditMode }: RequestSettingsModalOptions) {
+    async function update() {
+      if (!request) {
+        return;
+      }
+
+      const updatedRequest = await models.webSocketRequest.update(request, {
+        description,
+      });
+
+      setState(state => ({
+        ...state,
+        request: updatedRequest,
+        defaultPreviewMode: false,
+      }));
+    }
+
+    update();
+  }, [request]);
+
+  const handleAddDescription = () => {
+    setState(state => ({ ...state, showDescription: true }));
+  };
+
+  const show = async ({ request, forceEditMode }: RequestSettingsModalOptions) => {
     const hasDescription = !!request.description;
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(request);
@@ -116,18 +126,16 @@ export const WebSocketRequestSettingsModal = forwardRef<RequestSettingsModalHand
         editorRef.current?.focus();
       }, 400);
     }
-  }
+  };
 
-  function hide() {
+  const hide = () => {
     modalRef.current?.hide();
-  }
+  };
 
   useImperativeHandle(ref, () => ({
     show,
     hide,
   }));
-
-  const { showDescription, defaultPreviewMode, request } = state;
 
   if (!request) {
     return null;
