@@ -11,6 +11,7 @@ import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { createRequest } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown/dropdown';
@@ -25,6 +26,16 @@ import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
+
+interface WebSocketSpinnerProps {
+  className?: string;
+  requestId: string;
+}
+
+export const WebSocketSpinner: FC<WebSocketSpinnerProps> = ({ className, requestId }) => {
+  const readyState = useWSReadyState(requestId);
+  return readyState === ReadyState.OPEN ? <i className={classnames('fa fa-refresh fa-spin', className)} /> : null;
+};
 
 interface RawProps {
   disableDragAndDrop?: boolean;
@@ -247,7 +258,16 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                   />
                 )}
               />
-              <GrpcSpinner requestId={request._id} className="margin-right-sm" />
+              {isGrpcRequest(request) && (
+                <GrpcSpinner
+                  requestId={request._id}
+                  className="margin-right-sm"
+                />)}
+              {isWebSocketRequest(request) && (
+                <WebSocketSpinner
+                  requestId={request._id}
+                  className="margin-right-sm"
+                />)}
             </div>
           </button>
           <div className="sidebar__actions">
