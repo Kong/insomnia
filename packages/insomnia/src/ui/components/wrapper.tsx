@@ -120,7 +120,6 @@ const ActivityRouter = () => {
 const spectral = initializeSpectral();
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
-  handleDuplicateRequest: Function;
   handleSetResponseFilter: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
@@ -317,7 +316,6 @@ export class WrapperClass extends PureComponent<Props, State> {
       handleUpdateRequestMimeType,
       gitVCS,
       vcs,
-      handleDuplicateRequest,
       headerEditorKey,
     } = this.props;
 
@@ -496,7 +494,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleUpdateRequestMimeType={handleUpdateRequestMimeType}
                   handleSetActiveResponse={this.handleSetActiveResponse}
-                  handleDuplicateRequest={handleDuplicateRequest}
                   vcs={vcs}
                   headerEditorKey={headerEditorKey}
                 />
