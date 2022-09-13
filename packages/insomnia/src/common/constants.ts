@@ -421,7 +421,7 @@ export const RESPONSE_CODE_DESCRIPTIONS: Record<number, string> = {
     'An Insomnia plugin threw an error which prevented the request from sending',
   // 100s
   100: 'This interim response indicates that everything so far is OK and that the client should continue with the request or ignore it if it is already finished.',
-  101: 'This code is sent in response to an Upgrade: request header by the client and indicates the protocol the server is switching to. It was introduced to allow migration to an incompatible protocol version, and it is not in common use.',
+  101: 'This code is sent in response to an Upgrade: request header by the client and indicates the protocol the server is switching to.',
   // 200s
   200: 'The request has succeeded.',
   201: 'The request has succeeded and a new resource has been created as a result. This is typically the response sent after POST requests, or some PUT requests.',
