@@ -1,10 +1,13 @@
-import React, { FC, FormEvent } from 'react';
+import React, { FC, useCallback, useLayoutEffect, useRef } from 'react';
 import styled from 'styled-components';
 
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor } from '../codemirror/one-line-editor';
+import { KeydownBinder } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 
@@ -19,37 +22,6 @@ const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
     filter: 'brightness(0.8)',
   },
 }));
-
-interface ActionButtonProps {
-  requestId: string;
-  readyState: ReadyState;
-}
-const ActionButton: FC<ActionButtonProps> = ({ requestId, readyState }) => {
-
-  if (readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED) {
-    return (
-      <Button
-        type="submit"
-        form="websocketUrlForm"
-      >
-        Connect
-      </Button>
-    );
-  }
-
-  return (
-    <Button
-      className="urlbar__send-btn"
-      type="button"
-      warning
-      onClick={() => {
-        window.main.webSocket.close({ requestId });
-      }}
-    >
-      Disconnect
-    </Button>
-  );
-};
 
 interface ActionBarProps {
   request: WebSocketRequest;
@@ -96,21 +68,24 @@ const ConnectionCircle = styled.span({
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, environmentId, defaultValue, onChange, readyState }) => {
   const isOpen = readyState === ReadyState.OPEN;
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const editorRef = useRef<OneLineEditor>(null);
+  useLayoutEffect(() => {
+    editorRef.current?.focus(true);
+  }, []);
+  const handleSubmit = useCallback(async () => {
+    if (isOpen) {
+      window.main.webSocket.close({ requestId: request._id });
+      return;
+    }
     try {
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-
       const { url, headers, authentication } = request;
-
       // Render any nunjucks tags in the url/headers/authentication settings
       const rendered = await render({
         url,
         headers,
         authentication,
       }, renderContext);
-
       window.main.webSocket.create({
         requestId: request._id,
         workspaceId,
@@ -138,10 +113,24 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         });
       }
     }
-  };
+  }, [environmentId, isOpen, request, workspaceId]);
 
+  const handleGlobalKeyDown = useCallback(async (event: KeyboardEvent) => {
+    if (!editorRef.current) {
+      return;
+    }
+    executeHotKey(event, hotKeyRefs.REQUEST_SEND, () => {
+      handleSubmit();
+    });
+    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+      editorRef.current?.focus();
+      editorRef.current?.selectAll();
+    });
+  }, [handleSubmit]);
+
+  const isConnectingOrClosed = readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED;
   return (
-    <>
+    <KeydownBinder onKeydown={handleGlobalKeyDown}>
       {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
       {isOpen && (
         <ConnectionStatus>
@@ -149,9 +138,21 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
           CONNECTED
         </ConnectionStatus>
       )}
-      <Form aria-disabled={isOpen} id="websocketUrlForm" onSubmit={handleSubmit}>
+      <Form
+        aria-disabled={isOpen}
+        onSubmit={event => {
+          event.preventDefault();
+          handleSubmit();
+        }}
+      >
         <StyledUrlBar>
           <OneLineEditor
+            ref={editorRef}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                handleSubmit();
+              }
+            }}
             disabled={readyState === ReadyState.OPEN}
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}
@@ -160,8 +161,10 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
             forceEditor
           />
         </StyledUrlBar>
+        {isConnectingOrClosed
+          ? <Button type="submit">Connect</Button>
+          : <Button type="submit" warning>Disconnect</Button>}
       </Form>
-      <ActionButton requestId={request._id} readyState={readyState} />
-    </>
+    </KeydownBinder>
   );
 };
