@@ -256,10 +256,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
             key={`${uniqueKey}-${request.authentication.type}-auth-header`}
-            disabled={
-              readyState === ReadyState.OPEN ||
-              readyState === ReadyState.CLOSING
-            }
+            disabled={disabled}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
@@ -283,6 +280,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
                 key={headerEditorKey}
                 request={request}
                 bulk={useBulkParametersEditor}
+                disabled={disabled}
               />
             </ErrorBoundary>
           </div>

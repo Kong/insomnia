@@ -9,11 +9,13 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   bulk: boolean;
   request: Request | WebSocketRequest;
+  disabled?: boolean;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
   request,
   bulk,
+  disabled = false,
 }) => {
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {
@@ -63,6 +65,7 @@ export const RequestParametersEditor: FC<Props> = ({
         onChange={handleBulkUpdate}
         defaultValue={paramsString}
         enableNunjucks
+        readOnly={disabled}
       />
     );
   }
@@ -76,6 +79,7 @@ export const RequestParametersEditor: FC<Props> = ({
       descriptionPlaceholder="description"
       pairs={request.parameters}
       onChange={onChangeParameter}
+      isDisabled={disabled}
     />
   );
 };
