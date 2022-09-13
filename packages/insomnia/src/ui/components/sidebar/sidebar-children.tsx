@@ -30,11 +30,9 @@ function hasActiveChild(children: Child[], activeRequestId: string): boolean {
 
 interface Props {
   filter: string;
-  handleDuplicateRequest: Function;
 }
 export const SidebarChildren: FC<Props> = ({
   filter,
-  handleDuplicateRequest,
 }) => {
   const sidebarChildren = useSelector(selectSidebarChildren);
 
@@ -51,7 +49,6 @@ export const SidebarChildren: FC<Props> = ({
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
         <RecursiveSidebarRows
           filter={filter}
-          handleDuplicateRequest={handleDuplicateRequest}
           isInPinnedList={true}
           rows={pinned}
         />
@@ -64,7 +61,6 @@ export const SidebarChildren: FC<Props> = ({
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
         <RecursiveSidebarRows
           filter={filter}
-          handleDuplicateRequest={handleDuplicateRequest}
           isInPinnedList={false}
           rows={all}
         />
@@ -78,14 +74,12 @@ interface RecursiveSidebarRowsProps {
   rows: Child[];
   isInPinnedList: boolean;
   filter: string;
-  handleDuplicateRequest: Function;
 }
 
 const RecursiveSidebarRows = ({
   rows,
   isInPinnedList,
   filter,
-  handleDuplicateRequest,
 }: RecursiveSidebarRowsProps) => {
   const activeRequest = useSelector(selectActiveRequest);
   const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -109,7 +103,6 @@ const RecursiveSidebarRows = ({
                     isInPinnedList={isInPinnedList}
                     rows={row.children}
                     filter={filter}
-                    handleDuplicateRequest={handleDuplicateRequest}
                   />
                 ) : null}
               </SidebarRequestGroupRow>
@@ -119,7 +112,6 @@ const RecursiveSidebarRows = ({
             <SidebarRequestRow
               key={row.doc._id}
               filter={isInPinnedList ? '' : filter || ''}
-              handleDuplicateRequest={handleDuplicateRequest}
               isActive={row.doc._id === activeRequestId}
               isPinned={row.pinned}
               disableDragAndDrop={isInPinnedList}

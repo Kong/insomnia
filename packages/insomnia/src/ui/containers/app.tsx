@@ -823,7 +823,6 @@ class App extends PureComponent<AppProps, State> {
               <ErrorBoundary showAlert>
                 <Wrapper
                   ref={this._setWrapperRef}
-                  handleDuplicateRequest={this._requestDuplicate}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                   headerEditorKey={forceRefreshHeaderCounter + ''}

@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
-import { workspaceMeta } from '../../../models';
+import { stats, workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
@@ -21,7 +21,7 @@ import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
 import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-actions-dropdown';
 import { GrpcSpinner } from '../grpc-spinner';
-import { showModal } from '../modals/index';
+import { showModal, showPrompt } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
@@ -32,7 +32,6 @@ import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceColl
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
-  handleDuplicateRequest: Function;
   isActive: boolean;
   isPinned: boolean;
   request?: Request | GrpcRequest | WebSocketRequest;
@@ -62,7 +61,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   connectDropTarget,
   disableDragAndDrop,
   filter,
-  handleDuplicateRequest,
   isActive,
   isDragging,
   isDraggingOver,
@@ -90,6 +88,33 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     }
     updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
   }, [activeWorkspaceMeta, isActive, request]);
+
+  const handleDuplicateRequest = useCallback(() => {
+    if (!request) {
+      return;
+    }
+
+    showPrompt({
+      title: 'Duplicate Request',
+      defaultValue: request.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: async (name: string) => {
+        const newRequest = await requestOperations.duplicate(request, {
+          name,
+        });
+        if (activeWorkspaceMeta) {
+          await workspaceMeta.update(activeWorkspaceMeta, {
+            activeRequestId: newRequest._id,
+          });
+        }
+        await updateRequestMetaByParentId(newRequest._id, { lastActive: Date.now() });
+        stats.incrementCreatedRequests();
+      },
+    });
+  }, [activeWorkspaceMeta, request]);
+
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
     setDragDirection,

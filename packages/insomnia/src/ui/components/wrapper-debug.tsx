@@ -44,7 +44,6 @@ interface Props {
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleDuplicateRequest: Function;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   headerEditorKey: string;
   vcs: VCS | null;
@@ -59,7 +58,6 @@ export const WrapperDebug: FC<Props> = ({
   handleForceUpdateRequestHeaders,
   handleImport,
   handleSetResponseFilter,
-  handleDuplicateRequest,
   handleUpdateRequestMimeType,
   headerEditorKey,
   vcs,
@@ -115,7 +113,6 @@ export const WrapperDebug: FC<Props> = ({
         />
 
         <SidebarChildren
-          handleDuplicateRequest={handleDuplicateRequest}
           filter={sidebarFilter || ''}
         />
       </Fragment>
