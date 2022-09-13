@@ -58,7 +58,7 @@ const ConnectionStatus = styled.span({
   alignItems: 'center',
   paddingLeft: 'var(--padding-md)',
 });
-const ConnectionCircle = styled.span({
+export const ConnectionCircle = styled.span({
   backgroundColor: 'var(--color-success)',
   marginRight: 'var(--padding-sm)',
   width: 10,

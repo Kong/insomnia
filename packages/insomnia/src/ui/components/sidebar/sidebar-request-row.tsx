@@ -25,17 +25,8 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
+import { ConnectionCircle } from '../websockets/action-bar';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
-
-interface WebSocketSpinnerProps {
-  className?: string;
-  requestId: string;
-}
-
-export const WebSocketSpinner: FC<WebSocketSpinnerProps> = ({ className, requestId }) => {
-  const readyState = useWSReadyState(requestId);
-  return readyState === ReadyState.OPEN ? <i className={classnames('fa fa-refresh fa-spin', className)} /> : null;
-};
 
 interface RawProps {
   disableDragAndDrop?: boolean;
@@ -191,9 +182,9 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
         setRenderedUrl(requestUrl);
       })
       .catch(() => {
-      // Certain things, such as invalid variable tags and Prompts
-      // without titles will result in a failure to parse. Can't do
-      // much else, so let's just give them the unrendered URL
+        // Certain things, such as invalid variable tags and Prompts
+        // without titles will result in a failure to parse. Can't do
+        // much else, so let's just give them the unrendered URL
         setRenderedUrl(request.url);
       });
 
@@ -264,10 +255,8 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                   className="margin-right-sm"
                 />)}
               {isWebSocketRequest(request) && (
-                <WebSocketSpinner
-                  requestId={request._id}
-                  className="margin-right-sm"
-                />)}
+                <WebSocketSpinner requestId={request._id} />
+              )}
             </div>
           </button>
           <div className="sidebar__actions">
@@ -316,3 +305,8 @@ _SidebarRequestRow.displayName = 'SidebarRequestRow';
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(_SidebarRequestRow);
 export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+
+const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useWSReadyState(requestId);
+  return readyState === ReadyState.OPEN ? <ConnectionCircle /> : null;
+};
