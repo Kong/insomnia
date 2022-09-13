@@ -32,6 +32,9 @@ function hasActiveChild(children: Child[], activeRequestId: string): boolean {
 interface RecursiveSidebarRowsProps {
   rows: Child[];
   isInPinnedList: boolean;
+  filter: string;
+  setActiveRequest: (requestId: string) => void;
+  handleDuplicateRequest: Function;
 }
 
 interface Props {
@@ -46,56 +49,11 @@ export const SidebarChildren: FC<Props> = ({
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const setActiveRequest = (requestId: string) => {
     if (activeWorkspaceMeta) {
-      models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
+      models.workspaceMeta.update(activeWorkspaceMeta, {
+        activeRequestId: requestId,
+      });
     }
     updateRequestMetaByParentId(requestId, { lastActive: Date.now() });
-  };
-
-  const RecursiveSidebarRows: FC<RecursiveSidebarRowsProps> = ({
-    rows,
-    isInPinnedList,
-  }) => {
-    const activeRequest = useSelector(selectActiveRequest);
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-
-    return (
-      <>
-        {rows
-          .filter(row => !(!isInPinnedList && row.hidden))
-          .map(row => {
-            if (isRequestGroup(row.doc)) {
-              return (
-                <SidebarRequestGroupRow
-                  key={row.doc._id}
-                  filter={filter || ''}
-                  isActive={hasActiveChild(row.children, activeRequestId)}
-                  isCollapsed={row.collapsed}
-                  requestGroup={row.doc}
-                >
-                  {row.children.filter(Boolean).length > 0 ? (
-                    <RecursiveSidebarRows
-                      isInPinnedList={isInPinnedList}
-                      rows={row.children}
-                    />
-                  ) : null}
-                </SidebarRequestGroupRow>
-              );
-            }
-            return (
-              <SidebarRequestRow
-                key={row.doc._id}
-                filter={isInPinnedList ? '' : filter || ''}
-                handleSetActiveRequest={setActiveRequest}
-                handleDuplicateRequest={handleDuplicateRequest}
-                isActive={row.doc._id === activeRequestId}
-                isPinned={row.pinned}
-                disableDragAndDrop={isInPinnedList}
-                request={row.doc}
-              />
-            );
-          })}
-      </>
-    );
   };
 
   const { all, pinned } = sidebarChildren;
@@ -104,18 +62,87 @@ export const SidebarChildren: FC<Props> = ({
     <div className="hide">
       <SidebarCreateDropdown />
     </div>,
-    document.querySelector('#dropdowns-container') as any,
+    document.querySelector('#dropdowns-container') as any
   );
   return (
     <Fragment>
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        <RecursiveSidebarRows isInPinnedList={true} rows={pinned} />
+        <RecursiveSidebarRows
+          filter={filter}
+          handleDuplicateRequest={handleDuplicateRequest}
+          setActiveRequest={setActiveRequest}
+          isInPinnedList={true}
+          rows={pinned}
+        />
       </ul>
-      <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list"  >
-        <RecursiveSidebarRows isInPinnedList={false} rows={all} />
+      <div
+        className={`sidebar__list-separator${
+          showSeparator ? '' : '--invisible'
+        }`}
+      />
+      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+        <RecursiveSidebarRows
+          filter={filter}
+          handleDuplicateRequest={handleDuplicateRequest}
+          setActiveRequest={setActiveRequest}
+          isInPinnedList={false}
+          rows={all}
+        />
       </ul>
       {contextMenuPortal}
     </Fragment>
+  );
+};
+
+const RecursiveSidebarRows = ({
+  rows,
+  isInPinnedList,
+  filter,
+  setActiveRequest,
+  handleDuplicateRequest,
+}: RecursiveSidebarRowsProps) => {
+  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+
+  return (
+    <>
+      {rows
+        .filter(row => !(!isInPinnedList && row.hidden))
+        .map(row => {
+          if (isRequestGroup(row.doc)) {
+            return (
+              <SidebarRequestGroupRow
+                key={row.doc._id}
+                filter={filter || ''}
+                isActive={hasActiveChild(row.children, activeRequestId)}
+                isCollapsed={row.collapsed}
+                requestGroup={row.doc}
+              >
+                {row.children.filter(Boolean).length > 0 ? (
+                  <RecursiveSidebarRows
+                    isInPinnedList={isInPinnedList}
+                    rows={row.children}
+                    filter={filter}
+                    setActiveRequest={setActiveRequest}
+                    handleDuplicateRequest={handleDuplicateRequest}
+                  />
+                ) : null}
+              </SidebarRequestGroupRow>
+            );
+          }
+          return (
+            <SidebarRequestRow
+              key={row.doc._id}
+              filter={isInPinnedList ? '' : filter || ''}
+              handleSetActiveRequest={setActiveRequest}
+              handleDuplicateRequest={handleDuplicateRequest}
+              isActive={row.doc._id === activeRequestId}
+              isPinned={row.pinned}
+              disableDragAndDrop={isInPinnedList}
+              request={row.doc}
+            />
+          );
+        })}
+    </>
   );
 };
