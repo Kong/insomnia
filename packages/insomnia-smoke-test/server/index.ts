@@ -78,5 +78,6 @@ startGRPCServer(grpcPort).then(() => {
     console.log(`Listening at wss://localhost:${httpsPort}`);
   });
 
-  startWebSocketServer(server, httpsServer);
+  startWebSocketServer(server);
+  startWebSocketServer(httpsServer);
 });

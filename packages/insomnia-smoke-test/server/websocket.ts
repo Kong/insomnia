@@ -5,18 +5,14 @@ import { WebSocket, WebSocketServer } from 'ws';
 /**
  * Starts an echo WebSocket server that receives messages from a client and echoes them back.
  */
-export function startWebSocketServer(server: Server, httpsServer: Server) {
+export function startWebSocketServer(server: Server) {
   const wsServer = new WebSocketServer({ noServer: true });
-  const wssServer = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (request, socket, head) => {
     upgrade(wsServer, request, socket, head);
   });
-  httpsServer.on('upgrade', (request, socket, head) => {
-    upgrade(wssServer, request, socket, head);
-  });
+
   wsServer.on('connection', handleConnection);
-  wssServer.on('connection', handleConnection);
 }
 
 const handleConnection = (ws: WebSocket, req: IncomingMessage) => {

@@ -2,12 +2,13 @@ import React, { FC, useCallback } from 'react';
 
 import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestParameter } from '../../../models/request';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
-  request: Request;
+  request: Request | WebSocketRequest;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
