@@ -45,7 +45,6 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         parameters: enabledParameters,
       });
 
-      console.log(result);
       if (!result) {
         return;
       }
