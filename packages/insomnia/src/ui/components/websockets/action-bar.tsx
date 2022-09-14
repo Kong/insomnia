@@ -1,3 +1,4 @@
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { FC, useCallback, useLayoutEffect, useRef } from 'react';
 import styled from 'styled-components';
 
@@ -79,17 +80,20 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     }
     try {
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      const { url, headers, authentication } = request;
+      const { url: rawUrl, headers, authentication, parameters } = request;
       // Render any nunjucks tags in the url/headers/authentication settings
       const rendered = await render({
-        url,
+        url: rawUrl,
         headers,
         authentication,
+        parameters,
       }, renderContext);
+      const queryString = buildQueryStringFromParams(rendered.parameters);
+      const url = joinUrlAndQueryString(rendered.url, queryString);
       window.main.webSocket.create({
         requestId: request._id,
         workspaceId,
-        url: rendered.url,
+        url,
         headers: rendered.headers,
         authentication: rendered.authentication,
       });

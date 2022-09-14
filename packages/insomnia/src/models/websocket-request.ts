@@ -1,6 +1,6 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { RequestAuthentication, RequestHeader } from './request';
+import { RequestAuthentication, RequestHeader, RequestParameter } from './request';
 
 export const name = 'WebSocket Request';
 
@@ -19,6 +19,8 @@ export interface BaseWebSocketRequest {
   metaSortKey: number;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
+  parameters: RequestParameter[];
+  settingEncodeUrl: boolean;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -37,6 +39,8 @@ export const init = (): BaseWebSocketRequest => ({
   metaSortKey: -1 * Date.now(),
   headers: [],
   authentication: {},
+  parameters: [],
+  settingEncodeUrl: true,
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;

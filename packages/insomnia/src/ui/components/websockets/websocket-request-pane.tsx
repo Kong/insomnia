@@ -1,4 +1,5 @@
 import React, { FC, FormEvent, useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -7,14 +8,18 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/r
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { selectSettings } from '../../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { RequestParametersEditor } from '../editors/request-parameters-editor';
+import { ErrorBoundary } from '../error-boundary';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
 
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
@@ -149,14 +154,16 @@ interface Props {
   workspaceId: string;
   environmentId: string;
   forceRefreshKey: number;
+  headerEditorKey: string;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey, headerEditorKey }) => {
   const readyState = useWSReadyState(request._id);
+  const { useBulkParametersEditor } = useSelector(selectSettings);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
@@ -222,6 +229,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           <Tab tabIndex="-1">
             <AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />
           </Tab>
+          <Tab tabIndex='-1'>
+            <button>Query</button>
+          </Tab>
           <Tab tabIndex="-1">
             <button>Headers</button>
           </Tab>
@@ -246,11 +256,34 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
             key={`${uniqueKey}-${request.authentication.type}-auth-header`}
-            disabled={
-              readyState === ReadyState.OPEN ||
-              readyState === ReadyState.CLOSING
-            }
+            disabled={disabled}
           />
+        </TabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <div className="pad pad-bottom-sm query-editor__preview">
+            <label className="label--small no-pad-top">Url Preview</label>
+            <code className="txt-sm block faint">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RenderedQueryString request={request} />
+              </ErrorBoundary>
+            </code>
+          </div>
+          <div className="query-editor__editor">
+            <ErrorBoundary
+              key={uniqueKey}
+              errorClassName="tall wide vertically-align font-error pad text-center"
+            >
+              <RequestParametersEditor
+                key={headerEditorKey}
+                request={request}
+                bulk={useBulkParametersEditor}
+                disabled={disabled}
+              />
+            </ErrorBoundary>
+          </div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
