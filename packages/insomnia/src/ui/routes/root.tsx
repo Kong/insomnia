@@ -208,7 +208,7 @@ const App = () => {
 
                 <EnvironmentEditModal ref={instance => registerModal(instance, 'EnvironmentEditModal')} />
 
-                <GitRepositorySettingsModal ref={registerModal} />
+                <GitRepositorySettingsModal ref={instance => registerModal(instance, 'GitRepositorySettingsModal')}  />
 
                 {activeWorkspace && gitVCS ? (
                   <Fragment>
