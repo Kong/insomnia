@@ -114,7 +114,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
     }
   };
 
-  const handleMessageCodeMirrorChange = async (value: string) => {
+  const upsertPayloadWithValue = async (value: string) => {
     const payload = await models.webSocketPayload.getByParentId(request._id);
     if (payload) {
       await models.webSocketPayload.update(payload, { value });
@@ -137,7 +137,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
         uniquenessKey={request._id}
         mode={previewMode}
         ref={editorRef}
-        onChange={handleMessageCodeMirrorChange}
+        onChange={upsertPayloadWithValue}
         enableNunjucks
       />
     </SendMessageForm>
@@ -182,10 +182,10 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
 
   const changeMode = (mode: string) => {
     setPreviewMode(mode);
-    createOrUpdatePayload(mode);
+    upsertPayloadWithMode(mode);
   };
 
-  const createOrUpdatePayload = async (mode: string) => {
+  const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(request._id);
     if (payload) {
