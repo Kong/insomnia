@@ -303,7 +303,7 @@ const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
 };
 interface ChangesTableProps {
   keys: DocumentKey[];
-  title: ReactNode;
+  title: string;
   status: Status;
   lookupMap: LookupMap;
   toggleAll: (keys: DocumentKey[], doStage: boolean) => void;

@@ -1,15 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import type { MergeConflict } from '../../../sync/types';
-import { VCS } from '../../../sync/vcs/vcs';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-
-type Props = ModalProps & {
-  vcs: VCS;
-};
 export interface SyncMergeModalOptions {
   conflicts?: MergeConflict[];
   handleDone?: (conflicts?: MergeConflict[]) => void;
@@ -18,7 +13,7 @@ export interface SyncMergeModalHandle {
   show: (options: SyncMergeModalOptions) => void;
   hide: () => void;
 }
-export const SyncMergeModal = forwardRef<SyncMergeModalHandle, Props>(({ vcs }, ref) => {
+export const SyncMergeModal = forwardRef<SyncMergeModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<SyncMergeModalOptions>({
     conflicts: [],
