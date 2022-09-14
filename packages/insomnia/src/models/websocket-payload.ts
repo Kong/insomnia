@@ -9,8 +9,7 @@ export const prefix = 'ws-payload';
 
 export const canDuplicate = true;
 
-// @TODO: enable this at some point
-export const canSync = false;
+export const canSync = true;
 
 export interface BaseWebSocketPayload {
   value: string;
