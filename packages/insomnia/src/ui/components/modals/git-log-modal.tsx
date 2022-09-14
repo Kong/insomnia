@@ -8,9 +8,9 @@ import { ModalHeader } from '../base/modal-header';
 import { TimeFromNow } from '../time-from-now';
 import { Tooltip } from '../tooltip';
 
-interface Props {
+type Props = ModalProps & {
   vcs: GitVCS;
-}
+};
 
 interface GitLogModalOptions {
   logs: GitLogEntry[];
@@ -20,7 +20,7 @@ export interface GitLogModalHandle {
   show: (options: GitLogModalOptions) => void;
   hide: () => void;
 }
-export const GitLogModal = forwardRef<GitLogModalHandle, ModalProps & Props>(({ vcs }, ref) => {
+export const GitLogModal = forwardRef<GitLogModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<GitLogModalOptions>({
     logs: [],
@@ -34,13 +34,11 @@ export const GitLogModal = forwardRef<GitLogModalHandle, ModalProps & Props>(({ 
     show: async () => {
       const logs = await vcs.log();
       const branch = await vcs.getBranch();
-      setState({
-        logs,
-        branch,
-      });
+      setState({ logs, branch });
       modalRef.current?.show();
     },
   }), [vcs]);
+
   const { logs, branch } = state;
   return (
     <Modal ref={modalRef}>

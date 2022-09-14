@@ -42,7 +42,7 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
     newBranchName: '',
   });
   const dispatch = useDispatch();
-  const _refreshState = useCallback(async (newState?: Record<string, any>) => {
+  const refreshState = useCallback(async () => {
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
     const remoteBranches = await vcs.listRemoteBranches();
@@ -51,7 +51,6 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
       branch,
       branches,
       remoteBranches,
-      ...newState,
     });
     handleGitBranchChanged(branch);
   }, [handleGitBranchChanged, state, vcs]);
@@ -61,78 +60,90 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
       modalRef.current?.hide();
     },
     show: async ({ onHide }) => {
-      await _refreshState({
-        newBranchName: '',
-      });
+      setState({ ...state, newBranchName: '' });
+      await refreshState();
       modalRef.current?.show({ onHide });
       // Do a fetch of remotes and refresh again. NOTE: we're doing this
       // last because it's super slow
       await vcs.fetch(false, 1, gitRepository.credentials);
-      await _refreshState();
+      await refreshState();
     },
-  }), [_refreshState, gitRepository.credentials, vcs]);
+  }), [state, refreshState, vcs, gitRepository.credentials]);
 
-  async function _errorHandler(cb: () => Promise<void>) {
+  const handleCreate = async (event: React.SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      return await cb();
+      const providerName = getOauth2FormatName(gitRepository.credentials);
+      await vcs.checkout(state.newBranchName);
+      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
+      setState({ ...state, newBranchName: '' });
+      await refreshState();
     } catch (err) {
       setState({
         ...state,
         error: err.message,
       });
     }
-  }
-  async function _handleCreate(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await _errorHandler(async () => {
-      const { newBranchName } = state;
-      const providerName = getOauth2FormatName(gitRepository.credentials);
-      await vcs.checkout(newBranchName);
-      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
-      await _refreshState({
-        newBranchName: '',
-      });
-    });
-  }
+  };
 
-  async function _handleMerge(branch: string) {
-    await _errorHandler(async () => {
+  const handleMerge = async (branch: string) => {
+    try {
       const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.merge(branch);
       // Apparently merge doesn't update the working dir so need to checkout too
-      await _handleCheckout(branch);
+      await handleCheckout(branch);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
-    });
-  }
+    } catch (err) {
+      setState({
+        ...state,
+        error: err.message,
+      });
+    }
+  };
 
-  async function _handleDelete(branch: string) {
-    await _errorHandler(async () => {
+  const handleDelete = async (branch: string) => {
+    try {
       const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.deleteBranch(branch);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
-      await _refreshState();
-    });
-  }
+      await refreshState();
+    } catch (err) {
+      setState({
+        ...state,
+        error: err.message,
+      });
+    }
+  };
 
-  async function _handleRemoteCheckout(branch: string) {
-    await _errorHandler(async () => {
+  const handleRemoteCheckout = async (branch: string) => {
+    try {
       // First fetch more history to make sure we have lots
       await vcs.fetch(true, 20, gitRepository.credentials);
-      await _handleCheckout(branch);
-    });
-  }
+      await handleCheckout(branch);
+    } catch (err) {
+      setState({
+        ...state,
+        error: err.message,
+      });
+    }
+  };
 
-  async function _handleCheckout(branch: string) {
-    await _errorHandler(async () => {
+  const handleCheckout = async (branch: string) => {
+    try {
       const bufferId = await db.bufferChanges();
       const providerName = getOauth2FormatName(gitRepository.credentials);
       await vcs.checkout(branch);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
       await db.flushChanges(bufferId, true);
       await dispatch(initializeEntities());
-      await _refreshState();
-    });
-  }
+      await refreshState();
+    } catch (err) {
+      setState({
+        ...state,
+        error: err.message,
+      });
+    }
+  };
   const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = state;
   const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
   return (
@@ -147,7 +158,7 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
             {error}
           </p>
         )}
-        <form onSubmit={_handleCreate}>
+        <form onSubmit={handleCreate}>
           <div className="form-row">
             <div className="form-control form-control--outlined">
               <label>
@@ -199,20 +210,20 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
                         <PromptButton
                           className="btn btn--micro btn--outlined space-left"
                           doneMessage="Merged"
-                          onClick={() => _handleMerge(name)}
+                          onClick={() => handleMerge(name)}
                         >
                           Merge
                         </PromptButton>
                         <PromptButton
                           className="btn btn--micro btn--outlined space-left"
                           doneMessage="Deleted"
-                          onClick={() => _handleDelete(name)}
+                          onClick={() => handleDelete(name)}
                         >
                           Delete
                         </PromptButton>
                         <button
                           className="btn btn--micro btn--outlined space-left"
-                          onClick={() => _handleCheckout(name)}
+                          onClick={() => handleCheckout(name)}
                         >
                           Checkout
                         </button>
@@ -240,7 +251,7 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
                     <td className="text-right">
                       <button
                         className="btn btn--micro btn--outlined space-left"
-                        onClick={() => _handleRemoteCheckout(name)}
+                        onClick={() => handleRemoteCheckout(name)}
                       >
                         Checkout
                       </button>
