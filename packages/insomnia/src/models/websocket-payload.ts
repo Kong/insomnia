@@ -12,6 +12,7 @@ export const canDuplicate = true;
 export const canSync = true;
 
 export interface BaseWebSocketPayload {
+  name: string;
   value: string;
   mode: string;
 }
@@ -27,6 +28,7 @@ export const isWebSocketPayloadId = (id: string | null) => (
 );
 
 export const init = (): BaseWebSocketPayload => ({
+  name: 'New Payload',
   value: '',
   mode: 'application/json',
 });
