@@ -93,7 +93,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
       window.main.webSocket.create({
         requestId: request._id,
         workspaceId,
-        url: urlWithQueries,
+        url,
         headers: rendered.headers,
         authentication: rendered.authentication,
       });
