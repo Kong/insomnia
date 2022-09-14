@@ -89,7 +89,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         parameters,
       }, renderContext);
       const queryString = buildQueryStringFromParams(rendered.parameters);
-      const urlWithQueries = joinUrlAndQueryString(rendered.url, qs);
+      const url = joinUrlAndQueryString(rendered.url, queryString);
       window.main.webSocket.create({
         requestId: request._id,
         workspaceId,
