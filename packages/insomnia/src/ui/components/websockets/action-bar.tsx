@@ -80,10 +80,10 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     }
     try {
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      const { url, headers, authentication, parameters } = request;
+      const { url: rawUrl, headers, authentication, parameters } = request;
       // Render any nunjucks tags in the url/headers/authentication settings
       const rendered = await render({
-        url,
+        url: rawUrl,
         headers,
         authentication,
         parameters,
