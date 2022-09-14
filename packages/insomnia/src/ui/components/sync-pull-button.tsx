@@ -13,7 +13,7 @@ type ReduxProps = ReturnType<typeof mapStateToProps>;
 interface Props extends ReduxProps {
   vcs: VCS;
   branch: string;
-  onPull: (...args: any[]) => any;
+  onPull: () => any;
   disabled?: boolean;
   className?: string;
   children?: ReactNode;

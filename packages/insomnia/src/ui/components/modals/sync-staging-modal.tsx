@@ -183,8 +183,8 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
       return false;
     }
     onSnapshot?.();
-    setState({ ...state, message: '', error: '' });
     await refreshMainAttributes();
+    setState({ ...state, message: '', error: '' });
     modalRef.current?.hide();
     return true;
   };

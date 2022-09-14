@@ -115,11 +115,11 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       // Clear branch name and refresh things
+      await refreshState();
       setState({
         ...state,
         newBranchName: '',
       });
-      await refreshState();
     } catch (err) {
       console.log('Failed to create', err.stack);
       setState({
