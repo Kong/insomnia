@@ -57,9 +57,9 @@ describe('NeDBClient', () => {
         models.requestGroup.type,
         models.unitTest.type,
         models.unitTestSuite.type,
-        models.workspace.type,
         models.webSocketRequest.type,
         models.webSocketPayload.type,
+        models.workspace.type,
       ]);
       expect(await neDbClient.readdir(reqDir)).toEqual(['req_1.yml', 'req_2.yml']);
       expect(await neDbClient.readdir(wrkDir)).toEqual(['wrk_1.yml']);
