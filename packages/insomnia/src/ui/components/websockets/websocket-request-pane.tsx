@@ -55,9 +55,7 @@ const PaneHeader = styled(OriginalPaneHeader)({
 interface FormProps {
   request: WebSocketRequest;
   previewMode: string;
-  initialValue: string;
   environmentId: string;
-  createOrUpdatePayload: (payload: string, mode: string) => Promise<void>;
 }
 
 const PayloadTabPanel = styled(TabPanel)({
@@ -70,20 +68,19 @@ const PayloadTabPanel = styled(TabPanel)({
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
   previewMode,
-  initialValue,
-  createOrUpdatePayload,
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
+
   useEffect(() => {
-    let isMounted = true;
-    if (isMounted) {
-      editorRef.current?.codeMirror?.setValue(initialValue);
+    async function initMessageText(): Promise<void> {
+      const payload = await models.webSocketPayload.getByParentId(request._id);
+      const msg = payload?.value || '';
+      editorRef.current?.codeMirror?.setValue(msg);
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [initialValue]);
+
+    initMessageText();
+  }, [request._id]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -117,6 +114,19 @@ const WebSocketRequestForm: FC<FormProps> = ({
     }
   };
 
+  const upsertPayloadWithValue = async (value: string) => {
+    const payload = await models.webSocketPayload.getByParentId(request._id);
+    if (payload) {
+      await models.webSocketPayload.update(payload, { value });
+    } else {
+      await models.webSocketPayload.create({
+        parentId: request._id,
+        value,
+        mode: previewMode,
+      });
+    }
+  };
+
   // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
   // To allow for disabling rendering of messages based on a per-request setting.
   // Same as with regular requests
@@ -127,8 +137,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
         uniquenessKey={request._id}
         mode={previewMode}
         ref={editorRef}
-        defaultValue=''
-        onChange={value => createOrUpdatePayload(value, previewMode)}
+        onChange={upsertPayloadWithValue}
         enableNunjucks
       />
     </SendMessageForm>
@@ -156,14 +165,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
     }
   };
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
-  const [initialValue, setInitialValue] = useState('');
 
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
       const payload = await models.webSocketPayload.getByParentId(request._id);
       if (isMounted && payload) {
-        setInitialValue(payload.value);
         setPreviewMode(payload.mode);
       }
     };
@@ -175,21 +182,21 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
 
   const changeMode = (mode: string) => {
     setPreviewMode(mode);
-    createOrUpdatePayload(initialValue, mode);
+    upsertPayloadWithMode(mode);
   };
 
-  const createOrUpdatePayload = async (value: string, mode: string) => {
+  const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(request._id);
     if (payload) {
-      await models.webSocketPayload.update(payload, { value, mode });
-      return;
+      await models.webSocketPayload.update(payload, { mode });
+    } else {
+      await models.webSocketPayload.create({
+        parentId: request._id,
+        value: '',
+        mode,
+      });
     }
-    await models.webSocketPayload.create({
-      parentId: request._id,
-      value,
-      mode,
-    });
   };
 
   const uniqueKey = `${forceRefreshKey}::${request._id}`;
@@ -233,8 +240,6 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             key={uniqueKey}
             request={request}
             previewMode={previewMode}
-            initialValue={initialValue}
-            createOrUpdatePayload={createOrUpdatePayload}
             environmentId={environmentId}
           />
         </PayloadTabPanel>
