@@ -27,6 +27,7 @@ export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 export type AuthType =
   | 'none'
+  | 'inherit'
   | 'oauth2'
   | 'oauth1'
   | 'basic'
@@ -297,6 +298,7 @@ export const AUTH_NETRC = 'netrc';
 export const AUTH_ASAP = 'asap';
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
+export const AUTH_INHERIT = 'inherit';
 
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
@@ -313,6 +315,7 @@ const authTypesMap: Record<string, string[]> = {
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
+  [AUTH_INHERIT]: ['Inherit', 'Inherit auth from parent'],
 };
 
 // Sort Orders

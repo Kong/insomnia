@@ -147,6 +147,10 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
     id: 'documents_filter',
     description: 'Focus Documents Filter',
   },
+  PREFERENCES_WORKSPACE: {
+    id: 'preferences_workspace',
+    description: 'Show workspace preferences',
+  },
 };
 
 /**
@@ -293,6 +297,10 @@ const defaultRegistry: HotKeyRegistry = {
   },
   [hotKeyRefs.FILTER_DOCUMENTS.id]: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.f.keyCode }],
+    winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.f.keyCode }],
+  },
+  [hotKeyRefs.PREFERENCES_WORKSPACE.id]: {
+    macKeys: [{ meta: true, keyCode: keyboardKeys.e.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.f.keyCode }],
   },
 };

@@ -10,7 +10,7 @@ import { isProject, Project } from '../models/project';
 import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { WebSocketRequest } from '../models/websocket-request';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isWorkspace, Workspace, WorkspaceAuthentication } from '../models/workspace';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
@@ -36,6 +36,7 @@ export type RenderedRequest = Request & {
     disabled?: boolean;
   }[];
   cookieJar: CookieJar;
+  workspaceAuthentication?: WorkspaceAuthentication;
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
@@ -482,12 +483,16 @@ export async function getRenderedRequestAndContext(
     {
       _request: request,
       _cookieJar: cookieJar,
+      _workspaceAuthentication: workspace?.authentication,
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
   );
+
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
+  let renderedWorkspaceAuthentication = renderResult._workspaceAuthentication;
+
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
@@ -504,12 +509,17 @@ export async function getRenderedRequestAndContext(
     renderedRequest.authentication = {};
   }
 
+  if (renderedWorkspaceAuthentication && renderedWorkspaceAuthentication.disabled) {
+    renderedWorkspaceAuthentication = undefined;
+  }
+
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
   return {
     context: renderContext,
     request: {
       cookieJar: renderedCookieJar,
+      workspaceAuthentication: renderedWorkspaceAuthentication,
       cookies: [],
       isPrivate: false,
       _id: renderedRequest._id,

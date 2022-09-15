@@ -34,6 +34,7 @@ import { AddKeyCombinationModal } from './modals/add-key-combination-modal';
 import { AlertModal } from './modals/alert-modal';
 import { AnalyticsModal } from './modals/analytics-modal';
 import { AskModal } from './modals/ask-modal';
+import { AuthenticationModalFC } from './modals/authentication-modal';
 import { CodePromptModal } from './modals/code-prompt-modal';
 import { CookiesModalFC } from './modals/cookies-modal';
 import { EnvironmentEditModal } from './modals/environment-edit-modal';
@@ -303,6 +304,8 @@ export class WrapperClass extends PureComponent<Props, State> {
                 />
                 <CookieModifyModal ref={registerModal} />
               </> : null}
+
+              <AuthenticationModalFC ref={registerModal} />
 
               <NunjucksModal
                 ref={registerModal}

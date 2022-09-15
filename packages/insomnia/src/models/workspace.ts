@@ -12,11 +12,42 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
+export interface WorkspaceAuthentication {
+  type: string;
+  disabled: boolean;
+  username?: string;
+  password?: string;
+  token?: string;
+  prefix?: string;
+  signatureMethod?: string;
+  consumerKey?: string;
+  consumerSecret?: string;
+  tokenKey?: string;
+  tokenSecret?: string;
+  privateKey?: string;
+  version?: string;
+  nonce?: string;
+  timestamp?: string;
+  callback?: string;
+  grantType?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  algorithm?: string;
+  issuer?: string;
+  subject?: string;
+  audience?: string;
+  additionalClaims?: string;
+  keyId?: string;
+  useISO88591?: string;
+}
+
 interface GenericWorkspace<Scope extends 'design' | 'collection'> {
   name: string;
   description: string;
   certificates?: any;
   scope: Scope;
+  authentication: WorkspaceAuthentication;
 }
 
 export type DesignWorkspace = GenericWorkspace<'design'>;
@@ -48,6 +79,7 @@ export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
   scope: WorkspaceScopeKeys.collection,
+  authentication: { type: 'none', disabled: false },
 });
 
 export async function migrate(doc: Workspace) {

@@ -8,6 +8,7 @@ import {
   AUTH_BEARER,
   AUTH_DIGEST,
   AUTH_HAWK,
+  AUTH_INHERIT,
   AUTH_NETRC,
   AUTH_NTLM,
   AUTH_OAUTH_1,
@@ -20,6 +21,7 @@ import { BasicAuth } from './basic-auth';
 import { BearerAuth } from './bearer-auth';
 import { DigestAuth } from './digest-auth';
 import { HawkAuth } from './hawk-auth';
+import { InheritAuth } from './inherit-auth';
 import { NetrcAuth } from './netrc-auth';
 import { NTLMAuth } from './ntlm-auth';
 import { OAuth1Auth } from './o-auth-1-auth';
@@ -56,6 +58,8 @@ export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) =>
     authBody = <NetrcAuth />;
   } else if (type === AUTH_ASAP) {
     authBody = <AsapAuth />;
+  } else if (type === AUTH_INHERIT) {
+    authBody = <InheritAuth />;
   } else {
     authBody = (
       <div className="vertically-center text-center">
