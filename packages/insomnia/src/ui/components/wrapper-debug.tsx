@@ -3,9 +3,7 @@ import { useSelector } from 'react-redux';
 
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
-import type { Response } from '../../models/response';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { WebSocketResponse } from '../../models/websocket-response';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
 import {
@@ -37,7 +35,6 @@ interface Props {
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: (id: string | null) => void;
-  handleSetActiveResponse: (requestId: string, activeResponse: Response | WebSocketResponse | null) => void;
   handleImport: Function;
   handleSetResponseFilter: (filter: string) => void;
   vcs: VCS | null;
@@ -46,7 +43,6 @@ export const WrapperDebug: FC<Props> = ({
   gitSyncDropdown,
   handleActivityChange,
   handleSetActiveEnvironment,
-  handleSetActiveResponse,
   handleImport,
   handleSetResponseFilter,
   vcs,
@@ -147,13 +143,11 @@ export const WrapperDebug: FC<Props> = ({
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketResponsePane
                   requestId={activeRequest._id}
-                  handleSetActiveResponse={handleSetActiveResponse}
                 />
               ) : (
                 <ResponsePane
                   handleSetFilter={handleSetResponseFilter}
                   request={activeRequest}
-                  handleSetActiveResponse={handleSetActiveResponse}
                 />
               )
             )

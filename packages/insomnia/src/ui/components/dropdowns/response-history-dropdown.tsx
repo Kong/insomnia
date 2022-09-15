@@ -7,7 +7,9 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { Response } from '../../../models/response';
+import { isWebSocketRequestId } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -23,14 +25,12 @@ import { TimeFromNow } from '../time-from-now';
 
 interface Props<GenericResponse extends Response | WebSocketResponse> {
   activeResponse: GenericResponse;
-  handleSetActiveResponse: (requestId: string, activeResponse: GenericResponse | null) => void;
   className?: string;
   requestId: string;
 }
 
 export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
   activeResponse,
-  handleSetActiveResponse,
   className,
   requestId,
 }: Props<GenericResponse>) => {
@@ -48,14 +48,32 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     other: [],
   };
 
+  const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse | null = null) => {
+    const activeResponseId = activeResponse ? activeResponse._id : null;
+    await updateRequestMetaByParentId(requestId, { activeResponseId });
+    if (isWebSocketRequestId(requestId)) {
+      return;
+    }
+    let response: Response | null;
+    if (activeResponseId) {
+      response = await models.response.getById(activeResponseId);
+    } else {
+      const environmentId = activeEnvironment ? activeEnvironment._id : null;
+      response = await models.response.getLatestForRequest(requestId, environmentId);
+    }
+    if (!response || !response.requestVersionId) {
+      return;
+    }
+  }, [activeEnvironment]);
+
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     if (isWebSocketResponse(activeResponse)) {
+      window.main.webSocket.closeAll();
       await models.webSocketResponse.removeForRequest(requestId, environmentId);
     } else {
       await models.response.removeForRequest(requestId, environmentId);
     }
-
     if (activeRequest && activeRequest._id === requestId) {
       handleSetActiveResponse(requestId, null);
     }
@@ -64,6 +82,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
+        window.main.webSocket.close({ requestId });
         await models.webSocketResponse.remove(activeResponse);
       } else {
         await models.response.remove(activeResponse);
@@ -103,6 +122,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
     const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
+
     return (
       <DropdownItem
         key={response._id}

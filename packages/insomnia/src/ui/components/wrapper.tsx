@@ -20,13 +20,10 @@ import * as models from '../../models/index';
 import {
   isRequest,
 } from '../../models/request';
-import { Response } from '../../models/response';
-import { WebSocketResponse } from '../../models/websocket-response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { RootState } from '../redux/modules';
 import { setActiveActivity } from '../redux/modules/global';
 import { selectActiveActivity, selectActiveApiSpec, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
@@ -168,28 +165,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     return null;
   }
 
-  async handleSetActiveResponse(requestId: string, activeResponse: Response | WebSocketResponse | null = null) {
-    const { activeEnvironment } = this.props;
-    const activeResponseId = activeResponse ? activeResponse._id : null;
-    await updateRequestMetaByParentId(requestId, {
-      activeResponseId,
-    });
-
-    let response: Response | null;
-    if (activeResponseId) {
-      response = await models.response.getById(activeResponseId);
-    } else {
-      const environmentId = activeEnvironment ? activeEnvironment._id : null;
-      response = await models.response.getLatestForRequest(requestId, environmentId);
-    }
-    if (!response || !response.requestVersionId) {
-      return;
-    }
-    const request = await models.requestVersion.restore(response.requestVersionId);
-    if (!request) {
-      return;
-    }
-  }
   async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
     const { activeActivity, activeApiSpec, handleSetActiveActivity } = this.props;
 
@@ -448,7 +423,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleImport={this._handleImport}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleSetActiveResponse={this.handleSetActiveResponse}
                   vcs={vcs}
                 />
               </Suspense>
