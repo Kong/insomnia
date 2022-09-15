@@ -1,5 +1,6 @@
 import { SvgIcon } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -10,6 +11,8 @@ import { executeHotKey } from '../../../../common/hotkeys-listener';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
+import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
+import { selectActiveEnvironment } from '../../../redux/selectors';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
@@ -26,7 +29,6 @@ import useProtoFileReload from './use-proto-file-reload';
 import useSelectedMethod from './use-selected-method';
 
 interface Props {
-  forceRefreshKey: number;
   activeRequest: GrpcRequest;
   environmentId: string;
   workspaceId: string;
@@ -55,7 +57,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   environmentId,
   workspaceId,
-  forceRefreshKey,
 }) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
@@ -66,9 +67,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   // @ts-expect-error -- TSCONVERSION methodType can be undefined
   const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, dispatch);
   const getExistingGrpcUrls = useExistingGrpcUrls(workspaceId, activeRequest._id);
-  // Used to refresh input fields to their default value when switching between requests.
-  // This is a common pattern in this codebase.
-  const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
+  const gitVersion = useGitVCSVersion();
+  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
 
   const { start } = handleAction;
   const _handleKeyDown = useCallback((event: KeyboardEvent) => {

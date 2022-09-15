@@ -35,7 +35,6 @@ import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange } from './wrapper';
 
 interface Props {
-  forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: (id: string | null) => void;
@@ -47,7 +46,6 @@ interface Props {
   vcs: VCS | null;
 }
 export const WrapperDebug: FC<Props> = ({
-  forceRefreshKey,
   gitSyncDropdown,
   handleActivityChange,
   handleSetActiveEnvironment,
@@ -121,7 +119,6 @@ export const WrapperDebug: FC<Props> = ({
                 activeRequest={activeRequest}
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 workspaceId={activeWorkspace._id}
-                forceRefreshKey={forceRefreshKey}
                 settings={settings}
               />
             ) : (
@@ -134,7 +131,6 @@ export const WrapperDebug: FC<Props> = ({
               ) : (
                 <RequestPane
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  forceRefreshCounter={forceRefreshKey}
                   forceUpdateRequest={handleForceUpdateRequest}
                   forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
                   handleImport={handleImport}
@@ -153,7 +149,6 @@ export const WrapperDebug: FC<Props> = ({
             isGrpcRequest(activeRequest) ? (
               <GrpcResponsePane
                 activeRequest={activeRequest}
-                forceRefreshKey={forceRefreshKey}
               />
             ) : (
               isWebSocketRequest(activeRequest) ? (

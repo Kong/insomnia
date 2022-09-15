@@ -480,7 +480,6 @@ export class WrapperClass extends PureComponent<Props, State> {
             element={
               <Suspense fallback={<div />}>
                 <WrapperDebug
-                  forceRefreshKey={this.state.forceRefreshKey}
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
