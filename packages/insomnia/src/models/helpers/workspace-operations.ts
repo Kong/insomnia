@@ -29,3 +29,8 @@ export async function duplicate(
   models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
   return newWorkspace;
 }
+
+export function update<T extends object>(workspace: T, patch: Partial<T> = {}): Promise<T> {
+  // @ts-expect-error -- TSCONVERSION
+  return models.workspace.update(workspace, patch);
+}

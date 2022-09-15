@@ -203,6 +203,12 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         Other
       </DropdownDivider>
       <AuthItem
+        key="inherit"
+        type="inherit"
+        nameOverride="Inherit auth from parent"
+        {...itemProps}
+      />
+      <AuthItem
         key="none"
         type="none"
         nameOverride="No Authentication"

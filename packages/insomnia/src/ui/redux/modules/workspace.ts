@@ -63,6 +63,7 @@ export const createWorkspace = ({ scope, onCreate }: {
               name,
               scope,
               parentId: activeProject._id,
+              authentication: { type: 'none', disabled: false },
             },
             onCreate,
           ),

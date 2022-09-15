@@ -6,6 +6,7 @@ import {
   AUTH_BASIC,
   AUTH_BEARER,
   AUTH_HAWK,
+  AUTH_INHERIT,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../common/constants';
@@ -20,9 +21,22 @@ interface Header {
   value: string;
 }
 
-export async function getAuthHeader(renderedRequest: RenderedRequest, url: string) {
-  const { method, authentication, body } = renderedRequest;
+export async function getAuthHeader(
+  renderedRequest: RenderedRequest,
+  url: string,
+) {
+  const { method, body, workspaceAuthentication } = renderedRequest;
+  let { authentication } = renderedRequest;
+
   const requestId = renderedRequest._id;
+
+  if (authentication.type === AUTH_INHERIT && workspaceAuthentication) {
+    if (workspaceAuthentication.disabled) {
+      return;
+    }
+
+    authentication = workspaceAuthentication;
+  }
 
   if (authentication.disabled) {
     return;

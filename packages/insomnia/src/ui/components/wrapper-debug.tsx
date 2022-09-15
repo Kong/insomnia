@@ -19,9 +19,9 @@ import {
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
+import { ManageDropdown } from './dropdowns/manage-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
-import { showCookiesModal } from './modals/cookies-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
@@ -102,11 +102,8 @@ export const WrapperDebug: FC<Props> = ({
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             workspace={activeWorkspace}
           />
-          <button className="btn btn--super-compact" onClick={showCookiesModal}>
-            <div className="sidebar__menu__thing">
-              <span>Cookies</span>
-            </div>
-          </button>
+
+          <ManageDropdown />
         </div>
 
         <SidebarFilter
