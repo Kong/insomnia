@@ -1,9 +1,10 @@
 import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { useMount } from 'react-use';
 
+import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { update } from '../../../models/helpers/request-operations';
@@ -12,7 +13,6 @@ import type {
   RequestHeader,
 } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
-import { isWebSocketRequest } from '../../../models/websocket-request';
 import type { Workspace } from '../../../models/workspace';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -116,7 +116,6 @@ export const RequestPane: FC<Props> = ({
     request?._id, // happens when the user switches requests
     settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
   ]);
-  const [forceRefreshHeaderCounter, setForceRefreshHeaderCounter] = useState(0);
 
   if (!request) {
     return (
@@ -125,43 +124,23 @@ export const RequestPane: FC<Props> = ({
   }
 
   async function updateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    console.log(request);
     if (!request) {
       console.warn('Tried to update request mime-type when no active request');
       return null;
     }
-
-    if (isWebSocketRequest(request)) {
-      console.warn('Tried to update request mime-type on WebSocket request');
-      return null;
-    }
-
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(
-      request._id,
-    );
-    const savedBody = requestMeta.savedRequestBody;
-    const saveValue =
-      typeof mimeType !== 'string' // Switched to No body
-        ? request.body
-        : {};
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
+    // Switched to No body
+    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
     // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, {
-      savedRequestBody: saveValue,
-    });
-    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
-    const newRequest = await models.request.updateMimeType(request, mimeType, false, savedBody);
-    // Force it to update, because other editor components (header editor)
-    // needs to change. Need to wait a delay so the next render can finish
-    setTimeout(() => {
-      setForceRefreshHeaderCounter(forceRefreshHeaderCounter + 1);
-    }, 500);
-    return newRequest;
+    await models.requestMeta.update(requestMeta, { savedRequestBody });
+    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
+    return models.request.updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
   }
   const numParameters = request.parameters.filter(p => !p.disabled).length;
   const numHeaders = request.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
   const uniqueKey = `${forceRefreshCounter}::${request._id}`;
-
+  const contentType = getContentTypeFromHeaders(request.headers) || request.body.mimeType;
   return (
     <Pane type="request">
       <PaneHeader>
@@ -244,7 +223,7 @@ export const RequestPane: FC<Props> = ({
               errorClassName="tall wide vertically-align font-error pad text-center"
             >
               <RequestParametersEditor
-                key={forceRefreshHeaderCounter + ''}
+                key={contentType}
                 request={request}
                 bulk={settings.useBulkParametersEditor}
               />
@@ -269,7 +248,7 @@ export const RequestPane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel header-editor">
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestHeadersEditor
-              key={forceRefreshHeaderCounter + ''}
+              key={contentType}
               request={request}
               bulk={settings.useBulkHeaderEditor}
             />
