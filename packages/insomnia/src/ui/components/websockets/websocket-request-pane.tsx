@@ -154,14 +154,13 @@ interface Props {
   workspaceId: string;
   environmentId: string;
   forceRefreshKey: number;
-  headerEditorKey: string;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey, headerEditorKey }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
   const readyState = useWSReadyState(request._id);
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
@@ -277,7 +276,6 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
               errorClassName="tall wide vertically-align font-error pad text-center"
             >
               <RequestParametersEditor
-                key={headerEditorKey}
                 request={request}
                 bulk={useBulkParametersEditor}
                 disabled={disabled}

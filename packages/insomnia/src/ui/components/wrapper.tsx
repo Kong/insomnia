@@ -121,8 +121,6 @@ const spectral = initializeSpectral();
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
   handleSetResponseFilter: Function;
-  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  headerEditorKey: string;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 };
@@ -313,10 +311,8 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeGitRepository,
       activeWorkspace,
       activeApiSpec,
-      handleUpdateRequestMimeType,
       gitVCS,
       vcs,
-      headerEditorKey,
     } = this.props;
 
     // Setup git sync dropdown for use in Design/Debug pages
@@ -492,10 +488,8 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleUpdateRequestMimeType={handleUpdateRequestMimeType}
                   handleSetActiveResponse={this.handleSetActiveResponse}
                   vcs={vcs}
-                  headerEditorKey={headerEditorKey}
                 />
               </Suspense>
             }

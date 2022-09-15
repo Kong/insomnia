@@ -44,8 +44,6 @@ interface Props {
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  headerEditorKey: string;
   vcs: VCS | null;
 }
 export const WrapperDebug: FC<Props> = ({
@@ -58,8 +56,6 @@ export const WrapperDebug: FC<Props> = ({
   handleForceUpdateRequestHeaders,
   handleImport,
   handleSetResponseFilter,
-  handleUpdateRequestMimeType,
-  headerEditorKey,
   vcs,
 }) => {
   const activeProject = useSelector(selectActiveProject);
@@ -136,7 +132,6 @@ export const WrapperDebug: FC<Props> = ({
                   workspaceId={activeWorkspace._id}
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
                   forceRefreshKey={forceRefreshKey}
-                  headerEditorKey={headerEditorKey}
                 />
               ) : (
                 <RequestPane
@@ -145,10 +140,8 @@ export const WrapperDebug: FC<Props> = ({
                   forceUpdateRequest={handleForceUpdateRequest}
                   forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
                   handleImport={handleImport}
-                  headerEditorKey={headerEditorKey}
                   request={activeRequest}
                   settings={settings}
-                  updateRequestMimeType={handleUpdateRequestMimeType}
                   workspace={activeWorkspace}
                 />
               )

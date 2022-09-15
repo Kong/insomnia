@@ -26,10 +26,10 @@ import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
-import { Request, updateMimeType } from '../../models/request';
+import { Request } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
+import { WebSocketRequest } from '../../models/websocket-request';
 import { isWorkspace } from '../../models/workspace';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
@@ -90,7 +90,6 @@ interface State {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
   forceRefreshCounter: number;
-  forceRefreshHeaderCounter: number;
   isMigratingChildren: boolean;
 }
 
@@ -108,7 +107,6 @@ class App extends PureComponent<AppProps, State> {
       vcs: null,
       gitVCS: null,
       forceRefreshCounter: 0,
-      forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
     };
 
@@ -346,41 +344,6 @@ class App extends PureComponent<AppProps, State> {
         responseFilterHistory,
       });
     }, 2000);
-  }
-
-  async _handleUpdateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    if (!this.props.activeRequest) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-
-    if (isWebSocketRequest(this.props.activeRequest)) {
-      console.warn('Tried to update request mime-type on WebSocket request');
-      return null;
-    }
-
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(
-      this.props.activeRequest._id,
-    );
-    const savedBody = requestMeta.savedRequestBody;
-    const saveValue =
-      typeof mimeType !== 'string' // Switched to No body
-        ? this.props.activeRequest.body
-        : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, {
-      savedRequestBody: saveValue,
-    });
-    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
-    const newRequest = await updateMimeType(this.props.activeRequest, mimeType, false, savedBody);
-    // Force it to update, because other editor components (header editor)
-    // needs to change. Need to wait a delay so the next render can finish
-    setTimeout(() => {
-      this.setState({
-        forceRefreshHeaderCounter: this.state.forceRefreshHeaderCounter + 1,
-      });
-    }, 500);
-    return newRequest;
   }
 
   _handleKeyDown(event: KeyboardEvent) {
@@ -810,7 +773,6 @@ class App extends PureComponent<AppProps, State> {
       gitVCS,
       vcs,
       forceRefreshCounter,
-      forceRefreshHeaderCounter,
     } = this.state;
     const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace?._id || 'n/a'}`;
     return (
@@ -824,8 +786,6 @@ class App extends PureComponent<AppProps, State> {
                 <Wrapper
                   ref={this._setWrapperRef}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  headerEditorKey={forceRefreshHeaderCounter + ''}
                   vcs={vcs}
                   gitVCS={gitVCS}
                 />
