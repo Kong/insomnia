@@ -9,10 +9,7 @@ import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { update } from '../../../models/helpers/request-operations';
-import type {
-  Request,
-  RequestHeader,
-} from '../../../models/request';
+import type { Request } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -34,8 +31,6 @@ import { PlaceholderRequestPane } from './placeholder-request-pane';
 
 interface Props {
   environmentId: string;
-  forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   request?: Request | null;
   settings: Settings;
@@ -44,8 +39,6 @@ interface Props {
 
 export const RequestPane: FC<Props> = ({
   environmentId,
-  forceUpdateRequest,
-  forceUpdateRequestHeaders,
   handleImport,
   request,
   settings,
@@ -100,12 +93,12 @@ export const RequestPane: FC<Props> = ({
 
     // Only update if url changed
     if (url !== request.url) {
-      forceUpdateRequest(request, {
+      models.request.update(request, {
         url,
         parameters,
       });
     }
-  }, [request, forceUpdateRequest]);
+  }, [request]);
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   useMount(() => {
@@ -200,7 +193,6 @@ export const RequestPane: FC<Props> = ({
             workspace={workspace}
             environmentId={environmentId}
             settings={settings}
-            onChangeHeaders={forceUpdateRequestHeaders}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel scrollable-container">

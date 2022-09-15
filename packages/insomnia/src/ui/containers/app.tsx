@@ -21,7 +21,6 @@ import {
   generateId,
 } from '../../common/misc';
 import * as models from '../../models';
-import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
@@ -55,7 +54,7 @@ import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
-import { type WrapperClass, Wrapper } from '../components/wrapper';
+import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
@@ -96,7 +95,6 @@ interface State {
 class App extends PureComponent<AppProps, State> {
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _wrapper: WrapperClass | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: AppProps) {
@@ -354,10 +352,6 @@ class App extends PureComponent<AppProps, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(wrapper: WrapperClass) {
-    this._wrapper = wrapper;
-  }
-
   async _handleReloadPlugins() {
     const { settings } = this.props;
     await plugins.reloadPlugins();
@@ -531,37 +525,15 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _handleDbChange(changes: ChangeBufferEvent[]) {
-    let needsRefresh = false;
-
+  async listenforWorkspaceDelete(changes: ChangeBufferEvent[]) {
     for (const change of changes) {
-      const [type, doc, fromSync] = change;
+      const [type, doc] = change;
       const { vcs } = this.state;
-      const { activeRequest } = this.props;
-
-      // Force refresh if environment changes
-      // TODO: Only do this for environments in this workspace (not easy because they're nested)
-      if (isEnvironment(doc)) {
-        console.log('[App] Forcing update from environment change', change);
-        needsRefresh = true;
-      }
-
-      // Force refresh if sync changes the active request
-      if (fromSync && activeRequest && doc._id === activeRequest._id) {
-        needsRefresh = true;
-        console.log('[App] Forcing update from request change', change);
-      }
 
       // Delete VCS project if workspace deleted
       if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
         await vcs.removeBackendProjectsForRoot(doc._id);
       }
-    }
-
-    if (needsRefresh) {
-      setTimeout(() => {
-        this._wrapper?._forceRequestPaneRefresh();
-      }, 300);
     }
   }
 
@@ -575,7 +547,7 @@ class App extends PureComponent<AppProps, State> {
     // Update VCS
     await this._updateVCS();
     await this._updateGitVCS();
-    db.onChange(this._handleDbChange);
+    db.onChange(this.listenforWorkspaceDelete);
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
@@ -694,7 +666,7 @@ class App extends PureComponent<AppProps, State> {
   }
 
   componentWillUnmount() {
-    db.offChange(this._handleDbChange);
+    db.offChange(this.listenforWorkspaceDelete);
   }
 
   async _ensureWorkspaceChildren() {
@@ -774,7 +746,6 @@ class App extends PureComponent<AppProps, State> {
             <div className="app" key={uniquenessKey}>
               <ErrorBoundary showAlert>
                 <Wrapper
-                  ref={this._setWrapperRef}
                   handleSetResponseFilter={this._handleSetResponseFilter}
                   vcs={vcs}
                   gitVCS={gitVCS}
