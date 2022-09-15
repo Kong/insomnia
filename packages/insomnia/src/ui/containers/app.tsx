@@ -89,7 +89,6 @@ export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof ma
 interface State {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  forceRefreshCounter: number;
   isMigratingChildren: boolean;
 }
 
@@ -106,7 +105,6 @@ class App extends PureComponent<AppProps, State> {
     this.state = {
       vcs: null,
       gitVCS: null,
-      forceRefreshCounter: 0,
       isMigratingChildren: false,
     };
 
@@ -405,13 +403,6 @@ class App extends PureComponent<AppProps, State> {
     this._updateDocumentTitle();
 
     this._ensureWorkspaceChildren();
-
-    // Force app refresh if login state changes
-    if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
-      this.setState(state => ({
-        forceRefreshCounter: state.forceRefreshCounter + 1,
-      }));
-    }
 
     // Check on VCS things
     const { activeWorkspace, activeProject, activeGitRepository } = this.props;
@@ -768,13 +759,12 @@ class App extends PureComponent<AppProps, State> {
       return null;
     }
 
-    const { activeWorkspace } = this.props;
+    const { activeWorkspace, isLoggedIn } = this.props;
     const {
       gitVCS,
       vcs,
-      forceRefreshCounter,
     } = this.state;
-    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace?._id || 'n/a'}`;
+    const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
