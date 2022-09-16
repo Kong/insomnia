@@ -56,6 +56,10 @@ describe('app.import.*', () => {
         parentId: project._id,
         type: 'Workspace',
         scope: WorkspaceScopeKeys.collection,
+        authentication: {
+          disabled: false,
+          type: 'none',
+        },
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -104,6 +108,10 @@ describe('app.import.*', () => {
         parentId: project._id,
         type: 'Workspace',
         scope: WorkspaceScopeKeys.collection,
+        authentication: {
+          disabled: false,
+          type: 'none',
+        },
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -181,6 +189,10 @@ describe('app.export.*', () => {
           name: 'New Collection',
           parentId: null,
           scope: WorkspaceScopeKeys.collection,
+          authentication: {
+            disabled: false,
+            type: 'none',
+          },
         },
         {
           _id: 'req_1',
