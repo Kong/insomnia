@@ -142,50 +142,31 @@ export const GraphQLEditor: FC<Props> = props => {
     if (!url) {
       return;
     }
+    // @TODO: headers, auth, cookies
+    let response: AxiosResponse;
     try {
-      // @TODO: headers, auth, cookies
-      let response: AxiosResponse;
-      let error;
-      try {
-        console.log(url);
-        response = await axiosRequest({
-          url: new URL(url).toString(),
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          data: {
-            query: getIntrospectionQuery(),
-          },
-        });
-      } catch (err) {
-        console.log(err);
-        error = err.message;
+      console.log(url);
+      response = await axiosRequest({
+        url: new URL(url).toString(),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: {
+          query: getIntrospectionQuery(),
+        },
+      });
+      if (!response) {
+        return { schemaFetchError: { message: 'No response body received when fetching schema' } };
       }
-      if (error) {
-        return {
-          schemaFetchError: { message: error },
-        };
+      if (response.status < 200 || response.status >= 300) {
+        const renderedURL = response.request.res.responseUrl || url;
+        return { schemaFetchError: { message: `Got status ${response.status} fetching schema from "${renderedURL}"` } };
       }
-      if (response) {
-        if (response.status < 200 || response.status >= 300) {
-          const renderedURL = response.request.res.responseUrl || url;
-          return {
-            schemaFetchError: { message: `Got status ${response.status} fetching schema from "${renderedURL}"` },
-          };
-        } else if (response.data.data) {
-          return {
-            schema: buildClientSchema(response.data.data),
-          };
-        } else {
-          return {
-            schemaFetchError: { message: 'No response body received when fetching schema' },
-          };
-        }
+      if (response.data.data) {
+        return { schema: buildClientSchema(response.data.data) };
       }
+
     } catch (err) {
-      console.log('[graphql] ERROR: Failed to fetch schema', err);
-      return {
-        schemaFetchError: { message: `Failed to fetch schema: ${err.message}` },
-      };
+      return { schemaFetchError: { message: err.message } };
     }
   }, []);
 
