@@ -64,6 +64,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     if (!response || !response.requestVersionId) {
       return;
     }
+    models.requestVersion.restore(response.requestVersionId);
   }, [activeEnvironment]);
 
   const handleDeleteResponses = useCallback(async () => {
