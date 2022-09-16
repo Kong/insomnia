@@ -10,7 +10,7 @@ import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import {  selectSettings } from '../../redux/selectors';
+import {  selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
@@ -208,9 +208,10 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const activeRequestMeta = useSelector(selectActiveRequestMeta);
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniqueKey = `${environment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   return (
     <Pane type="request">

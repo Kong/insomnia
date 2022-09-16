@@ -7,7 +7,6 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { Response } from '../../../models/response';
-import { isWebSocketRequestId } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
@@ -48,24 +47,17 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     other: [],
   };
 
-  const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse | null = null) => {
-    const activeResponseId = activeResponse ? activeResponse._id : null;
-    await updateRequestMetaByParentId(requestId, { activeResponseId });
-    if (isWebSocketRequestId(requestId)) {
-      return;
+  const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse) => {
+    if (isWebSocketResponse(activeResponse)) {
+      window.main.webSocket.close({ requestId });
     }
-    let response: Response | null;
-    if (activeResponseId) {
-      response = await models.response.getById(activeResponseId);
-    } else {
-      const environmentId = activeEnvironment ? activeEnvironment._id : null;
-      response = await models.response.getLatestForRequest(requestId, environmentId);
+
+    if (activeResponse.requestVersionId) {
+      await models.requestVersion.restore(activeResponse.requestVersionId);
     }
-    if (!response || !response.requestVersionId) {
-      return;
-    }
-    models.requestVersion.restore(response.requestVersionId);
-  }, [activeEnvironment]);
+
+    await updateRequestMetaByParentId(requestId, { activeResponseId: activeResponse._id });
+  }, []);
 
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
@@ -76,21 +68,32 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       await models.response.removeForRequest(requestId, environmentId);
     }
     if (activeRequest && activeRequest._id === requestId) {
-      handleSetActiveResponse(requestId, null);
+      await updateRequestMetaByParentId(requestId, { activeResponseId: null });
     }
-  }, [activeEnvironment, activeRequest, activeResponse, handleSetActiveResponse, requestId]);
+  }, [activeEnvironment, activeRequest, activeResponse, requestId]);
 
   const handleDeleteResponse = useCallback(async () => {
+    let response: Response | WebSocketResponse | null = null;
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
         await models.webSocketResponse.remove(activeResponse);
+        const environmentId = activeEnvironment?._id || null;
+        response = await models.webSocketResponse.getLatestForRequest(requestId, environmentId);
       } else {
         await models.response.remove(activeResponse);
+        const environmentId = activeEnvironment?._id || null;
+        response = await models.response.getLatestForRequest(requestId, environmentId);
       }
+
+      if (response?.requestVersionId) {
+        // Deleting a response restores latest request body
+        await models.requestVersion.restore(response.requestVersionId);
+      }
+
+      await updateRequestMetaByParentId(requestId, { activeResponseId: response?._id || null });
     }
-    handleSetActiveResponse(requestId, null);
-  }, [activeResponse, handleSetActiveResponse, requestId]);
+  }, [activeEnvironment?._id, activeResponse, requestId]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
