@@ -3,10 +3,7 @@ import { useSelector } from 'react-redux';
 
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
-import { Request, RequestHeader } from '../../models/request';
-import type { Response } from '../../models/response';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { WebSocketResponse } from '../../models/websocket-response';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
 import {
@@ -35,25 +32,17 @@ import { WorkspacePageHeader } from './workspace-page-header';
 import type { HandleActivityChange } from './wrapper';
 
 interface Props {
-  forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: (id: string | null) => void;
-  handleSetActiveResponse: (requestId: string, activeResponse: Response | WebSocketResponse | null) => void;
-  handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   handleSetResponseFilter: (filter: string) => void;
   vcs: VCS | null;
 }
 export const WrapperDebug: FC<Props> = ({
-  forceRefreshKey,
   gitSyncDropdown,
   handleActivityChange,
   handleSetActiveEnvironment,
-  handleSetActiveResponse,
-  handleForceUpdateRequest,
-  handleForceUpdateRequestHeaders,
   handleImport,
   handleSetResponseFilter,
   vcs,
@@ -121,24 +110,18 @@ export const WrapperDebug: FC<Props> = ({
                 activeRequest={activeRequest}
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 workspaceId={activeWorkspace._id}
-                forceRefreshKey={forceRefreshKey}
                 settings={settings}
               />
             ) : (
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketRequestPane
-                  key={activeRequest._id}
                   request={activeRequest}
                   workspaceId={activeWorkspace._id}
-                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  forceRefreshKey={forceRefreshKey}
+                  environment={activeEnvironment}
                 />
               ) : (
                 <RequestPane
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  forceRefreshCounter={forceRefreshKey}
-                  forceUpdateRequest={handleForceUpdateRequest}
-                  forceUpdateRequestHeaders={handleForceUpdateRequestHeaders}
                   handleImport={handleImport}
                   request={activeRequest}
                   settings={settings}
@@ -155,19 +138,16 @@ export const WrapperDebug: FC<Props> = ({
             isGrpcRequest(activeRequest) ? (
               <GrpcResponsePane
                 activeRequest={activeRequest}
-                forceRefreshKey={forceRefreshKey}
               />
             ) : (
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketResponsePane
                   requestId={activeRequest._id}
-                  handleSetActiveResponse={handleSetActiveResponse}
                 />
               ) : (
                 <ResponsePane
                   handleSetFilter={handleSetResponseFilter}
                   request={activeRequest}
-                  handleSetActiveResponse={handleSetActiveResponse}
                 />
               )
             )

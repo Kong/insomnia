@@ -6,9 +6,11 @@ import styled from 'styled-components';
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
+import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { selectSettings } from '../../redux/selectors';
+import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import {  selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
@@ -152,15 +154,14 @@ const WebSocketRequestForm: FC<FormProps> = ({
 interface Props {
   request: WebSocketRequest;
   workspaceId: string;
-  environmentId: string;
-  forceRefreshKey: number;
+  environment: Environment | null;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
   const readyState = useWSReadyState(request._id);
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
@@ -205,7 +206,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
     }
   };
 
-  const uniqueKey = `${forceRefreshKey}::${request._id}`;
+  const gitVersion = useGitVCSVersion();
+  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const activeRequestMeta = useSelector(selectActiveRequestMeta);
+
+  // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniqueKey = `${environment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   return (
     <Pane type="request">
@@ -214,7 +220,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           key={uniqueKey}
           request={request}
           workspaceId={workspaceId}
-          environmentId={environmentId}
+          environmentId={environment?._id || ''}
           defaultValue={request.url}
           readyState={readyState}
           onChange={handleOnChange}
@@ -249,12 +255,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             key={uniqueKey}
             request={request}
             previewMode={previewMode}
-            environmentId={environmentId}
+            environmentId={environment?._id || ''}
           />
         </PayloadTabPanel>
         <TabPanel className="react-tabs__tab-panel">
           <AuthWrapper
-            key={`${uniqueKey}-${request.authentication.type}-auth-header`}
+            key={uniqueKey}
             disabled={disabled}
           />
         </TabPanel>
@@ -285,7 +291,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
-            key={`${uniqueKey}-${readyState}-header-editor`}
+            key={uniqueKey}
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}

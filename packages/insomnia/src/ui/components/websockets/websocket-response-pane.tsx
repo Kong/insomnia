@@ -48,10 +48,9 @@ const PaneBodyContent = styled.div({
   gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
 });
 
-export const WebSocketResponsePane: FC<{ requestId: string; handleSetActiveResponse: (requestId: string, activeResponse: WebSocketResponse | null) => void }> =
+export const WebSocketResponsePane: FC<{ requestId: string }> =
   ({
     requestId,
-    handleSetActiveResponse,
   }) => {
     const response = useSelector(selectActiveResponse) as WebSocketResponse | null;
     if (!response) {
@@ -72,24 +71,18 @@ export const WebSocketResponsePane: FC<{ requestId: string; handleSetActiveRespo
         </Pane>
       );
     }
-    return <WebSocketActiveResponsePane requestId={requestId} response={response} handleSetActiveResponse={handleSetActiveResponse} />;
+    return <WebSocketActiveResponsePane requestId={requestId} response={response} />;
   };
 
-const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse; handleSetActiveResponse: (requestId: string, activeResponse: WebSocketResponse | null) => void }> = ({
+const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse }> = ({
   requestId,
   response,
-  handleSetActiveResponse,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const events = useWebSocketConnectionEvents({ responseId: response._id });
   const handleSelection = (event: WebSocketEvent) => {
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
-  };
-
-  const setActiveResponseAndDisconnect = (requestId: string, response: WebSocketResponse | null) => {
-    handleSetActiveResponse(requestId, response);
-    window.main.webSocket.close({ requestId });
   };
 
   useEffect(() => {
@@ -123,7 +116,6 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          handleSetActiveResponse={setActiveResponseAndDisconnect}
           requestId={requestId}
           className="tall pane__header__right"
         />

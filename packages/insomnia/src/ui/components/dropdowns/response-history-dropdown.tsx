@@ -8,6 +8,7 @@ import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -23,14 +24,12 @@ import { TimeFromNow } from '../time-from-now';
 
 interface Props<GenericResponse extends Response | WebSocketResponse> {
   activeResponse: GenericResponse;
-  handleSetActiveResponse: (requestId: string, activeResponse: GenericResponse | null) => void;
   className?: string;
   requestId: string;
 }
 
 export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
   activeResponse,
-  handleSetActiveResponse,
   className,
   requestId,
 }: Props<GenericResponse>) => {
@@ -48,29 +47,53 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     other: [],
   };
 
+  const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse) => {
+    if (isWebSocketResponse(activeResponse)) {
+      window.main.webSocket.close({ requestId });
+    }
+
+    if (activeResponse.requestVersionId) {
+      await models.requestVersion.restore(activeResponse.requestVersionId);
+    }
+
+    await updateRequestMetaByParentId(requestId, { activeResponseId: activeResponse._id });
+  }, []);
+
   const handleDeleteResponses = useCallback(async () => {
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     if (isWebSocketResponse(activeResponse)) {
+      window.main.webSocket.closeAll();
       await models.webSocketResponse.removeForRequest(requestId, environmentId);
     } else {
       await models.response.removeForRequest(requestId, environmentId);
     }
-
     if (activeRequest && activeRequest._id === requestId) {
-      handleSetActiveResponse(requestId, null);
+      await updateRequestMetaByParentId(requestId, { activeResponseId: null });
     }
-  }, [activeEnvironment, activeRequest, activeResponse, handleSetActiveResponse, requestId]);
+  }, [activeEnvironment, activeRequest, activeResponse, requestId]);
 
   const handleDeleteResponse = useCallback(async () => {
+    let response: Response | WebSocketResponse | null = null;
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
+        window.main.webSocket.close({ requestId });
         await models.webSocketResponse.remove(activeResponse);
+        const environmentId = activeEnvironment?._id || null;
+        response = await models.webSocketResponse.getLatestForRequest(requestId, environmentId);
       } else {
         await models.response.remove(activeResponse);
+        const environmentId = activeEnvironment?._id || null;
+        response = await models.response.getLatestForRequest(requestId, environmentId);
       }
+
+      if (response?.requestVersionId) {
+        // Deleting a response restores latest request body
+        await models.requestVersion.restore(response.requestVersionId);
+      }
+
+      await updateRequestMetaByParentId(requestId, { activeResponseId: response?._id || null });
     }
-    handleSetActiveResponse(requestId, null);
-  }, [activeResponse, handleSetActiveResponse, requestId]);
+  }, [activeEnvironment?._id, activeResponse, requestId]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
@@ -103,6 +126,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
     const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
+
     return (
       <DropdownItem
         key={response._id}
