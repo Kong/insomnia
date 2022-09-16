@@ -22,6 +22,7 @@ import { showCookiesModal } from './modals/cookies-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
+import { PlaceholderRequestPane } from './panes/placeholder-request-pane';
 import { RequestPane } from './panes/request-pane';
 import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
@@ -64,7 +65,6 @@ export const WrapperDebug: FC<Props> = ({
       window.main.webSocket.closeAll();
     };
   }, [activeEnvironment?._id]);
-
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?
@@ -130,6 +130,7 @@ export const WrapperDebug: FC<Props> = ({
               )
             )
           )}
+          {!activeRequest && <PlaceholderRequestPane />}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
