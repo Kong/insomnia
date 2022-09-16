@@ -65,7 +65,6 @@ export const WrapperDebug: FC<Props> = ({
       window.main.webSocket.closeAll();
     };
   }, [activeEnvironment?._id]);
-  console.log(activeRequest);
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?
