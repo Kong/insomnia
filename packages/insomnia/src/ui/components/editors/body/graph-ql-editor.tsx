@@ -15,20 +15,15 @@ import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
 
-import { CONTENT_TYPE_JSON } from '../../../../common/constants';
-import { database as db } from '../../../../common/database';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
-import { newBodyRaw } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
 import { axiosRequest } from '../../../../network/axios-request';
-import * as network from '../../../../network/network';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
@@ -148,40 +143,43 @@ export const GraphQLEditor: FC<Props> = props => {
       return;
     }
     try {
-      let response:AxiosResponse;
+      // @TODO: headers, auth, cookies
+      let response: AxiosResponse;
       let error;
       try {
+        console.log(url);
         response = await axiosRequest({
-          url,
-          method: 'GET',
+          url: new URL(url).toString(),
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           data: {
             query: getIntrospectionQuery(),
-            operationName: 'IntrospectionQuery',
           },
         });
-        console.log(response);
       } catch (err) {
+        console.log(err);
         error = err.message;
       }
       if (error) {
         return {
           schemaFetchError: { message: error },
         };
-      } else if (response.status < 200 || response.status >= 300) {
-        const renderedURL = response.request.res.responseUrl || url;
-        return {
-          schemaFetchError: { message: `Got status ${response.status} fetching schema from "${renderedURL}"` },
-        };
-      } else if (response.data) {
-        const { data } = JSON.parse(response.data.toString());
-        return {
-          schema: buildClientSchema(data),
-        };
-      } else {
-        return {
-          schemaFetchError: { message: 'No response body received when fetching schema' },
-        };
+      }
+      if (response) {
+        if (response.status < 200 || response.status >= 300) {
+          const renderedURL = response.request.res.responseUrl || url;
+          return {
+            schemaFetchError: { message: `Got status ${response.status} fetching schema from "${renderedURL}"` },
+          };
+        } else if (response.data.data) {
+          return {
+            schema: buildClientSchema(response.data.data),
+          };
+        } else {
+          return {
+            schemaFetchError: { message: 'No response body received when fetching schema' },
+          };
+        }
       }
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
