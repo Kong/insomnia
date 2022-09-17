@@ -147,9 +147,9 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
     id: 'documents_filter',
     description: 'Focus Documents Filter',
   },
-  PREFERENCES_WORKSPACE: {
-    id: 'preferences_workspace',
-    description: 'Show workspace preferences',
+  MANAGEMENT_WORKSPACE: {
+    id: 'management_workspace',
+    description: 'Show workspace management',
   },
 };
 
@@ -299,7 +299,7 @@ const defaultRegistry: HotKeyRegistry = {
     macKeys: [{ meta: true, keyCode: keyboardKeys.f.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.f.keyCode }],
   },
-  [hotKeyRefs.PREFERENCES_WORKSPACE.id]: {
+  [hotKeyRefs.MANAGEMENT_WORKSPACE.id]: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.e.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.f.keyCode }],
   },

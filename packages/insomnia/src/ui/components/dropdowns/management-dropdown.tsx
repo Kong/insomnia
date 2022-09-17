@@ -13,7 +13,7 @@ export const ManagementDropdown: FC = () => {
   const dropdownRef = useRef<DropdownHandle>(null);
 
   const onKeydown = useCallback((event: KeyboardEvent) => {
-    executeHotKey(event, hotKeyRefs.PREFERENCES_WORKSPACE, () => {
+    executeHotKey(event, hotKeyRefs.MANAGEMENT_WORKSPACE, () => {
       dropdownRef.current?.toggle(true);
     });
   }, []);
