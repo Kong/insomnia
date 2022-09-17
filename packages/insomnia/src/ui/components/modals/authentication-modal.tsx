@@ -2,61 +2,62 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { useSelector } from 'react-redux';
 
-import { AUTH_BEARER, AuthType, AUTOBIND_CFG, getAuthTypeName } from '../../../common/constants';
-import { HandleRender } from '../../../common/render';
-import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { Workspace } from '../../../models/workspace';
-import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
+import {
+  AUTH_ASAP,
+  AUTH_AWS_IAM,
+  AUTH_BASIC,
+  AUTH_BEARER,
+  AUTH_DIGEST,
+  AUTH_HAWK,
+  AUTH_NETRC,
+  AUTH_NTLM,
+  AUTH_OAUTH_1,
+  AuthType,
+  AUTOBIND_CFG,
+} from '../../../common/constants';
+import { WorkspaceAuthentication } from '../../../models/workspace';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { showModal } from '.';
-import { BearerAuth } from './workspace-preferences/bearer-auth';
+import {
+  AsapAuth,
+  AuthSelectType,
+  AWSAuth,
+  BasicAuth,
+  BearerAuth,
+  DigestAuth,
+  HawkAuth,
+  NetrcAuth,
+  NTLMAuth,
+  OAuth1Auth,
+} from './workspace-preferences';
 
 interface Props extends ModalProps {
-  workspace?: Workspace;
-  handleRender: HandleRender;
+  authentication?: WorkspaceAuthentication;
 }
 
 interface State {
   type: AuthType;
 }
 
-const defaultTypes: AuthType[] = [
-  'basic',
-  'digest',
-  'oauth1',
-  'oauth2',
-  'ntlm',
-  'iam',
-  'bearer',
-  'hawk',
-  'asap',
-  'netrc',
-  'none',
-];
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class AuthenticationModal extends PureComponent<Props> {
   modal: Modal | null = null;
-  workspace = this.props.workspace as Workspace;
+  authentication = this.props.authentication;
 
   state: State = {
-    type: this.workspace?.authentication.type as AuthType,
+    type: this.authentication?.type || 'none',
   };
 
   _handleSetModalRef(modal: Modal) {
     this.modal = modal;
   }
 
-  _handleSelectType(event: React.SyntheticEvent<HTMLSelectElement>) {
-    const type = event.currentTarget.value;
-    const authentication = { type, disabled: false };
-
+  _handleChangeType(type: string) {
     this.setState({ type });
-    workspaceOperations.update(this.workspace, { authentication });
   }
 
   show() {
@@ -70,36 +71,37 @@ class AuthenticationModal extends PureComponent<Props> {
   renderAuthBody() {
     const { type } = this.state;
 
-    if (type === AUTH_BEARER) {
+    if (type === AUTH_BASIC) {
+      return <BasicAuth />;
+    } else if (type === AUTH_HAWK) {
+      return <HawkAuth />;
+    } else if (type === AUTH_OAUTH_1) {
+      return <OAuth1Auth />;
+    } else if (type === AUTH_BEARER) {
       return <BearerAuth />;
+    } else if (type === AUTH_DIGEST) {
+      return <DigestAuth />;
+    } else if (type === AUTH_NTLM) {
+      return <NTLMAuth />;
+    } else if (type === AUTH_AWS_IAM) {
+      return <AWSAuth />;
+    } else if (type === AUTH_NETRC) {
+      return <NetrcAuth />;
+    } else if (type === AUTH_ASAP) {
+      return <AsapAuth />;
     }
 
     return;
   }
 
   render() {
-    const { type } = this.state;
-
     return (
       <Modal ref={this._handleSetModalRef} freshState>
         <ModalHeader>Manage Authentication</ModalHeader>
 
-        <ModalBody noScroll className="auth-modal">
+        <ModalBody className="auth-modal">
           <div className="pad">
-            <div className="form-row">
-              <div className="form-control form-control--outlined">
-                <label>
-                  Type
-                  <select defaultValue={type} onChange={this._handleSelectType}>
-                    {defaultTypes.map(authType => (
-                      <option key={authType} value={authType}>
-                        {getAuthTypeName(authType, true) || 'No Authentication'}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            </div>
+            <AuthSelectType changeType={this._handleChangeType} />
 
             {this.renderAuthBody()}
           </div>
@@ -115,16 +117,14 @@ class AuthenticationModal extends PureComponent<Props> {
   }
 }
 
-const AuthenticationModalFCRF: ForwardRefRenderFunction<AuthenticationModal, Omit<Props, 'handleRender' | 'workspace'>> = (props, ref) => {
-  const { handleRender } = useNunjucks();
+const AuthenticationModalFCRF: ForwardRefRenderFunction<AuthenticationModal, Omit<Props, 'authentication'>> = (props, ref) => {
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
   return (
     <AuthenticationModal
       ref={ref}
-      workspace={activeWorkspace}
+      authentication={activeWorkspace?.authentication}
       {...props}
-      handleRender={handleRender}
     />
   );
 };
