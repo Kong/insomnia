@@ -25,18 +25,17 @@ export async function getAuthHeader(
   renderedRequest: RenderedRequest,
   url: string,
 ) {
-  const { method, body, workspaceAuthentication } = renderedRequest;
-  let { authentication } = renderedRequest;
-
+  const {
+    method,
+    body,
+    workspaceAuthentication,
+    authentication: requestAuthentication,
+  } = renderedRequest;
   const requestId = renderedRequest._id;
 
-  if (authentication.type === AUTH_INHERIT && workspaceAuthentication) {
-    if (workspaceAuthentication.disabled) {
-      return;
-    }
-
-    authentication = workspaceAuthentication;
-  }
+  const authentication = requestAuthentication.type === AUTH_INHERIT ?
+    workspaceAuthentication :
+    requestAuthentication;
 
   if (authentication.disabled) {
     return;

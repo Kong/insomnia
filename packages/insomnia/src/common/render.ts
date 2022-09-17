@@ -36,7 +36,7 @@ export type RenderedRequest = Request & {
     disabled?: boolean;
   }[];
   cookieJar: CookieJar;
-  workspaceAuthentication?: WorkspaceAuthentication;
+  workspaceAuthentication: WorkspaceAuthentication;
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
@@ -509,8 +509,8 @@ export async function getRenderedRequestAndContext(
     renderedRequest.authentication = {};
   }
 
-  if (renderedWorkspaceAuthentication && renderedWorkspaceAuthentication.disabled) {
-    renderedWorkspaceAuthentication = undefined;
+  if (!renderedWorkspaceAuthentication || renderedWorkspaceAuthentication?.disabled) {
+    renderedWorkspaceAuthentication = {};
   }
 
   // Default the proto if it doesn't exist
