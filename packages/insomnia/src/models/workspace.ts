@@ -12,35 +12,7 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-export interface WorkspaceAuthentication {
-  type: string;
-  disabled: boolean;
-  username?: string;
-  password?: string;
-  token?: string;
-  prefix?: string;
-  signatureMethod?: string;
-  consumerKey?: string;
-  consumerSecret?: string;
-  tokenKey?: string;
-  tokenSecret?: string;
-  privateKey?: string;
-  version?: string;
-  nonce?: string;
-  timestamp?: string;
-  callback?: string;
-  grantType?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  sessionToken?: string;
-  algorithm?: string;
-  issuer?: string;
-  subject?: string;
-  audience?: string;
-  additionalClaims?: string;
-  keyId?: string;
-  useISO88591?: string;
-}
+export type WorkspaceAuthentication = Record<string, any>;
 
 interface GenericWorkspace<Scope extends 'design' | 'collection'> {
   name: string;
