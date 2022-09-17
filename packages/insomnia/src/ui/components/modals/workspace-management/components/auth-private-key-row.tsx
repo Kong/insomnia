@@ -4,8 +4,8 @@ import { toKebabCase } from '../../../../../common/misc';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
 import { useActiveWorkspace } from '../../../../hooks/use-active-workspace';
 import { HelpTooltip } from '../../../help-tooltip';
-import { showModal } from '../../../modals';
-import { CodePromptModal } from '../../../modals/code-prompt-modal';
+import { showModal } from '../..';
+import { CodePromptModal } from '../../code-prompt-modal';
 import { AuthRow } from './auth-row';
 
 const PRIVATE_KEY_PLACEHOLDER = `
