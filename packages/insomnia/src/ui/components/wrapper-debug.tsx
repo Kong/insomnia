@@ -19,7 +19,7 @@ import {
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
-import { ManageDropdown } from './dropdowns/manage-dropdown';
+import { ManagementDropdown } from './dropdowns/management-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
@@ -103,7 +103,7 @@ export const WrapperDebug: FC<Props> = ({
             workspace={activeWorkspace}
           />
 
-          <ManageDropdown />
+          <ManagementDropdown />
         </div>
 
         <SidebarFilter

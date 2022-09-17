@@ -9,7 +9,7 @@ import { KeydownBinder } from '../keydown-binder';
 import { showAuthenticationModal } from '../modals/authentication-modal';
 import { showCookiesModal } from '../modals/cookies-modal';
 
-export const ManageDropdown: FC = () => {
+export const ManagementDropdown: FC = () => {
   const dropdownRef = useRef<DropdownHandle>(null);
 
   const onKeydown = useCallback((event: KeyboardEvent) => {
@@ -24,7 +24,7 @@ export const ManageDropdown: FC = () => {
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
             <div className="sidebar__menu__thing__text">
-              Manage
+              Management
             </div>
 
             <i className="space-left fa fa-caret-down" />
