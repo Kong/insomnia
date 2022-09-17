@@ -1,14 +1,15 @@
 import React, { FC, useCallback } from 'react';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { WorkspaceAuthentication } from '../../../../../models/workspace';
 import { useActiveWorkspace } from '../../../../hooks/use-active-workspace';
 import { Button } from '../../../base/button';
+import { HelpTooltip } from '../../../help-tooltip';
 import { AuthRow } from './auth-row';
 
 interface AuthInputRowProps {
   label: string;
-  property: keyof WorkspaceAuthentication;
+  property: string;
+  help?: string;
   onTitle?: string;
   offTitle?: string;
   invert?: boolean;
@@ -20,6 +21,7 @@ export const AuthToggleRow: FC<AuthInputRowProps> = ({
   label,
   property,
   invert,
+  help,
   onTitle = 'Disable item',
   offTitle = 'Enable item',
 }) => {
@@ -37,7 +39,7 @@ export const AuthToggleRow: FC<AuthInputRowProps> = ({
     <AuthRow className="form-control form-control--outlined row">
       <Button
         id={id}
-        className="btn btn--super-duper-compact"
+        className="btn btn--super-duper-compact no-margin-top"
         title={title}
         onClick={onClick}
         value={!databaseValue}
@@ -45,7 +47,10 @@ export const AuthToggleRow: FC<AuthInputRowProps> = ({
         <ToggleIcon isOn={isActuallyOn} />
       </Button>
 
-      <label htmlFor={id}>{label}</label>
+      <div className="vertically-center" style={{ gap: 'var(--padding-sm)' }}>
+        <label className="no-margin-top" htmlFor={id}>{label}</label>
+        {help ? <HelpTooltip>{help}</HelpTooltip> : null}
+      </div>
     </AuthRow>
   );
 };
