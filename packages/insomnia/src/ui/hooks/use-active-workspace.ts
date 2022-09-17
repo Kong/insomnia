@@ -17,7 +17,6 @@ export const useActiveWorkspace = () => {
   }, [activeWorkspace]);
 
   const { authentication } = activeWorkspace;
-
   const patchAuth = useCallback((patch: Partial<Workspace['authentication']>) => updateAuth({ ...authentication, ...patch }), [authentication, updateAuth]);
 
   return {
