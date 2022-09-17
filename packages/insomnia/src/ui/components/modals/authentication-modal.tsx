@@ -33,7 +33,7 @@ import {
   NetrcAuth,
   NTLMAuth,
   OAuth1Auth,
-} from './workspace-preferences';
+} from './workspace-management';
 
 interface Props extends ModalProps {
   authentication?: WorkspaceAuthentication;
