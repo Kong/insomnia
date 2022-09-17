@@ -5,8 +5,9 @@ import { database } from '../../../common/database';
 import { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import { GrpcRequest } from '../../../models/grpc-request';
+import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
-import { RequestGroup } from '../../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { WebSocketRequest } from '../../../models/websocket-request';
 
 export type DnDDragProps = ReturnType<typeof sourceCollect>;
@@ -103,8 +104,10 @@ const moveDoc = async ({
   }
 
   function __updateDoc(doc: BaseModel, patch: any) {
-    // @ts-expect-error -- TSCONVERSION
-    return models.getModel(docToMove.type).update(doc, patch);
+    if (isRequestGroup(doc)) {
+      return models.requestGroup.update(doc, patch);
+    }
+    return requestOperations.update(doc, patch);
   }
 
   if (!targetId) {
@@ -116,6 +119,7 @@ const moveDoc = async ({
   // NOTE: using requestToTarget's parentId so we can switch parents!
   const docs = [
     ...(await models.request.findByParentId(parentId)),
+    ...(await models.webSocketRequest.findByParentId(parentId)),
     ...(await models.grpcRequest.findByParentId(parentId)),
     ...(await models.requestGroup.findByParentId(parentId)),
   ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));

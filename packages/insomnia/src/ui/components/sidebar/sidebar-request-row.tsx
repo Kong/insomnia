@@ -5,32 +5,33 @@ import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
+import { stats, workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { createRequest } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace } from '../../redux/selectors';
+import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
 import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-actions-dropdown';
 import { GrpcSpinner } from '../grpc-spinner';
-import { showModal } from '../modals/index';
+import { showModal, showPrompt } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
+import { ConnectionCircle } from '../websockets/action-bar';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
-  handleSetActiveRequest: Function;
-  handleDuplicateRequest: Function;
   isActive: boolean;
   isPinned: boolean;
   request?: Request | GrpcRequest | WebSocketRequest;
@@ -60,8 +61,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   connectDropTarget,
   disableDragAndDrop,
   filter,
-  handleSetActiveRequest,
-  handleDuplicateRequest,
   isActive,
   isDragging,
   isDraggingOver,
@@ -73,9 +72,48 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const activeWorkspaceId = activeWorkspace?._id;
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const handleSetActiveRequest = useCallback(() => {
+    if (!request || isActive) {
+      return;
+    }
+
+    if (activeWorkspaceMeta) {
+      workspaceMeta.update(activeWorkspaceMeta, {
+        activeRequestId: request._id,
+      });
+    }
+    updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
+  }, [activeWorkspaceMeta, isActive, request]);
+
+  const handleDuplicateRequest = useCallback(() => {
+    if (!request) {
+      return;
+    }
+
+    showPrompt({
+      title: 'Duplicate Request',
+      defaultValue: request.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: async (name: string) => {
+        const newRequest = await requestOperations.duplicate(request, {
+          name,
+        });
+        if (activeWorkspaceMeta) {
+          await workspaceMeta.update(activeWorkspaceMeta, {
+            activeRequestId: newRequest._id,
+          });
+        }
+        await updateRequestMetaByParentId(newRequest._id, { lastActive: Date.now() });
+        stats.incrementCreatedRequests();
+      },
+    });
+  }, [activeWorkspaceMeta, request]);
 
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
@@ -121,14 +159,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       workspaceId: activeWorkspaceId,
     });
   }, [requestGroup?._id, activeWorkspaceId]);
-
-  const handleRequestActivate = useCallback(() => {
-    if (isActive) {
-      return;
-    }
-
-    handleSetActiveRequest(request?._id);
-  }, [isActive, request?._id, handleSetActiveRequest]);
 
   const handleShowRequestSettings = useCallback(() => {
     showModal(RequestSettingsModal, { request });
@@ -180,9 +210,9 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
         setRenderedUrl(requestUrl);
       })
       .catch(() => {
-      // Certain things, such as invalid variable tags and Prompts
-      // without titles will result in a failure to parse. Can't do
-      // much else, so let's just give them the unrendered URL
+        // Certain things, such as invalid variable tags and Prompts
+        // without titles will result in a failure to parse. Can't do
+        // much else, so let's just give them the unrendered URL
         setRenderedUrl(request.url);
       });
 
@@ -226,7 +256,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
         >
           <button
             className="wide"
-            onClick={handleRequestActivate}
+            onClick={handleSetActiveRequest}
             onContextMenu={handleShowRequestActions}
           >
             <div className="sidebar__clickable">
@@ -247,7 +277,14 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                   />
                 )}
               />
-              <GrpcSpinner requestId={request._id} className="margin-right-sm" />
+              {isGrpcRequest(request) && (
+                <GrpcSpinner
+                  requestId={request._id}
+                  className="margin-right-sm"
+                />)}
+              {isWebSocketRequest(request) && (
+                <WebSocketSpinner requestId={request._id} />
+              )}
             </div>
           </button>
           <div className="sidebar__actions">
@@ -296,3 +333,8 @@ _SidebarRequestRow.displayName = 'SidebarRequestRow';
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(_SidebarRequestRow);
 export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+
+const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useWSReadyState(requestId);
+  return readyState === ReadyState.OPEN ? <ConnectionCircle /> : null;
+};

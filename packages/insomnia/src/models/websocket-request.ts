@@ -1,6 +1,6 @@
 import { database } from '../common/database';
 import type { BaseModel } from '.';
-import { RequestAuthentication, RequestHeader } from './request';
+import { RequestAuthentication, RequestHeader, RequestParameter } from './request';
 
 export const name = 'WebSocket Request';
 
@@ -10,8 +10,7 @@ export const prefix = 'ws-req';
 
 export const canDuplicate = true;
 
-// @TODO: enable this at some point
-export const canSync = false;
+export const canSync = true;
 
 export interface BaseWebSocketRequest {
   name: string;
@@ -19,6 +18,8 @@ export interface BaseWebSocketRequest {
   metaSortKey: number;
   headers: RequestHeader[];
   authentication: RequestAuthentication;
+  parameters: RequestParameter[];
+  settingEncodeUrl: boolean;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -37,6 +38,8 @@ export const init = (): BaseWebSocketRequest => ({
   metaSortKey: -1 * Date.now(),
   headers: [],
   authentication: {},
+  parameters: [],
+  settingEncodeUrl: true,
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;
@@ -73,7 +76,7 @@ export async function duplicate(request: WebSocketRequest, patch: Partial<WebSoc
     },
   };
   // @ts-expect-error -- Database TSCONVERSION
-  const [nextRequest] = await db.find<WebSocketRequest>(type, q, {
+  const [nextRequest] = await database.find<WebSocketRequest>(type, q, {
     metaSortKey: 1,
   });
   const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
@@ -88,5 +91,7 @@ export async function duplicate(request: WebSocketRequest, patch: Partial<WebSoc
 }
 
 export const getById = (_id: string) => database.getWhere<WebSocketRequest>(type, { _id });
+
+export const findByParentId = (parentId: string) => database.find<WebSocketRequest>(type, { parentId });
 
 export const all = () => database.all<WebSocketRequest>(type);

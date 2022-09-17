@@ -12,11 +12,10 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import { update } from '../../../../models/helpers/request-operations';
+import * as models from '../../../../models';
 import type {
   Request,
   RequestBodyParameter,
-  RequestHeader,
 } from '../../../../models/request';
 import {
   newBodyFile,
@@ -37,7 +36,6 @@ import { RawEditor } from './raw-editor';
 import { UrlEncodedEditor } from './url-encoded-editor';
 
 interface Props {
-  onChangeHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -45,7 +43,6 @@ interface Props {
 }
 
 export const BodyEditor: FC<Props> = ({
-  onChangeHeaders,
   request,
   workspace,
   settings,
@@ -54,28 +51,28 @@ export const BodyEditor: FC<Props> = ({
   const handleRawChange = useCallback((rawValue: string) => {
     const oldContentType = request.body.mimeType || '';
     const body = newBodyRaw(rawValue, oldContentType);
-    update(request, { body });
+    models.request.update(request, { body });
   }, [request]);
 
   const handleGraphQLChange = useCallback((content: string) => {
     const body = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
-    update(request, { body });
+    models.request.update(request, { body });
   }, [request]);
 
   const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
     const body = newBodyFormUrlEncoded(parameters);
-    update(request, { body });
+    models.request.update(request, { body });
   }, [request]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
     const body = newBodyForm(parameters);
-    update(request, { body });
+    models.request.update(request, { body });
   }, [request]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
     const body = newBodyFile(path);
-    const newRequest = await update(request, { body });
+    const newRequest = await models.request.update(request, { body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
@@ -100,7 +97,7 @@ export const BodyEditor: FC<Props> = ({
         </p>,
         onDone: (saidYes: boolean) => {
           if (saidYes) {
-            onChangeHeaders(newRequest, headers);
+            models.request.update(newRequest, { headers });
           }
         },
       });

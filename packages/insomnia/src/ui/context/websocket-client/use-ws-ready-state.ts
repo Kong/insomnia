@@ -10,19 +10,22 @@ export function useWSReadyState(requestId: string): ReadyState {
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CLOSED);
 
   useEffect(() => {
+    let isMounted = true;
     window.main.webSocket.readyState.getCurrent({ requestId })
       .then((currentReadyState: ReadyState) => {
-        setReadyState(currentReadyState);
+        isMounted && setReadyState(currentReadyState);
       });
-  }, [requestId]);
 
-  useEffect(() => {
     const unsubscribe = window.main.on(`webSocket.${requestId}.readyState`,
       (_, incomingReadyState: ReadyState) => {
-        setReadyState(incomingReadyState);
+        isMounted && setReadyState(incomingReadyState);
       });
 
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+
   }, [requestId]);
 
   return readyState;

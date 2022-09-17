@@ -1,27 +1,31 @@
 import React, { FC, FormEvent, useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
+import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import {  selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { RequestParametersEditor } from '../editors/request-parameters-editor';
+import { ErrorBoundary } from '../error-boundary';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
 
 const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
 
-const EditorWrapper = styled.div({
-  height: '100%',
-});
 const SendMessageForm = styled.form({
   width: '100%',
   height: '100%',
@@ -36,6 +40,10 @@ const SendButton = styled.button({
   borderRadius: 'var(--radius-md)',
   ':hover': {
     filter: 'brightness(0.8)',
+  },
+  ':enabled': {
+    background: 'var(--color-surprise)',
+    color: 'var(--color-font-surprise)',
   },
 });
 const PaneSendButton = styled.div({
@@ -54,28 +62,32 @@ const PaneHeader = styled(OriginalPaneHeader)({
 interface FormProps {
   request: WebSocketRequest;
   previewMode: string;
-  initialValue: string;
   environmentId: string;
-  createOrUpdatePayload: (payload: string, mode: string) => Promise<void>;
 }
+
+const PayloadTabPanel = styled(TabPanel)({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  width: '100%',
+});
 
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
   previewMode,
-  initialValue,
-  createOrUpdatePayload,
   environmentId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
+
   useEffect(() => {
-    let isMounted = true;
-    if (isMounted) {
-      editorRef.current?.codeMirror?.setValue(initialValue);
+    async function initMessageText(): Promise<void> {
+      const payload = await models.webSocketPayload.getByParentId(request._id);
+      const msg = payload?.value || '';
+      editorRef.current?.codeMirror?.setValue(msg);
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [initialValue]);
+
+    initMessageText();
+  }, [request._id]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -109,21 +121,32 @@ const WebSocketRequestForm: FC<FormProps> = ({
     }
   };
 
+  const upsertPayloadWithValue = async (value: string) => {
+    const payload = await models.webSocketPayload.getByParentId(request._id);
+    if (payload) {
+      await models.webSocketPayload.update(payload, { value });
+    } else {
+      await models.webSocketPayload.create({
+        parentId: request._id,
+        value,
+        mode: previewMode,
+      });
+    }
+  };
+
   // TODO(@dmarby): Wrap the CodeEditor in a NunjucksEnabledProvider here?
   // To allow for disabling rendering of messages based on a per-request setting.
   // Same as with regular requests
   return (
     <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
-      <EditorWrapper>
-        <CodeEditor
-          uniquenessKey={request._id}
-          mode={previewMode}
-          ref={editorRef}
-          defaultValue=''
-          onChange={value => createOrUpdatePayload(value, previewMode)}
-          enableNunjucks
-        />
-      </EditorWrapper>
+      <CodeEditor
+        manualPrettify
+        uniquenessKey={request._id}
+        mode={previewMode}
+        ref={editorRef}
+        onChange={upsertPayloadWithValue}
+        enableNunjucks
+      />
     </SendMessageForm>
   );
 };
@@ -131,16 +154,16 @@ const WebSocketRequestForm: FC<FormProps> = ({
 interface Props {
   request: WebSocketRequest;
   workspaceId: string;
-  environmentId: string;
-  forceRefreshKey: number;
+  environment: Environment | null;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environmentId, forceRefreshKey }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
   const readyState = useWSReadyState(request._id);
+  const { useBulkParametersEditor } = useSelector(selectSettings);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
   const handleOnChange = (url: string) => {
@@ -149,14 +172,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
     }
   };
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
-  const [initialValue, setInitialValue] = useState('');
 
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
       const payload = await models.webSocketPayload.getByParentId(request._id);
       if (isMounted && payload) {
-        setInitialValue(payload.value);
         setPreviewMode(payload.mode);
       }
     };
@@ -168,24 +189,29 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
 
   const changeMode = (mode: string) => {
     setPreviewMode(mode);
-    createOrUpdatePayload(initialValue, mode);
+    upsertPayloadWithMode(mode);
   };
 
-  const createOrUpdatePayload = async (value: string, mode: string) => {
+  const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
     const payload = await models.webSocketPayload.getByParentId(request._id);
     if (payload) {
-      await models.webSocketPayload.update(payload, { value, mode });
-      return;
+      await models.webSocketPayload.update(payload, { mode });
+    } else {
+      await models.webSocketPayload.create({
+        parentId: request._id,
+        value: '',
+        mode,
+      });
     }
-    await models.webSocketPayload.create({
-      parentId: request._id,
-      value,
-      mode,
-    });
   };
 
-  const uniqueKey = `${forceRefreshKey}::${request._id}`;
+  const gitVersion = useGitVCSVersion();
+  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const activeRequestMeta = useSelector(selectActiveRequestMeta);
+
+  // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniqueKey = `${environment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   return (
     <Pane type="request">
@@ -194,7 +220,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           key={uniqueKey}
           request={request}
           workspaceId={workspaceId}
-          environmentId={environmentId}
+          environmentId={environment?._id || ''}
           defaultValue={request.url}
           readyState={readyState}
           onChange={handleOnChange}
@@ -208,11 +234,14 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           <Tab tabIndex="-1">
             <AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />
           </Tab>
+          <Tab tabIndex='-1'>
+            <button>Query</button>
+          </Tab>
           <Tab tabIndex="-1">
             <button>Headers</button>
           </Tab>
         </TabList>
-        <TabPanel className="react-tabs__tab-panel">
+        <PayloadTabPanel className="react-tabs__tab-panel">
           <PaneSendButton>
             <SendButton
               type="submit"
@@ -226,23 +255,43 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             key={uniqueKey}
             request={request}
             previewMode={previewMode}
-            initialValue={initialValue}
-            createOrUpdatePayload={createOrUpdatePayload}
-            environmentId={environmentId}
+            environmentId={environment?._id || ''}
+          />
+        </PayloadTabPanel>
+        <TabPanel className="react-tabs__tab-panel">
+          <AuthWrapper
+            key={uniqueKey}
+            disabled={disabled}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
-          <AuthWrapper
-            key={`${uniqueKey}-${request.authentication.type}-auth-header`}
-            disabled={
-              readyState === ReadyState.OPEN ||
-              readyState === ReadyState.CLOSING
-            }
-          />
+          <div className="pad pad-bottom-sm query-editor__preview">
+            <label className="label--small no-pad-top">Url Preview</label>
+            <code className="txt-sm block faint">
+              <ErrorBoundary
+                key={uniqueKey}
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
+                <RenderedQueryString request={request} />
+              </ErrorBoundary>
+            </code>
+          </div>
+          <div className="query-editor__editor">
+            <ErrorBoundary
+              key={uniqueKey}
+              errorClassName="tall wide vertically-align font-error pad text-center"
+            >
+              <RequestParametersEditor
+                request={request}
+                bulk={useBulkParametersEditor}
+                disabled={disabled}
+              />
+            </ErrorBoundary>
+          </div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
           <RequestHeadersEditor
-            key={`${uniqueKey}-${readyState}-header-editor`}
+            key={uniqueKey}
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}

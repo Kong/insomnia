@@ -6,8 +6,8 @@ import { Provider } from 'react-redux';
 import configureMockStore, { MockStoreEnhanced } from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
+import { getDropdownContainer } from '../../../../__jest__/dropdown-container';
 import * as models from '../../../../models';
-import { dropdownsContainerId } from '../../base/dropdown/dropdown';
 import { registerModal } from '../../modals';
 import { LoginModal } from '../../modals/login-modal';
 import { AccountDropdownButton } from './account-dropdown';
@@ -32,14 +32,6 @@ export const createMockStoreWithoutPaidFeatureAd = async (disablePaidFeatureAds:
 };
 
 describe('<AccountDropdownButton />', () => {
-  const getDropdownContainer = () => {
-    const container = document.createElement('div');
-    container.setAttribute('id', dropdownsContainerId);
-    document.body.appendChild(container);
-
-    return container;
-  };
-
   test('renders without exploding', async () => {
     const container = getDropdownContainer();
     const store = await createMockStoreWithoutPaidFeatureAd(true);

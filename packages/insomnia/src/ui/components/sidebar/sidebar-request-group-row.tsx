@@ -1,6 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { noop } from 'ramda-adjunct';
 import React, { ElementRef, MouseEvent, PureComponent } from 'react';
 import { PropsWithChildren } from 'react';
 import { createRef } from 'react';
@@ -170,8 +169,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
             children
           ) : (
             <SidebarRequestRow
-              handleSetActiveRequest={noop}
-              handleDuplicateRequest={noop}
               isActive={false}
               requestGroup={requestGroup}
               filter={filter}
