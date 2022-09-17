@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { AUTH_OAUTH_1 } from '../../common/constants';
+import { AUTH_BEARER, AUTH_INHERIT, AUTH_OAUTH_1 } from '../../common/constants';
 import { _buildBearerHeader, getAuthHeader } from '../authentication';
 
 describe('OAuth 1.0', () => {
@@ -141,5 +141,65 @@ describe('_buildBearerHeader()', () => {
       name: 'Authorization',
       value: 'token',
     });
+  });
+});
+
+describe('Inherit Auth', () => {
+  it('uses workspace authentication if inherit', async () => {
+    const request = {
+      url: 'https://insomnia.rest/',
+      method: 'GET',
+      authentication: {
+        type: AUTH_INHERIT,
+      },
+      workspaceAuthentication: {
+        type: AUTH_BEARER,
+        token: 'token',
+      },
+    };
+
+    const header = await getAuthHeader(request, 'http://insomnia.rest/');
+
+    expect(header).toEqual({
+      name: 'Authorization',
+      value: 'Bearer token',
+    });
+  });
+
+  it('uses request authentication if is not inherit', async () => {
+    const request = {
+      url: 'https://insomnia.rest/',
+      method: 'GET',
+      authentication: {
+        type: AUTH_BEARER,
+        token: 'token',
+      },
+    };
+
+    const header = await getAuthHeader(request, 'http://insomnia.rest/');
+
+    expect(header).toEqual({
+      name: 'Authorization',
+      value: 'Bearer token',
+    });
+  });
+
+  it('uses empty authentication if inherit is disabled', async () => {
+    const request = {
+      url: 'https://insomnia.rest/',
+      method: 'GET',
+      authentication: {
+        type: AUTH_INHERIT,
+      },
+      workspaceAuthentication: {
+        type: AUTH_BEARER,
+        token: 'token',
+        disabled: true,
+      },
+    };
+
+    const header = await getAuthHeader(request, 'http://insomnia.rest/');
+
+    expect(header).toBeUndefined();
   });
 });
