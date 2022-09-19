@@ -113,7 +113,6 @@ export const RequestPane: FC<Props> = ({
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  // const activeResponse = useSelector(selectActiveResponse);
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
