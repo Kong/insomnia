@@ -13,9 +13,9 @@ import {
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
 } from '../../common/constants';
+import { database } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import * as requestOperations from '../../models/helpers/request-operations';
 import * as models from '../../models/index';
 import {
   isRequest,
@@ -147,16 +147,19 @@ export class WrapperClass extends PureComponent<Props, State> {
 
       if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
         // Only pull fields that we want to update
-        return requestOperations.update(activeRequest, {
+        return database.update({
+          ...activeRequest,
+          modified: Date.now(),
           url: r.url,
           method: r.method,
           headers: r.headers,
-          // @ts-expect-error -- TSCONVERSION
           body: r.body,
           authentication: r.authentication,
-          // @ts-expect-error -- TSCONVERSION
           parameters: r.parameters,
-        });
+        },
+        // Pass true to indicate that this is an import
+        true
+        );
       }
     } catch (error) {
       // Import failed, that's alright
