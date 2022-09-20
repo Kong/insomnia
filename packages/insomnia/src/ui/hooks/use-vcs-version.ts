@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { database } from '../../common/database';
-import { selectActiveRequest, selectActiveWorkspaceMeta } from '../redux/selectors';
+import { ChangeBufferEvent, database } from '../../common/database';
+import { BaseModel } from '../../models';
+import {
+  selectActiveApiSpec,
+  selectActiveRequest,
+  selectActiveWorkspaceMeta,
+} from '../redux/selectors';
 
 // We use this hook to determine if the active request has been updated from the VCS
 // For example, by pulling a new version from the remote, switching branches, etc.
@@ -11,17 +16,22 @@ export function useActiveRequestSyncVCSVersion() {
   const activeRequest = useSelector(selectActiveRequest);
 
   useEffect(() => {
-    database.onChange(changes => {
-      for (const change of changes) {
-        const [, doc, fromSync] = change;
-
-        // Force refresh if sync changes the active request
-        if (activeRequest?._id === doc._id && fromSync) {
-          setVersion(v => v + 1);
-        }
-      }
-    });
+    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) => changes.find(([, doc, fromSync]) => activeRequest?._id === doc._id && fromSync);
+    database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
   }, [activeRequest?._id]);
+
+  return version;
+}
+
+// We use this hook to determine if the active api spec has been updated from the system
+export function useActiveApiSpecSyncVCSVersion() {
+  const [version, setVersion] = useState(0);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+
+  useEffect(() => {
+    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) => changes.find(([, doc, fromSync]) => activeApiSpec?._id === doc._id && fromSync);
+    database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
+  }, [activeApiSpec?._id]);
 
   return version;
 }
