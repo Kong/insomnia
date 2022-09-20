@@ -99,23 +99,21 @@ export const RequestPane: FC<Props> = ({
       });
     }
   }, [request]);
-
-  const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
-  useMount(() => {
-    requestUrlBarRef.current?.focusInput();
-  });
-  useEffect(() => {
-    requestUrlBarRef.current?.focusInput();
-  }, [
-    request?._id, // happens when the user switches requests
-    settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
-  ]);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+
+  const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
+  useEffect(() => {
+    requestUrlBarRef.current?.focusInput();
+  }, [
+    request?._id, // happens when the user switches requests
+    settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
+    uniqueKey,
+  ]);
 
   if (!request) {
     return (
