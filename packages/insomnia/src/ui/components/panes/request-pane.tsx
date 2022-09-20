@@ -3,7 +3,6 @@ import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insom
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { useMount } from 'react-use';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
