@@ -156,7 +156,7 @@ export const RequestPane: FC<Props> = ({
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
+      <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
         <TabList>
           <Tab tabIndex="-1">
             <ContentTypeDropdown onChange={updateRequestMimeType} />
@@ -246,7 +246,6 @@ export const RequestPane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel header-editor">
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestHeadersEditor
-              key={contentType}
               request={request}
               bulk={settings.useBulkHeaderEditor}
             />
