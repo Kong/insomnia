@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
+import { cookieJar } from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -81,12 +82,14 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     try {
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
       const { url: rawUrl, headers, authentication, parameters } = request;
-      // Render any nunjucks tags in the url/headers/authentication settings
+      // Render any nunjucks tags in the url/headers/authentication settings/cookies
+      const workspaceCookieJar = await cookieJar.getOrCreateForParentId(workspaceId);
       const rendered = await render({
         url: rawUrl,
         headers,
         authentication,
         parameters,
+        workspaceCookieJar,
       }, renderContext);
       const queryString = buildQueryStringFromParams(rendered.parameters);
       const url = joinUrlAndQueryString(rendered.url, queryString);
@@ -96,6 +99,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         url,
         headers: rendered.headers,
         authentication: rendered.authentication,
+        cookieJar: rendered.workspaceCookieJar,
       });
     } catch (err) {
       if (err.type === 'render') {

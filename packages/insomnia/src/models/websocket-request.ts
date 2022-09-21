@@ -20,6 +20,8 @@ export interface BaseWebSocketRequest {
   authentication: RequestAuthentication;
   parameters: RequestParameter[];
   settingEncodeUrl: boolean;
+  settingStoreCookies: boolean;
+  settingSendCookies: boolean;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -40,6 +42,8 @@ export const init = (): BaseWebSocketRequest => ({
   authentication: {},
   parameters: [],
   settingEncodeUrl: true,
+  settingStoreCookies: true,
+  settingSendCookies: true,
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;
