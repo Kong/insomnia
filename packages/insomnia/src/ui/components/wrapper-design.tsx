@@ -2,15 +2,16 @@ import { IRuleResult } from '@stoplight/spectral-core';
 import { Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAsync } from 'react-use';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import { database } from '../../common/database';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
+import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
@@ -35,47 +36,22 @@ interface LintMessage extends Notice {
   range: IRuleResult['range'];
 }
 
-const useDesignEmptyState = () => {
+const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
-  const contents = activeApiSpec?.contents;
-
-  const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
-  const [shouldIncrementCounter, setShouldIncrementCounter] = useState(false);
-
-  useEffect(() => {
-    if (contents && shouldIncrementCounter) {
-      setForceRefreshCounter(forceRefreshCounter => forceRefreshCounter + 1);
-      setShouldIncrementCounter(false);
-    }
-  }, [contents, shouldIncrementCounter]);
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
+  const contents = activeApiSpec?.contents ?? '';
+  const gitVersion = useGitVCSVersion();
+  const syncVersion = useActiveApiSpecSyncVCSVersion();
 
   const onUpdateContents = useCallback(async (value: string) => {
     if (!activeApiSpec) {
       return;
     }
 
-    await models.apiSpec.update({ ...activeApiSpec, contents: value });
-
-    // Because we can't await activeApiSpec.contents to have propageted to redux, we flip a toggle to decide if we should do something when redux does eventually change
-    setShouldIncrementCounter(true);
+    await database.update({ ...activeApiSpec,  modified: Date.now(), contents: value }, true);
   }, [activeApiSpec]);
 
-  const emptyStateNode = contents ? null : (
-    <DesignEmptyState
-      onUpdateContents={onUpdateContents}
-    />
-  );
-
-  const uniquenessKey = `${forceRefreshCounter}::${activeApiSpec?._id}`;
-  return { uniquenessKey, emptyStateNode };
-};
-
-const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
-  const contents = activeApiSpec?.contents ?? '';
-
-  const { uniquenessKey, emptyStateNode } = useDesignEmptyState();
+  const uniquenessKey = `::${activeApiSpec?._id}::${gitVersion}::${syncVersion}`;
 
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
@@ -89,22 +65,30 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
     return debounce(handler, 500);
   }, [activeApiSpec]);
 
-  useAsync(async () => {
+  useEffect(() => {
+    let isMounted = true;
+    const update = async () => {
     // Lint only if spec has content
-    if (contents && contents.length !== 0) {
-      const results: LintMessage[] = (await spectral.run(contents))
-        .filter(isLintError)
-        .map(({ severity, code, message, range }) => ({
-          type: severity === 0 ? 'error' : 'warning',
-          message: `${code} ${message}`,
-          line: range.start.line,
-          // Attach range that will be returned to our click handler
-          range,
-        }));
-      setLintMessages(results);
-    } else {
-      setLintMessages([]);
-    }
+      if (contents && contents.length !== 0) {
+        const results: LintMessage[] = (await spectral.run(contents))
+          .filter(isLintError)
+          .map(({ severity, code, message, range }) => ({
+            type: severity === 0 ? 'error' : 'warning',
+            message: `${code} ${message}`,
+            line: range.start.line,
+            // Attach range that will be returned to our click handler
+            range,
+          }));
+        isMounted && setLintMessages(results);
+      } else {
+        isMounted && setLintMessages([]);
+      }
+    };
+    update();
+
+    return () => {
+      isMounted = false;
+    };
   }, [contents]);
 
   const handleScrollToSelection = useCallback((notice: LintMessage) => {
@@ -134,7 +118,11 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
           onChange={onCodeEditorChange}
           uniquenessKey={uniquenessKey}
         />
-        {emptyStateNode}
+        {contents ? null : (
+          <DesignEmptyState
+            onUpdateContents={onUpdateContents}
+          />
+        )}
       </div>
       {lintMessages.length > 0 && (
         <NoticeTable
