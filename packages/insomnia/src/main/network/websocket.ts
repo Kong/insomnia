@@ -180,7 +180,7 @@ const createWebSocketConnection = async (
       const jar = jarFromCookies(options.cookieJar.cookies);
       const cookieHeader = jar.getCookieStringSync(options.url);
       if (cookieHeader) {
-        lowerCasedEnabledHeaders['Cookie'] = cookieHeader;
+        lowerCasedEnabledHeaders['cookie'] = cookieHeader;
       }
     }
 
