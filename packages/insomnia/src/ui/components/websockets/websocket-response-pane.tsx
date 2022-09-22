@@ -66,7 +66,7 @@ export const WebSocketResponsePane: FC<{ requestId: string }> =
               },
             ]}
             title="Enter a URL and connect to a WebSocket server to start sending data"
-            secondaryAction="Select a payload type from above to send data to the connection"
+            secondaryAction="Select a payload type to send data to the connection"
           />
         </Pane>
       );
