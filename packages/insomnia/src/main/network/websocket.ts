@@ -197,6 +197,7 @@ const createWebSocketConnection = async (
       pfx: pfxCertificates,
       rejectUnauthorized: settings.validateSSL,
       followRedirects,
+      maxRedirects: settings.maxRedirects > 0 ? settings.maxRedirects : undefined,
     });
     WebSocketConnections.set(options.requestId, ws);
 
