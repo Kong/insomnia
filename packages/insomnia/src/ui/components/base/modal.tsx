@@ -60,18 +60,17 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
     setTimeout(() => divRef.current?.focus());
   }, [forceRefreshCounter, freshState, onShow]);
 
-  const isOpen = useCallback(() => open, [open]);
-
   const hide = useCallback(() => {
     setOpen(false);
     onHide?.();
   }, [onHide]);
 
-  const toggle = useCallback(() => {
-    open ? hide() : show();
-  }, [hide, open, show]);
-
-  useImperativeHandle(ref, () => ({ show, hide, toggle, isOpen }), [show, hide, toggle, isOpen]);
+  useImperativeHandle(ref, () => ({
+    show,
+    hide,
+    toggle: open ? hide : show,
+    isOpen: () => open,
+  }), [show, open, hide]);
 
   const classes = classnames(
     'modal',
