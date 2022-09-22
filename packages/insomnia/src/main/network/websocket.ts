@@ -1,6 +1,7 @@
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
+import { jarFromCookies } from 'insomnia-cookies';
 import { setDefaultProtocol } from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -15,15 +16,17 @@ import {
 } from 'ws';
 
 import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
-import { generateId } from '../../common/misc';
+import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';
+import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
+import { addSetCookiesToToughCookieJar } from '../../network/network';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 
 export interface WebSocketConnection extends WebSocket {
@@ -97,6 +100,7 @@ const createWebSocketConnection = async (
     url: string;
     headers: RequestHeader[];
     authentication: RequestAuthentication;
+    cookieJar: CookieJar;
   }
 ): Promise<void> => {
   const existingConnection = WebSocketConnections.get(options.requestId);
@@ -172,6 +176,14 @@ const createWebSocketConnection = async (
       }
     });
 
+    if (request.settingSendCookies && options.cookieJar.cookies.length) {
+      const jar = jarFromCookies(options.cookieJar.cookies);
+      const cookieHeader = jar.getCookieStringSync(options.url);
+      if (cookieHeader) {
+        lowerCasedEnabledHeaders['cookie'] = cookieHeader;
+      }
+    }
+
     const ws = new WebSocket(options.url, {
       headers: lowerCasedEnabledHeaders,
       cert: pemCertificates,
@@ -186,7 +198,6 @@ const createWebSocketConnection = async (
       // @ts-expect-error -- private property
       const internalRequestHeader = ws._req._header;
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
@@ -199,10 +210,30 @@ const createWebSocketConnection = async (
         elapsedTime: performance.now() - start,
         timelinePath,
         eventLogPath: responseBodyPath,
+        settingSendCookies: request.settingSendCookies,
+        settingStoreCookies: request.settingStoreCookies,
       };
+
       const settings = await models.settings.getOrCreate();
       models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+
+      if (request.settingStoreCookies) {
+        const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
+        const totalSetCookies = setCookieStrings.length;
+        if (totalSetCookies) {
+          const currentUrl = request.url;
+          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: options.cookieJar });
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+          if (hasCookiesToPersist) {
+            await models.cookieJar.update(options.cookieJar, { cookies });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+          }
+        }
+      }
+
+      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
     });
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
       incomingMessage.on('data', chunk => {
@@ -224,6 +255,8 @@ const createWebSocketConnection = async (
         elapsedTime: performance.now() - start,
         timelinePath,
         eventLogPath: responseBodyPath,
+        settingSendCookies: request.settingSendCookies,
+        settingStoreCookies: request.settingStoreCookies,
       };
       const settings = await models.settings.getOrCreate();
       models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
@@ -402,6 +435,7 @@ export interface WebSocketBridgeAPI {
     url: string;
     headers: RequestHeader[];
     authentication: RequestAuthentication;
+    cookieJar: CookieJar;
   }) => void;
   close: typeof closeWebSocketConnection;
   closeAll: typeof closeAllWebSocketConnections;

@@ -13,6 +13,12 @@ export function startWebSocketServer(server: Server) {
   });
 
   wsServer.on('connection', handleConnection);
+
+  wsServer.on('headers', (headers, request) => {
+    if (request.url === '/cookies') {
+      headers.push('Set-Cookie: insomnia-websocket-test-cookie=foo');
+    }
+  });
 }
 
 const handleConnection = (ws: WebSocket, req: IncomingMessage) => {
