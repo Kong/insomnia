@@ -61,8 +61,8 @@ export const WebSocketResponsePane: FC<{ requestId: string }> =
             icon={<i className="fa fa-paper-plane" />}
             documentationLinks={[
               {
-                title: 'Introduction to Insomnia',
-                url: 'https://docs.insomnia.rest/insomnia/get-started',
+                title: 'Introduction to WebSockets in Insomnia',
+                url: 'https://docs.insomnia.rest/insomnia/requests',
               },
             ]}
             title="Enter a URL and connect to a WebSocket server to start sending data"
