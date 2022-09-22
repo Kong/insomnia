@@ -64,7 +64,6 @@ import { SyncDeleteModal } from './modals/sync-delete-modal';
 import { SyncHistoryModal } from './modals/sync-history-modal';
 import { SyncMergeModal } from './modals/sync-merge-modal';
 import { SyncStagingModal } from './modals/sync-staging-modal';
-import { WebSocketRequestSettingsModal } from './modals/websocket-request-settings-modal';
 import { WorkspaceDuplicateModal } from './modals/workspace-duplicate-modal';
 import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from './modals/workspace-settings-modal';
@@ -296,8 +295,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
             <CodePromptModal ref={registerModal} />
-            <RequestSettingsModal ref={registerModal} />
-            <WebSocketRequestSettingsModal ref={instance => registerModal(instance, 'WebSocketRequestSettingsModal')} />
+            <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
             <RequestGroupSettingsModal ref={registerModal} />
 
             {activeWorkspace ? <>

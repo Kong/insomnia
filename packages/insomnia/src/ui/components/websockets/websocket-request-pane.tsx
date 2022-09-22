@@ -21,7 +21,7 @@ import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
-import { WebSocketRequestSettingsModal } from '../modals/websocket-request-settings-modal';
+import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
@@ -209,11 +209,11 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
   };
 
   const handleEditDescription = useCallback(() => {
-    showModal(WebSocketRequestSettingsModal, { request });
+    showModal(RequestSettingsModal, { request });
   }, [request]);
 
   const handleEditDescriptionAdd = useCallback(() => {
-    showModal(WebSocketRequestSettingsModal, { request, forceEditMode: true });
+    showModal(RequestSettingsModal, { request, forceEditMode: true });
   }, [request]);
 
   const gitVersion = useGitVCSVersion();
