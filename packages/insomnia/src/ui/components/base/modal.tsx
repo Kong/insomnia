@@ -25,7 +25,7 @@ export interface ModalProps {
 }
 
 export interface ModalHandle {
-  show: () => void;
+  show: (options?: { onHide: () => void }) => void;
   hide: () => void;
   toggle: () => void;
   isOpen: () => boolean;
@@ -38,7 +38,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   freshState,
   noEscape,
   onCancel,
-  onHide,
+  onHide: onHideProp,
   onKeyDown,
   onShow,
   skinny,
@@ -48,27 +48,29 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   const [open, setOpen] = useState(false);
   const [forceRefreshCounter, setForceRefreshCounter] = useState(0);
   const [zIndex, setZIndex] = useState(globalZIndex);
-
+  const [onHideArgument, setOnHideArgument] = useState<() => void>();
   const divRef = useRef<HTMLDivElement>(null);
 
-  const show = useCallback(() => {
+  const show: ModalHandle['show'] = useCallback(options => {
+    options?.onHide && setOnHideArgument(options.onHide);
     setOpen(true);
     setZIndex(globalZIndex++);
     setForceRefreshCounter(forceRefreshCounter + (freshState ? 1 : 0));
     onShow?.();
 
-    setTimeout(() => divRef.current?.focus());
+    divRef.current?.focus();
   }, [forceRefreshCounter, freshState, onShow]);
 
   const hide = useCallback(() => {
     setOpen(false);
-    onHide?.();
-  }, [onHide]);
+    onHideProp?.();
+    onHideArgument?.();
+  }, [onHideProp, onHideArgument]);
 
   useImperativeHandle(ref, () => ({
     show,
     hide,
-    toggle: open ? hide : show,
+    toggle: () => open ? hide() : show(),
     isOpen: () => open,
   }), [show, open, hide]);
 
