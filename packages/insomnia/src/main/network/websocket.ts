@@ -188,7 +188,7 @@ const createWebSocketConnection = async (
       'off': false,
       'on': true,
       'global': settings.followRedirects,
-    }[request.settingFollowRedirects] || true;
+    }[request.settingFollowRedirects] ?? true;
 
     const ws = new WebSocket(options.url, {
       headers: lowerCasedEnabledHeaders,

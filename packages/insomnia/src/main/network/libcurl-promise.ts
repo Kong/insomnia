@@ -180,7 +180,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       'off': false,
       'on': true,
       'global': settings.followRedirects,
-    }[req.settingFollowRedirects] || true;
+    }[req.settingFollowRedirects] ?? true;
 
     curl.setOpt(Curl.option.FOLLOWLOCATION, followRedirects);
 
