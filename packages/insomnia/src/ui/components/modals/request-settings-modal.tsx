@@ -258,15 +258,14 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     </label>
                   </div> */}
                 </div>
-                {/* <div className="form-control form-control--outlined">
+                <div className="form-control form-control--outlined">
                   <label>
                     Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
                     <select
-                      // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-                      defaultValue={state.request?.settingFollowRedirects}
+                      defaultValue={request?.settingFollowRedirects}
                       name="settingFollowRedirects"
                       onChange={async event => {
-                        const updated = await models.request.update(request, {
+                        const updated = await requestOperations.update(request, {
                           [event.currentTarget.name]: event.currentTarget.value,
                         });
                         setState({ ...state, request: updated });
@@ -277,7 +276,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <option value={'on'}>Follow redirects</option>
                     </select>
                   </label>
-                </div> */}
+                </div>
               </>
               <hr />
               <div className="form-row">
@@ -441,8 +440,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                   <label>
                     Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
                     <select
-                      // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-                      defaultValue={state.request?.settingFollowRedirects}
+                      defaultValue={request?.settingFollowRedirects}
                       name="settingFollowRedirects"
                       onChange={async event => {
                         const updated = await models.request.update(request, {
