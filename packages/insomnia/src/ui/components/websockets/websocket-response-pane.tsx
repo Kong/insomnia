@@ -61,7 +61,7 @@ export const WebSocketResponsePane: FC<{ requestId: string }> =
             icon={<i className="fa fa-paper-plane" />}
             documentationLinks={[
               {
-                title: 'Introduction to Websockets in Insomnia',
+                title: 'Introduction to WebSockets in Insomnia',
                 url: 'https://docs.insomnia.rest/insomnia/requests',
               },
             ]}
