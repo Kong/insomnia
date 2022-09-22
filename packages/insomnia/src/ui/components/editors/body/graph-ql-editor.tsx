@@ -9,6 +9,7 @@ import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonN
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import { json as jsonPrettify } from 'insomnia-prettify';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import prettier from 'prettier';
 import { complement } from 'ramda';
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
@@ -19,6 +20,7 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
+import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import type { Request } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
@@ -142,12 +144,21 @@ export const GraphQLEditor: FC<Props> = props => {
     if (!url) {
       return;
     }
-    // @TODO: headers, auth, cookies
+    const { request, environmentId } = props;
+    const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+    // Render any nunjucks tags in the url/headers/authentication settings
+    const rendered = await render({
+      url: request.url,
+      headers: request.headers,
+      authentication: request.authentication,
+      parameters: request.parameters,
+    }, renderContext);
+    const queryString = buildQueryStringFromParams(rendered.parameters);
+
     let response: AxiosResponse;
     try {
-      console.log(url);
       response = await axiosRequest({
-        url: new URL(url).toString(),
+        url: joinUrlAndQueryString(rendered.url, queryString),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         data: {
