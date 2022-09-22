@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import classnames from 'classnames';
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -69,9 +68,7 @@ interface GraphQLBody {
 
 interface Props {
   onChange: Function;
-  content: string;
   request: Request;
-  workspace: Workspace;
   settings: Settings;
   environmentId: string;
   className?: string;
@@ -88,10 +85,17 @@ interface State {
   documentAST: null | DocumentNode;
   disabledOperationMarkers: (TextMarker | undefined)[];
 }
-export const GraphQLEditor: FC<Props> = props => {
+export const GraphQLEditor: FC<Props> = ({
+  request,
+  environmentId,
+  settings,
+  onChange,
+  className,
+  uniquenessKey,
+}) => {
   let maybeBody: GraphQLBody;
   try {
-    maybeBody = JSON.parse(props.content);
+    maybeBody = JSON.parse(request.body.text || '');
   } catch (err) {
     maybeBody = { query: '' };
   }
@@ -144,20 +148,18 @@ export const GraphQLEditor: FC<Props> = props => {
     if (!url) {
       return;
     }
-    const { request, environmentId } = props;
-    const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-    // Render any nunjucks tags in the url/headers/authentication settings
-    const rendered = await render({
-      url: request.url,
-      headers: request.headers,
-      authentication: request.authentication,
-      parameters: request.parameters,
-    }, renderContext);
-    const queryString = buildQueryStringFromParams(rendered.parameters);
-
-    let response: AxiosResponse;
     try {
-      response = await axiosRequest({
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      // Render any nunjucks tags in the url/headers/authentication settings
+      const rendered = await render({
+        url: request.url,
+        headers: request.headers,
+        authentication: request.authentication,
+        parameters: request.parameters,
+      }, renderContext);
+      const queryString = buildQueryStringFromParams(rendered.parameters);
+
+      const response = await axiosRequest({
         url: joinUrlAndQueryString(rendered.url, queryString),
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -179,13 +181,13 @@ export const GraphQLEditor: FC<Props> = props => {
     } catch (err) {
       return { schemaFetchError: { message: err.message } };
     }
-  }, []);
+  }, [environmentId, request]);
 
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
       setSchemaIsFetching(true);
-      const newState = await fetchAndSetSchema(props.request.url);
+      const newState = await fetchAndSetSchema(request.url);
 
       isMounted && setSchemaFetchError(newState?.schemaFetchError);
       isMounted && newState?.schema && setSchema(newState.schema);
@@ -196,7 +198,7 @@ export const GraphQLEditor: FC<Props> = props => {
     return () => {
       isMounted = false;
     };
-  }, [fetchAndSetSchema, props.request, state]);
+  }, [fetchAndSetSchema, request, state]);
 
   const getCurrentOperation = () => {
     if (!editorRef.current) {
@@ -238,8 +240,8 @@ export const GraphQLEditor: FC<Props> = props => {
     const { variables, query } = body;
     const prettyQuery = prettier.format(query, {
       parser: 'graphql',
-      useTabs: props.settings.editorIndentWithTabs,
-      tabWidth: props.settings.editorIndentSize,
+      useTabs: settings.editorIndentWithTabs,
+      tabWidth: settings.editorIndentSize,
     });
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
@@ -297,7 +299,7 @@ export const GraphQLEditor: FC<Props> = props => {
     // again after a refresh
     setState({ ...state, hideSchemaFetchErrors: false });
     setSchemaIsFetching(true);
-    fetchAndSetSchema(props.request.url);
+    fetchAndSetSchema(request.url);
     setSchemaIsFetching(false);
   };
 
@@ -333,7 +335,7 @@ export const GraphQLEditor: FC<Props> = props => {
       }
     }
     setState({ ...state, variablesSyntaxError: '', body });
-    props.onChange(JSON.stringify(body));
+    onChange(JSON.stringify(body));
 
     if (!documentAST || !editorRef.current) {
       return;
@@ -363,7 +365,7 @@ export const GraphQLEditor: FC<Props> = props => {
   };
 
   const renderSchemaFetchMessage = () => {
-    if (!props.request.url) {
+    if (!request.url) {
       return '';
     }
     if (schemaIsFetching) {
@@ -417,10 +419,6 @@ export const GraphQLEditor: FC<Props> = props => {
   };
 
   const {
-    className,
-    uniquenessKey,
-  } = props;
-  const {
     hideSchemaFetchErrors,
     variablesSyntaxError,
     activeReference,
@@ -429,7 +427,7 @@ export const GraphQLEditor: FC<Props> = props => {
   const { operationName } = state.body;
   let body: GraphQLBody;
   try {
-    body = JSON.parse(props.content);
+    body = JSON.parse(request.body.text || '');
   } catch (err) {
     body = { query: '' };
   }
