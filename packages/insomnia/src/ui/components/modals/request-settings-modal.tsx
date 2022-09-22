@@ -226,37 +226,6 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       />
                     </label>
                   </div>
-                  {/* <div className="form-control form-control--thin">
-                    <label>
-                      Automatically encode special characters in URL
-                      <input
-                        type="checkbox"
-                        name="settingEncodeUrl"
-                        checked={request['settingEncodeUrl']}
-                        onChange={toggleCheckBox}
-                      />
-                      <HelpTooltip position="top" className="space-left">
-                        Automatically encode special characters at send time (does not apply to query
-                        parameters editor)
-                      </HelpTooltip>
-                    </label>
-                  </div> */}
-                  {/* <div className="form-control form-control--thin">
-                    <label>
-                      Rebuild path dot sequences
-                      <HelpTooltip position="top" className="space-left">
-                        This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
-                        URL's path part and that is supposed to be removed according to RFC 3986 section
-                        5.2.4
-                      </HelpTooltip>
-                      <input
-                        type="checkbox"
-                        name="settingRebuildPath"
-                        checked={request['settingRebuildPath']}
-                        onChange={toggleCheckBox}
-                      />
-                    </label>
-                  </div> */}
                 </div>
                 <div className="form-control form-control--outlined">
                   <label>
