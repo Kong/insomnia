@@ -183,9 +183,6 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       modalRef.current?.hide();
     },
     show: options => {
-      if (modalRef.current?.isOpen()) {
-        return;
-      }
       setState(state => ({
         ...state,
         maxRequests: options?.maxRequests ?? 20,
@@ -194,7 +191,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
         hideNeverActiveRequests: !!options?.hideNeverActiveRequests,
         selectOnKeyup: !!options?.selectOnKeyup,
         title: options?.title || null,
-        isModalVisible: false,
+        isModalVisible: true,
       }));
       handleChangeValue('');
       modalRef.current?.show();
