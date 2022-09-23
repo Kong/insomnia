@@ -87,7 +87,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         url: request.url,
         headers: request.headers,
         authentication: request.authentication,
-        parameters: request.parameters,
+        parameters: request.parameters.filter(p => !p.disabled),
         workspaceCookieJar,
       }, renderContext);
       window.main.webSocket.open({
