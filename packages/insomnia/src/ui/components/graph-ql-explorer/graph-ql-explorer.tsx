@@ -2,10 +2,8 @@ import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
 import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { DebouncedInput } from '../base/debounced-input';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { GraphQLExplorerEnum } from './graph-ql-explorer-enum';
 import { GraphQLExplorerField } from './graph-ql-explorer-field';
 import { GraphQLExplorerSchema } from './graph-ql-explorer-schema';
@@ -133,6 +131,21 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     });
   };
 
+  useGlobalKeyboardShortcuts({
+    'GRAPHQL_EXPLORER_FOCUS_FILTER': () => {
+      setState(state => ({
+        ...state,
+        currentType: undefined,
+        currentField: undefined,
+        history: addToHistory(state),
+      }));
+      if (inputRef.current) {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    },
+  });
+
   if (!visible) {
     return null;
   }
@@ -212,25 +225,20 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     name = lastHistoryItem.currentType.name;
   }
   return (
-    <KeydownBinder
-      onKeydown={event => {
-        executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
-          setState(state => ({
-            ...state,
-            currentType: undefined,
-            currentField: undefined,
-            history: addToHistory(state),
-          }));
-          if (inputRef.current) {
-            inputRef.current?.focus();
-            inputRef.current?.select();
-          }
-        });
-      }}
-    >
-      <div className="graphql-explorer theme--dialog">
-        <div className="graphql-explorer__header">
-          {history.length ?
+    <div className="graphql-explorer theme--dialog">
+      <div className="graphql-explorer__header">
+        {history.length ?
+          (<a
+            href="#"
+            className="graphql-explorer__header__back-btn"
+            onClick={event => {
+              event.preventDefault();
+              handlePopHistory();
+            }}
+          >
+            <i className="fa--skinny fa fa-angle-left" /> {name}
+          </a>)
+          : typeOrField ?
             (<a
               href="#"
               className="graphql-explorer__header__back-btn"
@@ -239,30 +247,18 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
                 handlePopHistory();
               }}
             >
-              <i className="fa--skinny fa fa-angle-left" /> {name}
+              <i className="fa--skinny fa fa-angle-left" /> Schema
             </a>)
-            : typeOrField ?
-              (<a
-                href="#"
-                className="graphql-explorer__header__back-btn"
-                onClick={event => {
-                  event.preventDefault();
-                  handlePopHistory();
-                }}
-              >
-                <i className="fa--skinny fa fa-angle-left" /> Schema
-              </a>)
-              : null}
-          <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
-          <button
-            className="btn btn--compact graphql-explorer__header__close-btn"
-            onClick={handleClose}
-          >
-            <i className="fa fa-close" />
-          </button>
-        </div>
-        <div className="graphql-explorer__body">{child}</div>
+            : null}
+        <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
+        <button
+          className="btn btn--compact graphql-explorer__header__close-btn"
+          onClick={handleClose}
+        >
+          <i className="fa fa-close" />
+        </button>
       </div>
-    </KeydownBinder>
+      <div className="graphql-explorer__body">{child}</div>
+    </div>
   );
 };
