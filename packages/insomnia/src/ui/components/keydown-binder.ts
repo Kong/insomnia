@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { KeyCombination } from 'insomnia-common';
+import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
 import { useEffect } from 'react';
 import { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
@@ -86,35 +86,29 @@ export class KeydownBinder extends PureComponent<Props> {
     return this.props.children ?? null;
   }
 }
+const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
+  `${ctrl ? 'Control+' : ''}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${meta ? 'Meta+' : ''}` + Object.keys(keyboardKeys).find(keyName => keyboardKeys[keyName].keyCode === keyCode);
+
+const transformBehaviourIntoHotKeyVariations = (hotKeyRegistry: HotKeyRegistry, behaviour: HotKeyName): KeyCombination[] =>
+  getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefs[behaviour].id]);
 
 export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in HotKeyName]?: (event: KeyboardEvent) => any }) {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
 
   useEffect(() => {
-    const finalListeners: KeyBindingMap = {};
-    Object.entries(listeners).map(([key, listener]) => {
-      const keyDefinition = hotKeyRefs[key as HotKeyName];
-      const bindings = hotKeyRegistry[keyDefinition.id];
-
-      const keyCombList = getPlatformKeyCombinations(bindings);
-
-      for (const keyComb of keyCombList) {
-        const parseKeyComb = (keyComb: KeyCombination) => {
-          const { ctrl, alt, shift, meta, keyCode } = keyComb;
-
-          // Get the key from the keyCode from the event
-          const key = Object.keys(keyboardKeys).find(
-            keyName => keyboardKeys[keyName].keyCode === keyCode,
-          );
-
-          return `${ctrl ? 'Control+' : ''}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${meta ? 'Meta+' : ''}${key}`;
-        };
-
-        finalListeners[parseKeyComb(keyComb)] = listener;
-      }
-    });
-
-    const unsubscribe = tinykeys(target, finalListeners);
+    // behaviour: a screaming snake case key and a function which triggers an action
+    // eg. `SHOW_AUTOCOMPLETE` and `onThis`
+    const behaviours = Object.entries(listeners);
+    // makes a copy of each listener for each hot key variation for a given behaviour
+    // hot key variations are multiple hotkeys that can trigger the same behaviour
+    // eg. Control+Space, Control+Shift+Space both could trigger SHOW_AUTOCOMPLETE
+    const hotkeyVariationsByBehaviour = behaviours.map(([behaviour, action]) =>
+      transformBehaviourIntoHotKeyVariations(hotKeyRegistry, behaviour as HotKeyName)
+        .map(combo => ({ tinyKeyString: keyCombinationToTinyKeyString(combo), action })));
+    // nested arrays to object
+    const keyBindingMap: KeyBindingMap = hotkeyVariationsByBehaviour.flat()
+      .reduce((acc, { tinyKeyString, action }) => ({ ...acc, [tinyKeyString]: action }), {});
+    const unsubscribe = tinykeys(target, keyBindingMap);
     return unsubscribe;
   }, [hotKeyRegistry, listeners, target]);
 }
