@@ -47,7 +47,7 @@ import { showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import RequestSwitcherModal from '../components/modals/request-switcher-modal';
+import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
 import { showSelectModal } from '../components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
