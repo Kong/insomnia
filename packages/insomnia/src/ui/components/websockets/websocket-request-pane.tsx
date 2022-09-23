@@ -1,4 +1,4 @@
-import React, { FC, FormEvent, useEffect, useRef, useState } from 'react';
+import React, { FC, FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
@@ -18,8 +18,10 @@ import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { MarkdownPreview } from '../markdown-preview';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
+import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
@@ -206,6 +208,14 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
     }
   };
 
+  const handleEditDescription = useCallback(() => {
+    showModal(RequestSettingsModal, { request });
+  }, [request]);
+
+  const handleEditDescriptionAdd = useCallback(() => {
+    showModal(RequestSettingsModal, { request, forceEditMode: true });
+  }, [request]);
+
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
@@ -239,6 +249,16 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           </Tab>
           <Tab tabIndex="-1">
             <button>Headers</button>
+          </Tab>
+          <Tab tabIndex="-1">
+            <button>
+              Docs
+              {request.description && (
+                <span className="bubble space-left">
+                  <i className="fa fa--skinny fa-check txt-xxs" />
+                </span>
+              )}
+            </button>
           </Tab>
         </TabList>
         <PayloadTabPanel className="react-tabs__tab-panel">
@@ -296,6 +316,47 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
           />
+        </TabPanel>
+        <TabPanel>
+          {request.description ? (
+            <div>
+              <div className="pull-right pad bg-default">
+                <button className="btn btn--clicky" onClick={handleEditDescription}>
+                  Edit
+                </button>
+              </div>
+              <div className="pad">
+                <ErrorBoundary errorClassName="font-error pad text-center">
+                  <MarkdownPreview
+                    heading={request.name}
+                    markdown={request.description}
+                  />
+                </ErrorBoundary>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-hidden editor vertically-center text-center">
+              <p className="pad text-sm text-center">
+                <span className="super-faint">
+                  <i
+                    className="fa fa-file-text-o"
+                    style={{
+                      fontSize: '8rem',
+                      opacity: 0.3,
+                    }}
+                  />
+                </span>
+                <br />
+                <br />
+                <button
+                  className="btn btn--clicky faint"
+                  onClick={handleEditDescriptionAdd}
+                >
+                  Add Description
+                </button>
+              </p>
+            </div>
+          )}
         </TabPanel>
       </Tabs>
     </Pane>

@@ -184,13 +184,20 @@ const createWebSocketConnection = async (
       }
     }
 
+    const followRedirects = {
+      'off': false,
+      'on': true,
+      'global': settings.followRedirects,
+    }[request.settingFollowRedirects] ?? true;
+
     const ws = new WebSocket(options.url, {
       headers: lowerCasedEnabledHeaders,
       cert: pemCertificates,
       key: pemCertificateKeys,
       pfx: pfxCertificates,
       rejectUnauthorized: settings.validateSSL,
-      followRedirects: true,
+      followRedirects,
+      maxRedirects: settings.maxRedirects > 0 ? settings.maxRedirects : undefined,
     });
     WebSocketConnections.set(options.requestId, ws);
 

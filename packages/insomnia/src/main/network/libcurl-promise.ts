@@ -36,7 +36,7 @@ interface RequestUsedHere {
   method: string;
   body: { mimeType?: string | null };
   authentication: Record<string, any>;
-  settingFollowRedirects: string;
+  settingFollowRedirects: 'global' | 'on' | 'off';
   settingRebuildPath: boolean;
   settingSendCookies: boolean;
   url: string;
@@ -176,13 +176,14 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     }
     debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
 
-    if (req.settingFollowRedirects === 'off') {
-      curl.setOpt(Curl.option.FOLLOWLOCATION, false);
-    } else if (req.settingFollowRedirects === 'on') {
-      curl.setOpt(Curl.option.FOLLOWLOCATION, true);
-    } else {
-      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-    }
+    const followRedirects = {
+      'off': false,
+      'on': true,
+      'global': settings.followRedirects,
+    }[req.settingFollowRedirects] ?? true;
+
+    curl.setOpt(Curl.option.FOLLOWLOCATION, followRedirects);
+
     // Don't rebuild dot sequences in path
     if (!req.settingRebuildPath) {
       curl.setOpt(Curl.option.PATH_AS_IS, true);

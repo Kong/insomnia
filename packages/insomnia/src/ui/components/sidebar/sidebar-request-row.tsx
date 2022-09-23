@@ -295,6 +295,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                 handleDuplicateRequest={handleDuplicateRequest}
                 request={request}
                 isPinned={isPinned}
+                handleShowSettings={handleShowRequestSettings}
               />
             ) : (
               <RequestActionsDropdown

@@ -75,7 +75,7 @@ export function init(
       renderedRequest.settingDisableRenderRequestBody = enabled;
     },
 
-    settingFollowRedirects(enabled: string) {
+    settingFollowRedirects(enabled: 'global' | 'on' | 'off') {
       renderedRequest.settingFollowRedirects = enabled;
     },
 

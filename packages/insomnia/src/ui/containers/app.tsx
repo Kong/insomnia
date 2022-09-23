@@ -149,9 +149,10 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_SETTINGS,
         () => {
-          if (this.props.activeRequest) {
+          const { activeRequest } = this.props;
+          if (activeRequest) {
             showModal(RequestSettingsModal, {
-              request: this.props.activeRequest,
+              request: activeRequest,
             });
           }
         },

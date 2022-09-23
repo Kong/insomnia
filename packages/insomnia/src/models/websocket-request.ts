@@ -14,6 +14,7 @@ export const canSync = true;
 
 export interface BaseWebSocketRequest {
   name: string;
+  description: string;
   url: string;
   metaSortKey: number;
   headers: RequestHeader[];
@@ -22,6 +23,7 @@ export interface BaseWebSocketRequest {
   settingEncodeUrl: boolean;
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
+  settingFollowRedirects: 'global' | 'on' | 'off';
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -44,6 +46,8 @@ export const init = (): BaseWebSocketRequest => ({
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,
+  settingFollowRedirects: 'global',
+  description: '',
 });
 
 export const migrate = (doc: WebSocketRequest) => doc;

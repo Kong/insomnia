@@ -90,7 +90,7 @@ export interface BaseRequest {
   settingDisableRenderRequestBody: boolean;
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
-  settingFollowRedirects: string;
+  settingFollowRedirects: 'global' | 'on' | 'off';
 }
 
 export type Request = BaseModel & BaseRequest;
