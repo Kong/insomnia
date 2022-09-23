@@ -1,4 +1,5 @@
 import React, { FC, useCallback } from 'react';
+import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { update } from '../../../models/helpers/request-operations';
@@ -11,12 +12,18 @@ interface Props {
   bulk: boolean;
   isDisabled?: boolean;
   request: Request | WebSocketRequest;
+  noWrap?: boolean;
 }
+
+const ScrollableContainer = styled.div<{ noWrap?: boolean }>(({ noWrap }) => ({
+  position: noWrap ? 'initial' : 'relative',
+}));
 
 export const RequestHeadersEditor: FC<Props> = ({
   request,
   bulk,
   isDisabled,
+  noWrap = false,
 }) => {
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
@@ -74,7 +81,10 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   return (
-    <div className="pad-bottom scrollable-container">
+    <ScrollableContainer
+      noWrap={noWrap}
+      className="pad-bottom scrollable-container"
+    >
       <div className="scrollable">
         <KeyValueEditor
           sortable
@@ -89,6 +99,6 @@ export const RequestHeadersEditor: FC<Props> = ({
           isWebSocketRequest={isWebSocketRequest(request)}
         />
       </div>
-    </div>
+    </ScrollableContainer>
   );
 };

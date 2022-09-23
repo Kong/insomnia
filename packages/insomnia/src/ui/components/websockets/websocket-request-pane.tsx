@@ -61,7 +61,26 @@ const PaneSendButton = styled.div({
 const PaneHeader = styled(OriginalPaneHeader)({
   '&&': { alignItems: 'stretch' },
 });
+const PaneReadOnlyBannerContainer = styled.div({
+  paddingTop: 'var(--padding-md)',
+  paddingLeft: 'var(--padding-md)',
+  paddingRight: 'var(--padding-md)',
+});
+const PaneReadOnlyBanner = () => {
+  return (
+    <PaneReadOnlyBannerContainer>
+      <p className="notice info no-margin-top no-margin-bottom">
+        This section is now locked since the connection has already been established. To change these settings, please disconnect first.
+      </p>
+    </PaneReadOnlyBannerContainer>
+  );
+};
 
+const HeaderTabWrapper = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+});
 interface FormProps {
   request: WebSocketRequest;
   previewMode: string;
@@ -74,6 +93,11 @@ const PayloadTabPanel = styled(TabPanel)({
   flexDirection: 'column',
   height: '100%',
   width: '100%',
+});
+
+const HeaderEditorsWrapper = styled.div({
+  flex: 1,
+  position: 'relative',
 });
 
 const WebSocketRequestForm: FC<FormProps> = ({
@@ -305,12 +329,14 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           />
         </PayloadTabPanel>
         <TabPanel className="react-tabs__tab-panel">
+          {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
             disabled={disabled}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel">
+          {disabled && <PaneReadOnlyBanner />}
           <div className="pad pad-bottom-sm query-editor__preview">
             <label className="label--small no-pad-top">Url Preview</label>
             <code className="txt-sm block faint">
@@ -336,21 +362,19 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           </div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
+          <HeaderTabWrapper>
+            {disabled && <PaneReadOnlyBanner />}
+            <HeaderEditorsWrapper>
+              <RequestHeadersEditor
+                noWrap
+                key={uniqueKey}
+                request={request}
+                bulk={false}
+                isDisabled={readyState === ReadyState.OPEN}
+              />
+            </HeaderEditorsWrapper>
 
-          <div>
-            <div className="notice info margin-bottom no-margin-top">
-              <p>
-                This section is now locked since the connection has already been established. To change these settings, please disconnect first.
-              </p>
-            </div>
-          </div>
-          <RequestHeadersEditor
-            key={uniqueKey}
-            request={request}
-            bulk={false}
-            isDisabled={readyState === ReadyState.OPEN}
-
-          />
+          </HeaderTabWrapper>
         </TabPanel>
         <TabPanel>
           {request.description ? (
