@@ -336,11 +336,20 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           </div>
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel header-editor">
+
+          <div>
+            <div className="notice info margin-bottom no-margin-top">
+              <p>
+                This section is now locked since the connection has already been established. To change these settings, please disconnect first.
+              </p>
+            </div>
+          </div>
           <RequestHeadersEditor
             key={uniqueKey}
             request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
+
           />
         </TabPanel>
         <TabPanel>
