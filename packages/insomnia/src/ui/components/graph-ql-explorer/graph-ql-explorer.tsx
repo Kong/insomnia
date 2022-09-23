@@ -1,10 +1,7 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
 import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
-import React, { FC, PureComponent, useCallback, useEffect, useRef, useState } from 'react';
-import { createRef } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { DebouncedInput } from '../base/debounced-input';
