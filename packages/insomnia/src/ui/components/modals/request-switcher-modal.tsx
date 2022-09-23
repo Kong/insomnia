@@ -28,6 +28,7 @@ import { ModalHeader } from '../base/modal-header';
 import { KeydownBinder } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
+import { WebSocketTag } from '../tags/websocket-tag';
 import { wrapToIndex } from './utils';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
@@ -471,6 +472,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
                       <div className="margin-left-xs faint">
                         {isRequest(r) ? <MethodTag method={r.method} /> : null}
                         {isGrpcRequest(r) ? <GrpcTag /> : null}
+                        {isWebSocketRequest(r) ? <WebSocketTag /> : null}
                         {<Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url} />}
                       </div>
                     </Button>
