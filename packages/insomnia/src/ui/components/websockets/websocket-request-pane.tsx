@@ -1,4 +1,5 @@
-import React, { FC, FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
@@ -10,7 +11,7 @@ import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import {  selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
+import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
@@ -34,20 +35,20 @@ const SendMessageForm = styled.form({
   position: 'relative',
   boxSizing: 'border-box',
 });
-const SendButton = styled.button({
-  padding: '0 var(--padding-md)',
-  marginLeft: 'var(--padding-xs)',
-  height: '100%',
-  border: '1px solid var(--hl-lg)',
-  borderRadius: 'var(--radius-md)',
-  ':hover': {
-    filter: 'brightness(0.8)',
-  },
-  ':enabled': {
-    background: 'var(--color-surprise)',
-    color: 'var(--color-font-surprise)',
-  },
-});
+const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) =>
+  ({
+    padding: '0 var(--padding-md)',
+    marginLeft: 'var(--padding-xs)',
+    height: '100%',
+    border: '1px solid var(--hl-lg)',
+    borderRadius: 'var(--radius-md)',
+    background: isConnected ? 'var(--color-surprise)' : 'inherit',
+    color: isConnected ? 'var(--color-font-surprise)' : 'inherit',
+    ':hover': {
+      filter: 'brightness(0.8)',
+    },
+  }));
+
 const PaneSendButton = styled.div({
   display: 'flex',
   flexDirection: 'row',
@@ -65,6 +66,7 @@ interface FormProps {
   request: WebSocketRequest;
   previewMode: string;
   environmentId: string;
+  workspaceId: string;
 }
 
 const PayloadTabPanel = styled(TabPanel)({
@@ -78,29 +80,46 @@ const WebSocketRequestForm: FC<FormProps> = ({
   request,
   previewMode,
   environmentId,
+  workspaceId,
 }) => {
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
   useEffect(() => {
-    async function initMessageText(): Promise<void> {
+    const init = async () => {
       const payload = await models.webSocketPayload.getByParentId(request._id);
       const msg = payload?.value || '';
       editorRef.current?.codeMirror?.setValue(msg);
-    }
+    };
 
-    initMessageText();
+    init();
   }, [request._id]);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const message = editorRef.current?.getValue() || '';
-
+  // NOTE: Nunjucks interpolation can throw errors
+  const interpolateOpenAndSend = async (payload: string) => {
     try {
-      // Render any nunjucks tag in the message
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      const renderedMessage = await render(message, renderContext);
-
-      window.main.webSocket.event.send({ requestId: request._id, message: renderedMessage });
+      const renderedMessage = await render(payload, renderContext);
+      const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
+      if (readyState !== ReadyState.OPEN) {
+        const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+        const rendered = await render({
+          url: request.url,
+          headers: request.headers,
+          authentication: request.authentication,
+          parameters: request.parameters,
+          workspaceCookieJar,
+        }, renderContext);
+        window.main.webSocket.open({
+          requestId: request._id,
+          workspaceId,
+          url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
+          headers: rendered.headers,
+          authentication: rendered.authentication,
+          cookieJar: rendered.workspaceCookieJar,
+          initialPayload: renderedMessage,
+        });
+        return;
+      }
+      window.main.webSocket.event.send({ requestId: request._id, payload: renderedMessage });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -140,7 +159,13 @@ const WebSocketRequestForm: FC<FormProps> = ({
   // To allow for disabling rendering of messages based on a per-request setting.
   // Same as with regular requests
   return (
-    <SendMessageForm id="websocketMessageForm" onSubmit={handleSubmit}>
+    <SendMessageForm
+      id="websocketMessageForm"
+      onSubmit={event => {
+        event.preventDefault();
+        interpolateOpenAndSend(editorRef.current?.getValue() || '');
+      }}
+    >
       <CodeEditor
         manualPrettify
         uniquenessKey={request._id}
@@ -266,7 +291,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             <SendButton
               type="submit"
               form="websocketMessageForm"
-              disabled={readyState !== ReadyState.OPEN}
+              isConnected={readyState === ReadyState.OPEN}
             >
               Send
             </SendButton>
@@ -276,6 +301,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             request={request}
             previewMode={previewMode}
             environmentId={environment?._id || ''}
+            workspaceId={workspaceId}
           />
         </PayloadTabPanel>
         <TabPanel className="react-tabs__tab-panel">

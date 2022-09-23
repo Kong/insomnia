@@ -91,17 +91,18 @@ const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMes
   ];
   return { timeline, responseHeaders, statusCode, statusMessage, httpVersion };
 };
-
-const createWebSocketConnection = async (
+interface OpenWebSocketRequestOptions {
+  requestId: string;
+  workspaceId: string;
+  url: string;
+  headers: RequestHeader[];
+  authentication: RequestAuthentication;
+  cookieJar: CookieJar;
+  initialPayload?: string;
+}
+const openWebSocketConnection = async (
   event: Electron.IpcMainInvokeEvent,
-  options: {
-    requestId: string;
-    workspaceId: string;
-    url: string;
-    headers: RequestHeader[];
-    authentication: RequestAuthentication;
-    cookieJar: CookieJar;
-  }
+  options: OpenWebSocketRequestOptions
 ): Promise<void> => {
   const existingConnection = WebSocketConnections.get(options.requestId);
 
@@ -282,6 +283,10 @@ const createWebSocketConnection = async (
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n');
       event.sender.send(readyStateChannel, ws.readyState);
+
+      if (options.initialPayload) {
+        sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
+      }
     });
 
     ws.addEventListener('message', ({ data }: MessageEvent) => {
@@ -369,17 +374,8 @@ const getWebSocketReadyState = async (
   return WebSocketConnections.get(options.requestId)?.readyState ?? 0;
 };
 
-const sendWebSocketEvent = async (
-  options: { message: string; requestId: string }
-): Promise<void> => {
-  const ws = WebSocketConnections.get(options.requestId);
-
-  if (!ws) {
-    console.warn('No websocket found for requestId: ' + options.requestId);
-    return;
-  }
-
-  ws.send(options.message, error => {
+const sendPayload = async (ws: WebSocket, options: { payload: string; requestId: string }): Promise<void> => {
+  ws.send(options.payload, error => {
     // @TODO: We might want to set a status in the WebSocketMessageEvent
     // and update it here based on the error. e.g. status = 'sending' | 'sent' | 'error'
     if (error) {
@@ -392,7 +388,7 @@ const sendWebSocketEvent = async (
   const lastMessage: WebSocketMessageEvent = {
     _id: uuidV4(),
     requestId: options.requestId,
-    data: options.message,
+    data: options.payload,
     direction: 'OUTGOING',
     type: 'message',
     timestamp: Date.now(),
@@ -404,6 +400,19 @@ const sendWebSocketEvent = async (
     console.error('something went wrong');
     return;
   }
+};
+
+const sendWebSocketEvent = async (
+  options: { payload: string; requestId: string }
+): Promise<void> => {
+  const ws = WebSocketConnections.get(options.requestId);
+
+  if (!ws) {
+    console.warn('No websocket found for requestId: ' + options.requestId);
+    return;
+  }
+
+  sendPayload(ws, options);
 };
 
 const closeWebSocketConnection = async (
@@ -436,14 +445,7 @@ const findMany = async (
 };
 
 export interface WebSocketBridgeAPI {
-  create: (options: {
-    requestId: string;
-    workspaceId: string;
-    url: string;
-    headers: RequestHeader[];
-    authentication: RequestAuthentication;
-    cookieJar: CookieJar;
-  }) => void;
+  open: (options: OpenWebSocketRequestOptions) => void;
   close: typeof closeWebSocketConnection;
   closeAll: typeof closeAllWebSocketConnections;
   readyState: {
@@ -451,11 +453,11 @@ export interface WebSocketBridgeAPI {
   };
   event: {
     findMany: typeof findMany;
-    send: (options: { requestId: string; message: string }) => void;
+    send: typeof sendWebSocketEvent;
   };
 }
 export const registerWebSocketHandlers = () => {
-  ipcMain.handle('webSocket.create', createWebSocketConnection);
+  ipcMain.handle('webSocket.open', openWebSocketConnection);
   ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
   ipcMain.handle('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
   ipcMain.handle('webSocket.closeAll', closeAllWebSocketConnections);
