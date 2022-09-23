@@ -21,14 +21,14 @@ import {
   generateId,
 } from '../../common/misc';
 import * as models from '../../models';
-import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
-import { Request, updateMimeType } from '../../models/request';
+import { Request } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
+import { WebSocketRequest } from '../../models/websocket-request';
 import { isWorkspace } from '../../models/workspace';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
@@ -54,7 +54,7 @@ import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
-import { type WrapperClass, Wrapper } from '../components/wrapper';
+import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
@@ -88,8 +88,6 @@ export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof ma
 interface State {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  forceRefreshCounter: number;
-  forceRefreshHeaderCounter: number;
   isMigratingChildren: boolean;
 }
 
@@ -97,7 +95,6 @@ interface State {
 class App extends PureComponent<AppProps, State> {
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _wrapper: WrapperClass | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: AppProps) {
@@ -106,8 +103,6 @@ class App extends PureComponent<AppProps, State> {
     this.state = {
       vcs: null,
       gitVCS: null,
-      forceRefreshCounter: 0,
-      forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
     };
 
@@ -154,9 +149,10 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_SETTINGS,
         () => {
-          if (this.props.activeRequest) {
+          const { activeRequest } = this.props;
+          if (activeRequest) {
             showModal(RequestSettingsModal, {
-              request: this.props.activeRequest,
+              request: activeRequest,
             });
           }
         },
@@ -266,7 +262,7 @@ class App extends PureComponent<AppProps, State> {
     ];
   }
 
-  _requestDuplicate(request?: Request | GrpcRequest) {
+  _requestDuplicate(request?: Request | GrpcRequest | WebSocketRequest) {
     if (!request) {
       return;
     }
@@ -347,36 +343,6 @@ class App extends PureComponent<AppProps, State> {
     }, 2000);
   }
 
-  async _handleUpdateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    if (!this.props.activeRequest) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(
-      this.props.activeRequest._id,
-    );
-    const savedBody = requestMeta.savedRequestBody;
-    const saveValue =
-      typeof mimeType !== 'string' // Switched to No body
-        ? this.props.activeRequest.body
-        : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, {
-      savedRequestBody: saveValue,
-    });
-    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
-    const newRequest = await updateMimeType(this.props.activeRequest, mimeType, false, savedBody);
-    // Force it to update, because other editor components (header editor)
-    // needs to change. Need to wait a delay so the next render can finish
-    setTimeout(() => {
-      this.setState({
-        forceRefreshHeaderCounter: this.state.forceRefreshHeaderCounter + 1,
-      });
-    }, 500);
-    return newRequest;
-  }
-
   _handleKeyDown(event: KeyboardEvent) {
     for (const [definition, callback] of this._globalKeyMap) {
       executeHotKey(event, definition, callback);
@@ -385,10 +351,6 @@ class App extends PureComponent<AppProps, State> {
 
   static _handleShowSettingsModal(tabIndex?: number) {
     showModal(SettingsModal, tabIndex);
-  }
-
-  _setWrapperRef(wrapper: WrapperClass) {
-    this._wrapper = wrapper;
   }
 
   async _handleReloadPlugins() {
@@ -436,13 +398,6 @@ class App extends PureComponent<AppProps, State> {
     this._updateDocumentTitle();
 
     this._ensureWorkspaceChildren();
-
-    // Force app refresh if login state changes
-    if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
-      this.setState(state => ({
-        forceRefreshCounter: state.forceRefreshCounter + 1,
-      }));
-    }
 
     // Check on VCS things
     const { activeWorkspace, activeProject, activeGitRepository } = this.props;
@@ -571,37 +526,15 @@ class App extends PureComponent<AppProps, State> {
     }
   }
 
-  async _handleDbChange(changes: ChangeBufferEvent[]) {
-    let needsRefresh = false;
-
+  async listenforWorkspaceDelete(changes: ChangeBufferEvent[]) {
     for (const change of changes) {
-      const [type, doc, fromSync] = change;
+      const [type, doc] = change;
       const { vcs } = this.state;
-      const { activeRequest } = this.props;
-
-      // Force refresh if environment changes
-      // TODO: Only do this for environments in this workspace (not easy because they're nested)
-      if (isEnvironment(doc)) {
-        console.log('[App] Forcing update from environment change', change);
-        needsRefresh = true;
-      }
-
-      // Force refresh if sync changes the active request
-      if (fromSync && activeRequest && doc._id === activeRequest._id) {
-        needsRefresh = true;
-        console.log('[App] Forcing update from request change', change);
-      }
 
       // Delete VCS project if workspace deleted
       if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
         await vcs.removeBackendProjectsForRoot(doc._id);
       }
-    }
-
-    if (needsRefresh) {
-      setTimeout(() => {
-        this._wrapper?._forceRequestPaneRefresh();
-      }, 300);
     }
   }
 
@@ -615,7 +548,7 @@ class App extends PureComponent<AppProps, State> {
     // Update VCS
     await this._updateVCS();
     await this._updateGitVCS();
-    db.onChange(this._handleDbChange);
+    db.onChange(this.listenforWorkspaceDelete);
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
@@ -734,7 +667,7 @@ class App extends PureComponent<AppProps, State> {
   }
 
   componentWillUnmount() {
-    db.offChange(this._handleDbChange);
+    db.offChange(this.listenforWorkspaceDelete);
   }
 
   async _ensureWorkspaceChildren() {
@@ -799,14 +732,12 @@ class App extends PureComponent<AppProps, State> {
       return null;
     }
 
-    const { activeWorkspace } = this.props;
+    const { activeWorkspace, isLoggedIn } = this.props;
     const {
       gitVCS,
       vcs,
-      forceRefreshCounter,
-      forceRefreshHeaderCounter,
     } = this.state;
-    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace?._id || 'n/a'}`;
+    const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
@@ -816,11 +747,7 @@ class App extends PureComponent<AppProps, State> {
             <div className="app" key={uniquenessKey}>
               <ErrorBoundary showAlert>
                 <Wrapper
-                  ref={this._setWrapperRef}
-                  handleDuplicateRequest={this._requestDuplicate}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                  headerEditorKey={forceRefreshHeaderCounter + ''}
                   vcs={vcs}
                   gitVCS={gitVCS}
                 />

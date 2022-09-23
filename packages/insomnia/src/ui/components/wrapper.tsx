@@ -13,21 +13,17 @@ import {
   ACTIVITY_UNIT_TEST,
   AUTOBIND_CFG,
 } from '../../common/constants';
+import { database } from '../../common/database';
 import { importRaw } from '../../common/import';
 import { initializeSpectral, isLintError } from '../../common/spectral';
-import { update } from '../../models/helpers/request-operations';
 import * as models from '../../models/index';
 import {
   isRequest,
-  Request,
-  RequestHeader,
 } from '../../models/request';
-import { Response } from '../../models/response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { RootState } from '../redux/modules';
 import { setActiveActivity } from '../redux/modules/global';
 import { selectActiveActivity, selectActiveApiSpec, selectActiveCookieJar, selectActiveEnvironment, selectActiveGitRepository, selectActiveRequest, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
@@ -119,10 +115,7 @@ const ActivityRouter = () => {
 const spectral = initializeSpectral();
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
-  handleDuplicateRequest: Function;
   handleSetResponseFilter: Function;
-  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
-  headerEditorKey: string;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 };
@@ -133,28 +126,14 @@ export type HandleActivityChange = (options: {
 }) => Promise<void>;
 
 interface State {
-  forceRefreshKey: number;
   activeGitBranch: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class WrapperClass extends PureComponent<Props, State> {
   state: State = {
-    forceRefreshKey: Date.now(),
     activeGitBranch: 'no-vcs',
   };
-
-  // Request updaters
-  async _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
-    const newRequest = await update(r, patch);
-    this._forceRequestPaneRefreshAfterDelay();
-
-    return newRequest;
-  }
-
-  _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
-    return this._handleForceUpdateRequest(r, { headers });
-  }
 
   async _handleImport(text: string) {
     const { activeRequest } = this.props;
@@ -168,16 +147,19 @@ export class WrapperClass extends PureComponent<Props, State> {
 
       if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
         // Only pull fields that we want to update
-        return this._handleForceUpdateRequest(activeRequest, {
+        return database.update({
+          ...activeRequest,
+          modified: Date.now(),
           url: r.url,
           method: r.method,
           headers: r.headers,
-          // @ts-expect-error -- TSCONVERSION
           body: r.body,
           authentication: r.authentication,
-          // @ts-expect-error -- TSCONVERSION
           parameters: r.parameters,
-        });
+        },
+        // Pass true to indicate that this is an import
+        true
+        );
       }
     } catch (error) {
       // Import failed, that's alright
@@ -185,31 +167,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
     return null;
   }
-  async handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
-    const { activeEnvironment } = this.props;
-    const activeResponseId = activeResponse ? activeResponse._id : null;
-    await updateRequestMetaByParentId(requestId, {
-      activeResponseId,
-    });
 
-    let response: Response | null;
-    if (activeResponseId) {
-      response = await models.response.getById(activeResponseId);
-    } else {
-      const environmentId = activeEnvironment ? activeEnvironment._id : null;
-      response = await models.response.getLatestForRequest(requestId, environmentId);
-    }
-    if (!response || !response.requestVersionId) {
-      return;
-    }
-    const request = await models.requestVersion.restore(response.requestVersionId);
-    if (!request) {
-      return;
-    }
-    // Refresh app to reflect changes. Using timeout because we need to
-    // wait for the request update to propagate.
-    setTimeout(() => this._forceRequestPaneRefresh(), 500);
-  }
   async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: Parameters<HandleActivityChange>[0]): ReturnType<HandleActivityChange> {
     const { activeActivity, activeApiSpec, handleSetActiveActivity } = this.props;
 
@@ -276,19 +234,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _forceRequestPaneRefreshAfterDelay(): void {
-    // Give it a second for the app to render first. If we don't wait, it will refresh
-    // on the old request and won't catch the newest one.
-    // TODO: Move this refresh key into redux store so we don't need timeout
-    window.setTimeout(this._forceRequestPaneRefresh, 100);
-  }
-
-  _forceRequestPaneRefresh() {
-    this.setState({
-      forceRefreshKey: Date.now(),
-    });
-  }
-
   _handleGitBranchChanged(branch: string) {
     this.setState({
       activeGitBranch: branch || 'no-vcs',
@@ -299,10 +244,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     if (this.props.activeWorkspaceMeta) {
       await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeEnvironmentId });
     }
-    // Give it time to update and re-render
-    setTimeout(() => {
-      this._forceRequestPaneRefresh();
-    }, 300);
   }
 
   render() {
@@ -312,11 +253,8 @@ export class WrapperClass extends PureComponent<Props, State> {
       activeGitRepository,
       activeWorkspace,
       activeApiSpec,
-      handleUpdateRequestMimeType,
       gitVCS,
       vcs,
-      handleDuplicateRequest,
-      headerEditorKey,
     } = this.props;
 
     // Setup git sync dropdown for use in Design/Debug pages
@@ -357,7 +295,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
             <CodePromptModal ref={registerModal} />
-            <RequestSettingsModal ref={registerModal} />
+            <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
             <RequestGroupSettingsModal ref={registerModal} />
 
             {activeWorkspace ? <>
@@ -370,7 +308,6 @@ export class WrapperClass extends PureComponent<Props, State> {
               </> : null}
 
               <NunjucksModal
-                uniqueKey={`key::${this.state.forceRefreshKey}`}
                 ref={registerModal}
                 workspace={activeWorkspace}
               />
@@ -388,7 +325,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             />
 
             <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
-            <ResponseDebugModal ref={registerModal} />
+            <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
             <RequestSwitcherModal
               ref={registerModal}
@@ -484,19 +421,12 @@ export class WrapperClass extends PureComponent<Props, State> {
             element={
               <Suspense fallback={<div />}>
                 <WrapperDebug
-                  forceRefreshKey={this.state.forceRefreshKey}
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-                  handleForceUpdateRequest={this._handleForceUpdateRequest}
-                  handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
                   handleImport={this._handleImport}
                   handleSetResponseFilter={this._handleSetResponseFilter}
-                  handleUpdateRequestMimeType={handleUpdateRequestMimeType}
-                  handleSetActiveResponse={this.handleSetActiveResponse}
-                  handleDuplicateRequest={handleDuplicateRequest}
                   vcs={vcs}
-                  headerEditorKey={headerEditorKey}
                 />
               </Suspense>
             }

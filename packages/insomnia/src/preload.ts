@@ -1,5 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+import type { WebSocketBridgeAPI } from './main/network/websocket';
+
+const webSocket: WebSocketBridgeAPI = {
+  open: options => ipcRenderer.invoke('webSocket.open', options),
+  close: options => ipcRenderer.invoke('webSocket.close', options),
+  closeAll: () => ipcRenderer.invoke('webSocket.closeAll'),
+  readyState: {
+    getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
+  },
+  event: {
+    findMany: options => ipcRenderer.invoke('webSocket.event.findMany', options),
+    send: options => ipcRenderer.invoke('webSocket.event.send', options),
+  },
+};
+
 const main: Window['main'] = {
   restart: () => ipcRenderer.send('restart'),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
@@ -12,6 +27,7 @@ const main: Window['main'] = {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
+  webSocket,
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

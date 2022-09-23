@@ -10,7 +10,10 @@ import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { type Response } from '../../models/response';
 import { UnitTestResult } from '../../models/unit-test-result';
+import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
+import { type WebSocketResponse } from '../../models/websocket-response';
 import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
 
@@ -311,7 +314,7 @@ export const selectActiveWorkspaceEntities = createSelector(
 
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned: Record<string, boolean> = {};
-  const requests = [...entities.requests, ...entities.grpcRequests];
+  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.webSocketRequests];
   const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
 
   // Default all to unpinned
@@ -331,8 +334,8 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      entity => isRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
-    ) as (Request | GrpcRequest | RequestGroup)[];
+      entity => isRequest(entity) || isWebSocketRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
+    ) as (Request | WebSocketRequest | GrpcRequest | RequestGroup)[];
   },
 );
 
@@ -341,13 +344,20 @@ export const selectActiveRequest = createSelector(
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
     const id = workspaceMeta?.activeRequestId || 'n/a';
+
     if (id in entities.requests) {
       return entities.requests[id];
-    } else if (id in entities.grpcRequests) {
-      return entities.grpcRequests[id];
-    } else {
-      return null;
     }
+
+    if (id in entities.grpcRequests) {
+      return entities.grpcRequests[id];
+    }
+
+    if (id in entities.webSocketRequests) {
+      return entities.webSocketRequests[id];
+    }
+
+    return null;
   },
 );
 
@@ -431,19 +441,21 @@ export const selectActiveRequestResponses = createSelector(
   selectSettings,
   (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
-    // Filter responses down if the setting is enabled
-    return entities.responses
-      .filter(response => {
-        const requestMatches = requestId === response.parentId;
 
-        if (settings.filterResponsesByEnv) {
-          const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-          const environmentMatches = response.environmentId === activeEnvironmentId;
-          return requestMatches && environmentMatches;
-        } else {
-          return requestMatches;
-        }
-      })
+    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ?  entities.webSocketResponses : entities.responses;
+
+    // Filter responses down if the setting is enabled
+    return responses.filter(response => {
+      const requestMatches = requestId === response.parentId;
+
+      if (settings.filterResponsesByEnv) {
+        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+        const environmentMatches = response.environmentId === activeEnvironmentId;
+        return requestMatches && environmentMatches;
+      } else {
+        return requestMatches;
+      }
+    })
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
@@ -453,6 +465,7 @@ export const selectActiveResponse = createSelector(
   selectActiveRequestResponses,
   (activeRequestMeta, responses) => {
     const activeResponseId = activeRequestMeta ? activeRequestMeta.activeResponseId : 'n/a';
+
     const activeResponse = responses.find(response => response._id === activeResponseId);
 
     if (activeResponse) {

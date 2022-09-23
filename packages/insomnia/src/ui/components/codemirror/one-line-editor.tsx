@@ -385,6 +385,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}
+            readOnly={this.props.readOnly}
           />
         </Fragment>
       );
@@ -402,6 +403,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
           }}
           placeholder={placeholder}
           defaultValue={defaultValue}
+          disabled={this.props.readOnly}
           onBlur={this._handleInputBlur}
           onChange={this._handleInputChange}
           onMouseEnter={this._handleInputMouseEnter}

@@ -203,7 +203,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
 };
 
-const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
+export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
   const rejectedCookies: string[] = [];
   const jar = jarFromCookies(cookieJar.cookies);
   for (const setCookieStr of setCookieStrings) {
@@ -451,7 +451,7 @@ async function _applyResponsePluginHooks(
 
 }
 
-function storeTimeline(timeline: ResponseTimelineEntry[]) {
+export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
   const timelineStr = JSON.stringify(timeline, null, '\t');
   const timelineHash = uuidv4();
   const responsesDir = pathJoin(getDataDirectory(), 'responses');

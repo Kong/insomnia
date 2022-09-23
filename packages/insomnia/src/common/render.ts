@@ -9,6 +9,7 @@ import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, Project } from '../models/project';
 import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
+import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
@@ -289,7 +290,7 @@ export async function render<T>(
   return next<T>(newObj, name, true);
 }
 
-interface RenderRequest<T extends Request | GrpcRequest> {
+interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
   request: T;
 }
 
@@ -299,7 +300,7 @@ interface BaseRenderContextOptions {
   extraInfo?: ExtraRenderInfo;
 }
 
-interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest>> {
+interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
   ancestors?: RenderContextAncestor[];
 }
 export async function getRenderContext(
@@ -557,11 +558,12 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | RequestGroup | Workspace | Project;
-export async function getRenderContextAncestors(base?: Request | GrpcRequest | Workspace): Promise<RenderContextAncestor[]> {
+type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
+export async function getRenderContextAncestors(base?: Request | GrpcRequest | WebSocketRequest | Workspace): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,
     models.grpcRequest.type,
+    models.webSocketRequest.type,
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,

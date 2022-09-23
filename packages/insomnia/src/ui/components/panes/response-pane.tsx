@@ -33,15 +33,13 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  handleSetActiveResponse: (requestId: string, activeResponse: Response | null) => void;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
   handleSetFilter,
-  handleSetActiveResponse,
   request,
 }) => {
-  const response = useSelector(selectActiveResponse);
+  const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);
@@ -122,7 +120,7 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
-
+  const timeline = models.response.getTimeline(response);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
@@ -135,7 +133,6 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
-            handleSetActiveResponse={handleSetActiveResponse}
             requestId={request._id}
             className="tall pane__header__right"
           />
@@ -154,7 +151,7 @@ export const ResponsePane: FC<Props> = ({
           </Tab>
           <Tab tabIndex="-1">
             <Button>
-              Header{' '}
+              Headers{' '}
               {response.headers.length > 0 && (
                 <span className="bubble">{response.headers.length}</span>
               )}
@@ -162,7 +159,7 @@ export const ResponsePane: FC<Props> = ({
           </Tab>
           <Tab tabIndex="-1">
             <Button>
-              Cookie{' '}
+              Cookies{' '}
               {cookieHeaders.length ? (
                 <span className="bubble">{cookieHeaders.length}</span>
               ) : null}
@@ -212,7 +209,8 @@ export const ResponsePane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel">
           <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
-              response={response}
+              key={response._id}
+              timeline={timeline}
             />
           </ErrorBoundary>
         </TabPanel>

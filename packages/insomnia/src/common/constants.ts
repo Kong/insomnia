@@ -25,7 +25,20 @@ export const isDevelopment = () => getAppEnvironment() === 'development';
 export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
-
+export type AuthType =
+  | 'none'
+  | 'oauth2'
+  | 'oauth1'
+  | 'basic'
+  | 'digest'
+  | 'bearer'
+  | 'ntlm'
+  | 'hawk'
+  | 'iam'
+  | 'netrc'
+  | 'asap'
+  | 'sha256'
+  | 'sha1';
 export const getBrowserUserAgent = () => encodeURIComponent(
   String(window.navigator.userAgent)
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
@@ -408,7 +421,7 @@ export const RESPONSE_CODE_DESCRIPTIONS: Record<number, string> = {
     'An Insomnia plugin threw an error which prevented the request from sending',
   // 100s
   100: 'This interim response indicates that everything so far is OK and that the client should continue with the request or ignore it if it is already finished.',
-  101: 'This code is sent in response to an Upgrade: request header by the client and indicates the protocol the server is switching to. It was introduced to allow migration to an incompatible protocol version, and it is not in common use.',
+  101: 'This code is sent in response to an Upgrade: request header by the client and indicates the protocol the server is switching to.',
   // 200s
   200: 'The request has succeeded.',
   201: 'The request has succeeded and a new resource has been created as a result. This is typically the response sent after POST requests, or some PUT requests.',
@@ -548,6 +561,8 @@ export const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 export const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
 export const EXPORT_TYPE_REQUEST = 'request';
 export const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
+export const EXPORT_TYPE_WEBSOCKET_REQUEST = 'websocket_request';
+export const EXPORT_TYPE_WEBSOCKET_PAYLOAD = 'websocket_payload';
 export const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 export const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
 export const EXPORT_TYPE_UNIT_TEST = 'unit_test';

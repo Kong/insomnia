@@ -14,7 +14,7 @@ There are a few more technologies and tools worth mentioning:
 - [`libcurl`](https://curl.se/libcurl/) is the library that Insomnia uses to make requests. We used libcurl as our HTTP client of choice because it allows the deepest amount of debuggability and control of HTTP requests.
 - [`NeDB`](https://github.com/louischatriot/nedb) a local in-memory database.
 - [`node-libcurl`](https://github.com/JCMais/node-libcurl) is a Node.js wrapper around the native libcurl library.
-- [`Codemirror`](https://codemirror.net/) is a web-based, extendable, code editor used for highlighting and linting of data formats like JSON, GraphQL, and XML.
+- [`CodeMirror`](https://codemirror.net/) is a web-based, extendable, code editor used for highlighting and linting of data formats like JSON, GraphQL, and XML.
 - [`Commander.js`](https://github.com/tj/commander.js) is used for building the Inso CLI.
 
 ## Project Structure
@@ -48,7 +48,7 @@ Insomnia stores data in a few places:
 - A local Redux store contains an in-memory copy of all database entities.
 - Multiple React Context stores, defined in `/src/ui/context`.
 
-> Note: NeDB is officially unmaintained (even for criticl security bugs) and was last published in February 2016. Due to this, we hope to move away from it, however doing so is tricky because of how deeply tied it is to our architecture.
+> Note: NeDB is officially unmaintained (even for critical security bugs) and was last published in February 2016. Due to this, we hope to move away from it, however doing so is tricky because of how deeply tied it is to our architecture.
 
 ## Automated testing
 
@@ -61,7 +61,7 @@ Unit tests exist alongside the file under test. For example:
 
 Unit tests for components follow the same pattern.
 
-The structure for smoke tests is explained in the smoke testing package: [`packages/insomnia-smoke-test`](/packages/insomnia-smoke-test).
+The structure for smoke tests is explained in the smoke testing package: [`packages/insomnia-smoke-test`](packages/insomnia-smoke-test).
 
 ## Technical Debt
 

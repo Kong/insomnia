@@ -54,6 +54,7 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
       ...(await models.requestGroup.findByParentId(parentId)),
       ...(await models.request.findByParentId(parentId)),
       ...(await models.grpcRequest.findByParentId(parentId)),
+      ...(await models.webSocketRequest.findByParentId(parentId)),
     ].sort(sortMethodMap[order]);
     // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
     // Which all have the .update method. How do we better filter types?

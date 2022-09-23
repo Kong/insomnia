@@ -1,21 +1,26 @@
 import React, { FunctionComponent } from 'react';
+import { useSelector } from 'react-redux';
 
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { useGrpcRequestState } from '../../context/grpc';
+import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { selectActiveEnvironment } from '../../redux/selectors';
 import { GrpcSpinner } from '../grpc-spinner';
 import { GrpcStatusTag } from '../tags/grpc-status-tag';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {
-  forceRefreshKey: number;
   activeRequest: GrpcRequest;
 }
 
-export const GrpcResponsePane: FunctionComponent<Props> = ({ activeRequest, forceRefreshKey }) => {
-  // Used to refresh input fields to their default value when switching between requests.
-  // This is a common pattern in this codebase.
-  const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
+export const GrpcResponsePane: FunctionComponent<Props> = ({ activeRequest }) => {
+  const gitVersion = useGitVCSVersion();
+  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
+
   const { responseMessages, status, error } = useGrpcRequestState(activeRequest._id);
   return (
     <Pane type="response">

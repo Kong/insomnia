@@ -255,6 +255,7 @@ export const OAuth2Auth: FC = () => {
   return (
     <>
       <AuthTableBody>
+        <AuthToggleRow label="Enabled" property="disabled" invert />
         <AuthSelectRow
           label='Grant Type'
           property='grantType'

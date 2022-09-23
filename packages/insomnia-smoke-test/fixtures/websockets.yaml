@@ -1,0 +1,87 @@
+_type: export
+__export_format: 4
+__export_date: 2022-08-31T10:40:21.266Z
+__export_source: insomnia.desktop.app:v2022.5.0
+resources:
+  - _id: ws-req_0ba3ad1a7a81483a8f0c0caab4e8998c
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1661942223227
+    created: 1661942202873
+    name: localhost:4010
+    url: ws://localhost:4010
+    metaSortKey: -1661942202873
+    headers: []
+    authentication: {}
+    _type: websocket_request
+  - _id: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    parentId: null
+    modified: 1661942194367
+    created: 1661942194367
+    name: WebSockets
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: ws-req_c522379d686b44179e9626fc6c8ed88a
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1662451274029
+    created: 1662451239058
+    name: basic-auth
+    url: ws://localhost:4010/basic-auth
+    metaSortKey: -1661942202823
+    headers: []
+    authentication:
+      type: basic
+      useISO88591: false
+      disabled: false
+      username: user
+      password: password
+    _type: websocket_request
+  - _id: ws-req_2157c597bcbb4614b64c7c99c6f7a982
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1662451369688
+    created: 1662451318293
+    name: bearer
+    url: ws://localhost:4010/bearer
+    metaSortKey: -1661942202723
+    headers: []
+    authentication:
+      type: bearer
+      token: insomnia-cool-token-!!!1112113243111
+      disabled: false
+    _type: websocket_request
+  - _id: ws-req_6b9c944a7f034fcb8b0a92e5442538d7
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1662451456879
+    created: 1662451430343
+    name: redirect
+    url: ws://localhost:4010/redirect
+    metaSortKey: -1661942202623
+    headers: []
+    authentication: {}
+    _type: websocket_request
+  - _id: env_78d7375877d288dfb527a256e6d7e92dce4ff968
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1661942194375
+    created: 1661942194375
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1661942194375
+    _type: environment
+  - _id: jar_78d7375877d288dfb527a256e6d7e92dce4ff968
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1661942194378
+    created: 1661942194378
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_2d11197686aa40ec8f5f072727af4a7a
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1661942194369
+    created: 1661942194369
+    fileName: ws example
+    contents: ""
+    contentType: yaml
+    _type: api_spec

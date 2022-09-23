@@ -14,6 +14,8 @@ import { isRequest } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isUnitTest } from '../models/unit-test';
 import { isUnitTestSuite } from '../models/unit-test-suite';
+import { isWebSocketPayload } from '../models/websocket-payload';
+import { isWebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import { resetKeys } from '../sync/ignore-keys';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
@@ -28,6 +30,8 @@ import {
   EXPORT_TYPE_REQUEST_GROUP,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
+  EXPORT_TYPE_WEBSOCKET_PAYLOAD,
+  EXPORT_TYPE_WEBSOCKET_REQUEST,
   EXPORT_TYPE_WORKSPACE,
   getAppVersion,
 } from './constants';
@@ -174,7 +178,8 @@ export async function exportRequestsData(
         isUnitTestSuite(d) ||
         isUnitTest(d) ||
         isProtoFile(d) ||
-        isProtoDirectory(d)
+        isProtoDirectory(d) ||
+        isWebSocketPayload(d)
       );
     });
     docs.push(...descendants);
@@ -188,6 +193,8 @@ export async function exportRequestsData(
           isUnitTestSuite(d) ||
           isUnitTest(d) ||
           isRequest(d) ||
+          isWebSocketPayload(d) ||
+          isWebSocketRequest(d) ||
           isGrpcRequest(d) ||
           isRequestGroup(d) ||
           isProtoFile(d) ||
@@ -231,6 +238,12 @@ export async function exportRequestsData(
       } else if (isGrpcRequest(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_GRPC_REQUEST;
+      } else if (isWebSocketPayload(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
+        d._type = EXPORT_TYPE_WEBSOCKET_PAYLOAD;
+      } else if (isWebSocketRequest(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
+        d._type = EXPORT_TYPE_WEBSOCKET_REQUEST;
       } else if (isProtoFile(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_PROTO_FILE;

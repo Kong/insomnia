@@ -4,6 +4,7 @@ import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
 
@@ -61,19 +62,19 @@ export function init(): BaseResponse {
     contentType: '',
     url: '',
     bytesRead: 0,
-    bytesContent: -1,
     // -1 means that it was legacy and this property didn't exist yet
+    bytesContent: -1,
     elapsedTime: 0,
     headers: [],
-    timelinePath: '',
     // Actual timelines are stored on the filesystem
-    bodyPath: '',
+    timelinePath: '',
     // Actual bodies are stored on the filesystem
-    bodyCompression: '__NEEDS_MIGRATION__',
+    bodyPath: '',
     // For legacy bodies
+    bodyCompression: '__NEEDS_MIGRATION__',
     error: '',
-    requestVersionId: null,
     // Things from the request
+    requestVersionId: null,
     settingStoreCookies: null,
     settingSendCookies: null,
     // Responses sent before environment filtering will have a special value
@@ -163,7 +164,7 @@ export async function create(patch: Record<string, any> = {}, maxResponses = 20)
 
   const { parentId } = patch;
   // Create request version snapshot
-  const request = await models.request.getById(parentId);
+  const request = await requestOperations.getById(parentId);
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
@@ -224,7 +225,8 @@ export function getTimeline(response: Response, showBody?: boolean) {
 
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
-    const timeline = JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
+    const timelineString = rawBuffer.toString();
+    const timeline = JSON.parse(timelineString) as ResponseTimelineEntry[];
     const body: ResponseTimelineEntry[] = showBody ? [
       {
         name: 'DataOut',

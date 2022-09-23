@@ -2,17 +2,20 @@ import React, { FC, useCallback } from 'react';
 
 import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestParameter } from '../../../models/request';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
-  request: Request;
+  request: Request | WebSocketRequest;
+  disabled?: boolean;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
   request,
   bulk,
+  disabled = false,
 }) => {
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {
@@ -62,6 +65,7 @@ export const RequestParametersEditor: FC<Props> = ({
         onChange={handleBulkUpdate}
         defaultValue={paramsString}
         enableNunjucks
+        readOnly={disabled}
       />
     );
   }
@@ -75,6 +79,7 @@ export const RequestParametersEditor: FC<Props> = ({
       descriptionPlaceholder="description"
       pairs={request.parameters}
       onChange={onChangeParameter}
+      isDisabled={disabled}
     />
   );
 };

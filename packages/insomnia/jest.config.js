@@ -14,7 +14,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   verbose: true,
   moduleNameMapper: {
-    '\\.(css|less|png)$': '<rootDir>/src/__mocks__/dummy.ts',
+    '\\.(css|less|png|svg)$': '<rootDir>/src/__mocks__/dummy.ts',
     'styled-components': '<rootDir>/node_modules/styled-components',
     'jsonpath-plus': '<rootDir>/node_modules/jsonpath-plus/dist/index-node-cjs.cjs',
   },

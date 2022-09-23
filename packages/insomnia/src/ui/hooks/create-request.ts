@@ -50,7 +50,7 @@ export const setActiveRequest = async (
   });
 };
 
-export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL';
+export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket';
 type RequestCreator = (input: {
   parentId: string;
   requestType: CreateRequestType;
@@ -104,6 +104,16 @@ export const createRequest: RequestCreator = async ({
         parentId,
         method: METHOD_GET,
         name: 'New Request',
+      });
+      models.stats.incrementCreatedRequests();
+      setActiveRequest(request._id, workspaceId);
+      break;
+    }
+
+    case 'WebSocket': {
+      const request = await models.webSocketRequest.create({
+        parentId,
+        name: 'New WebSocket Request',
       });
       models.stats.incrementCreatedRequests();
       setActiveRequest(request._id, workspaceId);

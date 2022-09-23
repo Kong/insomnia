@@ -14,6 +14,7 @@ import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { Workspace } from '../../../models/workspace';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { RootState } from '../../redux/modules';
@@ -27,6 +28,7 @@ import { ModalHeader } from '../base/modal-header';
 import { KeydownBinder } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
+import { WebSocketTag } from '../tags/websocket-tag';
 import { wrapToIndex } from './utils';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
@@ -51,7 +53,7 @@ const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
 interface State {
   searchString: string;
   workspacesForActiveProject: Workspace[];
-  matchedRequests: (Request | GrpcRequest)[];
+  matchedRequests: (Request | WebSocketRequest | GrpcRequest)[];
   matchedWorkspaces: Workspace[];
   activeIndex: number;
   maxRequests: number;
@@ -167,7 +169,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
     this.modal?.hide();
   }
 
-  async _activateRequest(request?: Request | GrpcRequest) {
+  async _activateRequest(request?: Request | WebSocketRequest | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -184,7 +186,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: Request | GrpcRequest | RequestGroup): string[] {
+  _groupOf(requestOrRequestGroup: Request | WebSocketRequest | GrpcRequest | RequestGroup): string[] {
     const { workspaceRequestsAndRequestGroups } = this.props;
     const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
@@ -204,7 +206,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
     return this._groupOf(matchedGroups[0]);
   }
 
-  _isMatch(request: Request | GrpcRequest, searchStrings: string): number | null {
+  _isMatch(request: Request | WebSocketRequest | GrpcRequest, searchStrings: string): number | null {
     let finalUrl = request.url;
     let method = '';
 
@@ -254,7 +256,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = (workspaceRequestsAndRequestGroups
-      .filter(child => isRequest(child) || isGrpcRequest(child)) as (Request | GrpcRequest)[])
+      .filter(child => isRequest(child) || isWebSocketRequest(child) || isGrpcRequest(child)) as (Request | WebSocketRequest | GrpcRequest)[])
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -446,7 +448,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
               </div>
             )}
             <ul>
-              {matchedRequests.map((r: Request | GrpcRequest, i) => {
+              {matchedRequests.map((r: Request | WebSocketRequest | GrpcRequest, i) => {
                 const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
                 const buttonClasses = classnames(
                   'btn btn--expandable-small wide text-left pad-bottom',
@@ -470,6 +472,7 @@ class RequestSwitcherModal extends PureComponent<ReduxProps, State> {
                       <div className="margin-left-xs faint">
                         {isRequest(r) ? <MethodTag method={r.method} /> : null}
                         {isGrpcRequest(r) ? <GrpcTag /> : null}
+                        {isWebSocketRequest(r) ? <WebSocketTag /> : null}
                         {<Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url} />}
                       </div>
                     </Button>

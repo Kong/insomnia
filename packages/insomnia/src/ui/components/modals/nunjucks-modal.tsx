@@ -11,7 +11,6 @@ import { TagEditor } from '../templating/tag-editor';
 import { VariableEditor } from '../templating/variable-editor';
 
 interface Props {
-  uniqueKey: string;
   workspace: Workspace;
 }
 
@@ -66,7 +65,7 @@ export class NunjucksModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { uniqueKey, workspace } = this.props;
+    const { workspace } = this.props;
     const { defaultTemplate } = this.state;
     let editor: JSX.Element | null = null;
     let title = '';
@@ -80,7 +79,7 @@ export class NunjucksModal extends PureComponent<Props, State> {
     }
 
     return (
-      <Modal ref={this._setModalRef} onHide={this._handleModalHide} key={uniqueKey}>
+      <Modal ref={this._setModalRef} onHide={this._handleModalHide}>
         <ModalHeader>Edit {title}</ModalHeader>
         <ModalBody className="pad" key={defaultTemplate}>
           <form onSubmit={this._handleSubmit}>{editor}</form>

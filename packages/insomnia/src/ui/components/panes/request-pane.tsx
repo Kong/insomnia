@@ -1,18 +1,18 @@
 import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { useMount } from 'react-use';
 
+import { getContentTypeFromHeaders } from '../../../common/constants';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { update } from '../../../models/helpers/request-operations';
-import type {
-  Request,
-  RequestHeader,
-} from '../../../models/request';
+import type { Request } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
+import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -30,27 +30,17 @@ import { PlaceholderRequestPane } from './placeholder-request-pane';
 
 interface Props {
   environmentId: string;
-  forceRefreshCounter: number;
-  forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  headerEditorKey: string;
   request?: Request | null;
   settings: Settings;
-  updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   workspace: Workspace;
 }
 
 export const RequestPane: FC<Props> = ({
   environmentId,
-  forceRefreshCounter,
-  forceUpdateRequest,
-  forceUpdateRequestHeaders,
   handleImport,
-  headerEditorKey,
   request,
   settings,
-  updateRequestMimeType,
   workspace,
 }) => {
 
@@ -102,22 +92,26 @@ export const RequestPane: FC<Props> = ({
 
     // Only update if url changed
     if (url !== request.url) {
-      forceUpdateRequest(request, {
+      models.request.update(request, {
         url,
         parameters,
       });
     }
-  }, [request, forceUpdateRequest]);
+  }, [request]);
+  const gitVersion = useGitVCSVersion();
+  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeRequestMeta = useSelector(selectActiveRequestMeta);
+  // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
+  const uniqueKey = `${activeEnvironment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
-  useMount(() => {
-    requestUrlBarRef.current?.focusInput();
-  });
   useEffect(() => {
     requestUrlBarRef.current?.focusInput();
   }, [
     request?._id, // happens when the user switches requests
     settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
+    uniqueKey,
   ]);
 
   if (!request) {
@@ -126,11 +120,23 @@ export const RequestPane: FC<Props> = ({
     );
   }
 
+  async function updateRequestMimeType(mimeType: string | null): Promise<Request | null> {
+    if (!request) {
+      console.warn('Tried to update request mime-type when no active request');
+      return null;
+    }
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
+    // Switched to No body
+    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
+    // Clear saved value in requestMeta
+    await models.requestMeta.update(requestMeta, { savedRequestBody });
+    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
+    return models.request.updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
+  }
   const numParameters = request.parameters.filter(p => !p.disabled).length;
   const numHeaders = request.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
-  const uniqueKey = `${forceRefreshCounter}::${request._id}`;
-
+  const contentType = getContentTypeFromHeaders(request.headers) || request.body.mimeType;
   return (
     <Pane type="request">
       <PaneHeader>
@@ -147,12 +153,10 @@ export const RequestPane: FC<Props> = ({
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
+      <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
         <TabList>
           <Tab tabIndex="-1">
-            <ContentTypeDropdown
-              onChange={updateRequestMimeType}
-            />
+            <ContentTypeDropdown onChange={updateRequestMimeType} />
           </Tab>
           <Tab tabIndex="-1">
             <AuthDropdown />
@@ -165,7 +169,7 @@ export const RequestPane: FC<Props> = ({
           </Tab>
           <Tab tabIndex="-1">
             <button>
-              Header
+              Headers
               {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
             </button>
           </Tab>
@@ -187,7 +191,6 @@ export const RequestPane: FC<Props> = ({
             workspace={workspace}
             environmentId={environmentId}
             settings={settings}
-            onChangeHeaders={forceUpdateRequestHeaders}
           />
         </TabPanel>
         <TabPanel className="react-tabs__tab-panel scrollable-container">
@@ -215,7 +218,7 @@ export const RequestPane: FC<Props> = ({
               errorClassName="tall wide vertically-align font-error pad text-center"
             >
               <RequestParametersEditor
-                key={headerEditorKey}
+                key={contentType}
                 request={request}
                 bulk={settings.useBulkParametersEditor}
               />
@@ -240,7 +243,6 @@ export const RequestPane: FC<Props> = ({
         <TabPanel className="react-tabs__tab-panel header-editor">
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestHeadersEditor
-              key={headerEditorKey}
               request={request}
               bulk={settings.useBulkHeaderEditor}
             />

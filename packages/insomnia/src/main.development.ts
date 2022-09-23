@@ -13,6 +13,7 @@ import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
+import { registerWebSocketHandlers } from './main/network/websocket';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -70,6 +71,7 @@ app.on('ready', async () => {
   registerElectronHandlers();
   registerMainHandlers();
   registergRPCHandlers();
+  registerWebSocketHandlers();
 
   disableSpellcheckerDownload();
 
