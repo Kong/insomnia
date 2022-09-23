@@ -105,7 +105,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
           url: request.url,
           headers: request.headers,
           authentication: request.authentication,
-          parameters: request.parameters,
+          parameters: request.parameters.filter(p => !p.disabled),
           workspaceCookieJar,
         }, renderContext);
         window.main.webSocket.open({
