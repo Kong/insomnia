@@ -138,6 +138,7 @@ export class DebouncedInput extends PureComponent<Props> {
       delay,
       // eslint-disable-line @typescript-eslint/no-unused-vars
       textarea,
+      initialValue,
       ...props
     } = this.props;
 

@@ -72,61 +72,64 @@ interface State extends HistoryItem {
 
 const SEARCH_UPDATE_DELAY_IN_MS = 200;
 export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, reference }) => {
-  const [state, setState] = useState<State>({ history:[], filter: '' });
+  const [{ currentType, currentField, history, filter }, setState] = useState<State>({ history:[], filter: '' });
   const inputRef = useRef<DebouncedInput>(null);
 
-  const addToHistory = useCallback(() => {
-    const { currentType, currentField, history } = state;
+  const addToHistory = useCallback(({ currentType, currentField, history }: State) => {
     if (!currentType && !currentField) {
       return history;
     }
     return [...history, { currentType, currentField }];
-  }, [state]);
+  }, []);
 
   useEffect(() => {
-    const { currentField, currentType } = state;
     if (!reference) {
       return;
     }
-    const { type, field } = getReferenceInfo(reference);
 
-    if (isSameFieldAndType(currentType, type, currentField, field)) {
-      return;
-    }
+    setState(state => {
+      const { type, field } = getReferenceInfo(reference);
 
-    setState({
-      ...state,
-      history: addToHistory(),
-      currentType: type,
-      currentField: field,
+      if (isSameFieldAndType(state.currentType, type, state.currentField, field)) {
+        return state;
+      }
+
+      return ({
+        ...state,
+        history: addToHistory(state),
+        currentType: type,
+        currentField: field,
+      });
     });
-  }, [addToHistory, reference, state]);
+  }, [addToHistory, reference]);
 
   const handleNavigateType = (type: GraphQLType) => {
-    setState({
+    setState(state => ({
       ...state,
       currentType: type,
       currentField: undefined,
-      history: addToHistory(),
-    });
+      history: addToHistory(state),
+    }));
   };
 
   const handleNavigateField = (field: GraphQLFieldWithParentName) => {
-    setState({
+    setState(state => ({
       ...state,
       currentType: field.type,
       currentField: field,
-      history: addToHistory(),
-    });
+      history: addToHistory(state),
+    }));
   };
 
   const handlePopHistory = () => {
-    const last = state.history[history.length - 1] || null;
-    setState({
-      ...state,
-      history: history.slice(0, history.length - 1),
-      currentType: last ? last.currentType : undefined,
-      currentField: last ? last.currentField : undefined,
+    setState(state => {
+      const last = state.history[state.history.length - 1] || null;
+      return ({
+        ...state,
+        history: state.history.slice(0, state.history.length - 1),
+        currentType: last ? last.currentType : undefined,
+        currentField: last ? last.currentField : undefined,
+      });
     });
   };
 
@@ -134,7 +137,6 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     return null;
   }
 
-  const { currentType, currentField, history } = state;
   let child: JSX.Element | null = null;
 
   if (currentField) {
@@ -159,17 +161,17 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
           <div className="form-control form-control--outlined form-control--btn-right">
             <DebouncedInput
               ref={inputRef}
-              onChange={filter => setState({ ...state, filter })}
+              onChange={filter => setState(state => ({ ...state, filter }))}
               placeholder="Search the docs..."
               delay={SEARCH_UPDATE_DELAY_IN_MS}
-              initialValue={state.filter}
+              initialValue={filter}
             />
-            {state.filter && (
+            {filter && (
               <button
                 className="form-control__right"
                 onClick={() => {
                   inputRef.current?.setValue('');
-                  setState({ ...state, filter:'' });
+                  setState(state => ({ ...state, filter:'' }));
                 }}
               >
                 <i className="fa fa-times-circle" />
@@ -177,10 +179,10 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
             )}
           </div>
         </div>
-        {state.filter ? (
+        {filter ? (
           <GraphQLExplorerSearchResults
             schema={schema}
-            filter={state.filter}
+            filter={filter}
             onNavigateType={handleNavigateType}
             onNavigateField={handleNavigateField}
           />
@@ -213,12 +215,12 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     <KeydownBinder
       onKeydown={event => {
         executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
-          setState({
+          setState(state => ({
             ...state,
             currentType: undefined,
             currentField: undefined,
-            history: addToHistory(),
-          });
+            history: addToHistory(state),
+          }));
           if (inputRef.current) {
             inputRef.current?.focus();
             inputRef.current?.select();
@@ -228,7 +230,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     >
       <div className="graphql-explorer theme--dialog">
         <div className="graphql-explorer__header">
-          {state.history.length ?
+          {history.length ?
             (<a
               href="#"
               className="graphql-explorer__header__back-btn"
