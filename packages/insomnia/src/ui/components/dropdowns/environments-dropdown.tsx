@@ -3,7 +3,6 @@ import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
-
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
 import { selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
@@ -76,28 +75,30 @@ export const EnvironmentsDropdown: FC<Props> = ({
             ) : null}
             {description}
           </div>
-        </DropdownButton>
+          <i className="space-left fa fa-caret-down" />
+        </div>
+      </DropdownButton>
 
-        <DropdownDivider>Activate Environment</DropdownDivider>
-        {subEnvironments.map(environment => (
-          <DropdownItem
-            key={environment._id}
-            value={environment._id}
-            onClick={handleSetActiveEnvironment}
-          >
-            <i
-              className="fa fa-random"
-              style={{
-                ...(environment.color ? { color: environment.color } : {}),
-              }}
-            />
-            Use <strong>{environment.name}</strong>
-          </DropdownItem>
-        ))}
-
-        <DropdownItem value={null} onClick={handleSetActiveEnvironment}>
-          <i className="fa fa-empty" /> No Environment
+      <DropdownDivider>Activate Environment</DropdownDivider>
+      {subEnvironments.map(environment => (
+        <DropdownItem
+          key={environment._id}
+          value={environment._id}
+          onClick={handleSetActiveEnvironment}
+        >
+          <i
+            className="fa fa-random"
+            style={{
+              ...(environment.color ? { color: environment.color } : {}),
+            }}
+          />
+          Use <strong>{environment.name}</strong>
         </DropdownItem>
+      ))}
+
+      <DropdownItem value={null} onClick={handleSetActiveEnvironment}>
+        <i className="fa fa-empty" /> No Environment
+      </DropdownItem>
 
       <DropdownDivider>General</DropdownDivider>
 

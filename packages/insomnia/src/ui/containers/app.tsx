@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { ipcRenderer } from 'electron';
 import * as path from 'path';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { FC, PureComponent, useEffect, useRef } from 'react';
+import { connect, useSelector } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
@@ -15,7 +15,7 @@ import {
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
-import { hotKeyRefs } from '../../common/hotkeys';
+import { HotKeyDefinition, hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import {
   generateId,
@@ -83,45 +83,71 @@ import {
 } from '../redux/selectors';
 import { AppHooks } from './app-hooks';
 
-export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+const GlobalKeydownBinder: FC = props => {
+  const globalKeyMap = useRef<[HotKeyDefinition, () => void][] | null>(null);
+  // const activeActivity = useSelector(selectActiveActivity);
+  // const activeProject = useSelector(selectActiveProject);
+  // const activeApiSpec = useSelector(selectActiveApiSpec);
+  // const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+  // const activeCookieJar = useSelector(selectActiveCookieJar);
+  // const activeEnvironment = useSelector(selectActiveEnvironment);
+  // const activeGitRepository = useSelector(selectActiveGitRepository);
+  const activeRequest = useSelector(selectActiveRequest);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const settings = useSelector(selectSettings);
 
-interface State {
-  vcs: VCS | null;
-  gitVCS: GitVCS | null;
-  isMigratingChildren: boolean;
-}
+  // Setup global hotkeys
+  useEffect(() => {
+    const requestDuplicate = (request?: Request | GrpcRequest | WebSocketRequest) => {
+      if (!request) {
+        return;
+      }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class App extends PureComponent<AppProps, State> {
-  private _globalKeyMap: any;
-  private _updateVCSLock: any;
-  private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
-
-  constructor(props: AppProps) {
-    super(props);
-
-    this.state = {
-      vcs: null,
-      gitVCS: null,
-      isMigratingChildren: false,
+      showPrompt({
+        title: 'Duplicate Request',
+        defaultValue: request.name,
+        submitName: 'Create',
+        label: 'New Name',
+        selectText: true,
+        onComplete: async (name: string) => {
+          const newRequest = await requestOperations.duplicate(request, {
+            name,
+          });
+          await handleSetActiveRequest(newRequest._id);
+          models.stats.incrementCreatedRequests();
+        },
+      });
     };
 
-    this._globalKeyMap = null;
-    this._updateVCSLock = null;
-  }
+    function handleShowSettingsModal(tabIndex?: number) {
+      showModal(SettingsModal, tabIndex);
+    }
 
-  _setGlobalKeyMap() {
-    this._globalKeyMap = [
+    const handleSetActiveRequest = async (activeRequestId: string) => {
+      if (activeWorkspaceMeta) {
+        await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId });
+      }
+      await updateRequestMetaByParentId(activeRequestId, {
+        lastActive: Date.now(),
+      });
+    };
+
+    const updateShowVariableSourceAndValue = async () => {
+      await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
+    };
+
+    globalKeyMap.current = [
       [
         hotKeyRefs.PREFERENCES_SHOW_GENERAL,
         () => {
-          App._handleShowSettingsModal();
+          handleShowSettingsModal();
         },
       ],
       [
         hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
         () => {
-          App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
+          handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
         },
       ],
       [
@@ -142,14 +168,12 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
         () => {
-          const { activeWorkspace } = this.props;
           showModal(WorkspaceSettingsModal, activeWorkspace);
         },
       ],
       [
         hotKeyRefs.REQUEST_SHOW_SETTINGS,
         () => {
-          const { activeRequest } = this.props;
           if (activeRequest) {
             showModal(RequestSettingsModal, {
               request: activeRequest,
@@ -166,7 +190,6 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
         () => {
-          const { activeWorkspace } = this.props;
           showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
         },
       ],
@@ -174,7 +197,6 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_CREATE_HTTP,
         async () => {
-          const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
             return;
           }
@@ -184,7 +206,7 @@ class App extends PureComponent<AppProps, State> {
             parentId,
             name: 'New Request',
           });
-          await this._handleSetActiveRequest(request._id);
+          await handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
           trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
         },
@@ -192,8 +214,6 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_DELETE,
         () => {
-          const { activeRequest } = this.props;
-
           if (!activeRequest) {
             return;
           }
@@ -215,7 +235,6 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
         () => {
-          const { activeRequest, activeWorkspace } = this.props;
           if (!activeWorkspace) {
             return;
           }
@@ -227,20 +246,18 @@ class App extends PureComponent<AppProps, State> {
       [
         hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
         async () => {
-          showModal(GenerateCodeModal, this.props.activeRequest);
+          showModal(GenerateCodeModal, activeRequest);
         },
       ],
       [
         hotKeyRefs.REQUEST_SHOW_DUPLICATE,
         () => {
-          this._requestDuplicate(this.props.activeRequest || undefined);
+          requestDuplicate(activeRequest || undefined);
         },
       ],
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          const { activeRequest } = this.props;
-
           if (!activeRequest) {
             return;
           }
@@ -249,38 +266,57 @@ class App extends PureComponent<AppProps, State> {
           updateRequestMetaByParentId(activeRequest._id, { pinned:!meta?.pinned });
         },
       ],
-      [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
-      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, this._updateShowVariableSourceAndValue],
+      [hotKeyRefs.PLUGIN_RELOAD, plugins.reloadPlugins],
+      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, updateShowVariableSourceAndValue],
       [
         hotKeyRefs.SIDEBAR_TOGGLE,
         () => {
-          if (this.props.activeWorkspaceMeta) {
-            models.workspaceMeta.update(this.props.activeWorkspaceMeta, { sidebarHidden: !this.props.activeWorkspaceMeta.sidebarHidden });
+          if (activeWorkspaceMeta) {
+            models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });
           }
         },
       ],
     ];
+  }, [activeRequest, activeWorkspace, activeWorkspaceMeta, settings]);
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (globalKeyMap.current) {
+      for (const [definition, callback] of globalKeyMap.current) {
+        executeHotKey(event, definition, callback);
+      }
+    }
   }
 
-  _requestDuplicate(request?: Request | GrpcRequest | WebSocketRequest) {
-    if (!request) {
-      return;
-    }
+  return (
+    <KeydownBinder onKeydown={handleKeyDown}>
+      {props.children}
+    </KeydownBinder>
+  );
+};
 
-    showPrompt({
-      title: 'Duplicate Request',
-      defaultValue: request.name,
-      submitName: 'Create',
-      label: 'New Name',
-      selectText: true,
-      onComplete: async (name: string) => {
-        const newRequest = await requestOperations.duplicate(request, {
-          name,
-        });
-        await this._handleSetActiveRequest(newRequest._id);
-        models.stats.incrementCreatedRequests();
-      },
-    });
+export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+
+interface State {
+  vcs: VCS | null;
+  gitVCS: GitVCS | null;
+  isMigratingChildren: boolean;
+}
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
+class App extends PureComponent<AppProps, State> {
+  private _updateVCSLock: any;
+  private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
+
+  constructor(props: AppProps) {
+    super(props);
+
+    this.state = {
+      vcs: null,
+      gitVCS: null,
+      isMigratingChildren: false,
+    };
+
+    this._updateVCSLock = null;
   }
 
   static async _updateRequestGroupMetaByParentId(requestGroupId: string, patch: Partial<RequestGroupMeta>) {
@@ -297,20 +333,6 @@ class App extends PureComponent<AppProps, State> {
       );
       await models.requestGroupMeta.create(newPatch);
     }
-  }
-
-  async _updateShowVariableSourceAndValue() {
-    const { settings } = this.props;
-    await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
-  }
-
-  async _handleSetActiveRequest(activeRequestId: string) {
-    if (this.props.activeWorkspaceMeta) {
-      await models.workspaceMeta.update(this.props.activeWorkspaceMeta, { activeRequestId });
-    }
-    await updateRequestMetaByParentId(activeRequestId, {
-      lastActive: Date.now(),
-    });
   }
 
   async _handleSetResponseFilter(requestId: string, responseFilter: string) {
@@ -341,12 +363,6 @@ class App extends PureComponent<AppProps, State> {
         responseFilterHistory,
       });
     }, 2000);
-  }
-
-  _handleKeyDown(event: KeyboardEvent) {
-    for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(event, definition, callback);
-    }
   }
 
   static _handleShowSettingsModal(tabIndex?: number) {
@@ -539,9 +555,6 @@ class App extends PureComponent<AppProps, State> {
   }
 
   async componentDidMount() {
-    // Bind key handlers
-    this._setGlobalKeyMap();
-
     // Update title
     this._updateDocumentTitle();
 
@@ -739,7 +752,7 @@ class App extends PureComponent<AppProps, State> {
     } = this.state;
     const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
+      <GlobalKeydownBinder>
         <GrpcProvider>
           <NunjucksEnabledProvider>
             <AppHooks />
@@ -759,7 +772,7 @@ class App extends PureComponent<AppProps, State> {
             </div>
           </NunjucksEnabledProvider>
         </GrpcProvider>
-      </KeydownBinder>
+      </GlobalKeydownBinder>
     );
   }
 }
