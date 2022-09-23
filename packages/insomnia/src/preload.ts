@@ -3,7 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {
-  create: options => ipcRenderer.invoke('webSocket.create', options),
+  open: options => ipcRenderer.invoke('webSocket.open', options),
   close: options => ipcRenderer.invoke('webSocket.close', options),
   closeAll: () => ipcRenderer.invoke('webSocket.closeAll'),
   readyState: {
