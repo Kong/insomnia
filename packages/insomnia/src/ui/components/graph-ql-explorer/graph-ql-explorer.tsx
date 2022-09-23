@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
 import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent, useCallback, useEffect, useRef, useState } from 'react';
 import { createRef } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -73,241 +73,197 @@ interface State extends HistoryItem {
   filter: string;
 }
 
-const SEARCH_UPDATE_DELAY_IN_MS = 300;
+const SEARCH_UPDATE_DELAY_IN_MS = 200;
+export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, reference }) => {
+  const [state, setState] = useState<State>({ history:[], filter: '' });
+  const inputRef = useRef<DebouncedInput>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class GraphQLExplorer extends PureComponent<Props, State> {
-  state: State = {
-    history: [],
-    currentType: undefined,
-    currentField: undefined,
-    filter: '',
-  };
-
-  _searchInput = createRef<DebouncedInput>();
-
-  _handleKeydown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
-      this._navigateToSchema();
-      this._focusAndSelectFilterInput();
-    });
-  }
-
-  _focusAndSelectFilterInput() {
-    if (this._searchInput) {
-      this._searchInput.current?.focus();
-      this._searchInput.current?.select();
-    }
-  }
-
-  _navigateToSchema() {
-    this.setState({
-      currentType: undefined,
-      currentField: undefined,
-      history: this._addToHistory(),
-    });
-  }
-
-  _handleNavigateType(type: GraphQLType) {
-    this.setState({
-      currentType: type,
-      currentField: undefined,
-      history: this._addToHistory(),
-    });
-  }
-
-  _handleNavigateField(field: GraphQLFieldWithParentName) {
-    this.setState({
-      currentType: field.type,
-      currentField: field,
-      history: this._addToHistory(),
-    });
-  }
-
-  _handlePopHistory() {
-    this.setState(({ history }) => {
-      const last = history[history.length - 1] || null;
-      return {
-        history: history.slice(0, history.length - 1),
-        currentType: last ? last.currentType : undefined,
-        currentField: last ? last.currentField : undefined,
-      };
-    });
-  }
-
-  _addToHistory() {
-    const { currentType, currentField, history } = this.state;
-
-    // Nothing to add
+  const addToHistory = useCallback(() => {
+    const { currentType, currentField, history } = state;
     if (!currentType && !currentField) {
       return history;
     }
+    return [...history, { currentType, currentField }];
+  }, [state]);
 
-    return [
-      ...history,
-      {
-        currentType,
-        currentField,
-      },
-    ];
-  }
-
-  // TODO: make this a useEffect
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    const { reference } = nextProps;
-
+  useEffect(() => {
+    const { currentField, currentType } = state;
     if (!reference) {
       return;
     }
-
-    const { currentField, currentType } = this.state;
     const { type, field } = getReferenceInfo(reference);
 
     if (isSameFieldAndType(currentType, type, currentField, field)) {
       return;
     }
 
-    const history = this._addToHistory();
-
-    this.setState({
-      history,
+    setState({
+      ...state,
+      history: addToHistory(),
       currentType: type,
       currentField: field,
     });
+  }, [addToHistory, reference, state]);
+
+  const handleNavigateType = (type: GraphQLType) => {
+    setState({
+      ...state,
+      currentType: type,
+      currentField: undefined,
+      history: addToHistory(),
+    });
+  };
+
+  const handleNavigateField = (field: GraphQLFieldWithParentName) => {
+    setState({
+      ...state,
+      currentType: field.type,
+      currentField: field,
+      history: addToHistory(),
+    });
+  };
+
+  const handlePopHistory = () => {
+    const last = state.history[history.length - 1] || null;
+    setState({
+      ...state,
+      history: history.slice(0, history.length - 1),
+      currentType: last ? last.currentType : undefined,
+      currentField: last ? last.currentField : undefined,
+    });
+  };
+
+  if (!visible) {
+    return null;
   }
 
-  _handleFilterChange(filter: string) {
-    this.setState({ filter });
-  }
+  const { currentType, currentField, history } = state;
+  let child: JSX.Element | null = null;
 
-  render() {
-    const { schema, handleClose, visible } = this.props;
-
-    if (!visible) {
-      return null;
-    }
-
-    const { currentType, currentField, history } = this.state;
-    let child: JSX.Element | null = null;
-
-    if (currentField) {
-      child = (
-        <GraphQLExplorerField onNavigateType={this._handleNavigateType} field={currentField} />
-      );
-    } else if (currentType && currentType instanceof GraphQLEnumType) {
-      child = <GraphQLExplorerEnum type={currentType} />;
-    } else if (currentType) {
-      child = (
-        <GraphQLExplorerType
-          schema={schema}
-          type={currentType}
-          onNavigateType={this._handleNavigateType}
-          onNavigateField={this._handleNavigateField}
-        />
-      );
-    } else if (schema) {
-      child = (
-        <>
-          <div className="graphql-explorer__search">
-            <div className="form-control form-control--outlined form-control--btn-right">
-              <DebouncedInput
-                ref={this._searchInput}
-                onChange={this._handleFilterChange}
-                placeholder="Search the docs..."
-                delay={SEARCH_UPDATE_DELAY_IN_MS}
-                initialValue={this.state.filter}
-              />
-              {this.state.filter && (
-                <button
-                  className="form-control__right"
-                  onClick={() => {
-                    this._searchInput.current?.setValue('');
-                    this._handleFilterChange('');
-                  }}
-                >
-                  <i className="fa fa-times-circle" />
-                </button>
-              )}
-            </div>
+  if (currentField) {
+    child = (
+      <GraphQLExplorerField onNavigateType={handleNavigateType} field={currentField} />
+    );
+  } else if (currentType && currentType instanceof GraphQLEnumType) {
+    child = <GraphQLExplorerEnum type={currentType} />;
+  } else if (currentType) {
+    child = (
+      <GraphQLExplorerType
+        schema={schema}
+        type={currentType}
+        onNavigateType={handleNavigateType}
+        onNavigateField={handleNavigateField}
+      />
+    );
+  } else if (schema) {
+    child = (
+      <>
+        <div className="graphql-explorer__search">
+          <div className="form-control form-control--outlined form-control--btn-right">
+            <DebouncedInput
+              ref={inputRef}
+              onChange={filter => setState({ ...state, filter })}
+              placeholder="Search the docs..."
+              delay={SEARCH_UPDATE_DELAY_IN_MS}
+              initialValue={state.filter}
+            />
+            {state.filter && (
+              <button
+                className="form-control__right"
+                onClick={() => {
+                  inputRef.current?.setValue('');
+                  setState({ ...state, filter:'' });
+                }}
+              >
+                <i className="fa fa-times-circle" />
+              </button>
+            )}
           </div>
-          {this.state.filter ? (
-            <GraphQLExplorerSearchResults
-              schema={schema}
-              filter={this.state.filter}
-              onNavigateType={this._handleNavigateType}
-              onNavigateField={this._handleNavigateField}
-            />
-          ) : (
-            <GraphQLExplorerSchema
-              onNavigateType={this._handleNavigateType}
-              schema={schema}
-            />
-          )}
-        </>
-      );
-    }
+        </div>
+        {state.filter ? (
+          <GraphQLExplorerSearchResults
+            schema={schema}
+            filter={state.filter}
+            onNavigateType={handleNavigateType}
+            onNavigateField={handleNavigateField}
+          />
+        ) : (
+          <GraphQLExplorerSchema
+            onNavigateType={handleNavigateType}
+            schema={schema}
+          />
+        )}
+      </>
+    );
+  }
 
-    if (!child) {
-      return null;
-    }
+  if (!child) {
+    return null;
+  }
 
-    const fieldName = currentField ? currentField.name : null;
-    const typeName = isNamedType(currentType) ? currentType.name : null;
-    const schemaName = schema ? 'Schema' : null;
-    const typeOrField = currentType || currentField;
-    let name = 'Unknown';
-    const lastHistoryItem = history[history.length - 1] || {};
-    if (lastHistoryItem.currentField?.name) {
-      name = lastHistoryItem.currentField?.name;
-    } else if (isNamedType(lastHistoryItem.currentType)) {
-      name = lastHistoryItem.currentType.name;
-    }
-    return (
-      <KeydownBinder
-        onKeydown={event => {
-          executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
-            this._navigateToSchema();
-            this._focusAndSelectFilterInput();
+  const fieldName = currentField ? currentField.name : null;
+  const typeName = isNamedType(currentType) ? currentType.name : null;
+  const schemaName = schema ? 'Schema' : null;
+  const typeOrField = currentType || currentField;
+  let name = 'Unknown';
+  const lastHistoryItem = history[history.length - 1] || {};
+  if (lastHistoryItem.currentField?.name) {
+    name = lastHistoryItem.currentField?.name;
+  } else if (isNamedType(lastHistoryItem.currentType)) {
+    name = lastHistoryItem.currentType.name;
+  }
+  return (
+    <KeydownBinder
+      onKeydown={event => {
+        executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
+          setState({
+            ...state,
+            currentType: undefined,
+            currentField: undefined,
+            history: addToHistory(),
           });
-        }}
-      >
-        <div className="graphql-explorer theme--dialog">
-          <div className="graphql-explorer__header">
-            {this.state.history.length ?
+          if (inputRef.current) {
+            inputRef.current?.focus();
+            inputRef.current?.select();
+          }
+        });
+      }}
+    >
+      <div className="graphql-explorer theme--dialog">
+        <div className="graphql-explorer__header">
+          {state.history.length ?
+            (<a
+              href="#"
+              className="graphql-explorer__header__back-btn"
+              onClick={event => {
+                event.preventDefault();
+                handlePopHistory();
+              }}
+            >
+              <i className="fa--skinny fa fa-angle-left" /> {name}
+            </a>)
+            : typeOrField ?
               (<a
                 href="#"
                 className="graphql-explorer__header__back-btn"
                 onClick={event => {
                   event.preventDefault();
-                  this._handlePopHistory();
+                  handlePopHistory();
                 }}
               >
-                <i className="fa--skinny fa fa-angle-left" /> {name}
+                <i className="fa--skinny fa fa-angle-left" /> Schema
               </a>)
-              : typeOrField ?
-                (<a
-                  href="#"
-                  className="graphql-explorer__header__back-btn"
-                  onClick={event => {
-                    event.preventDefault();
-                    this._handlePopHistory();
-                  }}
-                >
-                  <i className="fa--skinny fa fa-angle-left" /> Schema
-                </a>)
-                : null}
-            <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
-            <button
-              className="btn btn--compact graphql-explorer__header__close-btn"
-              onClick={handleClose}
-            >
-              <i className="fa fa-close" />
-            </button>
-          </div>
-          <div className="graphql-explorer__body">{child}</div>
+              : null}
+          <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
+          <button
+            className="btn btn--compact graphql-explorer__header__close-btn"
+            onClick={handleClose}
+          >
+            <i className="fa fa-close" />
+          </button>
         </div>
-      </KeydownBinder>
-    );
-  }
-}
+        <div className="graphql-explorer__body">{child}</div>
+      </div>
+    </KeydownBinder>
+  );
+};
