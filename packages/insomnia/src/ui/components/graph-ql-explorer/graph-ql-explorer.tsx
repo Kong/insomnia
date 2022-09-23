@@ -152,6 +152,7 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
     ];
   }
 
+  // TODO: make this a useEffect
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
     const { reference } = nextProps;
@@ -176,86 +177,8 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
     });
   }
 
-  renderHistoryItem() {
-    const { history, currentField, currentType } = this.state;
-
-    if (history.length === 0 && (currentType || currentField)) {
-      return (
-        <a
-          href="#"
-          className="graphql-explorer__header__back-btn"
-          onClick={event => {
-            event.preventDefault();
-
-            this._handlePopHistory();
-          }}
-        >
-          <i className="fa--skinny fa fa-angle-left" /> Schema
-        </a>
-      );
-    } else if (history.length === 0) {
-      return null;
-    }
-
-    const { currentType: lastType, currentField: lastField } = history[history.length - 1];
-    let name: string | null = null;
-
-    if (lastField) {
-      name = lastField.name || 'Unknown';
-    } else if (lastType) {
-      if (isNamedType(lastType)) {
-        name = lastType.name;
-      } else {
-        name = 'Unknown';
-      }
-    } else {
-      return null;
-    }
-
-    return (
-      <a
-        href="#"
-        className="graphql-explorer__header__back-btn"
-        onClick={event => {
-          event.preventDefault();
-
-          this._handlePopHistory();
-        }}
-      >
-        <i className="fa--skinny fa fa-angle-left" /> {name}
-      </a>
-    );
-  }
-
   _handleFilterChange(filter: string) {
     this.setState({ filter });
-  }
-
-  renderSearchInput() {
-    return (
-      <div className="graphql-explorer__search">
-        <div className="form-control form-control--outlined form-control--btn-right">
-          <DebouncedInput
-            ref={this._searchInput}
-            onChange={this._handleFilterChange}
-            placeholder="Search the docs..."
-            delay={SEARCH_UPDATE_DELAY_IN_MS}
-            initialValue={this.state.filter}
-          />
-          {this.state.filter && (
-            <button
-              className="form-control__right"
-              onClick={() => {
-                this._searchInput.current?.setValue('');
-                this._handleFilterChange('');
-              }}
-            >
-              <i className="fa fa-times-circle" />
-            </button>
-          )}
-        </div>
-      </div>
-    );
   }
 
   render() {
@@ -265,7 +188,7 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
       return null;
     }
 
-    const { currentType, currentField } = this.state;
+    const { currentType, currentField, history } = this.state;
     let child: JSX.Element | null = null;
 
     if (currentField) {
@@ -286,7 +209,28 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
     } else if (schema) {
       child = (
         <>
-          {this.renderSearchInput()}
+          <div className="graphql-explorer__search">
+            <div className="form-control form-control--outlined form-control--btn-right">
+              <DebouncedInput
+                ref={this._searchInput}
+                onChange={this._handleFilterChange}
+                placeholder="Search the docs..."
+                delay={SEARCH_UPDATE_DELAY_IN_MS}
+                initialValue={this.state.filter}
+              />
+              {this.state.filter && (
+                <button
+                  className="form-control__right"
+                  onClick={() => {
+                    this._searchInput.current?.setValue('');
+                    this._handleFilterChange('');
+                  }}
+                >
+                  <i className="fa fa-times-circle" />
+                </button>
+              )}
+            </div>
+          </div>
           {this.state.filter ? (
             <GraphQLExplorerSearchResults
               schema={schema}
@@ -309,14 +253,50 @@ export class GraphQLExplorer extends PureComponent<Props, State> {
     }
 
     const fieldName = currentField ? currentField.name : null;
-
     const typeName = isNamedType(currentType) ? currentType.name : null;
     const schemaName = schema ? 'Schema' : null;
+    const typeOrField = currentType || currentField;
+    let name = 'Unknown';
+    const lastHistoryItem = history[history.length - 1] || {};
+    if (lastHistoryItem.currentField?.name) {
+      name = lastHistoryItem.currentField?.name;
+    } else if (isNamedType(lastHistoryItem.currentType)) {
+      name = lastHistoryItem.currentType.name;
+    }
     return (
-      <KeydownBinder onKeydown={this._handleKeydown}>
+      <KeydownBinder
+        onKeydown={event => {
+          executeHotKey(event, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
+            this._navigateToSchema();
+            this._focusAndSelectFilterInput();
+          });
+        }}
+      >
         <div className="graphql-explorer theme--dialog">
           <div className="graphql-explorer__header">
-            {this.renderHistoryItem()}
+            {this.state.history.length ?
+              (<a
+                href="#"
+                className="graphql-explorer__header__back-btn"
+                onClick={event => {
+                  event.preventDefault();
+                  this._handlePopHistory();
+                }}
+              >
+                <i className="fa--skinny fa fa-angle-left" /> {name}
+              </a>)
+              : typeOrField ?
+                (<a
+                  href="#"
+                  className="graphql-explorer__header__back-btn"
+                  onClick={event => {
+                    event.preventDefault();
+                    this._handlePopHistory();
+                  }}
+                >
+                  <i className="fa--skinny fa fa-angle-left" /> Schema
+                </a>)
+                : null}
             <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
             <button
               className="btn btn--compact graphql-explorer__header__close-btn"
