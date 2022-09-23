@@ -149,7 +149,7 @@ export async function buildRenderContext(
         }
       } else if (Object.prototype.toString.call(subContext[key]) === '[object Object]') {
         // Context is of Type object, Call this function recursively to handle nested objects.
-        subContext[key] = renderSubContext(subObject[key], subContext[key]);
+        subContext[key] = await renderSubContext(subObject[key], subContext[key]);
       } else {
         // For all other Types, add the Object to the Context.
         subContext[key] = subObject[key];
