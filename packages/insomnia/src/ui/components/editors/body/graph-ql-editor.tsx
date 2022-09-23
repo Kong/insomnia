@@ -16,8 +16,6 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
 
-import { hotKeyRefs } from '../../../../common/hotkeys';
-import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
@@ -34,7 +32,7 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
-import { KeydownBinder } from '../../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../../keydown-binder';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
@@ -168,7 +166,7 @@ interface GraphQLBody {
 }
 
 interface Props {
-  onChange: Function;
+  onChange: (value: string) => void;
   request: Request;
   settings: Settings;
   environmentId: string;
@@ -321,14 +319,19 @@ export const GraphQLEditor: FC<Props> = ({
       editorRef.current?.setValue(prettyQuery);
     }
   };
+
+  useGlobalKeyboardShortcuts({
+    'BEAUTIFY_REQUEST_BODY': _handlePrettify,
+  });
+
   const _handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
     event.preventDefault();
     if (reference) {
-      setState({
+      setState(state => ({
         ...state,
         explorerVisible: true,
         activeReference: reference,
-      });
+      }));
     }
   };
   const handleQueryUserActivity = () => {
@@ -366,7 +369,7 @@ export const GraphQLEditor: FC<Props> = ({
   const handleRefreshSchema = async () => {
     // First, "forget" preference to hide errors so they always show
     // again after a refresh
-    setState({ ...state, hideSchemaFetchErrors: false });
+    setState(state => ({ ...state, hideSchemaFetchErrors: false }));
     setSchemaIsFetching(true);
     await fetchGraphQLSchemaForRequest({
       requestId: request._id,
@@ -381,18 +384,19 @@ export const GraphQLEditor: FC<Props> = ({
     try {
       handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
     } catch (err) {
-      setState({ ...state, variablesSyntaxError: err.message });
+      setState(state => ({ ...state, variablesSyntaxError: err.message }));
     }
   };
 
   const handleBodyChange = (query: string, variables?: Record<string, any> | null, operationName?: string | null,) => {
-    let documentAST;
+    let documentAST: DocumentNode | null = null;
     try {
       documentAST = parse(query);
     } catch (error) {
       documentAST = null;
     }
-    setState({ ...state, documentAST });
+    setState(state => ({ ...state, documentAST }));
+
     const body: GraphQLBody = { query };
     if (variables) {
       body.variables = variables;
@@ -400,6 +404,7 @@ export const GraphQLEditor: FC<Props> = ({
     if (operationName) {
       body.operationName = operationName;
     }
+
     // Find op if there isn't one yet
     if (!body.operationName) {
       const newOperationName = getCurrentOperation();
@@ -408,7 +413,7 @@ export const GraphQLEditor: FC<Props> = ({
         body.operationName = newOperationName;
       }
     }
-    setState({ ...state, variablesSyntaxError: '', body });
+    setState(state => ({ ...state, variablesSyntaxError: '', body }));
     onChange(JSON.stringify(body));
 
     if (!documentAST || !editorRef.current) {
@@ -434,7 +439,7 @@ export const GraphQLEditor: FC<Props> = ({
             className: 'cm-gql-disabled',
           })
         );
-      setState({ ...state, disabledOperationMarkers: markers });
+      setState(state => ({ ...state, disabledOperationMarkers: markers }));
     }
   };
 
@@ -522,7 +527,7 @@ export const GraphQLEditor: FC<Props> = ({
         key={schemaLastFetchTime}
         visible={explorerVisible}
         reference={activeReference}
-        handleClose={() => setState({ ...state, explorerVisible: false })}
+        handleClose={() => setState(state => ({ ...state, explorerVisible: false }))}
       />,
       explorerContainer
     );
@@ -558,7 +563,6 @@ export const GraphQLEditor: FC<Props> = ({
 
   return (
     <div className="graphql-editor">
-      <KeydownBinder onKeydown={event => executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, _handlePrettify)} />
       <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
 
         <DropdownButton className="space-left btn btn--micro btn--outlined">
@@ -567,7 +571,7 @@ export const GraphQLEditor: FC<Props> = ({
 
         <DropdownItem
           onClick={() => {
-            setState({ ...state, explorerVisible: true });
+            setState(state => ({ ...state, explorerVisible: true }));
           }}
           disabled={!schema}
         >
@@ -581,7 +585,7 @@ export const GraphQLEditor: FC<Props> = ({
         </DropdownItem>
         <DropdownItem
           onClick={() => {
-            setState({ ...state, automaticFetch: !state.automaticFetch });
+            setState(state => ({ ...state, automaticFetch: !state.automaticFetch }));
             window.localStorage.setItem('graphql.automaticFetch', state.automaticFetch.toString());
           }}
           stayOpenAfterClick
@@ -595,7 +599,7 @@ export const GraphQLEditor: FC<Props> = ({
 
         <DropdownItem
           onClick={() => {
-            setState({ ...state, hideSchemaFetchErrors: false });
+            setState(state => ({ ...state, hideSchemaFetchErrors: false }));
             loadAndSetLocalSchema();
           }}
         >
@@ -655,7 +659,7 @@ export const GraphQLEditor: FC<Props> = ({
               </Tooltip>{' '}
               <button
                 className="icon"
-                onClick={() => setState({ ...state, hideSchemaFetchErrors: true })}
+                onClick={() => setState(state => ({ ...state, hideSchemaFetchErrors: true }))}
               >
                 <i className="fa fa-times" />
               </button>
