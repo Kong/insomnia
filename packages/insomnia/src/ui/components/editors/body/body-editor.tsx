@@ -118,7 +118,7 @@ export const BodyEditor: FC<Props> = ({
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} content={request.body.text || ''} workspace={workspace} settings={settings} environmentId={environmentId} onChange={handleGraphQLChange} />;
+      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} settings={settings} workspaceId={workspace._id} environmentId={environmentId} onChange={handleGraphQLChange} />;
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;
