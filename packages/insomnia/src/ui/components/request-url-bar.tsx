@@ -281,6 +281,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       inputRef.current?.focus();
       inputRef.current?.selectAll();
     },
+    'REQUEST_SEND': () => {
+      if (request.url) {
+        send();
+      }
+    },
     'REQUEST_TOGGLE_HTTP_METHOD_MENU': () => {
       methodDropdownRef.current?.toggle();
     },
