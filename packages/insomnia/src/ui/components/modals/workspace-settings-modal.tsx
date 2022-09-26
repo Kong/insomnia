@@ -10,7 +10,6 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ClientCertificate } from '../../../models/client-certificate';
-import { isGrpcRequest } from '../../../models/grpc-request';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
