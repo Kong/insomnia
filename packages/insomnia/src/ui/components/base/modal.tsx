@@ -1,9 +1,7 @@
 import classnames from 'classnames';
 import React, { forwardRef, ReactNode, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { pressedHotKey } from '../../../common/hotkeys-listener';
-import { KeydownBinder, useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
@@ -102,25 +100,14 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
       onCancel?.();
     }
   }, [hide, noEscape, onCancel]);
-  const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
-    if (!open) {
-      return;
-    }
-    // Don't check for close keys if we don't want them
-    if (noEscape) {
-      return;
-    }
-    const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
-    // Pressed escape
-    if (pressedEscape) {
-      event.preventDefault();
-      hide();
-      onCancel?.();
-    }
-  }, [hide, noEscape, onCancel, open]);
 
   useGlobalKeyboardShortcuts({
-    'CLOSE_MODAL': () => hide(),
+    'CLOSE_MODAL': () => {
+      if (!noEscape) {
+        hide();
+        onCancel?.();
+      }
+    },
   });
   return (open ?
     <div
