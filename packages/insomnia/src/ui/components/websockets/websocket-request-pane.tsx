@@ -76,11 +76,12 @@ const PaneReadOnlyBanner = () => {
   );
 };
 
-const HeaderTabWrapper = styled.div({
+const HeaderTabPanel = styled(TabPanel)({
   display: 'flex',
   flexDirection: 'column',
   position: 'relative',
   height: '100%',
+  overflowY: 'auto',
 });
 
 const QueryEditorWrapper = styled.div({
@@ -109,11 +110,6 @@ const QueryEditorTabPanel = styled(TabPanel)({
 
 const AuthTabPanel = styled(TabPanel)({
   overflowY: 'auto',
-});
-
-const HeaderEditorsWrapper = styled.div({
-  flex: 1,
-  position: 'relative',
 });
 
 const WebSocketRequestForm: FC<FormProps> = ({
@@ -381,21 +377,15 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             </ErrorBoundary>
           </QueryEditorWrapper>
         </QueryEditorTabPanel>
-        <TabPanel className="react-tabs__tab-panel">
-          <HeaderTabWrapper>
-            {disabled && <PaneReadOnlyBanner />}
-            <HeaderEditorsWrapper>
-              <RequestHeadersEditor
-                noWrap
-                key={uniqueKey}
-                request={request}
-                bulk={false}
-                isDisabled={readyState === ReadyState.OPEN}
-              />
-            </HeaderEditorsWrapper>
-
-          </HeaderTabWrapper>
-        </TabPanel>
+        <HeaderTabPanel className="react-tabs__tab-panel">
+          {disabled && <PaneReadOnlyBanner />}
+          <RequestHeadersEditor
+            key={uniqueKey}
+            request={request}
+            bulk={false}
+            isDisabled={readyState === ReadyState.OPEN}
+          />
+        </HeaderTabPanel>
         <TabPanel>
           {request.description ? (
             <div>

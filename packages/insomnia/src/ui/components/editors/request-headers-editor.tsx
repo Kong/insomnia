@@ -1,5 +1,4 @@
 import React, { FC, useCallback } from 'react';
-import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { update } from '../../../models/helpers/request-operations';
@@ -12,18 +11,12 @@ interface Props {
   bulk: boolean;
   isDisabled?: boolean;
   request: Request | WebSocketRequest;
-  noWrap?: boolean;
 }
-
-const ScrollableContainer = styled.div<{ noWrap?: boolean }>(({ noWrap }) => ({
-  position: noWrap ? 'initial' : 'relative',
-}));
 
 export const RequestHeadersEditor: FC<Props> = ({
   request,
   bulk,
   isDisabled,
-  noWrap = false,
 }) => {
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
@@ -81,24 +74,17 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   return (
-    <ScrollableContainer
-      noWrap={noWrap}
-      className="pad-bottom scrollable-container"
-    >
-      <div className="scrollable">
-        <KeyValueEditor
-          sortable
-          namePlaceholder="header"
-          valuePlaceholder="value"
-          descriptionPlaceholder="description"
-          pairs={request.headers}
-          handleGetAutocompleteNameConstants={getCommonHeaderNames}
-          handleGetAutocompleteValueConstants={getCommonHeaderValues}
-          onChange={onChangeHeaders}
-          isDisabled={isDisabled}
-          isWebSocketRequest={isWebSocketRequest(request)}
-        />
-      </div>
-    </ScrollableContainer>
+    <KeyValueEditor
+      sortable
+      namePlaceholder="header"
+      valuePlaceholder="value"
+      descriptionPlaceholder="description"
+      pairs={request.headers}
+      handleGetAutocompleteNameConstants={getCommonHeaderNames}
+      handleGetAutocompleteValueConstants={getCommonHeaderValues}
+      onChange={onChangeHeaders}
+      isDisabled={isDisabled}
+      isWebSocketRequest={isWebSocketRequest(request)}
+    />
   );
 };
