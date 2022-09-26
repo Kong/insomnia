@@ -13,6 +13,7 @@ import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
+import { isWebSocketRequest } from '../../../models/websocket-request';
 import type { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { setActiveActivity } from '../../redux/modules/global';
@@ -138,6 +139,12 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
 
     for (const req of requests) {
       await models.response.removeForRequest(req._id);
+    }
+
+    window.main.webSocket.closeAll();
+    const websocketRequests = docs.filter(isWebSocketRequest);
+    for (const req of websocketRequests) {
+      models.webSocketResponse.removeForRequest(req._id);
     }
     this.hide();
   }
