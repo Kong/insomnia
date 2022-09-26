@@ -74,21 +74,17 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   return (
-    <div className="pad-bottom scrollable-container">
-      <div className="scrollable">
-        <KeyValueEditor
-          sortable
-          namePlaceholder="header"
-          valuePlaceholder="value"
-          descriptionPlaceholder="description"
-          pairs={request.headers}
-          handleGetAutocompleteNameConstants={getCommonHeaderNames}
-          handleGetAutocompleteValueConstants={getCommonHeaderValues}
-          onChange={onChangeHeaders}
-          isDisabled={isDisabled}
-          isWebSocketRequest={isWebSocketRequest(request)}
-        />
-      </div>
-    </div>
+    <KeyValueEditor
+      sortable
+      namePlaceholder="header"
+      valuePlaceholder="value"
+      descriptionPlaceholder="description"
+      pairs={request.headers}
+      handleGetAutocompleteNameConstants={getCommonHeaderNames}
+      handleGetAutocompleteValueConstants={getCommonHeaderValues}
+      onChange={onChangeHeaders}
+      isDisabled={isDisabled}
+      isWebSocketRequest={isWebSocketRequest(request)}
+    />
   );
 };
