@@ -7,6 +7,7 @@ import React, {
   isValidElement,
   ReactNode,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -15,12 +16,9 @@ import React, {
 } from 'react';
 import ReactDOM from 'react-dom';
 
-import { hotKeyRefs } from '../../../../common/hotkeys';
-import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
 import {
-  createKeybindingsHandler,
-  useGlobalKeyboardShortcuts,
+  createKeybindingsHandler, useGlobalKeyboardShortcuts,
 } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
@@ -210,6 +208,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
 
     useGlobalKeyboardShortcuts({
       CLOSE_DROPDOWN: () => {
+        console.log('CLOSE_DROPDOWN');
         if (open) {
           hide();
         }
@@ -297,6 +296,14 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         filterInputRef.current?.focus();
       },
     });
+
+    useEffect(() => {
+      document.body.addEventListener('keydown', handleKeydown);
+
+      return () => {
+        document.body.removeEventListener('keydown', handleKeydown);
+      };
+    }, [handleKeydown]);
 
     const isNearBottomOfScreen = () => {
       if (!dropdownContainerRef.current) {
