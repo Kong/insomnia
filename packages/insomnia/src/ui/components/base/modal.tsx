@@ -18,7 +18,6 @@ export interface ModalProps {
   onShow?: Function;
   onHide?: Function;
   onCancel?: Function;
-  onKeyDown?: Function;
   children?: ReactNode;
   className?: string;
 }
@@ -37,7 +36,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   noEscape,
   onCancel,
   onHide: onHideProp,
-  onKeyDown,
   onShow,
   skinny,
   tall,
@@ -110,7 +108,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
     if (!open) {
       return;
     }
-    onKeyDown?.(event);
     // Don't check for close keys if we don't want them
     if (noEscape) {
       return;
@@ -123,7 +120,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
       hide();
       onCancel?.();
     }
-  }, [closeOnKeyCodes, hide, noEscape, onCancel, onKeyDown, open]);
+  }, [closeOnKeyCodes, hide, noEscape, onCancel, open]);
   return (open ?
     <KeydownBinder onKeydown={handleKeyDown}>
       <div
