@@ -26,7 +26,7 @@ interface Props {
   handleUpdateKeyBindings: (keyBindings: HotKeyRegistry) => void;
 }
 
-const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
+const HOT_KEY_DEFS: HotKeyDefinition[] = Object.values(hotKeyRefs);
 
 export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);

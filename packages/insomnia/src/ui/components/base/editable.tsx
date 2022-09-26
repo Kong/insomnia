@@ -1,6 +1,6 @@
 import React, { FC, ReactElement, useCallback, useRef, useState } from 'react';
 
-import { createKeybindingsHandler, KeydownBinder } from '../keydown-binder';
+import { createKeybindingsHandler } from '../keydown-binder';
 import { HighlightProps } from './highlight';
 
 export const shouldSave = (oldValue: string, newValue: string | undefined, preventBlank = false) => {
