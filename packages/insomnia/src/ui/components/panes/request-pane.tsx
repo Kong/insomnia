@@ -6,6 +6,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
+import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { update } from '../../../models/helpers/request-operations';
@@ -113,10 +114,13 @@ export const RequestPane: FC<Props> = ({
 
     // Only update if url changed
     if (url !== request.url) {
-      models.request.update(request, {
+      database.update({
+        ...request,
+        modified: Date.now(),
         url,
         parameters,
-      });
+      // Hack to force the ui to refresh. More info on use-vcs-version
+      }, true);
     }
   }, [request]);
   const gitVersion = useGitVCSVersion();
