@@ -87,7 +87,7 @@ export class KeydownBinder extends PureComponent<Props> {
   }
 }
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
-  `${ctrl ? 'Control+' : ''}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${meta ? 'Meta+' : ''}` + Object.keys(keyboardKeys).find(keyName => keyboardKeys[keyName].keyCode === keyCode);
+  `${ctrl ? 'Control+' : ''}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${meta ? 'Meta+' : ''}` + Object.entries(keyboardKeys).find(([, { keyCode: kc }]) => kc === keyCode)?.[1].label;
 
 const transformBehaviourIntoHotKeyVariations = (hotKeyRegistry: HotKeyRegistry, behaviour: HotKeyName): KeyCombination[] =>
   getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefs[behaviour].id]);
