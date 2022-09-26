@@ -82,7 +82,7 @@ export class AlertModal extends PureComponent<{}, State> {
   render() {
     const { message, title, addCancel, okLabel } = this.state;
     return (
-      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]} skinny>
+      <Modal ref={this._setModalRef} skinny>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>

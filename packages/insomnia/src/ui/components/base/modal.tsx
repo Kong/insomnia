@@ -3,7 +3,7 @@ import React, { forwardRef, ReactNode, useCallback, useImperativeHandle, useRef,
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { pressedHotKey } from '../../../common/hotkeys-listener';
-import { KeydownBinder } from '../keydown-binder';
+import { KeydownBinder, useGlobalKeyboardShortcuts } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
@@ -14,7 +14,6 @@ export interface ModalProps {
   wide?: boolean;
   skinny?: boolean;
   noEscape?: boolean;
-  closeOnKeyCodes?: any[];
   onShow?: Function;
   onHide?: Function;
   onCancel?: Function;
@@ -32,7 +31,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   centered,
   children,
   className,
-  closeOnKeyCodes,
   noEscape,
   onCancel,
   onHide: onHideProp,
@@ -113,32 +111,33 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
       return;
     }
     const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
-    const pressedCloseButton = (closeOnKeyCodes || []).find(c => c === event.keyCode);
     // Pressed escape
-    if (pressedEscape || pressedCloseButton) {
+    if (pressedEscape) {
       event.preventDefault();
       hide();
       onCancel?.();
     }
-  }, [closeOnKeyCodes, hide, noEscape, onCancel, open]);
+  }, [hide, noEscape, onCancel, open]);
+
+  useGlobalKeyboardShortcuts({
+    'CLOSE_MODAL': () => hide(),
+  });
   return (open ?
-    <KeydownBinder onKeydown={handleKeyDown}>
-      <div
-        ref={divRef}
-        tabIndex={-1}
-        className={classes}
-        style={{ zIndex }}
-        aria-hidden={false}
-        onClick={handleClick}
-      >
-        <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-        <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-          <div className="modal__content">
-            {children}
-          </div>
+    <div
+      ref={divRef}
+      tabIndex={-1}
+      className={classes}
+      style={{ zIndex }}
+      aria-hidden={false}
+      onClick={handleClick}
+    >
+      <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
+      <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+        <div className="modal__content">
+          {children}
         </div>
       </div>
-    </KeydownBinder>
+    </div>
     : null
   );
 });

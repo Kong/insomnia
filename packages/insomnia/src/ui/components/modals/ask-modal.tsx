@@ -94,7 +94,7 @@ export class AskModal extends PureComponent<{}, State> {
   render() {
     const { message, title, yesText, noText, loading } = this.state;
     return (
-      <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
+      <Modal noEscape ref={this._setModalRef}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>

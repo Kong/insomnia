@@ -273,7 +273,6 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   };
 
   useGlobalKeyboardShortcuts({
-    'CLOSE_MODAL': () => modalRef.current?.hide(),
     'SHOW_RECENT_REQUESTS': () => {
       console.log('SHOW_RECENT_REQUESTS', state);
       if (state.isModalVisible) {
