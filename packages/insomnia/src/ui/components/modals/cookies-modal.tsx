@@ -28,7 +28,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookiesModal extends PureComponent<Props, State> {
+export class CookiesModal extends PureComponent<Props, State> {
   modal: ModalHandle | null = null;
   filterInput: HTMLInputElement | null = null;
 

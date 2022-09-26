@@ -1,12 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { ipcRenderer } from 'electron';
 import * as path from 'path';
-import React, { FC, PureComponent, useEffect, useRef } from 'react';
-import { connect, useSelector } from 'react-redux';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
   AUTOBIND_CFG,
@@ -15,20 +14,12 @@ import {
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
-import { HotKeyDefinition, hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
 import {
   generateId,
 } from '../../common/misc';
 import * as models from '../../models';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import * as requestOperations from '../../models/helpers/request-operations';
 import { isNotDefaultProject } from '../../models/project';
-import { Request } from '../../models/request';
 import { type RequestGroupMeta } from '../../models/request-group-meta';
-import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { WebSocketRequest } from '../../models/websocket-request';
 import { isWorkspace } from '../../models/workspace';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
@@ -41,25 +32,17 @@ import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
 import { ErrorBoundary } from '../components/error-boundary';
-import { KeydownBinder } from '../components/keydown-binder';
 import { AskModal } from '../components/modals/ask-modal';
-import { showCookiesModal } from '../components/modals/cookies-modal';
-import { GenerateCodeModal } from '../components/modals/generate-code-modal';
-import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
+import { showAlert, showModal } from '../components/modals/index';
 import { showSelectModal } from '../components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
-import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { Toast } from '../components/toast';
 import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
-import { createRequestGroup } from '../hooks/create-request-group';
 import { RootState } from '../redux/modules';
 import {
   newCommand,
@@ -82,217 +65,6 @@ import {
   selectSettings,
 } from '../redux/selectors';
 import { AppHooks } from './app-hooks';
-
-const GlobalKeydownBinder: FC = props => {
-  const globalKeyMap = useRef<[HotKeyDefinition, () => void][] | null>(null);
-  // const activeActivity = useSelector(selectActiveActivity);
-  // const activeProject = useSelector(selectActiveProject);
-  // const activeApiSpec = useSelector(selectActiveApiSpec);
-  // const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
-  // const activeCookieJar = useSelector(selectActiveCookieJar);
-  // const activeEnvironment = useSelector(selectActiveEnvironment);
-  // const activeGitRepository = useSelector(selectActiveGitRepository);
-  const activeRequest = useSelector(selectActiveRequest);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const settings = useSelector(selectSettings);
-
-  // Setup global hotkeys
-  useEffect(() => {
-    const requestDuplicate = (request?: Request | GrpcRequest | WebSocketRequest) => {
-      if (!request) {
-        return;
-      }
-
-      showPrompt({
-        title: 'Duplicate Request',
-        defaultValue: request.name,
-        submitName: 'Create',
-        label: 'New Name',
-        selectText: true,
-        onComplete: async (name: string) => {
-          const newRequest = await requestOperations.duplicate(request, {
-            name,
-          });
-          await handleSetActiveRequest(newRequest._id);
-          models.stats.incrementCreatedRequests();
-        },
-      });
-    };
-
-    function handleShowSettingsModal(tabIndex?: number) {
-      showModal(SettingsModal, tabIndex);
-    }
-
-    const handleSetActiveRequest = async (activeRequestId: string) => {
-      if (activeWorkspaceMeta) {
-        await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId });
-      }
-      await updateRequestMetaByParentId(activeRequestId, {
-        lastActive: Date.now(),
-      });
-    };
-
-    const updateShowVariableSourceAndValue = async () => {
-      await models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue });
-    };
-
-    globalKeyMap.current = [
-      [
-        hotKeyRefs.PREFERENCES_SHOW_GENERAL,
-        () => {
-          handleShowSettingsModal();
-        },
-      ],
-      [
-        hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
-        () => {
-          handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
-        },
-      ],
-      [
-        hotKeyRefs.SHOW_RECENT_REQUESTS,
-        () => {
-          showModal(RequestSwitcherModal, {
-            disableInput: true,
-            maxRequests: 10,
-            maxWorkspaces: 0,
-            selectOnKeyup: true,
-            title: 'Recent Requests',
-            hideNeverActiveRequests: true,
-            // Add an open delay so the dialog won't show for quick presses
-            openDelay: 150,
-          });
-        },
-      ],
-      [
-        hotKeyRefs.WORKSPACE_SHOW_SETTINGS,
-        () => {
-          showModal(WorkspaceSettingsModal, activeWorkspace);
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_SETTINGS,
-        () => {
-          if (activeRequest) {
-            showModal(RequestSettingsModal, {
-              request: activeRequest,
-            });
-          }
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_QUICK_SWITCH,
-        () => {
-          showModal(RequestSwitcherModal);
-        },
-      ],
-      [
-        hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
-        () => {
-          showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
-        },
-      ],
-      [hotKeyRefs.SHOW_COOKIES_EDITOR, showCookiesModal],
-      [
-        hotKeyRefs.REQUEST_CREATE_HTTP,
-        async () => {
-          if (!activeWorkspace) {
-            return;
-          }
-
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          const request = await models.request.create({
-            parentId,
-            name: 'New Request',
-          });
-          await handleSetActiveRequest(request._id);
-          models.stats.incrementCreatedRequests();
-          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_DELETE,
-        () => {
-          if (!activeRequest) {
-            return;
-          }
-
-          showModal(AskModal, {
-            title: 'Delete Request?',
-            message: `Really delete ${activeRequest.name}?`,
-            onDone: async (confirmed: boolean) => {
-              if (!confirmed) {
-                return;
-              }
-
-              await requestOperations.remove(activeRequest);
-              models.stats.incrementDeletedRequests();
-            },
-          });
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
-        () => {
-          if (!activeWorkspace) {
-            return;
-          }
-
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          createRequestGroup(parentId);
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR,
-        async () => {
-          showModal(GenerateCodeModal, activeRequest);
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_SHOW_DUPLICATE,
-        () => {
-          requestDuplicate(activeRequest || undefined);
-        },
-      ],
-      [
-        hotKeyRefs.REQUEST_TOGGLE_PIN,
-        async () => {
-          if (!activeRequest) {
-            return;
-          }
-
-          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
-          updateRequestMetaByParentId(activeRequest._id, { pinned:!meta?.pinned });
-        },
-      ],
-      [hotKeyRefs.PLUGIN_RELOAD, plugins.reloadPlugins],
-      [hotKeyRefs.ENVIRONMENT_SHOW_VARIABLE_SOURCE_AND_VALUE, updateShowVariableSourceAndValue],
-      [
-        hotKeyRefs.SIDEBAR_TOGGLE,
-        () => {
-          if (activeWorkspaceMeta) {
-            models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });
-          }
-        },
-      ],
-    ];
-  }, [activeRequest, activeWorkspace, activeWorkspaceMeta, settings]);
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (globalKeyMap.current) {
-      for (const [definition, callback] of globalKeyMap.current) {
-        executeHotKey(event, definition, callback);
-      }
-    }
-  }
-
-  return (
-    <KeydownBinder onKeydown={handleKeyDown}>
-      {props.children}
-    </KeydownBinder>
-  );
-};
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -752,27 +524,25 @@ class App extends PureComponent<AppProps, State> {
     } = this.state;
     const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
     return (
-      <GlobalKeydownBinder>
-        <GrpcProvider>
-          <NunjucksEnabledProvider>
-            <AppHooks />
+      <GrpcProvider>
+        <NunjucksEnabledProvider>
+          <AppHooks />
 
-            <div className="app" key={uniquenessKey}>
-              <ErrorBoundary showAlert>
-                <Wrapper
-                  handleSetResponseFilter={this._handleSetResponseFilter}
-                  vcs={vcs}
-                  gitVCS={gitVCS}
-                />
-              </ErrorBoundary>
+          <div className="app" key={uniquenessKey}>
+            <ErrorBoundary showAlert>
+              <Wrapper
+                handleSetResponseFilter={this._handleSetResponseFilter}
+                vcs={vcs}
+                gitVCS={gitVCS}
+              />
+            </ErrorBoundary>
 
-              <ErrorBoundary showAlert>
-                <Toast />
-              </ErrorBoundary>
-            </div>
-          </NunjucksEnabledProvider>
-        </GrpcProvider>
-      </GlobalKeydownBinder>
+            <ErrorBoundary showAlert>
+              <Toast />
+            </ErrorBoundary>
+          </div>
+        </NunjucksEnabledProvider>
+      </GrpcProvider>
     );
   }
 }
