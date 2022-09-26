@@ -1,12 +1,10 @@
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import React, { forwardRef, Fragment, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { METHOD_GRPC } from '../../../common/constants';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import { isEventKey, keyboardKeys } from '../../../common/keyboard-keys';
+import { isEventKey } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -19,10 +17,10 @@ import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
-import { Modal, ModalProps } from '../base/modal';
+import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
@@ -56,7 +54,7 @@ export interface RequestSwitcherModalHandle {
   hide: () => void;
 }
 export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, ModalProps>((_, ref) => {
-  const modalRef = useRef<Modal>(null);
+  const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     searchString: '',
     workspacesForActiveProject: [],
@@ -183,6 +181,10 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       modalRef.current?.hide();
     },
     show: options => {
+      if (modalRef.current?.isOpen()) {
+        return;
+      }
+
       setState(state => ({
         ...state,
         maxRequests: options?.maxRequests ?? 20,
@@ -198,14 +200,15 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     },
   }), [handleChangeValue]);
 
-  const activateWorkspaceAndHide = (workspace?: Workspace) => {
+  const activateWorkspaceAndHide = useCallback((workspace?: Workspace) => {
     if (!workspace) {
       return;
     }
     dispatch(activateWorkspace({ workspace }));
     modalRef.current?.hide();
-  };
-  const activateRequestAndHide = (request?: Request | WebSocketRequest | GrpcRequest) => {
+  }, [dispatch]);
+
+  const activateRequestAndHide = useCallback((request?: Request | WebSocketRequest | GrpcRequest) => {
     if (!request) {
       return;
     }
@@ -214,21 +217,9 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
     updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
     modalRef.current?.hide();
-  };
-  const createRequestFromSearch = async () => {
-    if (!workspace) {
-      return;
-    }
+  }, [activeWorkspaceMeta]);
 
-    // Create the request if nothing matched
-    const request = await models.request.create({
-      parentId: activeRequest ? activeRequest.parentId : workspace._id,
-      name: state.searchString,
-    });
-
-    activateRequestAndHide(request);
-  };
-  const activateCurrentIndex = async () => {
+  const activateCurrentIndex = useCallback(async () => {
     const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = state;
     if (activeIndex < matchedRequests.length) {
       // Activate the request if there is one
@@ -247,9 +238,19 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
     if (searchString) {
       // Create request if no match
-      await createRequestFromSearch();
+      if (!workspace) {
+        return;
+      }
+
+      // Create the request if nothing matched
+      const request = await models.request.create({
+        parentId: activeRequest ? activeRequest.parentId : workspace._id,
+        name: state.searchString,
+      });
+
+      activateRequestAndHide(request);
     }
-  };
+  }, [activateRequestAndHide, activateWorkspaceAndHide, activeRequest, state, workspace]);
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const isKey = isEventKey(event as unknown as KeyboardEvent);
@@ -270,42 +271,48 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
     event.preventDefault();
   };
-  const handleKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.keyCode === keyboardKeys.esc.keyCode) {
-      modalRef.current?.hide();
-      return;
-    }
-    // Only control up/down with tab if modal is visible
-    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS, () => {
+
+  useGlobalKeyboardShortcuts({
+    'CLOSE_MODAL': () => modalRef.current?.hide(),
+    'SHOW_RECENT_REQUESTS': () => {
+      console.log('SHOW_RECENT_REQUESTS', state);
       if (state.isModalVisible) {
         setState(state => ({
           ...state,
           activeIndex: wrapToIndex(state.activeIndex + 1, state.matchedRequests.length + state.matchedWorkspaces.length),
         }));
       }
-    });
-    // Only control up/down with tab if modal is visible
-    executeHotKey(event as unknown as KeyboardEvent, hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS, () => {
+    },
+    'SHOW_RECENT_REQUESTS_PREVIOUS': () => {
+      console.log('SHOW_RECENT_REQUESTS_PREVIOUS', state);
       if (state.isModalVisible) {
         setState(state => ({
           ...state,
           activeIndex: wrapToIndex(state.activeIndex - 1, state.matchedRequests.length + state.matchedWorkspaces.length),
         }));
       }
-    });
-  };
+    },
+  });
 
-  const handleKeyup = async (event: KeyboardEvent) => {
-    // Handle selection if unpresses all modifier keys. Ideally this would trigger once
-    // the user unpresses the hotkey that triggered this modal but we currently do not
-    // have the facilities to do that.
-    const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
+  useEffect(() => {
+    const handleKeyup = async (event: KeyboardEvent) => {
+      // Handle selection if unpresses all modifier keys. Ideally this would trigger once
+      // the user unpresses the hotkey that triggered this modal but we currently do not
+      // have the facilities to do that.
+      const isMetaKeyDown = event.ctrlKey || event.shiftKey || event.metaKey || event.altKey;
 
-    if (state.selectOnKeyup && modalRef.current?.isOpen() && !isMetaKeyDown) {
-      await activateCurrentIndex();
-      modalRef.current?.hide();
-    }
-  };
+      if (state.selectOnKeyup && modalRef.current?.isOpen() && !isMetaKeyDown) {
+        await activateCurrentIndex();
+        modalRef.current?.hide();
+      }
+    };
+
+    document.body.addEventListener('keyup', handleKeyup);
+
+    return () => {
+      document.body.removeEventListener('keyup', handleKeyup);
+    };
+  }, [activateCurrentIndex, state.selectOnKeyup]);
 
   const {
     searchString,
@@ -318,113 +325,111 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   } = state;
   const requestGroups = workspaceRequestsAndRequestGroups.filter(isRequestGroup);
   return (
-    <KeydownBinder onKeydown={handleKeydown} onKeyup={handleKeyup}>
-      <Modal
-        ref={modalRef}
-        className={isModalVisible ? '' : 'hide'}
-      >
-        <ModalHeader hideCloseButton>
-          {title || (
-            <Fragment>
-              <div className="pull-right txt-sm pad-right tall">
-                <span className="vertically-center">
+    <Modal
+      ref={modalRef}
+      className={isModalVisible ? '' : 'hide'}
+    >
+      <ModalHeader hideCloseButton>
+        {title || (
+          <Fragment>
+            <div className="pull-right txt-sm pad-right tall">
+              <span className="vertically-center">
+                <div>
+                  <span className="monospace">tab</span> or&nbsp;
+                  <span className="monospace">↑↓</span> to navigate&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span className="monospace">↵</span> &nbsp;to select&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span className="monospace">esc</span> to dismiss
+                </div>
+              </span>
+            </div>
+            <div>Quick Switch</div>
+          </Fragment>
+        )}
+      </ModalHeader>
+      <ModalBody className="request-switcher">
+        {!disableInput && (
+          <div className="pad" onKeyDown={handleInputKeydown}>
+            <div className="form-control form-control--outlined no-margin">
+              <input
+                type="text"
+                placeholder="Filter by name or folder"
+                value={searchString}
+                onChange={event => handleChangeValue(event.currentTarget.value)}
+              />
+            </div>
+          </div>
+        )}
+        <ul>
+          {matchedRequests.map((r: Request | WebSocketRequest | GrpcRequest, i) => {
+            const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
+            const buttonClasses = classnames(
+              'btn btn--expandable-small wide text-left pad-bottom',
+              {
+                focus: activeIndex === i,
+              },
+            );
+            return (
+              <li key={r._id}>
+                <Button onClick={(_e, request) => activateRequestAndHide(request)} value={r} className={buttonClasses}>
                   <div>
-                    <span className="monospace">tab</span> or&nbsp;
-                    <span className="monospace">↑↓</span> to navigate&nbsp;&nbsp;&nbsp;&nbsp;
-                    <span className="monospace">↵</span> &nbsp;to select&nbsp;&nbsp;&nbsp;&nbsp;
-                    <span className="monospace">esc</span> to dismiss
-                  </div>
-                </span>
-              </div>
-              <div>Quick Switch</div>
-            </Fragment>
-          )}
-        </ModalHeader>
-        <ModalBody className="request-switcher">
-          {!disableInput && (
-            <div className="pad" onKeyDown={handleInputKeydown}>
-              <div className="form-control form-control--outlined no-margin">
-                <input
-                  type="text"
-                  placeholder="Filter by name or folder"
-                  value={searchString}
-                  onChange={event => handleChangeValue(event.currentTarget.value)}
-                />
-              </div>
-            </div>
-          )}
-          <ul>
-            {matchedRequests.map((r: Request | WebSocketRequest | GrpcRequest, i) => {
-              const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
-              const buttonClasses = classnames(
-                'btn btn--expandable-small wide text-left pad-bottom',
-                {
-                  focus: activeIndex === i,
-                },
-              );
-              return (
-                <li key={r._id}>
-                  <Button onClick={(_e, request) => activateRequestAndHide(request)} value={r} className={buttonClasses}>
-                    <div>
-                      {requestGroup ? (
-                        <div className="pull-right faint italic">
-                          <Highlight search={searchString} text={groupOf(r).join(' / ')} />
+                    {requestGroup ? (
+                      <div className="pull-right faint italic">
+                        <Highlight search={searchString} text={groupOf(r).join(' / ')} />
                           &nbsp;&nbsp;
-                          <i className="fa fa-folder-o" />
-                        </div>
-                      ) : null}
-                      <Highlight search={searchString} text={r.name} />
-                    </div>
-                    <div className="margin-left-xs faint">
-                      {isRequest(r) ? <MethodTag method={r.method} /> : null}
-                      {isGrpcRequest(r) ? <GrpcTag /> : null}
-                      {isWebSocketRequest(r) ? <WebSocketTag /> : null}
-                      {<Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url} />}
-                    </div>
-                  </Button>
-                </li>
-              );
-            })}
-
-            {matchedRequests.length > 0 && matchedWorkspaces.length > 0 && (
-              <li className="pad-left pad-right">
-                <hr />
+                        <i className="fa fa-folder-o" />
+                      </div>
+                    ) : null}
+                    <Highlight search={searchString} text={r.name} />
+                  </div>
+                  <div className="margin-left-xs faint">
+                    {isRequest(r) ? <MethodTag method={r.method} /> : null}
+                    {isGrpcRequest(r) ? <GrpcTag /> : null}
+                    {isWebSocketRequest(r) ? <WebSocketTag /> : null}
+                    {<Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url} />}
+                  </div>
+                </Button>
               </li>
-            )}
+            );
+          })}
 
-            {matchedWorkspaces.map((w, i) => {
-              const buttonClasses = classnames('btn btn--super-compact wide text-left', {
-                focus: activeIndex - matchedRequests.length === i,
-              });
-              return (
-                <li key={w._id}>
-                  <Button onClick={(_e, value) => activateWorkspaceAndHide(value)} value={w} className={buttonClasses}>
-                    <i className="fa fa-random" />
-                    &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
-
-          {searchString && matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
-            <div className="text-center pad-bottom">
-              <p>
-                No matches found for <strong>{searchString}</strong>
-              </p>
-
-              {workspace ? <button
-                className="btn btn--outlined btn--compact"
-                disabled={!searchString}
-                onClick={activateCurrentIndex}
-              >
-                Create a request named {searchString}
-              </button> : null}
-            </div>
+          {matchedRequests.length > 0 && matchedWorkspaces.length > 0 && (
+            <li className="pad-left pad-right">
+              <hr />
+            </li>
           )}
-        </ModalBody>
-      </Modal>
-    </KeydownBinder>
+
+          {matchedWorkspaces.map((w, i) => {
+            const buttonClasses = classnames('btn btn--super-compact wide text-left', {
+              focus: activeIndex - matchedRequests.length === i,
+            });
+            return (
+              <li key={w._id}>
+                <Button onClick={(_e, value) => activateWorkspaceAndHide(value)} value={w} className={buttonClasses}>
+                  <i className="fa fa-random" />
+                    &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {searchString && matchedRequests.length === 0 && matchedWorkspaces.length === 0 && (
+          <div className="text-center pad-bottom">
+            <p>
+              No matches found for <strong>{searchString}</strong>
+            </p>
+
+            {workspace ? <button
+              className="btn btn--outlined btn--compact"
+              disabled={!searchString}
+              onClick={activateCurrentIndex}
+            >
+              Create a request named {searchString}
+            </button> : null}
+          </div>
+        )}
+      </ModalBody>
+    </Modal>
   );
 });
 RequestSwitcherModal.displayName = 'RequestSwitcherModal';

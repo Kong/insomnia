@@ -279,7 +279,7 @@ export class WrapperClass extends PureComponent<Props, State> {
 
     return (
       <Fragment>
-        <div key="modals" className="modals" onKeyDown={e => e.stopPropagation()}>
+        <div key="modals" className="modals">
           <ErrorBoundary showAlert>
             <AnalyticsModal />
             <AlertModal ref={registerModal} />
