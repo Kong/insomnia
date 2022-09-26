@@ -539,7 +539,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
   render() {
     const { workspace } = this.props;
     return (
-      <Modal ref={this._handleSetModalRef} freshState>
+      <Modal ref={this._handleSetModalRef}>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
       </Modal>

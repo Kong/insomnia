@@ -56,7 +56,7 @@ class ProjectSettingsModal extends PureComponent<Props> {
     const isRemote = isRemoteProject(project);
 
     return (
-      <Modal ref={this._handleSetModalRef} freshState>
+      <Modal ref={this._handleSetModalRef}>
         <ModalHeader key={`header::${project._id}`}>
           {strings.project.singular} Settings{' '}
           <div className="txt-sm selectable faint monospace">{project._id}</div>

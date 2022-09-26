@@ -145,7 +145,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
   };
 
   return (
-    <Modal ref={modalRef} freshState>
+    <Modal ref={modalRef}>
       <ModalHeader>
         Request Settings{' '}
         <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>

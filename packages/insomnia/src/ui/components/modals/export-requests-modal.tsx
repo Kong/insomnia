@@ -219,7 +219,7 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
     const { treeRoot } = this.state;
     const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
     return (
-      <Modal ref={this.setModalRef} tall freshState {...this.props}>
+      <Modal ref={this.setModalRef} tall {...this.props}>
         <ModalHeader>Select Requests to Export</ModalHeader>
         <ModalBody>
           <div className="requests-tree">

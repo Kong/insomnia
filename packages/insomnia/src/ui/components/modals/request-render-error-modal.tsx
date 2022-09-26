@@ -91,7 +91,7 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
   render() {
     const { request, error } = this.state;
     return (
-      <Modal ref={this._setModalRef} freshState>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>Failed to Render Request</ModalHeader>
         <ModalBody>{request && error ? this.renderModalBody(request, error) : null}</ModalBody>
       </Modal>

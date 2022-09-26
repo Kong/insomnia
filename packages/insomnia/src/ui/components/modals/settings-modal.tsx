@@ -52,7 +52,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   }), []);
 
   return (
-    <Modal ref={modalRef} tall freshState {...props}>
+    <Modal ref={modalRef} tall {...props}>
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">

@@ -139,7 +139,7 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
     const { configs, activeTab } = this.state;
     const activeConfig = configs[activeTab];
     return (
-      <Modal ref={this._setModalRef} freshState tall>
+      <Modal ref={this._setModalRef} tall>
         <ModalHeader>Generate Config</ModalHeader>
         <ModalBody className="wide">
           <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={this._handleTabSelect}>

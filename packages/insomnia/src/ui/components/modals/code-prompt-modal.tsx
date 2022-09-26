@@ -119,7 +119,7 @@ export class CodePromptModal extends PureComponent<{}, State> {
     } = this.state;
 
     return (
-      <Modal ref={this._setModalRef} freshState tall>
+      <Modal ref={this._setModalRef} tall>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody
           noScroll

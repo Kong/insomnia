@@ -1,8 +1,6 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { CSSProperties, PureComponent, ReactNode } from 'react';
+import React, { forwardRef, ReactNode, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { pressedHotKey } from '../../../common/hotkeys-listener';
 import { KeydownBinder } from '../keydown-binder';
@@ -21,176 +19,130 @@ export interface ModalProps {
   onHide?: Function;
   onCancel?: Function;
   onKeyDown?: Function;
-  freshState?: boolean;
   children?: ReactNode;
   className?: string;
 }
 
-interface State {
-  open: boolean;
-  forceRefreshCounter: number;
-  zIndex: number;
+export interface ModalHandle {
+  show: (options?: { onHide: () => void }) => void;
+  hide: () => void;
+  toggle: () => void;
+  isOpen: () => boolean;
 }
+export const Modal = forwardRef<ModalHandle, ModalProps>(({
+  centered,
+  children,
+  className,
+  closeOnKeyCodes,
+  noEscape,
+  onCancel,
+  onHide: onHideProp,
+  onKeyDown,
+  onShow,
+  skinny,
+  tall,
+  wide,
+}, ref) => {
+  const [open, setOpen] = useState(false);
+  const [zIndex, setZIndex] = useState(globalZIndex);
+  const [onHideArgument, setOnHideArgument] = useState<() => void>();
+  const divRef = useRef<HTMLDivElement>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Modal extends PureComponent<ModalProps, State> {
-  onHide: Function | null = null;
-  _node: HTMLDivElement | null = null;
+  const show: ModalHandle['show'] = useCallback(options => {
+    options?.onHide && setOnHideArgument(options.onHide);
+    setOpen(true);
+    setZIndex(globalZIndex++);
+    onShow?.();
 
-  state: State = {
-    open: false,
-    forceRefreshCounter: 0,
-    zIndex: globalZIndex,
-  };
+    divRef.current?.focus();
+  }, [onShow]);
 
-  async _handleKeyDown(event: KeyboardEvent) {
-    if (!this.state.open) {
-      return;
-    }
+  const hide = useCallback(() => {
+    setOpen(false);
+    onHideProp?.();
+    onHideArgument?.();
+  }, [onHideProp, onHideArgument]);
 
-    this.props.onKeyDown?.(event);
+  useImperativeHandle(ref, () => ({
+    show,
+    hide,
+    toggle: () => open ? hide() : show(),
+    isOpen: () => open,
+  }), [show, open, hide]);
 
+  const classes = classnames(
+    'modal',
+    'theme--dialog',
+    className,
+    { 'modal--fixed-height': tall },
+    { 'modal--noescape': noEscape },
+    { 'modal--wide': wide },
+    { 'modal--skinny': skinny },
+  );
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     // Don't check for close keys if we don't want them
-    if (this.props.noEscape) {
+    if (noEscape) {
       return;
     }
-
-    const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
-    const pressedCloseButton = closeOnKeyCodes.find(c => c === event.keyCode);
-
-    // Pressed escape
-    if (pressedEscape || pressedCloseButton) {
-      event.preventDefault();
-      this.hide();
-      this.props.onCancel?.();
-    }
-  }
-
-  _handleClick(event: React.MouseEvent<HTMLDivElement>) {
-    // Don't check for close keys if we don't want them
-    if (this.props.noEscape) {
-      return;
-    }
-
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
-    let target: ParentNode | null =
-      event.target instanceof HTMLElement ?
-        event.target : null;
-
+    let currentElement: ParentNode | null = event.target instanceof HTMLElement ? event.target : null;
     let shouldHide = false;
-
     for (let i = 0; i < 5; i++) {
-      if (!target) {
+      if (!currentElement) {
         break;
       }
-
-      if (target instanceof HTMLElement && target.hasAttribute('data-close-modal')) {
+      if (currentElement instanceof HTMLElement && currentElement.hasAttribute('data-close-modal')) {
         shouldHide = true;
         break;
       }
-
-      target = target.parentNode;
+      currentElement = currentElement.parentNode;
     }
 
     if (shouldHide) {
-      this.hide();
-      this.props.onCancel?.();
+      hide();
+      onCancel?.();
     }
-  }
-
-  _setModalRef(node: HTMLDivElement) {
-    this._node = node;
-  }
-
-  show(options?: ModalProps) {
-    const { freshState } = this.props;
-    const { forceRefreshCounter } = this.state;
-
-    this.setState({
-      open: true,
-      zIndex: globalZIndex++,
-      forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
-    });
-
-    this.props.onShow?.();
-
-    // Allow instance-based onHide method
-    this.onHide = options?.onHide ?? null;
-    setTimeout(() => this._node?.focus());
-  }
-
-  toggle() {
-    if (this.state.open) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-
-  isOpen() {
-    return this.state.open;
-  }
-
-  hide() {
-    this.setState({
-      open: false,
-    });
-    this.props.onHide?.();
-    this.onHide?.();
-  }
-
-  render() {
-    const { tall, wide, skinny, noEscape, className, children, centered } = this.props;
-    const { open, zIndex, forceRefreshCounter } = this.state;
-
+  }, [hide, noEscape, onCancel]);
+  const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
     if (!open) {
-      return null;
+      return;
     }
-
-    const classes = classnames(
-      'modal',
-      'theme--dialog',
-      className,
-      {
-        'modal--fixed-height': tall,
-      },
-      {
-        'modal--noescape': noEscape,
-      },
-      {
-        'modal--wide': wide,
-      },
-      {
-        'modal--skinny': skinny,
-      },
-    );
-    const styles: CSSProperties = {};
-
-    if (open) {
-      styles.zIndex = zIndex;
+    onKeyDown?.(event);
+    // Don't check for close keys if we don't want them
+    if (noEscape) {
+      return;
     }
-
-    return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div
-          ref={this._setModalRef}
-          tabIndex={-1}
-          className={classes}
-          style={styles}
-          aria-hidden={!open}
-          onClick={this._handleClick}
-        >
-          <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
-          <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
-            <div className="modal__content" key={forceRefreshCounter}>
-              {children}
-            </div>
+    const pressedEscape = await pressedHotKey(event, hotKeyRefs.CLOSE_MODAL);
+    const pressedCloseButton = (closeOnKeyCodes || []).find(c => c === event.keyCode);
+    // Pressed escape
+    if (pressedEscape || pressedCloseButton) {
+      event.preventDefault();
+      hide();
+      onCancel?.();
+    }
+  }, [closeOnKeyCodes, hide, noEscape, onCancel, onKeyDown, open]);
+  return (open ?
+    <KeydownBinder onKeydown={handleKeyDown}>
+      <div
+        ref={divRef}
+        tabIndex={-1}
+        className={classes}
+        style={{ zIndex }}
+        aria-hidden={false}
+        onClick={handleClick}
+      >
+        <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
+        <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
+          <div className="modal__content">
+            {children}
           </div>
         </div>
-      </KeydownBinder>
-    );
-  }
-}
+      </div>
+    </KeydownBinder>
+    : null
+  );
+});
+Modal.displayName = 'Modal';

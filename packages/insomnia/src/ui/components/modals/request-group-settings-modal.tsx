@@ -315,7 +315,7 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
   render() {
     const { requestGroup } = this.state;
     return (
-      <Modal ref={this._setModalRef} freshState>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>
           Folder Settings{' '}
           <span className="txt-sm selectable faint monospace">
