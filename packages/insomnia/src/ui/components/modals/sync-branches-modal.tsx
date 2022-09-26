@@ -9,7 +9,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { selectSyncItems } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
@@ -31,7 +31,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
   state: State = {
     error: '',
@@ -41,7 +41,7 @@ export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
     currentBranch: '',
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -171,11 +171,8 @@ export class UnconnectedSyncBranchesModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  async show(options: { onHide: (...args: any[]) => any }) {
-    this.modal &&
-      this.modal.show({
-        onHide: options.onHide,
-      });
+  async show() {
+    this.modal && this.modal.show();
     await this.refreshState();
   }
 

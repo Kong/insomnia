@@ -7,7 +7,7 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -20,7 +20,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class AddKeyCombinationModal extends PureComponent<{}, State> {
-  _modal: Modal | null = null;
+  _modal: ModalHandle | null = null;
 
   state: State = {
     hotKeyRefId: null,
@@ -29,7 +29,7 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
     pressedKeyCombination: null,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this._modal = modal;
   }
 

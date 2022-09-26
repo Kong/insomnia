@@ -12,7 +12,7 @@ import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { selectSyncItems } from '../../redux/selectors';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -53,13 +53,13 @@ const _initialState: State = {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedSyncStagingModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _onSnapshot: (() => void) | null = null;
   _handlePush: (() => Promise<void>) | null = null;
   textarea: HTMLTextAreaElement | null = null;
   state = _initialState;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

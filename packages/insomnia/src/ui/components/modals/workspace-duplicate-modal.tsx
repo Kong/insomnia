@@ -17,7 +17,7 @@ import { initializeLocalBackendProjectAndMarkForSync } from '../../../sync/vcs/i
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveProject, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -44,7 +44,7 @@ const ProjectOption: FC<Project> = project => (
   </option>
 );
 
-const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
+const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<ModalHandle, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
   const dispatch = useDispatch();
 
   const projects = useSelector(selectProjects);
@@ -128,7 +128,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class WorkspaceDuplicateModal extends PureComponent<Props, State> {
   state: State = { };
-  modal = createRef<Modal>();
+  modal = createRef<ModalHandle>();
 
   show(options: Options) {
     this.setState({ options }, () => {
