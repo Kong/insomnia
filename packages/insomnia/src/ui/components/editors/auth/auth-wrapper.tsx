@@ -75,5 +75,5 @@ export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) =>
     );
   }
 
-  return <div className='tall'>{authBody}</div>;
+  return <div>{authBody}</div>;
 };

@@ -80,7 +80,14 @@ const HeaderTabWrapper = styled.div({
   display: 'flex',
   flexDirection: 'column',
   position: 'relative',
+  height: '100%',
 });
+
+const QueryEditorWrapper = styled.div({
+  flex: '1 0 auto',
+  overflowY: 'auto',
+});
+
 interface FormProps {
   request: WebSocketRequest;
   previewMode: string;
@@ -93,6 +100,15 @@ const PayloadTabPanel = styled(TabPanel)({
   flexDirection: 'column',
   height: '100%',
   width: '100%',
+});
+const QueryEditorTabPanel = styled(TabPanel)({
+  display: 'flex',
+  flexDirection: 'column',
+  overflowY: 'auto',
+});
+
+const AuthTabPanel = styled(TabPanel)({
+  overflowY: 'auto',
 });
 
 const HeaderEditorsWrapper = styled.div({
@@ -328,14 +344,16 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             workspaceId={workspaceId}
           />
         </PayloadTabPanel>
-        <TabPanel className="react-tabs__tab-panel">
+        <AuthTabPanel className="react-tabs__tab-panel">
           {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
             disabled={disabled}
           />
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel">
+        </AuthTabPanel>
+        <QueryEditorTabPanel
+          className="react-tabs__tab-panel query-editor"
+        >
           {disabled && <PaneReadOnlyBanner />}
           <div className="pad pad-bottom-sm query-editor__preview">
             <label className="label--small no-pad-top">Url Preview</label>
@@ -348,7 +366,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
               </ErrorBoundary>
             </code>
           </div>
-          <div className="query-editor__editor">
+          <QueryEditorWrapper
+            className="query-editor__editor"
+          >
             <ErrorBoundary
               key={uniqueKey}
               errorClassName="tall wide vertically-align font-error pad text-center"
@@ -359,9 +379,9 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
                 disabled={disabled}
               />
             </ErrorBoundary>
-          </div>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel header-editor">
+          </QueryEditorWrapper>
+        </QueryEditorTabPanel>
+        <TabPanel className="react-tabs__tab-panel">
           <HeaderTabWrapper>
             {disabled && <PaneReadOnlyBanner />}
             <HeaderEditorsWrapper>
