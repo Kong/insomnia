@@ -362,9 +362,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
               </ErrorBoundary>
             </code>
           </div>
-          <QueryEditorWrapper
-            className="query-editor__editor"
-          >
+          <QueryEditorWrapper>
             <ErrorBoundary
               key={uniqueKey}
               errorClassName="tall wide vertically-align font-error pad text-center"
