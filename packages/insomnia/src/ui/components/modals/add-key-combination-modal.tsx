@@ -33,7 +33,7 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
     this._modal = modal;
   }
 
-  _handleKeyDown(event: KeyboardEvent) {
+  _handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     event.preventDefault();
     event.stopPropagation();
 
@@ -121,10 +121,10 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
     const duplicateMessageClasses = classnames('margin-bottom margin-left faint italic txt-md', {
       hidden: !isDuplicate,
     });
+
     return (
       <Modal
         ref={this._setModalRef}
-        onKeyDown={this._handleKeyDown}
         className="shortcuts add-key-comb-modal"
       >
         <ModalHeader>Add Keyboard Shortcut</ModalHeader>
@@ -133,7 +133,7 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
             <div className="form-control form-control--outlined">
               <label>
                 Press desired key combination and then press ENTER.
-                <input type="text" className="key-comb" value={keyCombDisplay} disabled />
+                <input onKeyDown={this._handleKeyDown} autoFocus type="text" className="key-comb" value={keyCombDisplay} readOnly />
               </label>
             </div>
           </div>
