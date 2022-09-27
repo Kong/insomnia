@@ -3,7 +3,6 @@ import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import { selectSettings } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { showSettingsModal } from '../modals/settings-modal';
@@ -22,7 +21,7 @@ export const SettingsButton: FunctionComponent = () => {
         message={
           <>
             Preferences (
-            <Hotkey keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.PREFERENCES_SHOW_GENERAL.id]} />)
+            <Hotkey keyBindings={hotKeyRegistry['preferences_showGeneral']} />)
           </>
         }
       >

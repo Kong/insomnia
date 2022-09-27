@@ -35,17 +35,17 @@ export const PlaceholderResponsePane: FC = ({ children }) => {
       <PaneBody placeholder>
         <Wrapper>
           {[
-            keyboardShortcutDefinitions.REQUEST_SEND,
-            keyboardShortcutDefinitions.REQUEST_FOCUS_URL,
-            keyboardShortcutDefinitions.SHOW_COOKIES_EDITOR,
-            keyboardShortcutDefinitions.ENVIRONMENT_SHOW_EDITOR,
-            keyboardShortcutDefinitions.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
-          ].map(({ description, id }) => (
-            <Item key={id}>
-              <Description>{description}</Description>
+            'request_send',
+            'request_focusUrl',
+            'showCookiesEditor',
+            'environment_showEditor',
+            'preferences_showKeyboardShortcuts',
+          ].map(shortcut => (
+            <Item key={shortcut}>
+              <Description>{keyboardShortcutDefinitions[shortcut]}</Description>
               <code>
                 <Hotkey
-                  keyBindings={hotKeyRegistry[id]}
+                  keyBindings={hotKeyRegistry[shortcut]}
                   useFallbackMessage
                 />
               </code>
