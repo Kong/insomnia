@@ -14,7 +14,6 @@ export interface ModalProps {
   noEscape?: boolean;
   onShow?: Function;
   onHide?: Function;
-  onCancel?: Function;
   children?: ReactNode;
   className?: string;
 }
@@ -30,7 +29,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   children,
   className,
   noEscape,
-  onCancel,
   onHide: onHideProp,
   onShow,
   skinny,
@@ -95,15 +93,13 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
 
     if (shouldHide) {
       hide();
-      onCancel?.();
     }
-  }, [hide, noEscape, onCancel]);
+  }, [hide, noEscape]);
 
   useGlobalKeyboardShortcuts({
     'CLOSE_MODAL': () => {
       if (!noEscape) {
         hide();
-        onCancel?.();
       }
     },
   });

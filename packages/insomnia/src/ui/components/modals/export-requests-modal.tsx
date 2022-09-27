@@ -26,7 +26,7 @@ export interface Node {
   selectedRequests: number;
 }
 
-type Props = ModalProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+type Props = ModalProps & ReturnType<typeof mapStateToProps>;
 
 interface State {
   treeRoot: Node | null;
@@ -63,7 +63,7 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
     }
 
     const exportedRequestIds = this.getSelectedRequestIds(treeRoot);
-    this.props.handleExportRequestsToFile(exportedRequestIds);
+    exportRequestsToFile(exportedRequestIds);
     this.hide();
   }
 
@@ -248,11 +248,5 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
 const mapStateToProps = (state: RootState) => ({
   sidebarChildren: selectSidebarChildren(state),
 });
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
-  const bound = bindActionCreators({ exportRequestsToFile }, dispatch);
-  return {
-    handleExportRequestsToFile: bound.exportRequestsToFile,
-  };
-};
 
-export const ExportRequestsModal = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef:true })(ExportRequestsModalClass);
+export const ExportRequestsModal = connect(mapStateToProps, null, null, { forwardRef:true })(ExportRequestsModalClass);

@@ -10,7 +10,6 @@ import { showModal } from '.';
 
 export interface SelectModalShowOptions {
   message: string | null;
-  onCancel?: () => void;
   onDone?: (selectedValue: string | null) => void | Promise<void>;
   options: {
     name: string;
@@ -45,7 +44,6 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
 
   show({
     message,
-    onCancel,
     onDone,
     options,
     title,
@@ -54,7 +52,6 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
   }: SelectModalShowOptions = initialState) {
     this.setState({
       message,
-      onCancel,
       onDone,
       options,
       title,
@@ -68,10 +65,10 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
   }
 
   render() {
-    const { message, title, options, value, onCancel, noEscape } = this.state;
+    const { message, title, options, value,  noEscape } = this.state;
 
     return (
-      <Modal ref={this.modal} onCancel={onCancel} noEscape={noEscape}>
+      <Modal ref={this.modal} noEscape={noEscape}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">
           <p>{message}</p>

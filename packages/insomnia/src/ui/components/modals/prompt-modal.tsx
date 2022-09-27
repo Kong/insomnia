@@ -24,7 +24,6 @@ interface State {
   inputType?: string | null;
   cancelable?: boolean | null;
   onComplete?: (arg0: string) => Promise<void> | void;
-  onCancel?: (() => void) | null;
   onHide?: () => void;
   onDeleteHint?: ((arg0?: string) => void) | null;
   currentValue: string;
@@ -47,7 +46,6 @@ export interface PromptModalOptions {
   onComplete?: (arg0: string) => Promise<void> | void;
   onHide?: () => void;
   onDeleteHint?: (arg0?: string) => void;
-  onCancel?: () => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -69,7 +67,6 @@ export class PromptModal extends PureComponent<{}, State> {
     inputType: '',
     cancelable: false,
     onComplete: undefined,
-    onCancel: undefined,
     onDeleteHint: undefined,
     onHide: undefined,
     currentValue: '',
@@ -85,15 +82,6 @@ export class PromptModal extends PureComponent<{}, State> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await onComplete?.(value!);
     this.hide();
-  }
-
-  _handleCancel() {
-    const { onCancel, loading } = this.state;
-    if (loading) {
-      return;
-    }
-
-    onCancel?.();
   }
 
   _setInputRef(input: HTMLInputElement) {
@@ -166,7 +154,6 @@ export class PromptModal extends PureComponent<{}, State> {
     label,
     hints,
     onComplete,
-    onCancel,
     validate,
     onDeleteHint,
     onHide,
@@ -174,7 +161,6 @@ export class PromptModal extends PureComponent<{}, State> {
     this.setState({
       currentValue: '',
       title,
-      onCancel,
       onDeleteHint,
       onComplete,
       defaultValue,
@@ -285,7 +271,7 @@ export class PromptModal extends PureComponent<{}, State> {
       'form-control--outlined': inputType !== 'checkbox',
     });
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onCancel={this._handleCancel} onHide={this.state.onHide}>
+      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onHide={this.state.onHide}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
