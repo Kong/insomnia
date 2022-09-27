@@ -1,4 +1,4 @@
-import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
+import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -30,28 +30,22 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
    * @param newKeyComb the key combination to be checked.
    * @returns {boolean} true if already existed.
    */
-  const checkKeyCombinationDuplicate = useCallback((newKeyComb: KeyCombination) => {
-    for (const hotKeyRefId in hotKeyRegistry) {
-      if (!hotKeyRegistry.hasOwnProperty(hotKeyRefId)) {
-        continue;
-      }
-      const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
-      for (const keyComb of keyCombs) {
-        if (areSameKeyCombinations(keyComb, newKeyComb)) {
-          return true;
-        }
-      }
-    }
-    return false;
+  const checkKeyCombinationDuplicate = useCallback((pressedKeyComb: KeyCombination) => {
+    const allKeyBindings = Object.values(hotKeyRegistry);
+    const hasKeyBinding = !!allKeyBindings.find(bindings => {
+      const keyCombList = getPlatformKeyCombinations(bindings);
+      return keyCombList.find(keyComb => areSameKeyCombinations(pressedKeyComb, keyComb));
+    });
+    return hasKeyBinding;
   }, [hotKeyRegistry]);
 
   /**
    * Registers a new key combination under a hot key.
-   * @param hotKeyRefId the reference id of a hot key to be given the new key combination.
+   * @param keyboardShortcut the database key to be assigned the new key combination.
    * @param keyComb the new key combination.
    */
-  const addKeyCombination = useCallback((hotKeyRefId: string, keyComb: KeyCombination) => {
-    const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
+  const addKeyCombination = useCallback((keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => {
+    const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
     keyCombs.push(keyComb);
     handleUpdateKeyBindings(hotKeyRegistry);
   }, [handleUpdateKeyBindings, hotKeyRegistry]);

@@ -1,3 +1,4 @@
+import { KeyboardShortcut } from 'insomnia-common';
 import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -42,10 +43,10 @@ export const PlaceholderResponsePane: FC = ({ children }) => {
             'preferences_showKeyboardShortcuts',
           ].map(shortcut => (
             <Item key={shortcut}>
-              <Description>{keyboardShortcutDefinitions[shortcut]}</Description>
+              <Description>{keyboardShortcutDefinitions[shortcut as KeyboardShortcut]}</Description>
               <code>
                 <Hotkey
-                  keyBindings={hotKeyRegistry[shortcut]}
+                  keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]}
                   useFallbackMessage
                 />
               </code>
