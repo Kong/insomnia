@@ -517,7 +517,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           dropdownButtons[0],
           ReactDOM.createPortal(
             <div
-              // @ts-expect-error -- EventListener type doesn't match React.KeyboardEventHandler ???
               onKeyDown={handleKeydown}
               key="item"
               className={menuClasses}

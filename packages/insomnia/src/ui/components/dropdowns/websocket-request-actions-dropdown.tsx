@@ -1,7 +1,7 @@
 import React, { forwardRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
@@ -51,12 +51,12 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
       <DropdownItem onClick={duplicate}>
         <i className="fa fa-copy" /> Duplicate
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_DUPLICATE.id]} />
       </DropdownItem>
 
       <DropdownItem onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_TOGGLE_PIN.id]} />
       </DropdownItem>
 
       <DropdownItem
@@ -65,14 +65,14 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
         addIcon
       >
         <i className="fa fa-trash-o" /> Delete
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DELETE.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_DELETE.id]} />
       </DropdownItem>
 
       <DropdownDivider />
 
       <DropdownItem onClick={handleShowSettings}>
         <i className="fa fa-wrench" /> Settings
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_SETTINGS.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_SETTINGS.id]} />
       </DropdownItem>
     </Dropdown>
   );

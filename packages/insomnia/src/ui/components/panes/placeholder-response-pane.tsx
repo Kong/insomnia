@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
@@ -35,11 +35,11 @@ export const PlaceholderResponsePane: FC = ({ children }) => {
       <PaneBody placeholder>
         <Wrapper>
           {[
-            hotKeyRefs.REQUEST_SEND,
-            hotKeyRefs.REQUEST_FOCUS_URL,
-            hotKeyRefs.SHOW_COOKIES_EDITOR,
-            hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
-            hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
+            keyboardShortcutDefinitions.REQUEST_SEND,
+            keyboardShortcutDefinitions.REQUEST_FOCUS_URL,
+            keyboardShortcutDefinitions.SHOW_COOKIES_EDITOR,
+            keyboardShortcutDefinitions.ENVIRONMENT_SHOW_EDITOR,
+            keyboardShortcutDefinitions.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
           ].map(({ description, id }) => (
             <Item key={id}>
               <Description>{description}</Description>

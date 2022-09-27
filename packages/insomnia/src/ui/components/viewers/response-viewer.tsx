@@ -123,7 +123,7 @@ export const ResponseViewer = ({
   };
 
   useGlobalKeyboardShortcuts({
-    RESPONSE_FOCUS: () => {
+    response_focus: () => {
       if (!_isViewSelectable()) {
         return;
       }

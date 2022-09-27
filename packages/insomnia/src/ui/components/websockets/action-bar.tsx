@@ -119,8 +119,8 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
   }, [environmentId, isOpen, request, workspaceId]);
 
   useGlobalKeyboardShortcuts({
-    REQUEST_SEND: () => handleSubmit(),
-    REQUEST_FOCUS_URL: () => {
+    request_send: () => handleSubmit(),
+    request_focusUrl: () => {
       editorRef.current?.focus();
       editorRef.current?.selectAll();
     },

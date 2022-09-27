@@ -5,7 +5,7 @@ import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { exportHarRequest } from '../../../common/har';
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
@@ -124,21 +124,21 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem onClick={duplicate}>
         <i className="fa fa-copy" /> Duplicate
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_DUPLICATE.id]} />
       </DropdownItem>
 
       {canGenerateCode && (
         <DropdownItem onClick={generateCode}>
           <i className="fa fa-code" /> Generate Code
           <DropdownHint
-            keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]}
+            keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]}
           />
         </DropdownItem>
       )}
 
       <DropdownItem onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_TOGGLE_PIN.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_TOGGLE_PIN.id]} />
       </DropdownItem>
 
       {canGenerateCode && (
@@ -153,7 +153,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         addIcon
       >
         <i className="fa fa-trash-o" /> Delete
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_DELETE.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_DELETE.id]} />
       </DropdownItem>
 
       {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
@@ -177,7 +177,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem onClick={handleShowSettings}>
         <i className="fa fa-wrench" /> Settings
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_SETTINGS.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SHOW_SETTINGS.id]} />
       </DropdownItem>
     </Dropdown>
   );

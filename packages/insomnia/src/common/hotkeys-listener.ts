@@ -1,7 +1,7 @@
 import { KeyBindings, KeyCombination } from 'insomnia-common';
 
 import * as models from '../models';
-import type { HotKeyDefinition } from './hotkeys';
+import type { KeyboardShortcutDefinition } from './hotkeys';
 import { areSameKeyCombinations, getPlatformKeyCombinations } from './hotkeys';
 
 const _pressedHotKey = (event: KeyboardEvent, bindings: KeyBindings) => {
@@ -30,7 +30,7 @@ const _pressedHotKey = (event: KeyboardEvent, bindings: KeyBindings) => {
  */
 export const pressedHotKey = async (
   event: KeyboardEvent,
-  definition: HotKeyDefinition,
+  definition: KeyboardShortcutDefinition,
 ) => {
   const settings = await models.settings.getOrCreate();
   return _pressedHotKey(event, settings.hotKeyRegistry[definition.id]);
@@ -44,7 +44,7 @@ export const pressedHotKey = async (
  */
 export const executeHotKey = async <T extends Function>(
   event: KeyboardEvent,
-  definition: HotKeyDefinition,
+  definition: KeyboardShortcutDefinition,
   callback: T,
 ) => {
   if (await pressedHotKey(event, definition)) {

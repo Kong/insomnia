@@ -1,7 +1,7 @@
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
@@ -45,7 +45,7 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
 
       <DropdownItem value="HTTP" onClick={create}>
         <i className="fa fa-plus-circle" />HTTP Request
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[]} />
       </DropdownItem>
 
       <DropdownItem value="GraphQL" onClick={create}>
@@ -62,7 +62,7 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
 
       <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" />New Folder
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry} />
       </DropdownItem>
     </Dropdown>
   );

@@ -21,7 +21,7 @@ import {
   DEBOUNCE_MILLIS,
   isMac,
 } from '../../../common/constants';
-import { areSameKeyCombinations, getPlatformKeyCombinations, hotKeyRefs } from '../../../common/hotkeys';
+import { areSameKeyCombinations, getPlatformKeyCombinations, keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
@@ -762,7 +762,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   async _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._prettify);
+    executeHotKey(event, keyboardShortcutDefinitions.BEAUTIFY_REQUEST_BODY, this._prettify);
   }
 
   /**

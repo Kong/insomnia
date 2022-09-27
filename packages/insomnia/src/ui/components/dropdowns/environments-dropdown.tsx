@@ -2,7 +2,7 @@ import { EnvironmentHighlightColorStyle } from 'insomnia-common';
 import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
 import { selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
@@ -104,7 +104,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
 
       <DropdownItem onClick={handleShowEnvironmentModal}>
         <i className="fa fa-wrench" /> Manage Environments
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.ENVIRONMENT_SHOW_EDITOR.id]} />
       </DropdownItem>
     </Dropdown>
   );

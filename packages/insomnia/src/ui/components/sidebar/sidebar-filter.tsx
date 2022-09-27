@@ -37,7 +37,7 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
   }, [activeWorkspaceMeta]);
 
   useGlobalKeyboardShortcuts({
-    'SIDEBAR_FOCUS_FILTER': () => {
+    sidebar_focusFilter: () => {
       inputRef.current?.focus();
     },
   });

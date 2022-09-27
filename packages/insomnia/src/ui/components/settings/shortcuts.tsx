@@ -3,13 +3,10 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
-  areKeyBindingsSameAsDefault,
   areSameKeyCombinations,
   constructKeyCombinationDisplay,
   getPlatformKeyCombinations,
-  HotKeyDefinition,
-  hotKeyRefs,
-  newDefaultKeyBindings,
+  keyboardShortcutDefinitions,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
 import { selectHotKeyRegistry } from '../../redux/selectors';
@@ -25,8 +22,6 @@ import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
 interface Props {
   handleUpdateKeyBindings: (keyBindings: HotKeyRegistry) => void;
 }
-
-const HOT_KEY_DEFS: HotKeyDefinition[] = Object.values(hotKeyRefs);
 
 export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
@@ -85,7 +80,7 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
   }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
   const handleResetKeyBindings = useCallback((hotKeyRefId: string) => {
-    hotKeyRegistry[hotKeyRefId] = newDefaultKeyBindings(hotKeyRefId);
+    hotKeyRegistry[hotKeyRefId] = JSON.parse(JSON.stringify(newDefaultRegistry()[hotKeyRefId]));
     handleUpdateKeyBindings(hotKeyRegistry);
   }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
@@ -103,14 +98,14 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
       </div>
       <table className="table--fancy">
         <tbody>
-          {HOT_KEY_DEFS.map((def: HotKeyDefinition) => {
-            const keyBindings = hotKeyRegistry[def.id];
-            const keyCombinations = getPlatformKeyCombinations(keyBindings);
+          {Object.entries(hotKeyRegistry).map(([keyboardShortcut, platformCombinations]) => {
+            const keyCombinations = getPlatformKeyCombinations(platformCombinations);
+            const description = keyboardShortcutDefinitions[keyboardShortcut];
             const hasRemoveItems = keyCombinations.length > 0;
-            const hasResetItems = !areKeyBindingsSameAsDefault(def.id, keyBindings);
+
             return (
-              <tr key={def.id}>
-                <td style={{ verticalAlign: 'middle' }}>{def.description}</td>
+              <tr key={keyboardShortcut}>
+                <td style={{ verticalAlign: 'middle' }}>{description}</td>
                 <td className="text-right">
                   {keyCombinations.map((keyComb: KeyCombination, index: number) => {
                     return (
@@ -125,7 +120,7 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
                     <DropdownButton className="btn btn--clicky-small">
                       <i className="fa fa-gear" />
                     </DropdownButton>
-                    <DropdownItem value={def.id} onClick={handleAddKeyCombination}>
+                    <DropdownItem value={keyboardShortcut} onClick={handleAddKeyCombination}>
                       <i className="fa fa-plus-circle" />
                       Add keyboard shortcut
                     </DropdownItem>
@@ -139,8 +134,8 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
                           <DropdownItem
                             key={display}
                             value={{
-                              hotKeyRefId: def.id,
-                              keyComb: keyComb,
+                              hotKeyRefId: keyboardShortcut,
+                              keyComb,
                             }}
                             buttonClass={PromptButton}
                             onClick={handleRemoveKeyCombination}
@@ -151,16 +146,15 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
                       })
                     }
 
-                    {hasResetItems && <DropdownDivider />}
-                    {hasResetItems && (
-                      <DropdownItem
-                        value={def.id}
-                        buttonClass={PromptButton}
-                        onClick={handleResetKeyBindings}
-                      >
-                        <i className="fa fa-empty" /> Reset keyboard shortcuts
-                      </DropdownItem>
-                    )}
+                    <DropdownDivider />
+                    <DropdownItem
+                      value={keyboardShortcut}
+                      buttonClass={PromptButton}
+                      onClick={handleResetKeyBindings}
+                    >
+                      <i className="fa fa-empty" /> Reset keyboard shortcuts
+                    </DropdownItem>
+
                   </Dropdown>
                 </td>
               </tr>

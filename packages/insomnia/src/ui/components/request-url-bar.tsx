@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
-import { hotKeyRefs } from '../../common/hotkeys';
+import { keyboardShortcutDefinitions } from '../../common/hotkeys';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
@@ -349,7 +349,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           placeholder="https://api.myproduct.com/v1/users"
           defaultValue={url}
           onChange={handleUrlChange}
-          // @ts-expect-error -- EventListener type doesn't match React.KeyboardEventHandler ???
           onKeyDown={handleKeydown}
         />
         {isCancellable ? (
@@ -385,7 +384,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               <DropdownDivider>Basic</DropdownDivider>
               <DropdownItem onClick={send}>
                 <i className="fa fa-arrow-circle-o-right" /> Send Now
-                <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SEND.id]} />
+                <DropdownHint keyBindings={hotKeyRegistry[keyboardShortcutDefinitions.REQUEST_SEND.id]} />
               </DropdownItem>
               <DropdownItem onClick={handleGenerateCode}>
                 <i className="fa fa-code" /> Generate Client Code
