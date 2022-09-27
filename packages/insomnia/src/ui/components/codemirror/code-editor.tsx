@@ -1016,12 +1016,12 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
     const allKeyBindings = Object.values(this.props.hotKeyRegistry);
 
-    const globalBinding = allKeyBindings.find(bindings => {
+    const hasKeyBinding = !!allKeyBindings.find(bindings => {
       const keyCombList = getPlatformKeyCombinations(bindings);
       return keyCombList.find(keyComb => areSameKeyCombinations(pressedKeyComb, keyComb));
     });
 
-    if (globalBinding) {
+    if (hasKeyBinding) {
       // @ts-expect-error -- unsound property assignment
       event.codemirrorIgnore = true;
     } else {
