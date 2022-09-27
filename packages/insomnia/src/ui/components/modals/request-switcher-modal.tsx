@@ -274,7 +274,6 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
 
   useGlobalKeyboardShortcuts({
     'SHOW_RECENT_REQUESTS': () => {
-      console.log('SHOW_RECENT_REQUESTS', state);
       if (state.isModalVisible) {
         setState(state => ({
           ...state,
@@ -283,7 +282,6 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       }
     },
     'SHOW_RECENT_REQUESTS_PREVIOUS': () => {
-      console.log('SHOW_RECENT_REQUESTS_PREVIOUS', state);
       if (state.isModalVisible) {
         setState(state => ({
           ...state,
@@ -351,6 +349,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
             <div className="form-control form-control--outlined no-margin">
               <input
                 type="text"
+                autoFocus
                 placeholder="Filter by name or folder"
                 value={searchString}
                 onChange={event => handleChangeValue(event.currentTarget.value)}

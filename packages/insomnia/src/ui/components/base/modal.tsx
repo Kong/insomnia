@@ -47,8 +47,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
     setOpen(true);
     setZIndex(globalZIndex++);
     onShow?.();
-
-    divRef.current?.focus();
   }, [onShow]);
 
   const hide = useCallback(() => {
