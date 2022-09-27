@@ -34,11 +34,11 @@ export const AppHooks: FC = () => {
   const settings = useSelector(selectSettings);
 
   useGlobalKeyboardShortcuts({
-    'preferences_showGeneral':
+    preferences_showGeneral:
       () => showModal(SettingsModal),
-    'preferences_showKeyboardShortcuts':
+    preferences_showKeyboardShortcuts:
       () => showModal(SettingsModal, TAB_INDEX_SHORTCUTS),
-    'request_showRecent':
+    request_showRecent:
       () => showModal(RequestSwitcherModal, {
         disableInput: true,
         maxRequests: 10,
@@ -49,21 +49,21 @@ export const AppHooks: FC = () => {
         // Add an open delay so the dialog won't show for quick presses
         openDelay: 150,
       }),
-    'workspace_showSettings':
+    workspace_showSettings:
       () => showModal(WorkspaceSettingsModal, activeWorkspace),
-    'request_showSettings':
+    request_showSettings:
       () => {
         if (activeRequest) {
           showModal(RequestSettingsModal, { request: activeRequest });
         }
       },
-    'request_quickSwitch':
+    request_quickSwitch:
       () => showModal(RequestSwitcherModal),
-    'environment_showEditor':
+    environment_showEditor:
       () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
-    'showCookiesEditor':
+    showCookiesEditor:
       () => showModal(CookiesModal),
-    'request_createHTTP':
+    request_createHTTP:
       async () => {
         if (activeWorkspace) {
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
@@ -81,7 +81,7 @@ export const AppHooks: FC = () => {
           trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
         }
       },
-    'request_showDelete':
+    request_showDelete:
       () => {
         if (activeRequest) {
           showModal(AskModal, {
@@ -96,15 +96,15 @@ export const AppHooks: FC = () => {
           });
         }
       },
-    'request_showCreateFolder':
+    request_showCreateFolder:
       () => {
         if (activeWorkspace) {
           createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
         }
       },
-    'request_showGenerateCodeEditor':
+    request_showGenerateCodeEditor:
       () => showModal(GenerateCodeModal, activeRequest),
-    'request_showDuplicate':
+    request_showDuplicate:
       () => {
         if (activeRequest) {
           showModal(PromptModal, {
@@ -128,18 +128,18 @@ export const AppHooks: FC = () => {
           });
         }
       },
-    'request_togglePin':
+    request_togglePin:
       async () => {
         if (activeRequest) {
           const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
           updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
         }
       },
-    'plugin_reload':
+    plugin_reload:
       () => plugins.reloadPlugins(),
-    'environment_showVariableSourceAndValue':
+    environment_showVariableSourceAndValue:
       () => models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
-    'sidebar_toggle':
+    sidebar_toggle:
       () => {
         if (activeWorkspaceMeta) {
           models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });

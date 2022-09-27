@@ -321,7 +321,7 @@ export const GraphQLEditor: FC<Props> = ({
   };
 
   useGlobalKeyboardShortcuts({
-    'BEAUTIFY_REQUEST_BODY': _handlePrettify,
+    beautifyRequestBody: _handlePrettify,
   });
 
   const _handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {

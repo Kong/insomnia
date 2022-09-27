@@ -276,19 +276,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
 
   useGlobalKeyboardShortcuts({
-    'REQUEST_FOCUS_URL': () => {
+    request_focusUrl: () => {
       inputRef.current?.focus();
       inputRef.current?.selectAll();
     },
-    'REQUEST_SEND': () => {
+    request_send: () => {
       if (request.url) {
         send();
       }
     },
-    'REQUEST_TOGGLE_HTTP_METHOD_MENU': () => {
+    request_toggleHttpMethodMenu: () => {
       methodDropdownRef.current?.toggle();
     },
-    'REQUEST_SHOW_OPTIONS': () => {
+    request_showOptions: () => {
       dropdownRef.current?.toggle(true);
     },
   });

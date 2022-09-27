@@ -1,9 +1,9 @@
-import { KeyCombination } from 'insomnia-common';
+import { KeyboardShortcut, KeyCombination } from 'insomnia-common';
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import tinykeys, { type KeyBindingMap, createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions } from 'tinykeys';
 
-import { getPlatformKeyCombinations, KeyboardShortcut } from '../../common/hotkeys';
+import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
 import { selectHotKeyRegistry } from '../redux/selectors';
 

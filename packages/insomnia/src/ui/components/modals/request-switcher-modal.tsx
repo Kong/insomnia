@@ -273,7 +273,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   };
 
   useGlobalKeyboardShortcuts({
-    'SHOW_RECENT_REQUESTS': () => {
+    request_showRecent: () => {
       if (state.isModalVisible) {
         setState(state => ({
           ...state,
@@ -281,7 +281,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
         }));
       }
     },
-    'SHOW_RECENT_REQUESTS_PREVIOUS': () => {
+    request_showRecentPrevious: () => {
       if (state.isModalVisible) {
         setState(state => ({
           ...state,

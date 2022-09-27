@@ -84,7 +84,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   }, [hide, open, noEscape]);
 
   useGlobalKeyboardShortcuts({
-    'CLOSE_MODAL': () => {
+    closeModal: () => {
       if (!noEscape) {
         hide();
       }

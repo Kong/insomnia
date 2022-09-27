@@ -168,7 +168,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     );
 
     useGlobalKeyboardShortcuts({
-      CLOSE_DROPDOWN: () => {
+      closeDropdown: () => {
         console.log('CLOSE_DROPDOWN');
         if (open) {
           hide();

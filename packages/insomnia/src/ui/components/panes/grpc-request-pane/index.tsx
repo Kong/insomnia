@@ -79,7 +79,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   }, [method, running, start]);
 
   useGlobalKeyboardShortcuts({
-    'REQUEST_SEND': handleRequestSend,
+    request_send: handleRequestSend,
   });
 
   return (

@@ -40,7 +40,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   }, []);
 
   useGlobalKeyboardShortcuts({
-    'ENVIRONMENT_SHOW_SWITCH_MENU': toggleSwitchMenu,
+    environment_showSwitchMenu: toggleSwitchMenu,
   });
 
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.

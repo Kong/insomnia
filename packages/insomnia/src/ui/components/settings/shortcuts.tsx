@@ -56,42 +56,11 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
     handleUpdateKeyBindings(hotKeyRegistry);
   }, [handleUpdateKeyBindings, hotKeyRegistry]);
 
-  const handleAddKeyCombination = useCallback((hotKeyRefId: string) => {
-    showModal(
-      AddKeyCombinationModal,
-      hotKeyRefId,
-      checkKeyCombinationDuplicate,
-      addKeyCombination,
-    );
-  }, [addKeyCombination, checkKeyCombinationDuplicate]);
-
-  const handleRemoveKeyCombination = useCallback(({ hotKeyRefId, keyComb }: { hotKeyRefId: string; keyComb: KeyCombination }) => {
-    const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[hotKeyRefId]);
-    let toBeRemovedIndex = -1;
-    keyCombs.forEach((existingKeyComb, index) => {
-      if (areSameKeyCombinations(existingKeyComb, keyComb)) {
-        toBeRemovedIndex = index;
-      }
-    });
-    if (toBeRemovedIndex >= 0) {
-      keyCombs.splice(toBeRemovedIndex, 1);
-      handleUpdateKeyBindings(hotKeyRegistry);
-    }
-  }, [handleUpdateKeyBindings, hotKeyRegistry]);
-
-  const handleResetKeyBindings = useCallback((hotKeyRefId: string) => {
-    hotKeyRegistry[hotKeyRefId] = JSON.parse(JSON.stringify(newDefaultRegistry()[hotKeyRefId]));
-    handleUpdateKeyBindings(hotKeyRegistry);
-  }, [handleUpdateKeyBindings, hotKeyRegistry]);
-
-  const handleResetAllKeyBindings = useCallback(() => {
-    handleUpdateKeyBindings(newDefaultRegistry());
-  }, [handleUpdateKeyBindings]);
   return (
     <div className="shortcuts">
       <div className="row-spaced margin-bottom-xs">
         <div>
-          <PromptButton className="btn btn--clicky" onClick={handleResetAllKeyBindings}>
+          <PromptButton className="btn btn--clicky" onClick={() => handleUpdateKeyBindings(newDefaultRegistry())}>
             Reset all
           </PromptButton>
         </div>
@@ -120,7 +89,15 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
                     <DropdownButton className="btn btn--clicky-small">
                       <i className="fa fa-gear" />
                     </DropdownButton>
-                    <DropdownItem value={keyboardShortcut} onClick={handleAddKeyCombination}>
+                    <DropdownItem
+                      onClick={() =>
+                        showModal(
+                          AddKeyCombinationModal,
+                          keyboardShortcut,
+                          checkKeyCombinationDuplicate,
+                          addKeyCombination,
+                        )}
+                    >
                       <i className="fa fa-plus-circle" />
                       Add keyboard shortcut
                     </DropdownItem>
@@ -133,12 +110,20 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
                         return (
                           <DropdownItem
                             key={display}
-                            value={{
-                              hotKeyRefId: keyboardShortcut,
-                              keyComb,
-                            }}
                             buttonClass={PromptButton}
-                            onClick={handleRemoveKeyCombination}
+                            onClick={() => {
+                              const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
+                              let toBeRemovedIndex = -1;
+                              keyCombs.forEach((existingKeyComb, index) => {
+                                if (areSameKeyCombinations(existingKeyComb, keyComb)) {
+                                  toBeRemovedIndex = index;
+                                }
+                              });
+                              if (toBeRemovedIndex >= 0) {
+                                keyCombs.splice(toBeRemovedIndex, 1);
+                                handleUpdateKeyBindings(hotKeyRegistry);
+                              }
+                            }}
                           >
                             <i className="fa fa-trash-o" /> {display}
                           </DropdownItem>
@@ -150,7 +135,10 @@ export const Shortcuts: FC<Props> = ({ handleUpdateKeyBindings }) => {
                     <DropdownItem
                       value={keyboardShortcut}
                       buttonClass={PromptButton}
-                      onClick={handleResetKeyBindings}
+                      onClick={() => {
+                        hotKeyRegistry[hotKeyRefId] = JSON.parse(JSON.stringify(newDefaultRegistry()[hotKeyRefId]));
+                        handleUpdateKeyBindings(hotKeyRegistry);
+                      }}
                     >
                       <i className="fa fa-empty" /> Reset keyboard shortcuts
                     </DropdownItem>

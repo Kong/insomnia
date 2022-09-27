@@ -132,7 +132,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
   };
 
   useGlobalKeyboardShortcuts({
-    'GRAPHQL_EXPLORER_FOCUS_FILTER': () => {
+    graphql_explorer_focus_filter: () => {
       setState(state => ({
         ...state,
         currentType: undefined,

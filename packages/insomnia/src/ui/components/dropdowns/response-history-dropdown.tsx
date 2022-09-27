@@ -164,7 +164,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   };
 
   useGlobalKeyboardShortcuts({
-    'REQUEST_TOGGLE_HISTORY': () => dropdownRef.current?.toggle(true),
+    request_toggleHistory: () => dropdownRef.current?.toggle(true),
   });
 
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
