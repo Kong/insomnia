@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models';

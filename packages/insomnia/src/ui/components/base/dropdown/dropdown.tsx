@@ -55,7 +55,7 @@ const isDropdownDivider = isComponent(DropdownDivider.name);
 const _getFlattenedChildren = (children: ReactNode[] | ReactNode) => {
   let newChildren: ReactNode[] = [];
   // Ensure children is an array
-  const flatChildren = Array.isArray(children) ? children : [children];
+  const flatChildren: ReactNode[] = Array.isArray(children) ? children : [children];
 
   for (const child of flatChildren) {
     if (!child) {
@@ -167,45 +167,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       [filter, filterVisible]
     );
 
-    const _handleDropdownNavigation = useCallback(
-      (event: KeyboardEvent) => {
-        const { key, shiftKey } = event;
-        // Handle tab and arrows to move up and down dropdown entries
-        if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
-          event.preventDefault();
-          const items = filterItems || [];
-
-          if (!filterItems) {
-            const filterableItems =
-              dropdownListRef.current?.querySelectorAll('li');
-
-            if (filterableItems instanceof NodeList) {
-              for (const li of filterableItems) {
-                if (li.hasAttribute('data-filter-index')) {
-                  const filterIndex = li.getAttribute('data-filter-index');
-                  if (filterIndex) {
-                    items.push(parseInt(filterIndex, 10));
-                  }
-                }
-              }
-            }
-          }
-
-          const i = items.indexOf(filterActiveIndex);
-
-          if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
-            const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
-            setFilterActiveIndex(nextI);
-          } else {
-            setFilterActiveIndex(items[i + 1] || items[0]);
-          }
-        }
-
-        filterInputRef.current?.focus();
-      },
-      [filterActiveIndex, filterItems]
-    );
-
     useGlobalKeyboardShortcuts({
       CLOSE_DROPDOWN: () => {
         console.log('CLOSE_DROPDOWN');
@@ -216,6 +177,30 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     });
 
     const handleKeydown = createKeybindingsHandler({
+      'Tab': () => {
+        const items = filterItems || [];
+
+        if (!filterItems) {
+          const filterableItems =
+            dropdownListRef.current?.querySelectorAll('li');
+
+          if (filterableItems instanceof NodeList) {
+            for (const li of filterableItems) {
+              if (li.hasAttribute('data-filter-index')) {
+                const filterIndex = li.getAttribute('data-filter-index');
+                if (filterIndex) {
+                  items.push(parseInt(filterIndex, 10));
+                }
+              }
+            }
+          }
+        }
+
+        const i = items.indexOf(filterActiveIndex);
+        setFilterActiveIndex(items[i + 1] || items[0]);
+
+        filterInputRef.current?.focus();
+      },
       'Shift+Tab': () => {
         const items = filterItems || [];
 
@@ -236,7 +221,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         }
 
         const i = items.indexOf(filterActiveIndex);
-
         const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
         setFilterActiveIndex(nextI);
 
@@ -533,6 +517,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
           dropdownButtons[0],
           ReactDOM.createPortal(
             <div
+              // @ts-expect-error -- EventListener type doesn't match React.KeyboardEventHandler ???
               onKeyDown={handleKeydown}
               key="item"
               className={menuClasses}

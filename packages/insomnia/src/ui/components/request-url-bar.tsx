@@ -349,6 +349,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           placeholder="https://api.myproduct.com/v1/users"
           defaultValue={url}
           onChange={handleUrlChange}
+          // @ts-expect-error -- EventListener type doesn't match React.KeyboardEventHandler ???
           onKeyDown={handleKeydown}
         />
         {isCancellable ? (

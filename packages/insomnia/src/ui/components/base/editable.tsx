@@ -93,6 +93,7 @@ export const Editable: FC<Props> = ({
         ref={inputRef}
         defaultValue={initialValue}
         onBlur={handleEditEnd}
+        // @ts-expect-error -- EventListener type doesn't match React.KeyboardEventHandler ???
         onKeyDown={handleKeyDown}
       />
     );

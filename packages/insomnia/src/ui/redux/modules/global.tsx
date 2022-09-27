@@ -43,7 +43,7 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveProjectName, selectStats, selectWorkspacesForActiveProject } from '../selectors';
+import { selectStats } from '../selectors';
 import { RootState } from '.';
 import { importUri } from './import';
 import { activateWorkspace } from './workspace';

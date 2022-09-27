@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, ReactNode, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, ReactNode, useCallback, useImperativeHandle, useState } from 'react';
 
 import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
