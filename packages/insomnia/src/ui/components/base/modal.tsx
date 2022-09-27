@@ -38,7 +38,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   const [open, setOpen] = useState(false);
   const [zIndex, setZIndex] = useState(globalZIndex);
   const [onHideArgument, setOnHideArgument] = useState<() => void>();
-  const divRef = useRef<HTMLDivElement>(null);
 
   const show: ModalHandle['show'] = useCallback(options => {
     options?.onHide && setOnHideArgument(options.onHide);
@@ -105,7 +104,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   });
   return (open ?
     <div
-      ref={divRef}
       tabIndex={-1}
       className={classes}
       style={{ zIndex }}
