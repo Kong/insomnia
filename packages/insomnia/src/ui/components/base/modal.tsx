@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, ReactNode, useCallback, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
@@ -35,6 +35,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   tall,
   wide,
 }, ref) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [zIndex, setZIndex] = useState(globalZIndex);
   const [onHideArgument, setOnHideArgument] = useState<() => void>();
@@ -69,31 +70,18 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
     { 'modal--skinny': skinny },
   );
 
-  const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
     // Don't check for close keys if we don't want them
     if (noEscape) {
       return;
     }
-    // Did we click a close button. Let's check a few parent nodes up as well
-    // because some buttons might have nested elements. Maybe there is a better
-    // way to check this?
-    let currentElement: ParentNode | null = event.target instanceof HTMLElement ? event.target : null;
-    let shouldHide = false;
-    for (let i = 0; i < 5; i++) {
-      if (!currentElement) {
-        break;
-      }
-      if (currentElement instanceof HTMLElement && currentElement.hasAttribute('data-close-modal')) {
-        shouldHide = true;
-        break;
-      }
-      currentElement = currentElement.parentNode;
-    }
 
-    if (shouldHide) {
-      hide();
+    const closeElements = containerRef.current?.querySelectorAll('[data-close-modal]');
+
+    for (const element of closeElements || []) {
+      element.addEventListener('click', hide);
     }
-  }, [hide, noEscape]);
+  }, [hide, open, noEscape]);
 
   useGlobalKeyboardShortcuts({
     'CLOSE_MODAL': () => {
@@ -104,11 +92,11 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   });
   return (open ?
     <div
+      ref={containerRef}
       tabIndex={-1}
       className={classes}
       style={{ zIndex }}
       aria-hidden={false}
-      onClick={handleClick}
     >
       <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
       <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>
