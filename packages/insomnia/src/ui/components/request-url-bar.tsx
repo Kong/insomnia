@@ -332,7 +332,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (
-    <div onKeyDown={handleKeydown} className="urlbar">
+    <div className="urlbar">
       <MethodDropdown
         ref={methodDropdownRef}
         onChange={methodValue => onMethodChange(methodValue)}
@@ -349,6 +349,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           placeholder="https://api.myproduct.com/v1/users"
           defaultValue={url}
           onChange={handleUrlChange}
+          onKeyDown={handleKeydown}
         />
         {isCancellable ? (
           <button

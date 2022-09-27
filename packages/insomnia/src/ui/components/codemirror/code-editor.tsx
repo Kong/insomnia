@@ -7,6 +7,7 @@ import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintO
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
+import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
@@ -18,12 +19,10 @@ import vkBeautify from 'vkbeautify';
 import {
   AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
-  EditorKeyMap,
   isMac,
 } from '../../../common/constants';
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { areSameKeyCombinations, getPlatformKeyCombinations, hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
@@ -105,6 +104,7 @@ interface RawProps {
   onFocus?: (event: FocusEvent) => void;
   onBlur?: (event: FocusEvent) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
+  // NOTE: This is a hack to define keydown events on the Editor.
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
@@ -189,7 +189,6 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawPr
   ref
 ) => {
   const editorRef = useRef<UnconnectedCodeEditor | null>(null);
-
   useGlobalKeyboardShortcuts({
     'BEAUTIFY_REQUEST_BODY': () => editorRef.current?._prettify(),
   });
@@ -996,11 +995,37 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
+  // Fired on every keydown happening on the editor.
+  // If the key is defined in the editor keymap (vim/sublime etc.) it will be handled by the editor unless we define event.codemirrorIgnore = true
+  // @UX-Issue There's no way for the user view the keymap definitions (vim/sublime).
+  // The user defined hotkeys have priority over the editor keymap.
   async _codemirrorKeyDown(doc: CodeMirror.Editor, event: KeyboardEvent) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && event.code === 'Tab') {
       // @ts-expect-error -- unsound property assignment
       event.codemirrorIgnore = true;
+    }
+
+    const pressedKeyComb: KeyCombination = {
+      ctrl: event.ctrlKey,
+      alt: event.altKey,
+      shift: event.shiftKey,
+      meta: event.metaKey,
+      keyCode: event.keyCode,
+    };
+
+    const allKeyBindings = Object.values(this.props.hotKeyRegistry);
+
+    const globalBinding = allKeyBindings.find(bindings => {
+      const keyCombList = getPlatformKeyCombinations(bindings);
+      return keyCombList.find(keyComb => areSameKeyCombinations(pressedKeyComb, keyComb));
+    });
+
+    if (globalBinding) {
+      // @ts-expect-error -- unsound property assignment
+      event.codemirrorIgnore = true;
+    } else {
+      event.stopPropagation();
     }
 
     if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
@@ -1058,15 +1083,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: Event) {
-    const { keyMap } = this.props;
-    // @ts-expect-error -- unsound property access
-    const { keyCode } = event;
-    const isVimKeyMap = keyMap === EditorKeyMap.vim;
-    const pressedEscape = keyCode === keyCodes.esc.keyCode;
-
-    if (isVimKeyMap && pressedEscape) {
-      event.stopPropagation();
-    }
+    event.stopPropagation();
   }
 
   _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
