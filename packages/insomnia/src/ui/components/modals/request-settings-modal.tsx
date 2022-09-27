@@ -135,7 +135,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
   if (!request) {
     return null;
   }
-  const toggleCheckBox = async (event:any) => {
+  const toggleCheckBox = async (event: any) => {
     const updated = await requestOperations.update(request, {
       [event.currentTarget.name]: event.currentTarget.checked,
     });
@@ -300,10 +300,63 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
               </div>
             </>)}
           {isGrpcRequest(request) && (
-            <p className="faint italic">
-              Are there any gRPC settings you expect to see? Create a{' '}
-              <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
-            </p>
+            <>
+              <p className="faint italic">
+                Are there any gRPC settings you expect to see? Create a{' '}
+                <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
+              </p>
+              <hr />
+              <div className="form-row">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Move/Copy to Workspace
+                    <HelpTooltip position="top" className="space-left">
+                      Copy or move the current request to a new workspace. It will be placed at the root of
+                      the new workspace's folder structure.
+                    </HelpTooltip>
+                    <select
+                      value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                      onChange={event => {
+                        const { value } = event.currentTarget;
+                        const workspaceId = value === '__NULL__' ? null : value;
+                        setState({ ...state, activeWorkspaceIdToCopyTo: workspaceId });
+                      }}
+                    >
+                      <option value="__NULL__">-- Select Workspace --</option>
+                      {workspacesForActiveProject.map(w => {
+                        if (workspace && workspace._id === w._id) {
+                          return null;
+                        }
+
+                        return (
+                          <option key={w._id} value={w._id}>
+                            {w.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </label>
+                </div>
+                <div className="form-control form-control--no-label width-auto">
+                  <button
+                    disabled={justCopied || !activeWorkspaceIdToCopyTo}
+                    className="btn btn--clicky"
+                    onClick={_handleCopyToWorkspace}
+                  >
+                    {justCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <div className="form-control form-control--no-label width-auto">
+                  <button
+                    disabled={justMoved || !activeWorkspaceIdToCopyTo}
+                    className="btn btn--clicky"
+                    onClick={_handleMoveToWorkspace}
+                  >
+                    {justMoved ? 'Moved!' : 'Move'}
+                  </button>
+                </div>
+              </div>
+            </>
           )}
           {isRequest(request) && (
             <>
