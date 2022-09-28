@@ -1,11 +1,9 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
-import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -33,12 +31,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
   const modalRef = useRef<ModalHandle>(null);
   const email = session.isLoggedIn() ? session.getFullName() : null;
-
-  const handleUpdateKeyBindings = async (hotKeyRegistry: HotKeyRegistry) => {
-    await models.settings.update(settings, {
-      hotKeyRegistry,
-    });
-  };
 
   useImperativeHandle(ref, () => ({
     hide(): void {
@@ -92,9 +84,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <ThemePanel />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
-            <Shortcuts
-              handleUpdateKeyBindings={handleUpdateKeyBindings}
-            />
+            <Shortcuts />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
             <Account />

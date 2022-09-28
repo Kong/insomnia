@@ -21,8 +21,7 @@ import {
   DEBOUNCE_MILLIS,
   isMac,
 } from '../../../common/constants';
-import { areSameKeyCombinations, getPlatformKeyCombinations, keyboardShortcutDefinitions } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
+import { areSameKeyCombinations, getPlatformKeyCombinations } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
@@ -190,7 +189,7 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawPr
 ) => {
   const editorRef = useRef<UnconnectedCodeEditor | null>(null);
   useGlobalKeyboardShortcuts({
-    'BEAUTIFY_REQUEST_BODY': () => editorRef.current?._prettify(),
+    beautifyRequestBody: () => editorRef.current?._prettify(),
   });
 
   const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
@@ -759,10 +758,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       // Failed to parse so just return original
       return code;
     }
-  }
-
-  async _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, keyboardShortcutDefinitions.BEAUTIFY_REQUEST_BODY, this._prettify);
   }
 
   /**
