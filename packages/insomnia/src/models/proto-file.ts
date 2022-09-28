@@ -57,6 +57,17 @@ export async function batchRemoveIds(ids: string[]) {
   });
 }
 
+export async function duplicate(protoFile: ProtoFile, patch: Partial<ProtoFile> = {}) {
+  if (!patch.name) {
+    patch.name = `${protoFile.name} (Copy)`;
+  }
+
+  return db.duplicate<ProtoFile>(protoFile, {
+    name,
+    ...patch,
+  });
+}
+
 export function update(protoFile: ProtoFile, patch: Partial<ProtoFile> = {}) {
   return db.docUpdate<ProtoFile>(protoFile, patch);
 }

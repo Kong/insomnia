@@ -107,9 +107,6 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
       return;
     }
 
-    // TODO: if there are gRPC requests in a request group
-    //  we should also copy the protofiles to the destination workspace - INS-267
-
     await models.requestGroup.duplicate(requestGroup, {
       metaSortKey: -1e9,
       parentId: activeWorkspaceIdToCopyTo,

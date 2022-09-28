@@ -1,5 +1,5 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { BaseModel, protoDirectory, protoFile } from './index';
 
 export const name = 'gRPC Request';
 export const type = 'GrpcRequest';
@@ -112,9 +112,32 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
+
+  // duplicate proto file
+  const foundProtoFile = await protoFile.getById(request.protoFileId as string);
+  const foundProtoDirectory = await protoDirectory.getById(request.protoFileId as string);
+
+  let duplicateProtoFileId = '';
+  if (foundProtoFile) {
+    const duplicateProtoFile = await protoFile.duplicate(foundProtoFile, {
+      name: foundProtoFile.name,
+      parentId: patch.parentId,
+    });
+    duplicateProtoFileId = duplicateProtoFile._id;
+
+  }
+  if (foundProtoDirectory) {
+    const duplicateProtoDirectory = await protoDirectory.duplicate(foundProtoDirectory, {
+      name: foundProtoDirectory.name,
+      parentId: patch.parentId,
+    });
+    duplicateProtoFileId = duplicateProtoDirectory._id;
+  }
+
   return db.duplicate<GrpcRequest>(request, {
     name,
     metaSortKey,
+    protoFileId: duplicateProtoFileId,
     ...patch,
   });
 }

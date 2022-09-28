@@ -87,7 +87,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
       // Move to top of sort order
       parentId: activeWorkspaceIdToCopyTo,
     };
-    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+
     await requestOperations.update(request, patch);
     setState({
       ...state,
@@ -117,7 +117,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
       // Because duplicate will add (Copy) suffix if name is not provided in patch
       parentId: activeWorkspaceIdToCopyTo,
     };
-    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+
     await requestOperations.duplicate(request, patch);
     setState({
       ...state,

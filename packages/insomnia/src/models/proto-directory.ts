@@ -44,6 +44,17 @@ export function create(patch: Partial<ProtoDirectory> = {}) {
   return db.docCreate<ProtoDirectory>(type, patch);
 }
 
+export async function duplicate(protoDirectory: ProtoDirectory, patch: Partial<ProtoDirectory> = {}) {
+  if (!patch.name) {
+    patch.name = `${protoDirectory.name} (Copy)`;
+  }
+
+  return db.duplicate<ProtoDirectory>(protoDirectory, {
+    name,
+    ...patch,
+  });
+}
+
 export function getById(_id: string) {
   return db.getWhere<ProtoDirectory>(type, { _id });
 }
