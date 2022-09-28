@@ -73,7 +73,7 @@ export const Editable: FC<Props> = ({
 
   const handleKeyDown = createKeybindingsHandler({
     'Enter': handleEditEnd,
-    'Esc': () => {
+    'Escape': () => {
       if (inputRef.current) {
         // Set the input to the original value
         inputRef.current.value = value;
