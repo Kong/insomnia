@@ -6,10 +6,10 @@ import { keyboardKeys } from './keyboard-keys';
 import { strings } from './strings';
 
 /**
- * The collection of available hotkeys' and their definitions.
+ * The collection of available hotkeys' and their descriptions.
  * @IMPORTANT Not using dot, because NeDB prohibits field names to contain dots.
  */
-export const keyboardShortcutDefinitions: Record<KeyboardShortcut, string> = {
+export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   'workspace_showSettings': `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
   'request_showSettings': 'Show Request Settings',
   'preferences_showKeyboardShortcuts': 'Show Keyboard Shortcuts',

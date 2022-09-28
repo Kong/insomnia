@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { keyboardShortcutDefinitions } from '../../../common/hotkeys';
+import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
@@ -43,7 +43,7 @@ export const PlaceholderResponsePane: FC = ({ children }) => {
             'preferences_showKeyboardShortcuts',
           ].map(shortcut => (
             <Item key={shortcut}>
-              <Description>{keyboardShortcutDefinitions[shortcut as KeyboardShortcut]}</Description>
+              <Description>{keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}</Description>
               <code>
                 <Hotkey
                   keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]}

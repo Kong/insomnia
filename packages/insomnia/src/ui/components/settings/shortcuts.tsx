@@ -6,7 +6,7 @@ import {
   areSameKeyCombinations,
   constructKeyCombinationDisplay,
   getPlatformKeyCombinations,
-  keyboardShortcutDefinitions,
+  keyboardShortcutDescriptions,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
 import * as models from '../../../models/index';
@@ -51,7 +51,7 @@ export const Shortcuts: FC = () => {
 
             return (
               <tr key={keyboardShortcut}>
-                <td style={{ verticalAlign: 'middle' }}>{keyboardShortcutDefinitions[keyboardShortcut]}</td>
+                <td style={{ verticalAlign: 'middle' }}>{keyboardShortcutDescriptions[keyboardShortcut]}</td>
                 <td className="text-right">
                   {keyCombosForThisPlatform.map((keyComb: KeyCombination, index: number) => {
                     return (
