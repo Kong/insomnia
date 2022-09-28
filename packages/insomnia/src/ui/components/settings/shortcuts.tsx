@@ -34,17 +34,6 @@ export const Shortcuts: FC = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const settings = useSelector(selectSettings);
 
-  /**
-   * Registers a new key combination under a hot key.
-   * @param keyboardShortcut the database key to be assigned the new key combination.
-   * @param keyComb the new key combination.
-   */
-  const addKeyCombination = useCallback((keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => {
-    const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
-    keyCombs.push(keyComb);
-    models.settings.update(settings, { hotKeyRegistry });
-  }, [hotKeyRegistry, settings]);
-
   return (
     <div className="shortcuts">
       <div className="row-spaced margin-bottom-xs">
@@ -81,9 +70,15 @@ export const Shortcuts: FC = () => {
                       onClick={() =>
                         showModal(
                           AddKeyCombinationModal,
-                          keyboardShortcut,
-                          (pressed: KeyCombination) => isKeyCombinationDuplicate(pressed, hotKeyRegistry),
-                          addKeyCombination,
+                          {
+                            keyboardShortcut,
+                            checkKeyCombinationDuplicate: (pressed: KeyCombination) => isKeyCombinationDuplicate(pressed, hotKeyRegistry),
+                            addKeyCombination:(keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => {
+                              const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
+                              keyCombs.push(keyComb);
+                              models.settings.update(settings, { hotKeyRegistry });
+                            },
+                          }
                         )}
                     >
                       <i className="fa fa-plus-circle" />

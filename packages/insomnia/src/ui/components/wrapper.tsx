@@ -367,7 +367,7 @@ export class WrapperClass extends PureComponent<Props, State> {
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />
 
-            <AddKeyCombinationModal ref={registerModal} />
+            <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
             <ExportRequestsModal ref={registerModal} />
 
             <GrpcDispatchModalWrapper>
