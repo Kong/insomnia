@@ -10,10 +10,15 @@ import { selectHotKeyRegistry } from '../redux/selectors';
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
   `${ctrl ? 'Control+' : ''}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${meta ? 'Meta+' : ''}` + Object.entries(keyboardKeys).find(([, { keyCode: kc }]) => kc === keyCode)?.[1].label;
 
-export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+export function useKeyboardShortcuts(getTarget: () => HTMLElement, listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
 
   useEffect(() => {
+    const target = getTarget();
+
+    if (!target) {
+      return;
+    }
     // behaviour: a screaming snake case key and a function which triggers an action
     // eg. `SHOW_AUTOCOMPLETE` and `onThis`
     const keyboardShortcuts = Object.entries(listeners) as [KeyboardShortcut, (event: KeyboardEvent) => any][];
@@ -28,11 +33,11 @@ export function useKeyboardShortcuts(target: HTMLElement, listeners: { [key in K
 
     const unsubscribe = tinykeys(target, keyBindingMap);
     return unsubscribe;
-  }, [hotKeyRegistry, listeners, target]);
+  }, [hotKeyRegistry, listeners, getTarget]);
 }
 
 export function useGlobalKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
-  useKeyboardShortcuts(document.body, listeners);
+  useKeyboardShortcuts(() => document.body, listeners);
 }
 
 export function createKeybindingsHandler(
