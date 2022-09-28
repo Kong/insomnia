@@ -74,7 +74,7 @@ jobs:
           echo ::set-output name=inso-version::$INSO_VERSION
 
       - name: Run Inso NPM package tests
-        run: npm run inso-test
+        run: npm run test:bundled-inso
 
       - name: Package Inso CLI binary
         run: npm run inso-package
