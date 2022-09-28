@@ -79,7 +79,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
 
   /** Return array of path segments for given folders */
-  const groupOf = useCallback((requestOrRequestGroup: Request | WebSocketRequest | GrpcRequest | RequestGroup): string[] => {
+  const pathSegments = useCallback((requestOrRequestGroup: Request | WebSocketRequest | GrpcRequest | RequestGroup): string[] => {
     const folders = workspaceRequestsAndRequestGroups.filter(isRequestGroup)
       .filter(g => g._id === requestOrRequestGroup.parentId);
     const folderName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
@@ -89,14 +89,12 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
     // Still has more parents
     if (folderName) {
-      return [...groupOf(folders[0]), folderName];
+      return [...pathSegments(folders[0]), folderName];
     }
     // It's the child
-    return groupOf(folders[0]);
+    return pathSegments(folders[0]);
   }, [workspaceRequestsAndRequestGroups]);
-
-  const handleChangeValue = useCallback((searchString: string) => {
-    const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = state;
+  const getLastActiveRequestMap = () => {
     const lastActiveMap: Record<string, number> = {};
 
     for (const meta of requestMetas) {
@@ -105,6 +103,36 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     for (const meta of grpcRequestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
     }
+    return lastActiveMap;
+  };
+  const isMatch = (request: Request | WebSocketRequest | GrpcRequest, searchStrings: string): number | null => {
+    if (request._id === searchStrings) {
+      return Infinity;
+    }
+    // name
+    const searchIndexes = [request.name];
+    // url
+    isGrpcRequest(request) ? searchIndexes.push(request.url + request.protoMethodName)
+      : searchIndexes.push(joinUrlAndQueryString(request.url, buildQueryStringFromParams(request.parameters)));
+    // http method
+    const method = isRequest(request) && request.method;
+    method && searchIndexes.push(method);
+    isGrpcRequest(request) && searchIndexes.push(METHOD_GRPC);
+    // path segments
+    searchIndexes.push(pathSegments(request).join('/'));
+    const match = fuzzyMatchAll(
+      searchStrings,
+      searchIndexes,
+      { splitSpace: true },
+    );
+    if (!match) {
+      return null;
+    }
+    return match.score;
+  };
+  const handleChangeValue = useCallback((searchString: string) => {
+    const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = state;
+    const lastActiveMap = getLastActiveRequestMap();
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = (workspaceRequestsAndRequestGroups
@@ -125,31 +153,9 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
 
     if (searchString) {
       matchedRequests = matchedRequests
-        .map(request => ({
-          request,
-          score: () => {
-            let finalUrl = request.url;
-            let method = '';
-            if (isRequest(request)) {
-              finalUrl = joinUrlAndQueryString(finalUrl, buildQueryStringFromParams(request.parameters));
-              method = request.method;
-            }
-            if (isGrpcRequest(request)) {
-              finalUrl = request.url + request.protoMethodName;
-              method = METHOD_GRPC;
-            }
-            const match = fuzzyMatchAll(searchString, [request.name, finalUrl, method, groupOf(request).join('/')], { splitSpace: true });
-            // Match exact Id
-            const matchesId = request._id === searchString;
-            // _id match is the highest;
-            if (matchesId) {
-              return Infinity;
-            }
-            if (!match) {
-              return null;
-            }
-            return match.score;
-          },
+        .map(r => ({
+          request: r,
+          score: isMatch(r, searchString),
         }))
         .filter(v => v.score !== null)
         .sort((a, b) => Number(a.score || -Infinity) - Number(b.score || -Infinity))
@@ -174,7 +180,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     }));
-  }, [activeRequest, groupOf, grpcRequestMetas, requestMetas, state, workspace?._id, workspaceRequestsAndRequestGroups, workspacesForActiveProject]);
+  }, [activeRequest, pathSegments, grpcRequestMetas, requestMetas, state, workspace?._id, workspaceRequestsAndRequestGroups, workspacesForActiveProject]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -372,7 +378,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
                   <div>
                     {requestGroup ? (
                       <div className="pull-right faint italic">
-                        <Highlight search={searchString} text={groupOf(r).join(' / ')} />
+                        <Highlight search={searchString} text={pathSegments(r).join(' / ')} />
                           &nbsp;&nbsp;
                         <i className="fa fa-folder-o" />
                       </div>
