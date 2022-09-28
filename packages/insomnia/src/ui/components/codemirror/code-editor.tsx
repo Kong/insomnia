@@ -1009,13 +1009,18 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       keyCode: event.keyCode,
     };
 
-    const hasKeyBinding = isKeyCombinationInRegistry(pressedKeyComb, this.props.hotKeyRegistry);
+    const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, this.props.hotKeyRegistry);
     const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
       'showAutocomplete': this.props.hotKeyRegistry.showAutocomplete,
     });
+    const isEscapeKey = event.code === 'Escape';
 
-    // Stop the editor from handling global keyboard shortcuts except for autocomplete
-    if (hasKeyBinding && !isCodeEditorAutoCompleteBinding) {
+    // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
+    if (isUserDefinedKeyboardShortcut && !isCodeEditorAutoCompleteBinding) {
+      // @ts-expect-error -- unsound property assignment
+      event.codemirrorIgnore = true;
+    // Stop the editor from handling the escape key
+    } else if (isEscapeKey) {
       // @ts-expect-error -- unsound property assignment
       event.codemirrorIgnore = true;
     } else {
