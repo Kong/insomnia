@@ -1,5 +1,5 @@
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from 'insomnia-common';
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
