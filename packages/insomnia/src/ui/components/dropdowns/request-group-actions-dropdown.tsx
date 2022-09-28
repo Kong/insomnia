@@ -2,7 +2,6 @@ import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
@@ -135,7 +134,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
       <DropdownItem value="HTTP" onClick={create}>
         <i className="fa fa-plus-circle" />New HTTP Request
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
       </DropdownItem>
 
       <DropdownItem value="GraphQL" onClick={create}>
@@ -152,7 +151,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
       <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" /> New Folder
-        <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showCreateFolder} />
       </DropdownItem>
 
       <DropdownDivider />

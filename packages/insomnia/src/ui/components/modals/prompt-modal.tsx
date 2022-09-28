@@ -4,7 +4,7 @@ import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Button } from '../base/button';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -24,7 +24,6 @@ interface State {
   inputType?: string | null;
   cancelable?: boolean | null;
   onComplete?: (arg0: string) => Promise<void> | void;
-  onCancel?: (() => void) | null;
   onHide?: () => void;
   onDeleteHint?: ((arg0?: string) => void) | null;
   currentValue: string;
@@ -47,12 +46,11 @@ export interface PromptModalOptions {
   onComplete?: (arg0: string) => Promise<void> | void;
   onHide?: () => void;
   onDeleteHint?: (arg0?: string) => void;
-  onCancel?: () => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class PromptModal extends PureComponent<{}, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _input: HTMLInputElement | null = null;
 
   state: State = {
@@ -69,7 +67,6 @@ export class PromptModal extends PureComponent<{}, State> {
     inputType: '',
     cancelable: false,
     onComplete: undefined,
-    onCancel: undefined,
     onDeleteHint: undefined,
     onHide: undefined,
     currentValue: '',
@@ -87,20 +84,11 @@ export class PromptModal extends PureComponent<{}, State> {
     this.hide();
   }
 
-  _handleCancel() {
-    const { onCancel, loading } = this.state;
-    if (loading) {
-      return;
-    }
-
-    onCancel?.();
-  }
-
   _setInputRef(input: HTMLInputElement) {
     this._input = input;
   }
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -166,7 +154,6 @@ export class PromptModal extends PureComponent<{}, State> {
     label,
     hints,
     onComplete,
-    onCancel,
     validate,
     onDeleteHint,
     onHide,
@@ -174,7 +161,6 @@ export class PromptModal extends PureComponent<{}, State> {
     this.setState({
       currentValue: '',
       title,
-      onCancel,
       onDeleteHint,
       onComplete,
       defaultValue,
@@ -285,7 +271,7 @@ export class PromptModal extends PureComponent<{}, State> {
       'form-control--outlined': inputType !== 'checkbox',
     });
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onCancel={this._handleCancel} onHide={this.state.onHide}>
+      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onHide={this.state.onHide}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">

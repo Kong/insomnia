@@ -9,7 +9,7 @@ import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -37,14 +37,14 @@ interface ShowOptions {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GenerateConfigModal extends PureComponent<{}, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
   state: State = {
     configs: [],
     activeTab: 0,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -139,7 +139,7 @@ export class GenerateConfigModal extends PureComponent<{}, State> {
     const { configs, activeTab } = this.state;
     const activeConfig = configs[activeTab];
     return (
-      <Modal ref={this._setModalRef} freshState tall>
+      <Modal ref={this._setModalRef} tall>
         <ModalHeader>Generate Config</ModalHeader>
         <ModalBody className="wide">
           <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={this._handleTabSelect}>

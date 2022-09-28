@@ -7,7 +7,7 @@ import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
 import { deleteGitRepository } from '../../../../models/helpers/git-repository-operations';
 import { Link } from '../../base/link';
-import { Modal } from '../../base/modal';
+import { type ModalHandle, Modal } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
@@ -23,14 +23,14 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class GitRepositorySettingsModal extends PureComponent<{}, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _onSubmitEdits?: ((repo: Partial<GitRepository>) => any) | null;
 
   state: State = {
     gitRepository: null,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

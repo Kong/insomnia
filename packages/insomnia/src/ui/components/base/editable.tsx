@@ -1,6 +1,6 @@
 import React, { FC, ReactElement, useCallback, useRef, useState } from 'react';
 
-import { KeydownBinder } from '../keydown-binder';
+import { createKeybindingsHandler } from '../keydown-binder';
 import { HighlightProps } from './highlight';
 
 export const shouldSave = (oldValue: string, newValue: string | undefined, preventBlank = false) => {
@@ -71,40 +71,30 @@ export const Editable: FC<Props> = ({
     setTimeout(() => setEditing(false), 100);
   }, [onSubmit, preventBlank, value]);
 
-  const handleEditKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.keyCode === 13) {
-      // Pressed Enter
-      handleEditEnd();
-    }
-    if (event.keyCode === 27) {
-      // Pressed Escape
-      // Prevent bubbling to modals and other escape listeners.
-      event.stopPropagation();
-
+  const handleKeyDown = createKeybindingsHandler({
+    'Enter': handleEditEnd,
+    'Escape': () => {
       if (inputRef.current) {
         // Set the input to the original value
         inputRef.current.value = value;
 
         handleEditEnd();
       }
-    }
-  }, [value, handleEditEnd]);
+    },
+  });
 
   const initialValue = value || fallbackValue;
   if (editing) {
     return (
-      // KeydownBinder must be used here to properly stop propagation
-      // from reaching other scoped KeydownBinders
-      <KeydownBinder onKeydown={handleEditKeyDown} scoped>
-        <input
-          {...childProps}
-          className={`editable ${className || ''}`}
-          type="text"
-          ref={inputRef}
-          defaultValue={initialValue}
-          onBlur={handleEditEnd}
-        />
-      </KeydownBinder>
+      <input
+        {...childProps}
+        className={`editable ${className || ''}`}
+        type="text"
+        ref={inputRef}
+        defaultValue={initialValue}
+        onBlur={handleEditEnd}
+        onKeyDown={handleKeyDown}
+      />
     );
   }
   const readViewProps = {

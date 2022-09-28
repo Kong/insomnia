@@ -9,7 +9,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { selectActiveWorkspace } from '../../redux/selectors';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -31,7 +31,7 @@ const INITIAL_STATE: State = {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedSyncDeleteModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   input: HTMLInputElement | null = null;
 
   constructor(props: Props) {
@@ -39,7 +39,7 @@ export class UnconnectedSyncDeleteModal extends PureComponent<Props, State> {
     this.state = INITIAL_STATE;
   }
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -73,11 +73,8 @@ export class UnconnectedSyncDeleteModal extends PureComponent<Props, State> {
     }
   }
 
-  async show(options: { onHide: (...args: any[]) => any }) {
-    this.modal &&
-      this.modal.show({
-        onHide: options.onHide,
-      });
+  async show() {
+    this.modal && this.modal.show();
     // Reset state
     this.setState(INITIAL_STATE);
     // Focus input when modal shows

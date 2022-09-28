@@ -3,19 +3,18 @@ import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { sortMethodMap } from '../../../common/sorting';
 import * as models from '../../../models';
 import { isRequestGroup } from '../../../models/request-group';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
   filter: string;
 }
+
 export const SidebarFilter: FC<Props> = ({ filter }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const activeWorkspace = useSelector(selectActiveWorkspace);
@@ -36,11 +35,13 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
       await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: event.currentTarget.value });
     }
   }, [activeWorkspaceMeta]);
-  const handleKeydown = useCallback((event: KeyboardEvent) => {
-    executeHotKey(event, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
+
+  useGlobalKeyboardShortcuts({
+    sidebar_focusFilter: () => {
       inputRef.current?.focus();
-    });
-  }, []);
+    },
+  });
+
   const sortSidebar = async (order: SortOrder, parentId?: string) => {
     let flushId: number | undefined;
     if (!activeWorkspace) {
@@ -68,25 +69,23 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
   };
 
   return (
-    <KeydownBinder onKeydown={handleKeydown}>
-      <div className="sidebar__filter">
-        <div className="form-control form-control--outlined form-control--btn-right">
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Filter"
-            defaultValue={filter}
-            onChange={handleOnChange}
-          />
-          {filter && (
-            <button className="form-control__right" onClick={handleClearFilter}>
-              <i className="fa fa-times-circle" />
-            </button>
-          )}
-        </div>
-        <SidebarSortDropdown handleSort={sortSidebar} />
-        <SidebarCreateDropdown />
+    <div className="sidebar__filter">
+      <div className="form-control form-control--outlined form-control--btn-right">
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Filter"
+          defaultValue={filter}
+          onChange={handleOnChange}
+        />
+        {filter && (
+          <button className="form-control__right" onClick={handleClearFilter}>
+            <i className="fa fa-times-circle" />
+          </button>
+        )}
       </div>
-    </KeydownBinder>
+      <SidebarSortDropdown handleSort={sortSidebar} />
+      <SidebarCreateDropdown />
+    </div>
   );
 };

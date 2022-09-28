@@ -10,7 +10,7 @@ import { isWebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { Modal, ModalProps } from '../base/modal';
+import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { UnconnectedCodeEditor } from '../codemirror/code-editor';
@@ -35,7 +35,7 @@ export interface RequestSettingsModalHandle {
   hide: () => void;
 }
 export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, ModalProps>((_, ref) => {
-  const modalRef = useRef<Modal>(null);
+  const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<UnconnectedCodeEditor>(null);
 
   const [state, setState] = useState<State>({
@@ -145,7 +145,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
   };
 
   return (
-    <Modal ref={modalRef} freshState>
+    <Modal ref={modalRef}>
       <ModalHeader>
         Request Settings{' '}
         <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>

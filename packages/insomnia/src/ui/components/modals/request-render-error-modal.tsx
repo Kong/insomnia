@@ -6,7 +6,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { docsTemplateTags } from '../../../common/documentation';
 import { isRequest } from '../../../models/request';
 import { Link } from '../base/link';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -24,9 +24,9 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
     request: null,
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -91,7 +91,7 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
   render() {
     const { request, error } = this.state;
     return (
-      <Modal ref={this._setModalRef} freshState>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>Failed to Render Request</ModalHeader>
         <ModalBody>{request && error ? this.renderModalBody(request, error) : null}</ModalBody>
       </Modal>

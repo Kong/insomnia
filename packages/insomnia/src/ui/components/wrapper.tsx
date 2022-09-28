@@ -55,7 +55,7 @@ import ProtoFilesModal from './modals/proto-files-modal';
 import { RequestGroupSettingsModal } from './modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 import { RequestSettingsModal } from './modals/request-settings-modal';
-import RequestSwitcherModal from './modals/request-switcher-modal';
+import { RequestSwitcherModal } from './modals/request-switcher-modal';
 import { ResponseDebugModal } from './modals/response-debug-modal';
 import { SelectModal } from './modals/select-modal';
 import { SettingsModal } from './modals/settings-modal';
@@ -327,9 +327,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
             <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
-            <RequestSwitcherModal
-              ref={registerModal}
-            />
+            <RequestSwitcherModal ref={instance => registerModal(instance, 'RequestSwitcherModal')}/>
 
             <EnvironmentEditModal
               ref={registerModal}
@@ -369,7 +367,7 @@ export class WrapperClass extends PureComponent<Props, State> {
               activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             />
 
-            <AddKeyCombinationModal ref={registerModal} />
+            <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
             <ExportRequestsModal ref={registerModal} />
 
             <GrpcDispatchModalWrapper>

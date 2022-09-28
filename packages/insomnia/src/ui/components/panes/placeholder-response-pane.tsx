@@ -1,8 +1,9 @@
+import { KeyboardShortcut } from 'insomnia-common';
 import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
@@ -35,17 +36,17 @@ export const PlaceholderResponsePane: FC = ({ children }) => {
       <PaneBody placeholder>
         <Wrapper>
           {[
-            hotKeyRefs.REQUEST_SEND,
-            hotKeyRefs.REQUEST_FOCUS_URL,
-            hotKeyRefs.SHOW_COOKIES_EDITOR,
-            hotKeyRefs.ENVIRONMENT_SHOW_EDITOR,
-            hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS,
-          ].map(({ description, id }) => (
-            <Item key={id}>
-              <Description>{description}</Description>
+            'request_send',
+            'request_focusUrl',
+            'showCookiesEditor',
+            'environment_showEditor',
+            'preferences_showKeyboardShortcuts',
+          ].map(shortcut => (
+            <Item key={shortcut}>
+              <Description>{keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}</Description>
               <code>
                 <Hotkey
-                  keyBindings={hotKeyRegistry[id]}
+                  keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]}
                   useFallbackMessage
                 />
               </code>

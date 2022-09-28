@@ -10,7 +10,7 @@ import type { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { UnconnectedCodeEditor } from '../codemirror/code-editor';
@@ -40,7 +40,7 @@ interface RequestGroupSettingsModalOptions {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _editorRef = createRef<UnconnectedCodeEditor>();
 
   state: State = {
@@ -54,7 +54,7 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
     justMoved: false,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -315,7 +315,7 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
   render() {
     const { requestGroup } = this.state;
     return (
-      <Modal ref={this._setModalRef} freshState>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>
           Folder Settings{' '}
           <span className="txt-sm selectable faint monospace">

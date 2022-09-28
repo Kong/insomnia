@@ -11,7 +11,7 @@ import { RootState } from '../../redux/modules';
 import * as projectActions from '../../redux/modules/project';
 import { selectActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
@@ -23,9 +23,9 @@ type Props = ReduxProps;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ProjectSettingsModal extends PureComponent<Props> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
-  _handleSetModalRef(modal: Modal) {
+  _handleSetModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -56,7 +56,7 @@ class ProjectSettingsModal extends PureComponent<Props> {
     const isRemote = isRemoteProject(project);
 
     return (
-      <Modal ref={this._handleSetModalRef} freshState>
+      <Modal ref={this._handleSetModalRef}>
         <ModalHeader key={`header::${project._id}`}>
           {strings.project.singular} Settings{' '}
           <div className="txt-sm selectable faint monospace">{project._id}</div>

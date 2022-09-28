@@ -1,14 +1,12 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
-import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { Account } from '../settings/account';
@@ -31,14 +29,8 @@ export const displayName = 'SettingsModal';
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const settings = useSelector(selectSettings);
   const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
-  const modalRef = useRef<Modal>(null);
+  const modalRef = useRef<ModalHandle>(null);
   const email = session.isLoggedIn() ? session.getFullName() : null;
-
-  const handleUpdateKeyBindings = async (hotKeyRegistry: HotKeyRegistry) => {
-    await models.settings.update(settings, {
-      hotKeyRegistry,
-    });
-  };
 
   useImperativeHandle(ref, () => ({
     hide(): void {
@@ -52,7 +44,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   }), []);
 
   return (
-    <Modal ref={modalRef} tall freshState {...props}>
+    <Modal ref={modalRef} tall {...props}>
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">
@@ -92,9 +84,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <ThemePanel />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
-            <Shortcuts
-              handleUpdateKeyBindings={handleUpdateKeyBindings}
-            />
+            <Shortcuts />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel pad scrollable">
             <Account />

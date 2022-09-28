@@ -130,10 +130,6 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
             title,
             ...(options || ({} as Record<string, any>)),
 
-            onCancel() {
-              reject(new Error(`Prompt ${title} cancelled`));
-            },
-
             onComplete(value: string) {
               shouldResolve = true;
               resolveWith = value;
@@ -144,6 +140,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
               if (shouldResolve && resolveWith !== null) {
                 resolve(resolveWith);
               }
+              reject(new Error(`Prompt ${title} cancelled`));
             },
           });
         });

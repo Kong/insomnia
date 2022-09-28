@@ -20,7 +20,7 @@ import { setActiveActivity } from '../../redux/modules/global';
 import { selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
 import { FileInputButton } from '../base/file-input-button';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
@@ -85,7 +85,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
   state: State = {
     showAddCertificateForm: false,
@@ -109,7 +109,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
     });
   }
 
-  _handleSetModalRef(modal: Modal) {
+  _handleSetModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -539,7 +539,7 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
   render() {
     const { workspace } = this.props;
     return (
-      <Modal ref={this._handleSetModalRef} freshState>
+      <Modal ref={this._handleSetModalRef}>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
       </Modal>

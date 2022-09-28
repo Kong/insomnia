@@ -7,10 +7,11 @@ import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintO
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
+import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode } from 'react';
+import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
@@ -18,12 +19,8 @@ import vkBeautify from 'vkbeautify';
 import {
   AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
-  EditorKeyMap,
   isMac,
 } from '../../../common/constants';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
@@ -32,9 +29,10 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
+import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 import { shouldIndentWithTabs } from './should-indent-with-tabs';
 
@@ -105,6 +103,7 @@ interface RawProps {
   onFocus?: (event: FocusEvent) => void;
   onBlur?: (event: FocusEvent) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
+  // NOTE: This is a hack to define keydown events on the Editor.
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
@@ -188,10 +187,23 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawPr
   { enableNunjucks, ignoreEditorFontSettings, ...rawProps },
   ref
 ) => {
+  const editorRef = useRef<UnconnectedCodeEditor | null>(null);
+  useGlobalKeyboardShortcuts({
+    beautifyRequestBody: () => editorRef.current?._prettify(),
+  });
+
   const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
 
   return <UnconnectedCodeEditor
-    ref={ref}
+    ref={editor => {
+      if (typeof ref === 'function') {
+        ref(editor);
+      } else if (typeof ref === 'object' && ref) {
+        ref.current = editor;
+      }
+
+      editorRef.current = editor;
+    }}
     {...rawProps}
     {...derivedProps}
   />;
@@ -748,10 +760,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
-  async _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._prettify);
-  }
-
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
@@ -982,11 +990,41 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     }
   }
 
+  // Fired on every keydown happening on the editor.
+  // If the key is defined in the editor keymap (vim/sublime etc.) it will be handled by the editor unless we define event.codemirrorIgnore = true
+  // @UX-Issue There's no way for the user view the keymap definitions (vim/sublime).
+  // The user defined hotkeys have priority over the editor keymap.
   async _codemirrorKeyDown(doc: CodeMirror.Editor, event: KeyboardEvent) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && event.code === 'Tab') {
       // @ts-expect-error -- unsound property assignment
       event.codemirrorIgnore = true;
+    }
+
+    const pressedKeyComb: KeyCombination = {
+      ctrl: event.ctrlKey,
+      alt: event.altKey,
+      shift: event.shiftKey,
+      meta: event.metaKey,
+      keyCode: event.keyCode,
+    };
+
+    const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, this.props.hotKeyRegistry);
+    const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+      'showAutocomplete': this.props.hotKeyRegistry.showAutocomplete,
+    });
+    const isEscapeKey = event.code === 'Escape';
+
+    // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
+    if (isUserDefinedKeyboardShortcut && !isCodeEditorAutoCompleteBinding) {
+      // @ts-expect-error -- unsound property assignment
+      event.codemirrorIgnore = true;
+    // Stop the editor from handling the escape key
+    } else if (isEscapeKey) {
+      // @ts-expect-error -- unsound property assignment
+      event.codemirrorIgnore = true;
+    } else {
+      event.stopPropagation();
     }
 
     if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
@@ -1044,15 +1082,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
   }
 
   _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: Event) {
-    const { keyMap } = this.props;
-    // @ts-expect-error -- unsound property access
-    const { keyCode } = event;
-    const isVimKeyMap = keyMap === EditorKeyMap.vim;
-    const pressedEscape = keyCode === keyCodes.esc.keyCode;
-
-    if (isVimKeyMap && pressedEscape) {
-      event.stopPropagation();
-    }
+    event.stopPropagation();
   }
 
   _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
@@ -1295,7 +1325,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
         data-editor-type={type}
         data-testid="CodeEditor"
       >
-        <KeydownBinder onKeydown={this._handleKeyDown} />
         <div
           className={classnames('editor__container', 'input', className)}
           style={styles}

@@ -17,8 +17,6 @@ import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DashboardSortOrder,
 } from '../../common/constants';
-import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
 import { isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { ApiSpec } from '../../models/api-spec';
@@ -38,7 +36,7 @@ import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { KeydownBinder } from './keydown-binder';
+import { useGlobalKeyboardShortcuts } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
 import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
@@ -247,9 +245,9 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
     setFilter(event.currentTarget.value);
   }, []);
 
-  const onKeydown = useCallback(event => {
-    executeHotKey(event, hotKeyRefs.FILTER_DOCUMENTS, () => inputRef.current?.focus());
-  }, []);
+  useGlobalKeyboardShortcuts({
+    documents_filter: () => inputRef.current?.focus(),
+  });
 
   return (
     <PageLayout
@@ -278,16 +276,14 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
                     maxWidth: '400px',
                   }}
                 >
-                  <KeydownBinder onKeydown={onKeydown}>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      placeholder="Filter..."
-                      onChange={onChangeFilter}
-                      className="no-margin"
-                    />
-                    <span className="fa fa-search filter-icon" />
-                  </KeydownBinder>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Filter..."
+                    onChange={onChangeFilter}
+                    className="no-margin"
+                  />
+                  <span className="fa fa-search filter-icon" />
                 </div>
                 <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
                 <RemoteWorkspacesDropdown vcs={vcs} />

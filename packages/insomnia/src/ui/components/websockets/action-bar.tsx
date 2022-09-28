@@ -2,14 +2,12 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url'
 import React, { FC, useCallback, useLayoutEffect, useRef } from 'react';
 import styled from 'styled-components';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor } from '../codemirror/one-line-editor';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 
@@ -120,22 +118,17 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     }
   }, [environmentId, isOpen, request, workspaceId]);
 
-  const handleGlobalKeyDown = useCallback(async (event: KeyboardEvent) => {
-    if (!editorRef.current) {
-      return;
-    }
-    executeHotKey(event, hotKeyRefs.REQUEST_SEND, () => {
-      handleSubmit();
-    });
-    executeHotKey(event, hotKeyRefs.REQUEST_FOCUS_URL, () => {
+  useGlobalKeyboardShortcuts({
+    request_send: () => handleSubmit(),
+    request_focusUrl: () => {
       editorRef.current?.focus();
       editorRef.current?.selectAll();
-    });
-  }, [handleSubmit]);
+    },
+  });
 
   const isConnectingOrClosed = readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED;
   return (
-    <KeydownBinder onKeydown={handleGlobalKeyDown}>
+    <>
       {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
       {isOpen && (
         <ConnectionStatus>
@@ -170,6 +163,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
           ? <Button type="submit">Connect</Button>
           : <Button type="submit" warning>Disconnect</Button>}
       </Form>
-    </KeydownBinder>
+    </>
   );
 };

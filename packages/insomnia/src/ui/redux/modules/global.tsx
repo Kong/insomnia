@@ -27,7 +27,7 @@ import * as requestOperations from '../../../models/helpers/request-operations';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { isWorkspace } from '../../../models/workspace';
+import { isWorkspace, Workspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
 import { setTheme } from '../../../plugins/misc';
@@ -43,7 +43,7 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveProjectName, selectStats, selectWorkspacesForActiveProject } from '../selectors';
+import { selectStats } from '../selectors';
 import { RootState } from '.';
 import { importUri } from './import';
 import { activateWorkspace } from './workspace';
@@ -401,8 +401,7 @@ export type SelectedFormat =
   | typeof VALUE_YAML
   ;
 
-const showSelectExportTypeModal = ({ onCancel, onDone }: {
-  onCancel: () => void;
+const showSelectExportTypeModal = ({ onDone }: {
   onDone: (selectedFormat: SelectedFormat) => Promise<void>;
 }) => {
   const options = [
@@ -428,7 +427,6 @@ const showSelectExportTypeModal = ({ onCancel, onDone }: {
     value: defaultValue,
     options,
     message: 'Which format would you like to export as?',
-    onCancel,
     onDone: async (selectedFormat: SelectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
       await onDone(selectedFormat);
@@ -467,14 +465,8 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) => {
-  dispatch(loadStart());
-  const state = getState();
-  const activeProjectName = selectActiveProjectName(state);
-  const workspacesForActiveProject = selectWorkspacesForActiveProject(state);
-
+export const exportAllToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {
-    dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
       message: <>There are no workspaces to export in the <strong>{activeProjectName}</strong> {strings.project.singular.toLowerCase()}.</>,
@@ -483,9 +475,6 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) =
   }
 
   showSelectExportTypeModal({
-    onCancel: () => {
-      dispatch(loadStop());
-    },
     onDone: async selectedFormat => {
       // Check if we want to export private environments.
       const environments = await models.environment.all();
@@ -504,8 +493,6 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) =
       });
 
       if (!fileName) {
-        // Cancelled.
-        dispatch(loadStop());
         return;
       }
 
@@ -534,7 +521,6 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) =
           error: err,
           message: 'Export failed due to an unexpected error',
         });
-        dispatch(loadStop());
         return;
       }
 
@@ -542,19 +528,13 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState: any) =
         if (err) {
           console.warn('Export failed', err);
         }
-
-        dispatch(loadStop());
       });
     },
   });
 };
 
-export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
+export const exportRequestsToFile = (requestIds: string[]) => {
   showSelectExportTypeModal({
-    onCancel: () => {
-      dispatch(loadStop());
-    },
     onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request | WebSocketRequest)[] = [];
       const privateEnvironments: Environment[] = [];
@@ -599,8 +579,6 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
       });
 
       if (!fileName) {
-        // Cancelled.
-        dispatch(loadStop());
         return;
       }
 
@@ -629,7 +607,6 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
           error: err,
           message: 'Export failed due to an unexpected error',
         });
-        dispatch(loadStop());
         return;
       }
 
@@ -637,8 +614,6 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
         if (err) {
           console.warn('Export failed', err);
         }
-
-        dispatch(loadStop());
       });
     },
   });

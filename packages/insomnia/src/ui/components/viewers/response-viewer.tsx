@@ -14,11 +14,9 @@ import {
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { xmlDecode } from '../../../common/misc';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
@@ -124,12 +122,8 @@ export const ResponseViewer = ({
     );
   };
 
-  function _handleKeyDown(event: KeyboardEvent) {
-    if (!_isViewSelectable()) {
-      return;
-    }
-
-    executeHotKey(event, hotKeyRefs.RESPONSE_FOCUS, () => {
+  useGlobalKeyboardShortcuts({
+    response_focus: () => {
       if (!_isViewSelectable()) {
         return;
       }
@@ -143,8 +137,8 @@ export const ResponseViewer = ({
           _selectableViewRef.current.selectAll();
         }
       }
-    });
-  }
+    },
+  });
 
   function _getContentType() {
     const lowercasedOriginalContentType = originalContentType.toLowerCase();
@@ -226,201 +220,197 @@ export const ResponseViewer = ({
     clickLink(url);
   }
 
-  function renderResponseView() {
-    if (error) {
-      return (
-        <div className="scrollable tall">
-          <ResponseErrorViewer url={url} error={error} />
-        </div>
-      );
-    }
-
-    if (blockingBecauseTooLarge) {
-      return (
-        <div className="response-pane__notify">
-          {hugeResponse ? (
-            <Fragment>
-              <p className="pad faint">
-                Responses over {HUGE_RESPONSE_MB}MB cannot be shown
-              </p>
-              <button onClick={download} className="inline-block btn btn--clicky">
-                Save Response To File
-              </button>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <p className="pad faint">
-                Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
-              </p>
-              <div>
-                <button
-                  onClick={download}
-                  className="inline-block btn btn--clicky margin-xs"
-                >
-                  Save To File
-                </button>
-                <button
-                  onClick={_handleDismissBlocker}
-                  disabled={hugeResponse}
-                  className=" inline-block btn btn--clicky margin-xs"
-                >
-                  Show Anyway
-                </button>
-              </div>
-              <div className="pad-top-sm">
-                <button
-                  className="faint inline-block btn btn--super-compact"
-                  onClick={_handleDisableBlocker}
-                >
-                  Always Show
-                </button>
-              </div>
-            </Fragment>
-          )}
-        </div>
-      );
-    }
-
-    if (!bodyBuffer) {
-      return (
-        <div className="pad faint">
-          Failed to read response body from filesystem
-        </div>
-      );
-    }
-
-    if (bodyBuffer.length === 0) {
-      return <div className="pad faint">No body returned for response</div>;
-    }
-
-    const contentType = _getContentType();
-    if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('image/') === 0
-    ) {
-      const justContentType = contentType.split(';')[0];
-      const base64Body = bodyBuffer.toString('base64');
-      return (
-        <div className="scrollable-container tall wide">
-          <div className="scrollable">
-            <img
-              src={`data:${justContentType};base64,${base64Body}`}
-              className="pad block"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                margin: 'auto',
-              }}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
-      return (
-        <ResponseWebView
-          body={_getBody()}
-          contentType={contentType}
-          key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
-          url={url}
-          webpreferences={`disableDialogs=true, javascript=${
-            disableHtmlPreviewJs ? 'no' : 'yes'
-          }`}
-        />
-      );
-    }
-
-    if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('application/pdf') === 0
-    ) {
-      return (
-        <div className="tall wide scrollable">
-          <ResponsePDFViewer body={bodyBuffer} key={responseId} />
-        </div>
-      );
-    }
-
-    if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('text/csv') === 0
-    ) {
-      return (
-        <div className="tall wide scrollable">
-          <ResponseCSVViewer body={bodyBuffer} key={responseId} />
-        </div>
-      );
-    }
-
-    if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('multipart/') === 0
-    ) {
-      return (
-        <ResponseMultipartViewer
-          bodyBuffer={bodyBuffer}
-          contentType={contentType}
-          disableHtmlPreviewJs={disableHtmlPreviewJs}
-          disablePreviewLinks={disablePreviewLinks}
-          download={download}
-          editorFontSize={editorFontSize}
-          filter={filter}
-          filterHistory={filterHistory}
-          key={responseId}
-          responseId={responseId}
-          url={url}
-        />
-      );
-    }
-
-    if (
-      previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('audio/') === 0
-    ) {
-      const justContentType = contentType.split(';')[0];
-      const base64Body = bodyBuffer.toString('base64');
-      return (
-        <div className="vertically-center" key={responseId}>
-          <audio controls>
-            <source src={`data:${justContentType};base64,${base64Body}`} />
-          </audio>
-        </div>
-      );
-    }
-
-    if (previewMode === PREVIEW_MODE_RAW) {
-      return (
-        <ResponseRawViewer
-          key={responseId}
-          responseId={responseId}
-          ref={_selectableViewRef}
-          value={_getBody()}
-        />
-      );
-    }
-
-    // Show everything else as "source"
+  if (error) {
     return (
-      <CodeEditor
-        key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
-        ref={_selectableViewRef}
-        autoPrettify
-        defaultValue={_getBody()}
-        filter={filter}
-        filterHistory={filterHistory}
-        mode={_getMode()}
-        noMatchBrackets
-        onClickLink={disablePreviewLinks ? undefined : _handleClickLink}
-        placeholder="..."
-        readOnly
-        uniquenessKey={responseId}
-        updateFilter={updateFilter}
+      <div className="scrollable tall">
+        <ResponseErrorViewer url={url} error={error} />
+      </div>
+    );
+  }
+
+  if (blockingBecauseTooLarge) {
+    return (
+      <div className="response-pane__notify">
+        {hugeResponse ? (
+          <Fragment>
+            <p className="pad faint">
+              Responses over {HUGE_RESPONSE_MB}MB cannot be shown
+            </p>
+            <button onClick={download} className="inline-block btn btn--clicky">
+              Save Response To File
+            </button>
+          </Fragment>
+        ) : (
+          <Fragment>
+            <p className="pad faint">
+              Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
+            </p>
+            <div>
+              <button
+                onClick={download}
+                className="inline-block btn btn--clicky margin-xs"
+              >
+                Save To File
+              </button>
+              <button
+                onClick={_handleDismissBlocker}
+                disabled={hugeResponse}
+                className=" inline-block btn btn--clicky margin-xs"
+              >
+                Show Anyway
+              </button>
+            </div>
+            <div className="pad-top-sm">
+              <button
+                className="faint inline-block btn btn--super-compact"
+                onClick={_handleDisableBlocker}
+              >
+                Always Show
+              </button>
+            </div>
+          </Fragment>
+        )}
+      </div>
+    );
+  }
+
+  if (!bodyBuffer) {
+    return (
+      <div className="pad faint">
+        Failed to read response body from filesystem
+      </div>
+    );
+  }
+
+  if (bodyBuffer.length === 0) {
+    return <div className="pad faint">No body returned for response</div>;
+  }
+
+  const contentType = _getContentType();
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+      contentType.indexOf('image/') === 0
+  ) {
+    const justContentType = contentType.split(';')[0];
+    const base64Body = bodyBuffer.toString('base64');
+    return (
+      <div className="scrollable-container tall wide">
+        <div className="scrollable">
+          <img
+            src={`data:${justContentType};base64,${base64Body}`}
+            className="pad block"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              margin: 'auto',
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
+    return (
+      <ResponseWebView
+        body={_getBody()}
+        contentType={contentType}
+        key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
+        url={url}
+        webpreferences={`disableDialogs=true, javascript=${
+          disableHtmlPreviewJs ? 'no' : 'yes'
+        }`}
       />
     );
   }
 
-  return <KeydownBinder onKeydown={_handleKeyDown}>{renderResponseView()}</KeydownBinder>;
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+      contentType.indexOf('application/pdf') === 0
+  ) {
+    return (
+      <div className="tall wide scrollable">
+        <ResponsePDFViewer body={bodyBuffer} key={responseId} />
+      </div>
+    );
+  }
+
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+      contentType.indexOf('text/csv') === 0
+  ) {
+    return (
+      <div className="tall wide scrollable">
+        <ResponseCSVViewer body={bodyBuffer} key={responseId} />
+      </div>
+    );
+  }
+
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+      contentType.indexOf('multipart/') === 0
+  ) {
+    return (
+      <ResponseMultipartViewer
+        bodyBuffer={bodyBuffer}
+        contentType={contentType}
+        disableHtmlPreviewJs={disableHtmlPreviewJs}
+        disablePreviewLinks={disablePreviewLinks}
+        download={download}
+        editorFontSize={editorFontSize}
+        filter={filter}
+        filterHistory={filterHistory}
+        key={responseId}
+        responseId={responseId}
+        url={url}
+      />
+    );
+  }
+
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+      contentType.indexOf('audio/') === 0
+  ) {
+    const justContentType = contentType.split(';')[0];
+    const base64Body = bodyBuffer.toString('base64');
+    return (
+      <div className="vertically-center" key={responseId}>
+        <audio controls>
+          <source src={`data:${justContentType};base64,${base64Body}`} />
+        </audio>
+      </div>
+    );
+  }
+
+  if (previewMode === PREVIEW_MODE_RAW) {
+    return (
+      <ResponseRawViewer
+        key={responseId}
+        responseId={responseId}
+        ref={_selectableViewRef}
+        value={_getBody()}
+      />
+    );
+  }
+
+  // Show everything else as "source"
+  return (
+    <CodeEditor
+      key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
+      ref={_selectableViewRef}
+      autoPrettify
+      defaultValue={_getBody()}
+      filter={filter}
+      filterHistory={filterHistory}
+      mode={_getMode()}
+      noMatchBrackets
+      onClickLink={disablePreviewLinks ? undefined : _handleClickLink}
+      placeholder="..."
+      readOnly
+      uniquenessKey={responseId}
+      updateFilter={updateFilter}
+    />
+  );
 };
 
 ResponseViewer.displayName = 'ResponseViewer';

@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { RequestGroup } from '../../../models/request-group';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -25,10 +25,10 @@ export class EnvironmentEditModal extends PureComponent<Props, State> {
     isValid: true,
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _envEditor: EnvironmentEditor | null = null;
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

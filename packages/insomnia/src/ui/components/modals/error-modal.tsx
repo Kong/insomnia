@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -16,7 +16,7 @@ export interface ErrorModalOptions {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _okCallback: (value?: unknown) => void = () => {};
 
   state: ErrorModalOptions = {
@@ -26,7 +26,7 @@ export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
     addCancel: false,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -26,14 +26,14 @@ export class AlertModal extends PureComponent<{}, State> {
     okLabel: '',
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _cancel: HTMLButtonElement | null = null;
   _ok: HTMLButtonElement | null = null;
 
   _okCallback?: (value: void | PromiseLike<void>) => void;
   _okCallback2: AlertModalOptions['onConfirm'];
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -82,7 +82,7 @@ export class AlertModal extends PureComponent<{}, State> {
   render() {
     const { message, title, addCancel, okLabel } = this.state;
     return (
-      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]} skinny>
+      <Modal ref={this._setModalRef} skinny>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>

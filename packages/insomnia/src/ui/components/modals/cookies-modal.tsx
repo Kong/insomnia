@@ -10,7 +10,7 @@ import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectActiveCookieJar } from '../../redux/selectors';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -28,8 +28,8 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookiesModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+export class CookiesModal extends PureComponent<Props, State> {
+  modal: ModalHandle | null = null;
   filterInput: HTMLInputElement | null = null;
 
   state: State = {
@@ -37,7 +37,7 @@ class CookiesModal extends PureComponent<Props, State> {
     visibleCookieIndexes: null,
   };
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 

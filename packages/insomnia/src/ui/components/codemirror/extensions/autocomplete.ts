@@ -2,7 +2,7 @@ import 'codemirror/addon/mode/overlay';
 
 import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
 
-import { getPlatformKeyCombinations, hotKeyRefs } from '../../../../common/hotkeys';
+import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
 import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
 import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
@@ -162,7 +162,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor,
     // Remove keymap if we're already added it
     cm.removeKeyMap('autocomplete-keymap');
 
-    const keyBindings = options.hotKeyRegistry[hotKeyRefs.SHOW_AUTOCOMPLETE.id];
+    const keyBindings = options.hotKeyRegistry.showAutocomplete;
     const keyCombs = getPlatformKeyCombinations(keyBindings);
 
     const keymap: CodeMirror.KeyMap = {

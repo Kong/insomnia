@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -33,13 +33,13 @@ export class AskModal extends PureComponent<{}, State> {
     loading: false,
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   yesButton: HTMLButtonElement | null = null;
 
   _doneCallback: AskModalOptions['onDone'];
   _promiseCallback: (value: boolean | PromiseLike<boolean>) => void = () => {};
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -94,7 +94,7 @@ export class AskModal extends PureComponent<{}, State> {
   render() {
     const { message, title, yesText, noText, loading } = this.state;
     return (
-      <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
+      <Modal noEscape ref={this._setModalRef}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">{message}</ModalBody>
         <ModalFooter>

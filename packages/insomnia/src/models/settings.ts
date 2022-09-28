@@ -1,4 +1,4 @@
-import { HttpVersions, Settings as BaseSettings, UpdateChannel } from 'insomnia-common';
+import { HttpVersions, KeyboardShortcut, Settings as BaseSettings, UpdateChannel } from 'insomnia-common';
 
 import {
   getAppDefaultDarkTheme,
@@ -129,6 +129,17 @@ export async function getOrCreate() {
  * Ensure map is updated when new hotkeys are added
  */
 function migrateEnsureHotKeys(settings: Settings): Settings {
-  settings.hotKeyRegistry = { ...hotkeys.newDefaultRegistry(), ...settings.hotKeyRegistry };
+  const defaultHotKeyRegistry = hotkeys.newDefaultRegistry();
+
+  // Remove any hotkeys that are no longer in the default registry
+  const hotKeyRegistry = (Object.keys(settings.hotKeyRegistry) as KeyboardShortcut[]).reduce((newHotKeyRegistry, key) => {
+    if (key in defaultHotKeyRegistry) {
+      newHotKeyRegistry[key] = settings.hotKeyRegistry[key];
+    }
+
+    return newHotKeyRegistry;
+  }, {} as Settings['hotKeyRegistry']);
+
+  settings.hotKeyRegistry = { ...defaultHotKeyRegistry, ...hotKeyRegistry };
   return settings;
 }

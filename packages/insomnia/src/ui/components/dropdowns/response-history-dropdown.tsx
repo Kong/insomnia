@@ -2,8 +2,6 @@ import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'dat
 import React, { Fragment, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { Response } from '../../../models/response';
@@ -15,7 +13,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { KeydownBinder } from '../keydown-binder';
+import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
@@ -165,50 +163,49 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     );
   };
 
-  const handleKeydown = useCallback((event: KeyboardEvent) => {
-    executeHotKey(event, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => dropdownRef.current?.toggle(true));
-  }, []);
+  useGlobalKeyboardShortcuts({
+    request_toggleHistory: () => dropdownRef.current?.toggle(true),
+  });
+
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
   return (
-    <KeydownBinder onKeydown={handleKeydown}>
-      <Dropdown
-        ref={dropdownRef}
-        key={activeResponse ? activeResponse._id : 'n/a'}
-        className={className}
-      >
-        <DropdownButton className="btn btn--super-compact tall" title="Response history">
-          {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
-          {!isLatestResponseActive ? (
-            <i className="fa fa-thumb-tack space-left" />
-          ) : (
-            <i className="fa fa-caret-down space-left" />
-          )}
-        </DropdownButton>
-        <DropdownDivider>
-          <strong>{environmentName}</strong> Responses
-        </DropdownDivider>
-        <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponse}>
-          <i className="fa fa-trash-o" />
-          Delete Current Response
-        </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponses}>
-          <i className="fa fa-trash-o" />
-          Clear History
-        </DropdownItem>
-        <Fragment>
-          <DropdownDivider>Just Now</DropdownDivider>
-          {categories.minutes.map(renderResponseRow)}
-          <DropdownDivider>Less Than Two Hours Ago</DropdownDivider>
-          {categories.hours.map(renderResponseRow)}
-          <DropdownDivider>Today</DropdownDivider>
-          {categories.today.map(renderResponseRow)}
-          <DropdownDivider>This Week</DropdownDivider>
-          {categories.week.map(renderResponseRow)}
-          <DropdownDivider>Older Than This Week</DropdownDivider>
-          {categories.other.map(renderResponseRow)}
-        </Fragment>
-      </Dropdown>
-    </KeydownBinder>
+    <Dropdown
+      ref={dropdownRef}
+      key={activeResponse ? activeResponse._id : 'n/a'}
+      className={className}
+    >
+      <DropdownButton className="btn btn--super-compact tall" title="Response history">
+        {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
+        {!isLatestResponseActive ? (
+          <i className="fa fa-thumb-tack space-left" />
+        ) : (
+          <i className="fa fa-caret-down space-left" />
+        )}
+      </DropdownButton>
+      <DropdownDivider>
+        <strong>{environmentName}</strong> Responses
+      </DropdownDivider>
+      <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponse}>
+        <i className="fa fa-trash-o" />
+        Delete Current Response
+      </DropdownItem>
+      <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponses}>
+        <i className="fa fa-trash-o" />
+        Clear History
+      </DropdownItem>
+      <Fragment>
+        <DropdownDivider>Just Now</DropdownDivider>
+        {categories.minutes.map(renderResponseRow)}
+        <DropdownDivider>Less Than Two Hours Ago</DropdownDivider>
+        {categories.hours.map(renderResponseRow)}
+        <DropdownDivider>Today</DropdownDivider>
+        {categories.today.map(renderResponseRow)}
+        <DropdownDivider>This Week</DropdownDivider>
+        {categories.week.map(renderResponseRow)}
+        <DropdownDivider>Older Than This Week</DropdownDivider>
+        {categories.other.map(renderResponseRow)}
+      </Fragment>
+    </Dropdown>
   );
 };

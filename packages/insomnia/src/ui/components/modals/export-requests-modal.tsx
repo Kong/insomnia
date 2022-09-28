@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { AnyAction, bindActionCreators, Dispatch } from 'redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models';
@@ -12,7 +11,7 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { RootState } from '../../redux/modules';
 import { exportRequestsToFile } from '../../redux/modules/global';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
-import { Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -26,7 +25,7 @@ export interface Node {
   selectedRequests: number;
 }
 
-type Props = ModalProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+type Props = ModalProps & ReturnType<typeof mapStateToProps>;
 
 interface State {
   treeRoot: Node | null;
@@ -34,13 +33,13 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ExportRequestsModalClass extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
 
   state: State = {
     treeRoot: null,
   };
 
-  setModalRef(modal: Modal) {
+  setModalRef(modal: ModalHandle) {
     if (modal != null) {
       this.modal = modal;
     }
@@ -63,7 +62,7 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
     }
 
     const exportedRequestIds = this.getSelectedRequestIds(treeRoot);
-    this.props.handleExportRequestsToFile(exportedRequestIds);
+    exportRequestsToFile(exportedRequestIds);
     this.hide();
   }
 
@@ -219,7 +218,7 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
     const { treeRoot } = this.state;
     const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
     return (
-      <Modal ref={this.setModalRef} tall freshState {...this.props}>
+      <Modal ref={this.setModalRef} tall {...this.props}>
         <ModalHeader>Select Requests to Export</ModalHeader>
         <ModalBody>
           <div className="requests-tree">
@@ -248,11 +247,5 @@ export class ExportRequestsModalClass extends PureComponent<Props, State> {
 const mapStateToProps = (state: RootState) => ({
   sidebarChildren: selectSidebarChildren(state),
 });
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
-  const bound = bindActionCreators({ exportRequestsToFile }, dispatch);
-  return {
-    handleExportRequestsToFile: bound.exportRequestsToFile,
-  };
-};
 
-export const ExportRequestsModal = connect(mapStateToProps, mapDispatchToProps, null, { forwardRef:true })(ExportRequestsModalClass);
+export const ExportRequestsModal = connect(mapStateToProps, null, null, { forwardRef:true })(ExportRequestsModalClass);

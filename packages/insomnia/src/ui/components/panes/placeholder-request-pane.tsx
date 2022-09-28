@@ -1,7 +1,6 @@
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { hotKeyRefs } from '../../../common/hotkeys';
 import { createRequest } from '../../hooks/create-request';
 import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importFile } from '../../redux/modules/import';
@@ -37,7 +36,7 @@ export const PlaceholderRequestPane: FC = () => {
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_CREATE_HTTP.id]}
+                      keyBindings={hotKeyRegistry.request_createHTTP}
                       useFallbackMessage
                     />
                   </code>
@@ -48,7 +47,7 @@ export const PlaceholderRequestPane: FC = () => {
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]}
+                      keyBindings={hotKeyRegistry.request_quickSwitch}
                       useFallbackMessage
                     />
                   </code>
@@ -59,7 +58,7 @@ export const PlaceholderRequestPane: FC = () => {
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
+                      keyBindings={hotKeyRegistry.environment_showEditor}
                       useFallbackMessage
                     />
                   </code>

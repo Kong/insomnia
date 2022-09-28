@@ -1,81 +1,56 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { PureComponent, ReactNode } from 'react';
-import ReactDOM from 'react-dom';
+import { KeyboardShortcut, KeyCombination } from 'insomnia-common';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import tinykeys, { type KeyBindingMap, createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions } from 'tinykeys';
 
-import { AUTOBIND_CFG, isMac } from '../../common/constants';
+import { getPlatformKeyCombinations } from '../../common/hotkeys';
+import { keyboardKeys } from '../../common/keyboard-keys';
+import { selectHotKeyRegistry } from '../redux/selectors';
 
-interface Props {
-  children?: ReactNode;
-  onKeydown?: (...args: any[]) => any;
-  onKeyup?: (...args: any[]) => any;
-  disabled?: boolean;
-  scoped?: boolean;
-  stopMetaPropagation?: boolean;
+const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
+  `${meta ? 'Meta+' : ''}${alt ? 'Alt+' : ''}${ctrl ? 'Control+' : ''}${shift ? 'Shift+' : ''}` + Object.entries(keyboardKeys).find(([, { keyCode: kc }]) => kc === keyCode)?.[1].code;
+
+export function useKeyboardShortcuts(getTarget: () => HTMLElement, listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+
+  useEffect(() => {
+    const target = getTarget();
+
+    if (!target) {
+      return;
+    }
+    // behaviour: a screaming snake case key and a function which triggers an action
+    // eg. `SHOW_AUTOCOMPLETE` and `onThis`
+    const keyboardShortcuts = Object.entries(listeners) as [KeyboardShortcut, (event: KeyboardEvent) => any][];
+    // makes a copy of each listener for each hot key variation for a given behaviour
+    // hot key variations are multiple hotkeys that can trigger the same behaviour
+    // eg. Control+Space, Control+Shift+Space both could trigger SHOW_AUTOCOMPLETE
+    const keyBindingMap: KeyBindingMap = keyboardShortcuts
+      .map(([keyboardShortcut, action]) => getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut])
+        .map(combo => ({ tinyKeyString: keyCombinationToTinyKeyString(combo), action })))
+      .flat()
+      .reduce((acc, { tinyKeyString, action }) => ({ ...acc, [tinyKeyString]: action }), {});
+
+    const unsubscribe = tinykeys(target, keyBindingMap);
+    return unsubscribe;
+  }, [hotKeyRegistry, listeners, getTarget]);
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class KeydownBinder extends PureComponent<Props> {
-  _handleKeydown(event: KeyboardEvent) {
-    const { stopMetaPropagation, onKeydown, disabled } = this.props;
+export function useGlobalKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+  useKeyboardShortcuts(() => document.body, listeners);
+}
 
-    if (disabled) {
-      return;
-    }
+export function createKeybindingsHandler(
+  keyBindingMap: KeyBindingMap,
+  options: KeyBindingHandlerOptions = {},
+): (event: KeyboardEvent | React.KeyboardEvent<Element>) => void {
+  const handler = _createKeybindingsHandler(keyBindingMap, options);
 
-    const isMeta = isMac() ? event.metaKey : event.ctrlKey;
-
-    if (stopMetaPropagation && isMeta) {
-      event.stopPropagation();
-    }
-
-    if (onKeydown) {
-      onKeydown(event);
-    }
-  }
-
-  _handleKeyup(event: KeyboardEvent) {
-    const { stopMetaPropagation, onKeyup, disabled } = this.props;
-
-    if (disabled) {
-      return;
-    }
-
-    const isMeta = isMac() ? event.metaKey : event.ctrlKey;
-
-    if (stopMetaPropagation && isMeta) {
-      event.stopPropagation();
-    }
-
-    if (onKeyup) {
-      onKeyup(event);
-    }
-  }
-
-  componentDidMount() {
-    if (this.props.scoped) {
-      // TODO: unsound casting
-      const el = ReactDOM.findDOMNode(this) as HTMLElement | null;
-      el?.addEventListener('keydown', this._handleKeydown, { capture: true });
-      el?.addEventListener('keyup', this._handleKeyup, { capture: true });
+  return event => {
+    if (event instanceof KeyboardEvent) {
+      handler(event);
     } else {
-      document.body && document.body.addEventListener('keydown', this._handleKeydown, { capture: true });
-      document.body && document.body.addEventListener('keyup', this._handleKeyup, { capture: true });
+      handler(event.nativeEvent);
     }
-  }
-
-  componentWillUnmount() {
-    if (this.props.scoped) {
-      // TODO: unsound casting
-      const el = ReactDOM.findDOMNode(this) as HTMLElement | null;
-      el?.removeEventListener('keydown', this._handleKeydown, { capture: true });
-      el?.removeEventListener('keyup', this._handleKeyup, { capture: true });
-    } else {
-      document.body && document.body.removeEventListener('keydown', this._handleKeydown, { capture: true });
-      document.body && document.body.removeEventListener('keyup', this._handleKeyup, { capture: true });
-    }
-  }
-
-  render() {
-    return this.props.children ?? null;
-  }
+  };
 }

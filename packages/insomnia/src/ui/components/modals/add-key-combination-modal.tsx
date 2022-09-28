@@ -1,59 +1,56 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { KeyCombination } from 'insomnia-common';
-import { noop } from 'ramda-adjunct';
-import React, { PureComponent } from 'react';
+import { KeyboardShortcut } from 'insomnia-common';
+import React, { forwardRef, KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
-import { Modal } from '../base/modal';
+import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
-interface State {
-  hotKeyRefId: string | null;
-  checkKeyCombinationDuplicate: (...args: any[]) => any;
-  onAddKeyCombination: (...args: any[]) => any;
+export interface AddKeyCombinationModalOptions {
+  keyboardShortcut: KeyboardShortcut | null;
+  checkKeyCombinationDuplicate: (pressedKeyComb: KeyCombination) => boolean;
+  addKeyCombination: (keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => void;
   pressedKeyCombination: KeyCombination | null;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class AddKeyCombinationModal extends PureComponent<{}, State> {
-  _modal: Modal | null = null;
-
-  state: State = {
-    hotKeyRefId: null,
-    checkKeyCombinationDuplicate: noop,
-    onAddKeyCombination: noop,
+export interface AddKeyCombinationModalHandle {
+  show: (options: AddKeyCombinationModalOptions) => void;
+  hide: () => void;
+}
+export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const [state, setState] = useState<AddKeyCombinationModalOptions>({
+    keyboardShortcut: null,
+    checkKeyCombinationDuplicate: () => false,
+    addKeyCombination: () => {},
     pressedKeyCombination: null,
-  };
+  });
 
-  _setModalRef(modal: Modal) {
-    this._modal = modal;
-  }
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
 
-  _handleKeyDown(event: KeyboardEvent) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault();
     event.stopPropagation();
-
     // Handle keypress without modifiers.
     if (!event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
       // esc key is for closing dialog, don't record it.
-      if (event.keyCode === keyboardKeys.esc.keyCode) {
+      if (event.code === keyboardKeys.esc.code) {
         // Hiding modal is already handled by underlying modal.
         return;
       }
-
       // enter key is for saving previously entered key combination, don't record it.
-      if (event.keyCode === keyboardKeys.enter.keyCode) {
-        const {
-          hotKeyRefId,
-          checkKeyCombinationDuplicate,
-          onAddKeyCombination,
-          pressedKeyCombination,
-        } = this.state;
-
+      if (event.code === keyboardKeys.enter.code) {
+        const { pressedKeyCombination } = state;
         // Exit immediately if no key combination is pressed,
         // pressed key code is unknown,
         // or pressed key combination is incomplete (only modifiers are pressed).
@@ -62,22 +59,22 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
           pressedKeyCombination.keyCode === 0 ||
           isModifierKeyCode(pressedKeyCombination.keyCode)
         ) {
-          this.hide();
+          modalRef.current?.hide();
           return;
         }
-
         // Reject duplicate key combination.
-        if (checkKeyCombinationDuplicate(pressedKeyCombination)) {
+        if (state.checkKeyCombinationDuplicate(pressedKeyCombination)) {
           return;
         }
-
+        if (!state.keyboardShortcut) {
+          return;
+        }
         // Accept new key combination.
-        onAddKeyCombination(hotKeyRefId, pressedKeyCombination);
-        this.hide();
+        state.addKeyCombination(state.keyboardShortcut, pressedKeyCombination);
+        modalRef.current?.hide();
         return;
       }
     }
-
     const pressed: KeyCombination = {
       ctrl: event.ctrlKey,
       alt: event.altKey,
@@ -85,61 +82,42 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
       meta: event.metaKey,
       keyCode: event.keyCode,
     };
-    this.setState({
+    setState({
+      ...state,
       pressedKeyCombination: pressed,
     });
+  };
+
+  const { pressedKeyCombination } = state;
+  let keyCombDisplay = '';
+  let isDuplicate = false;
+
+  if (pressedKeyCombination != null) {
+    keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true);
+    isDuplicate = state.checkKeyCombinationDuplicate(pressedKeyCombination);
   }
 
-  show(
-    hotKeyRefId: string,
-    checkKeyCombinationDuplicate: (...args: any[]) => any,
-    onAddKeyCombination: (...args: any[]) => any,
-  ) {
-    this.setState({
-      hotKeyRefId: hotKeyRefId,
-      checkKeyCombinationDuplicate: checkKeyCombinationDuplicate,
-      onAddKeyCombination: onAddKeyCombination,
-      pressedKeyCombination: null,
-    });
-    this._modal?.show();
-  }
-
-  hide() {
-    this._modal?.hide();
-  }
-
-  render() {
-    const { checkKeyCombinationDuplicate, pressedKeyCombination } = this.state;
-    let keyCombDisplay = '';
-    let isDuplicate = false;
-
-    if (pressedKeyCombination != null) {
-      keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true);
-      isDuplicate = checkKeyCombinationDuplicate(pressedKeyCombination);
-    }
-
-    const duplicateMessageClasses = classnames('margin-bottom margin-left faint italic txt-md', {
-      hidden: !isDuplicate,
-    });
-    return (
-      <Modal
-        ref={this._setModalRef}
-        onKeyDown={this._handleKeyDown}
-        className="shortcuts add-key-comb-modal"
-      >
-        <ModalHeader>Add Keyboard Shortcut</ModalHeader>
-        <ModalBody noScroll>
-          <div className="pad-left pad-right pad-top pad-bottom-sm">
-            <div className="form-control form-control--outlined">
-              <label>
-                Press desired key combination and then press ENTER.
-                <input type="text" className="key-comb" value={keyCombDisplay} disabled />
-              </label>
-            </div>
+  const duplicateMessageClasses = classnames('margin-bottom margin-left faint italic txt-md', {
+    hidden: !isDuplicate,
+  });
+  return (
+    <Modal
+      ref={modalRef}
+      className="shortcuts add-key-comb-modal"
+    >
+      <ModalHeader>Add Keyboard Shortcut</ModalHeader>
+      <ModalBody noScroll>
+        <div className="pad-left pad-right pad-top pad-bottom-sm">
+          <div className="form-control form-control--outlined">
+            <label>
+              Press desired key combination and then press ENTER.
+              <input onKeyDown={handleKeyDown} autoFocus type="text" className="key-comb" value={keyCombDisplay} readOnly />
+            </label>
           </div>
-          <div className={duplicateMessageClasses}>Duplicate key combination</div>
-        </ModalBody>
-      </Modal>
-    );
-  }
-}
+        </div>
+        <div className={duplicateMessageClasses}>Duplicate key combination</div>
+      </ModalBody>
+    </Modal>
+  );
+});
+AddKeyCombinationModal.displayName = 'AddKeyCombinationModal';

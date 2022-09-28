@@ -6,15 +6,17 @@ import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
+import { isRequestGroup } from '../../../models/request-group';
 import { exportAllToFile } from '../../redux/modules/global';
 import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
-import { selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName } from '../../redux/selectors';
+import { selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Link } from '../base/link';
+import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { showModal, showPrompt } from '../modals/index';
 
@@ -27,6 +29,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const projectName = useSelector(selectActiveProjectName) ?? getProductName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const forceToWorkspace = activeWorkspace?._id ? ForceToWorkspace.current : ForceToWorkspace.existing;
+  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
+  const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
 
   const handleImportUri = useCallback(() => {
     const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
@@ -47,14 +51,21 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
 
   const showExportRequestsModal = useCallback(() => {
+    if (!workspaceRequestsAndRequestGroups.filter(r => !isRequestGroup(r)).length) {
+      showModal(AlertModal, {
+        title: 'Cannot export',
+        message: <>There are no requests to export.</>,
+      });
+      return;
+    }
     showModal(ExportRequestsModal);
     hideSettingsModal();
-  }, [hideSettingsModal]);
+  }, [hideSettingsModal, workspaceRequestsAndRequestGroups]);
 
   const handleExportAllToFile = useCallback(() => {
-    dispatch((exportAllToFile()));
+    exportAllToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
-  }, [hideSettingsModal, dispatch]);
+  }, [hideSettingsModal, projectName, workspacesForActiveProject]);
 
   const handleImportFile = useCallback(() => {
     dispatch(importFile({ workspaceId: activeWorkspace?._id, forceToWorkspace }));

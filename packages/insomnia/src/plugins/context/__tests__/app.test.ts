@@ -91,7 +91,6 @@ describe('app.prompt()', () => {
         {
           title: 'Title',
           onComplete: expect.any(Function),
-          onCancel: expect.any(Function),
           onHide: expect.any(Function),
         },
       ],
@@ -100,7 +99,6 @@ describe('app.prompt()', () => {
           title: 'Title',
           label: 'Label',
           onComplete: expect.any(Function),
-          onCancel: expect.any(Function),
           onHide: expect.any(Function),
         },
       ],

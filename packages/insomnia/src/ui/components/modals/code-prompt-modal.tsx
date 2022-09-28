@@ -8,7 +8,7 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { Modal } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -50,11 +50,11 @@ export class CodePromptModal extends PureComponent<{}, State> {
     showCopyButton: false,
   };
 
-  modal: Modal | null = null;
+  modal: ModalHandle | null = null;
   _onModeChange: Function = () => {};
   _onChange: Function = () => {};
 
-  _setModalRef(modal: Modal) {
+  _setModalRef(modal: ModalHandle) {
     this.modal = modal;
   }
 
@@ -119,7 +119,7 @@ export class CodePromptModal extends PureComponent<{}, State> {
     } = this.state;
 
     return (
-      <Modal ref={this._setModalRef} freshState tall>
+      <Modal ref={this._setModalRef} tall>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody
           noScroll
