@@ -9,7 +9,7 @@ import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import { jarFromCookies } from 'insomnia-cookies';
 import { json as jsonPrettify } from 'insomnia-prettify';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
+import { buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol } from 'insomnia-url';
 import prettier from 'prettier';
 import { complement } from 'ramda';
 import React, { FC, useEffect, useRef, useState } from 'react';
@@ -120,9 +120,8 @@ const fetchGraphQLSchemaForRequest = async ({
         enabledHeaders['cookie'] = cookieHeader;
       }
     }
-
     const response = await axiosRequest({
-      url: joinUrlAndQueryString(rendered.url, queryString),
+      url: setDefaultProtocol(joinUrlAndQueryString(rendered.url, queryString)),
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...enabledHeaders },
       data: {
@@ -155,6 +154,7 @@ const fetchGraphQLSchemaForRequest = async ({
       },
     };
   } catch (err) {
+    console.error('[graphql] Failed to fetch schema', err);
     return { schemaFetchError: { message: err.message } };
   }
 };
@@ -642,21 +642,6 @@ export const GraphQLEditor: FC<Props> = ({
         {!hideSchemaFetchErrors && schemaFetchError && (
           <div className="notice error margin no-margin-top margin-bottom-sm">
             <div className="pull-right">
-              <Tooltip position="top" message="View introspection request/response timeline">
-                <button
-                  className="icon icon--success"
-                  onClick={() => {
-                    if (schemaFetchError?.response) {
-                      showModal(ResponseDebugModal, {
-                        title: 'GraphQL Introspection Response',
-                        response: schemaFetchError.response,
-                      });
-                    }
-                  }}
-                >
-                  <i className="fa fa-bug" />
-                </button>
-              </Tooltip>{' '}
               <button
                 className="icon"
                 onClick={() => setState(state => ({ ...state, hideSchemaFetchErrors: true }))}
