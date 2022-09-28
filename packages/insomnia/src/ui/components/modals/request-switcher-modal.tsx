@@ -4,7 +4,6 @@ import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandl
 import { useDispatch, useSelector } from 'react-redux';
 
 import { METHOD_GRPC } from '../../../common/constants';
-import { isEventKey } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -20,7 +19,7 @@ import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { createKeybindingsHandler, useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
@@ -260,25 +259,40 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
   }, [activateRequestAndHide, activateWorkspaceAndHide, activeRequest, state, workspace]);
 
-  const handleInputKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const isKey = isEventKey(event as unknown as KeyboardEvent);
-    if (isKey('uparrow') || (isKey('tab') && event.shiftKey)) {
+  const handleInputKeydown = createKeybindingsHandler({
+    'ArrowUp': e => {
+      e.preventDefault();
       setState(state => ({
         ...state,
         activeIndex: wrapToIndex(state.activeIndex - 1, state.matchedRequests.length + state.matchedWorkspaces.length),
       }));
-    } else if (isKey('downarrow') || isKey('tab')) {
+    },
+    'Shift+Tab': e => {
+      e.preventDefault();
+      setState(state => ({
+        ...state,
+        activeIndex: wrapToIndex(state.activeIndex - 1, state.matchedRequests.length + state.matchedWorkspaces.length),
+      }));
+    },
+    'ArrowDown': e => {
+      e.preventDefault();
       setState(state => ({
         ...state,
         activeIndex: wrapToIndex(state.activeIndex + 1, state.matchedRequests.length + state.matchedWorkspaces.length),
       }));
-    } else if (isKey('enter')) {
+    },
+    'Tab': e => {
+      e.preventDefault();
+      setState(state => ({
+        ...state,
+        activeIndex: wrapToIndex(state.activeIndex + 1, state.matchedRequests.length + state.matchedWorkspaces.length),
+      }));
+    },
+    'Enter': e => {
+      e.preventDefault();
       activateCurrentIndex();
-    } else {
-      return;
-    }
-    event.preventDefault();
-  };
+    },
+  });
 
   useGlobalKeyboardShortcuts({
     request_showRecent: () => {

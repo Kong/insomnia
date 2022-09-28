@@ -44,12 +44,12 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
     // Handle keypress without modifiers.
     if (!event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
       // esc key is for closing dialog, don't record it.
-      if (event.keyCode === keyboardKeys.esc.keyCode) {
+      if (event.code === keyboardKeys.esc.code) {
         // Hiding modal is already handled by underlying modal.
         return;
       }
       // enter key is for saving previously entered key combination, don't record it.
-      if (event.keyCode === keyboardKeys.enter.keyCode) {
+      if (event.code === keyboardKeys.enter.code) {
         const { pressedKeyCombination } = state;
         // Exit immediately if no key combination is pressed,
         // pressed key code is unknown,

@@ -242,10 +242,8 @@ function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
 
 /**
  * Check whether key code is a modifier key, i.e., alt, shift, ctrl, or meta.
- * @param keyCode
- * @returns {boolean}
  */
-export function isModifierKeyCode(keyCode: number) {
+export function isModifierKeyCode(keyCode: number): boolean {
   return (
     keyCode === keyboardKeys.alt.keyCode ||
     keyCode === keyboardKeys.shift.keyCode ||

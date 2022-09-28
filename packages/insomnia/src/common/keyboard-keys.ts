@@ -500,9 +500,3 @@ export const keyboardKeys: Record<string, { keyCode: number; label: string; code
     label: "'",
   },
 };
-
-type KeyName = keyof typeof keyboardKeys;
-
-export const isEventKey = (event: KeyboardEvent) => (key: KeyName) => (
-  event.keyCode === keyboardKeys[key]?.keyCode
-);
