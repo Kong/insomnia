@@ -146,5 +146,6 @@ export const AppHooks: FC = () => {
         }
       },
   });
+
   return null;
 };
