@@ -1,3 +1,4 @@
+import { fromUrl } from 'hosted-git-info';
 import * as git from 'isomorphic-git';
 import path from 'path';
 import React, { ReactNode } from 'react';
@@ -14,7 +15,7 @@ import { isWorkspace, Workspace, WorkspaceScopeKeys } from '../../../models/work
 import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-scope-to-design';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
 import { shallowClone } from '../../../sync/git/shallow-clone';
-import { addDotGit, getOauth2FormatName, translateSSHtoHTTP } from '../../../sync/git/utils';
+import { getOauth2FormatName } from '../../../sync/git/utils';
 import { showAlert, showError, showModal } from '../../components/modals';
 import { GitRepositorySettingsModal } from '../../components/modals/git-repository-settings-modal';
 import { selectActiveProject } from '../selectors';
@@ -68,6 +69,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
               gitRepository: gitRepoPatch,
             });
           } catch (err) {
+            console.error(err);
             showError({
               title: 'Error Cloning Repository',
               message: err.message,
@@ -163,11 +165,12 @@ export const cloneGitRepository = ({ createFsClient }: {
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
-      onSubmitEdits: async (repoSettingsPatch: any) => {
+      onSubmitEdits: async (repoSettingsPatch: GitRepository) => {
         dispatch(loadStart());
         repoSettingsPatch.needsFullClone = true;
-        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
-        let fsClient = createFsClient();
+        // @ts-expect-error: Object is possibly 'null'.
+        repoSettingsPatch.uri = fromUrl(repoSettingsPatch?.uri).https();
+        const fsClient = createFsClient();
 
         const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
         try {
@@ -175,36 +178,16 @@ export const cloneGitRepository = ({ createFsClient }: {
             fsClient,
             gitRepository: { ...repoSettingsPatch },
           });
-        } catch (originalUriError) {
-          if (repoSettingsPatch.uri.endsWith('.git')) {
-            showAlert({
-              title: 'Error Cloning Repository',
-              message: originalUriError.message,
-            });
-            dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', originalUriError.message), providerName });
-            return;
-          }
-
-          const dotGitUri = addDotGit(repoSettingsPatch.uri);
-
-          try {
-            fsClient = createFsClient();
-            await shallowClone({
-              fsClient,
-              gitRepository: { ...repoSettingsPatch, uri: dotGitUri },
-            });
-            // by this point the clone was successful, so update with this syntax
-            repoSettingsPatch.uri = dotGitUri;
-          } catch (dotGitError) {
-            showAlert({
-              title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
-              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUriError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUri}): ${dotGitError.message}`,
-            });
-            dispatch(loadStop());
-            trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', dotGitError.message), providerName });
-            return;
-          }
+        } catch (err) {
+          console.error(err);
+          showError({
+            title: 'Error Cloning Repository',
+            message: err.message,
+            error: err,
+          });
+          dispatch(loadStop());
+          trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone', err.message), providerName });
+          return;
         }
 
         // If no workspace exists, user should be prompted to create a document
