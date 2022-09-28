@@ -94,7 +94,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     // It's the child
     return pathSegments(folders[0]);
   }, [workspaceRequestsAndRequestGroups]);
-  const getLastActiveRequestMap = () => {
+  const getLastActiveRequestMap = useCallback(() => {
+    // requestIds: lastActive datetime
     const lastActiveMap: Record<string, number> = {};
 
     for (const meta of requestMetas) {
@@ -104,8 +105,9 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       lastActiveMap[meta.parentId] = meta.lastActive;
     }
     return lastActiveMap;
-  };
-  const isMatch = (request: Request | WebSocketRequest | GrpcRequest, searchStrings: string): number | null => {
+  }, [grpcRequestMetas, requestMetas]);
+
+  const isMatch = useCallback((request: Request | WebSocketRequest | GrpcRequest, searchStrings: string): number | null => {
     if (request._id === searchStrings) {
       return Infinity;
     }
@@ -129,7 +131,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       return null;
     }
     return match.score;
-  };
+  }, [pathSegments]);
   const handleChangeValue = useCallback((searchString: string) => {
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = state;
     const lastActiveMap = getLastActiveRequestMap();
@@ -180,7 +182,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     }));
-  }, [activeRequest, pathSegments, grpcRequestMetas, requestMetas, state, workspace?._id, workspaceRequestsAndRequestGroups, workspacesForActiveProject]);
+  }, [state, getLastActiveRequestMap, workspaceRequestsAndRequestGroups, workspacesForActiveProject, activeRequest, isMatch, workspace?._id]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
