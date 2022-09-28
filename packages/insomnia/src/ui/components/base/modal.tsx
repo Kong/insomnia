@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { forwardRef, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { createKeybindingsHandler } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
@@ -83,16 +83,25 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
     }
   }, [hide, open, noEscape]);
 
-  useGlobalKeyboardShortcuts({
-    closeModal: () => {
+  const handleKeydown = createKeybindingsHandler({
+    'Escape': () => {
       if (!noEscape) {
         hide();
       }
     },
   });
+  useEffect(() => {
+    document.body.addEventListener('keydown', handleKeydown);
+
+    return () => {
+      document.body.removeEventListener('keydown', handleKeydown);
+    };
+  }, [handleKeydown]);
+
   return (open ?
     <div
       ref={containerRef}
+      onKeyDown={handleKeydown}
       tabIndex={-1}
       className={classes}
       style={{ zIndex }}

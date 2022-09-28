@@ -36,8 +36,6 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   'request_showCreateFolder': 'Create Folder',
   'request_showDuplicate': 'Duplicate Request',
   'request_togglePin': 'Pin/Unpin Request',
-  'closeDropdown': 'Close Dropdown',
-  'closeModal': 'Close Modal',
   'environment_showVariableSourceAndValue': 'Show variable source and value',
   'beautifyRequestBody': 'Beautify Active Code Editors',
   'graphql_explorer_focus_filter': 'Focus GraphQL Explorer Filter',
@@ -165,14 +163,6 @@ const defaultRegistry: HotKeyRegistry = {
   request_togglePin: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.p.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.p.keyCode }],
-  },
-  closeDropdown: {
-    macKeys: [{ keyCode: keyboardKeys.esc.keyCode }],
-    winLinuxKeys: [{ keyCode: keyboardKeys.esc.keyCode }],
-  },
-  closeModal: {
-    macKeys: [{ keyCode: keyboardKeys.esc.keyCode }],
-    winLinuxKeys: [{ keyCode: keyboardKeys.esc.keyCode }],
   },
   environment_showVariableSourceAndValue: {
     macKeys: [{ alt: true, shift: true, keyCode: keyboardKeys.u.keyCode }],

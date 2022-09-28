@@ -53,8 +53,6 @@ export type KeyboardShortcut =
   | 'request_showCreateFolder'
   | 'request_showDuplicate'
   | 'request_togglePin'
-  | 'closeDropdown'
-  | 'closeModal'
   | 'environment_showVariableSourceAndValue'
   | 'beautifyRequestBody'
   | 'graphql_explorer_focus_filter'

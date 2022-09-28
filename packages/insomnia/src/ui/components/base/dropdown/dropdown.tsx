@@ -17,9 +17,7 @@ import React, {
 import ReactDOM from 'react-dom';
 
 import { fuzzyMatch } from '../../../../common/misc';
-import {
-  createKeybindingsHandler, useGlobalKeyboardShortcuts,
-} from '../../keydown-binder';
+import { createKeybindingsHandler } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
@@ -167,16 +165,12 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       [filter, filterVisible]
     );
 
-    useGlobalKeyboardShortcuts({
-      closeDropdown: () => {
-        console.log('CLOSE_DROPDOWN');
+    const handleKeydown = createKeybindingsHandler({
+      'Escape': () => {
         if (open) {
           hide();
         }
       },
-    });
-
-    const handleKeydown = createKeybindingsHandler({
       'Tab': () => {
         const items = filterItems || [];
 
@@ -333,8 +327,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         );
 
         const offset = beside ? dropdownBtnRect.width - 40 : 0;
-        dropdownListRef.current.style.right = `${
-          bodyRect.width - rightMargin + offset
+        dropdownListRef.current.style.right = `${bodyRect.width - rightMargin + offset
         }px`;
         dropdownListRef.current.style.maxWidth = `${Math.min(
           dropdownListRect.width,
@@ -357,16 +350,13 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       }
 
       if (isNearBottomOfScreen()) {
-        dropdownListRef.current.style.bottom = `${
-          bodyRect.height - dropdownBtnRect.top
+        dropdownListRef.current.style.bottom = `${bodyRect.height - dropdownBtnRect.top
         }px`;
-        dropdownListRef.current.style.maxHeight = `${
-          dropdownBtnRect.top - screenMargin
+        dropdownListRef.current.style.maxHeight = `${dropdownBtnRect.top - screenMargin
         }px`;
       } else {
         dropdownListRef.current.style.top = `${dropdownBtnRect.bottom}px`;
-        dropdownListRef.current.style.maxHeight = `${
-          bodyRect.height - dropdownBtnRect.bottom - screenMargin
+        dropdownListRef.current.style.maxHeight = `${bodyRect.height - dropdownBtnRect.bottom - screenMargin
         }px`;
       }
     }, [beside, open, right, wide, uniquenessKey]);
