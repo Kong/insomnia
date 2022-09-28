@@ -32,7 +32,7 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
-import { isKeyCombinationDuplicate } from '../settings/shortcuts';
+import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 import { shouldIndentWithTabs } from './should-indent-with-tabs';
 
@@ -1009,9 +1009,13 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       keyCode: event.keyCode,
     };
 
-    const hasKeyBinding = isKeyCombinationDuplicate(pressedKeyComb, this.props.hotKeyRegistry);
+    const hasKeyBinding = isKeyCombinationInRegistry(pressedKeyComb, this.props.hotKeyRegistry);
+    const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+      'showAutocomplete': this.props.hotKeyRegistry.showAutocomplete,
+    });
 
-    if (hasKeyBinding) {
+    // Stop the editor from handling global keyboard shortcuts except for autocomplete
+    if (hasKeyBinding && !isCodeEditorAutoCompleteBinding) {
       // @ts-expect-error -- unsound property assignment
       event.codemirrorIgnore = true;
     } else {

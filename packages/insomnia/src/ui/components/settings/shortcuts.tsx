@@ -25,7 +25,7 @@ import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
    * @param newKeyComb the key combination to be checked.
    * @returns {boolean} true if already existed.
    */
-export const isKeyCombinationDuplicate = (pressedKeyComb: KeyCombination, hotKeyRegistry: HotKeyRegistry) =>
+export const isKeyCombinationInRegistry = (pressedKeyComb: KeyCombination, hotKeyRegistry: Partial<HotKeyRegistry>) =>
   !!Object.values(hotKeyRegistry).find(bindings =>
     getPlatformKeyCombinations(bindings)
       .find(keyComb => areSameKeyCombinations(pressedKeyComb, keyComb)));
@@ -72,7 +72,7 @@ export const Shortcuts: FC = () => {
                           AddKeyCombinationModal,
                           {
                             keyboardShortcut,
-                            checkKeyCombinationDuplicate: (pressed: KeyCombination) => isKeyCombinationDuplicate(pressed, hotKeyRegistry),
+                            checkKeyCombinationDuplicate: (pressed: KeyCombination) => isKeyCombinationInRegistry(pressed, hotKeyRegistry),
                             addKeyCombination:(keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => {
                               const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
                               keyCombs.push(keyComb);
