@@ -121,7 +121,7 @@ export const WorkspaceDropdown: FC = () => {
       </DropdownButton>
       <DropdownItem onClick={handleShowWorkspaceSettings}>
         <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
-        <DropdownHint keyBindings={hotKeyRegistry['workspace_showSettings']} />
+        <DropdownHint keyBindings={hotKeyRegistry.workspace_showSettings} />
       </DropdownItem>
 
       <DropdownItem onClick={handleShowExport}>

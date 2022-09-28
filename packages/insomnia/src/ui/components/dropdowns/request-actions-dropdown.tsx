@@ -123,21 +123,21 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem onClick={duplicate}>
         <i className="fa fa-copy" /> Duplicate
-        <DropdownHint keyBindings={hotKeyRegistry['request_showDuplicate']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showDuplicate} />
       </DropdownItem>
 
       {canGenerateCode && (
         <DropdownItem onClick={generateCode}>
           <i className="fa fa-code" /> Generate Code
           <DropdownHint
-            keyBindings={hotKeyRegistry['request_showGenerateCodeEditor']}
+            keyBindings={hotKeyRegistry.request_showGenerateCodeEditor}
           />
         </DropdownItem>
       )}
 
       <DropdownItem onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
-        <DropdownHint keyBindings={hotKeyRegistry['request_togglePin']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_togglePin} />
       </DropdownItem>
 
       {canGenerateCode && (
@@ -152,7 +152,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         addIcon
       >
         <i className="fa fa-trash-o" /> Delete
-        <DropdownHint keyBindings={hotKeyRegistry['request_showDelete']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showDelete} />
       </DropdownItem>
 
       {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
@@ -176,7 +176,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem onClick={handleShowSettings}>
         <i className="fa fa-wrench" /> Settings
-        <DropdownHint keyBindings={hotKeyRegistry['request_showSettings']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
       </DropdownItem>
     </Dropdown>
   );

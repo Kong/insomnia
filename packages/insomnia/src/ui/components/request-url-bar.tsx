@@ -383,7 +383,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               <DropdownDivider>Basic</DropdownDivider>
               <DropdownItem onClick={send}>
                 <i className="fa fa-arrow-circle-o-right" /> Send Now
-                <DropdownHint keyBindings={hotKeyRegistry['request_send']} />
+                <DropdownHint keyBindings={hotKeyRegistry.request_send} />
               </DropdownItem>
               <DropdownItem onClick={handleGenerateCode}>
                 <i className="fa fa-code" /> Generate Client Code

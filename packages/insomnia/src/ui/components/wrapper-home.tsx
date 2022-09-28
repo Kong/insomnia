@@ -246,7 +246,7 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
   }, []);
 
   useGlobalKeyboardShortcuts({
-    'documents_filter': () => inputRef.current?.focus(),
+    documents_filter: () => inputRef.current?.focus(),
   });
 
   return (

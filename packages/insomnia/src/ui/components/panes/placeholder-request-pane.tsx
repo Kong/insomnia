@@ -36,7 +36,7 @@ export const PlaceholderRequestPane: FC = () => {
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry['request_createHTTP']}
+                      keyBindings={hotKeyRegistry.request_createHTTP}
                       useFallbackMessage
                     />
                   </code>
@@ -47,7 +47,7 @@ export const PlaceholderRequestPane: FC = () => {
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry['request_quickSwitch']}
+                      keyBindings={hotKeyRegistry.request_quickSwitch}
                       useFallbackMessage
                     />
                   </code>
@@ -58,7 +58,7 @@ export const PlaceholderRequestPane: FC = () => {
                 <td className="text-right">
                   <code>
                     <Hotkey
-                      keyBindings={hotKeyRegistry['environment_showEditor']}
+                      keyBindings={hotKeyRegistry.environment_showEditor}
                       useFallbackMessage
                     />
                   </code>

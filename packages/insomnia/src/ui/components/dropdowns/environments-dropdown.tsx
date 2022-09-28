@@ -103,7 +103,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
 
       <DropdownItem onClick={handleShowEnvironmentModal}>
         <i className="fa fa-wrench" /> Manage Environments
-        <DropdownHint keyBindings={hotKeyRegistry['environment_showEditor']} />
+        <DropdownHint keyBindings={hotKeyRegistry.environment_showEditor} />
       </DropdownItem>
     </Dropdown>
   );

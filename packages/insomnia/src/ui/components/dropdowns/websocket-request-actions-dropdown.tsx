@@ -50,12 +50,12 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
       <DropdownItem onClick={duplicate}>
         <i className="fa fa-copy" /> Duplicate
-        <DropdownHint keyBindings={hotKeyRegistry['request_showDuplicate']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showDuplicate} />
       </DropdownItem>
 
       <DropdownItem onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
-        <DropdownHint keyBindings={hotKeyRegistry['request_togglePin']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_togglePin} />
       </DropdownItem>
 
       <DropdownItem
@@ -64,14 +64,14 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
         addIcon
       >
         <i className="fa fa-trash-o" /> Delete
-        <DropdownHint keyBindings={hotKeyRegistry['request_showDelete']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showDelete} />
       </DropdownItem>
 
       <DropdownDivider />
 
       <DropdownItem onClick={handleShowSettings}>
         <i className="fa fa-wrench" /> Settings
-        <DropdownHint keyBindings={hotKeyRegistry['request_showSettings']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
       </DropdownItem>
     </Dropdown>
   );

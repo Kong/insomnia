@@ -162,7 +162,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor,
     // Remove keymap if we're already added it
     cm.removeKeyMap('autocomplete-keymap');
 
-    const keyBindings = options.hotKeyRegistry['showAutocomplete'];
+    const keyBindings = options.hotKeyRegistry.showAutocomplete;
     const keyCombs = getPlatformKeyCombinations(keyBindings);
 
     const keymap: CodeMirror.KeyMap = {

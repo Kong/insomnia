@@ -134,7 +134,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
       <DropdownItem value="HTTP" onClick={create}>
         <i className="fa fa-plus-circle" />New HTTP Request
-        <DropdownHint keyBindings={hotKeyRegistry['request_createHTTP']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
       </DropdownItem>
 
       <DropdownItem value="GraphQL" onClick={create}>
@@ -151,7 +151,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
       <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" /> New Folder
-        <DropdownHint keyBindings={hotKeyRegistry['request_showCreateFolder']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showCreateFolder} />
       </DropdownItem>
 
       <DropdownDivider />

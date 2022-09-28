@@ -44,7 +44,7 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
 
       <DropdownItem value="HTTP" onClick={create}>
         <i className="fa fa-plus-circle" />HTTP Request
-        <DropdownHint keyBindings={hotKeyRegistry['request_createHTTP']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
       </DropdownItem>
 
       <DropdownItem value="GraphQL" onClick={create}>
@@ -61,7 +61,7 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
 
       <DropdownItem onClick={createGroup}>
         <i className="fa fa-folder" />New Folder
-        <DropdownHint keyBindings={hotKeyRegistry['request_showCreateFolder']} />
+        <DropdownHint keyBindings={hotKeyRegistry.request_showCreateFolder} />
       </DropdownItem>
     </Dropdown>
   );

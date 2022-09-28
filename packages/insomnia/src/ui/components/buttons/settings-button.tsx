@@ -21,7 +21,7 @@ export const SettingsButton: FunctionComponent = () => {
         message={
           <>
             Preferences (
-            <Hotkey keyBindings={hotKeyRegistry['preferences_showGeneral']} />)
+            <Hotkey keyBindings={hotKeyRegistry.preferences_showGeneral} />)
           </>
         }
       >
