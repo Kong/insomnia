@@ -27,7 +27,7 @@
     "test": "jest --runInBand",
     "test:watch": "npm run test -- --watch",
     "test:snapshots": "npm run build && npm run test -- -u",
-    "test:npm": "./src/scripts/test-inso.sh",
+    "test:npm": "./bin/inso run test \"Another suite\" -e \"OpenAPI env\" --src src/db/fixtures/nedb",
     "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
     "build:source": "esr esbuild.ts",
     "build:types": "tsc --build tsconfig.build.json",
