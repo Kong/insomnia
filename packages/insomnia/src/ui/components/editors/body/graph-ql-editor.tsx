@@ -33,10 +33,7 @@ import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
 import { useGlobalKeyboardShortcuts } from '../../keydown-binder';
-import { showModal } from '../../modals';
-import { ResponseDebugModal } from '../../modals/response-debug-modal';
 import { TimeFromNow } from '../../time-from-now';
-import { Tooltip } from '../../tooltip';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
@@ -275,7 +272,7 @@ export const GraphQLEditor: FC<Props> = ({
     if (!editorRef.current.hasFocus()) {
       return state.body.operationName || null;
     }
-    const isOperation = (def: any): def is OperationDefinitionNode => def.type === Kind.OPERATION_DEFINITION;
+    const isOperation = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
     const operations = !state.documentAST ? [] : state.documentAST.definitions.filter(isOperation);
     const cursorIndex = editorRef.current.indexFromPos(editorRef.current.getCursor());
     let operationName: string | null = null;
@@ -336,6 +333,8 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const handleQueryUserActivity = () => {
     const newOperationName = getCurrentOperation();
+    console.log('newOperationName', newOperationName);
+
     const { query, variables, operationName } = state.body;
     if (newOperationName !== operationName) {
       handleBodyChange(query, variables, newOperationName);
@@ -408,6 +407,7 @@ export const GraphQLEditor: FC<Props> = ({
     // Find op if there isn't one yet
     if (!body.operationName) {
       const newOperationName = getCurrentOperation();
+      console.log('newOperationName', newOperationName);
 
       if (newOperationName) {
         body.operationName = newOperationName;
