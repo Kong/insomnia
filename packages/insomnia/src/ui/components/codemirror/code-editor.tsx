@@ -21,7 +21,6 @@ import {
   DEBOUNCE_MILLIS,
   isMac,
 } from '../../../common/constants';
-import { areSameKeyCombinations, getPlatformKeyCombinations } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
@@ -33,6 +32,7 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { useGlobalKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
+import { isKeyCombinationDuplicate } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 import { shouldIndentWithTabs } from './should-indent-with-tabs';
 
@@ -1009,12 +1009,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       keyCode: event.keyCode,
     };
 
-    const allKeyBindings = Object.values(this.props.hotKeyRegistry);
-
-    const hasKeyBinding = !!allKeyBindings.find(bindings => {
-      const keyCombList = getPlatformKeyCombinations(bindings);
-      return keyCombList.find(keyComb => areSameKeyCombinations(pressedKeyComb, keyComb));
-    });
+    const hasKeyBinding = isKeyCombinationDuplicate(pressedKeyComb, this.props.hotKeyRegistry);
 
     if (hasKeyBinding) {
       // @ts-expect-error -- unsound property assignment

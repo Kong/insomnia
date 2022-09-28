@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { KeyCombination } from 'insomnia-common';
-import { noop } from 'ramda-adjunct';
+import { KeyboardShortcut, KeyCombination } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -12,9 +11,9 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
 interface State {
-  hotKeyRefId: string | null;
-  checkKeyCombinationDuplicate: (...args: any[]) => any;
-  onAddKeyCombination: (...args: any[]) => any;
+  keyboardShortcut: KeyboardShortcut | null;
+  checkKeyCombinationDuplicate: (pressedKeyComb: KeyCombination) => boolean;
+  onAddKeyCombination: (keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => void;
   pressedKeyCombination: KeyCombination | null;
 }
 
@@ -23,9 +22,9 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
   _modal: ModalHandle | null = null;
 
   state: State = {
-    hotKeyRefId: null,
-    checkKeyCombinationDuplicate: noop,
-    onAddKeyCombination: noop,
+    keyboardShortcut: null,
+    checkKeyCombinationDuplicate: () => false,
+    onAddKeyCombination: () => {},
     pressedKeyCombination: null,
   };
 
@@ -48,7 +47,7 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
       // enter key is for saving previously entered key combination, don't record it.
       if (event.keyCode === keyboardKeys.enter.keyCode) {
         const {
-          hotKeyRefId,
+          keyboardShortcut,
           checkKeyCombinationDuplicate,
           onAddKeyCombination,
           pressedKeyCombination,
@@ -70,9 +69,11 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
         if (checkKeyCombinationDuplicate(pressedKeyCombination)) {
           return;
         }
-
+        if (!keyboardShortcut) {
+          return;
+        }
         // Accept new key combination.
-        onAddKeyCombination(hotKeyRefId, pressedKeyCombination);
+        onAddKeyCombination(keyboardShortcut, pressedKeyCombination);
         this.hide();
         return;
       }
@@ -91,12 +92,12 @@ export class AddKeyCombinationModal extends PureComponent<{}, State> {
   }
 
   show(
-    hotKeyRefId: string,
+    keyboardShortcut: KeyboardShortcut,
     checkKeyCombinationDuplicate: (...args: any[]) => any,
     onAddKeyCombination: (...args: any[]) => any,
   ) {
     this.setState({
-      hotKeyRefId: hotKeyRefId,
+      keyboardShortcut: keyboardShortcut,
       checkKeyCombinationDuplicate: checkKeyCombinationDuplicate,
       onAddKeyCombination: onAddKeyCombination,
       pressedKeyCombination: null,
