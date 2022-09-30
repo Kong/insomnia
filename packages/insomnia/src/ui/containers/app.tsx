@@ -6,7 +6,6 @@ import { parse as urlParse } from 'url';
 import {
   ACTIVITY_HOME,
   getProductName,
-  isDevelopment,
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
@@ -14,19 +13,14 @@ import {
   generateId,
 } from '../../common/misc';
 import * as models from '../../models';
-import { isNotDefaultProject } from '../../models/project';
-import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
 import { GitVCS } from '../../sync/git/git-vcs';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
-import * as templating from '../../templating/index';
 import { ErrorBoundary } from '../components/error-boundary';
-import { AskModal } from '../components/modals/ask-modal';
-import { showAlert, showModal } from '../components/modals/index';
-import { showSelectModal } from '../components/modals/select-modal';
-import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { AlertModal } from '../components/modals/alert-modal';
+import { showModal } from '../components/modals/index';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { Toast } from '../components/toast';
 import { type WrapperClass, Wrapper } from '../components/wrapper';
@@ -57,88 +51,13 @@ import { AppHooks } from './app-hooks';
 interface State {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  forceRefreshCounter: number;
-  forceRefreshHeaderCounter: number;
   isMigratingChildren: boolean;
 }
-
-ipcRenderer.on('toggle-preferences', () => {
-  showModal(SettingsModal);
-});
-
-if (isDevelopment()) {
-  ipcRenderer.on('clear-model', () => {
-    const options = models
-      .types()
-      .filter(t => t !== models.settings.type) // don't clear settings
-      .map(t => ({ name: t, value: t }));
-
-    showSelectModal({
-      title: 'Clear a model',
-      message: 'Select a model to clear; this operation cannot be undone.',
-      value: options[0].value,
-      options,
-      onDone: async type => {
-        if (type) {
-          const bufferId = await db.bufferChanges();
-          console.log(`[developer] clearing all "${type}" entities`);
-          const allEntities = await db.all(type);
-          const filteredEntites = allEntities
-            .filter(isNotDefaultProject); // don't clear the default project
-          await db.batchModifyDocs({ remove: filteredEntites });
-          db.flushChanges(bufferId);
-        }
-      },
-    });
-  });
-
-  ipcRenderer.on('clear-all-models', () => {
-    showModal(AskModal, {
-      title: 'Clear all models',
-      message: 'Are you sure you want to clear all models? This operation cannot be undone.',
-      yesText: 'Yes',
-      noText: 'No',
-      onDone: async (yes: boolean) => {
-        if (yes) {
-          const bufferId = await db.bufferChanges();
-          const promises = models
-            .types()
-            .filter(t => t !== models.settings.type) // don't clear settings
-            .reverse().map(async type => {
-              console.log(`[developer] clearing all "${type}" entities`);
-              const allEntities = await db.all(type);
-              const filteredEntites = allEntities
-                .filter(isNotDefaultProject); // don't clear the default project
-              await db.batchModifyDocs({ remove: filteredEntites });
-            });
-          await Promise.all(promises);
-          db.flushChanges(bufferId);
-        }
-      },
-    });
-  });
-}
-
-async function reloadPlugins() {
-  const settings = await models.settings.getOrCreate();
-  await plugins.reloadPlugins();
-  await themes.applyColorScheme(settings);
-  templating.reload();
-  console.log('[plugins] reloaded');
-}
-
-ipcRenderer.on('reload-plugins', reloadPlugins);
-
-ipcRenderer.on('toggle-preferences-shortcuts', () => {
-  showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
-});
 
 const App = () => {
   const [state, setState] = useState<State>({
     vcs: null,
     gitVCS: null,
-    forceRefreshCounter: 0,
-    forceRefreshHeaderCounter: 0,
     isMigratingChildren: false,
   });
   const activeActivity = useSelector(selectActiveActivity);
@@ -164,22 +83,18 @@ const App = () => {
   // Update document title
   useEffect(() => {
     let title;
-
     if (activeActivity === ACTIVITY_HOME) {
       title = getProductName();
     } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
       title += ` - ${activeWorkspaceName}`;
-
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
-
       if (activeRequest) {
         title += ` – ${activeRequest.name}`;
       }
     }
-
     document.title = title || getProductName();
   }, [activeActivity, activeEnvironment, activeProject.name, activeRequest, activeWorkspace, activeWorkspaceName]);
 
@@ -324,17 +239,8 @@ const App = () => {
         setState(state => ({ ...state, isMigratingChildren: false }));
       }
     }
-
     update();
   }, [activeApiSpec, activeCookieJar, activeWorkspace, activeWorkspaceMeta, environments, state.isMigratingChildren]);
-
-  // Force app refresh if login state changes
-  useEffect(() => {
-    setState(state => ({
-      ...state,
-      forceRefreshCounter: state.forceRefreshCounter + 1,
-    }));
-  }, [isLoggedIn]);
 
   // Give it a bit before letting the backend know it's ready
   useEffect(() => {
@@ -355,15 +261,13 @@ const App = () => {
   // Handle System Theme change
   useEffect(() => {
     const matches = window.matchMedia('(prefers-color-scheme: dark)');
-
     matches.addEventListener('change', () => themes.applyColorScheme(settings));
-
     return () => {
       matches.removeEventListener('change', () => themes.applyColorScheme(settings));
     };
   });
 
-  // Global Drag and Drop
+  // Global Drag and Drop for importing files
   useEffect(() => {
     // NOTE: This is required for "drop" event to trigger.
     document.addEventListener(
@@ -373,36 +277,32 @@ const App = () => {
       },
       false,
     );
-
     document.addEventListener(
       'drop',
       async event => {
         event.preventDefault();
-
         if (!activeWorkspace) {
           return;
         }
-
-        // @ts-expect-error -- TSCONVERSION
-        if (event.dataTransfer.files.length === 0) {
+        const files = event.dataTransfer?.files || [];
+        if (files.length === 0) {
           console.log('[drag] Ignored drop event because no files present');
           return;
         }
-
-        // @ts-expect-error -- TSCONVERSION
-        const file = event.dataTransfer.files[0];
-        const { path } = file;
-        const uri = `file://${path}`;
-        await showAlert({
+        const file = files[0];
+        if (!file?.path) {
+          return;
+        }
+        await showModal(AlertModal, {
           title: 'Confirm Data Import',
           message: (
             <span>
-              Import <code>{path}</code>?
+              Import <code>{file.path}</code>?
             </span>
           ),
           addCancel: true,
         });
-        handleImportUri(uri, { workspaceId: activeWorkspace?._id });
+        handleImportUri(`file://${file.path}`, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
@@ -418,12 +318,7 @@ const App = () => {
     return null;
   }
 
-  const {
-    gitVCS,
-    vcs,
-  } = state;
   const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
-
   return (
     <GrpcProvider>
       <NunjucksEnabledProvider>
@@ -432,8 +327,8 @@ const App = () => {
           <ErrorBoundary showAlert>
             <Wrapper
               ref={wrapperRef}
-              vcs={vcs}
-              gitVCS={gitVCS}
+              vcs={state.vcs}
+              gitVCS={state.gitVCS}
             />
           </ErrorBoundary>
 
