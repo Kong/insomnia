@@ -34,51 +34,18 @@ export const AppHooks: FC = () => {
   const settings = useSelector(selectSettings);
 
   useGlobalKeyboardShortcuts({
-    preferences_showGeneral:
-      () => showModal(SettingsModal),
-    preferences_showKeyboardShortcuts:
-      () => showModal(SettingsModal, TAB_INDEX_SHORTCUTS),
-    request_showRecent:
-      () => showModal(RequestSwitcherModal, {
-        disableInput: true,
-        maxRequests: 10,
-        maxWorkspaces: 0,
-        selectOnKeyup: true,
-        title: 'Recent Requests',
-        hideNeverActiveRequests: true,
-        // Add an open delay so the dialog won't show for quick presses
-        openDelay: 150,
-      }),
-    workspace_showSettings:
-      () => showModal(WorkspaceSettingsModal, activeWorkspace),
+    // request context shortcuts
+    request_togglePin:
+      async () => {
+        if (activeRequest) {
+          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
+          updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
+        }
+      },
     request_showSettings:
       () => {
         if (activeRequest) {
           showModal(RequestSettingsModal, { request: activeRequest });
-        }
-      },
-    request_quickSwitch:
-      () => showModal(RequestSwitcherModal),
-    environment_showEditor:
-      () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
-    showCookiesEditor:
-      () => showModal(CookiesModal),
-    request_createHTTP:
-      async () => {
-        if (activeWorkspace) {
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          const request = await models.request.create({
-            parentId,
-            name: 'New Request',
-          });
-          if (activeWorkspaceMeta) {
-            await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-          }
-          await updateRequestMetaByParentId(request._id, {
-            lastActive: Date.now(),
-          });
-          models.stats.incrementCreatedRequests();
-          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
         }
       },
     request_showDelete:
@@ -96,14 +63,6 @@ export const AppHooks: FC = () => {
           });
         }
       },
-    request_showCreateFolder:
-      () => {
-        if (activeWorkspace) {
-          createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
-        }
-      },
-    request_showGenerateCodeEditor:
-      () => showModal(GenerateCodeModal, activeRequest),
     request_showDuplicate:
       () => {
         if (activeRequest) {
@@ -128,23 +87,68 @@ export const AppHooks: FC = () => {
           });
         }
       },
-    request_togglePin:
+    // workspace context shortcuts
+    request_createHTTP:
       async () => {
-        if (activeRequest) {
-          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
-          updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
+        if (activeWorkspace) {
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          const request = await models.request.create({
+            parentId,
+            name: 'New Request',
+          });
+          if (activeWorkspaceMeta) {
+            await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
+          }
+          await updateRequestMetaByParentId(request._id, {
+            lastActive: Date.now(),
+          });
+          models.stats.incrementCreatedRequests();
+          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
         }
       },
-    plugin_reload:
-      () => plugins.reloadPlugins(),
-    environment_showVariableSourceAndValue:
-      () => models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
+    request_showCreateFolder:
+      () => {
+        if (activeWorkspace) {
+          createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
+        }
+      },
     sidebar_toggle:
       () => {
         if (activeWorkspaceMeta) {
           models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });
         }
       },
+    // action shortcuts
+    plugin_reload:
+      () => plugins.reloadPlugins(),
+    environment_showVariableSourceAndValue:
+      () => models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
+    // open modal shortcuts
+    preferences_showGeneral:
+      () => showModal(SettingsModal),
+    preferences_showKeyboardShortcuts:
+      () => showModal(SettingsModal, TAB_INDEX_SHORTCUTS),
+    request_showRecent:
+      () => showModal(RequestSwitcherModal, {
+        disableInput: true,
+        maxRequests: 10,
+        maxWorkspaces: 0,
+        selectOnKeyup: true,
+        title: 'Recent Requests',
+        hideNeverActiveRequests: true,
+        // Add an open delay so the dialog won't show for quick presses
+        openDelay: 150,
+      }),
+    workspace_showSettings:
+      () => showModal(WorkspaceSettingsModal, activeWorkspace),
+    request_quickSwitch:
+      () => showModal(RequestSwitcherModal),
+    environment_showEditor:
+      () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
+    showCookiesEditor:
+      () => showModal(CookiesModal),
+    request_showGenerateCodeEditor:
+      () => showModal(GenerateCodeModal, activeRequest),
   });
 
   return null;
