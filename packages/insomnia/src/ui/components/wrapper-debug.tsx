@@ -1,11 +1,13 @@
 import React, { FC, Fragment, ReactNode, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
+import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { isRemoteProject } from '../../models/project';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
+import { updateRequestMetaByParentId } from '../hooks/create-request';
 import {
   selectActiveEnvironment,
   selectActiveProject,
@@ -37,7 +39,6 @@ interface Props {
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: (id: string | null) => void;
   handleImport: Function;
-  handleSetResponseFilter: (filter: string) => void;
   vcs: VCS | null;
 }
 export const WrapperDebug: FC<Props> = ({
@@ -45,7 +46,6 @@ export const WrapperDebug: FC<Props> = ({
   handleActivityChange,
   handleSetActiveEnvironment,
   handleImport,
-  handleSetResponseFilter,
   vcs,
 }) => {
   const activeProject = useSelector(selectActiveProject);
@@ -65,6 +65,36 @@ export const WrapperDebug: FC<Props> = ({
       window.main.webSocket.closeAll();
     };
   }, [activeEnvironment?._id]);
+
+  async function handleSetResponseFilter(responseFilter: string) {
+    if (!activeRequest) {
+      return;
+    }
+    const requestId = activeRequest._id;
+    await updateRequestMetaByParentId(requestId, { responseFilter });
+
+    const meta = await models.requestMeta.getByParentId(requestId);
+    if (!meta) {
+      return;
+    }
+    const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
+
+    // Already in history?
+    if (responseFilterHistory.includes(responseFilter)) {
+      return;
+    }
+
+    // Blank?
+    if (!responseFilter) {
+      return;
+    }
+
+    responseFilterHistory.unshift(responseFilter);
+    await updateRequestMetaByParentId(requestId, {
+      responseFilterHistory,
+    });
+  }
+
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?

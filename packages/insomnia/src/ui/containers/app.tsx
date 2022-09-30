@@ -1,32 +1,23 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { ipcRenderer } from 'electron';
-import * as path from 'path';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { Action, bindActionCreators, Dispatch } from 'redux';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { parse as urlParse } from 'url';
 
 import {
   ACTIVITY_HOME,
-  AUTOBIND_CFG,
   getProductName,
   isDevelopment,
 } from '../../common/constants';
-import { type ChangeBufferEvent, database as db } from '../../common/database';
+import { database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
 import {
   generateId,
 } from '../../common/misc';
 import * as models from '../../models';
 import { isNotDefaultProject } from '../../models/project';
-import { type RequestGroupMeta } from '../../models/request-group-meta';
-import { isWorkspace } from '../../models/workspace';
 import * as plugins from '../../plugins';
 import * as themes from '../../plugins/misc';
-import { fsClient } from '../../sync/git/fs-client';
-import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
-import { NeDBClient } from '../../sync/git/ne-db-client';
-import { routableFSClient } from '../../sync/git/routable-fs-client';
+import { GitVCS } from '../../sync/git/git-vcs';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
@@ -38,12 +29,10 @@ import { showSelectModal } from '../components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { Toast } from '../components/toast';
-import { Wrapper } from '../components/wrapper';
+import { type WrapperClass, Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
-import { RootState } from '../redux/modules';
 import {
   newCommand,
 } from '../redux/modules/global';
@@ -53,7 +42,6 @@ import {
   selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
-  selectActiveGitRepository,
   selectActiveProject,
   selectActiveRequest,
   selectActiveWorkspace,
@@ -66,102 +54,115 @@ import {
 } from '../redux/selectors';
 import { AppHooks } from './app-hooks';
 
-export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
-
 interface State {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
+  forceRefreshCounter: number;
+  forceRefreshHeaderCounter: number;
   isMigratingChildren: boolean;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class App extends PureComponent<AppProps, State> {
-  private _updateVCSLock: any;
-  private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
+ipcRenderer.on('toggle-preferences', () => {
+  showModal(SettingsModal);
+});
 
-  constructor(props: AppProps) {
-    super(props);
+if (isDevelopment()) {
+  ipcRenderer.on('clear-model', () => {
+    const options = models
+      .types()
+      .filter(t => t !== models.settings.type) // don't clear settings
+      .map(t => ({ name: t, value: t }));
 
-    this.state = {
-      vcs: null,
-      gitVCS: null,
-      isMigratingChildren: false,
-    };
-
-    this._updateVCSLock = null;
-  }
-
-  static async _updateRequestGroupMetaByParentId(requestGroupId: string, patch: Partial<RequestGroupMeta>) {
-    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
-
-    if (requestGroupMeta) {
-      await models.requestGroupMeta.update(requestGroupMeta, patch);
-    } else {
-      const newPatch = Object.assign(
-        {
-          parentId: requestGroupId,
-        },
-        patch,
-      );
-      await models.requestGroupMeta.create(newPatch);
-    }
-  }
-
-  async _handleSetResponseFilter(requestId: string, responseFilter: string) {
-    await updateRequestMetaByParentId(requestId, {
-      responseFilter,
+    showSelectModal({
+      title: 'Clear a model',
+      message: 'Select a model to clear; this operation cannot be undone.',
+      value: options[0].value,
+      options,
+      onDone: async type => {
+        if (type) {
+          const bufferId = await db.bufferChanges();
+          console.log(`[developer] clearing all "${type}" entities`);
+          const allEntities = await db.all(type);
+          const filteredEntites = allEntities
+            .filter(isNotDefaultProject); // don't clear the default project
+          await db.batchModifyDocs({ remove: filteredEntites });
+          db.flushChanges(bufferId);
+        }
+      },
     });
+  });
 
-    if (this._responseFilterHistorySaveTimeout !== null) {
-      clearTimeout(this._responseFilterHistorySaveTimeout);
-    }
-    this._responseFilterHistorySaveTimeout = setTimeout(async () => {
-      const meta = await models.requestMeta.getByParentId(requestId);
-      // @ts-expect-error -- TSCONVERSION meta can be null
-      const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
+  ipcRenderer.on('clear-all-models', () => {
+    showModal(AskModal, {
+      title: 'Clear all models',
+      message: 'Are you sure you want to clear all models? This operation cannot be undone.',
+      yesText: 'Yes',
+      noText: 'No',
+      onDone: async (yes: boolean) => {
+        if (yes) {
+          const bufferId = await db.bufferChanges();
+          const promises = models
+            .types()
+            .filter(t => t !== models.settings.type) // don't clear settings
+            .reverse().map(async type => {
+              console.log(`[developer] clearing all "${type}" entities`);
+              const allEntities = await db.all(type);
+              const filteredEntites = allEntities
+                .filter(isNotDefaultProject); // don't clear the default project
+              await db.batchModifyDocs({ remove: filteredEntites });
+            });
+          await Promise.all(promises);
+          db.flushChanges(bufferId);
+        }
+      },
+    });
+  });
+}
 
-      // Already in history?
-      if (responseFilterHistory.includes(responseFilter)) {
-        return;
-      }
+async function reloadPlugins() {
+  const settings = await models.settings.getOrCreate();
+  await plugins.reloadPlugins();
+  await themes.applyColorScheme(settings);
+  templating.reload();
+  console.log('[plugins] reloaded');
+}
 
-      // Blank?
-      if (!responseFilter) {
-        return;
-      }
+ipcRenderer.on('reload-plugins', reloadPlugins);
 
-      responseFilterHistory.unshift(responseFilter);
-      await updateRequestMetaByParentId(requestId, {
-        responseFilterHistory,
-      });
-    }, 2000);
-  }
+ipcRenderer.on('toggle-preferences-shortcuts', () => {
+  showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+});
 
-  static _handleShowSettingsModal(tabIndex?: number) {
-    showModal(SettingsModal, tabIndex);
-  }
+const App = () => {
+  const [state, setState] = useState<State>({
+    vcs: null,
+    gitVCS: null,
+    forceRefreshCounter: 0,
+    forceRefreshHeaderCounter: 0,
+    isMigratingChildren: false,
+  });
+  const activeActivity = useSelector(selectActiveActivity);
+  const activeProject = useSelector(selectActiveProject);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+  const activeCookieJar = useSelector(selectActiveCookieJar);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeRequest = useSelector(selectActiveRequest);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const environments = useSelector(selectEnvironments);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const isFinishedBooting = useSelector(selectIsFinishedBooting);
+  const settings = useSelector(selectSettings);
+  const dispatch = useDispatch();
+  const handleCommand = dispatch(newCommand);
+  const handleImportUri = dispatch(importUri);
 
-  async _handleReloadPlugins() {
-    const { settings } = this.props;
-    await plugins.reloadPlugins();
-    await themes.applyColorScheme(settings);
-    templating.reload();
-    console.log('[plugins] reloaded');
-  }
+  const updateVCSLock = useRef<boolean | string>(false);
+  const wrapperRef = useRef<WrapperClass | null>(null);
 
-  /**
-   * Update document.title to be "Project - Workspace (Environment) – Request" when not home
-   * @private
-   */
-  _updateDocumentTitle() {
-    const {
-      activeWorkspace,
-      activeProject,
-      activeWorkspaceName,
-      activeEnvironment,
-      activeRequest,
-      activeActivity,
-    } = this.props;
+  // Update document title
+  useEffect(() => {
     let title;
 
     if (activeActivity === ACTIVITY_HOME) {
@@ -180,112 +181,95 @@ class App extends PureComponent<AppProps, State> {
     }
 
     document.title = title || getProductName();
-  }
+  }, [activeActivity, activeEnvironment, activeProject.name, activeRequest, activeWorkspace, activeWorkspaceName]);
 
-  componentDidUpdate(prevProps: AppProps) {
-    this._updateDocumentTitle();
+  // let gitVCS = state.gitVCS;
+  // useEffect(() => {
+  //   // Get the vcs and set it to null in the state while we update it
 
-    this._ensureWorkspaceChildren();
+  //   // if (gitVCS) {
+  //   //   setState(state => ({
+  //   //     ...state,
+  //   //     gitVCS: null,
+  //   //   }));
+  //   // }
 
-    // Check on VCS things
-    const { activeWorkspace, activeProject, activeGitRepository } = this.props;
-    const changingWorkspace = prevProps.activeWorkspace?._id !== activeWorkspace?._id;
+  //   if (!gitVCS) {
+  //     gitVCS = new GitVCS();
+  //   }
 
-    // Update VCS if needed
-    if (changingWorkspace) {
-      this._updateVCS();
-    }
+  //   async function update() {
+  //     if (activeWorkspace && activeGitRepository && gitVCS) {
+  //       // Create FS client
+  //       const baseDir = path.join(
+  //         getDataDirectory(),
+  //         `version-control/git/${activeGitRepository._id}`,
+  //       );
 
-    // Update Git VCS if needed
-    const changingProject = prevProps.activeProject?._id !== activeProject?._id;
-    const changingGit = prevProps.activeGitRepository?._id !== activeGitRepository?._id;
+  //       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
+  //       const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeProject._id);
 
-    if (changingWorkspace || changingProject || changingGit) {
-      this._updateGitVCS();
-    }
-  }
+  //       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
+  //       const gitDataClient = fsClient(baseDir);
 
-  async _updateGitVCS() {
-    const { activeGitRepository, activeWorkspace, activeProject } = this.props;
+  //       /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
+  //       const otherDatClient = fsClient(path.join(baseDir, 'other'));
 
-    // Get the vcs and set it to null in the state while we update it
-    let gitVCS = this.state.gitVCS;
-    this.setState({
-      gitVCS: null,
-    });
+  //       /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
+  //       const routableFS = routableFSClient(otherDatClient, {
+  //         [GIT_INSOMNIA_DIR]: neDbClient,
+  //         [GIT_INTERNAL_DIR]: gitDataClient,
+  //       });
+  //       // Init VCS
+  //       const { credentials, uri } = activeGitRepository;
+  //       if (activeGitRepository.needsFullClone) {
+  //         await models.gitRepository.update(activeGitRepository, {
+  //           needsFullClone: false,
+  //         });
+  //         await gitVCS.initFromClone({
+  //           url: uri,
+  //           gitCredentials: credentials,
+  //           directory: GIT_CLONE_DIR,
+  //           fs: routableFS,
+  //           gitDirectory: GIT_INTERNAL_DIR,
+  //         });
+  //       } else {
+  //         await gitVCS.init({
+  //           directory: GIT_CLONE_DIR,
+  //           fs: routableFS,
+  //           gitDirectory: GIT_INTERNAL_DIR,
+  //         });
+  //       }
 
-    if (!gitVCS) {
-      gitVCS = new GitVCS();
-    }
+  //       // Configure basic info
+  //       const { author, uri: gitUri } = activeGitRepository;
+  //       await gitVCS.setAuthor(author.name, author.email);
+  //       await gitVCS.addRemote(gitUri);
+  //     } else {
+  //       // Create new one to un-initialize it
+  //       gitVCS = new GitVCS();
+  //     }
 
-    if (activeWorkspace && activeGitRepository) {
-      // Create FS client
-      const baseDir = path.join(
-        getDataDirectory(),
-        `version-control/git/${activeGitRepository._id}`,
-      );
+  //     setState(state => ({
+  //       ...state,
+  //       gitVCS,
+  //     }));
+  //   }
 
-      /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeProject._id);
+  //   update();
+  // }, [activeGitRepository, activeProject._id, activeWorkspace, gitVCS]);
 
-      /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
-      const gitDataClient = fsClient(baseDir);
-
-      /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
-      const otherDatClient = fsClient(path.join(baseDir, 'other'));
-
-      /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
-      const routableFS = routableFSClient(otherDatClient, {
-        [GIT_INSOMNIA_DIR]: neDbClient,
-        [GIT_INTERNAL_DIR]: gitDataClient,
-      });
-      // Init VCS
-      const { credentials, uri } = activeGitRepository;
-
-      if (activeGitRepository.needsFullClone) {
-        await models.gitRepository.update(activeGitRepository, {
-          needsFullClone: false,
-        });
-        await gitVCS.initFromClone({
-          url: uri,
-          gitCredentials: credentials,
-          directory: GIT_CLONE_DIR,
-          fs: routableFS,
-          gitDirectory: GIT_INTERNAL_DIR,
-        });
-      } else {
-        await gitVCS.init({
-          directory: GIT_CLONE_DIR,
-          fs: routableFS,
-          gitDirectory: GIT_INTERNAL_DIR,
-        });
-      }
-
-      // Configure basic info
-      const { author, uri: gitUri } = activeGitRepository;
-      await gitVCS.setAuthor(author.name, author.email);
-      await gitVCS.addRemote(gitUri);
-    } else {
-      // Create new one to un-initialize it
-      gitVCS = new GitVCS();
-    }
-
-    this.setState({
-      gitVCS,
-    });
-  }
-
-  async _updateVCS() {
-    const { activeWorkspace } = this.props;
-
+  // Update VCS when the active workspace changes
+  useEffect(() => {
     const lock = generateId();
-    this._updateVCSLock = lock;
+    updateVCSLock.current = lock;
 
     // Get the vcs and set it to null in the state while we update it
-    let vcs = this.state.vcs;
-    this.setState({
+    let vcs = state.vcs;
+    setState(state => ({
+      ...state,
       vcs: null,
-    });
+    }));
 
     if (!vcs) {
       const driver = FileSystemDriver.create(getDataDirectory());
@@ -300,108 +284,87 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    if (activeWorkspace) {
-      await vcs.switchProject(activeWorkspace._id);
+    if (activeWorkspace?._id) {
+      vcs.switchProject(activeWorkspace._id);
     } else {
       vcs.clearBackendProject();
     }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
-    if (this._updateVCSLock === lock) {
-      this.setState({
-        vcs,
-      });
+    if (updateVCSLock.current === lock) {
+      setState(state => ({ ...state, vcs }));
     }
-  }
+  }, [activeWorkspace?._id, state.vcs]);
 
-  async listenforWorkspaceDelete(changes: ChangeBufferEvent[]) {
-    for (const change of changes) {
-      const [type, doc] = change;
-      const { vcs } = this.state;
+  // Ensure Children: Make sure all the models exist or whatever
+  useEffect(() => {
+    if (!activeWorkspace) {
+      return;
+    }
 
-      // Delete VCS project if workspace deleted
-      if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
-        await vcs.removeBackendProjectsForRoot(doc._id);
+    const baseEnvironments = environments.filter(environment => environment.parentId === activeWorkspace._id);
+
+    // Nothing to do
+    if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
+      return;
+    }
+
+    // We already started migrating. Let it finish.
+    if (state.isMigratingChildren) {
+      return;
+    }
+
+    // Prevent rendering of everything
+    setState(state => ({ ...state, isMigratingChildren: true }));
+    async function update() {
+      if (activeWorkspace) {
+        const flushId = await db.bufferChanges();
+        await models.workspace.ensureChildren(activeWorkspace);
+        await db.flushChanges(flushId);
+        setState(state => ({ ...state, isMigratingChildren: false }));
       }
     }
-  }
 
-  async componentDidMount() {
-    // Update title
-    this._updateDocumentTitle();
+    update();
+  }, [activeApiSpec, activeCookieJar, activeWorkspace, activeWorkspaceMeta, environments, state.isMigratingChildren]);
 
-    // Update VCS
-    await this._updateVCS();
-    await this._updateGitVCS();
-    db.onChange(this.listenforWorkspaceDelete);
-    ipcRenderer.on('toggle-preferences', () => {
-      App._handleShowSettingsModal();
-    });
+  // Force app refresh if login state changes
+  useEffect(() => {
+    setState(state => ({
+      ...state,
+      forceRefreshCounter: state.forceRefreshCounter + 1,
+    }));
+  }, [isLoggedIn]);
 
-    if (isDevelopment()) {
-      ipcRenderer.on('clear-model', () => {
-        const options = models
-          .types()
-          .filter(t => t !== models.settings.type) // don't clear settings
-          .map(t => ({ name: t, value: t }));
+  // Give it a bit before letting the backend know it's ready
+  useEffect(() => {
+    setTimeout(() => ipcRenderer.send('window-ready'), 500);
+  }, []);
 
-        showSelectModal({
-          title: 'Clear a model',
-          message: 'Select a model to clear; this operation cannot be undone.',
-          value: options[0].value,
-          options,
-          onDone: async type => {
-            if (type) {
-              const bufferId = await db.bufferChanges();
-              console.log(`[developer] clearing all "${type}" entities`);
-              const allEntities = await db.all(type);
-              const filteredEntites = allEntities
-                .filter(isNotDefaultProject); // don't clear the default project
-              await db.batchModifyDocs({ remove: filteredEntites });
-              db.flushChanges(bufferId);
-            }
-          },
-        });
-      });
-
-      ipcRenderer.on('clear-all-models', () => {
-        showModal(AskModal, {
-          title: 'Clear all models',
-          message: 'Are you sure you want to clear all models? This operation cannot be undone.',
-          yesText: 'Yes',
-          noText: 'No',
-          onDone: async (yes: boolean) => {
-            if (yes) {
-              const bufferId = await db.bufferChanges();
-              const promises = models
-                .types()
-                .filter(t => t !== models.settings.type) // don't clear settings
-                .reverse().map(async type => {
-                  console.log(`[developer] clearing all "${type}" entities`);
-                  const allEntities = await db.all(type);
-                  const filteredEntites = allEntities
-                    .filter(isNotDefaultProject); // don't clear the default project
-                  await db.batchModifyDocs({ remove: filteredEntites });
-                });
-              await Promise.all(promises);
-              db.flushChanges(bufferId);
-            }
-          },
-        });
-      });
-    }
-
-    ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
-    ipcRenderer.on('toggle-preferences-shortcuts', () => {
-      App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
-    });
+  // Handle Application Commands
+  useEffect(() => {
     ipcRenderer.on('run-command', (_, commandUri) => {
       const parsed = urlParse(commandUri, true);
       const command = `${parsed.hostname}${parsed.pathname}`;
       const args = JSON.parse(JSON.stringify(parsed.query));
-      args.workspaceId = args.workspaceId || this.props.activeWorkspace?._id;
-      this.props.handleCommand(command, args);
+      args.workspaceId = args.workspaceId || activeWorkspace?._id;
+      handleCommand(command, args);
     });
+  }, []);
+
+  // Handle System Theme change
+  useEffect(() => {
+    const matches = window.matchMedia('(prefers-color-scheme: dark)');
+
+    matches.addEventListener('change', () => themes.applyColorScheme(settings));
+
+    return () => {
+      matches.removeEventListener('change', () => themes.applyColorScheme(settings));
+    };
+  });
+
+  // Global Drag and Drop
+  useEffect(() => {
     // NOTE: This is required for "drop" event to trigger.
     document.addEventListener(
       'dragover',
@@ -410,11 +373,11 @@ class App extends PureComponent<AppProps, State> {
       },
       false,
     );
+
     document.addEventListener(
       'drop',
       async event => {
         event.preventDefault();
-        const { activeWorkspace, handleImportUri } = this.props;
 
         if (!activeWorkspace) {
           return;
@@ -443,139 +406,44 @@ class App extends PureComponent<AppProps, State> {
       },
       false,
     );
+  });
 
-    // Give it a bit before letting the backend know it's ready
-    setTimeout(() => ipcRenderer.send('window-ready'), 500);
-    window
-      .matchMedia('(prefers-color-scheme: dark)')
-      .addListener(async () => themes.applyColorScheme(this.props.settings));
+  if (state.isMigratingChildren) {
+    console.log('[app] Waiting for migration to complete');
+    return null;
   }
 
-  componentWillUnmount() {
-    db.offChange(this.listenforWorkspaceDelete);
+  if (!isFinishedBooting) {
+    console.log('[app] Waiting to finish booting');
+    return null;
   }
 
-  async _ensureWorkspaceChildren() {
-    const {
-      activeWorkspace,
-      activeWorkspaceMeta,
-      activeCookieJar,
-      environments,
-      activeApiSpec,
-    } = this.props;
-
-    if (!activeWorkspace) {
-      return;
-    }
-
-    const baseEnvironments = environments.filter(environment => environment.parentId === activeWorkspace._id);
-
-    // Nothing to do
-    if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
-      return;
-    }
-
-    // We already started migrating. Let it finish.
-    if (this.state.isMigratingChildren) {
-      return;
-    }
-
-    // Prevent rendering of everything
-    this.setState(
-      {
-        isMigratingChildren: true,
-      },
-      async () => {
-        const flushId = await db.bufferChanges();
-        await models.workspace.ensureChildren(activeWorkspace);
-        await db.flushChanges(flushId);
-        this.setState({
-          isMigratingChildren: false,
-        });
-      },
-    );
-  }
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps() {
-    this._ensureWorkspaceChildren();
-  }
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount() {
-    this._ensureWorkspaceChildren();
-  }
-
-  render() {
-    if (this.state.isMigratingChildren) {
-      console.log('[app] Waiting for migration to complete');
-      return null;
-    }
-
-    if (!this.props.isFinishedBooting) {
-      console.log('[app] Waiting to finish booting');
-      return null;
-    }
-
-    const { activeWorkspace, isLoggedIn } = this.props;
-    const {
-      gitVCS,
-      vcs,
-    } = this.state;
-    const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
-    return (
-      <GrpcProvider>
-        <NunjucksEnabledProvider>
-          <AppHooks />
-
-          <div className="app" key={uniquenessKey}>
-            <ErrorBoundary showAlert>
-              <Wrapper
-                handleSetResponseFilter={this._handleSetResponseFilter}
-                vcs={vcs}
-                gitVCS={gitVCS}
-              />
-            </ErrorBoundary>
-
-            <ErrorBoundary showAlert>
-              <Toast />
-            </ErrorBoundary>
-          </div>
-        </NunjucksEnabledProvider>
-      </GrpcProvider>
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  activeActivity: selectActiveActivity(state),
-  activeProject: selectActiveProject(state),
-  activeApiSpec: selectActiveApiSpec(state),
-  activeWorkspaceName: selectActiveWorkspaceName(state),
-  activeCookieJar: selectActiveCookieJar(state),
-  activeEnvironment: selectActiveEnvironment(state),
-  activeGitRepository: selectActiveGitRepository(state),
-  activeRequest: selectActiveRequest(state),
-  activeWorkspace: selectActiveWorkspace(state),
-  activeWorkspaceMeta: selectActiveWorkspaceMeta(state),
-  environments: selectEnvironments(state),
-  isLoggedIn: selectIsLoggedIn(state),
-  isFinishedBooting: selectIsFinishedBooting(state),
-  settings: selectSettings(state),
-});
-
-const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
-    importUri: handleImportUri,
-    newCommand: handleCommand,
-  } = bindActionCreators({
-    importUri,
-    newCommand,
-  }, dispatch);
-  return {
-    handleCommand,
-    handleImportUri,
-  };
+    gitVCS,
+    vcs,
+  } = state;
+  const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
+
+  return (
+    <GrpcProvider>
+      <NunjucksEnabledProvider>
+        <AppHooks />
+        <div className="app" key={uniquenessKey}>
+          <ErrorBoundary showAlert>
+            <Wrapper
+              ref={wrapperRef}
+              vcs={vcs}
+              gitVCS={gitVCS}
+            />
+          </ErrorBoundary>
+
+          <ErrorBoundary showAlert>
+            <Toast />
+          </ErrorBoundary>
+        </div>
+      </NunjucksEnabledProvider>
+    </GrpcProvider>
+  );
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withDragDropContext(App));
+export default withDragDropContext(App);
