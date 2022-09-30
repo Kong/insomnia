@@ -32,7 +32,7 @@ import { CodeEditor } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
-import { useGlobalKeyboardShortcuts } from '../../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
@@ -317,7 +317,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
   };
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     beautifyRequestBody: _handlePrettify,
   });
 

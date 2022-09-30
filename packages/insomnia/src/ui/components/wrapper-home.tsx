@@ -36,7 +36,7 @@ import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { useGlobalKeyboardShortcuts } from './keydown-binder';
+import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
 import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
@@ -245,7 +245,7 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
     setFilter(event.currentTarget.value);
   }, []);
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     documents_filter: () => inputRef.current?.focus(),
   });
 

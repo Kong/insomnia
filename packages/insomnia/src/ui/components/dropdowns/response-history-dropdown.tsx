@@ -13,7 +13,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
@@ -163,7 +163,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     );
   };
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     request_toggleHistory: () => dropdownRef.current?.toggle(true),
   });
 

@@ -3,7 +3,7 @@ import { GraphQLEnumType, GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQL
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DebouncedInput } from '../base/debounced-input';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { GraphQLExplorerEnum } from './graph-ql-explorer-enum';
 import { GraphQLExplorerField } from './graph-ql-explorer-field';
 import { GraphQLExplorerSchema } from './graph-ql-explorer-schema';
@@ -131,7 +131,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     });
   };
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     graphql_explorer_focus_filter: () => {
       setState(state => ({
         ...state,

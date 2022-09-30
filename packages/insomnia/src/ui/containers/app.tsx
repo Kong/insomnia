@@ -3,10 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { parse as urlParse } from 'url';
 
-import {
-  ACTIVITY_HOME,
-  getProductName,
-} from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
 import {
@@ -32,15 +28,10 @@ import {
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
 import {
-  selectActiveActivity,
   selectActiveApiSpec,
   selectActiveCookieJar,
-  selectActiveEnvironment,
-  selectActiveProject,
-  selectActiveRequest,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
-  selectActiveWorkspaceName,
   selectEnvironments,
   selectIsFinishedBooting,
   selectIsLoggedIn,
@@ -60,13 +51,9 @@ const App = () => {
     gitVCS: null,
     isMigratingChildren: false,
   });
-  const activeActivity = useSelector(selectActiveActivity);
-  const activeProject = useSelector(selectActiveProject);
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+
   const activeCookieJar = useSelector(selectActiveCookieJar);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const environments = useSelector(selectEnvironments);
@@ -79,24 +66,6 @@ const App = () => {
 
   const updateVCSLock = useRef<boolean | string>(false);
   const wrapperRef = useRef<WrapperClass | null>(null);
-
-  // Update document title
-  useEffect(() => {
-    let title;
-    if (activeActivity === ACTIVITY_HOME) {
-      title = getProductName();
-    } else if (activeWorkspace && activeWorkspaceName) {
-      title = activeProject.name;
-      title += ` - ${activeWorkspaceName}`;
-      if (activeEnvironment) {
-        title += ` (${activeEnvironment.name})`;
-      }
-      if (activeRequest) {
-        title += ` – ${activeRequest.name}`;
-      }
-    }
-    document.title = title || getProductName();
-  }, [activeActivity, activeEnvironment, activeProject.name, activeRequest, activeWorkspace, activeWorkspaceName]);
 
   // let gitVCS = state.gitVCS;
   // useEffect(() => {
@@ -211,7 +180,7 @@ const App = () => {
     }
   }, [activeWorkspace?._id, state.vcs]);
 
-  // Ensure Children: Make sure all the models exist or whatever
+  // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
     if (!activeWorkspace) {
       return;
@@ -229,7 +198,7 @@ const App = () => {
       return;
     }
 
-    // Prevent rendering of everything
+    // Prevent rendering of everything until we check the workspace has cookies, env, and meta
     setState(state => ({ ...state, isMigratingChildren: true }));
     async function update() {
       if (activeWorkspace) {

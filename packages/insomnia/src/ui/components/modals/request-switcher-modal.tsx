@@ -19,7 +19,7 @@ import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { createKeybindingsHandler, useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
@@ -294,7 +294,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     },
   });
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     request_showRecent: () => {
       if (state.isModalVisible) {
         setState(state => ({

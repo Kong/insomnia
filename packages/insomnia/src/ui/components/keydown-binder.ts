@@ -36,7 +36,7 @@ export function useKeyboardShortcuts(getTarget: () => HTMLElement, listeners: { 
   }, [hotKeyRegistry, listeners, getTarget]);
 }
 
-export function useGlobalKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
+export function useDocBodyKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
   useKeyboardShortcuts(() => document.body, listeners);
 }
 
