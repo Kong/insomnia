@@ -1,4 +1,5 @@
 import { ipcRenderer } from 'electron';
+import path from 'path';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { parse as urlParse } from 'url';
@@ -9,8 +10,12 @@ import {
   generateId,
 } from '../../common/misc';
 import * as models from '../../models';
+import { GitRepository } from '../../models/git-repository';
 import * as themes from '../../plugins/misc';
-import { GitVCS } from '../../sync/git/git-vcs';
+import { fsClient } from '../../sync/git/fs-client';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
+import { NeDBClient } from '../../sync/git/ne-db-client';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
@@ -30,6 +35,8 @@ import { importUri } from '../redux/modules/import';
 import {
   selectActiveApiSpec,
   selectActiveCookieJar,
+  selectActiveGitRepository,
+  selectActiveProject,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectEnvironments,
@@ -40,125 +47,30 @@ import {
 import { AppHooks } from './app-hooks';
 
 interface State {
-  vcs: VCS | null;
-  gitVCS: GitVCS | null;
   isMigratingChildren: boolean;
 }
 
-const App = () => {
-  const [state, setState] = useState<State>({
-    vcs: null,
-    gitVCS: null,
-    isMigratingChildren: false,
-  });
-
-  const activeCookieJar = useSelector(selectActiveCookieJar);
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const environments = useSelector(selectEnvironments);
-  const isLoggedIn = useSelector(selectIsLoggedIn);
-  const isFinishedBooting = useSelector(selectIsFinishedBooting);
-  const settings = useSelector(selectSettings);
-  const dispatch = useDispatch();
-  const handleCommand = dispatch(newCommand);
-  const handleImportUri = dispatch(importUri);
-
+function useVCS({
+  workspaceId,
+}: {
+  workspaceId?: string;
+}) {
+  const vcsInstanceRef = useRef<VCS | null>(null);
+  const [vcs, setVCS] = useState<VCS | null>(null);
   const updateVCSLock = useRef<boolean | string>(false);
-  const wrapperRef = useRef<WrapperClass | null>(null);
-
-  // let gitVCS = state.gitVCS;
-  // useEffect(() => {
-  //   // Get the vcs and set it to null in the state while we update it
-
-  //   // if (gitVCS) {
-  //   //   setState(state => ({
-  //   //     ...state,
-  //   //     gitVCS: null,
-  //   //   }));
-  //   // }
-
-  //   if (!gitVCS) {
-  //     gitVCS = new GitVCS();
-  //   }
-
-  //   async function update() {
-  //     if (activeWorkspace && activeGitRepository && gitVCS) {
-  //       // Create FS client
-  //       const baseDir = path.join(
-  //         getDataDirectory(),
-  //         `version-control/git/${activeGitRepository._id}`,
-  //       );
-
-  //       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-  //       const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeProject._id);
-
-  //       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
-  //       const gitDataClient = fsClient(baseDir);
-
-  //       /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
-  //       const otherDatClient = fsClient(path.join(baseDir, 'other'));
-
-  //       /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
-  //       const routableFS = routableFSClient(otherDatClient, {
-  //         [GIT_INSOMNIA_DIR]: neDbClient,
-  //         [GIT_INTERNAL_DIR]: gitDataClient,
-  //       });
-  //       // Init VCS
-  //       const { credentials, uri } = activeGitRepository;
-  //       if (activeGitRepository.needsFullClone) {
-  //         await models.gitRepository.update(activeGitRepository, {
-  //           needsFullClone: false,
-  //         });
-  //         await gitVCS.initFromClone({
-  //           url: uri,
-  //           gitCredentials: credentials,
-  //           directory: GIT_CLONE_DIR,
-  //           fs: routableFS,
-  //           gitDirectory: GIT_INTERNAL_DIR,
-  //         });
-  //       } else {
-  //         await gitVCS.init({
-  //           directory: GIT_CLONE_DIR,
-  //           fs: routableFS,
-  //           gitDirectory: GIT_INTERNAL_DIR,
-  //         });
-  //       }
-
-  //       // Configure basic info
-  //       const { author, uri: gitUri } = activeGitRepository;
-  //       await gitVCS.setAuthor(author.name, author.email);
-  //       await gitVCS.addRemote(gitUri);
-  //     } else {
-  //       // Create new one to un-initialize it
-  //       gitVCS = new GitVCS();
-  //     }
-
-  //     setState(state => ({
-  //       ...state,
-  //       gitVCS,
-  //     }));
-  //   }
-
-  //   update();
-  // }, [activeGitRepository, activeProject._id, activeWorkspace, gitVCS]);
 
   // Update VCS when the active workspace changes
   useEffect(() => {
     const lock = generateId();
     updateVCSLock.current = lock;
 
-    // Get the vcs and set it to null in the state while we update it
-    let vcs = state.vcs;
-    setState(state => ({
-      ...state,
-      vcs: null,
-    }));
+    // Set vcs to null while we update it
+    setVCS(null);
 
-    if (!vcs) {
+    if (!vcsInstanceRef.current) {
       const driver = FileSystemDriver.create(getDataDirectory());
 
-      vcs = new VCS(driver, async conflicts => {
+      vcsInstanceRef.current = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {
             conflicts,
@@ -168,17 +80,139 @@ const App = () => {
       });
     }
 
-    if (activeWorkspace?._id) {
-      vcs.switchProject(activeWorkspace._id);
+    if (workspaceId) {
+      vcsInstanceRef.current.switchProject(workspaceId);
     } else {
-      vcs.clearBackendProject();
+      vcsInstanceRef.current.clearBackendProject();
     }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
     if (updateVCSLock.current === lock) {
-      setState(state => ({ ...state, vcs }));
+      setVCS(vcsInstanceRef.current);
     }
-  }, [activeWorkspace?._id, state.vcs]);
+  }, [workspaceId]);
+
+  return vcs;
+}
+
+function useGitVCS({
+  workspaceId,
+  projectId,
+  gitRepository,
+}: {
+  workspaceId?: string;
+  projectId: string;
+  gitRepository?: GitRepository | null;
+}) {
+  const gitVCSInstanceRef = useRef<GitVCS | null>(null);
+  const [gitVCS, setGitVCS] = useState<GitVCS | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Set the instance to null in the state while we update it
+    if (gitVCSInstanceRef.current) {
+      setGitVCS(null);
+    }
+
+    if (!gitVCSInstanceRef.current) {
+      gitVCSInstanceRef.current = new GitVCS();
+    }
+
+    async function update() {
+      if (workspaceId && gitRepository && gitVCSInstanceRef.current) {
+        // Create FS client
+        const baseDir = path.join(
+          getDataDirectory(),
+          `version-control/git/${gitRepository._id}`,
+        );
+
+        /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
+        const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+
+        /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
+        const gitDataClient = fsClient(baseDir);
+
+        /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
+        const otherDatClient = fsClient(path.join(baseDir, 'other'));
+
+        /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
+        const routableFS = routableFSClient(otherDatClient, {
+          [GIT_INSOMNIA_DIR]: neDbClient,
+          [GIT_INTERNAL_DIR]: gitDataClient,
+        });
+        // Init VCS
+        const { credentials, uri } = gitRepository;
+        if (gitRepository.needsFullClone) {
+          await models.gitRepository.update(gitRepository, {
+            needsFullClone: false,
+          });
+          await gitVCSInstanceRef.current.initFromClone({
+            url: uri,
+            gitCredentials: credentials,
+            directory: GIT_CLONE_DIR,
+            fs: routableFS,
+            gitDirectory: GIT_INTERNAL_DIR,
+          });
+        } else {
+          await gitVCSInstanceRef.current.init({
+            directory: GIT_CLONE_DIR,
+            fs: routableFS,
+            gitDirectory: GIT_INTERNAL_DIR,
+          });
+        }
+
+        // Configure basic info
+        const { author, uri: gitUri } = gitRepository;
+        await gitVCSInstanceRef.current.setAuthor(author.name, author.email);
+        await gitVCSInstanceRef.current.addRemote(gitUri);
+      } else {
+        // Create new one to un-initialize it
+        gitVCSInstanceRef.current = new GitVCS();
+      }
+
+      isMounted && setGitVCS(gitVCSInstanceRef.current);
+    }
+
+    update();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [workspaceId, projectId, gitRepository]);
+
+  return gitVCS;
+}
+
+const App = () => {
+  const [state, setState] = useState<State>({
+    isMigratingChildren: false,
+  });
+
+  const activeProject = useSelector(selectActiveProject);
+  const activeCookieJar = useSelector(selectActiveCookieJar);
+  const activeApiSpec = useSelector(selectActiveApiSpec);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeGitRepository = useSelector(selectActiveGitRepository);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const environments = useSelector(selectEnvironments);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const isFinishedBooting = useSelector(selectIsFinishedBooting);
+  const settings = useSelector(selectSettings);
+  const dispatch = useDispatch();
+  const handleCommand = dispatch(newCommand);
+  const handleImportUri = dispatch(importUri);
+  const vcs = useVCS({
+    workspaceId: activeWorkspace?._id,
+  });
+
+  const gitVCS = useGitVCS({
+    workspaceId: activeWorkspace?._id,
+    projectId: activeProject?._id,
+    gitRepository: activeGitRepository,
+  });
+
+  const wrapperRef = useRef<WrapperClass | null>(null);
 
   // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
@@ -225,7 +259,7 @@ const App = () => {
       args.workspaceId = args.workspaceId || activeWorkspace?._id;
       handleCommand(command, args);
     });
-  }, []);
+  }, [activeWorkspace?._id, handleCommand]);
 
   // Handle System Theme change
   useEffect(() => {
@@ -296,8 +330,8 @@ const App = () => {
           <ErrorBoundary showAlert>
             <Wrapper
               ref={wrapperRef}
-              vcs={state.vcs}
-              gitVCS={state.gitVCS}
+              vcs={vcs}
+              gitVCS={gitVCS}
             />
           </ErrorBoundary>
 
