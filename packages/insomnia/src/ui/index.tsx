@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-
+import './rendererListeners';
 import { getProductName, isDevelopment } from '../common/constants';
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
