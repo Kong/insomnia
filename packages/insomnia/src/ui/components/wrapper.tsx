@@ -96,6 +96,22 @@ preloadWrapperDebug();
 preloadWrapperDesign();
 preloadWrapperUnitTest();
 
+const LoadingIndicator = () => (<div
+  id="app-loading-indicator"
+  style={{
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
+  }}
+>
+  <img src="./ui/images/insomnia-logo.svg" alt="Insomnia" />
+</div>);
+
 const ActivityRouter = () => {
   const selectedActivity = useSelector(selectActiveActivity);
   const activeWorkspace = useSelector(selectActiveWorkspace);
@@ -385,7 +401,7 @@ export class WrapperClass extends PureComponent<Props, State> {
           <Route
             path="*"
             element={
-              <Suspense fallback={<div />}>
+              <Suspense fallback={<LoadingIndicator />}>
                 <WrapperHome
                   vcs={vcs}
                 />
@@ -395,7 +411,7 @@ export class WrapperClass extends PureComponent<Props, State> {
           <Route
             path={ACTIVITY_UNIT_TEST}
             element={
-              <Suspense fallback={<div />}>
+              <Suspense fallback={<LoadingIndicator />}>
                 <WrapperUnitTest
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
@@ -406,7 +422,7 @@ export class WrapperClass extends PureComponent<Props, State> {
           <Route
             path={ACTIVITY_SPEC}
             element={
-              <Suspense fallback={<div />}>
+              <Suspense fallback={<LoadingIndicator />}>
                 <WrapperDesign
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
@@ -417,7 +433,7 @@ export class WrapperClass extends PureComponent<Props, State> {
           <Route
             path={ACTIVITY_DEBUG}
             element={
-              <Suspense fallback={<div />}>
+              <Suspense fallback={<LoadingIndicator />}>
                 <WrapperDebug
                   gitSyncDropdown={gitSyncDropdown}
                   handleActivityChange={this._handleWorkspaceActivityChange}
