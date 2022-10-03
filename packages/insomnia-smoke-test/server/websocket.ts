@@ -6,7 +6,7 @@ import { WebSocket, WebSocketServer } from 'ws';
  * Starts an echo WebSocket server that receives messages from a client and echoes them back.
  */
 export function startWebSocketServer(server: Server) {
-  const wsServer = new WebSocketServer({ noServer: true });
+  const wsServer = new WebSocketServer({ noServer: true, handleProtocols: () => 'chat' });
 
   server.on('upgrade', (request, socket, head) => {
     upgrade(wsServer, request, socket, head);
