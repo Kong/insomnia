@@ -35,9 +35,4 @@ describe('<BooleanSetting />', () => {
     const { getByLabelText } = render(booleanSetting, container);
     expect(getByLabelText(label)).toBeInTheDocument();
   });
-
-  it('should render help text', async () => {
-    const { getByText } = render(booleanSetting, container);
-    expect(getByText(help)).toBeInTheDocument();
-  });
 });
