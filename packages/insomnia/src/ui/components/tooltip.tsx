@@ -1,6 +1,5 @@
 import classnames from 'classnames';
 import React, {
-  isValidElement,
   ReactNode,
 } from 'react';
 import {
@@ -23,8 +22,8 @@ interface Props {
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, selectable, wide, delay, ...rest } = props;
-  const state = useTooltipTriggerState({ ...props, delay });
+  const { children, message, className, selectable, wide, delay, position } = props;
+  const state = useTooltipTriggerState({ delay });
   const triggerRef = React.useRef(null);
   const overlayRef = React.useRef(null);
   const trigger = useTooltipTrigger(props, state, triggerRef);
@@ -33,7 +32,7 @@ export const Tooltip = (props: Props) => {
   const { overlayProps: positionProps } = useOverlayPosition({
     targetRef: triggerRef,
     overlayRef,
-    placement: 'top',
+    placement: position,
     offset: 5,
     isOpen: state.isOpen,
   });
@@ -50,23 +49,20 @@ export const Tooltip = (props: Props) => {
       ref={triggerRef}
       className={tooltipClasses}
       style={{ position: 'relative' }}
+      {...trigger.triggerProps}
     >
+      {children}
       {state.isOpen && (
         <OverlayContainer>
           <div
             ref={overlayRef}
-            {...mergeProps(rest, tooltipProps, positionProps)}
+            {...mergeProps(tooltipProps, positionProps)}
             className={bubbleClasses}
           >
             {message}
           </div>
         </OverlayContainer>
       )}
-      {isValidElement(children) &&
-        React.cloneElement(children, {
-          ...trigger.triggerProps,
-          ...children.props,
-        })}
     </div>
   );
 };

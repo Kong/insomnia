@@ -1,4 +1,4 @@
-import { Button, Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
+import { Button, Dropdown, DropdownDivider, DropdownItem } from 'insomnia-components';
 import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -10,6 +10,7 @@ import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { selectActiveProject } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   vcs?: VCS | null;

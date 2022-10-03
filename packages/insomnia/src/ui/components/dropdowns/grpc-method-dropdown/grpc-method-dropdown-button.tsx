@@ -1,8 +1,9 @@
-import { Button, ButtonProps, Tooltip } from 'insomnia-components';
+import { Button, ButtonProps } from 'insomnia-components';
 import React, { FunctionComponent, useMemo } from 'react';
 import styled from 'styled-components';
 
 import { getGrpcPathSegments, getShortGrpcPath } from '../../../../common/grpc-paths';
+import { Tooltip } from '../../tooltip';
 
 const FlexSpaceBetween = styled.span`
   width: 100%;
