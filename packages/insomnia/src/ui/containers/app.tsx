@@ -24,7 +24,7 @@ import { AlertModal } from '../components/modals/alert-modal';
 import { showModal } from '../components/modals/index';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { Toast } from '../components/toast';
-import { type WrapperClass, Wrapper } from '../components/wrapper';
+import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
@@ -35,8 +35,6 @@ import { importUri } from '../redux/modules/import';
 import {
   selectActiveApiSpec,
   selectActiveCookieJar,
-  selectActiveGitRepository,
-  selectActiveProject,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectEnvironments,
@@ -50,7 +48,7 @@ interface State {
   isMigratingChildren: boolean;
 }
 
-function useVCS({
+export function useVCS({
   workspaceId,
 }: {
   workspaceId?: string;
@@ -95,7 +93,7 @@ function useVCS({
   return vcs;
 }
 
-function useGitVCS({
+export function useGitVCS({
   workspaceId,
   projectId,
   gitRepository,
@@ -189,11 +187,9 @@ const App = () => {
     isMigratingChildren: false,
   });
 
-  const activeProject = useSelector(selectActiveProject);
   const activeCookieJar = useSelector(selectActiveCookieJar);
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeGitRepository = useSelector(selectActiveGitRepository);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const environments = useSelector(selectEnvironments);
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -202,36 +198,21 @@ const App = () => {
   const dispatch = useDispatch();
   const handleCommand = dispatch(newCommand);
   const handleImportUri = dispatch(importUri);
-  const vcs = useVCS({
-    workspaceId: activeWorkspace?._id,
-  });
-
-  const gitVCS = useGitVCS({
-    workspaceId: activeWorkspace?._id,
-    projectId: activeProject?._id,
-    gitRepository: activeGitRepository,
-  });
-
-  const wrapperRef = useRef<WrapperClass | null>(null);
 
   // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
     if (!activeWorkspace) {
       return;
     }
-
     const baseEnvironments = environments.filter(environment => environment.parentId === activeWorkspace._id);
-
-    // Nothing to do
-    if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
+    const workspaceHasChildren = baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta;
+    if (workspaceHasChildren) {
       return;
     }
-
     // We already started migrating. Let it finish.
     if (state.isMigratingChildren) {
       return;
     }
-
     // Prevent rendering of everything until we check the workspace has cookies, env, and meta
     setState(state => ({ ...state, isMigratingChildren: true }));
     async function update() {
@@ -328,11 +309,7 @@ const App = () => {
         <AppHooks />
         <div className="app" key={uniquenessKey}>
           <ErrorBoundary showAlert>
-            <Wrapper
-              ref={wrapperRef}
-              vcs={vcs}
-              gitVCS={gitVCS}
-            />
+            <Wrapper />
           </ErrorBoundary>
 
           <ErrorBoundary showAlert>

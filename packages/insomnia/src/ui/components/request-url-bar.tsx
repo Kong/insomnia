@@ -1,5 +1,6 @@
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
+import * as importers from 'insomnia-importers';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
@@ -7,15 +8,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
-import type { Request } from '../../models/request';
+import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { loadRequestStart, loadRequestStop } from '../redux/modules/global';
-import { selectActiveEnvironment, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -31,7 +33,6 @@ import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
-  handleImport: Function;
   nunjucksPowerUserMode: boolean;
   onUrlChange: (r: Request, url: string) => Promise<Request>;
   request: Request;
@@ -44,7 +45,6 @@ export interface RequestUrlBarHandle {
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
-  handleImport,
   onUrlChange,
   request,
   uniquenessKey,
@@ -52,6 +52,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
   const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -302,6 +303,36 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   });
 
   const [lastPastedText, setLastPastedText] = useState<string>();
+  const handleImport = useCallback(async (text: string) => {
+    // Allow user to paste any import file into the url. If it results in
+    // only one item, it will overwrite the current request.
+    try {
+      const { data } = await importers.convert(text);
+      const { resources } = data;
+      const r = resources[0];
+      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
+        // Only pull fields that we want to update
+        return database.update({
+          ...activeRequest,
+          modified: Date.now(),
+          url: r.url,
+          method: r.method,
+          headers: r.headers,
+          body: r.body,
+          authentication: r.authentication,
+          parameters: r.parameters,
+        },
+        // Pass true to indicate that this is an import
+        true
+        );
+      }
+    } catch (error) {
+      // Import failed, that's alright
+      console.error(error);
+    }
+    return null;
+  }, [activeRequest]);
+
   const handleUrlChange = useCallback(async (url: string) => {
     const pastedText = lastPastedText;
     // If no pasted text in the queue, just fire the regular change handler

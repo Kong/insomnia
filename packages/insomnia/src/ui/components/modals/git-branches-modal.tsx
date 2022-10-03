@@ -20,7 +20,6 @@ import { PromptButton } from '../base/prompt-button';
 type Props = ReturnType<typeof mapDispatchToProps> & {
   vcs: GitVCS;
   gitRepository: GitRepository;
-  handleGitBranchChanged: (branch: string) => void;
 };
 
 interface State {
@@ -75,7 +74,7 @@ export class GitBranchesModalClass extends PureComponent<Props, State> {
   }
 
   async _refreshState(newState?: Record<string, any>) {
-    const { vcs, handleGitBranchChanged } = this.props;
+    const { vcs } = this.props;
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
     const remoteBranches = await vcs.listRemoteBranches();
@@ -85,7 +84,6 @@ export class GitBranchesModalClass extends PureComponent<Props, State> {
       remoteBranches,
       ...newState,
     });
-    handleGitBranchChanged(branch);
   }
 
   _handleClearError() {

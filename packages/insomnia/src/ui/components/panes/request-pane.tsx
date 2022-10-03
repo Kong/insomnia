@@ -52,7 +52,6 @@ const TabPanelBody = styled.div({
 
 interface Props {
   environmentId: string;
-  handleImport: Function;
   request?: Request | null;
   settings: Settings;
   workspace: Workspace;
@@ -60,7 +59,6 @@ interface Props {
 
 export const RequestPane: FC<Props> = ({
   environmentId,
-  handleImport,
   request,
   settings,
   workspace,
@@ -172,7 +170,6 @@ export const RequestPane: FC<Props> = ({
             uniquenessKey={uniqueKey}
             onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={autocompleteUrls}
-            handleImport={handleImport}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
           />
