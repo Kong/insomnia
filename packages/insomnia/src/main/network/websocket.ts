@@ -332,7 +332,6 @@ const openWebSocketConnection = async (
 
       deleteRequestMaps(request._id, message, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
-      createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
     });
   } catch (e) {
     console.error('unhandled error:', e);
