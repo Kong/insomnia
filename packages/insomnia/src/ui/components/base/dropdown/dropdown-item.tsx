@@ -15,7 +15,7 @@ interface Props {
   children: ReactNode;
   className?: string;
   color?: string;
-  widthUnset?: boolean;
+  unsetStyles?: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -45,7 +45,7 @@ export class DropdownItem extends PureComponent<Props> {
       className,
       color,
       onClick,
-      widthUnset,
+      unsetStyles,
       // eslint-disable-line @typescript-eslint/no-unused-vars
       stayOpenAfterClick,
       // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -69,7 +69,7 @@ export class DropdownItem extends PureComponent<Props> {
       ...props,
     };
 
-    if (widthUnset) {
+    if (unsetStyles) {
       buttonProps.className = 'dropdown__item-button-unset';
     }
 

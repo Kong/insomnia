@@ -2,7 +2,7 @@ import React, { FC, useRef } from 'react';
 import styled from 'styled-components';
 
 import { Dropdown as OriginalDropdown, DropdownHandle } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DROPDOWN_BUTTON_DISPLAY_NAME, DropdownButton as OriginalDropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 const SplitButton = styled.div({
@@ -11,8 +11,6 @@ const SplitButton = styled.div({
 });
 const Dropdown = styled(OriginalDropdown)({
   display: 'flex',
-  paddingRight: 'var(--padding-xs)',
-  paddingLeft: 'var(--padding-xs)',
   textAlign: 'center',
   borderLeft: '1px solid var(--hl-md)',
   background: 'var(--color-danger)',
@@ -20,6 +18,11 @@ const Dropdown = styled(OriginalDropdown)({
     opacity: 0.9,
   },
 });
+const DropdownButton = styled(OriginalDropdownButton)({
+  paddingRight: 'var(--padding-xs)',
+  paddingLeft: 'var(--padding-xs)',
+});
+DropdownButton.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
 const ActionButton = styled.button({
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
@@ -65,11 +68,15 @@ export const DisconnectDropdown: FC<{ requestId: string }> = ({ requestId }) => 
         key="dropdown"
         className="tall"
         right
+        data-testid="DisconnectDropdown__Dropdown"
       >
-        <DropdownButton onClick={() => dropdownRef.current?.show()}>
+        <DropdownButton
+          name="DisconnectDropdown__DropdownButton"
+          onClick={() => dropdownRef.current?.show()}
+        >
           <i className="fa fa-caret-down" />
         </DropdownButton>
-        <DropdownItem widthUnset onClick={handleCloseThisRequest}>
+        <DropdownItem unsetStyles onClick={handleCloseThisRequest}>
           <Connections>
             <Connection />
           </Connections>
@@ -77,7 +84,7 @@ export const DisconnectDropdown: FC<{ requestId: string }> = ({ requestId }) => 
             Disconnect this request
           </TextWrapper>
         </DropdownItem>
-        <DropdownItem widthUnset onClick={handleCloseAllRequests}>
+        <DropdownItem unsetStyles onClick={handleCloseAllRequests}>
           <Connections>
             <Connection size={5} />
             <Connection size={5} />
