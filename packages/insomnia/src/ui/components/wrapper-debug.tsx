@@ -153,35 +153,6 @@ export const WrapperDebug: FC = () => {
     };
   }, [activeEnvironment?._id]);
 
-  async function handleSetResponseFilter(responseFilter: string) {
-    if (!activeRequest) {
-      return;
-    }
-    const requestId = activeRequest._id;
-    await updateRequestMetaByParentId(requestId, { responseFilter });
-
-    const meta = await models.requestMeta.getByParentId(requestId);
-    if (!meta) {
-      return;
-    }
-    const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
-
-    // Already in history?
-    if (responseFilterHistory.includes(responseFilter)) {
-      return;
-    }
-
-    // Blank?
-    if (!responseFilter) {
-      return;
-    }
-
-    responseFilterHistory.unshift(responseFilter);
-    await updateRequestMetaByParentId(requestId, {
-      responseFilterHistory,
-    });
-  }
-
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?
@@ -245,19 +216,12 @@ export const WrapperDebug: FC = () => {
         <ErrorBoundary showAlert>
           {activeRequest && (
             isGrpcRequest(activeRequest) ? (
-              <GrpcResponsePane
-                activeRequest={activeRequest}
-              />
+              <GrpcResponsePane activeRequest={activeRequest} />
             ) : (
               isWebSocketRequest(activeRequest) ? (
-                <WebSocketResponsePane
-                  requestId={activeRequest._id}
-                />
+                <WebSocketResponsePane requestId={activeRequest._id} />
               ) : (
-                <ResponsePane
-                  handleSetFilter={handleSetResponseFilter}
-                  request={activeRequest}
-                />
+                <ResponsePane request={activeRequest} />
               )
             )
           )}
