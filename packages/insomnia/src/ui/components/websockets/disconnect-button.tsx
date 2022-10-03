@@ -48,7 +48,7 @@ const TextWrapper = styled.div({
   paddingLeft: 'var(--padding-xs)',
 });
 
-export const DisconnectDropdown: FC<{ requestId: string }> = ({ requestId }) => {
+export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const dropdownRef = useRef<DropdownHandle>();
   const handleCloseThisRequest = () => {
     window.main.webSocket.close({ requestId });

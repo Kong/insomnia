@@ -10,7 +10,7 @@ import { OneLineEditor } from '../codemirror/one-line-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
-import { DisconnectDropdown } from './disconnect-dropdown';
+import { DisconnectButton } from './disconnect-button';
 
 const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
   paddingRight: 'var(--padding-md)',
@@ -162,7 +162,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         </StyledUrlBar>
         {isConnectingOrClosed
           ? <Button type="submit">Connect</Button>
-          : <DisconnectDropdown requestId={request._id} />}
+          : <DisconnectButton requestId={request._id} />}
       </Form>
     </>
   );
