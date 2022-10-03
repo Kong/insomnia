@@ -16,18 +16,20 @@ interface Props {
   message: ReactNode;
   position?: 'bottom' | 'top' | 'right' | 'left';
   className?: string;
-  delay?: number;
   selectable?: boolean;
+  delay?: number;
   wide?: boolean;
+  onClick?: () => void;
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, selectable, wide, delay, position } = props;
-  const state = useTooltipTriggerState({ delay });
+  const { children, message, className, wide, selectable, delay, position } = props;
   const triggerRef = React.useRef(null);
   const overlayRef = React.useRef(null);
+
+  const state = useTooltipTriggerState({ delay });
   const trigger = useTooltipTrigger(props, state, triggerRef);
-  const { tooltipProps } = useTooltip(trigger.tooltipProps, state);
+  const tooltip = useTooltip(trigger.tooltipProps, state);
 
   const { overlayProps: positionProps } = useOverlayPosition({
     targetRef: triggerRef,
@@ -41,7 +43,7 @@ export const Tooltip = (props: Props) => {
   const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
     'tooltip__bubble--visible': state.isOpen,
     'tooltip__bubble--wide': wide,
-    selectable: selectable,
+    selectable,
   });
 
   return (
@@ -50,13 +52,15 @@ export const Tooltip = (props: Props) => {
       className={tooltipClasses}
       style={{ position: 'relative' }}
       {...trigger.triggerProps}
+      onClick={props.onClick}
     >
       {children}
       {state.isOpen && (
         <OverlayContainer>
           <div
             ref={overlayRef}
-            {...mergeProps(tooltipProps, positionProps)}
+            onClick={e => e.stopPropagation()}
+            {...mergeProps(tooltip.tooltipProps, positionProps)}
             className={bubbleClasses}
           >
             {message}

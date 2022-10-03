@@ -1,4 +1,4 @@
-import { Button, ButtonProps } from 'insomnia-components';
+import { Button } from 'insomnia-components';
 import React, { FunctionComponent, useMemo } from 'react';
 import styled from 'styled-components';
 
@@ -27,15 +27,13 @@ const useLabel = (fullPath?: string) =>
     return 'Select Method';
   }, [fullPath]);
 
-const buttonProps: ButtonProps = {
-  className: 'tall wide',
-  variant: 'text',
-  size: 'medium',
-  radius: '0',
-};
-
 export const GrpcMethodDropdownButton: FunctionComponent<Props> = ({ fullPath }) => (
-  <Button {...buttonProps}>
+  <Button
+    className='tall wide'
+    variant='text'
+    size='medium'
+    radius='0'
+  >
     <Tooltip className="tall wide" message={fullPath} position="bottom" delay={500}>
       <FlexSpaceBetween>
         {useLabel(fullPath)}

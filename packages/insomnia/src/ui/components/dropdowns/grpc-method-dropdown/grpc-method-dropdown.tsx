@@ -32,14 +32,14 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChange,
   handleChangeProtoFile,
 }) => {
-  const dropdownButton = useMemo(
-    () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- TSCONVERSION this error appears to be correct, actually
-    [selectedMethod?.path],
-  );
   const groupedByPkg = useMemo(() => groupGrpcMethodsByPackage(methods), [methods]);
   return (
-    <Dropdown className="tall wide" renderButton={dropdownButton}>
+    <Dropdown
+      className="tall wide"
+      renderButton={
+        <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />
+      }
+    >
       {/* @ts-expect-error this appears to be a genuine error since value is not defined the argument passed will not be a string (as these types specify), but rather an event */}
       <DropdownItem onClick={handleChangeProtoFile}>
         <em>Click to change proto file</em>
