@@ -1,16 +1,24 @@
 import React, { FC, Fragment, ReactNode, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
+import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
+import * as requestOperations from '../../models/helpers/request-operations';
 import { isRemoteProject } from '../../models/project';
+import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { isCollection, isDesign } from '../../models/workspace';
 import { VCS } from '../../sync/vcs/vcs';
+import { updateRequestMetaByParentId } from '../hooks/create-request';
+import { createRequestGroup } from '../hooks/create-request-group';
 import {
   selectActiveEnvironment,
   selectActiveProject,
   selectActiveRequest,
   selectActiveWorkspace,
+  selectActiveWorkspaceMeta,
   selectIsLoggedIn,
   selectSettings,
 } from '../redux/selectors';
@@ -18,7 +26,15 @@ import { selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
-import { showCookiesModal } from './modals/cookies-modal';
+import { useDocBodyKeyboardShortcuts } from './keydown-binder';
+import { showModal } from './modals';
+import { AskModal } from './modals/ask-modal';
+import { CookiesModal, showCookiesModal } from './modals/cookies-modal';
+import { GenerateCodeModal } from './modals/generate-code-modal';
+import { PromptModal } from './modals/prompt-modal';
+import { RequestSettingsModal } from './modals/request-settings-modal';
+import { RequestSwitcherModal } from './modals/request-switcher-modal';
+import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-edit-modal';
 import { PageLayout } from './page-layout';
 import { GrpcRequestPane } from './panes/grpc-request-pane';
 import { GrpcResponsePane } from './panes/grpc-response-pane';
@@ -37,7 +53,6 @@ interface Props {
   handleActivityChange: HandleActivityChange;
   handleSetActiveEnvironment: (id: string | null) => void;
   handleImport: Function;
-  handleSetResponseFilter: (filter: string) => void;
   vcs: VCS | null;
 }
 export const WrapperDebug: FC<Props> = ({
@@ -45,7 +60,6 @@ export const WrapperDebug: FC<Props> = ({
   handleActivityChange,
   handleSetActiveEnvironment,
   handleImport,
-  handleSetResponseFilter,
   vcs,
 }) => {
   const activeProject = useSelector(selectActiveProject);
@@ -56,15 +70,142 @@ export const WrapperDebug: FC<Props> = ({
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
   const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
-
+  useDocBodyKeyboardShortcuts({
+    request_togglePin:
+      async () => {
+        if (activeRequest) {
+          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
+          updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
+        }
+      },
+    request_showSettings:
+      () => {
+        if (activeRequest) {
+          showModal(RequestSettingsModal, { request: activeRequest });
+        }
+      },
+    request_showDelete:
+      () => {
+        if (activeRequest) {
+          showModal(AskModal, {
+            title: 'Delete Request?',
+            message: `Really delete ${activeRequest.name}?`,
+            onDone: async (confirmed: boolean) => {
+              if (confirmed) {
+                await requestOperations.remove(activeRequest);
+                models.stats.incrementDeletedRequests();
+              }
+            },
+          });
+        }
+      },
+    request_showDuplicate:
+      () => {
+        if (activeRequest) {
+          showModal(PromptModal, {
+            title: 'Duplicate Request',
+            defaultValue: activeRequest.name,
+            submitName: 'Create',
+            label: 'New Name',
+            selectText: true,
+            onComplete: async (name: string) => {
+              const newRequest = await requestOperations.duplicate(activeRequest, {
+                name,
+              });
+              if (activeWorkspaceMeta) {
+                await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: newRequest._id });
+              }
+              await updateRequestMetaByParentId(newRequest._id, {
+                lastActive: Date.now(),
+              });
+              models.stats.incrementCreatedRequests();
+            },
+          });
+        }
+      },
+    request_createHTTP:
+      async () => {
+        if (activeWorkspace) {
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          const request = await models.request.create({
+            parentId,
+            name: 'New Request',
+          });
+          if (activeWorkspaceMeta) {
+            await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
+          }
+          await updateRequestMetaByParentId(request._id, {
+            lastActive: Date.now(),
+          });
+          models.stats.incrementCreatedRequests();
+          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
+        }
+      },
+    request_showCreateFolder:
+      () => {
+        if (activeWorkspace) {
+          createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
+        }
+      },
+    request_showRecent:
+      () => showModal(RequestSwitcherModal, {
+        disableInput: true,
+        maxRequests: 10,
+        maxWorkspaces: 0,
+        selectOnKeyup: true,
+        title: 'Recent Requests',
+        hideNeverActiveRequests: true,
+        // Add an open delay so the dialog won't show for quick presses
+        openDelay: 150,
+      }),
+    request_quickSwitch:
+      () => showModal(RequestSwitcherModal),
+    environment_showEditor:
+      () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
+    showCookiesEditor:
+      () => showModal(CookiesModal),
+    request_showGenerateCodeEditor:
+      () => showModal(GenerateCodeModal, activeRequest),
+  });
   // Close all websocket connections when the active environment changes
   useEffect(() => {
     return () => {
       window.main.webSocket.closeAll();
     };
   }, [activeEnvironment?._id]);
+
+  async function handleSetResponseFilter(responseFilter: string) {
+    if (!activeRequest) {
+      return;
+    }
+    const requestId = activeRequest._id;
+    await updateRequestMetaByParentId(requestId, { responseFilter });
+
+    const meta = await models.requestMeta.getByParentId(requestId);
+    if (!meta) {
+      return;
+    }
+    const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
+
+    // Already in history?
+    if (responseFilterHistory.includes(responseFilter)) {
+      return;
+    }
+
+    // Blank?
+    if (!responseFilter) {
+      return;
+    }
+
+    responseFilterHistory.unshift(responseFilter);
+    await updateRequestMetaByParentId(requestId, {
+      responseFilterHistory,
+    });
+  }
+
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?

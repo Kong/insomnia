@@ -131,7 +131,6 @@ const ActivityRouter = () => {
 const spectral = initializeSpectral();
 
 export type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps> & {
-  handleSetResponseFilter: Function;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 };
@@ -244,12 +243,6 @@ export class WrapperClass extends PureComponent<Props, State> {
     }, 1000);
   }
 
-  _handleSetResponseFilter(filter: string) {
-    const activeRequest = this.props.activeRequest;
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    this.props.handleSetResponseFilter(activeRequestId, filter);
-  }
-
   _handleGitBranchChanged(branch: string) {
     this.setState({
       activeGitBranch: branch || 'no-vcs',
@@ -343,7 +336,7 @@ export class WrapperClass extends PureComponent<Props, State> {
             <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
             <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
-            <RequestSwitcherModal ref={instance => registerModal(instance, 'RequestSwitcherModal')}/>
+            <RequestSwitcherModal ref={instance => registerModal(instance, 'RequestSwitcherModal')} />
 
             <EnvironmentEditModal
               ref={registerModal}
@@ -439,7 +432,6 @@ export class WrapperClass extends PureComponent<Props, State> {
                   handleActivityChange={this._handleWorkspaceActivityChange}
                   handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                   handleImport={this._handleImport}
-                  handleSetResponseFilter={this._handleSetResponseFilter}
                   vcs={vcs}
                 />
               </Suspense>

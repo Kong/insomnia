@@ -7,7 +7,7 @@ import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor } from '../codemirror/one-line-editor';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 
@@ -118,7 +118,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     }
   }, [environmentId, isOpen, request, workspaceId]);
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     request_send: () => handleSubmit(),
     request_focusUrl: () => {
       editorRef.current?.focus();

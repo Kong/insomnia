@@ -29,7 +29,7 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
@@ -188,7 +188,7 @@ const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawPr
   ref
 ) => {
   const editorRef = useRef<UnconnectedCodeEditor | null>(null);
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => editorRef.current?._prettify(),
   });
 

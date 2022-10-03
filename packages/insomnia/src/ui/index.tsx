@@ -1,11 +1,10 @@
 // eslint-disable-next-line simple-import-sort/imports
-import { ipcRenderer } from 'electron';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-
+import './rendererListeners';
 import { getProductName, isDevelopment } from '../common/constants';
-import { database as db } from '../common/database';
+import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
@@ -25,7 +24,7 @@ document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
 (async function() {
-  await db.initClient();
+  await database.initClient();
 
   await initPlugins();
 
@@ -59,22 +58,5 @@ if (isDevelopment()) {
   // @ts-expect-error -- TSCONVERSION needs window augmentation
   window.models = models;
   // @ts-expect-error -- TSCONVERSION needs window augmentation
-  window.db = db;
+  window.db = database;
 }
-
-function showUpdateNotification() {
-  console.log('[app] Update Available');
-  // eslint-disable-next-line no-new
-  new window.Notification('Insomnia Update Ready', {
-    body: 'Relaunch the app for it to take effect',
-    silent: true,
-    // @ts-expect-error -- TSCONVERSION
-    sticky: true,
-  });
-}
-
-ipcRenderer.on('update-available', () => {
-  // Give it a few seconds before showing this. Sometimes, when
-  // you relaunch too soon it doesn't work the first time.
-  setTimeout(showUpdateNotification, 1000 * 10);
-});

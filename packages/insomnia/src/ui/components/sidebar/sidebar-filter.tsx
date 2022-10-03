@@ -7,7 +7,7 @@ import { sortMethodMap } from '../../../common/sorting';
 import * as models from '../../../models';
 import { isRequestGroup } from '../../../models/request-group';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
@@ -36,7 +36,7 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
     }
   }, [activeWorkspaceMeta]);
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     sidebar_focusFilter: () => {
       inputRef.current?.focus();
     },

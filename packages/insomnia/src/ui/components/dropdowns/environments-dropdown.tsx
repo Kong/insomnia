@@ -10,7 +10,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal } from '../modals/index';
 import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
 import { Tooltip } from '../tooltip';
@@ -39,7 +39,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
     dropdownRef.current?.toggle(true);
   }, []);
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     environment_showSwitchMenu: toggleSwitchMenu,
   });
 

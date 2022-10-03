@@ -16,7 +16,7 @@ import {
 import { clickLink } from '../../../common/electron-helpers';
 import { xmlDecode } from '../../../common/misc';
 import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
-import { useGlobalKeyboardShortcuts } from '../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
@@ -122,7 +122,7 @@ export const ResponseViewer = ({
     );
   };
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     response_focus: () => {
       if (!_isViewSelectable()) {
         return;

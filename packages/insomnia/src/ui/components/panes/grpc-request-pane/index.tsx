@@ -16,7 +16,7 @@ import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
-import { useGlobalKeyboardShortcuts } from '../../keydown-binder';
+import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
@@ -78,7 +78,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     }
   }, [method, running, start]);
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
 

@@ -24,7 +24,7 @@ import { DropdownItem } from './base/dropdown/dropdown-item';
 import { PromptButton } from './base/prompt-button';
 import { OneLineEditor } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
-import { createKeybindingsHandler, useGlobalKeyboardShortcuts } from './keydown-binder';
+import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
@@ -275,7 +275,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [request._id]);
   const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
 
-  useGlobalKeyboardShortcuts({
+  useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
       inputRef.current?.focus();
       inputRef.current?.selectAll();
