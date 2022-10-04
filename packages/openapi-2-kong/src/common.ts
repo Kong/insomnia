@@ -67,7 +67,7 @@ const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
 export function pathVariablesToRegex(p: string) {
   // escape URL special characters except the curly braces
-  p = p.replace(/[!*+?^<>$';:@&=,/%#[]()|[\]\\]/g, '\\$&');
+  p = p.replace(/[$()]/g, '\\$&');
   // match anything except whitespace and '/'
   const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/]+)');
   // add a line ending because it is a regex
