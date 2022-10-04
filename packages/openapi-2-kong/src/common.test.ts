@@ -242,6 +242,10 @@ describe('common', () => {
     it('does not convert to regex if no variables present', () => {
       expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz$');
     });
+
+    it('escape special characters not present in curly braces', () => {
+      expect(pathVariablesToRegex('/*foo$bar?baz')).toBe('/\*foo\$bar\?baz$');
+    });
   });
 
   describe('getPluginNameFromKey()', () => {
