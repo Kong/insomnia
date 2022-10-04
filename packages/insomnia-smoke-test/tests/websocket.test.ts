@@ -49,4 +49,13 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
   await expect(responseBody).toContainText('WebSocket connection established');
 
+  const webSocketActiveConnections = page.locator('[data-testid="WebSocketSpinner__Connected"]');
+
+  // Basic auth, Bearer auth, and Redirect connections are displayed as open
+  await expect(webSocketActiveConnections).toHaveCount(3);
+
+  // Can disconnect from all connections
+  await page.locator('button[name="DisconnectDropdown__DropdownButton"]').click();
+  await page.locator('text=Disconnect all requests').click();
+  await expect(webSocketActiveConnections).toHaveCount(0);
 });

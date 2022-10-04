@@ -337,5 +337,5 @@ export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, t
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useWSReadyState(requestId);
-  return readyState === ReadyState.OPEN ? <ConnectionCircle /> : null;
+  return readyState === ReadyState.OPEN ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
 };

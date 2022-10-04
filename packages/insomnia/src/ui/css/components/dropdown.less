@@ -126,7 +126,12 @@
         text-align: center;
       }
     }
-
+    li > .dropdown__item-button-unset {
+      min-width: unset;
+      .dropdown__text > * {
+        margin-left: unset;
+      }
+    }
     li > button:hover:not(:disabled),
     li.active > button:not(:disabled) {
       background: var(--hl-sm);
