@@ -167,14 +167,12 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
         await this.refreshMainAttributes();
       }
     }, REFRESH_PERIOD);
-    document.addEventListener('mousemove', this._handleUserActivity);
   }
 
   componentWillUnmount() {
     if (this.checkInterval !== null) {
       clearInterval(this.checkInterval);
     }
-    document.removeEventListener('mousemove', this._handleUserActivity);
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -195,10 +193,6 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
         this.refreshOnNextSyncItems = false;
       }
     }
-  }
-
-  _handleUserActivity() {
-    this.lastUserActivity = Date.now();
   }
 
   _handleShowBranchesModal() {
