@@ -244,7 +244,7 @@ describe('common', () => {
     });
 
     it('escape special characters not present in curly braces', () => {
-      expect(pathVariablesToRegex('/*foo$bar?baz')).toBe('/\*foo\$bar\?baz$');
+      expect(pathVariablesToRegex('/*foo$bar?baz')).toBe('/\\*foo\\$bar\\?baz$');
     });
   });
 
