@@ -9,12 +9,6 @@ const config: PlaywrightTestConfig = {
       retries: 0,
     },
     {
-      // Broad coverage PreRelease only checks (PreRelease Only)
-      name: 'PreRelease',
-      testMatch: /.*prerelease\/.*.test.ts/,
-      retries: 0,
-    },
-    {
       // Run all tests
       name: 'Default',
       testIgnore: /.*.test.ts/,
