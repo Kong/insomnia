@@ -1,40 +1,66 @@
-import { ipcRenderer } from 'electron';
-import path from 'path';
-import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { parse as urlParse } from 'url';
+import React, { FC, Fragment, lazy, Suspense, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+} from '../../common/constants';
 import { database as db } from '../../common/database';
-import { getDataDirectory } from '../../common/electron-helpers';
-import {
-  generateId,
-} from '../../common/misc';
 import * as models from '../../models';
-import { GitRepository } from '../../models/git-repository';
-import * as themes from '../../plugins/misc';
-import { fsClient } from '../../sync/git/fs-client';
-import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
-import { NeDBClient } from '../../sync/git/ne-db-client';
-import { routableFSClient } from '../../sync/git/routable-fs-client';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { type MergeConflict } from '../../sync/types';
-import { VCS } from '../../sync/vcs/vcs';
 import { ErrorBoundary } from '../components/error-boundary';
+import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
 import { AlertModal } from '../components/modals/alert-modal';
-import { showModal } from '../components/modals/index';
+import { AnalyticsModal } from '../components/modals/analytics-modal';
+import { AskModal } from '../components/modals/ask-modal';
+import { CodePromptModal } from '../components/modals/code-prompt-modal';
+import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
+import { CookiesModalFC } from '../components/modals/cookies-modal';
+import { EnvironmentEditModal } from '../components/modals/environment-edit-modal';
+import { ErrorModal } from '../components/modals/error-modal';
+import { ExportRequestsModal } from '../components/modals/export-requests-modal';
+import { FilterHelpModal } from '../components/modals/filter-help-modal';
+import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { GenerateConfigModal } from '../components/modals/generate-config-modal';
+import { GitBranchesModal } from '../components/modals/git-branches-modal';
+import { GitLogModal } from '../components/modals/git-log-modal';
+import { GitRepositorySettingsModal } from '../components/modals/git-repository-settings-modal';
+import { GitStagingModal } from '../components/modals/git-staging-modal';
+import { registerModal } from '../components/modals/index';
+import { LoginModal } from '../components/modals/login-modal';
+import { NunjucksModal } from '../components/modals/nunjucks-modal';
+import ProjectSettingsModal from '../components/modals/project-settings-modal';
+import { PromptModal } from '../components/modals/prompt-modal';
+import ProtoFilesModal from '../components/modals/proto-files-modal';
+import { RequestGroupSettingsModal } from '../components/modals/request-group-settings-modal';
+import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
+import { RequestSettingsModal } from '../components/modals/request-settings-modal';
+import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
+import { ResponseDebugModal } from '../components/modals/response-debug-modal';
+import { SelectModal } from '../components/modals/select-modal';
+import { SettingsModal } from '../components/modals/settings-modal';
+import { SyncBranchesModal } from '../components/modals/sync-branches-modal';
+import { SyncDeleteModal } from '../components/modals/sync-delete-modal';
+import { SyncHistoryModal } from '../components/modals/sync-history-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+import { SyncStagingModal } from '../components/modals/sync-staging-modal';
+import { WorkspaceDuplicateModal } from '../components/modals/workspace-duplicate-modal';
+import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
+import { WrapperModal } from '../components/modals/wrapper-modal';
 import { Toast } from '../components/toast';
-import { type WrapperClass, Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
-import { GrpcProvider } from '../context/grpc';
+import { GrpcDispatchModalWrapper, GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { useGitVCS } from '../hooks/use-git-vcs';
+import { useVCS } from '../hooks/use-vcs';
 import {
-  newCommand,
-} from '../redux/modules/global';
-import { importUri } from '../redux/modules/import';
-import {
+  selectActiveActivity,
   selectActiveApiSpec,
   selectActiveCookieJar,
+  selectActiveEnvironment,
   selectActiveGitRepository,
   selectActiveProject,
   selectActiveWorkspace,
@@ -42,146 +68,70 @@ import {
   selectEnvironments,
   selectIsFinishedBooting,
   selectIsLoggedIn,
-  selectSettings,
 } from '../redux/selectors';
 import { AppHooks } from './app-hooks';
 
+const lazyWithPreload = <T extends FC<any>>(
+  importFn: () => Promise<{ default: T }>
+) => {
+  const LazyComponent = lazy(importFn);
+  const preload = () => importFn();
+
+  return [LazyComponent, preload] as const;
+};
+
+const [WrapperHome, preloadWrapperHome] = lazyWithPreload(
+  () => import('../components/wrapper-home')
+);
+const [WrapperDebug, preloadWrapperDebug] = lazyWithPreload(
+  () => import('../components/wrapper-debug')
+);
+const [WrapperDesign, preloadWrapperDesign] = lazyWithPreload(
+  () => import('../components/wrapper-design')
+);
+const [WrapperUnitTest, preloadWrapperUnitTest] = lazyWithPreload(
+  () => import('../components/wrapper-unit-test')
+);
+
+preloadWrapperHome();
+preloadWrapperDebug();
+preloadWrapperDesign();
+preloadWrapperUnitTest();
+
+const LoadingIndicator = () => (<div
+  id="app-loading-indicator"
+  style={{
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
+  }}
+>
+  <img src="./ui/images/insomnia-logo.svg" alt="Insomnia" />
+</div>);
+
+const ActivityRouter = () => {
+  const selectedActivity = useSelector(selectActiveActivity);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  // If there is no active workspace, we want to navigate to home no matter what the previous activity was
+  const activity = activeWorkspace ? selectedActivity : ACTIVITY_HOME;
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (activity) {
+      navigate(activity);
+    }
+  }, [activity, navigate]);
+
+  return null;
+};
+
 interface State {
   isMigratingChildren: boolean;
-}
-
-function useVCS({
-  workspaceId,
-}: {
-  workspaceId?: string;
-}) {
-  const vcsInstanceRef = useRef<VCS | null>(null);
-  const [vcs, setVCS] = useState<VCS | null>(null);
-  const updateVCSLock = useRef<boolean | string>(false);
-
-  // Update VCS when the active workspace changes
-  useEffect(() => {
-    const lock = generateId();
-    updateVCSLock.current = lock;
-
-    // Set vcs to null while we update it
-    setVCS(null);
-
-    if (!vcsInstanceRef.current) {
-      const driver = FileSystemDriver.create(getDataDirectory());
-
-      vcsInstanceRef.current = new VCS(driver, async conflicts => {
-        return new Promise(resolve => {
-          showModal(SyncMergeModal, {
-            conflicts,
-            handleDone: (conflicts: MergeConflict[]) => resolve(conflicts),
-          });
-        });
-      });
-    }
-
-    if (workspaceId) {
-      vcsInstanceRef.current.switchProject(workspaceId);
-    } else {
-      vcsInstanceRef.current.clearBackendProject();
-    }
-
-    // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
-    if (updateVCSLock.current === lock) {
-      setVCS(vcsInstanceRef.current);
-    }
-  }, [workspaceId]);
-
-  return vcs;
-}
-
-function useGitVCS({
-  workspaceId,
-  projectId,
-  gitRepository,
-}: {
-  workspaceId?: string;
-  projectId: string;
-  gitRepository?: GitRepository | null;
-}) {
-  const gitVCSInstanceRef = useRef<GitVCS | null>(null);
-  const [gitVCS, setGitVCS] = useState<GitVCS | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    // Set the instance to null in the state while we update it
-    if (gitVCSInstanceRef.current) {
-      setGitVCS(null);
-    }
-
-    if (!gitVCSInstanceRef.current) {
-      gitVCSInstanceRef.current = new GitVCS();
-    }
-
-    async function update() {
-      if (workspaceId && gitRepository && gitVCSInstanceRef.current) {
-        // Create FS client
-        const baseDir = path.join(
-          getDataDirectory(),
-          `version-control/git/${gitRepository._id}`,
-        );
-
-        /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-        const neDbClient = NeDBClient.createClient(workspaceId, projectId);
-
-        /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
-        const gitDataClient = fsClient(baseDir);
-
-        /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
-        const otherDatClient = fsClient(path.join(baseDir, 'other'));
-
-        /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
-        const routableFS = routableFSClient(otherDatClient, {
-          [GIT_INSOMNIA_DIR]: neDbClient,
-          [GIT_INTERNAL_DIR]: gitDataClient,
-        });
-        // Init VCS
-        const { credentials, uri } = gitRepository;
-        if (gitRepository.needsFullClone) {
-          await models.gitRepository.update(gitRepository, {
-            needsFullClone: false,
-          });
-          await gitVCSInstanceRef.current.initFromClone({
-            url: uri,
-            gitCredentials: credentials,
-            directory: GIT_CLONE_DIR,
-            fs: routableFS,
-            gitDirectory: GIT_INTERNAL_DIR,
-          });
-        } else {
-          await gitVCSInstanceRef.current.init({
-            directory: GIT_CLONE_DIR,
-            fs: routableFS,
-            gitDirectory: GIT_INTERNAL_DIR,
-          });
-        }
-
-        // Configure basic info
-        const { author, uri: gitUri } = gitRepository;
-        await gitVCSInstanceRef.current.setAuthor(author.name, author.email);
-        await gitVCSInstanceRef.current.addRemote(gitUri);
-      } else {
-        // Create new one to un-initialize it
-        gitVCSInstanceRef.current = new GitVCS();
-      }
-
-      isMounted && setGitVCS(gitVCSInstanceRef.current);
-    }
-
-    update();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [workspaceId, projectId, gitRepository]);
-
-  return gitVCS;
 }
 
 const App = () => {
@@ -189,19 +139,17 @@ const App = () => {
     isMigratingChildren: false,
   });
 
-  const activeProject = useSelector(selectActiveProject);
   const activeCookieJar = useSelector(selectActiveCookieJar);
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeGitRepository = useSelector(selectActiveGitRepository);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const environments = useSelector(selectEnvironments);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const isFinishedBooting = useSelector(selectIsFinishedBooting);
-  const settings = useSelector(selectSettings);
-  const dispatch = useDispatch();
-  const handleCommand = dispatch(newCommand);
-  const handleImportUri = dispatch(importUri);
+  const activeGitRepository = useSelector(selectActiveGitRepository);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeProject = useSelector(selectActiveProject);
+
   const vcs = useVCS({
     workspaceId: activeWorkspace?._id,
   });
@@ -212,26 +160,25 @@ const App = () => {
     gitRepository: activeGitRepository,
   });
 
-  const wrapperRef = useRef<WrapperClass | null>(null);
-
+  async function handleSetActiveEnvironment(activeEnvironmentId: string | null) {
+    if (activeWorkspaceMeta) {
+      await models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId });
+    }
+  }
   // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
     if (!activeWorkspace) {
       return;
     }
-
     const baseEnvironments = environments.filter(environment => environment.parentId === activeWorkspace._id);
-
-    // Nothing to do
-    if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
+    const workspaceHasChildren = baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta;
+    if (workspaceHasChildren) {
       return;
     }
-
     // We already started migrating. Let it finish.
     if (state.isMigratingChildren) {
       return;
     }
-
     // Prevent rendering of everything until we check the workspace has cookies, env, and meta
     setState(state => ({ ...state, isMigratingChildren: true }));
     async function update() {
@@ -244,72 +191,6 @@ const App = () => {
     }
     update();
   }, [activeApiSpec, activeCookieJar, activeWorkspace, activeWorkspaceMeta, environments, state.isMigratingChildren]);
-
-  // Give it a bit before letting the backend know it's ready
-  useEffect(() => {
-    setTimeout(() => ipcRenderer.send('window-ready'), 500);
-  }, []);
-
-  // Handle Application Commands
-  useEffect(() => {
-    ipcRenderer.on('run-command', (_, commandUri) => {
-      const parsed = urlParse(commandUri, true);
-      const command = `${parsed.hostname}${parsed.pathname}`;
-      const args = JSON.parse(JSON.stringify(parsed.query));
-      args.workspaceId = args.workspaceId || activeWorkspace?._id;
-      handleCommand(command, args);
-    });
-  }, [activeWorkspace?._id, handleCommand]);
-
-  // Handle System Theme change
-  useEffect(() => {
-    const matches = window.matchMedia('(prefers-color-scheme: dark)');
-    matches.addEventListener('change', () => themes.applyColorScheme(settings));
-    return () => {
-      matches.removeEventListener('change', () => themes.applyColorScheme(settings));
-    };
-  });
-
-  // Global Drag and Drop for importing files
-  useEffect(() => {
-    // NOTE: This is required for "drop" event to trigger.
-    document.addEventListener(
-      'dragover',
-      event => {
-        event.preventDefault();
-      },
-      false,
-    );
-    document.addEventListener(
-      'drop',
-      async event => {
-        event.preventDefault();
-        if (!activeWorkspace) {
-          return;
-        }
-        const files = event.dataTransfer?.files || [];
-        if (files.length === 0) {
-          console.log('[drag] Ignored drop event because no files present');
-          return;
-        }
-        const file = files[0];
-        if (!file?.path) {
-          return;
-        }
-        await showModal(AlertModal, {
-          title: 'Confirm Data Import',
-          message: (
-            <span>
-              Import <code>{file.path}</code>?
-            </span>
-          ),
-          addCancel: true,
-        });
-        handleImportUri(`file://${file.path}`, { workspaceId: activeWorkspace?._id });
-      },
-      false,
-    );
-  });
 
   if (state.isMigratingChildren) {
     console.log('[app] Waiting for migration to complete');
@@ -328,11 +209,144 @@ const App = () => {
         <AppHooks />
         <div className="app" key={uniquenessKey}>
           <ErrorBoundary showAlert>
-            <Wrapper
-              ref={wrapperRef}
-              vcs={vcs}
-              gitVCS={gitVCS}
-            />
+            <div key="modals" className="modals">
+              <ErrorBoundary showAlert>
+                <AnalyticsModal />
+                <AlertModal ref={registerModal} />
+                <ErrorModal ref={registerModal} />
+                <PromptModal ref={registerModal} />
+                <WrapperModal ref={registerModal} />
+                <LoginModal ref={registerModal} />
+                <AskModal ref={registerModal} />
+                <SelectModal ref={registerModal} />
+                <FilterHelpModal ref={registerModal} />
+                <RequestRenderErrorModal ref={registerModal} />
+                <GenerateConfigModal ref={registerModal} />
+                <ProjectSettingsModal ref={registerModal} />
+                <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
+                <CodePromptModal ref={registerModal} />
+                <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
+                <RequestGroupSettingsModal ref={registerModal} />
+
+                {activeWorkspace ? <>
+                  {/* TODO: Figure out why cookieJar is sometimes null */}
+                  {activeCookieJar ? <>
+                    <CookiesModalFC
+                      ref={registerModal}
+                    />
+                    <CookieModifyModal ref={registerModal} />
+                  </> : null}
+
+                  <NunjucksModal
+                    ref={registerModal}
+                    workspace={activeWorkspace}
+                  />
+
+                  {activeApiSpec ? <WorkspaceSettingsModal
+                    ref={registerModal}
+                    workspace={activeWorkspace}
+                    apiSpec={activeApiSpec}
+                  /> : null}
+                </> : null}
+
+                <GenerateCodeModal
+                  ref={registerModal}
+                  environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+                />
+
+                <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
+                <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
+
+                <RequestSwitcherModal ref={instance => registerModal(instance, 'RequestSwitcherModal')} />
+
+                <EnvironmentEditModal
+                  ref={registerModal}
+                  onChange={models.requestGroup.update}
+                />
+
+                <GitRepositorySettingsModal ref={registerModal} />
+
+                {activeWorkspace && gitVCS ? (
+                  <Fragment>
+                    <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} gitRepository={activeGitRepository} />
+                    <GitLogModal ref={registerModal} vcs={gitVCS} />
+                    {activeGitRepository !== null && (
+                      <GitBranchesModal
+                        ref={registerModal}
+                        vcs={gitVCS}
+                        gitRepository={activeGitRepository}
+                      />
+                    )}
+                  </Fragment>
+                ) : null}
+
+                {activeWorkspace && vcs ? (
+                  <Fragment>
+                    <SyncStagingModal ref={registerModal} vcs={vcs} />
+                    <SyncMergeModal ref={registerModal} vcs={vcs} />
+                    <SyncBranchesModal ref={registerModal} vcs={vcs} />
+                    <SyncDeleteModal ref={registerModal} vcs={vcs} />
+                    <SyncHistoryModal ref={registerModal} vcs={vcs} />
+                  </Fragment>
+                ) : null}
+
+                <WorkspaceEnvironmentsEditModal
+                  ref={registerModal}
+                  handleSetActiveEnvironment={handleSetActiveEnvironment}
+                  activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
+                />
+
+                <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
+                <ExportRequestsModal ref={registerModal} />
+
+                <GrpcDispatchModalWrapper>
+                  {dispatch => (
+                    <ProtoFilesModal
+                      ref={registerModal}
+                      grpcDispatch={dispatch}
+                    />
+                  )}
+                </GrpcDispatchModalWrapper>
+              </ErrorBoundary>
+            </div>
+
+            <Routes>
+              <Route
+                path="*"
+                element={
+                  <Suspense fallback={<LoadingIndicator />}>
+                    <WrapperHome
+                      vcs={vcs}
+                    />
+                  </Suspense>
+                }
+              />
+              <Route
+                path={ACTIVITY_UNIT_TEST}
+                element={
+                  <Suspense fallback={<LoadingIndicator />}>
+                    <WrapperUnitTest />
+                  </Suspense>
+                }
+              />
+              <Route
+                path={ACTIVITY_SPEC}
+                element={
+                  <Suspense fallback={<LoadingIndicator />}>
+                    <WrapperDesign />
+                  </Suspense>
+                }
+              />
+              <Route
+                path={ACTIVITY_DEBUG}
+                element={
+                  <Suspense fallback={<LoadingIndicator />}>
+                    <WrapperDebug />
+                  </Suspense>
+                }
+              />
+            </Routes>
+            <ActivityRouter />
           </ErrorBoundary>
 
           <ErrorBoundary showAlert>

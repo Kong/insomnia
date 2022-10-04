@@ -1,6 +1,6 @@
 import { IRuleResult } from '@stoplight/spectral-core';
 import { Notice, NoticeTable } from 'insomnia-components';
-import React, { createRef, FC, ReactNode, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import SwaggerUI from 'swagger-ui-react';
@@ -19,7 +19,6 @@ import { ErrorBoundary } from './error-boundary';
 import { PageLayout } from './page-layout';
 import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { HandleActivityChange } from './wrapper';
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
@@ -30,6 +29,7 @@ const EmptySpaceHelper = styled.div({
   textAlign: 'center',
 });
 
+// TODO(jackkav): find the right place to do this
 const spectral = initializeSpectral();
 
 interface LintMessage extends Notice {
@@ -48,7 +48,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
       return;
     }
 
-    await database.update({ ...activeApiSpec,  modified: Date.now(), contents: value }, true);
+    await database.update({ ...activeApiSpec, modified: Date.now(), contents: value }, true);
   }, [activeApiSpec]);
 
   const uniquenessKey = `::${activeApiSpec?._id}::${gitVersion}::${syncVersion}`;
@@ -68,7 +68,7 @@ const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor
   useEffect(() => {
     let isMounted = true;
     const update = async () => {
-    // Lint only if spec has content
+      // Lint only if spec has content
       if (contents && contents.length !== 0) {
         const results: LintMessage[] = (await spectral.run(contents))
           .filter(isLintError)
@@ -233,24 +233,13 @@ const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ e
   );
 };
 
-interface Props {
-  gitSyncDropdown: ReactNode;
-  handleActivityChange: HandleActivityChange;
-}
-
-export const WrapperDesign: FC<Props> = ({
-  gitSyncDropdown,
-  handleActivityChange,
-}) => {
+export const WrapperDesign: FC = () => {
   const editor = createRef<UnconnectedCodeEditor>();
 
   return (
     <PageLayout
       renderPageHeader={(
-        <WorkspacePageHeader
-          handleActivityChange={handleActivityChange}
-          gridRight={gitSyncDropdown}
-        />
+        <WorkspacePageHeader />
       )}
       renderPaneOne={<RenderEditor editor={editor} />}
       renderPaneTwo={<RenderPreview />}

@@ -13,6 +13,7 @@ import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
@@ -32,11 +33,9 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  handleSetFilter: (filter: string) => void;
   request?: Request | null;
 }
 export const ResponsePane: FC<Props> = ({
-  handleSetFilter,
   request,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
@@ -45,7 +44,24 @@ export const ResponsePane: FC<Props> = ({
   const settings = useSelector(selectSettings);
   const loadStartTime = useSelector(selectLoadStartTime);
   const previewMode = useSelector(selectResponsePreviewMode);
-
+  const handleSetFilter = async (responseFilter: string) => {
+    if (!response) {
+      return;
+    }
+    const requestId = response.parentId;
+    await updateRequestMetaByParentId(requestId, { responseFilter });
+    const meta = await models.requestMeta.getByParentId(requestId);
+    if (!meta) {
+      return;
+    }
+    const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
+    // Already in history or empty?
+    if (!responseFilter || responseFilterHistory.includes(responseFilter)) {
+      return;
+    }
+    responseFilterHistory.unshift(responseFilter);
+    updateRequestMetaByParentId(requestId, { responseFilterHistory });
+  };
   const handleGetResponseBody = useCallback(() => {
     if (!response) {
       return null;
@@ -58,7 +74,6 @@ export const ResponsePane: FC<Props> = ({
       clipboard.writeText(bodyBuffer.toString('utf8'));
     }
   }, [handleGetResponseBody]);
-
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
     if (!response || !request) {
       console.warn('Nothing to download');

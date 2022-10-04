@@ -10,7 +10,7 @@ import {
 } from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
-import React, { FC, ReactNode, useCallback, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -34,7 +34,6 @@ import { EmptyStatePane } from './panes/empty-state-pane';
 import type { Child } from './sidebar/sidebar-children';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { HandleActivityChange } from './wrapper';
 
 const HeaderButton = styled(Button)({
   '&&': {
@@ -42,15 +41,7 @@ const HeaderButton = styled(Button)({
   },
 });
 
-interface Props {
-  gitSyncDropdown: ReactNode;
-  handleActivityChange: HandleActivityChange;
-}
-
-const WrapperUnitTest: FC<Props> = ({
-  gitSyncDropdown,
-  handleActivityChange,
-}) => {
+const WrapperUnitTest: FC = () => {
   const [testsRunning, setTestsRunning] = useState<UnitTest[] | null>(null);
   const [resultsError, setResultsError] = useState<string | null>(null);
   const lintOptions = {
@@ -421,10 +412,7 @@ const WrapperUnitTest: FC<Props> = ({
         <TestRunStatus testsRunning={testsRunning} resultsError={resultsError} />
       }
       renderPageHeader={
-        <WorkspacePageHeader
-          handleActivityChange={handleActivityChange}
-          gridRight={gitSyncDropdown}
-        />
+        <WorkspacePageHeader />
       }
     />
   );
@@ -432,9 +420,9 @@ const WrapperUnitTest: FC<Props> = ({
 
 export default WrapperUnitTest;
 
-interface TestRunStatusProps{
-  testsRunning:UnitTest[] | null;
-  resultsError:string | null;
+interface TestRunStatusProps {
+  testsRunning: UnitTest[] | null;
+  resultsError: string | null;
 }
 const TestRunStatus: FC<TestRunStatusProps> = ({ testsRunning, resultsError }) => {
   const activeUnitTestResult = useSelector(selectActiveUnitTestResult);

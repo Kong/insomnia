@@ -1,4 +1,4 @@
-import React, { FC, Fragment, ReactNode, useEffect } from 'react';
+import React, { FC, Fragment, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
@@ -6,25 +6,19 @@ import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRemoteProject } from '../../models/project';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { isCollection, isDesign } from '../../models/workspace';
-import { VCS } from '../../sync/vcs/vcs';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import {
   selectActiveEnvironment,
-  selectActiveProject,
   selectActiveRequest,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
-  selectIsLoggedIn,
   selectSettings,
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
 import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
-import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { ErrorBoundary } from './error-boundary';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showModal } from './modals';
@@ -46,25 +40,8 @@ import { SidebarFilter } from './sidebar/sidebar-filter';
 import { WebSocketRequestPane } from './websockets/websocket-request-pane';
 import { WebSocketResponsePane } from './websockets/websocket-response-pane';
 import { WorkspacePageHeader } from './workspace-page-header';
-import type { HandleActivityChange } from './wrapper';
 
-interface Props {
-  gitSyncDropdown: ReactNode;
-  handleActivityChange: HandleActivityChange;
-  handleSetActiveEnvironment: (id: string | null) => void;
-  handleImport: Function;
-  vcs: VCS | null;
-}
-export const WrapperDebug: FC<Props> = ({
-  gitSyncDropdown,
-  handleActivityChange,
-  handleSetActiveEnvironment,
-  handleImport,
-  vcs,
-}) => {
-  const activeProject = useSelector(selectActiveProject);
-  const isLoggedIn = useSelector(selectIsLoggedIn);
-
+export const WrapperDebug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
   const activeWorkspace = useSelector(selectActiveWorkspace);
@@ -72,7 +49,6 @@ export const WrapperDebug: FC<Props> = ({
   const sidebarFilter = useSelector(selectSidebarFilter);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
-  const isTeamSync = isLoggedIn && activeWorkspace && isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs;
   useDocBodyKeyboardShortcuts({
     request_togglePin:
       async () => {
@@ -177,53 +153,16 @@ export const WrapperDebug: FC<Props> = ({
     };
   }, [activeEnvironment?._id]);
 
-  async function handleSetResponseFilter(responseFilter: string) {
-    if (!activeRequest) {
-      return;
-    }
-    const requestId = activeRequest._id;
-    await updateRequestMetaByParentId(requestId, { responseFilter });
-
-    const meta = await models.requestMeta.getByParentId(requestId);
-    if (!meta) {
-      return;
-    }
-    const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
-
-    // Already in history?
-    if (responseFilterHistory.includes(responseFilter)) {
-      return;
-    }
-
-    // Blank?
-    if (!responseFilter) {
-      return;
-    }
-
-    responseFilterHistory.unshift(responseFilter);
-    await updateRequestMetaByParentId(requestId, {
-      responseFilterHistory,
-    });
-  }
-
   return (
     <PageLayout
       renderPageHeader={activeWorkspace ?
-        <WorkspacePageHeader
-          handleActivityChange={handleActivityChange}
-          gridRight={isTeamSync ? <SyncDropdown
-            workspace={activeWorkspace}
-            project={activeProject}
-            vcs={vcs}
-          /> : isDesign(activeWorkspace) ? gitSyncDropdown : null}
-        />
+        <WorkspacePageHeader />
         : null}
       renderPageSidebar={activeWorkspace ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
-            handleSetActiveEnvironment={handleSetActiveEnvironment}
             workspace={activeWorkspace}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
@@ -263,7 +202,6 @@ export const WrapperDebug: FC<Props> = ({
               ) : (
                 <RequestPane
                   environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  handleImport={handleImport}
                   request={activeRequest}
                   settings={settings}
                   workspace={activeWorkspace}
@@ -278,19 +216,12 @@ export const WrapperDebug: FC<Props> = ({
         <ErrorBoundary showAlert>
           {activeRequest && (
             isGrpcRequest(activeRequest) ? (
-              <GrpcResponsePane
-                activeRequest={activeRequest}
-              />
+              <GrpcResponsePane activeRequest={activeRequest} />
             ) : (
               isWebSocketRequest(activeRequest) ? (
-                <WebSocketResponsePane
-                  requestId={activeRequest._id}
-                />
+                <WebSocketResponsePane requestId={activeRequest._id} />
               ) : (
-                <ResponsePane
-                  handleSetFilter={handleSetResponseFilter}
-                  request={activeRequest}
-                />
+                <ResponsePane request={activeRequest} />
               )
             )
           )}

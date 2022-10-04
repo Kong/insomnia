@@ -2,9 +2,10 @@ import { EnvironmentHighlightColorStyle } from 'insomnia-common';
 import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
+import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import { selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
+import { selectActiveWorkspaceMeta, selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -18,18 +19,17 @@ import { Tooltip } from '../tooltip';
 interface Props {
   activeEnvironment?: Environment | null;
   environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
-  handleSetActiveEnvironment: (id: string | null) => void;
   workspace: Workspace;
 }
 
 export const EnvironmentsDropdown: FC<Props> = ({
   activeEnvironment,
   environmentHighlightColorStyle,
-  handleSetActiveEnvironment,
   workspace,
 }) => {
   const environments = useSelector(selectEnvironments);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const dropdownRef = useRef<DropdownHandle>(null);
   const handleShowEnvironmentModal = useCallback(() => {
     showModal(WorkspaceEnvironmentsEditModal, workspace);
@@ -48,7 +48,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   const subEnvironments = environments
     .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
     .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
-  const description =  (!activeEnvironment || activeEnvironment === baseEnvironment) ? 'No Environment' : activeEnvironment.name;
+  const description = (!activeEnvironment || activeEnvironment === baseEnvironment) ? 'No Environment' : activeEnvironment.name;
 
   return (
     <Dropdown ref={dropdownRef}>
@@ -82,8 +82,11 @@ export const EnvironmentsDropdown: FC<Props> = ({
       {subEnvironments.map(environment => (
         <DropdownItem
           key={environment._id}
-          value={environment._id}
-          onClick={handleSetActiveEnvironment}
+          onClick={() => {
+            if (activeWorkspaceMeta) {
+              models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: environment._id });
+            }
+          }}
         >
           <i
             className="fa fa-random"
@@ -95,7 +98,13 @@ export const EnvironmentsDropdown: FC<Props> = ({
         </DropdownItem>
       ))}
 
-      <DropdownItem value={null} onClick={handleSetActiveEnvironment}>
+      <DropdownItem
+        onClick={() => {
+          if (activeWorkspaceMeta) {
+            models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: null });
+          }
+        }}
+      >
         <i className="fa fa-empty" /> No Environment
       </DropdownItem>
 

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import type { GlobalActivity } from '../../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../common/constants';
 import { isDesign, Workspace } from '../../../models/workspace';
-import { HandleActivityChange } from '../wrapper';
+import { HandleActivityChange } from '../workspace-page-header';
 
 const StyledNav = styled.nav({
   display: 'flex',
