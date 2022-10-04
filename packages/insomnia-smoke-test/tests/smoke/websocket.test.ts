@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
-import { loadFixture } from '../playwright/paths';
-import { test } from '../playwright/test';
+import { loadFixture } from '../../playwright/paths';
+import { test } from '../../playwright/test';
 
 test('can make websocket connection', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
