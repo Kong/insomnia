@@ -48,86 +48,14 @@ test('can make websocket connection', async ({ app, page }) => {
   await expect(statusTag).toContainText('101 Switching Protocols');
   await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
   await expect(responseBody).toContainText('WebSocket connection established');
-});
 
-test('can close a websocket connection', async ({ app, page }) => {
-  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
-    has: page.locator('.CodeMirror-activeline'),
-  });
+  const webSocketActiveConnections = page.locator('[data-testid="WebSocketSpinner__Connected"]');
 
-  await page.click('[data-testid="project"]');
-  await page.click('text=Create');
+  // Basic auth, Bearer auth, and Redirect connections are displayed as open
+  await expect(webSocketActiveConnections).toHaveCount(3);
 
-  const text = await loadFixture('websockets.yaml');
-  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-  await page.click('button:has-text("Clipboard")');
-  await page.click('text=CollectionWebSocketsjust now');
-
-  await page.click('button:has-text("localhost:4010")');
-  await page.click('text=Connect');
-  await expect(statusTag).toContainText('101 Switching Protocols');
-
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
-  await expect(responseBody).toContainText('WebSocket connection established');
-
-  const dropdownTrigger = await page.locator('button[name="DisconnectDropdown__DropdownButton"]');
-  await expect(dropdownTrigger).toBeDefined();
-  await dropdownTrigger.click();
-
-  const disconnectThisRequest = page.locator('text=Disconnect this request');
-  const disconnectAllRequest = page.locator('text=Disconnect all requests');
-  await expect(disconnectThisRequest).toBeDefined();
-  await expect(disconnectAllRequest).toBeDefined();
-
-  await disconnectThisRequest.click();
-  await expect(responseBody).toContainText('Closing connection with code 1005');
-});
-
-test('can close all websocket connection', async ({ app, page }) => {
-  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
-    has: page.locator('.CodeMirror-activeline'),
-  });
-
-  await page.click('[data-testid="project"]');
-  await page.click('text=Create');
-
-  const text = await loadFixture('websockets.yaml');
-  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-  await page.click('button:has-text("Clipboard")');
-  await page.click('text=CollectionWebSocketsjust now');
-
-  await page.click('button:has-text("localhost:4010")');
-  await page.click('text=Connect');
-  await expect(statusTag).toContainText('101 Switching Protocols');
-
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
-  await expect(responseBody).toContainText('WebSocket connection established');
-
-  await page.click('button:has-text("basic-auth")');
-  await page.click('text=Connect');
-  await expect(statusTag).toContainText('101 Switching Protocols');
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
-  await expect(responseBody).toContainText('> authorization: Basic dXNlcjpwYXNzd29yZA==');
-
-  await expect(await page.locator('[data-testid="WebSocketSpinner__Connected"]').count()).toBe(2);
-
-  const dropdownTrigger = await page.locator('button[name="DisconnectDropdown__DropdownButton"]');
-  await expect(dropdownTrigger).toBeDefined();
-  await dropdownTrigger.click();
-
-  const disconnectThisRequest = page.locator('text=Disconnect this request');
-  const disconnectAllRequest = page.locator('text=Disconnect all requests');
-  await expect(disconnectThisRequest).toBeDefined();
-  await expect(disconnectAllRequest).toBeDefined();
-
-  await disconnectAllRequest.click();
-  await expect(responseBody).toContainText('Closing connection with code 1005');
-
-  await expect(await page.locator('[data-testid="WebSocketSpinner__Connected"]').count()).toBe(0);
+  // Can disconnect from all connections
+  await page.locator('button[name="DisconnectDropdown__DropdownButton"]').click();
+  await page.locator('text=Disconnect all requests').click();
+  await expect(webSocketActiveConnections).toHaveCount(0);
 });
