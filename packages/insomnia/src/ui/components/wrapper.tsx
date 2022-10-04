@@ -11,8 +11,9 @@ import {
 } from '../../common/constants';
 import * as models from '../../models/index';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
-import { useGitVCS, useVCS } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
+import { useGitVCS } from '../hooks/use-git-vcs';
+import { useVCS } from '../hooks/use-vcs';
 import {
   selectActiveActivity,
   selectActiveApiSpec,
