@@ -18,7 +18,15 @@
 
 ## Diagrama de Classes
 
-![](./screenshots/class-diagram.png)
+![](./screenshots/class-diagram-1.png)
+
+![](./screenshots/class-diagram-2.png)
+
+![](./screenshots/class-diagram-3.png)
+
+![](./screenshots/class-diagram-4.png)
+
+![](./screenshots/class-diagram-5.png)
 
 ---
 
