@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { UpdateChannel } from 'insomnia-common';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
@@ -21,7 +22,7 @@ describe('<EnumSetting />', () => {
     { value: UpdateChannel.stable, name: 'Release (Recommended)' },
     { value: UpdateChannel.beta, name: 'Early Access (Beta)' },
   ];
-  let container = {};
+  let renderOptions = {};
   const enumSetting = (
     <EnumSetting<UpdateChannel>
       help={help}
@@ -34,21 +35,26 @@ describe('<EnumSetting />', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     const store = mockStore(await reduxStateForTest());
-    container = { wrapper: withReduxStore(store) };
+    renderOptions = { wrapper: withReduxStore(store) };
   });
 
   it('should render label text', async () => {
-    const { getByLabelText } = render(enumSetting, container);
+    const { getByLabelText } = render(enumSetting, renderOptions);
     expect(getByLabelText(label)).toBeInTheDocument();
   });
 
   it('should render help text', async () => {
-    const { getByText } = render(enumSetting, container);
-    expect(getByText(help)).toBeInTheDocument();
+    const { container, findByRole } = render(enumSetting, renderOptions);
+    await userEvent.hover(container);
+
+    act(async () => {
+      const helpText = await findByRole(/tooltip/);
+      expect(helpText).toBeInTheDocument();
+    });
   });
 
   it('should be render the options provided', async () => {
-    const { getByText } = render(enumSetting, container);
+    const { getByText } = render(enumSetting, renderOptions);
     expect(getByText(values[0].name)).toBeInTheDocument();
     expect(getByText(values[1].name)).toBeInTheDocument();
   });

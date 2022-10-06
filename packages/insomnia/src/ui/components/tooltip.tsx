@@ -23,7 +23,7 @@ interface Props {
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay, position } = props;
+  const { children, message, className, wide, selectable, delay = 400, position } = props;
   const triggerRef = React.useRef(null);
   const overlayRef = React.useRef(null);
 
