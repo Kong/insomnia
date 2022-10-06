@@ -1,4 +1,4 @@
-import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps, Tooltip } from 'insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps } from 'insomnia-components';
 import { partition } from 'ramda';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,6 +13,7 @@ import { createProject } from '../../redux/modules/project';
 import { selectActiveProject, selectProjects } from '../../redux/selectors';
 import { showModal } from '../modals';
 import ProjectSettingsModal from '../modals/project-settings-modal';
+import { Tooltip } from '../tooltip';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
 const Checkmark = styled(SvgIcon)({

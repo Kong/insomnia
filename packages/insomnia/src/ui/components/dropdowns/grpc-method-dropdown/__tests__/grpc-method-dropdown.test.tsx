@@ -1,6 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
@@ -65,10 +66,10 @@ describe('<GrpcMethodDropdown />', () => {
     expect(handleChangeProtoFile).toHaveBeenCalledTimes(1);
   });
 
-  it('should send selected method path to handle change', () => {
+  it('should send selected method path to handle change', async () => {
     const handleChange = jest.fn();
     const method = builder.path('/service/method').build();
-    const { getByRole, queryAllByText } = render(
+    const { findByRole, findByText } = render(
       <GrpcMethodDropdown
         methods={[method]}
         handleChange={handleChange}
@@ -76,15 +77,25 @@ describe('<GrpcMethodDropdown />', () => {
       />,
     );
 
+    const dropdownTrigger = await findByText('Select Method');
+
+    // Hover over dropdown trigger to show the method path as a tooltip
+    await userEvent.hover(dropdownTrigger);
+
+    await act(async () => {
+      const tooltip = await findByRole(/tooltip/);
+      expect(tooltip).toBeInTheDocument();
+    });
+
     // Open dropdown
-    fireEvent.click(getByRole('button'));
-    // Should find two items - a dropdown item and a tooltip with the same text
-    const [dropdownButton, tooltip] = queryAllByText(method.path);
-    expect(tooltip).toBeTruthy();
-    expect(tooltip).toHaveAttribute('role', 'tooltip');
-    expect(tooltip).toHaveAttribute('aria-hidden', 'true');
-    fireEvent.click(dropdownButton);
+    await userEvent.click(dropdownTrigger);
+
+    // Select method from the dropdown
+    const dropdownItem = await findByText(method.path);
+    await userEvent.click(dropdownItem);
+
     expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
+
   });
 
   it('should create a divider with the package name', () => {

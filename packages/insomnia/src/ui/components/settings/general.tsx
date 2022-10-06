@@ -1,5 +1,4 @@
 import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
-import { Tooltip } from 'insomnia-components';
 import React, { FC, Fragment, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -21,6 +20,7 @@ import { selectSettings, selectStats } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { HelpTooltip } from '../help-tooltip';
+import { Tooltip } from '../tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { MaskedSetting } from './masked-setting';

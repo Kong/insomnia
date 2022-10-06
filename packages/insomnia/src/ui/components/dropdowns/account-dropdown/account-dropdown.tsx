@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CircleButton, SvgIcon, Tooltip } from 'insomnia-components';
+import { CircleButton, SvgIcon } from 'insomnia-components';
 import React, { Fragment, FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -12,6 +12,7 @@ import { DropdownItem } from '../../base/dropdown/dropdown-item';
 import { Link } from '../../base/link';
 import { PromptButton } from '../../base/prompt-button';
 import { showLoginModal } from '../../modals/login-modal';
+import { Tooltip } from '../../tooltip';
 
 const Wrapper = styled.div({
   display: 'flex',

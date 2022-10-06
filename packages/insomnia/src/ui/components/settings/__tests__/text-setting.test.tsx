@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
@@ -17,7 +18,7 @@ describe('<TextSetting />', () => {
   const label = 'label text';
   const placeholder = 'placeholder text';
   const help = 'help text';
-  let container = {};
+  let renderOptions = {};
   const textSetting = (
     <TextSetting
       disabled
@@ -31,26 +32,30 @@ describe('<TextSetting />', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     const store = mockStore(await reduxStateForTest());
-    container = { wrapper: withReduxStore(store) };
+    renderOptions = { wrapper: withReduxStore(store) };
   });
 
   it('should render label text', async () => {
-    const { getByLabelText } = render(textSetting, container);
+    const { getByLabelText } = render(textSetting, renderOptions);
     expect(getByLabelText(label)).toBeInTheDocument();
   });
 
   it('should render placeholder text', async () => {
-    const { getByPlaceholderText } = render(textSetting, container);
+    const { getByPlaceholderText } = render(textSetting, renderOptions);
     expect(getByPlaceholderText(placeholder)).toBeInTheDocument();
   });
 
   it('should render help text', async () => {
-    const { getByText } = render(textSetting, container);
-    expect(getByText(help)).toBeInTheDocument();
+    const { container, findByRole } = render(textSetting, renderOptions);
+    userEvent.hover(container);
+    act(async () => {
+      const helpText = await findByRole(/tooltip/);
+      expect(helpText).toBeInTheDocument();
+    });
   });
 
   it('should be disabled when passed a disabled prop', async () => {
-    const { getByLabelText } = render(textSetting, container);
+    const { getByLabelText } = render(textSetting, renderOptions);
     const input = getByLabelText(label).closest('input');
     expect(input).toHaveAttribute('disabled');
   });

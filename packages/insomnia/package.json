@@ -195,6 +195,8 @@
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.3.0",
     "react-sortable-hoc": "^2.0.0",
+    "react-stately": "^3.17.0",
+    "react-aria": "^3.19.0",
     "react-tabs": "^3.2.3",
     "react-use": "^17.2.4",
     "react-virtual": "2.10.4",
