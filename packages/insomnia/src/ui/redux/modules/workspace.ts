@@ -13,7 +13,7 @@ import { setActiveActivity, setActiveProject, setActiveWorkspace } from './globa
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
-const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
+export const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
   const flushId = await database.bufferChanges();
 
   const workspace = await models.workspace.create(patch);

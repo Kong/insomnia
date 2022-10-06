@@ -36,8 +36,10 @@ import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
+import { useGlobalModal } from './global-modal/global-modal';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showPrompt } from './modals';
+import { CreateCollectionModal } from './modals/create-collection-modal';
 import { PageLayout } from './page-layout';
 import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
@@ -145,6 +147,7 @@ const mapWorkspaceToWorkspaceCard = ({
 };
 
 const WrapperHome: FC<Props> = (({ vcs }) => {
+  const { showModal } = useGlobalModal();
   const sortOrder = useSelector(selectDashboardSortOrder);
   const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -201,17 +204,20 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
       />
     ));
 
-  const createRequestCollection = useCallback(() => {
-    handleCreateWorkspace({
-      scope: WorkspaceScopeKeys.collection,
-      onCreate: async (workspace: Workspace) => {
-        // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
-          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
-        }
-      },
+  const createRequestCollection = () => {
+    const scope = WorkspaceScopeKeys.collection;
+    const onCreate = async (workspace: Workspace) => {
+      // Don't mark for sync if not logged in at the time of creation
+      if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
+        await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+      }
+    };
+
+    showModal({
+      component: CreateCollectionModal,
+      props: { scope, onCreate },
     });
-  }, [activeProject, handleCreateWorkspace, isLoggedIn, vcs]);
+  };
 
   const createDesignDocument = useCallback(() => {
     handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });

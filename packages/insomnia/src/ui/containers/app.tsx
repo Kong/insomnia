@@ -11,6 +11,7 @@ import {
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { ErrorBoundary } from '../components/error-boundary';
+import { GlobalMoal } from '../components/global-modal/global-modal';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AnalyticsModal } from '../components/modals/analytics-modal';
@@ -207,6 +208,7 @@ const App = () => {
     <GrpcProvider>
       <NunjucksEnabledProvider>
         <AppHooks />
+        <GlobalMoal />
         <div className="app" key={uniquenessKey}>
           <ErrorBoundary showAlert>
             <div key="modals" className="modals">
