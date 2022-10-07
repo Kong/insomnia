@@ -18,7 +18,7 @@ module.exports = {
       // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
       const declarativeConfig = result.documents?.[0]
       return {
-        document: JSON.stringify(declarativeConfig, null, '\t'),
+        document: JSON.stringify(declarativeConfig, null, '\t').replaceAll("\\\\","\\"),
         error: null,
       };
     } catch (err) {
