@@ -60,7 +60,7 @@
         {
           "methods": ["GET"],
           "name": "Example-params-pathid-get",
-          "paths": ["/params/(?<pathid>[^\\/]+)/$"],
+          "paths": ["/params/(?<pathid>[^/]+)/$"],
           "plugins": [
             {
               "config": {
