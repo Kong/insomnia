@@ -3,15 +3,15 @@ import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   projects: [
     {
-      // High-confidence smoke/sanity checks
-      name: 'Smoke',
-      testMatch: /.*smoke\/.*.test.ts/,
+      // Run all tests
+      name: 'Default',
+      testMatch: /.*.test.ts/,
       retries: 0,
     },
     {
-      // Run all tests
-      name: 'Default',
-      testIgnore: /.*.test.ts/,
+      // High-confidence smoke/sanity checks
+      name: 'Smoke',
+      testMatch: /smoke\/.*.test.ts/,
       retries: 0,
     },
   ],
