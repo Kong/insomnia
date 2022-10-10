@@ -138,23 +138,18 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
 
     // Filter out events that don't match the search query
     if (searchQuery) {
-      switch (event.type) {
-        case 'message': {
-          return event.data.toString().toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        case 'error': {
-          return event.message.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        case 'close': {
-          return event.reason.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        case 'open': {
-          return false;
-        }
-        default: {
-          return false;
-        }
+      if (event.type === 'message') {
+        return event.data.toString().toLowerCase().includes(searchQuery.toLowerCase());
       }
+      if (event.type === 'error') {
+        return event.message.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      if (event.type === 'close') {
+        return event.reason.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+
+      // Filter out open events
+      return false;
     }
 
     return true;
