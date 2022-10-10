@@ -333,7 +333,6 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const handleQueryUserActivity = () => {
     const newOperationName = getCurrentOperation();
-    console.log('newOperationName', newOperationName);
 
     const { query, variables, operationName } = state.body;
     if (newOperationName !== operationName) {
