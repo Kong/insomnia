@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
 
 import { WebSocketEvent } from '../../../main/network/websocket';
 
 export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
   const [events, setEvents] = useState<WebSocketEvent[]>([]);
+
+  useEffect(() => {
+    setEvents([]);
+  }, [responseId]);
+
   useInterval(
     () => {
       let isMounted = true;
@@ -21,5 +26,6 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     },
     500
   );
+
   return events;
 }

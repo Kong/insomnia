@@ -1,5 +1,6 @@
 import fs from 'fs';
-import React, { FC, useEffect, useState } from 'react';
+import { SvgIcon } from 'insomnia-components';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
@@ -10,6 +11,7 @@ import { WebSocketEvent } from '../../../main/network/websocket';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
+import { Button } from '../base/button';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { EmptyStatePane } from '../panes/empty-state-pane';
@@ -48,6 +50,39 @@ const PaneBodyContent = styled.div({
   gridTemplateRows: 'repeat(auto-fit, minmax(0, 1fr))',
 });
 
+const EventSearchFormControl = styled.div({
+  outline: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+  position: 'relative',
+  display: 'flex',
+  border: '1px solid var(--hl-md)',
+  borderRadius: 'var(--radius-md)',
+});
+
+const EventSearchInput = styled.input({
+  paddingRight: '2em',
+  padding: 'var(--padding-sm)',
+  backgroundColor: 'var(--hl-xxs)',
+  width: '100%',
+  display: 'block',
+  boxSizing: 'border-box',
+
+  // Remove the default search input cancel button
+  '::-webkit-search-cancel-button': {
+    display: 'none',
+  },
+
+  ':focus': {
+    backgroundColor: 'transparent',
+    borderColor: 'var(--hl-lg)',
+  },
+});
+
+const PaddedButton = styled(Button)({
+  padding: 'var(--padding-sm)',
+});
+
 export const WebSocketResponsePane: FC<{ requestId: string }> =
   ({
     requestId,
@@ -80,13 +115,50 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
-  const events = useWebSocketConnectionEvents({ responseId: response._id });
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [eventType, setEventType] = useState<WebSocketEvent['type']>();
+  const allEvents = useWebSocketConnectionEvents({ responseId: response._id });
   const handleSelection = (event: WebSocketEvent) => {
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
+  const events = allEvents.filter(event => {
+    // Filter out events that are earlier than the clearEventsBefore timestamp
+    if (clearEventsBefore && event.timestamp <= clearEventsBefore) {
+      return false;
+    }
+
+    // Filter out events that don't match the selected event type
+    if (eventType && event.type !== eventType) {
+      return false;
+    }
+
+    // Filter out events that don't match the search query
+    if (searchQuery) {
+      if (event.type === 'message') {
+        return event.data.toString().toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      if (event.type === 'error') {
+        return event.message.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      if (event.type === 'close') {
+        return event.reason.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+
+      // Filter out open events
+      return false;
+    }
+
+    return true;
+  });
+
   useEffect(() => {
     setSelectedEvent(null);
+    setSearchQuery('');
+    setClearEventsBefore(null);
   }, [response._id]);
 
   useEffect(() => {
@@ -149,15 +221,58 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
           <PaneBodyContent>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
-                {Boolean(events?.length) && (
-                  <EventLogTableWrapper>
+                <EventLogTableWrapper>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 'var(--padding-sm)',
+                      gap: 'var(--padding-sm)',
+                    }}
+                  >
+                    <select onChange={e => setEventType(e.currentTarget.value as WebSocketEvent['type'])}>
+                      <option value="">All</option>
+                      <option value="message">Message</option>
+                      <option value="open">Open</option>
+                      <option value="close">Close</option>
+                      <option value="error">Error</option>
+                    </select>
+
+                    <EventSearchFormControl>
+                      <EventSearchInput
+                        ref={searchInputRef}
+                        type="search"
+                        placeholder="Search"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.currentTarget.value)}
+                      />
+                      {searchQuery && (
+                        <PaddedButton
+                          className="form-control__right"
+                          onClick={() => {
+                            setSearchQuery('');
+                            searchInputRef.current?.focus();
+                          }}
+                        >
+                          <i className="fa fa-times-circle" />
+                        </PaddedButton>
+                      )}
+                    </EventSearchFormControl>
+                    <PaddedButton
+                      onClick={() => {
+                        const lastEvent = events[0];
+                        setClearEventsBefore(lastEvent.timestamp);
+                      }}
+                    ><SvgIcon icon='prohibited' /></PaddedButton>
+                  </div>
+                  {Boolean(events?.length) && (
                     <EventLogView
                       events={events}
                       onSelect={handleSelection}
                       selectionId={selectedEvent?._id}
                     />
-                  </EventLogTableWrapper>
-                )}
+                  )}
+                </EventLogTableWrapper>
                 {selectedEvent && (
                   <EventViewWrapper>
                     <EventView
