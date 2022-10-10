@@ -53,8 +53,15 @@ jobs:
           NODE_OPTIONS: '--max_old_space_size=6144'
         run: npm run app-build
 
-      - name: Run app smoke tests
-        run: npm run test:smoke:build
+      - name: Run Smoke tests (CI)
+        # Partial Smoke test run, for regular CI triggers
+        if: "!startsWith(github.head_ref, 'release/')"
+        run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke
+
+      - name: Run Smoke tests (Release)
+        # Full Smoke test run, for Release PRs
+        if: "startsWith(github.head_ref, 'release/')"
+        run: npm run test:build --prefix packages/insomnia-smoke-test
 
       - name: Set Inso CLI variables
         id: inso-variables
