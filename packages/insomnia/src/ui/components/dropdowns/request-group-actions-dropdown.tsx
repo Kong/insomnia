@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
+import * as requestOperations from '../../../models/helpers/request-operations';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
@@ -84,6 +85,19 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     createRequestGroup(requestGroup._id);
   }, [requestGroup._id]);
 
+  const handleRename = useCallback(() => {
+    showPrompt({
+      title: 'Rename Folder',
+      defaultValue: requestGroup.name,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: name => {
+        requestOperations.update(requestGroup, { name });
+      },
+    });
+  }, [requestGroup]);
+
   const handleDeleteFolder = useCallback(async () => {
     await models.stats.incrementDeletedRequestsForDescendents(requestGroup);
     models.requestGroup.remove(requestGroup);
@@ -162,6 +176,10 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
       <DropdownItem onClick={handleEditEnvironment}>
         <i className="fa fa-code" /> Environment
+      </DropdownItem>
+
+      <DropdownItem onClick={handleRename}>
+        <i className="fa fa-edit" /> Rename
       </DropdownItem>
 
       <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteFolder}>

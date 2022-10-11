@@ -12,6 +12,7 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
+import { showPrompt } from '../modals';
 
 interface Props extends Pick<DropdownProps, 'right'> {
   handleDuplicateRequest: Function;
@@ -32,6 +33,19 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);
   }, [handleDuplicateRequest, request]);
+
+  const handleRename = useCallback(() => {
+    showPrompt({
+      title: 'Rename Request',
+      defaultValue: request.name,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: name => {
+        requestOperations.update(request, { name });
+      },
+    });
+  }, [request]);
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
@@ -56,6 +70,13 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       <DropdownItem onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
         <DropdownHint keyBindings={hotKeyRegistry.request_togglePin} />
+      </DropdownItem>
+
+      <DropdownItem
+        onClick={handleRename}
+        addIcon
+      >
+        <i className="fa fa-edit" /> Rename
       </DropdownItem>
 
       <DropdownItem

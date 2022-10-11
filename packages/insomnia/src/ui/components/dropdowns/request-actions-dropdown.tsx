@@ -25,7 +25,7 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { showError, showModal } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 
 interface Props extends Pick<DropdownProps, 'right'> {
@@ -104,6 +104,19 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     }
   }, [activeEnvironment, request._id]);
 
+  const handleRename = useCallback(() => {
+    showPrompt({
+      title: 'Rename Request',
+      defaultValue: request.name,
+      submitName: 'Rename',
+      selectText: true,
+      label: 'Name',
+      onComplete: name => {
+        requestOperations.update(request, { name });
+      },
+    });
+  }, [request]);
+
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
   }, [isPinned, request]);
@@ -145,6 +158,13 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
           <i className="fa fa-copy" /> Copy as Curl
         </DropdownItem>
       )}
+
+      <DropdownItem
+        onClick={handleRename}
+        addIcon
+      >
+        <i className="fa fa-edit" /> Rename
+      </DropdownItem>
 
       <DropdownItem
         buttonClass={PromptButton}
