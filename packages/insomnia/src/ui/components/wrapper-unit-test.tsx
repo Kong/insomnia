@@ -14,7 +14,6 @@ import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import {
-  Button,
   Dropdown,
   DropdownItem,
 } from '../insomnia-components';
@@ -30,6 +29,7 @@ import { PageLayout } from './page-layout';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import type { Child } from './sidebar/sidebar-children';
 import { SvgIcon } from './svg-icon';
+import { Button } from './themed-button';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
 

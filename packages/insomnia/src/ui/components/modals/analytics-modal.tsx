@@ -6,9 +6,9 @@ import { getAppSynopsis, getProductName } from '../../../common/constants';
 import * as models from '../../../models';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';
-import { Button } from '../../insomnia-components';
 import { selectSettings } from '../../redux/selectors';
 import { type ModalHandle, Modal } from '../base/modal';
+import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
   position: 'relative',

@@ -18,7 +18,7 @@ export interface AsyncButtonProps<T> extends ButtonProps {
   loadingNode?: ReactNode;
 }
 
-export const AsyncButton = <T extends unknown>({
+export const AsyncButton = <T, >({
   onClick,
   disabled,
   loadingNode,

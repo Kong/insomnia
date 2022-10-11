@@ -6,12 +6,12 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { Button } from '../../insomnia-components';
 import { RootState } from '../../redux/modules';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+import { Button } from '../themed-button';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 

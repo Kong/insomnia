@@ -2,7 +2,8 @@ import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { superFaint, ultraFaint } from '../../css/css-in-js';
-import { Button, Dropdown, DropdownItem } from '../../insomnia-components';
+import { Dropdown, DropdownItem } from '../../insomnia-components';
+import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
   maxHeight: '100%',

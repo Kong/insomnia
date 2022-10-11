@@ -18,11 +18,11 @@ import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
-import { Button } from '../../insomnia-components';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
+import { Button } from '../themed-button';
 import { ToggleSwitch } from '../toggle-switch';
 
 interface Props {

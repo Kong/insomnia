@@ -7,9 +7,10 @@ import { strings } from '../../../common/strings';
 import { isRemoteProject } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
-import { Button, Dropdown, DropdownDivider, DropdownItem } from '../../insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem } from '../../insomnia-components';
 import { selectActiveProject } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
+import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 interface Props {

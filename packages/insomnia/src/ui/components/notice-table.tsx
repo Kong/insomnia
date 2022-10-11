@@ -1,8 +1,8 @@
 import React, { PropsWithChildren, ReactNode, useCallback, useState } from 'react';
 import styled from 'styled-components';
 
-import { Button } from '../insomnia-components/button';
 import { IconEnum, SvgIcon } from './svg-icon';
+import { Button } from './themed-button';
 
 export interface Notice {
   type: 'warning' | 'error';

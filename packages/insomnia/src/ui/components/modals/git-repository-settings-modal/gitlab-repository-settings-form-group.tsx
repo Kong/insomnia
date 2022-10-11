@@ -12,11 +12,11 @@ import {
   refreshToken,
   signOut,
 } from '../../../../sync/git/gitlab-oauth-provider';
-import { Button } from '../../../insomnia-components';
 import {
   COMMAND_GITLAB_OAUTH_AUTHENTICATE,
   newCommand,
 } from '../../../redux/modules/global';
+import { Button } from '../../themed-button';
 import { showAlert } from '..';
 
 interface Props {

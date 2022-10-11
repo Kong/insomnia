@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import * as session from '../../../../account/session';
-import { CircleButton } from '../../../insomnia-components';
 import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
@@ -13,6 +12,7 @@ import { Link } from '../../base/link';
 import { PromptButton } from '../../base/prompt-button';
 import { showLoginModal } from '../../modals/login-modal';
 import { SvgIcon } from '../../svg-icon';
+import { CircleButton } from '../../themed-button';
 import { Tooltip } from '../../tooltip';
 
 const Wrapper = styled.div({

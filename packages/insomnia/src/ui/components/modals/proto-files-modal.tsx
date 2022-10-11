@@ -6,7 +6,6 @@ import type { ProtoFile } from '../../../models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';
 import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
-import { AsyncButton } from '../../insomnia-components';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -14,6 +13,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { ProtoFileList } from '../proto-file/proto-file-list';
+import { AsyncButton } from '../themed-button';
 
 export interface ProtoFilesModalOptions {
   selectedId?: string;

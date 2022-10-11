@@ -6,11 +6,12 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
-import { Button, Dropdown, DropdownItem } from '../insomnia-components';
+import { Dropdown, DropdownItem } from '../insomnia-components';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import { SvgIcon } from './svg-icon';
+import { Button } from './themed-button';
 
 const Wrapper = styled.div({
   position: 'absolute',

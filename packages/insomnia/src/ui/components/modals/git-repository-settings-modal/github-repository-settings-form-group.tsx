@@ -12,11 +12,11 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
-import { Button } from '../../../insomnia-components';
 import {
   COMMAND_GITHUB_OAUTH_AUTHENTICATE,
   newCommand,
 } from '../../../redux/modules/global';
+import { Button } from '../../themed-button';
 import { showAlert } from '..';
 
 interface Props {

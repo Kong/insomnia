@@ -2,7 +2,7 @@ import { clipboard } from 'electron';
 import React, { FC, useCallback, useState } from 'react';
 import { useInterval } from 'react-use';
 
-import { Button, ButtonProps } from '../../insomnia-components';
+import { Button, ButtonProps } from '../themed-button';
 
 interface Props extends ButtonProps {
   confirmMessage?: string;

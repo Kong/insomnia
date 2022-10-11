@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback } from 'react';
 
 import type { ProtoDirectory } from '../../../models/proto-directory';
-import { Button } from '../../insomnia-components';
+import { Button } from '../themed-button';
 import type { DeleteProtoDirectoryHandler } from './proto-file-list';
 import { ProtoListItem } from './proto-list-item';
 

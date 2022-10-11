@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes, FunctionComponent } from 'react';
+import { ButtonHTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 import { ValueOf } from 'type-fest';
 
@@ -53,7 +53,7 @@ const getFontColorVar = (theme?: ValueOf<typeof ButtonThemeEnum>) => {
   return `var(--color-font-${theme})`;
 };
 
-const StyledButton = styled.button<ButtonProps>`
+export const Button = styled.button<ButtonProps>`
   color: ${({ bg }) => getColorVar(bg)};
   margin: ${({ margin }) => (margin || 0)};
   text-align: center;
@@ -157,18 +157,9 @@ const StyledButton = styled.button<ButtonProps>`
   }
 `;
 
-export const Button: FunctionComponent<ButtonProps> = ({
-  variant = 'outlined',
-  bg = 'default',
-  size = 'default',
-  radius = '3px',
-  ...props
-}) => (
-  <StyledButton
-    {...props}
-    variant={variant}
-    bg={bg}
-    size={size}
-    radius={radius}
-  />
-);
+Button.defaultProps = {
+  variant: 'outlined',
+  bg: 'default',
+  size: 'default',
+  radius: '3px',
+};
