@@ -1,6 +1,5 @@
 export * from './button';
 export * from './dropdown';
-export * from './sidebar';
 export * from './list-group';
 
 export { Breadcrumb, type BreadcrumbProps, type  CrumbProps } from './breadcrumb';

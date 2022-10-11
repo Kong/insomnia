@@ -4,7 +4,7 @@ import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
 import type { ApiSpec } from '../../../models/api-spec';
-import { Sidebar } from '../../insomnia-components';
+import { Sidebar } from './sidebar';
 
 interface Props {
   apiSpec: ApiSpec;

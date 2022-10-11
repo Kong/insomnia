@@ -3,10 +3,10 @@ import React, { FunctionComponent } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
-import { Dropdown } from '../dropdown/dropdown';
-import { DropdownDivider } from '../dropdown/dropdown-divider';
-import { DropdownItem } from '../dropdown/dropdown-item';
-import { IconEnum, SvgIcon } from '../svg-icon';
+import { Dropdown } from '../../../insomnia-components/dropdown/dropdown';
+import { DropdownDivider } from '../../../insomnia-components/dropdown/dropdown-divider';
+import { DropdownItem } from '../../../insomnia-components/dropdown/dropdown-item';
+import { IconEnum, SvgIcon } from '../../../insomnia-components/svg-icon';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarHeaders } from './sidebar-headers';
 import { SidebarInfo, SidebarInfoType } from './sidebar-info';
