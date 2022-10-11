@@ -9,7 +9,6 @@ import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
-import { SvgIcon } from '../../../insomnia-components';
 import { selectActiveEnvironment } from '../../../redux/selectors';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
@@ -17,6 +16,7 @@ import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-me
 import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
+import { SvgIcon } from '../../svg-icon';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';

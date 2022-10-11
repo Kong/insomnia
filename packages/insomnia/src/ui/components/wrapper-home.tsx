@@ -23,7 +23,6 @@ import {
   Dropdown,
   DropdownDivider,
   DropdownItem,
-  SvgIcon,
 } from '../insomnia-components';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
@@ -39,6 +38,7 @@ import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
 import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
+import { SvgIcon } from './svg-icon';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 
 const CreateButton = styled(Button)({

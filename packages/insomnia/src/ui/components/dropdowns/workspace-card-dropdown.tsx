@@ -14,7 +14,6 @@ import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { SvgIcon } from '../../insomnia-components';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -22,6 +21,7 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { showWorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
+import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;

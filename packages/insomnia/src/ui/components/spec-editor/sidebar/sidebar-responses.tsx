@@ -1,7 +1,7 @@
 import React, { Component, ReactNode } from 'react';
 
+import { IconEnum, SvgIcon } from '../../svg-icon';
 import { Tooltip } from '../../tooltip';
-import { IconEnum, SvgIcon } from '../../../insomnia-components/svg-icon';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { SidebarItem } from './sidebar-item';
 import { SidebarSection } from './sidebar-section';

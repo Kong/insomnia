@@ -7,12 +7,13 @@ import { strings } from '../../../common/strings';
 import { isDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteProjects } from '../../hooks/project';
-import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps } from '../../insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem } from '../../insomnia-components';
 import { setActiveProject } from '../../redux/modules/global';
 import { createProject } from '../../redux/modules/project';
 import { selectActiveProject, selectProjects } from '../../redux/selectors';
 import { showModal } from '../modals';
 import ProjectSettingsModal from '../modals/project-settings-modal';
+import { SvgIcon, SvgIconProps } from '../svg-icon';
 import { Tooltip } from '../tooltip';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 

@@ -1,7 +1,7 @@
 import React, { Component, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
-import { IconEnum, SvgIcon } from '../../../insomnia-components/svg-icon';
+import { IconEnum, SvgIcon } from '../../svg-icon';
 import { Tooltip } from '../../tooltip';
 import { SidebarBadge } from './sidebar-badge';
 import { SidebarInvalidSection } from './sidebar-invalid-section';

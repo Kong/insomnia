@@ -4,8 +4,8 @@ import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
-import { SvgIcon } from '../insomnia-components';
 import { selectSettings } from '../redux/selectors';
+import { SvgIcon } from './svg-icon';
 
 const Wrapper = styled.div({
   fontSize: 'var(--font-size-xs)',

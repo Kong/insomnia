@@ -25,10 +25,10 @@ import {
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
-import { SvgIcon } from '../../../insomnia-components';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { EmptyStatePane } from '../../panes/empty-state-pane';
+import { SvgIcon } from '../../svg-icon';
 import { FileEditor } from './file-editor';
 import { FormEditor } from './form-editor';
 import { GraphQLEditor } from './graph-ql-editor';

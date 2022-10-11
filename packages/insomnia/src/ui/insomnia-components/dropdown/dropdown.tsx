@@ -14,7 +14,7 @@ import React, {
 import ReactDOM from 'react-dom';
 import styled, { css } from 'styled-components';
 
-import { SvgIcon } from '../svg-icon';
+import { SvgIcon } from '../../components/svg-icon';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
 

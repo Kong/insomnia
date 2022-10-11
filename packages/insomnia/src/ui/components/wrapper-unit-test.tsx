@@ -18,7 +18,6 @@ import {
   Dropdown,
   DropdownItem,
   ListGroup,
-  SvgIcon,
   UnitTestItem,
   UnitTestResultItem,
 } from '../insomnia-components';
@@ -32,6 +31,7 @@ import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import type { Child } from './sidebar/sidebar-children';
+import { SvgIcon } from './svg-icon';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
 

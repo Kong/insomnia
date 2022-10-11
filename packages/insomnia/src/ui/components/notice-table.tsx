@@ -2,7 +2,7 @@ import React, { PropsWithChildren, ReactNode, useCallback, useState } from 'reac
 import styled from 'styled-components';
 
 import { Button } from '../insomnia-components/button';
-import { IconEnum, SvgIcon } from '../insomnia-components/svg-icon';
+import { IconEnum, SvgIcon } from './svg-icon';
 
 export interface Notice {
   type: 'warning' | 'error';

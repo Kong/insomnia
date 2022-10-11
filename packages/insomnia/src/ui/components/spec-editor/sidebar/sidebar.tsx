@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { Dropdown } from '../../../insomnia-components/dropdown/dropdown';
 import { DropdownDivider } from '../../../insomnia-components/dropdown/dropdown-divider';
 import { DropdownItem } from '../../../insomnia-components/dropdown/dropdown-item';
-import { IconEnum, SvgIcon } from '../../../insomnia-components/svg-icon';
+import { IconEnum, SvgIcon } from '../../svg-icon';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarHeaders } from './sidebar-headers';
 import { SidebarInfo, SidebarInfoType } from './sidebar-info';

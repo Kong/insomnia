@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-import { SvgIcon } from '../svg-icon';
+import { SvgIcon } from '../../components/svg-icon';
 
 export interface UnitTestResultTimestampProps {
   timeMs: String;

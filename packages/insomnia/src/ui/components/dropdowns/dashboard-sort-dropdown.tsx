@@ -2,7 +2,8 @@ import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { DASHBOARD_SORT_ORDERS, DashboardSortOrder, dashboardSortOrderName } from '../../../common/constants';
-import { Button, Dropdown, DropdownItem, SvgIcon } from '../../insomnia-components';
+import { Button, Dropdown, DropdownItem } from '../../insomnia-components';
+import { SvgIcon } from '../svg-icon';
 import { svgPlacementHack } from './dropdown-placement-hacks';
 
 interface DashboardSortDropdownProps {

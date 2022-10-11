@@ -3,8 +3,8 @@ import React, { FunctionComponent, ReactNode } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
+import { SvgIcon } from '../../components/svg-icon';
 import { Button } from '../button';
-import { SvgIcon } from '../svg-icon';
 import { ListGroupItem } from './list-group-item';
 import { UnitTestRequestSelector } from './unit-test-request-selector';
 
