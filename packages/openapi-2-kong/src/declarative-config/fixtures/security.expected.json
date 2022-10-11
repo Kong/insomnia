@@ -13,13 +13,6 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
           "name": "Security_Example-only-oath2-get",
-          "plugins": [
-            {
-              "config": { "auth_methods": ["client_credentials"] },
-              "name": "openid-connect",
-              "tags": ["OAS3_import", "OAS3file_security.yaml"]
-            }
-          ],
           "paths": ["/only/oath2$"]
         },
         {
@@ -41,13 +34,6 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_security.yaml"],
           "name": "Security_Example-and-based-auth-get",
-          "plugins": [
-            {
-              "config": { "auth_methods": ["client_credentials"] },
-              "name": "openid-connect",
-              "tags": ["OAS3_import", "OAS3file_security.yaml"]
-            }
-          ],
           "paths": ["/and/based/auth$"]
         },
         {
