@@ -2,7 +2,6 @@ export * from './button';
 export * from './dropdown';
 export * from './list-group';
 
-export { Breadcrumb, type BreadcrumbProps, type  CrumbProps } from './breadcrumb';
 export { CardContainer } from './card-container';
 export { Card, type  CardProps } from './card';
 export { Header, type  HeaderProps } from './header';
