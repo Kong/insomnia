@@ -8,7 +8,6 @@ import { selectActiveWorkspace } from '../redux/selectors';
 
 export const useAppCommands = () => {
   const dispatch = useDispatch();
-  const handleCommand = dispatch(newCommand);
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
   // Handle Application Commands
@@ -18,7 +17,7 @@ export const useAppCommands = () => {
       const command = `${parsed.hostname}${parsed.pathname}`;
       const args = JSON.parse(JSON.stringify(parsed.query));
       args.workspaceId = args.workspaceId || activeWorkspace?._id;
-      handleCommand(command, args);
+      newCommand(command, args)(dispatch);
     });
-  }, [activeWorkspace?._id, handleCommand]);
+  }, [activeWorkspace?._id, dispatch]);
 };
