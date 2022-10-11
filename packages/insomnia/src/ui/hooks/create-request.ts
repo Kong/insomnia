@@ -13,7 +13,7 @@ import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { showModal } from '../components/modals';
-import ProtoFilesModal from '../components/modals/proto-files-modal';
+import { ProtoFilesModal } from '../components/modals/proto-files-modal';
 
 export const updateActiveWorkspaceMeta = async (
   patch: Partial<WorkspaceMeta>,
