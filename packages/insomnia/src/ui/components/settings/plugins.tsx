@@ -18,11 +18,12 @@ import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
-import { Button, ToggleSwitch } from '../../insomnia-components';
+import { Button } from '../../insomnia-components';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
+import { ToggleSwitch } from '../toggle-switch';
 
 interface Props {
   settings: Settings;
@@ -188,8 +189,6 @@ export class Plugins extends PureComponent<Props, State> {
   renderToggleSwitch(plugin: Plugin) {
     return (
       <ToggleSwitch
-        // @ts-expect-error -- TSCONVERSION should this be labelClassName or switchClassName?
-        className="valign-middle"
         checked={!plugin.config.disabled}
         disabled={this.state.isRefreshingPlugins}
         onChange={async checked => {

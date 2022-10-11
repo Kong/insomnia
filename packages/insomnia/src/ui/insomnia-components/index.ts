@@ -21,4 +21,3 @@ export {
   type TableHeaderProps,
   TableRow,
 } from './table';
-export { ToggleSwitch, type ToggleSwitchProps } from './toggle-switch';
