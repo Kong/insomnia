@@ -1,6 +1,20 @@
 /* eslint-disable filenames/match-exported */
 import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
+  projects: [
+    {
+      // Run all tests
+      name: 'Default',
+      testMatch: /.*.test.ts/,
+      retries: 0,
+    },
+    {
+      // High-confidence smoke/sanity checks
+      name: 'Smoke',
+      testMatch: /smoke\/.*.test.ts/,
+      retries: 0,
+    },
+  ],
   webServer: {
     command: 'npm run serve',
     url: 'http://127.0.0.1:4010',

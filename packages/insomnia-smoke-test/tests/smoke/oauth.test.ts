@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
-import { loadFixture } from '../playwright/paths';
-import { test } from '../playwright/test';
+import { loadFixture } from '../../playwright/paths';
+import { test } from '../../playwright/test';
 
 test('can make oauth2 requests', async ({ app, page }) => {
   if (process.platform === 'darwin') {

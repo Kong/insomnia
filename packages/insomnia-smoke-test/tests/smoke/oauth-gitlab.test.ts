@@ -1,4 +1,4 @@
-import { test } from '../playwright/test';
+import { test } from '../../playwright/test';
 
 test('Sign in with Gitlab', async ({ app, page }) => {
   await page.locator('text=Setup Git Sync').click();

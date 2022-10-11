@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { test } from '../playwright/test';
+import { test } from '../../playwright/test';
 
 test('can render Spectral OpenAPI lint errors', async ({ page }) => {
   await page.click('text=Design');
