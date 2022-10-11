@@ -17,15 +17,13 @@ import {
   Button,
   Dropdown,
   DropdownItem,
-  ListGroup,
-  UnitTestItem,
-  UnitTestResultItem,
 } from '../insomnia-components';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
+import { ListGroup, UnitTestItem, UnitTestResultItem } from './list-group';
 import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
