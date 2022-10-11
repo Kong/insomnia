@@ -1,7 +1,7 @@
 import React, { Component, ReactNode } from 'react';
 
+import { Tooltip } from '../../components/tooltip';
 import { IconEnum, SvgIcon } from '../svg-icon';
-import { Tooltip } from '../tooltip';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { SidebarItem } from './sidebar-item';
 import { SidebarSection } from './sidebar-section';

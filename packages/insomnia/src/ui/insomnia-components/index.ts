@@ -24,4 +24,3 @@ export {
   TableRow,
 } from './table';
 export { ToggleSwitch, type ToggleSwitchProps } from './toggle-switch';
-export { Tooltip, type TooltipProps } from './tooltip';

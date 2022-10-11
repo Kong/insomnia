@@ -1,8 +1,8 @@
 import React, { Component, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
+import { Tooltip } from '../../components/tooltip';
 import { IconEnum, SvgIcon } from '../svg-icon';
-import { Tooltip } from '../tooltip';
 import { SidebarBadge } from './sidebar-badge';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { SidebarItem } from './sidebar-item';
