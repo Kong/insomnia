@@ -1,4 +1,3 @@
-import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps } from 'insomnia-components';
 import { partition } from 'ramda';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,6 +7,7 @@ import { strings } from '../../../common/strings';
 import { isDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteProjects } from '../../hooks/project';
+import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps } from '../../insomnia-components';
 import { setActiveProject } from '../../redux/modules/global';
 import { createProject } from '../../redux/modules/project';
 import { selectActiveProject, selectProjects } from '../../redux/selectors';

@@ -1,10 +1,10 @@
-import { SvgIcon } from 'insomnia-components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { SvgIcon } from '../insomnia-components';
 import { selectSettings } from '../redux/selectors';
 
 const Wrapper = styled.div({

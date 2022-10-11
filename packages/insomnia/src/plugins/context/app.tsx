@@ -226,7 +226,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
         const ReactDOM = await import('react-dom');
         const React = await import('react');
-        const insomniaComponents = await import('insomnia-components');
+        const insomniaComponents = await import('../../ui/insomnia-components');
 
         return {
           ReactDOM,

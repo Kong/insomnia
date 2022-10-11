@@ -1,8 +1,8 @@
 import type { GraphQLType } from 'graphql';
-import { SvgIcon } from 'insomnia-components';
 import React, { FC } from 'react';
 
 import { Tooltip } from '../../components/tooltip';
+import { SvgIcon } from '../../insomnia-components';
 import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLDefaultValue } from './graph-ql-default-value';
 import { GraphQLExplorerArgLinks } from './graph-ql-explorer-arg-links';

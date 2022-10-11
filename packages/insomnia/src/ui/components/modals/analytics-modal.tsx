@@ -1,4 +1,3 @@
-import { Button } from 'insomnia-components';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -7,6 +6,7 @@ import { getAppSynopsis, getProductName } from '../../../common/constants';
 import * as models from '../../../models';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';
+import { Button } from '../../insomnia-components';
 import { selectSettings } from '../../redux/selectors';
 import { type ModalHandle, Modal } from '../base/modal';
 

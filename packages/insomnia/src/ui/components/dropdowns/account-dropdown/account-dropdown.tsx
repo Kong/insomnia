@@ -1,10 +1,10 @@
 import classNames from 'classnames';
-import { CircleButton, SvgIcon } from 'insomnia-components';
 import React, { Fragment, FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import * as session from '../../../../account/session';
+import { CircleButton, SvgIcon } from '../../../insomnia-components';
 import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';

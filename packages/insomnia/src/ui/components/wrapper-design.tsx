@@ -1,5 +1,4 @@
 import { IRuleResult } from '@stoplight/spectral-core';
-import { Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -12,6 +11,7 @@ import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { superFaint } from '../css/css-in-js';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
+import { Notice, NoticeTable } from '../insomnia-components';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';

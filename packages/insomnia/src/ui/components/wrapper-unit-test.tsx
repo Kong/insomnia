@@ -1,13 +1,4 @@
 import classnames from 'classnames';
-import {
-  Button,
-  Dropdown,
-  DropdownItem,
-  ListGroup,
-  SvgIcon,
-  UnitTestItem,
-  UnitTestResultItem,
-} from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
 import React, { FC, useCallback, useState } from 'react';
@@ -22,6 +13,15 @@ import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  ListGroup,
+  SvgIcon,
+  UnitTestItem,
+  UnitTestResultItem,
+} from '../insomnia-components';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { Editable } from './base/editable';

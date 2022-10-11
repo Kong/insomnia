@@ -1,8 +1,8 @@
-import { SvgIcon } from 'insomnia-components';
 import React, { FC, ReactNode } from 'react';
 import styled from 'styled-components';
 
 import { superDuperFaint, superFaint, ultraFaint } from '../../css/css-in-js';
+import { SvgIcon } from '../../insomnia-components';
 import { Link } from '../base/link';
 
 const Panel = styled.div({

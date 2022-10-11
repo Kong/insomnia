@@ -1,9 +1,9 @@
-import { Breadcrumb, BreadcrumbProps, Header as _Header } from 'insomnia-components';
 import React, { FC, Fragment, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import coreLogo from '../images/insomnia-logo.svg';
+import { Breadcrumb, BreadcrumbProps, Header as _Header } from '../insomnia-components';
 import { selectIsLoggedIn } from '../redux/selectors';
 import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown/account-dropdown';

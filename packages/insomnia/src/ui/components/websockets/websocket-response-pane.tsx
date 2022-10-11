@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { SvgIcon } from 'insomnia-components';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -10,6 +9,7 @@ import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
+import { SvgIcon } from '../../insomnia-components';
 import { selectActiveResponse } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';

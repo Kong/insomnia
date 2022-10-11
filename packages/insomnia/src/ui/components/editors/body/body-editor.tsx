@@ -1,5 +1,4 @@
 import clone from 'clone';
-import { SvgIcon } from 'insomnia-components';
 import { lookup } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 
@@ -26,6 +25,7 @@ import {
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
+import { SvgIcon } from '../../../insomnia-components';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { EmptyStatePane } from '../../panes/empty-state-pane';

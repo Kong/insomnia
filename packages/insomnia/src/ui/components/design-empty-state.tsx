@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { Button, Dropdown, DropdownItem, SvgIcon } from 'insomnia-components';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -7,6 +6,7 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
+import { Button, Dropdown, DropdownItem, SvgIcon } from '../insomnia-components';
 import { selectActiveApiSpec } from '../redux/selectors';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';

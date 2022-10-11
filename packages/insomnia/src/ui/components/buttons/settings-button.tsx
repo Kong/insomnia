@@ -1,8 +1,8 @@
-import { CircleButton, SvgIcon } from 'insomnia-components';
 import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { CircleButton, SvgIcon } from '../../insomnia-components';
 import { selectSettings } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { showSettingsModal } from '../modals/settings-modal';

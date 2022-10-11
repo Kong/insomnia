@@ -1,6 +1,5 @@
 import { AxiosResponse } from 'axios';
 import type { GraphQLError } from 'graphql';
-import { Button } from 'insomnia-components';
 import React, { MouseEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
@@ -13,6 +12,7 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
+import { Button } from '../../../insomnia-components';
 import {
   COMMAND_GITHUB_OAUTH_AUTHENTICATE,
   newCommand,

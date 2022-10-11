@@ -1,4 +1,3 @@
-import { SvgIcon } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -10,6 +9,7 @@ import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
+import { SvgIcon } from '../../../insomnia-components';
 import { selectActiveEnvironment } from '../../../redux/selectors';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';

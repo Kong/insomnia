@@ -1,4 +1,3 @@
-import { Button } from 'insomnia-components';
 import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -23,6 +22,7 @@ import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { useActiveRequest } from '../../../hooks/use-active-request';
+import { Button } from '../../../insomnia-components';
 import { selectActiveOAuth2Token } from '../../../redux/selectors';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';

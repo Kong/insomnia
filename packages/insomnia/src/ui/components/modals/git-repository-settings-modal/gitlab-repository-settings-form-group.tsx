@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { Button } from 'insomnia-components';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
@@ -13,6 +12,7 @@ import {
   refreshToken,
   signOut,
 } from '../../../../sync/git/gitlab-oauth-provider';
+import { Button } from '../../../insomnia-components';
 import {
   COMMAND_GITLAB_OAUTH_AUTHENTICATE,
   newCommand,

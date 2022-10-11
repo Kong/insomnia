@@ -1,13 +1,5 @@
 import 'swagger-ui-react/swagger-ui.css';
 
-import {
-  Button,
-  CardContainer,
-  Dropdown,
-  DropdownDivider,
-  DropdownItem,
-  SvgIcon,
-} from 'insomnia-components';
 import React, { FC, useCallback, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -26,6 +18,14 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
+import {
+  Button,
+  CardContainer,
+  Dropdown,
+  DropdownDivider,
+  DropdownItem,
+  SvgIcon,
+} from '../insomnia-components';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
