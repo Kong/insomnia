@@ -564,9 +564,6 @@ Supported types are:
 
 - `oauth2`
   - NOT YET IMPLEMENTED!
-  - except for the implicit flow
-  - implemented using the Kong plugin `openid-connect`
-  - extended by: `x-kong-security-openid-connect`
 - `openIdConnect`
   - implemented using the Kong plugin `openid-connect`
   - extended by: `x-kong-security-openid-connect`
@@ -635,7 +632,7 @@ The `request-validator` plugin has three [parameters](https://docs.konghq.com/hu
 - `config.parameter_schema`
 - `config.allowed_content_types`
 
-If any of these are *not* specified in the `x-kong-plugin-request-validator.config` object in the OpenAPI spec, they will be generated if possible, otherwise will be configured to allow all body/parameter/content types.
+If any of these are _not_ specified in the `x-kong-plugin-request-validator.config` object in the OpenAPI spec, they will be generated if possible, otherwise will be configured to allow all body/parameter/content types.
 
 ```yaml
 paths:
