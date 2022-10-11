@@ -20,7 +20,6 @@ import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/init
 import { VCS } from '../../sync/vcs/vcs';
 import {
   Button,
-  CardContainer,
   Dropdown,
   DropdownDivider,
   DropdownItem,
@@ -46,6 +45,12 @@ const CreateButton = styled(Button)({
   '&&': {
     marginLeft: 'var(--padding-md)',
   },
+});
+
+const CardContainer = styled.div({
+  display: 'flex',
+  flexWrap: 'wrap',
+  paddingTop: 'var(--padding-md)',
 });
 
 interface Props {
