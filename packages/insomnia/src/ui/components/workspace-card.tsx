@@ -11,8 +11,8 @@ import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
 import { Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
-import { Card } from '../insomnia-components';
 import { Highlight } from './base/highlight';
+import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
 import { TimeFromNow } from './time-from-now';
 

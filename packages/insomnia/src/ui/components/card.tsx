@@ -1,7 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 
-import { IconEnum, SvgIcon } from './svg-icon';
+import { IconEnum, SvgIcon } from '../insomnia-components/svg-icon';
 
 export interface CardProps {
   docBranch?: ReactNode;
