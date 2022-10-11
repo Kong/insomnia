@@ -7,12 +7,14 @@ import { type MergeConflict } from '../../sync/types';
 import { VCS } from '../../sync/vcs/vcs';
 import { showModal } from '../components/modals/index';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+
+let vcsInstance: VCS | null = null;
+
 export function useVCS({
   workspaceId,
 }: {
   workspaceId?: string;
 }) {
-  const vcsInstanceRef = useRef<VCS | null>(null);
   const [vcs, setVCS] = useState<VCS | null>(null);
   const updateVCSLock = useRef<boolean | string>(false);
 
@@ -24,29 +26,33 @@ export function useVCS({
     // Set vcs to null while we update it
     setVCS(null);
 
-    if (!vcsInstanceRef.current) {
-      const driver = FileSystemDriver.create(getDataDirectory());
+    async function updateVCS() {
+      if (!vcsInstance) {
+        const driver = FileSystemDriver.create(getDataDirectory());
 
-      vcsInstanceRef.current = new VCS(driver, async conflicts => {
-        return new Promise(resolve => {
-          showModal(SyncMergeModal, {
-            conflicts,
-            handleDone: (conflicts: MergeConflict[]) => resolve(conflicts),
+        vcsInstance = new VCS(driver, async conflicts => {
+          return new Promise(resolve => {
+            showModal(SyncMergeModal, {
+              conflicts,
+              handleDone: (conflicts: MergeConflict[]) => resolve(conflicts),
+            });
           });
         });
-      });
+      }
+
+      if (workspaceId) {
+        await vcsInstance.switchProject(workspaceId);
+      } else {
+        await vcsInstance.clearBackendProject();
+      }
+
+      // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
+      if (updateVCSLock.current === lock) {
+        setVCS(vcsInstance);
+      }
     }
 
-    if (workspaceId) {
-      vcsInstanceRef.current.switchProject(workspaceId);
-    } else {
-      vcsInstanceRef.current.clearBackendProject();
-    }
-
-    // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
-    if (updateVCSLock.current === lock) {
-      setVCS(vcsInstanceRef.current);
-    }
+    updateVCS();
   }, [workspaceId]);
 
   return vcs;
