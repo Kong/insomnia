@@ -25,7 +25,6 @@ export interface Context {
       trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
     };
     loadRendererModules: () => Promise<{
-      insomniaComponents: any;
       ReactDOM: typeof ReactDOM;
       React: typeof React;
     }>;
@@ -42,7 +41,7 @@ export const documentActions = [
     action(context: Context, spec: Spec) {
       const root = document.createElement('div');
       const { analytics, axios, loadRendererModules } = context.__private;
-      loadRendererModules().then(({ React, ReactDOM, insomniaComponents }) => {
+      loadRendererModules().then(({ React, ReactDOM }) => {
         const { DeployToPortal } = getDeployToPortalComponent({ React });
 
         ReactDOM.render(
@@ -50,7 +49,6 @@ export const documentActions = [
             spec={spec}
             store={context.store}
             axios={axios}
-            insomniaComponents={insomniaComponents}
             trackSegmentEvent={analytics.trackSegmentEvent}
           />,
           root,
