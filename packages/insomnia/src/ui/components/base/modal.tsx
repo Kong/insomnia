@@ -19,7 +19,7 @@ export interface ModalProps {
 }
 
 export interface ModalHandle {
-  show: (options?: { onHide: () => void }) => void;
+  show: (options?: { onHide?: () => void }) => void;
   hide: () => void;
   toggle: () => void;
   isOpen: () => boolean;
