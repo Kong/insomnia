@@ -71,13 +71,6 @@ export const generateOpenIdConnectSecurityPlugin = (scheme: OpenAPIV3.OpenIdSecu
   return openIdConnectPlugin;
 };
 
-export const generateOAuth2SecurityPlugin = (): OpenIDConnectPlugin => ({
-  config: {
-    auth_methods: ['client_credentials'],
-  },
-  name: 'openid-connect',
-});
-
 export function generateSecurityPlugin(
   scheme: OA3SecurityScheme | null,
   args: string[],
@@ -97,10 +90,6 @@ export function generateSecurityPlugin(
 
     case 'openidconnect':
       plugin = generateOpenIdConnectSecurityPlugin(scheme as OpenAPIV3.OpenIdSecurityScheme, args);
-      break;
-
-    case 'oauth2':
-      plugin = generateOAuth2SecurityPlugin();
       break;
 
     default:
