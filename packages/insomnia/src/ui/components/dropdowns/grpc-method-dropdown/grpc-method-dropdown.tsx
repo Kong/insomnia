@@ -40,7 +40,7 @@ interface Props {
   methods: GrpcMethodDefinition[];
   selectedMethod?: GrpcMethodDefinition;
   handleChange: (arg0: string) => Promise<void>;
-  handleChangeProtoFile: (arg0: string) => Promise<void>;
+  handleChangeProtoFile: () => Promise<void>;
 }
 
 const NormalCase = styled.span`
@@ -93,8 +93,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           {groupedByPkg[pkgName].map(({ segments, type, fullPath }: GrpcMethodInfo) => (
             <DropdownItem
               key={fullPath}
-              onClick={handleChange}
-              value={fullPath}
+              onClick={() => handleChange(fullPath)}
               disabled={disabled}
               selected={fullPath === selectedMethod?.path}
             >

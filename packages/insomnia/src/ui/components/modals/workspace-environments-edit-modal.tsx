@@ -473,12 +473,11 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                   <i className="fa fa-plus-circle" />
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
-                <DropdownItem onClick={this._handleAddEnvironment} value={false}>
+                <DropdownItem onClick={() => this._handleAddEnvironment(false)}>
                   <i className="fa fa-eye" /> Environment
                 </DropdownItem>
                 <DropdownItem
-                  onClick={this._handleAddEnvironment}
-                  value={true}
+                  onClick={() => this._handleAddEnvironment(true)}
                   title="Environment will not be exported or synced"
                 >
                   <i className="fa fa-eye-slash" /> Private Environment
@@ -542,7 +541,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                       Color <i className="fa fa-caret-down" />
                     </DropdownButton>
 
-                    <DropdownItem value={selectedEnvironment} onClick={this._handleClickColorChange}>
+                    <DropdownItem onClick={() => this._handleClickColorChange(selectedEnvironment)}>
                       <i
                         className="fa fa-circle"
                         style={{
@@ -553,8 +552,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                     </DropdownItem>
 
                     <DropdownItem
-                      value={selectedEnvironment}
-                      onClick={this.unsetColor}
+                      onClick={() => this.unsetColor(selectedEnvironment)}
                       disabled={!selectedEnvironment.color}
                     >
                       <i className="fa fa-minus-circle" />

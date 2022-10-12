@@ -390,14 +390,13 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
     const isCurrentBranch = branch === currentBranch;
     return (
-      // @ts-expect-error -- TSCONVERSION
       <DropdownItem
         key={branch}
-        onClick={isCurrentBranch ? null : () => this._handleSwitchBranch(branch)}
+        onClick={isCurrentBranch ? undefined : () => this._handleSwitchBranch(branch)}
         className={classnames({
           bold: isCurrentBranch,
         })}
-        title={isCurrentBranch ? null : `Switch to "${branch}"`}
+        title={isCurrentBranch ? '' : `Switch to "${branch}"`}
       >
         {icon}
         {branch}

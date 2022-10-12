@@ -179,7 +179,7 @@ export class CodePromptModal extends PureComponent<{}, State> {
               </DropdownButton>
               <DropdownDivider>Editor Syntax</DropdownDivider>
               {Object.keys(MODES).map(mode => (
-                <DropdownItem key={mode} value={mode} onClick={this._handleChangeMode}>
+                <DropdownItem key={mode} onClick={() => this._handleChangeMode(mode)}>
                   <i className="fa fa-code" />
                   {MODES[mode]}
                 </DropdownItem>

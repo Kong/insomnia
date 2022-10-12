@@ -6,10 +6,9 @@ interface Props {
   title?: string;
   buttonClass?: React.ElementType;
   stayOpenAfterClick?: boolean;
-  value?: any;
   disabled?: boolean;
   selected?: boolean;
-  onClick?: Function;
+  onClick?: (event: React.MouseEvent<Element, MouseEvent>) => void;
   children: ReactNode;
   className?: string;
   color?: string;
@@ -61,11 +60,7 @@ export const DropdownItem = (props: Props) => {
         return;
       }
 
-      if (props.hasOwnProperty('value')) {
-        onClick(props.value, event);
-      } else {
-        onClick(event);
-      }
+      onClick(event);
     },
     ...otherProps,
   };

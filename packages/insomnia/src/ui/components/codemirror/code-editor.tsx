@@ -1266,7 +1266,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
             </DropdownButton>
             {filterHistory.reverse().map(filter => (
 
-              <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
+              <DropdownItem key={filter} onClick={() => this._handleFilterHistorySelect(filter)}>
                 {filter}
               </DropdownItem>
             ))}

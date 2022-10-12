@@ -77,6 +77,7 @@ export const SidebarHeader: FunctionComponent<SidebarHeaderProps> = ({
         {children || (
           <span
             onClick={handleFilterClick}
+            style={{ opacity: sectionVisible ? 0.6 : 0 }}
           >
             <SvgIcon icon={IconEnum.search} />
           </span>

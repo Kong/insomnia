@@ -87,8 +87,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
         <DropdownItem
           key={method}
           className={`http-method-${method}`}
-          onClick={onChange}
-          value={method}
+          onClick={() => onChange(method)}
         >
           {method}
         </DropdownItem>
@@ -97,7 +96,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
       {showGrpc && (
         <>
           <DropdownDivider />
-          <DropdownItem className="method-grpc" onClick={onChange} value={METHOD_GRPC}>
+          <DropdownItem className="method-grpc" onClick={() => onChange(METHOD_GRPC)}>
             {GRPC_LABEL}
           </DropdownItem>
         </>

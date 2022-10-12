@@ -78,8 +78,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {
         <DropdownItem
           key={p.id}
           stayOpenAfterClick
-          value={p}
-          onClick={pull}
+          onClick={() => pull(p)}
         >
           {pullingBackendProjects[p.id] ? (
             <i className="fa fa-refresh fa-spin" />

@@ -373,31 +373,28 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
             <i className="fa fa-caret-down" />
           </DropdownButton>
           <DropdownItem
-            onClick={this._handleTypeChange}
-            value={{
+            onClick={() => this._handleTypeChange({
               type: 'text',
               multiline: false,
-            }}
+            })}
           >
             Text
           </DropdownItem>
           {allowMultiline && (
             <DropdownItem
-              onClick={this._handleTypeChange}
-              value={{
+              onClick={() => this._handleTypeChange({
                 type: 'text',
                 multiline: true,
-              }}
+              })}
             >
               Text (Multi-line)
             </DropdownItem>
           )}
           {allowFile && (
             <DropdownItem
-              onClick={this._handleTypeChange}
-              value={{
+              onClick={() => this._handleTypeChange({
                 type: 'file',
-              }}
+              })}
             >
               File
             </DropdownItem>

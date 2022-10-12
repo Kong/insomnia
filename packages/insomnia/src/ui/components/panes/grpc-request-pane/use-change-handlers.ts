@@ -12,7 +12,7 @@ interface ChangeHandlers {
   body: (arg0: string) => Promise<void>;
   method: (arg0: string) => Promise<void>;
   metadata: (arg0: GrpcRequestHeader[]) => Promise<void>;
-  protoFile: (arg0: string) => Promise<void>;
+  protoFile: () => Promise<void>;
 }
 
 // This will create memoized change handlers for the url, body and method selection

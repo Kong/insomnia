@@ -25,7 +25,7 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
       <i className="fa fa-caret-down space-left" />
     </DropdownButton>
     <DropdownDivider>Preview Mode</DropdownDivider>
-    {PREVIEW_MODES.map(mode => <DropdownItem key={mode} onClick={setPreviewMode} value={mode}>
+    {PREVIEW_MODES.map(mode => <DropdownItem key={mode} onClick={() => setPreviewMode(mode)}>
       {previewMode === mode ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
       {getPreviewModeName(mode, true)}
     </DropdownItem>)}

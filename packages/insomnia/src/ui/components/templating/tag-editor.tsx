@@ -696,20 +696,18 @@ class TagEditorInternal extends PureComponent<Props, State> {
               </DropdownButton>
               <DropdownDivider>Input Type</DropdownDivider>
               <DropdownItem
-                value={{
+                onClick={() => this._handleChangeArgVariable({
                   variable: false,
                   argIndex,
-                }}
-                onClick={this._handleChangeArgVariable}
+                })}
               >
                 <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
               </DropdownItem>
               <DropdownItem
-                value={{
+                onClick={() => this._handleChangeArgVariable({
                   variable: true,
                   argIndex,
-                }}
-                onClick={this._handleChangeArgVariable}
+                })}
               >
                 <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
               </DropdownItem>

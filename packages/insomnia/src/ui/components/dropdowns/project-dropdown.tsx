@@ -77,8 +77,7 @@ const ProjectDropdownItem: FC<{
   return (
     <DropdownItem
       key={_id}
-      value={_id}
-      onClick={setActive}
+      onClick={() => setActive(_id)}
     >
       <Item>
 

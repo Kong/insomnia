@@ -40,8 +40,7 @@ export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect
       </DropdownButton>
       {DASHBOARD_SORT_ORDERS.map(order => (
         <DropdownItem
-          value={order}
-          onClick={onSelect}
+          onClick={() => onSelect(order)}
           key={order}
         >
           <Item>

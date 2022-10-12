@@ -15,7 +15,7 @@ import { RenderedText } from './rendered-text';
 export interface CookieListProps {
   handleCookieAdd: (cookie: Cookie) => void;
   handleCookieDelete: (cookie: Cookie) => void;
-  handleDeleteAll: Function;
+  handleDeleteAll: () => void;
   cookies: Cookie[];
   newCookieDomainName: string;
 }
@@ -46,7 +46,7 @@ const CookieRow: FC<{
     <td className="force-wrap wide">
       <RenderedText>{cookieString || ''}</RenderedText>
     </td>
-    <td onClick={() => {}} className="text-right no-wrap">
+    <td onClick={() => { }} className="text-right no-wrap">
       <button
         className="btn btn--super-compact btn--outlined"
         onClick={handleShowModal}

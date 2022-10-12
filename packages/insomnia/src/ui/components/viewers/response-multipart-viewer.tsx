@@ -176,7 +176,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
               <i className="fa fa-caret-down fa--skinny space-left" />
             </DropdownButton>
             {parts.map(part => (
-              <DropdownItem key={part.id} value={part} onClick={selectPart}>
+              <DropdownItem key={part.id} onClick={() => selectPart(part)}>
                 {selectedPart?.id === part.id ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
                 {part.title}
               </DropdownItem>

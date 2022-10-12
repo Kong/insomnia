@@ -123,7 +123,7 @@ const AuthItem: FC<{
   isCurrent: (type: AuthType) => boolean;
   onClick: (type: AuthType) => void;
 }> = ({ type, nameOverride, isCurrent, onClick }) => (
-  <DropdownItem onClick={onClick} value={type}>
+  <DropdownItem onClick={() => onClick(type)}>
     {<i className={`fa fa-${isCurrent(type) ? 'check' : 'empty'}`} />}{' '}
     {nameOverride || getAuthTypeName(type, true)}
   </DropdownItem>
