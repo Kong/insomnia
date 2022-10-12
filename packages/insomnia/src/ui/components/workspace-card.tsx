@@ -1,4 +1,3 @@
-import { Card } from 'insomnia-components';
 import React, { Fragment } from 'react';
 import { FC } from 'react';
 
@@ -13,6 +12,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { Highlight } from './base/highlight';
+import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
 import { TimeFromNow } from './time-from-now';
 

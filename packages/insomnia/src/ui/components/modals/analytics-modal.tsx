@@ -1,4 +1,3 @@
-import { Button } from 'insomnia-components';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -9,6 +8,7 @@ import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';
 import { selectSettings } from '../../redux/selectors';
 import { type ModalHandle, Modal } from '../base/modal';
+import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
   position: 'relative',

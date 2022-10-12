@@ -19,7 +19,6 @@ interface Props {
     };
     status: number;
   }>;
-  insomniaComponents: any;
   trackSegmentEvent: Context['__private']['analytics']['trackSegmentEvent'];
   store: Context['store'];
   spec: Spec;
@@ -266,9 +265,6 @@ export function getDeployToPortalComponent(options: {
 
     render() {
       const {
-        insomniaComponents: { Button },
-      } = this.props;
-      const {
         kongPortalApiUrl,
         kongSpecFileName,
         kongPortalUserWorkspace,
@@ -351,19 +347,19 @@ export function getDeployToPortalComponent(options: {
               </label>
             </div>
             <div className="row margin-top">
-              <Button
-                bg="surprise"
+              <button
                 type="submit"
                 disabled={!connectIsEnabled}
                 style={{
                   marginRight: 'var(--padding-sm)',
+                  color: 'var(--color-surprise)',
                 }}
               >
                 {isLoading ? 'Connecting...' : 'Connect to Kong'}
-              </Button>
-              <Button data-close-modal="true" type="button">
+              </button>
+              <button data-close-modal="true" type="button">
                 Cancel
-              </Button>
+              </button>
             </div>
           </form>
         );
@@ -411,19 +407,19 @@ export function getDeployToPortalComponent(options: {
               </label>
             </div>
             <div className="row margin-top">
-              <Button
-                bg="surprise"
+              <button
                 type="submit"
                 style={{
                   marginRight: 'var(--padding-sm)',
+                  color: 'var(--color-surprise)',
                 }}
                 disabled={!uploadIsEnabled}
               >
                 {isLoading ? 'Uploading...' : 'Upload To Dev Portal'}
-              </Button>
-              <Button onClick={this._handleEditKongConnection} type="button">
+              </button>
+              <button onClick={this._handleEditKongConnection} type="button">
                 Go Back
-              </Button>
+              </button>
             </div>
           </form>
         );
@@ -439,7 +435,7 @@ export function getDeployToPortalComponent(options: {
               )}
             </p>
             <div>
-              <Button data-close-modal="true">Close</Button>
+              <button data-close-modal="true">Close</button>
             </div>
           </div>
         );
@@ -453,16 +449,16 @@ export function getDeployToPortalComponent(options: {
               <strong>{kongPortalDeployError}</strong>
             </p>
             <div className="row margin-top">
-              <Button
-                bg="surprise"
+              <button
                 onClick={() => this._handleUploadSpec(false)}
                 style={{
                   marginRight: 'var(--padding-sm)',
+                  color: 'var(--color-surprise)',
                 }}
                 disabled={!uploadIsEnabled}
               >
                 Try Again
-              </Button>
+              </button>
               <button onClick={this._handleReturnToUpload}>Go Back</button>
             </div>
           </div>
@@ -480,17 +476,17 @@ export function getDeployToPortalComponent(options: {
               overwrite the existing spec.
             </p>
             <div className="row margin-top">
-              <Button
-                bg="surprise"
+              <button
                 onClick={() => this._handleUploadSpec(true)}
                 style={{
                   marginRight: 'var(--padding-sm)',
+                  color: 'var(--color-surprise)',
                 }}
                 disabled={!uploadIsEnabled}
               >
                 Overwrite Existing Spec
-              </Button>
-              <Button onClick={this._handleReturnToUpload}>Go Back</Button>
+              </button>
+              <button onClick={this._handleReturnToUpload}>Go Back</button>
             </div>
           </div>
         );

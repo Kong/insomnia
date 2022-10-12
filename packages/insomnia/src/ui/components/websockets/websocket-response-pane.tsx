@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { SvgIcon } from 'insomnia-components';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -11,11 +10,11 @@ import { WebSocketEvent } from '../../../main/network/websocket';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
-import { Button } from '../base/button';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { EmptyStatePane } from '../panes/empty-state-pane';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { SvgIcon } from '../svg-icon';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
@@ -79,7 +78,7 @@ const EventSearchInput = styled.input({
   },
 });
 
-const PaddedButton = styled(Button)({
+const PaddedButton = styled('button')({
   padding: 'var(--padding-sm)',
 });
 
@@ -263,7 +262,9 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
                         const lastEvent = events[0];
                         setClearEventsBefore(lastEvent.timestamp);
                       }}
-                    ><SvgIcon icon='prohibited' /></PaddedButton>
+                    >
+                      <SvgIcon icon='prohibited' />
+                    </PaddedButton>
                   </div>
                   {Boolean(events?.length) && (
                     <EventLogView

@@ -1,4 +1,3 @@
-import { Button } from 'insomnia-components';
 import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -27,6 +26,7 @@ import { selectActiveOAuth2Token } from '../../../redux/selectors';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
+import { Button } from '../../themed-button';
 import { TimeFromNow } from '../../time-from-now';
 import { AuthAccordion } from './components/auth-accordion';
 import { AuthInputRow } from './components/auth-input-row';

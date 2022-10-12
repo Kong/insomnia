@@ -66,7 +66,6 @@ export interface PrivateProperties {
   axios: typeof axios;
   analytics: typeof analytics;
   loadRendererModules: () => Promise<{
-    insomniaComponents: any;
     ReactDOM: typeof ReactDOM;
     React: typeof React;
   } | {}>;
@@ -226,12 +225,10 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
         const ReactDOM = await import('react-dom');
         const React = await import('react');
-        const insomniaComponents = await import('insomnia-components');
 
         return {
           ReactDOM,
           React,
-          insomniaComponents,
         };
       },
     },

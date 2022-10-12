@@ -1,9 +1,10 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { act, fireEvent, render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
+import { getDropdownContainer } from '../../../../../__jest__/dropdown-container';
 import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
 import { GrpcMethodDropdown } from '../grpc-method-dropdown';
 
@@ -22,6 +23,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={handleChange}
         handleChangeProtoFile={jest.fn()}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
@@ -40,6 +42,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={jest.fn()}
         handleChangeProtoFile={handleChangeProtoFile}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
@@ -58,6 +61,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={jest.fn()}
         handleChangeProtoFile={handleChangeProtoFile}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
@@ -69,23 +73,16 @@ describe('<GrpcMethodDropdown />', () => {
   it('should send selected method path to handle change', async () => {
     const handleChange = jest.fn();
     const method = builder.path('/service/method').build();
-    const { findByRole, findByText } = render(
+    const { findByText } = render(
       <GrpcMethodDropdown
         methods={[method]}
         handleChange={handleChange}
         handleChangeProtoFile={jest.fn()}
       />,
+      { container: getDropdownContainer() }
     );
 
     const dropdownTrigger = await findByText('Select Method');
-
-    // Hover over dropdown trigger to show the method path as a tooltip
-    await userEvent.hover(dropdownTrigger);
-
-    await act(async () => {
-      const tooltip = await findByRole(/tooltip/);
-      expect(tooltip).toBeInTheDocument();
-    });
 
     // Open dropdown
     await userEvent.click(dropdownTrigger);
@@ -94,7 +91,7 @@ describe('<GrpcMethodDropdown />', () => {
     const dropdownItem = await findByText(method.path);
     await userEvent.click(dropdownItem);
 
-    expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
+    expect(handleChange).toHaveBeenCalledWith(method.path);
 
   });
 
@@ -107,12 +104,13 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={handleChange}
         handleChangeProtoFile={jest.fn()}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
     fireEvent.click(getByRole('button'));
     expect(queryByText('pkg: package')).toBeTruthy();
     fireEvent.click(getByText('/service/method'));
-    expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
+    expect(handleChange).toHaveBeenCalledWith(method.path);
   });
 });

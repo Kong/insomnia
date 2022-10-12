@@ -37,7 +37,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit --project tsconfig.build.json",
-    "type-check:watch": "npm run type-check -- --watch"
+    "type-check:watch": "npm run type-check -- --watch",
+    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.5-2",
@@ -177,7 +178,6 @@
     "graphql": "^16.3.0",
     "graphql-language-service": "^4.1.5",
     "highlight.js": "^11.5.1",
-    "insomnia-components": "3.6.1-beta.0",
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.0.2",
     "jest-mock": "^28.0.2",

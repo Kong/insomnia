@@ -85,7 +85,7 @@ const MimeTypeItem: FC<{
   const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
   const iconClass = mimeType === contentTypeFallback ? 'fa-check' : 'fa-empty';
   return (
-    <DropdownItem onClick={handleChangeMimeType} value={mimeType}>
+    <DropdownItem onClick={() => handleChangeMimeType(mimeType)}>
       <i className={`fa ${iconClass}`} />
       {forcedName || getContentTypeName(mimeType, true)}
     </DropdownItem>

@@ -9,7 +9,6 @@ import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import { Button, ButtonProps } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -41,9 +40,9 @@ interface State {
 interface SidebarListItemProps extends Pick<Props, 'activeEnvironmentId'> {
   changeEnvironmentName: (environment: Environment, name?: string) => void;
   environment: Environment;
-  handleActivateEnvironment: ButtonProps<Environment>['onClick'];
+  handleActivateEnvironment: (e: Environment) => void;
   selectedEnvironment: Environment | null;
-  showEnvironment: ButtonProps<Environment>['onClick'];
+  showEnvironment: (e: Environment) => void;
 }
 
 const SidebarListItem = SortableElement<SidebarListItemProps>(({
@@ -62,7 +61,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
   });
   return (
     <li key={environment._id} className={classes}>
-      <Button onClick={showEnvironment} value={environment}>
+      <button onClick={() => showEnvironment(environment)}>
         <i className="fa fa-drag-handle drag-handle" />
         {environment.color ? (
           <i
@@ -86,14 +85,14 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
           onSubmit={name => changeEnvironmentName(environment, name)}
           value={environment.name}
         />
-      </Button>
+      </button>
       <div className="env-status">
         {environment._id === activeEnvironmentId ? (
           <i className="fa fa-square active" title="Active Environment" />
         ) : (
-          <Button onClick={handleActivateEnvironment} value={environment}>
+          <button onClick={() => handleActivateEnvironment(environment)}>
             <i className="fa fa-square-o inactive" title="Click to activate Environment" />
-          </Button>
+          </button>
         )}
       </div>
     </li>
@@ -220,7 +219,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     await this._load(workspace, environment);
   }
 
-  _handleShowEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  _handleShowEnvironment(environment?: Environment) {
     // Don't allow switching if the current one has errors
     if (this.environmentEditorRef && !this.environmentEditorRef.isValid()) {
       return;
@@ -234,7 +233,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._load(workspace, environment);
   }
 
-  async _handleDuplicateEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  async _handleDuplicateEnvironment(environment?: Environment) {
     const { workspace } = this.state;
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -242,7 +241,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     await this._load(workspace, newEnvironment);
   }
 
-  async _handleDeleteEnvironment(_event: React.MouseEvent, environment?: Environment) {
+  async _handleDeleteEnvironment(environment?: Environment) {
     const { handleSetActiveEnvironment, activeEnvironmentId } = this.props;
     const { rootEnvironment, workspace } = this.state;
 
@@ -416,7 +415,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     this._handleChangeEnvironmentColor(environment, null);
   }
 
-  _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (event, environment) => {
+  _handleActivateEnvironment = (environment: Environment) => {
     const { handleSetActiveEnvironment, activeEnvironmentId } = this.props;
 
     if (!environment) {
@@ -428,7 +427,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     }
 
     handleSetActiveEnvironment(environment._id);
-    this._handleShowEnvironment(event, environment);
+    this._handleShowEnvironment(environment);
   };
 
   render() {
@@ -458,13 +457,13 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                 'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
               })}
             >
-              <Button onClick={this._handleShowEnvironment} value={rootEnvironment ?? undefined}>
+              <button onClick={() => this._handleShowEnvironment(rootEnvironment ?? undefined)}>
                 {ROOT_ENVIRONMENT_NAME}
                 <HelpTooltip className="space-left">
                   The variables in this environment are always available, regardless of which
                   sub-environment is active. Useful for storing default or fallback values.
                 </HelpTooltip>
-              </Button>
+              </button>
             </li>
             <div className="pad env-modal__sidebar-heading">
               <h3 className="no-margin">Sub Environments</h3>
@@ -473,12 +472,11 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                   <i className="fa fa-plus-circle" />
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
-                <DropdownItem onClick={this._handleAddEnvironment} value={false}>
+                <DropdownItem onClick={() => this._handleAddEnvironment(false)}>
                   <i className="fa fa-eye" /> Environment
                 </DropdownItem>
                 <DropdownItem
-                  onClick={this._handleAddEnvironment}
-                  value={true}
+                  onClick={() => this._handleAddEnvironment(true)}
                   title="Environment will not be exported or synced"
                 >
                   <i className="fa fa-eye-slash" /> Private Environment
@@ -542,7 +540,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                       Color <i className="fa fa-caret-down" />
                     </DropdownButton>
 
-                    <DropdownItem value={selectedEnvironment} onClick={this._handleClickColorChange}>
+                    <DropdownItem onClick={() => this._handleClickColorChange(selectedEnvironment)}>
                       <i
                         className="fa fa-circle"
                         style={{
@@ -553,8 +551,7 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                     </DropdownItem>
 
                     <DropdownItem
-                      value={selectedEnvironment}
-                      onClick={this.unsetColor}
+                      onClick={() => this.unsetColor(selectedEnvironment)}
                       disabled={!selectedEnvironment.color}
                     >
                       <i className="fa fa-minus-circle" />
@@ -562,17 +559,15 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
                     </DropdownItem>
                   </Dropdown>
 
-                  <Button
-                    value={selectedEnvironment}
-                    onClick={this._handleDuplicateEnvironment}
+                  <button
+                    onClick={() => this._handleDuplicateEnvironment(selectedEnvironment)}
                     className="btn btn--clicky space-right"
                   >
                     <i className="fa fa-copy" /> Duplicate
-                  </Button>
+                  </button>
 
                   <PromptButton
-                    value={selectedEnvironment}
-                    onClick={this._handleDeleteEnvironment}
+                    onClick={() => this._handleDeleteEnvironment(selectedEnvironment)}
                     className="btn btn--clicky"
                   >
                     <i className="fa fa-trash-o" />

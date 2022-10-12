@@ -17,7 +17,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
   });
 
   await page.locator('[data-testid="project"]').click();
-  await page.locator('text=Create').click();
+  const projectView = page.locator('#wrapper');
+  await projectView.locator('text=Create').click();
 
   const text = await loadFixture('oauth.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);

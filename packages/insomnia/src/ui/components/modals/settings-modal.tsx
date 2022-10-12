@@ -5,7 +5,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as session from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { selectSettings } from '../../redux/selectors';
-import { Button } from '../base/button';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -56,22 +55,22 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
         <Tabs className="react-tabs" defaultIndex={currentTabIndex ?? undefined}>
           <TabList>
             <Tab tabIndex="-1">
-              <Button value="General">General</Button>
+              <button value="General">General</button>
             </Tab>
             <Tab tabIndex="-1">
-              <Button value="Import/Export">Data</Button>
+              <button value="Import/Export">Data</button>
             </Tab>
             <Tab tabIndex="-1">
-              <Button value="Themes">Themes</Button>
+              <button value="Themes">Themes</button>
             </Tab>
             <Tab tabIndex="-1">
-              <Button value="Shortcuts">Keyboard</Button>
+              <button value="Shortcuts">Keyboard</button>
             </Tab>
             <Tab tabIndex="-1">
-              <Button value="Account">Account</Button>
+              <button value="Account">Account</button>
             </Tab>
             <Tab tabIndex="-1">
-              <Button value="Plugins">Plugins</Button>
+              <button value="Plugins">Plugins</button>
             </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel pad scrollable">

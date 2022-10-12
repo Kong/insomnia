@@ -179,8 +179,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       {actionPlugins.map((plugin: RequestAction) => (
         <DropdownItem
           key={`${plugin.plugin.name}::${plugin.label}`}
-          value={plugin}
-          onClick={handlePluginClick}
+          onClick={() => handlePluginClick(plugin)}
           stayOpenAfterClick
         >
           {loadingActions[plugin.label] ? (

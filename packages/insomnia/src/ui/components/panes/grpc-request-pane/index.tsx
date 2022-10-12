@@ -1,4 +1,3 @@
-import { SvgIcon } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -17,6 +16,7 @@ import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-me
 import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
+import { SvgIcon } from '../../svg-icon';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';

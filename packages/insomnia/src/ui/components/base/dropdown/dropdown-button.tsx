@@ -1,15 +1,17 @@
-import React, { ButtonHTMLAttributes, forwardRef, ReactNode, useImperativeHandle, useRef } from 'react';
+import React, { ButtonHTMLAttributes, createElement, forwardRef, ReactNode, useImperativeHandle, useRef } from 'react';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
+  children?: ReactNode;
   noWrap?: boolean;
   className?: string;
+  buttonClass?: React.ElementType;
 }
 export const DROPDOWN_BUTTON_DISPLAY_NAME = 'DropdownButton';
 export interface DropdownButtonHandle {
   blur(): void;
 }
-const DropdownButtonForwarded = forwardRef<DropdownButtonHandle, Props>(({ noWrap, children, ...otherProps }, ref) => {
+
+export const DropdownButton = forwardRef<DropdownButtonHandle, Props>(({ noWrap, children, buttonClass = 'button', ...otherProps }, ref) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -22,12 +24,13 @@ const DropdownButtonForwarded = forwardRef<DropdownButtonHandle, Props>(({ noWra
     return <>{children}</>;
   }
 
-  return (
-    <button ref={buttonRef} type="button" {...otherProps}>
-      {children}
-    </button>
-  );
+  return createElement(buttonClass, {
+    ref: buttonRef,
+    type: 'button',
+    ...otherProps,
+  }, children);
 });
-DropdownButtonForwarded.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
 
-export const DropdownButton = Object.assign(DropdownButtonForwarded, { name: DROPDOWN_BUTTON_DISPLAY_NAME });
+DropdownButton.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
+// @ts-expect-error -- This is currently a hack for dropdowns to recognize this component
+DropdownButton.name = DROPDOWN_BUTTON_DISPLAY_NAME;

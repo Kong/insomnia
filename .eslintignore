@@ -14,5 +14,4 @@ screenshots/
 **/__snapshots__/
 **/dist/
 **/.cache/
-**/svgr/
 *.md

@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Button } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
@@ -12,6 +11,7 @@ import { selectActiveWorkspace } from '../../redux/selectors';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
+import { Button } from '../themed-button';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 

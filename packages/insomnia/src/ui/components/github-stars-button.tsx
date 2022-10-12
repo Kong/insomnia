@@ -1,4 +1,3 @@
-import { SvgIcon } from 'insomnia-components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
@@ -6,6 +5,7 @@ import styled from 'styled-components';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { selectSettings } from '../redux/selectors';
+import { SvgIcon } from './svg-icon';
 
 const Wrapper = styled.div({
   fontSize: 'var(--font-size-xs)',

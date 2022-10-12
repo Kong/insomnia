@@ -3,7 +3,6 @@ import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { Button } from '../base/button';
 import { GRPCEditor } from '../editors/grpc-editor';
 
 interface Message {
@@ -59,20 +58,20 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
         {showActions && (
           <>
             {handleStream && (
-              <Button
+              <button
                 className="btn btn--compact btn--clicky margin-sm bg-default"
                 onClick={handleStream}
               >
                 Stream <i className="fa fa-plus" />
-              </Button>
+              </button>
             )}
             {handleCommit && (
-              <Button
+              <button
                 className="btn btn--compact btn--clicky margin-sm bg-surprise"
                 onClick={handleCommit}
               >
                 Commit <i className="fa fa-arrow-right" />
-              </Button>
+              </button>
             )}
           </>
         )}

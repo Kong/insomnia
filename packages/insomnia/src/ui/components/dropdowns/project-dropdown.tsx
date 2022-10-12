@@ -1,6 +1,5 @@
-import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps } from 'insomnia-components';
 import { partition } from 'ramda';
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -11,8 +10,13 @@ import { useRemoteProjects } from '../../hooks/project';
 import { setActiveProject } from '../../redux/modules/global';
 import { createProject } from '../../redux/modules/project';
 import { selectActiveProject, selectProjects } from '../../redux/selectors';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals';
 import ProjectSettingsModal from '../modals/project-settings-modal';
+import { SvgIcon, SvgIconProps } from '../svg-icon';
 import { Tooltip } from '../tooltip';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
@@ -38,6 +42,12 @@ const StyledTooltip = styled(Tooltip)({
   '&&': {
     ...tooltipIconPlacementHack,
   },
+});
+
+const Item = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-sm)',
 });
 
 const TooltipIcon = ({ message, icon }: { message: string; icon: SvgIconProps['icon'] }) => (
@@ -67,12 +77,14 @@ const ProjectDropdownItem: FC<{
   return (
     <DropdownItem
       key={_id}
-      icon={isDefault ? home : isRemote ? remoteProject : localProject}
-      right={isActive && <Checkmark icon="checkmark" />}
-      value={_id}
-      onClick={setActive}
+      onClick={() => setActive(_id)}
     >
-      {name}
+      <Item>
+
+        {isDefault ? home : isRemote ? remoteProject : localProject}
+        {name}
+        {isActive && <Checkmark icon="checkmark" />}
+      </Item>
     </DropdownItem>
   );
 };
@@ -89,14 +101,6 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
   const createNew = useCallback(() => dispatch(createProject()), [dispatch]);
   const showSettings = useCallback(() => showModal(ProjectSettingsModal), []);
 
-  // dropdown button
-  const button = useMemo(() => (
-    <button type="button" className="row" title={activeProject.name}>
-      {activeProject.name}
-      <i className="fa fa-caret-down space-left" />
-    </button>
-  ), [activeProject]);
-
   const renderProject = useCallback((project: Project) => (
     <ProjectDropdownItem
       key={project._id}
@@ -109,20 +113,24 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
   const [defaultProjects, userProjects] = partition(isDefaultProject, projects);
 
   return (
-    <Dropdown renderButton={button} onOpen={refresh}>
+    <Dropdown onOpen={refresh}>
+      <DropdownButton className="row" title={activeProject.name}>
+        {activeProject.name}
+        <i className="fa fa-caret-down space-left" />
+      </DropdownButton>
       {defaultProjects.map(renderProject)}
       <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
       {userProjects.map(renderProject)}
       {projectHasSettings(activeProject) && <>
         <DropdownDivider />
-        <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
-          {strings.project.singular} Settings
+        <DropdownItem onClick={showSettings}>
+          <Item><StyledSvgIcon icon="gear" />{strings.project.singular} Settings</Item>
         </DropdownItem>
       </>}
 
       <DropdownDivider />
-      <DropdownItem icon={<StyledSvgIcon icon="plus" />} onClick={createNew}>
-        Create new {strings.project.singular.toLowerCase()}
+      <DropdownItem onClick={createNew}>
+        <Item><StyledSvgIcon icon="plus" /> Create new {strings.project.singular.toLowerCase()}</Item>
       </DropdownItem>
     </Dropdown>
   );

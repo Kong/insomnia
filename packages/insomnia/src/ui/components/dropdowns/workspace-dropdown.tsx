@@ -150,8 +150,7 @@ export const WorkspaceDropdown: FC = () => {
           {configGeneratorPlugins.map((p: ConfigGenerator) => (
             <DropdownItem
               key="generateConfig"
-              onClick={handleGenerateConfig}
-              value={p.label}
+              onClick={() => handleGenerateConfig(p.label)}
             >
               <i className="fa fa-code" />
               {p.label}

@@ -1,8 +1,8 @@
-import { AsyncButton, Button } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
 
 import type { ProtoFile } from '../../../models/proto-file';
 import { Editable } from '../base/editable';
+import { AsyncButton, Button } from '../themed-button';
 import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,

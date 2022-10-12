@@ -18,10 +18,10 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }
         }[previewMode]}
         <i className="fa fa-caret-down space-left" />
       </DropdownButton>
-      <DropdownItem onClick={onClick} value={CONTENT_TYPE_JSON}>
+      <DropdownItem onClick={() => onClick(CONTENT_TYPE_JSON)} >
         JSON
       </DropdownItem>
-      <DropdownItem onClick={onClick} value={CONTENT_TYPE_PLAINTEXT}>
+      <DropdownItem onClick={() => onClick(CONTENT_TYPE_PLAINTEXT)} >
         Raw
       </DropdownItem>
     </Dropdown>

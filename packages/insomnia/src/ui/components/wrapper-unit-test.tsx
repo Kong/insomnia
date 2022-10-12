@@ -1,13 +1,4 @@
 import classnames from 'classnames';
-import {
-  Button,
-  Dropdown,
-  DropdownItem,
-  ListGroup,
-  SvgIcon,
-  UnitTestItem,
-  UnitTestResultItem,
-} from 'insomnia-components';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { isEmpty } from 'ramda';
 import React, { FC, useCallback, useState } from 'react';
@@ -24,14 +15,20 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownItem } from './base/dropdown/dropdown-item';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
+import { ListGroup, UnitTestItem, UnitTestResultItem } from './list-group';
 import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
 import { PageLayout } from './page-layout';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import type { Child } from './sidebar/sidebar-children';
+import { SvgIcon } from './svg-icon';
+import { Button } from './themed-button';
 import { UnitTestEditable } from './unit-test-editable';
 import { WorkspacePageHeader } from './workspace-page-header';
 
@@ -312,12 +309,10 @@ const WrapperUnitTest: FC = () => {
                   </button>
                   <Dropdown
                     right
-                    renderButton={() => (
-                      <button className="unit-tests__sidebar__action">
-                        <i className="fa fa-caret-down" />
-                      </button>
-                    )}
                   >
+                    <DropdownButton className="unit-tests__sidebar__action">
+                      <i className="fa fa-caret-down" />
+                    </DropdownButton>
                     <DropdownItem
                       stayOpenAfterClick
                       onClick={handleRunTests}

@@ -42,20 +42,20 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
         <i className="fa fa-caret-down" />
       </DropdownButton>
 
-      <DropdownItem value="HTTP" onClick={create}>
+      <DropdownItem onClick={() => create('HTTP')}>
         <i className="fa fa-plus-circle" />HTTP Request
         <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
       </DropdownItem>
 
-      <DropdownItem value="GraphQL" onClick={create}>
+      <DropdownItem onClick={() => create('GraphQL')}>
         <i className="fa fa-plus-circle" />GraphQL Request
       </DropdownItem>
 
-      <DropdownItem value="gRPC" onClick={create}>
+      <DropdownItem onClick={() => create('gRPC')}>
         <i className="fa fa-plus-circle" />gRPC Request
       </DropdownItem>
 
-      <DropdownItem value="WebSocket" onClick={create}>
+      <DropdownItem onClick={() => create('WebSocket')}>
         <i className="fa fa-plus-circle" />WebSocket Request
       </DropdownItem>
 

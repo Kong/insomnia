@@ -1,5 +1,4 @@
 import { IRuleResult } from '@stoplight/spectral-core';
-import { Notice, NoticeTable } from 'insomnia-components';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -16,6 +15,7 @@ import { selectActiveApiSpec } from '../redux/selectors';
 import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
 import { DesignEmptyState } from './design-empty-state';
 import { ErrorBoundary } from './error-boundary';
+import { Notice, NoticeTable } from './notice-table';
 import { PageLayout } from './page-layout';
 import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
 import { WorkspacePageHeader } from './workspace-page-header';

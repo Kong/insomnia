@@ -1,8 +1,11 @@
-import { Button, Dropdown, DropdownItem } from 'insomnia-components';
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { superFaint, ultraFaint } from '../../css/css-in-js';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
   maxHeight: '100%',
@@ -73,34 +76,31 @@ export const WrapperHomeEmptyStatePane: FC<Props> = ({ createRequestCollection, 
           </Button>
         </div>
         <Divider>or</Divider>
-        <Dropdown
-          style={{ alignSelf: 'stretch' }}
-          renderButton={<Button style={{ width: '100%' }}>
+        <Dropdown >
+          <DropdownButton buttonClass={Button} style={{ width: '100%', alignSelf: 'stretch' }}>
             Import From <i className="fa fa-caret-down pad-left-sm" />
-          </Button>}
-        >
+          </DropdownButton>
           <DropdownItem
-            icon={<i className="fa fa-plus" />}
             onClick={importFromFile}
-          >
+          ><i className="fa fa-plus" />
             File
           </DropdownItem>
           <DropdownItem
-            icon={<i className="fa fa-link" />}
             onClick={importFromURL}
           >
+            <i className="fa fa-link" />
             URL
           </DropdownItem>
           <DropdownItem
-            icon={<i className="fa fa-clipboard" />}
             onClick={importFromClipboard}
           >
+            <i className="fa fa-clipboard" />
             Clipboard
           </DropdownItem>
           <DropdownItem
-            icon={<i className="fa fa-code-fork" />}
             onClick={importFromGit}
           >
+            <i className="fa fa-code-fork" />
             Git Clone
           </DropdownItem>
         </Dropdown>

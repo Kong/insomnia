@@ -1,6 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { PluginConfig } from 'insomnia-common';
-import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
 import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
 
@@ -23,6 +22,7 @@ import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
+import { Button } from '../themed-button';
 
 interface Props {
   settings: Settings;
@@ -187,13 +187,12 @@ export class Plugins extends PureComponent<Props, State> {
 
   renderToggleSwitch(plugin: Plugin) {
     return (
-      <ToggleSwitch
-        // @ts-expect-error -- TSCONVERSION should this be labelClassName or switchClassName?
-        className="valign-middle"
+      <input
+        type="checkbox"
         checked={!plugin.config.disabled}
         disabled={this.state.isRefreshingPlugins}
-        onChange={async checked => {
-          await this._togglePluginEnabled(plugin.name, checked, plugin.config);
+        onChange={event => {
+          this._togglePluginEnabled(plugin.name, event.target.checked, plugin.config);
         }}
       />
     );

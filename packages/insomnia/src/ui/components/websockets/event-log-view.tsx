@@ -1,11 +1,11 @@
 import { format } from 'date-fns';
-import { SvgIcon, SvgIconProps } from 'insomnia-components';
 import React, { FC, useRef } from 'react';
 import { useMeasure } from 'react-use';
 import { useVirtual } from 'react-virtual';
 import styled from 'styled-components';
 
 import { WebSocketEvent } from '../../../main/network/websocket';
+import { SvgIcon, SvgIconProps } from '../svg-icon';
 
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
   const date = format(time, 'HH:mm:ss');

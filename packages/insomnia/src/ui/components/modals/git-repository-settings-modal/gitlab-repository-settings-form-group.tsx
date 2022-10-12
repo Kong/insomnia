@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { Button } from 'insomnia-components';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
@@ -17,6 +16,7 @@ import {
   COMMAND_GITLAB_OAUTH_AUTHENTICATE,
   newCommand,
 } from '../../../redux/modules/global';
+import { Button } from '../../themed-button';
 import { showAlert } from '..';
 
 interface Props {

@@ -8,12 +8,9 @@ import React, {
   useState,
 } from 'react';
 
-import { Button } from './button';
-
 type PromptStateEnum = 'default' | 'ask' | 'done';
 
 interface Props<T> {
-  value?: T;
   className?: string;
   addIcon?: boolean;
   disabled?: boolean;
@@ -30,7 +27,6 @@ export const PromptButton = <T, >({
   disabled,
   confirmMessage = 'Click to confirm',
   doneMessage = 'Done',
-  value,
   tabIndex,
   title,
   className,
@@ -57,7 +53,7 @@ export const PromptButton = <T, >({
     }
 
     // Fire the click handler
-    onClick?.(event, value);
+    onClick?.(event);
 
     // Set the state to done (but delay a bit to not alarm user)
     // using global.setTimeout to force use of the Node timeout rather than DOM timeout
@@ -70,7 +66,7 @@ export const PromptButton = <T, >({
       setState('default');
 
       // Fire the click handler
-      onClick?.(event, value);
+      onClick?.(event);
     }, 2000);
   };
 
@@ -98,7 +94,7 @@ export const PromptButton = <T, >({
   };
 
   return (
-    <Button
+    <button
       onClick={handleClick}
       disabled={disabled}
       tabIndex={tabIndex}
@@ -113,7 +109,7 @@ export const PromptButton = <T, >({
       >
         {children}
       </PromptMessage>
-    </Button>
+    </button>
   );
 };
 

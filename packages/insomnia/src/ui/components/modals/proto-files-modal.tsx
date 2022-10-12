@@ -1,4 +1,3 @@
-import { AsyncButton } from 'insomnia-components';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -14,6 +13,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { ProtoFileList } from '../proto-file/proto-file-list';
+import { AsyncButton } from '../themed-button';
 
 export interface ProtoFilesModalOptions {
   selectedId?: string;

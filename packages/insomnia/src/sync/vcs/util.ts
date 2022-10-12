@@ -537,12 +537,12 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
     const bStr = deterministicStringify(bValue);
 
     if (aValue === undefined && bValue !== undefined) {
-      changes.push(`+${key}`);
+      changes.push(`+${String(key)}`);
       continue;
     }
 
     if (aValue !== undefined && bValue === undefined) {
-      changes.push(`-${key}`);
+      changes.push(`-${String(key)}`);
       continue;
     }
 

@@ -21,7 +21,6 @@ const toSchema = <T>(obj: T): Schema<T> => {
 
   return output as Schema<T>;
 };
-
 export const baseModelSchema: Schema<BaseModel> = {
   _id: () => 'id',
   created: () => 1234,
