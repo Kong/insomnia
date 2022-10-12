@@ -18,8 +18,7 @@
   "main": "src/main.min.js",
   "scripts": {
     "bootstrap": "npm run build:sr",
-    "prepare": "npm run convert-svg",
-    "prebuild": "npm run clean && npm run convert-svg",
+    "prebuild": "npm run clean",
     "build": "npm run build:sr && npm run build:app",
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
