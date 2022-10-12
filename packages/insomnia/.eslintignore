@@ -5,3 +5,4 @@ coverage
 src/main.min.js
 src/preload.js
 **/svgr
+svgr.config.js
