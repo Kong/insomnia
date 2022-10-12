@@ -8,7 +8,6 @@ import ReactDOM from 'react-dom';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
-import { Button } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -188,7 +187,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDisableChange(_event: React.MouseEvent, disabled?: boolean) {
+  _handleDisableChange(disabled?: boolean) {
     this._sendChange({
       disabled,
     });
@@ -483,9 +482,8 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
           {this.renderPairSelector()}
 
           {!hideButtons ? (
-            <Button
-              onClick={this._handleDisableChange}
-              value={!pair.disabled}
+            <button
+              onClick={() => this._handleDisableChange(!pair.disabled)}
               title={pair.disabled ? 'Enable item' : 'Disable item'}
             >
               {pair.disabled ? (
@@ -493,7 +491,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
               ) : (
                 <i className="fa fa-check-square-o" />
               )}
-            </Button>
+            </button>
           ) : (
             <button>
               <i className="fa fa-empty" />

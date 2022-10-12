@@ -14,7 +14,6 @@ import { Workspace } from '../../../models/workspace';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
-import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -390,7 +389,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
             );
             return (
               <li key={r._id}>
-                <Button onClick={(_e, request) => activateRequestAndHide(request)} value={r} className={buttonClasses}>
+                <button onClick={() => activateRequestAndHide(r)} className={buttonClasses}>
                   <div>
                     {requestGroup ? (
                       <div className="pull-right faint italic">
@@ -407,7 +406,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
                     {isWebSocketRequest(r) ? <WebSocketTag /> : null}
                     {<Highlight search={searchString} text={isGrpcRequest(r) ? r.url + r.protoMethodName : r.url} />}
                   </div>
-                </Button>
+                </button>
               </li>
             );
           })}
@@ -424,10 +423,10 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
             });
             return (
               <li key={w._id}>
-                <Button onClick={(_e, value) => activateWorkspaceAndHide(value)} value={w} className={buttonClasses}>
+                <button onClick={() => activateWorkspaceAndHide(w)} className={buttonClasses}>
                   <i className="fa fa-random" />
                     &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
-                </Button>
+                </button>
               </li>
             );
           })}

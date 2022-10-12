@@ -15,7 +15,6 @@ import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
-import { Button } from '../base/button';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -165,23 +164,23 @@ export const ResponsePane: FC<Props> = ({
             />
           </Tab>
           <Tab tabIndex="-1">
-            <Button>
+            <button>
               Headers{' '}
               {response.headers.length > 0 && (
                 <span className="bubble">{response.headers.length}</span>
               )}
-            </Button>
+            </button>
           </Tab>
           <Tab tabIndex="-1">
-            <Button>
+            <button>
               Cookies{' '}
               {cookieHeaders.length ? (
                 <span className="bubble">{cookieHeaders.length}</span>
               ) : null}
-            </Button>
+            </button>
           </Tab>
           <Tab tabIndex="-1">
-            <Button>Timeline</Button>
+            <button>Timeline</button>
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel">

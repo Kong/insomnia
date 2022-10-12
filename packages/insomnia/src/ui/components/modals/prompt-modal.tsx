@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Button } from '../base/button';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -92,11 +91,11 @@ export class PromptModal extends PureComponent<{}, State> {
     this.modal = modal;
   }
 
-  _handleSelectHint(_event: React.MouseEvent, hint?: string) {
+  _handleSelectHint(hint?: string) {
     this._done(hint);
   }
 
-  _handleDeleteHint(_event: React.MouseEvent, hint?: string) {
+  _handleDeleteHint(hint?: string) {
     const { onDeleteHint } = this.state;
     onDeleteHint?.(hint);
     const hints = this.state.hints.filter(h => h !== hint);
@@ -204,15 +203,14 @@ export class PromptModal extends PureComponent<{}, State> {
     );
     return (
       <div key={hint} className={classes}>
-        <Button className="tall" onClick={this._handleSelectHint} value={hint}>
+        <button className="tall" onClick={() => this._handleSelectHint(hint)}>
           {hint}
-        </Button>
+        </button>
         <PromptButton
           addIcon
           confirmMessage=""
           className="tall space-left icon"
-          onClick={this._handleDeleteHint}
-          value={hint}
+          onClick={() => this._handleDeleteHint(hint)}
         >
           <i className="fa fa-close faint" />
         </PromptButton>

@@ -10,7 +10,6 @@ import { WebSocketEvent } from '../../../main/network/websocket';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
-import { Button } from '../base/button';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { EmptyStatePane } from '../panes/empty-state-pane';
@@ -79,7 +78,7 @@ const EventSearchInput = styled.input({
   },
 });
 
-const PaddedButton = styled(Button)({
+const PaddedButton = styled('button')({
   padding: 'var(--padding-sm)',
 });
 

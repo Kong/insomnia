@@ -5,7 +5,6 @@ import { useToggle } from 'react-use';
 import { toKebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { selectSettings } from '../../../../redux/selectors';
-import { Button } from '../../../base/button';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
 
@@ -25,9 +24,6 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
   const canBeMasked = !showPasswords && mask;
   const isMasked = canBeMasked && masked;
 
-  // this handler is needed to ignore the parameters sent by button into onClick...
-  const onClick = useCallback(() => toggleMask(), [toggleMask]);
-
   const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
 
   const id = toKebabCase(label);
@@ -45,14 +41,13 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
         getAutocompleteConstants={getAutocompleteConstants}
       />
       {canBeMasked ? (
-        <Button
+        <button
           className="btn btn--super-duper-compact pointer"
-          onClick={onClick}
-          value={isMasked}
+          onClick={toggleMask}
           disabled={disabled}
         >
           {isMasked ? <i className="fa fa-eye" data-testid="reveal-password-icon" /> : <i className="fa fa-eye-slash" data-testid="mask-password-icon" />}
-        </Button>
+        </button>
       ) : null}
     </AuthRow>
   );

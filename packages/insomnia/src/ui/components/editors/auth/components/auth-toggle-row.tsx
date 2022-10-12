@@ -2,7 +2,6 @@ import React, { FC, ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
-import { Button } from '../../../base/button';
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -29,10 +28,7 @@ export const AuthToggleRow: FC<Props> = ({
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
   const databaseValue = Boolean(authentication[property]);
-  const toggle = useCallback(
-    (_event: React.MouseEvent<HTMLButtonElement>, value?: boolean) =>
-      patchAuth({ [property]: value }), [patchAuth, property]
-  );
+  const toggle = useCallback((value?: boolean) => patchAuth({ [property]: value }), [patchAuth, property]);
 
   const isActuallyOn = invert ? !databaseValue : databaseValue;
 
@@ -41,16 +37,15 @@ export const AuthToggleRow: FC<Props> = ({
 
   return (
     <AuthRow labelFor={id} label={label} help={help} disabled={disabled}>
-      <Button
+      <button
         className="btn btn--super-duper-compact"
         id={id}
-        onClick={toggle}
-        value={!databaseValue}
+        onClick={() => toggle(!databaseValue)}
         title={title}
         disabled={disabled}
       >
         <ToggleIcon isOn={isActuallyOn} />
-      </Button>
+      </button>
     </AuthRow>
   );
 };
