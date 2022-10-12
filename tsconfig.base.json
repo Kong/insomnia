@@ -2,6 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": true,
     "allowUnusedLabels": false,
     "checkJs": true,
     "declaration": true,
