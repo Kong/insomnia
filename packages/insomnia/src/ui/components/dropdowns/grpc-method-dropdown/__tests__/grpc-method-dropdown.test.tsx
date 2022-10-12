@@ -1,9 +1,10 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { act, fireEvent, render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
+import { getDropdownContainer } from '../../../../../__jest__/dropdown-container';
 import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
 import { GrpcMethodDropdown } from '../grpc-method-dropdown';
 
@@ -22,6 +23,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={handleChange}
         handleChangeProtoFile={jest.fn()}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
@@ -40,6 +42,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={jest.fn()}
         handleChangeProtoFile={handleChangeProtoFile}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
@@ -58,6 +61,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={jest.fn()}
         handleChangeProtoFile={handleChangeProtoFile}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown
@@ -75,17 +79,10 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={handleChange}
         handleChangeProtoFile={jest.fn()}
       />,
+      { container: getDropdownContainer() }
     );
 
     const dropdownTrigger = await findByText('Select Method');
-
-    // Hover over dropdown trigger to show the method path as a tooltip
-    await userEvent.hover(dropdownTrigger);
-
-    await act(async () => {
-      const tooltip = await findByRole(/tooltip/);
-      expect(tooltip).toBeInTheDocument();
-    });
 
     // Open dropdown
     await userEvent.click(dropdownTrigger);
@@ -107,6 +104,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChange={handleChange}
         handleChangeProtoFile={jest.fn()}
       />,
+      { container: getDropdownContainer() }
     );
 
     // Open dropdown

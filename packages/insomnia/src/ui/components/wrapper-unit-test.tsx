@@ -13,12 +13,11 @@ import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import {
-  Dropdown,
-  DropdownItem,
-} from '../insomnia-components';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownItem } from './base/dropdown/dropdown-item';
 import { Editable } from './base/editable';
 import { CodeEditor } from './codemirror/code-editor';
 import { ErrorBoundary } from './error-boundary';
@@ -310,12 +309,10 @@ const WrapperUnitTest: FC = () => {
                   </button>
                   <Dropdown
                     right
-                    renderButton={() => (
-                      <button className="unit-tests__sidebar__action">
-                        <i className="fa fa-caret-down" />
-                      </button>
-                    )}
                   >
+                    <DropdownButton className="unit-tests__sidebar__action">
+                      <i className="fa fa-caret-down" />
+                    </DropdownButton>
                     <DropdownItem
                       stayOpenAfterClick
                       onClick={handleRunTests}

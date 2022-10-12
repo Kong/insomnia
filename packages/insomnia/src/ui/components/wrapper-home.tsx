@@ -18,12 +18,6 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
-import {
-  Button,
-  Dropdown,
-  DropdownDivider,
-  DropdownItem,
-} from '../insomnia-components';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
@@ -31,6 +25,10 @@ import { importClipBoard, importFile, importUri } from '../redux/modules/import'
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import { selectActiveProject, selectApiSpecs, selectDashboardSortOrder, selectIsLoggedIn, selectWorkspaceMetas, selectWorkspacesForActiveProject } from '../redux/selectors';
 import { AppHeader } from './app-header';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownDivider } from './base/dropdown/dropdown-divider';
+import { DropdownItem } from './base/dropdown/dropdown-item';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
@@ -39,9 +37,13 @@ import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
 import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
 import { SvgIcon } from './svg-icon';
+import { Button } from './themed-button';
 import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 
-const CreateButton = styled(Button)({
+const CreateButton = styled(Button).attrs({
+  variant: 'contained',
+  bg: 'surprise',
+})({
   '&&': {
     marginLeft: 'var(--padding-md)',
   },
@@ -292,47 +294,46 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
                 </div>
                 <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
                 <RemoteWorkspacesDropdown vcs={vcs} />
-                <Dropdown
-                  renderButton={<CreateButton variant="contained" bg="surprise">
+                <Dropdown>
+                  <DropdownButton buttonClass={CreateButton}>
                     Create <i className="fa fa-caret-down pad-left-sm" />
-                  </CreateButton>}
-                >
+                  </DropdownButton>
                   <DropdownDivider>New</DropdownDivider>
                   <DropdownItem
-                    icon={<i className="fa fa-bars" />}
                     onClick={createRequestCollection}
                   >
+                    <i className="fa fa-bars" />
                     Request Collection
                   </DropdownItem>
                   <DropdownItem
-                    icon={<i className="fa fa-file-o" />}
                     onClick={createDesignDocument}
                   >
+                    <i className="fa fa-file-o" />
                     Design Document
                   </DropdownItem>
                   <DropdownDivider>Import From</DropdownDivider>
                   <DropdownItem
-                    icon={<i className="fa fa-plus" />}
                     onClick={importFromFile}
                   >
+                    <i className="fa fa-plus" />
                     File
                   </DropdownItem>
                   <DropdownItem
-                    icon={<i className="fa fa-link" />}
                     onClick={importFromURL}
                   >
+                    <i className="fa fa-link" />
                     URL
                   </DropdownItem>
                   <DropdownItem
-                    icon={<i className="fa fa-clipboard" />}
                     onClick={importFromClipboard}
                   >
+                    <i className="fa fa-clipboard" />
                     Clipboard
                   </DropdownItem>
                   <DropdownItem
-                    icon={<i className="fa fa-code-fork" />}
                     onClick={importFromGit}
                   >
+                    <i className="fa fa-code-fork" />
                     Git Clone
                   </DropdownItem>
                 </Dropdown>

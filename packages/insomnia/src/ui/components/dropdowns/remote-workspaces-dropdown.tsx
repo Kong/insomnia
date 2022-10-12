@@ -7,8 +7,11 @@ import { strings } from '../../../common/strings';
 import { isRemoteProject } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
-import { Dropdown, DropdownDivider, DropdownItem } from '../../insomnia-components';
 import { selectActiveProject } from '../../redux/selectors';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { HelpTooltip } from '../help-tooltip';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
@@ -17,11 +20,7 @@ interface Props {
   vcs?: VCS | null;
 }
 
-const PullButton = styled(({ disabled, className }) => (
-  <Button className={className} disabled={disabled}>
-    Pull <i className="fa fa-caret-down pad-left-sm" />
-  </Button>
-))({
+const PullButton = styled(Button)({
   '&&': {
     marginLeft: 'var(--padding-md)',
   },
@@ -52,13 +51,18 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {
   if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">
-        <PullButton disabled />
+        <PullButton disabled>
+          Pull <i className="fa fa-caret-down pad-left-sm" />
+        </PullButton>
       </Tooltip>
     );
   }
 
   return (
-    <Dropdown onOpen={refresh} renderButton={<PullButton />}>
+    <Dropdown onOpen={refresh}>
+      <DropdownButton buttonClass={PullButton}>
+        Pull <i className="fa fa-caret-down pad-left-sm" />
+      </DropdownButton>
       <DropdownDivider>
         Remote {strings.collection.plural}
         <HelpTooltip>
@@ -76,14 +80,12 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {
           stayOpenAfterClick
           value={p}
           onClick={pull}
-          icon={
-            pullingBackendProjects[p.id] ? (
-              <i className="fa fa-refresh fa-spin" />
-            ) : (
-              <i className="fa fa-cloud-download" />
-            )
-          }
         >
+          {pullingBackendProjects[p.id] ? (
+            <i className="fa fa-refresh fa-spin" />
+          ) : (
+            <i className="fa fa-cloud-download" />
+          )}
           <span>
             Pull <strong>{p.name}</strong>
           </span>

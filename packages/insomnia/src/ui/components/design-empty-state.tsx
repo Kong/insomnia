@@ -6,8 +6,10 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
-import { Dropdown, DropdownItem } from '../insomnia-components';
 import { selectActiveApiSpec } from '../redux/selectors';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownItem } from './base/dropdown/dropdown-item';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import { SvgIcon } from './svg-icon';
@@ -76,25 +78,22 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
     });
   }, [onUpdateContents]);
 
-  const button = (
-    <StyledButton variant="outlined" bg="surprise" className="margin-left">
-      Import OpenAPI
-      <i className="fa fa-caret-down pad-left-sm" />
-    </StyledButton>
-  );
-
   return (
-    <Dropdown renderButton={button}>
+    <Dropdown>
+      <DropdownButton buttonClass={StyledButton}>
+        Import OpenAPI
+        <i className="fa fa-caret-down pad-left-sm" />
+      </DropdownButton>
       <DropdownItem
-        icon={<i className="fa fa-plus" />}
         onClick={handleImportFile}
       >
+        <i className="fa fa-plus" />
         File
       </DropdownItem>
       <DropdownItem
-        icon={<i className="fa fa-link" />}
         onClick={handleImportUri}
       >
+        <i className="fa fa-link" />
         URL
       </DropdownItem>
     </Dropdown>
