@@ -6,7 +6,6 @@ export { SidebarHeaders, type SidebarHeadersProps } from './sidebar-headers';
 export { SidebarInfo, type SidebarInfoProps, type SidebarInfoType } from './sidebar-info';
 export { SidebarInvalidSection, type SidebarInvalidSectionProps } from './sidebar-invalid-section';
 export { SidebarItem, type SidebarItemProps } from './sidebar-item';
-export { SidebarPanel, type SidebarPanelProps } from './sidebar-panel';
 export { SidebarParameters, type SidebarParametersProps } from './sidebar-parameters';
 export { SidebarPaths, type SidebarPathsProps, type SidebarPathsType } from './sidebar-paths';
 export { SidebarRequests, type SidebarRequestsProps } from './sidebar-requests';

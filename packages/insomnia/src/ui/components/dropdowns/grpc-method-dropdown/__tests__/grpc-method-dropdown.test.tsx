@@ -73,7 +73,7 @@ describe('<GrpcMethodDropdown />', () => {
   it('should send selected method path to handle change', async () => {
     const handleChange = jest.fn();
     const method = builder.path('/service/method').build();
-    const { findByRole, findByText } = render(
+    const { findByText } = render(
       <GrpcMethodDropdown
         methods={[method]}
         handleChange={handleChange}

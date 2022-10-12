@@ -4,3 +4,4 @@ send-request
 coverage
 src/main.min.js
 src/preload.js
+**/svgr

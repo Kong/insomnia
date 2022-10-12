@@ -4,7 +4,6 @@ import styled from 'styled-components';
 
 import { SidebarFilter } from './sidebar-filter';
 import { SidebarHeader } from './sidebar-header';
-import { SidebarPanel } from './sidebar-panel';
 
 export interface SidebarSectionProps {
   title: string;
@@ -44,12 +43,12 @@ export const SidebarSection: FunctionComponent<SidebarSectionProps> = ({ title, 
         toggleSection={toggleBodyVisible}
         toggleFilter={toggleFilterVisible}
       />
-      <SidebarPanel childrenVisible={bodyVisible}>
+      <div style={{ height: bodyVisible ? '100%' : 0 }}>
         <SidebarFilter filter={filterVisible} onChange={handleFilterChange} />
         {renderBody(filterValue) || (
           <StyledNoResults>No results found for "{filterValue}"...</StyledNoResults>
         )}
-      </SidebarPanel>
+      </div>
     </StyledSection>
   );
 };

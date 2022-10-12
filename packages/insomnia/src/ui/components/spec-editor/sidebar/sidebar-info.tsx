@@ -1,7 +1,6 @@
 import React, { FunctionComponent } from 'react';
 
 import { SidebarItem } from './sidebar-item';
-import { SidebarPanel } from './sidebar-panel';
 import { SidebarTextItem } from './sidebar-text-item';
 
 export interface SidebarInfoType {
@@ -30,7 +29,7 @@ export const SidebarInfo: FunctionComponent<SidebarInfoProps> = ({
   onClick,
 }) => {
   return (
-    <SidebarPanel childrenVisible={childrenVisible}>
+    <div style={{ height: childrenVisible ? '100%' : 0 }}>
       {title && (
         <SidebarItem onClick={() => onClick('info', 'title')}>
           <SidebarTextItem label={'Title:'} headline={title} />
@@ -51,6 +50,6 @@ export const SidebarInfo: FunctionComponent<SidebarInfoProps> = ({
           <SidebarTextItem label={'License:'} headline={license.name} />
         </SidebarItem>
       )}
-    </SidebarPanel>
+    </div>
   );
 };
