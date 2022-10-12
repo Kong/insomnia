@@ -14,7 +14,6 @@ const toSchema = <T>(obj: T): Schema<T> => {
   const cloned = clone(obj);
   const output: Partial<Schema<T>> = {};
 
-  // @ts-expect-error - don't care
   Object.keys(cloned).forEach(key => {
     // @ts-expect-error -- mapping unsoundness
     output[key] = () => cloned[key];
