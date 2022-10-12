@@ -46,10 +46,7 @@ export const SidebarFilter: FunctionComponent<SidebarFilterProps> = ({ filter, o
 
   return (
     <StyledFilter
-      initial={{
-        height: filter ? '100%' : '0px',
-      }}
-      animate={{
+      style={{
         height: filter ? '100%' : '0px',
       }}
     >

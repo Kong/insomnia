@@ -112,16 +112,8 @@ export const UnitTestItem: FunctionComponent<UnitTestItemProps> = ({
       </div>
 
       <StyledUnitTestContent
-        initial={{
+        style={{
           height: isToggled ? '100%' : '0px',
-        }}
-        animate={{
-          height: isToggled ? '100%' : '0px',
-        }}
-        transition={{
-          duration: 0.2,
-          ease: 'easeInOut',
-          delay: 0,
         }}
       >
         {isToggled && <div>{children}</div>}
