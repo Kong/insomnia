@@ -1,13 +1,12 @@
+// 
 module.exports = {
-  // @ts-expect-error -- no types yet exist for svgr
-  template: ({ template }, options, { componentName, jsx }) => (
-    template.smart({ plugins: ['jsx', 'typescript'] }).ast`
+  template: (variables, {tpl}) => tpl`
       import React, { SVGProps, memo } from 'react';
   
-      export const ${componentName} = memo<SVGProps<SVGSVGElement>>(props => (
-        ${jsx}
+      export const ${variables.componentName} = memo<SVGProps<SVGSVGElement>>(props => (
+        ${variables.jsx}
       ));
-  `),
+  `,
   icon: true,
   replaceAttrValues: {
     '#000': '',

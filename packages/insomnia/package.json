@@ -38,9 +38,7 @@
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit --project tsconfig.build.json",
     "type-check:watch": "npm run type-check -- --watch",
-    "convert-svg": "npm run clean:svg && svgr --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/ && npm run clean:svg:index",
-    "clean:svg": "rimraf src/ui/components/assets/svgr",
-    "clean:svg:index": "rimraf src/ui/components/assets/svgr/index.tsx"
+    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.5-2",

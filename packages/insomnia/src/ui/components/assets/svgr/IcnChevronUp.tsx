@@ -5,8 +5,9 @@ export const SvgIcnChevronUp = memo<SVGProps<SVGSVGElement>>(props => (
     height="1em"
     viewBox="0 0 10 10"
     xmlns="http://www.w3.org/2000/svg"
+    role="img"
     {...props}
   >
-    <path d="M1 8L0 7l5-5 5 5-1 1-4-4-4 4z" />
+    <path d="M1 8 0 7l5-5 5 5-1 1-4-4-4 4Z" />
   </svg>
 ));
