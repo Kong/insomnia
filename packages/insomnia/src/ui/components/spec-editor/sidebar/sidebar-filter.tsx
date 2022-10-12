@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import React, { createRef, FunctionComponent, useLayoutEffect } from 'react';
 import styled from 'styled-components';
 
@@ -7,7 +6,7 @@ export interface SidebarFilterProps {
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
 
-const StyledFilter = styled(motion.div)`
+const StyledFilter = styled.div`
   padding-left: var(--padding-md);
   padding-right: var(--padding-md);
   overflow: hidden;

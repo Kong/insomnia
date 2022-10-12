@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import React, { FunctionComponent } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
@@ -56,7 +55,7 @@ const StyledSidebar = styled.div`
   }
 `;
 
-const StyledSection = styled(motion.ul)`
+const StyledSection = styled.ul`
   overflow: hidden;
   box-sizing: border-box;
   border-bottom: 1px solid var(--hl-md);

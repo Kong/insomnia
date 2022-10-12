@@ -1,10 +1,9 @@
-import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
-import { Button } from '../themed-button';
 import { SvgIcon } from '../svg-icon';
+import { Button } from '../themed-button';
 import { ListGroupItem } from './list-group-item';
 import { UnitTestRequestSelector } from './unit-test-request-selector';
 
@@ -56,7 +55,7 @@ const StyledResultListItem = styled(ListGroupItem)`
   }
 `;
 
-const StyledUnitTestContent = styled(motion.div)`
+const StyledUnitTestContent = styled.div`
   display: block;
   height: 0px;
   overflow: hidden;

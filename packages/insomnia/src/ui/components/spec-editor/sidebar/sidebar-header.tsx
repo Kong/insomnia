@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 
@@ -76,17 +75,11 @@ export const SidebarHeader: FunctionComponent<SidebarHeaderProps> = ({
       <h6>{headerTitle}</h6>
       <div>
         {children || (
-          <motion.span
+          <span
             onClick={handleFilterClick}
-            initial={{
-              opacity: sectionVisible ? 0.6 : 0,
-            }}
-            animate={{
-              opacity: sectionVisible ? 0.6 : 0,
-            }}
           >
             <SvgIcon icon={IconEnum.search} />
-          </motion.span>
+          </span>
         )}
       </div>
     </StyledHeader>

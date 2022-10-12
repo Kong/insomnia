@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import React, { ChangeEvent, FunctionComponent, ReactNode, useCallback, useLayoutEffect, useState } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
@@ -12,7 +11,7 @@ export interface SidebarSectionProps {
   renderBody: (filterValue: string) => ReactNode;
 }
 
-const StyledSection = styled(motion.ul)`
+const StyledSection = styled.ul`
   overflow: hidden;
   box-sizing: border-box;
   border-bottom: 1px solid var(--hl-md);
