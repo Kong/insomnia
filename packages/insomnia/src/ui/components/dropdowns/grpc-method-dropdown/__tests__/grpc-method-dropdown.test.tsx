@@ -91,7 +91,7 @@ describe('<GrpcMethodDropdown />', () => {
     const dropdownItem = await findByText(method.path);
     await userEvent.click(dropdownItem);
 
-    expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
+    expect(handleChange).toHaveBeenCalledWith(method.path);
 
   });
 
@@ -111,6 +111,6 @@ describe('<GrpcMethodDropdown />', () => {
     fireEvent.click(getByRole('button'));
     expect(queryByText('pkg: package')).toBeTruthy();
     fireEvent.click(getByText('/service/method'));
-    expect(handleChange).toHaveBeenCalledWith(method.path, expect.anything());
+    expect(handleChange).toHaveBeenCalledWith(method.path);
   });
 });

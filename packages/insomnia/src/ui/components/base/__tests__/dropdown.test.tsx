@@ -45,8 +45,7 @@ describe('Dropdown', () => {
         {options.map(option => (
           <DropdownItem
             key={option.id}
-            onClick={onSelect}
-            value={option.value}
+            onClick={() => onSelect(option.value)}
           >
             {option.label}
           </DropdownItem>
@@ -62,7 +61,7 @@ describe('Dropdown', () => {
 
     fireEvent.click(option2);
 
-    expect(onSelect).toHaveBeenCalledWith(options[1].value, expect.any(Object));
+    expect(onSelect).toHaveBeenCalledWith(options[1].value);
 
     cleanup();
   });
@@ -86,8 +85,7 @@ describe('Dropdown', () => {
           <DropdownItem
             key={option.id}
             title={option.label}
-            onClick={onSelect}
-            value={option.value}
+            onClick={() => onSelect(option.value)}
           >
             {option.label}
           </DropdownItem>
@@ -109,7 +107,7 @@ describe('Dropdown', () => {
     // Press enter on the second option
     await user.keyboard('[Enter]');
 
-    expect(onSelect).toHaveBeenCalledWith(options[1].value, expect.any(Object));
+    expect(onSelect).toHaveBeenCalledWith(options[1].value);
 
     // The dropdown button should regain focus
     expect(button).toHaveFocus();
