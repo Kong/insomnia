@@ -21,6 +21,7 @@ import {
   Header as V210Header,
   HttpsSchemaGetpostmanComJsonCollectionV210 as V210Schema,
   Item as V210Item,
+  QueryParam,
   Request1 as V210Request1,
   UrlEncodedParameter as V210UrlEncodedParameter,
   Variable2 as V210Variable2,
@@ -123,6 +124,11 @@ export class ImportPostman {
 
     const { authentication, headers } = this.importAuthentication(request.auth, request.header as Header[]);
 
+    let parameters = [] as Parameter[];
+
+    if (typeof request.url === 'object' && request.url.query) {
+      parameters = this.importParameters(request.url?.query);
+    }
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
@@ -130,6 +136,7 @@ export class ImportPostman {
       name,
       description: (request.description as string) || '',
       url: this.importUrl(request.url),
+      parameters: parameters,
       method: request.method || 'GET',
       headers: headers.map(({ key, value }) => ({
         name: key,
@@ -138,6 +145,17 @@ export class ImportPostman {
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
     };
+  };
+
+  importParameters = (parameters: QueryParam[]): Parameter[] => {
+    if (!parameters || parameters?.length === 0) {
+      return [];
+    }
+    return parameters.map(({ key, value, disabled }) => ({
+      name: key,
+      value,
+      disabled: disabled || false,
+    }) as Parameter);
   };
 
   importFolderItem = ({ name, description }: Folder, parentId: string) => {
@@ -176,6 +194,11 @@ export class ImportPostman {
   importUrl = (url?: Url | string) => {
     if (!url) {
       return '';
+    }
+
+    // remove ? and everything after it if there are QueryParams strictly defined
+    if (typeof url === 'object' && url.query && url.raw?.includes('?')) {
+      return url.raw?.slice(0, url.raw.indexOf('?')) || '';
     }
 
     if (typeof url === 'object' && url.raw) {

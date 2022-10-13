@@ -16,9 +16,15 @@
       "_id": "__REQ_1__",
       "_type": "request",
       "parentId": "__GRP_1__",
-      "url": "https://insomnia.rest?foo=bar",
+      "url": "https://insomnia.rest",
       "name": "Test Request",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "foo",
+          "value": "bar",
+          "disabled": false
+        }
+      ],
       "description": "",
       "method": "GET",
       "body": {},
