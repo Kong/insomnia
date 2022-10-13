@@ -658,14 +658,18 @@ export class ImportPostman {
     // Note: We only support importing OAuth2 configuration from Postman v2.1
     if (schema === POSTMAN_SCHEMA_V2_1) {
       const oauth2 = auth.oauth2 as V210Auth['oauth2'];
+      const grantTypeField = this.findValueByKey(oauth2, 'grant_type');
+      const grantType = grantTypeField === 'authorization_code_with_pkce' ? 'authorization_code' : grantTypeField;
+
       return {
         type: 'oauth2',
         disabled: false,
         accessTokenUrl: this.findValueByKey(oauth2, 'accessTokenUrl'),
         authorizationUrl: this.findValueByKey(oauth2, 'authUrl'),
-        grantType: this.findValueByKey(oauth2, 'grant_type'),
+        grantType,
         password: '',
         username: '',
+        usePkce: grantTypeField === 'authorization_code_with_pkce' ? true : undefined,
         clientId: this.findValueByKey(oauth2, 'clientId'),
         clientSecret: this.findValueByKey(oauth2, 'clientSecret'),
         redirectUrl: this.findValueByKey(oauth2, 'redirect_uri'),
