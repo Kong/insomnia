@@ -1,13 +1,13 @@
 import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
-import type { GitRepository } from '../../../models/git-repository';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
+import { selectActiveGitRepository } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -16,7 +16,6 @@ import { PromptButton } from '../base/prompt-button';
 
 type Props = ModalProps & {
   vcs: GitVCS;
-  gitRepository: GitRepository;
 };
 export interface GitBranchesModalOptions {
   onHide: () => void;
@@ -32,7 +31,7 @@ export interface GitBranchesModalHandle {
   show: (options: GitBranchesModalOptions) => void;
   hide: () => void;
 }
-export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs, gitRepository, handleGitBranchChanged }, ref) => {
+export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     error: '',
@@ -42,106 +41,106 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
     newBranchName: '',
   });
   const dispatch = useDispatch();
+  const gitRepository = useSelector(selectActiveGitRepository);
   const refreshState = useCallback(async () => {
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
     const remoteBranches = await vcs.listRemoteBranches();
-    setState({
+    setState(state => ({
       ...state,
       branch,
       branches,
       remoteBranches,
-    });
-    handleGitBranchChanged(branch);
-  }, [handleGitBranchChanged, state, vcs]);
+    }));
+  }, [vcs]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
     show: async ({ onHide }) => {
-      setState({ ...state, newBranchName: '' });
+      setState(state => ({ ...state, newBranchName: '' }));
       await refreshState();
       modalRef.current?.show({ onHide });
       // Do a fetch of remotes and refresh again. NOTE: we're doing this
       // last because it's super slow
-      await vcs.fetch(false, 1, gitRepository.credentials);
+      await vcs.fetch(false, 1, gitRepository?.credentials);
       await refreshState();
     },
-  }), [state, refreshState, vcs, gitRepository.credentials]);
+  }), [refreshState, vcs, gitRepository?.credentials]);
 
   const handleCreate = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      const providerName = getOauth2FormatName(gitRepository.credentials);
+      const providerName = getOauth2FormatName(gitRepository?.credentials);
       await vcs.checkout(state.newBranchName);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
       setState({ ...state, newBranchName: '' });
       await refreshState();
     } catch (err) {
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
   const handleMerge = async (branch: string) => {
     try {
-      const providerName = getOauth2FormatName(gitRepository.credentials);
+      const providerName = getOauth2FormatName(gitRepository?.credentials);
       await vcs.merge(branch);
       // Apparently merge doesn't update the working dir so need to checkout too
       await handleCheckout(branch);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
     } catch (err) {
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
   const handleDelete = async (branch: string) => {
     try {
-      const providerName = getOauth2FormatName(gitRepository.credentials);
+      const providerName = getOauth2FormatName(gitRepository?.credentials);
       await vcs.deleteBranch(branch);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
       await refreshState();
     } catch (err) {
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
   const handleRemoteCheckout = async (branch: string) => {
     try {
       // First fetch more history to make sure we have lots
-      await vcs.fetch(true, 20, gitRepository.credentials);
+      await vcs.fetch(true, 20, gitRepository?.credentials);
       await handleCheckout(branch);
     } catch (err) {
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
   const handleCheckout = async (branch: string) => {
     try {
       const bufferId = await db.bufferChanges();
-      const providerName = getOauth2FormatName(gitRepository.credentials);
+      const providerName = getOauth2FormatName(gitRepository?.credentials);
       await vcs.checkout(branch);
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
       await db.flushChanges(bufferId, true);
       await dispatch(initializeEntities());
       await refreshState();
     } catch (err) {
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
   const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = state;

@@ -14,7 +14,7 @@ import { selectActiveActivity, selectActiveApiSpec, selectActiveGitRepository, s
 import { ActivityToggle } from './activity-toggle/activity-toggle';
 import { AppHeader } from './app-header';
 import { DropdownButton } from './base/dropdown/dropdown-button';
-import GitSyncDropdown from './dropdowns/git-sync-dropdown';
+import { GitSyncDropdown } from './dropdowns/git-sync-dropdown';
 import { SyncDropdown } from './dropdowns/sync-dropdown';
 import { WorkspaceDropdown } from './dropdowns/workspace-dropdown';
 import { showModal } from './modals';

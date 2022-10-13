@@ -1,11 +1,8 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { Fragment, PureComponent, ReactNode } from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, bindActionCreators, Dispatch } from 'redux';
+import React, { FC, Fragment, ReactNode, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
@@ -28,13 +25,13 @@ import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
 
-type Props = ReturnType<typeof mapDispatchToProps> & {
+interface Props {
   workspace: Workspace;
   vcs: GitVCS;
   gitRepository: GitRepository | null;
   className?: string;
   renderDropdownButton?: (children: ReactNode) => ReactNode;
-};
+}
 
 interface State {
   initializing: boolean;
@@ -44,26 +41,20 @@ interface State {
   branch: string;
   branches: string[];
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class GitSyncDropdown extends PureComponent<Props, State> {
-  _dropdown: DropdownHandle | null = null;
-
-  state: State = {
+export const GitSyncDropdown: FC<Props> = props => {
+  const [state, setState] = useState<State>({
     initializing: false,
     loadingPush: false,
     loadingPull: false,
     log: [],
     branch: '',
     branches: [],
-  };
+  });
+  const dispatch = useDispatch();
+  const dropdownRef = useRef<DropdownHandle>(null);
 
-  _setDropdownRef(dropdown: DropdownHandle) {
-    this._dropdown = dropdown;
-  }
-
-  async _refreshState(otherState?: Record<string, any>) {
-    const { vcs, workspace } = this.props;
+  async function _refreshState() {
+    const { vcs, workspace } = props;
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     // Clear cached items and return if no state
@@ -89,7 +80,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
     const log = (await vcs.log()) || [];
-    this.setState({ ...(otherState || {}), log, branch, branches });
+    setState(state => ({ ...state, log, branch, branches }));
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitRepositoryBranch = branch;
     const cachedGitLastAuthor = author ? author.name : null;
@@ -101,16 +92,12 @@ class GitSyncDropdown extends PureComponent<Props, State> {
       cachedGitLastCommitTime,
     });
   }
-
-  async _handleOpen() {
-    await this._refreshState();
-  }
-
-  async _handlePull() {
-    this.setState({
+  async function _handlePull() {
+    setState(state => ({
+      ...state,
       loadingPull: true,
-    });
-    const { vcs, gitRepository } = this.props;
+    }));
+    const { vcs, gitRepository } = props;
 
     if (!gitRepository) {
       // Should never happen
@@ -131,16 +118,18 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     await db.flushChanges(bufferId);
-    this.setState({
+    setState(state => ({
+      ...state,
       loadingPull: false,
-    });
+    }));
   }
 
-  async _handlePush(_e: unknown, force = false) {
-    this.setState({
+  async function _handlePush(_e: unknown, force = false) {
+    setState(state => ({
+      ...state,
       loadingPush: true,
-    });
-    const { vcs, gitRepository } = this.props;
+    }));
+    const { vcs, gitRepository } = props;
 
     if (!gitRepository) {
       // Should never happen
@@ -157,9 +146,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
         title: 'Error Pushing Repository',
         error: err,
       });
-      this.setState({
+      setState(state => ({
+        ...state,
         loadingPush: false,
-      });
+      }));
       return;
     }
 
@@ -169,9 +159,10 @@ class GitSyncDropdown extends PureComponent<Props, State> {
         title: 'Push Skipped',
         message: 'Everything up-to-date. Nothing was pushed to the remote',
       });
-      this.setState({
+      setState(state => ({
+        ...state,
         loadingPush: false,
-      });
+      }));
       return;
     }
 
@@ -182,14 +173,14 @@ class GitSyncDropdown extends PureComponent<Props, State> {
       trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'), providerName });
     } catch (err) {
       if (err.code === 'PushRejectedError') {
-        this._dropdown?.hide();
+        dropdownRef.current?.hide();
         showAlert({
           title: 'Push Rejected',
           message: 'Do you want to force push?',
           okLabel: 'Force Push',
           addCancel: true,
           onConfirm: () => {
-            this._handlePush(null, true);
+            _handlePush(null, true);
           },
         });
       } else {
@@ -202,46 +193,29 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     await db.flushChanges(bufferId);
-    this.setState({
+    setState(state => ({
+      ...state,
       loadingPush: false,
-    });
+    }));
   }
 
-  _handleConfig() {
-    const { gitRepository, workspace, updateGitRepository, setupGitRepository } = this.props;
+  function _handleConfig() {
+    const { gitRepository, workspace } = props;
 
     if (gitRepository) {
-      updateGitRepository({
+      dispatch(gitActions.updateGitRepository({
         gitRepository,
-      });
+      }));
     } else {
-      setupGitRepository({
+      dispatch(gitActions.setupGitRepository({
         workspace,
         createFsClient: MemClient.createClient,
-      });
+      }));
     }
   }
 
-  _handleLog() {
-    showModal(GitLogModal);
-  }
-
-  async _handleCommit() {
-    const { gitRepository } = this.props;
-    showModal(GitStagingModal, {
-      onCommit: this._refreshState,
-      gitRepository,
-    });
-  }
-
-  _handleManageBranches() {
-    showModal(GitBranchesModal, {
-      onHide: this._refreshState,
-    });
-  }
-
-  async _handleCheckoutBranch(branch: string) {
-    const { vcs, handleInitializeEntities } = this.props;
+  async function _handleCheckoutBranch(branch: string) {
+    const { vcs } = props;
     const bufferId = await db.bufferChanges();
 
     try {
@@ -254,164 +228,119 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     }
 
     await db.flushChanges(bufferId, true);
-    await handleInitializeEntities();
-    await this._refreshState();
+    await dispatch(initializeEntities());
+    await _refreshState();
   }
-
-  _getProviderIconClassName(): string | undefined {
-    const { gitRepository } = this.props;
-    const providerName = getOauth2FormatName(gitRepository?.credentials);
-
-    if (providerName === 'github') {
-      return 'fa fa-github';
-    }
-
-    if (providerName === 'gitlab') {
-      return 'fa fa-gitlab';
-    }
-
-    return;
+  const { className, vcs, renderDropdownButton, gitRepository } = props;
+  const { log, branches, branch, loadingPull, loadingPush } = state;
+  let iconClassName = '';
+  const providerName = getOauth2FormatName(gitRepository?.credentials);
+  if (providerName === 'github') {
+    iconClassName = 'fa fa-github';
   }
-
-  componentDidMount() {
-    this._refreshState();
+  if (providerName === 'gitlab') {
+    iconClassName = 'fa fa-gitlab';
   }
+  const initializing = false;
+  return (
+    <div className={className}>
+      <Dropdown className="wide tall" onOpen={() => _refreshState()} ref={dropdownRef}>
+        {renderDropdownButton || vcs.isInitialized() ? (<DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
+          {iconClassName && <i className={classnames('space-right', iconClassName)} />}
+          <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
+          <i className="fa fa-code-fork space-left" />
+        </DropdownButton>) :
+          (<DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
+            <i className="fa fa-code-fork space-right" />
+            Setup Git Sync
+          </DropdownButton>)}
 
-  renderButton() {
-    const { branch } = this.state;
-    const { vcs, renderDropdownButton } = this.props;
+        <DropdownDivider>
+          Git Sync
+          <HelpTooltip>
+            Sync and collaborate with Git{' '}
+            <Link href={docsGitSync}>
+              <span className="no-wrap">
+                <br />
+                Documentation <i className="fa fa-external-link" />
+              </span>
+            </Link>
+          </HelpTooltip>
+        </DropdownDivider>
 
-    const renderBtn =
-      renderDropdownButton ||
-      (children => (
-        <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
-          {children}
-        </DropdownButton>
-      ));
+        <DropdownItem onClick={_handleConfig}>
+          <i className="fa fa-wrench" /> Repository Settings
+        </DropdownItem>
 
-    if (!vcs.isInitialized()) {
-      return renderBtn(
-        <Fragment>
-          <i className="fa fa-code-fork space-right" />
-          Setup Git Sync
-        </Fragment>,
-      );
-    }
+        {vcs.isInitialized() && (
+          <Fragment>
+            <DropdownItem onClick={() => showModal(GitBranchesModal, { onHide: _refreshState })}>
+              <i className="fa fa-code-fork" /> Branches
+            </DropdownItem>
+          </Fragment>
+        )}
 
-    const initializing = false;
-    const iconClassName = this._getProviderIconClassName();
-    return renderBtn(
-      <Fragment>
-        {iconClassName && <i className={classnames('space-right', iconClassName)} />}
-        <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
-        <i className="fa fa-code-fork space-left" />
-      </Fragment>,
-    );
-  }
-
-  renderBranch(branch: string) {
-    const { branch: currentBranch } = this.state;
-    const icon =
-      branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
-    const isCurrentBranch = branch === currentBranch;
-    return (
-      <DropdownItem
-        key={branch}
-        onClick={isCurrentBranch ? undefined : () => this._handleCheckoutBranch(branch)}
-        className={classnames({
-          bold: isCurrentBranch,
-        })}
-        title={isCurrentBranch ? '' : `Switch to "${branch}"`}
-      >
-        {icon}
-        {branch}
-      </DropdownItem>
-    );
-  }
-
-  render() {
-    const { className, vcs } = this.props;
-    const { log, branches, branch, loadingPull, loadingPush } = this.state;
-    return (
-      <div className={className}>
-        <Dropdown className="wide tall" onOpen={this._handleOpen} ref={this._setDropdownRef}>
-          {this.renderButton()}
-
-          <DropdownDivider>
-            Git Sync
-            <HelpTooltip>
-              Sync and collaborate with Git{' '}
-              <Link href={docsGitSync}>
-                <span className="no-wrap">
-                  <br />
-                  Documentation <i className="fa fa-external-link" />
-                </span>
-              </Link>
-            </HelpTooltip>
-          </DropdownDivider>
-
-          <DropdownItem onClick={this._handleConfig}>
-            <i className="fa fa-wrench" /> Repository Settings
-          </DropdownItem>
-
-          {vcs.isInitialized() && (
-            <Fragment>
-              <DropdownItem onClick={this._handleManageBranches}>
-                <i className="fa fa-code-fork" /> Branches
-              </DropdownItem>
-            </Fragment>
-          )}
-
-          {vcs.isInitialized() && (
-            <Fragment>
-              <DropdownDivider>Branches</DropdownDivider>
-              {branches.map(this.renderBranch)}
-
-              <DropdownDivider>{branch}</DropdownDivider>
-
-              <DropdownItem onClick={this._handleCommit}>
-                <i className="fa fa-check" /> Commit
-              </DropdownItem>
-              {log.length > 0 && (
-                <DropdownItem onClick={this._handlePush} stayOpenAfterClick>
-                  <i
-                    className={classnames({
-                      fa: true,
-                      'fa-spin fa-refresh': loadingPush,
-                      'fa-cloud-upload': !loadingPush,
-                    })}
-                  />{' '}
-                  Push
+        {vcs.isInitialized() && (
+          <Fragment>
+            <DropdownDivider>Branches</DropdownDivider>
+            {branches.map(branch => {
+              const { branch: currentBranch } = state;
+              const icon =
+                branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
+              const isCurrentBranch = branch === currentBranch;
+              return (
+                <DropdownItem
+                  key={branch}
+                  onClick={isCurrentBranch ? undefined : () => _handleCheckoutBranch(branch)}
+                  className={classnames({
+                    bold: isCurrentBranch,
+                  })}
+                  title={isCurrentBranch ? '' : `Switch to "${branch}"`}
+                >
+                  {icon}
+                  {branch}
                 </DropdownItem>
-              )}
-              <DropdownItem onClick={this._handlePull} stayOpenAfterClick>
+              );
+            })}
+
+            <DropdownDivider>{branch}</DropdownDivider>
+
+            <DropdownItem
+              onClick={() => showModal(GitStagingModal, {
+                onCommit: _refreshState,
+                gitRepository,
+              })}
+            >
+              <i className="fa fa-check" /> Commit
+            </DropdownItem>
+            {log.length > 0 && (
+              <DropdownItem onClick={_handlePush} stayOpenAfterClick>
                 <i
                   className={classnames({
                     fa: true,
-                    'fa-spin fa-refresh': loadingPull,
-                    'fa-cloud-download': !loadingPull,
+                    'fa-spin fa-refresh': loadingPush,
+                    'fa-cloud-upload': !loadingPush,
                   })}
                 />{' '}
-                Pull
+                Push
               </DropdownItem>
-              <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
-                <i className="fa fa-clock-o" /> History ({log.length})
-              </DropdownItem>
-            </Fragment>
-          )}
-        </Dropdown>
-      </div>
-    );
-  }
-}
-
-function mapDispatchToProps(dispatch: Dispatch<AnyAction>) {
-  const boundGitActions = bindActionCreators({ ...gitActions, initializeEntities }, dispatch);
-  return {
-    setupGitRepository: boundGitActions.setupGitRepository,
-    updateGitRepository: boundGitActions.updateGitRepository,
-    handleInitializeEntities: boundGitActions.initializeEntities,
-  };
-}
-
-export default connect(null, mapDispatchToProps)(GitSyncDropdown);
+            )}
+            <DropdownItem onClick={_handlePull} stayOpenAfterClick>
+              <i
+                className={classnames({
+                  fa: true,
+                  'fa-spin fa-refresh': loadingPull,
+                  'fa-cloud-download': !loadingPull,
+                })}
+              />{' '}
+              Pull
+            </DropdownItem>
+            <DropdownItem onClick={() => showModal(GitLogModal)} disabled={log.length === 0}>
+              <i className="fa fa-clock-o" /> History ({log.length})
+            </DropdownItem>
+          </Fragment>
+        )}
+      </Dropdown>
+    </div>
+  );
+};

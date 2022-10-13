@@ -218,7 +218,6 @@ const App = () => {
                       <GitBranchesModal
                         ref={instance => registerModal(instance, 'GitBranchesModal')}
                         vcs={gitVCS}
-                        gitRepository={activeGitRepository}
                       />
                     )}
                   </Fragment>

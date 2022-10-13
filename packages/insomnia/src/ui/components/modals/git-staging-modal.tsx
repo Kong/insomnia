@@ -85,24 +85,24 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
   }, [vcs]);
 
   const refresh = useCallback(async () => {
-    setState({
+    setState(state => ({
       ...state,
       loading: true,
-    });
+    }));
     // Get and set branch name
     const branch = await vcs.getBranch();
-    setState({
+    setState(state => ({
       ...state,
       branch,
-    });
+    }));
     // Cache status names
     const docs = await db.withDescendants(workspace);
     const allPaths = await getAllPaths();
-    state.statusNames = {};
+    const statusNames: Record<string, string> = {};
     for (const doc of docs) {
       const name = (isApiSpec(doc) && doc.fileName) || doc.name || '';
-      state.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] = name;
-      state.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] = name;
+      statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] = name;
+      statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] = name;
     }
     // Create status items
     const items: Record<string, Item> = {};
@@ -112,7 +112,7 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
       if (status === 'unmodified') {
         continue;
       }
-      if (!state.statusNames[gitPath] && log.length > 0) {
+      if (!statusNames[gitPath] && log.length > 0) {
         const docYML = await vcs.readObjFromTree(log[0].commit.tree, gitPath);
         if (!docYML) {
           continue;
@@ -120,7 +120,7 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
         try {
           // @ts-expect-error -- TSCONVERSION
           const doc = YAML.parse(docYML);
-          state.statusNames[gitPath] = doc.name || '';
+          statusNames[gitPath] = doc.name || '';
         } catch (err) {
           // Nothing here
         }
@@ -151,12 +151,13 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
         path: gitPath,
       };
     }
-    setState({
+    setState(state => ({
       ...state,
       items,
       loading: false,
-    });
-  }, [getAllPaths, state, vcs, workspace]);
+      statusNames,
+    }));
+  }, [getAllPaths, vcs, workspace]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
