@@ -1,40 +1,25 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { HTMLAttributes, PureComponent } from 'react';
-
-import { AUTOBIND_CFG } from '../../../common/constants';
+import React, { FC, HTMLAttributes, useEffect, useRef } from 'react';
 
 interface Props extends HTMLAttributes<HTMLInputElement> {
   indeterminate: boolean;
   checked: boolean;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class IndeterminateCheckbox extends PureComponent<Props> {
-  input: HTMLInputElement | null = null;
+export const IndeterminateCheckbox: FC<Props> = ({ checked, indeterminate, ...otherProps }) => {
+  const checkRef = useRef<HTMLInputElement>(null);
 
-  _setRef(input: HTMLInputElement) {
-    this.input = input;
-  }
-
-  _update() {
-    if (this.input) {
-      this.input.indeterminate = this.props.indeterminate;
+  useEffect(() => {
+    if (checkRef.current) {
+      checkRef.current.checked = checked;
+      checkRef.current.indeterminate = indeterminate;
     }
-  }
+  }, [checked, indeterminate]);
 
-  componentDidMount() {
-    this._update();
-  }
-
-  componentDidUpdate() {
-    this._update();
-  }
-
-  render() {
-    const {
-      indeterminate,
-      ...otherProps
-    } = this.props;
-    return <input ref={this._setRef} type="checkbox" {...otherProps} />;
-  }
-}
+  return (
+    <input
+      type="checkbox"
+      ref={checkRef}
+      {...otherProps}
+    />
+  );
+};
