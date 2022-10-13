@@ -89,15 +89,15 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     };
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     await requestOperations.update(request, patch);
-    setState({
+    setState(state => ({
       ...state,
       justMoved: true,
-    });
+    }));
     setTimeout(() => {
-      setState({
+      setState(state => ({
         ...state,
         justMoved: false,
-      });
+      }));
     }, 2000);
   }
 
@@ -119,15 +119,15 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     };
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     await requestOperations.duplicate(request, patch);
-    setState({
+    setState(state => ({
       ...state,
       justCopied: true,
-    });
+    }));
     setTimeout(() => {
-      setState({
+      setState(state => ({
         ...state,
         justCopied: false,
-      });
+      }));
     }, 2000);
     models.stats.incrementCreatedRequests();
   }
@@ -139,9 +139,9 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     const updated = await requestOperations.update(request, {
       [event.currentTarget.name]: event.currentTarget.checked,
     });
-    setState({
+    setState(state => ({
       ...state, request: updated,
-    });
+    }));
   };
 
   return (
@@ -195,7 +195,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                   />
                 ) : (
                   <button
-                    onClick={() => setState({ ...state, showDescription: true })}
+                    onClick={() => setState(state => ({ ...state, showDescription: true }))}
                     className="btn btn--outlined btn--super-duper-compact"
                   >
                     Add Description
@@ -237,7 +237,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         const updated = await requestOperations.update(request, {
                           [event.currentTarget.name]: event.currentTarget.value,
                         });
-                        setState({ ...state, request: updated });
+                        setState(state => ({ ...state, request: updated }));
                       }}
                     >
                       <option value={'global'}>Use global setting</option>
@@ -261,7 +261,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       onChange={event => {
                         const { value } = event.currentTarget;
                         const workspaceId = value === '__NULL__' ? null : value;
-                        setState({ ...state, activeWorkspaceIdToCopyTo: workspaceId });
+                        setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
                       }}
                     >
                       <option value="__NULL__">-- Select Workspace --</option>
@@ -319,16 +319,16 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       const updated = await models.request.update(request, {
                         description,
                       });
-                      setState({
+                      setState(state => ({
                         ...state,
                         request: updated,
                         defaultPreviewMode: false,
-                      });
+                      }));
                     }}
                   />
                 ) : (
                   <button
-                    onClick={() => setState({ ...state, showDescription: true })}
+                    onClick={() => setState(state => ({ ...state, showDescription: true }))}
                     className="btn btn--outlined btn--super-duper-compact"
                   >
                     Add Description
@@ -415,7 +415,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         const updated = await models.request.update(request, {
                           [event.currentTarget.name]: event.currentTarget.value,
                         });
-                        setState({ ...state, request: updated });
+                        setState(state => ({ ...state, request: updated }));
                       }}
                     >
                       <option value={'global'}>Use global setting</option>
@@ -439,7 +439,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       onChange={event => {
                         const { value } = event.currentTarget;
                         const workspaceId = value === '__NULL__' ? null : value;
-                        setState({ ...state, activeWorkspaceIdToCopyTo: workspaceId });
+                        setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
                       }}
                     >
                       <option value="__NULL__">-- Select Workspace --</option>
