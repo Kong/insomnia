@@ -223,7 +223,7 @@ const App = () => {
                 <RequestRenderErrorModal ref={registerModal} />
                 <GenerateConfigModal ref={registerModal} />
                 <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
-                <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
+                <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')}  vcs={vcs || undefined} />
                 <CodePromptModal ref={registerModal} />
                 <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
                 <RequestGroupSettingsModal ref={instance => registerModal(instance, 'RequestGroupSettingsModal')} />
@@ -243,9 +243,7 @@ const App = () => {
                   />
 
                   {activeApiSpec ? <WorkspaceSettingsModal
-                    ref={registerModal}
-                    workspace={activeWorkspace}
-                    apiSpec={activeApiSpec}
+                    ref={instance => registerModal(instance, 'WorkspaceSettingsModal')}
                   /> : null}
                 </> : null}
 
@@ -291,7 +289,7 @@ const App = () => {
                 ) : null}
 
                 <WorkspaceEnvironmentsEditModal
-                  ref={registerModal}
+                  ref={instance => registerModal(instance, 'WorkspaceEnvironmentsEditModal')}
                   handleSetActiveEnvironment={handleSetActiveEnvironment}
                   activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
                 />

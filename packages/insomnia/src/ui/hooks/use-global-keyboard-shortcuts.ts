@@ -6,7 +6,7 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
-import {  selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 
 export const useGlobalKeyboardShortcuts = () => {
   const activeWorkspace = useSelector(selectActiveWorkspace);
@@ -15,7 +15,7 @@ export const useGlobalKeyboardShortcuts = () => {
 
   useDocBodyKeyboardShortcuts({
     workspace_showSettings:
-      () => showModal(WorkspaceSettingsModal, activeWorkspace),
+      () => showModal(WorkspaceSettingsModal, { workspace: activeWorkspace }),
     plugin_reload:
       () => plugins.reloadPlugins(),
     environment_showVariableSourceAndValue:

@@ -32,7 +32,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const dropdownRef = useRef<DropdownHandle>(null);
   const handleShowEnvironmentModal = useCallback(() => {
-    showModal(WorkspaceEnvironmentsEditModal, workspace);
+    showModal(WorkspaceEnvironmentsEditModal, { workspace });
   }, [workspace]);
 
   const toggleSwitchMenu = useCallback(() => {
