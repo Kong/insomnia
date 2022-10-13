@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "insomnia-plugin-hash",
-  "version": "3.6.1-beta.0",
+  "version": "3.6.1-beta.1",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia hash template tag",
   "license": "MIT",
