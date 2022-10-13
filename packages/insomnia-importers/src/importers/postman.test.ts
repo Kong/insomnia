@@ -322,5 +322,105 @@ describe('postman', () => {
         username: '',
       });
     });
+
+    it('returns oauth2 for Postman v2.1.0 with PKCE', () => {
+      const requestWithPCKE: Request1 = {
+        'auth': {
+          'type': 'oauth2',
+          'oauth2': [
+            {
+              'key': 'state',
+              'value': '1234567890',
+              'type': 'string',
+            },
+            {
+              'key': 'scope',
+              'value': 'read:org',
+              'type': 'string',
+            },
+            {
+              'key': 'clientSecret',
+              'value': '1234567890',
+              'type': 'string',
+            },
+            {
+              'key': 'clientId',
+              'value': '1234567890',
+              'type': 'string',
+            },
+            {
+              'key': 'accessTokenUrl',
+              'value': 'https://accounts.google.com/o/oauth2/token',
+              'type': 'string',
+            },
+            {
+              'key': 'authUrl',
+              'value': 'https://accounts.google.com/o/oauth2/auth',
+              'type': 'string',
+            },
+            {
+              'key': 'grant_type',
+              'value': 'authorization_code_with_pkce',
+              'type': 'string',
+            },
+            {
+              'key': 'tokenName',
+              'value': 'Test',
+              'type': 'string',
+            },
+            {
+              'key': 'challengeAlgorithm',
+              'value': 'S256',
+              'type': 'string',
+            },
+            {
+              'key': 'addTokenTo',
+              'value': 'queryParams',
+              'type': 'string',
+            },
+            {
+              'key': 'client_authentication',
+              'value': 'header',
+              'type': 'string',
+            },
+            {
+              key: 'redirect_uri',
+              value: 'exampleCallbackUrl',
+              type: 'string',
+            },
+          ],
+        },
+        'method': 'GET',
+        'header': [],
+        'url': {
+          'raw': 'https://mockbin.org/echo',
+          'protocol': 'https',
+          'host': [
+            'mockbin',
+            'org',
+          ],
+          'path': [
+            'echo',
+          ],
+        },
+      };
+      const schema = postmanSchema({ requests: [requestWithPCKE], version: 'v2.1.0' });
+      const postman = new ImportPostman(schema);
+      const { authentication } = postman.importRequestItem({ request: requestWithPCKE }, 'n/a');
+
+      expect(authentication).toEqual({
+        'accessTokenUrl': 'https://accounts.google.com/o/oauth2/token',
+        'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
+        'clientId': '1234567890',
+        'clientSecret': '1234567890',
+        disabled: false,
+        grantType: 'authorization_code',
+        password: '',
+        usePkce: true,
+        redirectUrl: 'exampleCallbackUrl',
+        type: 'oauth2',
+        username: '',
+      });
+    });
   });
 });
