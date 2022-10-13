@@ -222,7 +222,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
               <textarea
                 cols={30}
                 rows={3}
-                onChange={event => setState(state => ({ ...state, message: event.currentTarget.value }))}
+                onChange={event => setState(state => ({ ...state, message: event.target.value }))}
                 value={message}
                 placeholder="This is a helpful message that describe the changes made in this snapshot"
                 required
