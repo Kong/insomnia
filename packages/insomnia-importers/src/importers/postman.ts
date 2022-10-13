@@ -124,9 +124,12 @@ export class ImportPostman {
 
     const { authentication, headers } = this.importAuthentication(request.auth, request.header as Header[]);
 
-    // @ts-expect-error - property query does not exist?
-    const parameters = this.importParameters(request.url.query as QueryParam[]);
+    let parameters = [] as Parameter[];
 
+    if (typeof request.url !== 'string') {
+      // @ts-expect-error  -- Url can be both string and Url type.
+      parameters = this.importParameters(request.url?.query);
+    }
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
@@ -146,7 +149,7 @@ export class ImportPostman {
   };
 
   importParameters = (parameters: QueryParam[]): Parameter[] => {
-    if (parameters?.length === 0) {
+    if (!parameters || parameters?.length === 0) {
       return [];
     }
     return parameters.map(({ key, value, disabled }) => ({

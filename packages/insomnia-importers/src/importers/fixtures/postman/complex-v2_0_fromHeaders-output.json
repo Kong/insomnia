@@ -46,7 +46,13 @@
       ],
       "method": "GET",
       "name": "Return the complete project hierarchy.",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "team_id",
+          "value": "",
+          "disabled": true
+        }
+      ],
       "parentId": "__GRP_2__",
       "url": ""
     },
@@ -78,7 +84,23 @@
       ],
       "method": "GET",
       "name": "Return a list containing all projects.",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "title",
+          "value": "root",
+          "disabled": false
+        },
+        {
+          "name": "hide_archived",
+          "value": "true",
+          "disabled": false
+        },
+        {
+          "name": "team_id",
+          "value": "",
+          "disabled": true
+        }
+      ],
       "parentId": "__GRP_2__",
       "url": ""
     },
