@@ -509,12 +509,9 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (err) {
     body = { query: '' };
   }
-  let maybeVariables;
-  if (typeof body.variables === 'string') {
-    maybeVariables = jsonParseOr(body.variables, '');
-  }
+
   const query = body.query || '';
-  const variables = jsonPrettify(JSON.stringify(maybeVariables));
+  const variables = jsonPrettify(JSON.stringify(body.variables));
   const variableTypes = buildVariableTypes(schema);
 
   // Create portal for GraphQL Explorer
