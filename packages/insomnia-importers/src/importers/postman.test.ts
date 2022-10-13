@@ -314,11 +314,17 @@ describe('postman', () => {
         authorizationUrl: 'exampleAuthorizeUrl',
         clientId: 'exampleClientId',
         clientSecret: 'exampleClientSecret',
+        credentialsInBody: false,
         disabled: false,
         grantType: 'authorization_code',
         password: '',
+        pkceMethod: 'S256',
         redirectUrl: 'exampleCallbackUrl',
+        scope: '',
+        state: '',
+        tokenPrefix: '',
         type: 'oauth2',
+        usePkce: undefined,
         username: '',
       });
     });
@@ -409,16 +415,21 @@ describe('postman', () => {
       const { authentication } = postman.importRequestItem({ request: requestWithPCKE }, 'n/a');
 
       expect(authentication).toEqual({
-        'accessTokenUrl': 'https://accounts.google.com/o/oauth2/token',
-        'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
-        'clientId': '1234567890',
-        'clientSecret': '1234567890',
+        accessTokenUrl: 'https://accounts.google.com/o/oauth2/token',
+        authorizationUrl: 'https://accounts.google.com/o/oauth2/auth',
+        clientId: '1234567890',
+        clientSecret: '1234567890',
+        credentialsInBody: true,
         disabled: false,
         grantType: 'authorization_code',
         password: '',
-        usePkce: true,
+        pkceMethod: 'S256',
         redirectUrl: 'exampleCallbackUrl',
+        scope: 'read:org',
+        state: '1234567890',
+        tokenPrefix: '',
         type: 'oauth2',
+        usePkce: true,
         username: '',
       });
     });
