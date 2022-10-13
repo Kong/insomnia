@@ -126,8 +126,7 @@ export class ImportPostman {
 
     let parameters = [] as Parameter[];
 
-    if (typeof request.url !== 'string') {
-      // @ts-expect-error  -- Url can be both string and Url type.
+    if (typeof request.url === 'object' && request.url.query) {
       parameters = this.importParameters(request.url?.query);
     }
     return {
