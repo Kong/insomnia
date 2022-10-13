@@ -1,6 +1,6 @@
 import 'swagger-ui-react/swagger-ui.css';
 
-import React, { FC, useCallback, useRef, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { unreachableCase } from 'ts-assert-unreachable';
@@ -32,7 +32,6 @@ import { DropdownItem } from './base/dropdown/dropdown-item';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showPrompt } from './modals';
 import { PageLayout } from './page-layout';
 import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
@@ -190,7 +189,6 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
     dispatch(activateWorkspace({ workspace }));
   }, [dispatch]);
 
-  const inputRef = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('');
 
   // Render each card, removing all the ones that don't match the filter
@@ -252,10 +250,6 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
     setFilter(event.currentTarget.value);
   }, []);
 
-  useDocBodyKeyboardShortcuts({
-    documents_filter: () => inputRef.current?.focus(),
-  });
-
   return (
     <PageLayout
       renderPageHeader={
@@ -284,7 +278,7 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
                   }}
                 >
                   <input
-                    ref={inputRef}
+                    autoFocus
                     type="text"
                     placeholder="Filter..."
                     onChange={onChangeFilter}

@@ -39,7 +39,6 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   'environment_showVariableSourceAndValue': 'Show variable source and value',
   'beautifyRequestBody': 'Beautify Active Code Editors',
   'graphql_explorer_focus_filter': 'Focus GraphQL Explorer Filter',
-  'documents_filter': 'Focus Documents Filter',
 };
 
 /**
@@ -175,10 +174,6 @@ const defaultRegistry: HotKeyRegistry = {
   graphql_explorer_focus_filter: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.i.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.i.keyCode }],
-  },
-  documents_filter: {
-    macKeys: [{ meta: true, keyCode: keyboardKeys.f.keyCode }],
-    winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.f.keyCode }],
   },
 };
 
