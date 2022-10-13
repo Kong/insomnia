@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef,  useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { interceptAccessError } from '../../../sync/vcs/util';
@@ -36,6 +36,35 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
     currentBranch: '',
   });
 
+  const refreshState = useCallback(async () => {
+    try {
+      const currentBranch = await vcs.getBranch();
+      const branches = (await vcs.getBranches()).sort();
+      setState(state => ({
+        ...state,
+        branches,
+        currentBranch,
+        error: '',
+      }));
+
+      const remoteBranches = await interceptAccessError({
+        callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
+        action: 'get',
+        resourceName: 'remote',
+        resourceType: 'branches',
+      });
+      setState(state => ({
+        ...state,
+        remoteBranches,
+      }));
+    } catch (err) {
+      console.log('Failed to refresh', err.stack);
+      setState(state => ({
+        ...state,
+        error: err.message,
+      }));
+    }
+  }, [vcs]);
   useImperativeHandle(ref, () => ({
     hide: () => modalRef.current?.hide(),
     show: ({ onHide }) => {
@@ -43,12 +72,12 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
         ...state,
         onHide,
       }));
+      refreshState();
       modalRef.current?.show({ onHide });
     },
-  }), []);
+  }), [refreshState]);
   const syncItems = useSelector(selectSyncItems);
   async function handleCheckout(branch: string) {
-
     try {
       const delta = await vcs.checkout(syncItems, branch);
       // @ts-expect-error -- TSCONVERSION
@@ -64,7 +93,6 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
   }
   const handleMerge = async (branch: string) => {
     const delta = await vcs.merge(syncItems, branch);
-
     try {
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
@@ -122,35 +150,6 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       }));
     } catch (err) {
       console.log('Failed to create', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-  const refreshState = async () => {
-    try {
-      const currentBranch = await vcs.getBranch();
-      const branches = (await vcs.getBranches()).sort();
-      setState(state => ({
-        ...state,
-        branches,
-        currentBranch,
-        error: '',
-      }));
-
-      const remoteBranches = await interceptAccessError({
-        callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
-        action: 'get',
-        resourceName: 'remote',
-        resourceType: 'branches',
-      });
-      setState(state => ({
-        ...state,
-        remoteBranches,
-      }));
-    } catch (err) {
-      console.log('Failed to refresh', err.stack);
       setState(state => ({
         ...state,
         error: err.message,

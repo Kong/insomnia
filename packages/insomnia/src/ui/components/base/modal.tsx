@@ -49,8 +49,12 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
 
   const hide = useCallback(() => {
     setOpen(false);
-    onHideProp?.();
-    onHideArgument?.();
+    if (typeof onHideProp === 'function') {
+      onHideProp();
+    }
+    if (typeof onHideArgument === 'function') {
+      onHideArgument();
+    }
   }, [onHideProp, onHideArgument]);
 
   useImperativeHandle(ref, () => ({
