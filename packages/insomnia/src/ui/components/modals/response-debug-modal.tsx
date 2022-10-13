@@ -76,5 +76,4 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
     </Modal>
   );
 });
-
 ResponseDebugModal.displayName = 'ResponseDebugModal';

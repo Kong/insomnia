@@ -1,14 +1,11 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { type ModalHandle, Modal } from '../base/modal';
+import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
-
 interface State {
   title: string;
   hints: string[];
@@ -28,7 +25,6 @@ interface State {
   currentValue: string;
   loading: boolean;
 }
-
 export interface PromptModalOptions {
   title: string;
   defaultValue?: string;
@@ -46,13 +42,15 @@ export interface PromptModalOptions {
   onHide?: () => void;
   onDeleteHint?: (arg0?: string) => void;
 }
+export interface PromptModalHandle {
+  show: (options: PromptModalOptions) => void;
+  hide: () => void;
+}
+export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class PromptModal extends PureComponent<{}, State> {
-  modal: ModalHandle | null = null;
-  _input: HTMLInputElement | null = null;
-
-  state: State = {
+  const [state, setState] = useState<State>({
     title: 'Not Set',
     hints: [],
     defaultValue: '',
@@ -70,220 +68,171 @@ export class PromptModal extends PureComponent<{}, State> {
     onHide: undefined,
     currentValue: '',
     loading: false,
+  });
+  const _done = async (rawValue?: string) => {
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const value = state.upperCase ? rawValue!.toUpperCase() : rawValue;
+    // TODO: unsound non-null assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await state.onComplete?.(value!);
+    modalRef.current?.hide();
   };
-
-  async _done(rawValue?: string) {
-    const { onComplete, upperCase } = this.state;
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const value = upperCase ? rawValue!.toUpperCase() : rawValue;
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await onComplete?.(value!);
-    this.hide();
-  }
-
-  _setInputRef(input: HTMLInputElement) {
-    this._input = input;
-  }
-
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
-
-  _handleSelectHint(hint?: string) {
-    this._done(hint);
-  }
-
-  _handleDeleteHint(hint?: string) {
-    const { onDeleteHint } = this.state;
-    onDeleteHint?.(hint);
-    const hints = this.state.hints.filter(h => h !== hint);
-    this.setState({
-      hints,
-    });
-  }
-
-  async _handleSubmit(event: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
-    if (this.state.loading) {
+  const _handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) => {
+    if (state.loading) {
       return;
     }
 
-    this.setState({
-      loading: true,
-    });
+    setState({ ...state, loading: true });
 
     event.preventDefault();
 
-    if (this._input) {
-      const result =
-        this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
+    if (inputRef.current) {
+      const result = inputRef.current.type === 'checkbox' ? inputRef.current.checked.toString() : inputRef.current.value;
 
-      await this._done(result);
+      await _done(result);
     }
 
-    this.setState({
-      loading: false,
-    });
-  }
-
-  _handleChange(event: React.SyntheticEvent<HTMLInputElement>) {
-    const { validate } = this.state;
-
-    if (validate) {
-      const errorMessage = validate(event.currentTarget.value);
-      event.currentTarget.setCustomValidity(errorMessage);
-    }
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  show({
-    title,
-    defaultValue,
-    submitName,
-    selectText,
-    upperCase,
-    hint,
-    cancelable,
-    inputType,
-    placeholder,
-    label,
-    hints,
-    onComplete,
-    validate,
-    onDeleteHint,
-    onHide,
-  }: PromptModalOptions) {
-    this.setState({
-      currentValue: '',
+    setState({ ...state, loading: false });
+  };
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: ({
       title,
-      onDeleteHint,
-      onComplete,
       defaultValue,
       submitName,
       selectText,
-      cancelable: cancelable === undefined ? true : cancelable,
-      placeholder,
       upperCase,
       hint,
+      cancelable,
       inputType,
+      placeholder,
       label,
+      hints,
+      onComplete,
       validate,
-      hints: hints || [],
-      loading: false,
+      onDeleteHint,
       onHide,
-    });
-    this.modal?.show();
+    }) => {
+      setState({
+        currentValue: '',
+        title,
+        onDeleteHint,
+        onComplete,
+        defaultValue,
+        submitName,
+        selectText,
+        cancelable: cancelable === undefined ? true : cancelable,
+        placeholder,
+        upperCase,
+        hint,
+        inputType,
+        label,
+        validate,
+        hints: hints || [],
+        loading: false,
+        onHide,
+      });
+      modalRef.current?.show();
+    },
+  }), []);
 
-    // Need to do this after render because modal focuses itself too
-    setTimeout(() => {
-      if (!this._input) {
-        return;
-      }
+  const {
+    submitName,
+    title,
+    hint,
+    inputType,
+    placeholder,
+    label,
+    upperCase,
+    hints,
+    cancelable,
+    loading,
+  } = state;
+  const input = (
+    <input
+      ref={inputRef}
+      onChange={event => {
+        if (state.validate) {
+          const errorMessage = state.validate(event.currentTarget.value);
+          event.currentTarget.setCustomValidity(errorMessage);
+        }
+      }}
+      id="prompt-input"
+      disabled={loading}
+      type={inputType === 'decimal' ? 'number' : inputType || 'text'}
+      step={inputType === 'decimal' ? '0.1' : undefined}
+      min={inputType === 'decimal' ? '0.5' : undefined}
+      style={{
+        textTransform: upperCase ? 'uppercase' : 'none',
+      }}
+      placeholder={placeholder || ''}
+    />
+  );
+  let sanitizedHints: ReactNode[] = [];
 
-      if (inputType === 'checkbox') {
-        this._input.checked = !!defaultValue;
-      } else {
-        this._input.value = defaultValue || '';
-      }
-
-      this._input.focus();
-
-      selectText && this._input?.select();
-    }, 100);
-  }
-
-  _renderHintButton(hint: string) {
-    const classes = classnames(
-      'btn btn--outlined btn--super-duper-compact',
-      'margin-right-sm margin-top-sm inline-block',
-    );
-    return (
-      <div key={hint} className={classes}>
-        <button className="tall" onClick={() => this._handleSelectHint(hint)}>
+  if (Array.isArray(hints)) {
+    sanitizedHints = hints.slice(0, 15).map(hint =>
+      (<div key={hint} className="btn btn--outlined btn--super-duper-compact margin-right-sm margin-top-sm inline-block">
+        <button className="tall" onClick={() => _done(hint)}>
           {hint}
         </button>
         <PromptButton
           addIcon
           confirmMessage=""
           className="tall space-left icon"
-          onClick={() => this._handleDeleteHint(hint)}
+          onClick={() => {
+            state.onDeleteHint?.(hint);
+            const hints = state.hints.filter(h => h !== hint);
+            setState({
+              ...state,
+              hints,
+            });
+          }}
         >
           <i className="fa fa-close faint" />
         </PromptButton>
-      </div>
-    );
+      </div>));
   }
 
-  render() {
-    const {
-      submitName,
-      title,
-      hint,
-      inputType,
-      placeholder,
-      label,
-      upperCase,
-      hints,
-      cancelable,
-      loading,
-    } = this.state;
-    const input = (
-      <input
-        ref={this._setInputRef}
-        onChange={this._handleChange}
-        id="prompt-input"
-        disabled={loading}
-        type={inputType === 'decimal' ? 'number' : inputType || 'text'}
-        step={inputType === 'decimal' ? '0.1' : undefined}
-        min={inputType === 'decimal' ? '0.5' : undefined}
-        style={{
-          textTransform: upperCase ? 'uppercase' : 'none',
-        }}
-        placeholder={placeholder || ''}
-      />
-    );
-    let sanitizedHints: ReactNode[] = [];
+  let field = input;
 
-    if (Array.isArray(hints)) {
-      sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
-    }
-
-    let field = input;
-
-    if (label) {
-      const labelClasses = classnames({
-        'inline-block': inputType === 'checkbox',
-      });
-      field = (
-        <label htmlFor="prompt-input" className={labelClasses}>
-          {label} {input}
-        </label>
-      );
-    }
-
-    const divClassnames = classnames('form-control form-control--wide', {
-      'form-control--outlined': inputType !== 'checkbox',
+  if (label) {
+    const labelClasses = classnames({
+      'inline-block': inputType === 'checkbox',
     });
-    return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onHide={this.state.onHide}>
-        <ModalHeader>{title}</ModalHeader>
-        <ModalBody className="wide">
-          <form onSubmit={this._handleSubmit} className="wide pad">
-            <div className={divClassnames}>{field}</div>
-            {sanitizedHints}
-          </form>
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
-          <button className="btn" onClick={this._handleSubmit} disabled={loading}>
-            {loading && <i className="fa fa-refresh fa-spin" />} {submitName || 'Submit'}
-          </button>
-        </ModalFooter>
-      </Modal>
+    field = (
+      <label htmlFor="prompt-input" className={labelClasses}>
+        {label} {input}
+      </label>
     );
   }
-}
+
+  const divClassnames = classnames('form-control form-control--wide', {
+    'form-control--outlined': inputType !== 'checkbox',
+  });
+  return (
+    <Modal
+      ref={modalRef}
+      noEscape={!cancelable || loading}
+      onHide={state.onHide}
+    >
+      <ModalHeader>{title}</ModalHeader>
+      <ModalBody className="wide">
+        <form onSubmit={_handleSubmit} className="wide pad">
+          <div className={divClassnames}>{field}</div>
+          {sanitizedHints}
+        </form>
+      </ModalBody>
+      <ModalFooter>
+        <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
+        <button className="btn" onClick={_handleSubmit} disabled={loading}>
+          {loading && <i className="fa fa-refresh fa-spin" />} {submitName || 'Submit'}
+        </button>
+      </ModalFooter>
+    </Modal>
+  );
+});
+PromptModal.displayName = 'PromptModal';
