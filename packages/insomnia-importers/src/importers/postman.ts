@@ -56,6 +56,18 @@ const POSTMAN_SCHEMA_V2_0 =
 const POSTMAN_SCHEMA_V2_1 =
   'https://schema.getpostman.com/json/collection/v2.1.0/collection.json';
 
+const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
+  if (grantType === 'authorization_code_with_pkce') {
+    return 'authorization_code';
+  }
+
+  if (grantType === 'password_credentials') {
+    return 'password';
+  }
+
+  return grantType;
+};
+
 export class ImportPostman {
   collection;
 
@@ -658,14 +670,23 @@ export class ImportPostman {
     // Note: We only support importing OAuth2 configuration from Postman v2.1
     if (schema === POSTMAN_SCHEMA_V2_1) {
       const oauth2 = auth.oauth2 as V210Auth['oauth2'];
+      const grantTypeField = this.findValueByKey(oauth2, 'grant_type');
+      const grantType = mapGrantTypeToInsomniaGrantType(grantTypeField);
+
       return {
         type: 'oauth2',
         disabled: false,
+        pkceMethod: this.findValueByKey(oauth2, 'challengeAlgorithm'),
+        state: this.findValueByKey(oauth2, 'state'),
+        scope: this.findValueByKey(oauth2, 'scope'),
+        tokenPrefix: this.findValueByKey(oauth2, 'headerPrefix'),
+        credentialsInBody: this.findValueByKey(oauth2, 'addTokenTo') !== 'header',
         accessTokenUrl: this.findValueByKey(oauth2, 'accessTokenUrl'),
         authorizationUrl: this.findValueByKey(oauth2, 'authUrl'),
-        grantType: this.findValueByKey(oauth2, 'grant_type'),
-        password: '',
-        username: '',
+        grantType,
+        password: this.findValueByKey(oauth2, 'password'),
+        username: this.findValueByKey(oauth2, 'username'),
+        usePkce: grantTypeField === 'authorization_code_with_pkce' ? true : undefined,
         clientId: this.findValueByKey(oauth2, 'clientId'),
         clientSecret: this.findValueByKey(oauth2, 'clientSecret'),
         redirectUrl: this.findValueByKey(oauth2, 'redirect_uri'),

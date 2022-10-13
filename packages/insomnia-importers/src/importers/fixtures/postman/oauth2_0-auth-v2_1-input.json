@@ -1,74 +1,526 @@
 {
-  "info": {
-    "_postman_id": "acf8fcf9-f63b-4bf8-93a9-c95cee40bde4",
-    "name": "Oauth 2.0 Test",
-    "description": "A collection for testing",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Added to Request URL",
-      "request": {
-        "auth": {
-          "type": "oauth2",
-          "oauth2": [
-            {
-              "key": "accessToken",
-              "value": "oauth2.0-access-token-url",
-              "type": "string"
-            },
-            {
-              "key": "addTokenTo",
-              "value": "queryParams",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": ""
-        },
-        "url": {
-          "raw": "https://insomnia.rest",
-          "protocol": "https",
-          "host": ["insomnia", "rest"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Added to Request Headers",
-      "request": {
-        "auth": {
-          "type": "oauth2",
-          "oauth2": [
-            {
-              "key": "accessToken",
-              "value": "oauth2.0-adccess-token-headers",
-              "type": "string"
-            },
-            {
-              "key": "addTokenTo",
-              "value": "header",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": ""
-        },
-        "url": {
-          "raw": "https://insomnia.rest",
-          "protocol": "https",
-          "host": ["insomnia", "rest"]
-        }
-      },
-      "response": []
-    }
-  ]
+	"info": {
+		"_postman_id": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX",
+		"name": "oauth2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "XXXXXXXX"
+	},
+	"item": [
+		{
+			"name": "auth code",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "headerPrefix",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"38333c40-c3c4-4a19-ab07-2cca65eb22b9": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "resource",
+							"value": {
+								"21156c61-4463-4f97-ab80-0cb2adcea953": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "state",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "authorization_code",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "mockbin.org/request/any",
+					"host": [
+						"mockbin",
+						"org"
+					],
+					"path": [
+						"request",
+						"any"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "pkce",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "headerPrefix",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"a6b13605-f65a-418c-90da-650fcc7a25a0": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "resource",
+							"value": {
+								"95668487-cf79-411f-b3ac-effaa6f84e98": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "code_verifier",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "authorization_code_with_pkce",
+							"type": "string"
+						},
+						{
+							"key": "state",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "mockbin.org/request/any",
+					"host": [
+						"mockbin",
+						"org"
+					],
+					"path": [
+						"request",
+						"any"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "implicit",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "headerPrefix",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"9f3101aa-93b4-46c3-8626-d0d9275434d8": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "grant_type",
+							"value": "implicit",
+							"type": "string"
+						},
+						{
+							"key": "code_verifier",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "state",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "mockbin.org/request/any",
+					"host": [
+						"mockbin",
+						"org"
+					],
+					"path": [
+						"request",
+						"any"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "password",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "headerPrefix",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"dd83a076-85c0-4e53-995c-ac99b738f2d3": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "password",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "password_credentials",
+							"type": "string"
+						},
+						{
+							"key": "code_verifier",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "state",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "mockbin.org/request/any",
+					"host": [
+						"mockbin",
+						"org"
+					],
+					"path": [
+						"request",
+						"any"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "client",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "headerPrefix",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"49395f3e-8e67-43b9-9479-1ed5209dbb72": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "resource",
+							"value": {
+								"8da4761b-2871-48e9-8aad-a59df2c1bf9a": "test"
+							},
+							"type": "any"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "code_verifier",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "state",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "mockbin.org/request/any",
+					"host": [
+						"mockbin",
+						"org"
+					],
+					"path": [
+						"request",
+						"any"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
 }
