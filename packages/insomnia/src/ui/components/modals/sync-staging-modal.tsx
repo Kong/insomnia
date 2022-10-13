@@ -82,14 +82,14 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
         checked: !!status.stage[key],
       };
     }
-    setState({
+    setState(state => ({
       ...state,
       status,
       branch,
       lookupMap,
       error: '',
-    });
-  }, [state, syncItems, vcs]);
+    }));
+  }, [syncItems, vcs]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -184,7 +184,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     }
     onSnapshot?.();
     await refreshMainAttributes();
-    setState({ ...state, message: '', error: '' });
+    setState(state => ({ ...state, message: '', error: '' }));
     modalRef.current?.hide();
     return true;
   };
@@ -209,7 +209,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
       <ModalBody className="wide pad">
         {error && (
           <p className="notice error margin-bottom-sm no-margin-top">
-            <button className="pull-right icon" onClick={() => setState({ ...state, error: '' })}>
+            <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
               <i className="fa fa-times" />
             </button>
             {error}
@@ -222,7 +222,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
               <textarea
                 cols={30}
                 rows={3}
-                onChange={event => setState({ ...state, message: event.currentTarget.value })}
+                onChange={event => setState(state => ({ ...state, message: event.currentTarget.value }))}
                 value={message}
                 placeholder="This is a helpful message that describe the changes made in this snapshot"
                 required

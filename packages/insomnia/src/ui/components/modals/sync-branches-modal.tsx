@@ -39,13 +39,13 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
   useImperativeHandle(ref, () => ({
     hide: () => modalRef.current?.hide(),
     show: ({ onHide }) => {
-      setState({
+      setState(state => ({
         ...state,
         onHide,
-      });
+      }));
       modalRef.current?.show({ onHide });
     },
-  }), [state]);
+  }), []);
   const syncItems = useSelector(selectSyncItems);
   async function handleCheckout(branch: string) {
 
@@ -165,7 +165,7 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       <ModalBody className="wide pad">
         {error && (
           <p className="notice error margin-bottom-sm no-margin-top">
-            <button className="pull-right icon" onClick={() => setState({ ...state, error: '' })}>
+            <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
               <i className="fa fa-times" />
             </button>
             {error}
@@ -178,7 +178,7 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
                 New Branch Name
                 <input
                   type="text"
-                  onChange={event => setState({ ...state, newBranchName: event.currentTarget.value })}
+                  onChange={event => setState(state => ({ ...state, newBranchName: event.currentTarget.value }))}
                   placeholder="testing-branch"
                   value={newBranchName}
                 />
