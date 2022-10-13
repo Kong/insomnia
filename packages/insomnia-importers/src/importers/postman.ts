@@ -197,7 +197,7 @@ export class ImportPostman {
     }
 
     // remove ? and everything after it if there are QueryParams strictly defined
-    if (typeof url === 'object' && url.query) {
+    if (typeof url === 'object' && url.query && url.raw?.includes('?')) {
       return url.raw?.slice(0, url.raw.indexOf('?')) || '';
     }
 

@@ -95,13 +95,7 @@
 						"request",
 						"any"
 					],
-					"query": [
-						{
-							"key": "foo",
-							"value": "bar",
-							"disabled": true
-						}
-					]
+					"query": []
 				}
 			},
 			"response": []
@@ -200,13 +194,7 @@
 						"request",
 						"any"
 					],
-					"query": [
-						{
-							"key": "foo",
-							"value": "bar",
-							"disabled": true
-						}
-					]
+					"query": []
 				}
 			},
 			"response": []
@@ -298,13 +286,7 @@
 						"request",
 						"any"
 					],
-					"query": [
-						{
-							"key": "foo",
-							"value": "bar",
-							"disabled": true
-						}
-					]
+					"query": []
 				}
 			},
 			"response": []
@@ -406,13 +388,7 @@
 						"request",
 						"any"
 					],
-					"query": [
-						{
-							"key": "foo",
-							"value": "bar",
-							"disabled": true
-						}
-					]
+					"query": []
 				}
 			},
 			"response": []
@@ -511,13 +487,7 @@
 						"request",
 						"any"
 					],
-					"query": [
-						{
-							"key": "foo",
-							"value": "bar",
-							"disabled": true
-						}
-					]
+					"query": []
 				}
 			},
 			"response": []
