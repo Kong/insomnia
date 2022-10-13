@@ -56,10 +56,10 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       await refreshState();
     } catch (err) {
       console.log('Failed to checkout', err.stack);
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   }
   const handleMerge = async (branch: string) => {
@@ -71,10 +71,10 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       await refreshState();
     } catch (err) {
       console.log('Failed to merge', err.stack);
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
@@ -84,10 +84,10 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       await refreshState();
     } catch (err) {
       console.log('Failed to remote delete', err.stack);
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
@@ -97,10 +97,10 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       await refreshState();
     } catch (err) {
       console.log('Failed to delete', err.stack);
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
 
@@ -116,28 +116,28 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       await db.batchModifyDocs(delta);
       // Clear branch name and refresh things
       await refreshState();
-      setState({
+      setState(state => ({
         ...state,
         newBranchName: '',
-      });
+      }));
     } catch (err) {
       console.log('Failed to create', err.stack);
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
   const refreshState = async () => {
     try {
       const currentBranch = await vcs.getBranch();
       const branches = (await vcs.getBranches()).sort();
-      setState({
+      setState(state => ({
         ...state,
         branches,
         currentBranch,
         error: '',
-      });
+      }));
 
       const remoteBranches = await interceptAccessError({
         callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
@@ -145,16 +145,16 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
         resourceName: 'remote',
         resourceType: 'branches',
       });
-      setState({
+      setState(state => ({
         ...state,
         remoteBranches,
-      });
+      }));
     } catch (err) {
       console.log('Failed to refresh', err.stack);
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
     }
   };
   const { branches, remoteBranches, currentBranch, newBranchName, error } = state;
