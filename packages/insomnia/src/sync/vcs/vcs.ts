@@ -378,7 +378,7 @@ export class VCS {
 
   async getHistoryCount(branchName?: string) {
     const branch = branchName ? await this._getBranch(branchName) : await this._getCurrentBranch();
-    return branch?.snapshots.length;
+    return branch?.snapshots.length || 0;
   }
 
   async getHistory(count = 0) {

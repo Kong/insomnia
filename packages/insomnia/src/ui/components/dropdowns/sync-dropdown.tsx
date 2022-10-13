@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, Fragment, useEffect, useState } from 'react';
+import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
@@ -85,6 +85,42 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
+
+  const refreshMainAttributes = useCallback(async () => {
+    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
+      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
+      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
+      setState(state => ({
+        ...state,
+        remoteBackendProjects: matchedBackendProjects,
+      }));
+      return;
+    }
+
+    const localBranches = (await vcs.getBranches()).sort();
+    const currentBranch = await vcs.getBranch();
+    const historyCount = await vcs.getHistoryCount();
+    const status = await vcs.status(syncItems, {});
+    // Do the remote stuff
+    if (session.isLoggedIn()) {
+      try {
+        const compare = await vcs.compareRemoteBranch();
+        setState(state => ({
+          ...state,
+          compare,
+        }));
+      } catch (err) {
+        console.log('Failed to compare remote branches', err.message);
+      }
+    }
+    setState(state => ({ ...state,
+      status,
+      historyCount,
+      localBranches,
+      currentBranch,
+    }));
+  }, [project, syncItems, vcs, workspace._id]);
+
   // on mount
   useEffect(() => {
     let isMounted = true;
@@ -119,9 +155,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       isMounted = false;
       // document.removeEventListener('mousemove', _handleUserActivity);
     };
-  }, []);
+  }, [project, refreshMainAttributes, vcs, workspace, workspaceMeta]);
   // Update if new sync items
-
   useEffect(() => {
     if (vcs.hasBackendProject()) {
       vcs.status(syncItems, {}).then(status => {
@@ -136,41 +171,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       refreshMainAttributes();
       setRefreshOnNextSyncItems(false);
     }
-  }, [syncItems]);
-  async function refreshMainAttributes(extraState: Partial<State> = {}) {
-    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
-      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
-      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
-      setState(state => ({
-        ...state,
-        remoteBackendProjects: matchedBackendProjects,
-      }));
-      return;
-    }
+  }, [refreshMainAttributes, refreshOnNextSyncItems, syncItems, vcs]);
 
-    const localBranches = (await vcs.getBranches()).sort();
-    const currentBranch = await vcs.getBranch();
-    const historyCount = await vcs.getHistoryCount();
-    const status = await vcs.status(syncItems, {});
-    const newState: Partial<State> = {
-      status,
-      historyCount,
-      localBranches,
-      currentBranch,
-      ...extraState,
-    };
-
-    // Do the remote stuff
-    if (session.isLoggedIn()) {
-      try {
-        newState.compare = await vcs.compareRemoteBranch();
-      } catch (err) {
-        console.log('Failed to compare remote branches', err.message);
-      }
-    }
-
-    setState(prevState => ({ ...prevState, ...newState }));
-  }
   async function _handlePushChanges() {
     setState(state => ({
       ...state,
@@ -193,9 +195,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       });
     }
 
-    await refreshMainAttributes({
+    await refreshMainAttributes();
+    setState(state => ({
+      ...state,
       loadingPush: false,
-    });
+    }));
   }
 
   async function _handlePullChanges() {
@@ -262,9 +266,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       logCollectionMovedToProject(workspace, pulledIntoProject);
     }
 
-    await refreshMainAttributes({
+    await refreshMainAttributes();
+    setState(state => ({
+      ...state,
       loadingProjectPull: false,
-    });
+    }));
   }
 
   async function _handleSwitchBranch(branch: string) {
@@ -361,9 +367,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   loadingProjectPull: true,
                 }));
                 await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
-                await refreshMainAttributes({
+                await refreshMainAttributes();
+                setState(state => ({
+                  ...state,
                   loadingProjectPull: false,
-                });
+                }));
               }}
             >
               <i className="fa fa-plus-circle" /> Create Locally
