@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
 import * as session from '../../../account/session';
@@ -9,14 +9,17 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { Project } from '../../../models/project';
+import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Status } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
+import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
+import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectActiveWorkspaceMeta, selectSyncItems } from '../../redux/selectors';
+import { activateWorkspace } from '../../redux/modules/workspace';
+import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -76,6 +79,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
     remoteBackendProjects: [],
   });
+  const dispatch = useDispatch();
+  const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
@@ -94,6 +99,15 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   }, [vcs]);
 
   const refreshVCSAndRefetchRemote = useCallback(async () => {
+    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
+      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
+      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
+      setState(state => ({
+        ...state,
+        remoteBackendProjects: matchedBackendProjects,
+      }));
+      return;
+    }
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
@@ -107,7 +121,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }));
     // Do the remote stuff
     refetchRemoteBranch();
-  }, [refetchRemoteBranch, syncItems, vcs]);
+  }, [project, refetchRemoteBranch, syncItems, vcs, workspace._id]);
 
   useInterval(() => {
     refetchRemoteBranch();
@@ -152,7 +166,23 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       });
     }
   }, [syncItems, vcs]);
-
+  async function handleSetProject(backendProject: BackendProjectWithTeam) {
+    setState(state => ({
+      ...state,
+      loadingProjectPull: true,
+    }));
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
+    if (pulledIntoProject._id !== project._id) {
+      // If pulled into a different project, reactivate the workspace
+      await dispatch(activateWorkspace({ workspaceId: workspace._id }));
+      logCollectionMovedToProject(workspace, pulledIntoProject);
+    }
+    await refreshVCSAndRefetchRemote();
+    setState(state => ({
+      ...state,
+      loadingProjectPull: false,
+    }));
+  }
   async function handlePush() {
     setState(state => ({
       ...state,
@@ -269,6 +299,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     loadingProjectPull,
     compare: { ahead, behind },
     initializing,
+    remoteBackendProjects,
   } = state;
   const canCreateSnapshot =
     Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
@@ -298,6 +329,41 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     );
   }
 
+  if (!vcs.hasBackendProject()) {
+    return (
+      <div>
+        <Dropdown className="wide tall" onOpen={() => refreshVCSAndRefetchRemote()}>
+          <DropdownButton className="btn btn--compact wide">
+            <i className="fa fa-code-fork " /> Setup Sync
+          </DropdownButton>
+          {syncMenuHeader}
+          {remoteBackendProjects.length === 0 && (
+            <DropdownItem
+              onClick={async () => {
+                setState(state => ({
+                  ...state,
+                  loadingProjectPull: true,
+                }));
+                await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+                await refreshVCSAndRefetchRemote();
+                setState(state => ({
+                  ...state,
+                  loadingProjectPull: false,
+                }));
+              }}
+            >
+              <i className="fa fa-plus-circle" /> Create Locally
+            </DropdownItem>
+          )}
+          {remoteBackendProjects.map(p => (
+            <DropdownItem key={p.id} onClick={() => handleSetProject(p)}>
+              <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
+            </DropdownItem>
+          ))}
+        </Dropdown>
+      </div>
+    );
+  }
   const canPush = ahead > 0;
   const canPull = behind > 0;
   const loadIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;

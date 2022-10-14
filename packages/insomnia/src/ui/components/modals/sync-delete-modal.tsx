@@ -1,13 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
-import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
-import * as models from '../../../models';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
-import { setActiveActivity } from '../../redux/modules/global';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -43,7 +40,6 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
     },
   }), []);
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const dispatch = useDispatch();
   const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
@@ -53,11 +49,6 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
         resourceName: state.workspaceName,
         resourceType: strings.collection.singular.toLowerCase(),
       });
-      if (activeWorkspace) {
-        await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-        await models.workspace.remove(activeWorkspace);
-        dispatch(setActiveActivity(ACTIVITY_HOME));
-      }
       modalRef.current?.hide();
     } catch (err) {
       setState(state => ({
@@ -75,7 +66,7 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
         {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
         <p className="selectable">
           This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-          {strings.collection.singular.toLowerCase()} locally and remotely.
+          {strings.collection.singular.toLowerCase()} remotely.
         </p>
         <p className="selectable">Please type {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} to confirm.</p>
         <form onSubmit={onSubmit}>
