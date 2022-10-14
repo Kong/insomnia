@@ -218,3 +218,32 @@ jobs:
           git push "${remote_repo}"
         env:
           RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
+  publish-fedora:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch # Check out the release branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build Insomnia from sources for Fedora
+        run: |
+          docker build --tag fedora-insomnia-builder:latest -f fedora.Dockerfile .
+          docker create --name builder fedora-insomnia-builder:latest
+          docker cp builder:/insomnia/packages/insomnia/dist ./artifacts/
+          docker rm -f builder
+
+      - name: Upload artifacts to release
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.core_tag_and_release.outputs.id }}
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          file: "./artifacts/**.rpm"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false

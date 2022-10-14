@@ -143,6 +143,7 @@ const { env: { BUILD_TARGETS, BUILD_DEPS_FROM_SOURCE }, platform } = process;
 const targets = BUILD_TARGETS?.split(',');
 if (BUILD_DEPS_FROM_SOURCE) {
   config.buildDependenciesFromSource = true;
+  config.linux.artifactName = `${BINARY_PREFIX}-\${version}-fromSource.\${ext}`;
 }
 if (platform && targets) {
   console.log('overriding build targets to: ', targets);
