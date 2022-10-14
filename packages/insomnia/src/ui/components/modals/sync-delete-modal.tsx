@@ -13,7 +13,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 type Props = ModalProps & {
-  vcs:VCS;
+  vcs: VCS;
 };
 export interface SyncDeleteModalOptions {
   error: string;
