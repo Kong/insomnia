@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
@@ -8,17 +8,14 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { isRemoteProject, Project } from '../../../models/project';
+import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { Snapshot, Status } from '../../../sync/types';
+import { Status } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
-import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
-import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
+import { selectActiveWorkspaceMeta, selectSyncItems } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -80,23 +77,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
     remoteBackendProjects: [],
   });
-  const [refreshOnNextSyncItems, setRefreshOnNextSyncItems] = useState(false);
-  const dispatch = useDispatch();
-  const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
   const refreshMainAttributes = useCallback(async () => {
-    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
-      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
-      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
-      setState(state => ({
-        ...state,
-        remoteBackendProjects: matchedBackendProjects,
-      }));
-      return;
-    }
-
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
@@ -113,13 +97,14 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         console.log('Failed to compare remote branches', err.message);
       }
     }
-    setState(state => ({ ...state,
+    setState(state => ({
+      ...state,
       status,
       historyCount,
       localBranches,
       currentBranch,
     }));
-  }, [project, syncItems, vcs, workspace._id]);
+  }, [syncItems, vcs]);
 
   // on mount
   useEffect(() => {
@@ -131,6 +116,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       }));
 
       try {
+        // NOTE pushes the first snapshot automatically
         await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
         await refreshMainAttributes();
       } catch (err) {
@@ -158,6 +144,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   }, [project, refreshMainAttributes, vcs, workspace, workspaceMeta]);
   // Update if new sync items
   useEffect(() => {
+    console.log('syncitems dropdown', syncItems);
     if (vcs.hasBackendProject()) {
       vcs.status(syncItems, {}).then(status => {
         setState(state => ({
@@ -166,12 +153,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         }));
       });
     }
-
-    if (refreshOnNextSyncItems) {
-      refreshMainAttributes();
-      setRefreshOnNextSyncItems(false);
-    }
-  }, [refreshMainAttributes, refreshOnNextSyncItems, syncItems, vcs]);
+  }, [syncItems, vcs]);
 
   async function _handlePushChanges() {
     setState(state => ({
@@ -218,7 +200,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       });
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
-      setRefreshOnNextSyncItems(true);
     } catch (err) {
       showError({
         title: 'Pull Error',
@@ -233,13 +214,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }));
   }
 
-  async function _handleRollback(snapshot: Snapshot) {
-    const delta = await vcs.rollback(snapshot.id, syncItems);
-    // @ts-expect-error -- TSCONVERSION
-    await db.batchModifyDocs(delta);
-    setRefreshOnNextSyncItems(true);
-  }
-
   async function _handleRevert() {
     try {
       const delta = await vcs.rollbackToLatest(syncItems);
@@ -252,25 +226,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         error: err,
       });
     }
-  }
-  async function _handleSetProject(backendProject: BackendProjectWithTeam) {
-    setState(state => ({
-      ...state,
-      loadingProjectPull: true,
-    }));
-
-    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
-    if (pulledIntoProject._id !== project._id) {
-      // If pulled into a different project, reactivate the workspace
-      await dispatch(activateWorkspace({ workspaceId: workspace._id }));
-      logCollectionMovedToProject(workspace, pulledIntoProject);
-    }
-
-    await refreshMainAttributes();
-    setState(state => ({
-      ...state,
-      loadingProjectPull: false,
-    }));
   }
 
   async function _handleSwitchBranch(branch: string) {
@@ -299,7 +254,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }
 
     // We can't refresh now because we won't yet have the new syncItems
-    setRefreshOnNextSyncItems(true);
     // Still need to do this in case sync items don't change
     setState(state => ({
       ...state,
@@ -319,7 +273,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     loadingPull,
     loadingPush,
     loadingProjectPull,
-    remoteBackendProjects,
     compare: { ahead, behind },
     initializing,
   } = state;
@@ -351,41 +304,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     );
   }
 
-  if (!vcs.hasBackendProject()) {
-    return (
-      <div>
-        <Dropdown className="wide tall" onOpen={() => refreshMainAttributes()}>
-          <DropdownButton className="btn btn--compact wide">
-            <i className="fa fa-code-fork " /> Setup Sync
-          </DropdownButton>
-          {syncMenuHeader}
-          {remoteBackendProjects.length === 0 && (
-            <DropdownItem
-              onClick={async () => {
-                setState(state => ({
-                  ...state,
-                  loadingProjectPull: true,
-                }));
-                await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
-                await refreshMainAttributes();
-                setState(state => ({
-                  ...state,
-                  loadingProjectPull: false,
-                }));
-              }}
-            >
-              <i className="fa fa-plus-circle" /> Create Locally
-            </DropdownItem>
-          )}
-          {remoteBackendProjects.map(p => (
-            <DropdownItem key={p.id} onClick={() => _handleSetProject(p)}>
-              <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
-            </DropdownItem>
-          ))}
-        </Dropdown>
-      </div>
-    );
-  }
   const canPush = ahead > 0;
   const canPull = behind > 0;
   const loadIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;
@@ -487,7 +405,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
         <DropdownDivider>{currentBranch}</DropdownDivider>
 
-        <DropdownItem onClick={() => showModal(SyncHistoryModal, { handleRollback: _handleRollback })} disabled={historyCount === 0}>
+        <DropdownItem onClick={() => showModal(SyncHistoryModal)} disabled={historyCount === 0}>
           <i className="fa fa-clock-o" />
           History
         </DropdownItem>

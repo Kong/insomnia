@@ -1,8 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
+import { selectSyncItems } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -17,13 +19,9 @@ type Props = ModalProps & {
 interface State {
   branch: string;
   history: Snapshot[];
-  handleRollback?: (snapshot: Snapshot) => Promise<void>;
-}
-export interface SyncHistoryModalOptions {
-  handleRollback?: (snapshot: Snapshot) => Promise<void>;
 }
 export interface SyncHistoryModalHandle {
-  show: (options: SyncHistoryModalOptions) => void;
+  show: () => void;
   hide: () => void;
 }
 export const SyncHistoryModal = forwardRef<SyncHistoryModalHandle, Props>(({ vcs }, ref) => {
@@ -32,16 +30,15 @@ export const SyncHistoryModal = forwardRef<SyncHistoryModalHandle, Props>(({ vcs
     branch: '',
     history: [],
   });
-
+  const syncItems = useSelector(selectSyncItems);
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
-    show: async ({ handleRollback }) => {
+    show: async () => {
       const branch = await vcs.getBranch();
       const history = await vcs.getHistory();
       setState({
-        handleRollback,
         branch,
         history: history.sort((a, b) => (a.created < b.created ? 1 : -1)),
       });
@@ -61,7 +58,7 @@ export const SyncHistoryModal = forwardRef<SyncHistoryModalHandle, Props>(({ vcs
 
     return fullName;
   };
-  const { branch, history, handleRollback } = state;
+  const { branch, history } = state;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>
@@ -114,11 +111,12 @@ export const SyncHistoryModal = forwardRef<SyncHistoryModalHandle, Props>(({ vcs
                 <td className="text-right">
                   <PromptButton
                     className="btn btn--micro btn--outlined"
-                    onClick={() => {
-                      console.log('clicked');
-                      if (typeof handleRollback === 'function') {
-                        handleRollback(snapshot);
-                      }
+                    onClick={async () => {
+                      console.log('syncItems', syncItems.length);
+                      const delta = await vcs.rollback(snapshot.id, syncItems);
+                      console.log('run', delta);
+                      // @ts-expect-error -- TSCONVERSION
+                      await db.batchModifyDocs(delta);
                     }}
                   >
                     Restore
