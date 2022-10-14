@@ -13,10 +13,10 @@ SHELL ["/bin/bash", "--login", "-c"]
 RUN curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
 # Build and Package the app
-# Build and Package the app
-RUN cd insomnia && \
-    nvm install && \
-    npm run bootstrap && \
-    NODE_OPTIONS="--max-old-space-size=6144" BUILD_TARGETS="rpm" BUILD_DEPS_FROM_SOURCE="true" npm run app-package
+WORKDIR /insomnia
+
+RUN nvm install
+RUN npm run bootstrap
+RUN NODE_OPTIONS="--max-old-space-size=6144" BUILD_TARGETS="rpm" BUILD_DEPS_FROM_SOURCE="true" npm run app-package
 
 ENTRYPOINT [ "bash" ]
