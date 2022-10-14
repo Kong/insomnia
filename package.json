@@ -31,7 +31,6 @@
     "app-start": "npm start --prefix packages/insomnia",
     "app-build": "npm run build --prefix packages/insomnia",
     "app-package": "npm run build --prefix packages/insomnia && npm run package --prefix packages/insomnia",
-    "app-package-fedora": "npm run build --prefix packages/insomnia && npm run package-fedora --prefix packages/insomnia",
     "app-bump-version": "npm run bump-version --prefix packages/insomnia",
     "test:smoke:dev": "npm run test:dev --prefix packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke",

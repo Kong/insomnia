@@ -2,7 +2,8 @@
 
 FROM docker.io/fedora:36 AS builder
 
-RUN dnf install libcurl-devel make automake gcc gcc-c++ libxcrypt-compat rpm-build -y
+RUN dnf upgrade -y
+RUN dnf install libcurl-devel make automake gcc gcc-c++ libxcrypt-compat rpm-build cups -y
 
 # Add files
 COPY . ./insomnia
@@ -16,4 +17,6 @@ RUN curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 RUN cd insomnia && \
     nvm install && \
     npm run bootstrap && \
-    npm run app-package-fedora
+    NODE_OPTIONS="--max-old-space-size=6144" BUILD_TARGETS="rpm" BUILD_DEPS_FROM_SOURCE="true" npm run app-package
+
+ENTRYPOINT [ "bash" ]

@@ -10,6 +10,7 @@ const BINARY_PREFIX = 'Insomnia.Core';
 const config = {
   npmRebuild: false,
   appId: 'com.insomnia.app',
+  buildDependenciesFromSource: false,
   protocols: [
     {
       name: 'Insomnia',
@@ -138,8 +139,11 @@ const config = {
   },
 };
 
-const { env: { BUILD_TARGETS }, platform } = process;
+const { env: { BUILD_TARGETS, BUILD_DEPS_FROM_SOURCE }, platform } = process;
 const targets = BUILD_TARGETS?.split(',');
+if (BUILD_DEPS_FROM_SOURCE) {
+  config.buildDependenciesFromSource = true;
+}
 if (platform && targets) {
   console.log('overriding build targets to: ', targets);
   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
