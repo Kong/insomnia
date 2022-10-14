@@ -114,16 +114,10 @@ export const SyncHistoryModal = forwardRef<SyncHistoryModalHandle, Props>(({ vcs
                 <td className="text-right">
                   <PromptButton
                     className="btn btn--micro btn--outlined"
-                    onClick={async () => {
+                    onClick={() => {
+                      console.log('clicked');
                       if (typeof handleRollback === 'function') {
-                        await handleRollback(snapshot);
-                        const branch = await vcs.getBranch();
-                        const history = await vcs.getHistory();
-                        setState({
-                          handleRollback,
-                          branch,
-                          history: history.sort((a, b) => (a.created < b.created ? 1 : -1)),
-                        });
+                        handleRollback(snapshot);
                       }
                     }}
                   >
