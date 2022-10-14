@@ -73,7 +73,7 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
           <div className="form-control form-control--outlined">
             <input
               type="text"
-              onChange={event => setState(state => ({ ...state, workspaceName: event.currentTarget.value }))}
+              onChange={event => setState(state => ({ ...state, workspaceName: event.target.value }))}
               value={workspaceName}
             />
             <Button bg="danger" disabled={workspaceName !== activeWorkspace?.name}>
