@@ -46,50 +46,36 @@ export const PromptButton = <T, >({
     };
   }, []);
 
-  const handleConfirm = (event: MouseEvent<HTMLButtonElement>) => {
-    if (triggerTimeout.current !== null) {
-      // Clear existing timeouts
-      clearTimeout(triggerTimeout.current);
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (state === 'default') {
+      // Prevent events (ex. won't close dropdown if it's in one)
+      event.preventDefault();
+      event.stopPropagation();
+      // Toggle the confirmation notice
+      setState('ask');
+      // Set a timeout to hide the confirmation
+      // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+      triggerTimeout.current = global.setTimeout(() => {
+        setState('default');
+      }, 2000);
     }
-
-    // Fire the click handler
-    onClick?.(event);
-
-    // Set the state to done (but delay a bit to not alarm user)
-    // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-    doneTimeout.current = global.setTimeout(() => {
-      setState('done');
-    }, 100);
-    // Set a timeout to hide the confirmation
-    // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-    triggerTimeout.current = global.setTimeout(() => {
-      setState('default');
-
+    if (state === 'ask') {
+      if (triggerTimeout.current !== null) {
+        // Clear existing timeouts
+        clearTimeout(triggerTimeout.current);
+      }
       // Fire the click handler
       onClick?.(event);
-    }, 2000);
-  };
-
-  const handleAsk = (event: MouseEvent<HTMLButtonElement>) => {
-    // Prevent events (ex. won't close dropdown if it's in one)
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Toggle the confirmation notice
-    setState('ask');
-
-    // Set a timeout to hide the confirmation
-    // using global.setTimeout to force use of the Node timeout rather than DOM timeout
-    triggerTimeout.current = global.setTimeout(() => {
-      setState('default');
-    }, 2000);
-  };
-
-  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (state === 'ask') {
-      handleConfirm(event);
-    } else if (state === 'default') {
-      handleAsk(event);
+      // Set the state to done (but delay a bit to not alarm user)
+      // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+      doneTimeout.current = global.setTimeout(() => {
+        setState('done');
+      }, 100);
+      // Set a timeout to hide the confirmation
+      // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+      triggerTimeout.current = global.setTimeout(() => {
+        setState('default');
+      }, 2000);
     }
   };
 
