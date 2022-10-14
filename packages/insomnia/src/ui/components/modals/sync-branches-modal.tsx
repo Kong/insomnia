@@ -177,7 +177,7 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
                 New Branch Name
                 <input
                   type="text"
-                  onChange={event => setState(state => ({ ...state, newBranchName: event.currentTarget.value }))}
+                  onChange={event => setState(state => ({ ...state, newBranchName: event.target.value }))}
                   placeholder="testing-branch"
                   value={newBranchName}
                 />
