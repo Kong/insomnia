@@ -1,5 +1,6 @@
 import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
 import { database as db } from '../../../common/database';
@@ -7,6 +8,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
+import { selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -128,11 +130,8 @@ const SidebarList = SortableContainer<SidebarListProps>(
   ),
 );
 
-export interface WorkspaceEnvironmentsEditModalOptions {
-  workspace?: Workspace;
-}
 export interface WorkspaceEnvironmentsEditModalHandle {
-  show: (options: WorkspaceEnvironmentsEditModalOptions) => void;
+  show: () => void;
   hide: () => void;
 }
 export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, Props>((props, ref) => {
@@ -148,7 +147,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     selectedEnvironmentId: null,
   });
 
-  const _load = useCallback(async (workspace: Workspace | null, environmentToSelect: Environment | null = null) => {
+  const workspace = useSelector(selectActiveWorkspace);
+
+  const _load = useCallback(async (environmentToSelect: Environment | null = null) => {
     if (!workspace) {
       console.warn('Failed to reload environment editor without Workspace');
       return;
@@ -156,52 +157,44 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
     const rootEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
     const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
-    let selectedEnvironmentId;
+    let selectedEnvironmentId: string;
 
     if (environmentToSelect) {
       selectedEnvironmentId = environmentToSelect._id;
-    } else if (state.workspace && workspace._id !== state.workspace._id) {
-      // We've changed workspaces, so load the root one
-      selectedEnvironmentId = rootEnvironment._id;
     } else {
       // We haven't changed workspaces, so try loading the last environment, and fall back
       // to the root one
       selectedEnvironmentId = state.selectedEnvironmentId || rootEnvironment._id;
     }
 
-    setState({
+    setState(state => ({
       ...state,
-      workspace,
       rootEnvironment,
       subEnvironments,
       selectedEnvironmentId,
-    });
-  }, [state]);
+    }));
+  }, [state.selectedEnvironmentId, workspace]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
-    show: ({ workspace }) => {
-      if (!workspace) {
-        return;
-      }
-      const { activeEnvironmentId } = props;
+    show: () => {
       // Default to showing the currently active environment
-      if (activeEnvironmentId) {
-        setState({
+      if (props.activeEnvironmentId) {
+        setState(state => ({
           ...state,
-          selectedEnvironmentId: activeEnvironmentId,
-        });
+          selectedEnvironmentId: props.activeEnvironmentId,
+        }));
       }
 
-      _load(workspace);
+      _load();
       modalRef.current?.show();
     },
-  }), [_load, props, state]);
+  }), [_load, props]);
 
   async function _handleAddEnvironment(isPrivate = false) {
-    const { rootEnvironment, workspace } = state;
+    const { rootEnvironment } = state;
 
     if (!rootEnvironment) {
       console.warn('Failed to add environment. Unknown root environment');
@@ -213,7 +206,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       parentId,
       isPrivate,
     });
-    await _load(workspace, environment);
+    _load(environment);
   }
 
   function _handleShowEnvironment(environment?: Environment) {
@@ -226,21 +219,19 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       return;
     }
 
-    const { workspace } = state;
-    _load(workspace, environment);
+    _load(environment);
   }
 
   async function _handleDuplicateEnvironment(environment?: Environment) {
-    const { workspace } = state;
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const newEnvironment = await models.environment.duplicate(environment!);
-    await _load(workspace, newEnvironment);
+    await _load(newEnvironment);
   }
 
   async function _handleDeleteEnvironment(environment?: Environment) {
     const { handleSetActiveEnvironment, activeEnvironmentId } = props;
-    const { rootEnvironment, workspace } = state;
+    const { rootEnvironment } = state;
 
     // Don't delete the root environment
     if (environment === rootEnvironment) {
@@ -258,32 +249,23 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await models.environment.remove(environment!);
-    await _load(workspace, rootEnvironment);
+    _load(rootEnvironment);
   }
 
   async function _updateEnvironment(
     environment: Environment | null,
     patch: Partial<Environment>,
-    refresh = true,
   ) {
     if (environment === null) {
       return;
     }
-
-    const { workspace } = state;
     // NOTE: Fetch the environment first because it might not be up to date.
     // For example, editing the body updates silently.
     const realEnvironment = await models.environment.getById(environment._id);
-
     if (!realEnvironment) {
       return;
     }
-
     await models.environment.update(realEnvironment, patch);
-
-    if (refresh) {
-      await _load(workspace);
-    }
   }
 
   async function _handleChangeEnvironmentName(environment: Environment, name?: string) {
@@ -328,10 +310,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
     const { subEnvironments } = state;
     const newSubEnvironments = arrayMove(subEnvironments, oldIndex, newIndex);
-    setState({
+    setState(state => ({
       ...state,
       subEnvironments: newSubEnvironments,
-    });
+    }));
     // Do this last so we don't block the sorting
     db.bufferChanges();
 
