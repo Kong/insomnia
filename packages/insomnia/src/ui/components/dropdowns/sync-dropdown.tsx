@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useInterval } from 'react-use';
 
 import * as session from '../../../account/session';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
@@ -31,10 +32,8 @@ import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
 import { Tooltip } from '../tooltip';
 
-// Stop refreshing if user hasn't been active in this long
-// const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
-// const REFRESH_PERIOD = 1000 * 60 * 1;
+const REFRESH_PERIOD = 1000 * 60 * 1;
 
 interface Props {
   workspace: Workspace;
@@ -80,12 +79,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const syncItems = useSelector(selectSyncItems);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
-  const refreshMainAttributes = useCallback(async () => {
-    const localBranches = (await vcs.getBranches()).sort();
-    const currentBranch = await vcs.getBranch();
-    const historyCount = await vcs.getHistoryCount();
-    const status = await vcs.status(syncItems, {});
-    // Do the remote stuff
+  const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
       try {
         const compare = await vcs.compareRemoteBranch();
@@ -97,6 +91,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         console.log('Failed to compare remote branches', err.message);
       }
     }
+  }, [vcs]);
+
+  const refreshVCSAndRefetchRemote = useCallback(async () => {
+    const localBranches = (await vcs.getBranches()).sort();
+    const currentBranch = await vcs.getBranch();
+    const historyCount = await vcs.getHistoryCount();
+    const status = await vcs.status(syncItems, {});
     setState(state => ({
       ...state,
       status,
@@ -104,7 +105,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       localBranches,
       currentBranch,
     }));
-  }, [syncItems, vcs]);
+    // Do the remote stuff
+    refetchRemoteBranch();
+  }, [refetchRemoteBranch, syncItems, vcs]);
+
+  useInterval(() => {
+    refetchRemoteBranch();
+  }, REFRESH_PERIOD);
 
   // on mount
   useEffect(() => {
@@ -118,7 +125,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       try {
         // NOTE pushes the first snapshot automatically
         await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
-        await refreshMainAttributes();
+        await refreshVCSAndRefetchRemote();
       } catch (err) {
         console.log('[sync_menu] Error refreshing sync state', err);
       } finally {
@@ -127,21 +134,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           initializing: false,
         }));
       }
-      // Refresh but only if the user has been active in the last n minutes
-      // checkInterval = setInterval(async () => {
-      //   if (Date.now() - lastUserActivity < REFRESH_USER_ACTIVITY) {
-      //     await refreshMainAttributes();
-      //   }
-      // }, REFRESH_PERIOD);
-      // document.addEventListener('mousemove', _handleUserActivity);
     };
     fn();
 
     return () => {
       isMounted = false;
-      // document.removeEventListener('mousemove', _handleUserActivity);
     };
-  }, [project, refreshMainAttributes, vcs, workspace, workspaceMeta]);
+  }, [project, refreshVCSAndRefetchRemote, vcs, workspace, workspaceMeta]);
   // Update if new sync items
   useEffect(() => {
     if (vcs.hasBackendProject()) {
@@ -154,7 +153,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }
   }, [syncItems, vcs]);
 
-  async function _handlePushChanges() {
+  async function handlePush() {
     setState(state => ({
       ...state,
       loadingPush: true,
@@ -176,14 +175,14 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       });
     }
 
-    await refreshMainAttributes();
+    await refreshVCSAndRefetchRemote();
     setState(state => ({
       ...state,
       loadingPush: false,
     }));
   }
 
-  async function _handlePullChanges() {
+  async function handlePull() {
     setState(state => ({
       ...state,
       loadingPull: true,
@@ -213,7 +212,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }));
   }
 
-  async function _handleRevert() {
+  async function handleRevert() {
     try {
       const delta = await vcs.rollbackToLatest(syncItems);
       // @ts-expect-error -- TSCONVERSION
@@ -227,13 +226,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }
   }
 
-  async function _handleSwitchBranch(branch: string) {
+  async function handleSwitchBranch(branch: string) {
     try {
       const delta = await vcs.checkout(syncItems, branch);
-
       if (branch === DEFAULT_BRANCH_NAME) {
         const defaultBranchHistoryCount = await vcs.getHistoryCount(DEFAULT_BRANCH_NAME);
-
         // If the default branch has no snapshots, but the current branch does
         // It will result in the workspace getting deleted
         // So we filter out the workspace from the delta to prevent this
@@ -241,7 +238,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           delta.remove = delta.remove.filter(e => e?.type !== models.workspace.type);
         }
       }
-
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
     } catch (err) {
@@ -251,7 +247,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         error: err,
       });
     }
-
     // We can't refresh now because we won't yet have the new syncItems
     // Still need to do this in case sync items don't change
     setState(state => ({
@@ -316,7 +311,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
   return (
     <div>
-      <Dropdown className="wide tall" onOpen={() => refreshMainAttributes()}>
+      <Dropdown className="wide tall" onOpen={() => refreshVCSAndRefetchRemote()}>
         {currentBranch === null ?
           <Fragment>Sync</Fragment> :
           <DropdownButton
@@ -375,12 +370,12 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
         )}
 
-        <DropdownItem onClick={() => showModal(SyncBranchesModal, { onHide: refreshMainAttributes })}>
+        <DropdownItem onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })}>
           <i className="fa fa-code-fork" />
           Branches
         </DropdownItem>
 
-        <DropdownItem onClick={() => showModal(SyncDeleteModal, { onHide: refreshMainAttributes })} disabled={historyCount === 0}>
+        <DropdownItem onClick={() => showModal(SyncDeleteModal, { onHide: refreshVCSAndRefetchRemote })} disabled={historyCount === 0}>
           <i className="fa fa-remove" />
           Delete {strings.collection.singular}
         </DropdownItem>
@@ -391,7 +386,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           const isCurrentBranch = branch === currentBranch;
           return <DropdownItem
             key={branch}
-            onClick={isCurrentBranch ? undefined : () => _handleSwitchBranch(branch)}
+            onClick={isCurrentBranch ? undefined : () => handleSwitchBranch(branch)}
             className={classnames({
               bold: isCurrentBranch,
             })}
@@ -410,7 +405,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         </DropdownItem>
 
         <DropdownItem
-          onClick={_handleRevert}
+          onClick={handleRevert}
           buttonClass={PromptButton}
           stayOpenAfterClick
           disabled={!canCreateSnapshot || historyCount === 0}
@@ -422,8 +417,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         <DropdownItem
           onClick={() =>
             showModal(SyncStagingModal, {
-              onSnapshot: () => refreshMainAttributes(),
-              handlePush: () => _handlePushChanges(),
+              onSnapshot: refreshVCSAndRefetchRemote,
+              handlePush,
             })
           }
           disabled={!canCreateSnapshot}
@@ -432,7 +427,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           Create Snapshot
         </DropdownItem>
 
-        <DropdownItem onClick={_handlePullChanges} disabled={behind === 0 || loadingPull}>
+        <DropdownItem onClick={handlePull} disabled={behind === 0 || loadingPull}>
           {loadingPull ? (
             <Fragment>
               <i className="fa fa-spin fa-refresh" /> Pulling Snapshots...
@@ -445,7 +440,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           )}
         </DropdownItem>
 
-        <DropdownItem onClick={_handlePushChanges} disabled={ahead === 0 || loadingPush}>
+        <DropdownItem onClick={handlePush} disabled={ahead === 0 || loadingPush}>
           {loadingPush ? (
             <Fragment>
               <i className="fa fa-spin fa-refresh" /> Pushing Snapshots...
