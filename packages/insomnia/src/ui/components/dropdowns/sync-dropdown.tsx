@@ -144,7 +144,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   }, [project, refreshMainAttributes, vcs, workspace, workspaceMeta]);
   // Update if new sync items
   useEffect(() => {
-    console.log('syncitems dropdown', syncItems);
     if (vcs.hasBackendProject()) {
       vcs.status(syncItems, {}).then(status => {
         setState(state => ({

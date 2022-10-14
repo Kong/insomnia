@@ -112,9 +112,7 @@ export const SyncHistoryModal = forwardRef<SyncHistoryModalHandle, Props>(({ vcs
                   <PromptButton
                     className="btn btn--micro btn--outlined"
                     onClick={async () => {
-                      console.log('syncItems', syncItems.length);
                       const delta = await vcs.rollback(snapshot.id, syncItems);
-                      console.log('run', delta);
                       // @ts-expect-error -- TSCONVERSION
                       await db.batchModifyDocs(delta);
                     }}
