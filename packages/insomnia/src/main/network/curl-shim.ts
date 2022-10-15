@@ -118,6 +118,7 @@ class NotCurl extends EventEmitter {
   sslCert: any; // blob or filename
   sslKey: any; // blob or filename
   sslKeyPasswd: string;
+  isHttp2: boolean;
 
   constructor() {
     super();
@@ -253,6 +254,11 @@ class NotCurl extends EventEmitter {
       case 'KEYPASSWD':
         this.sslKeyPasswd = val;
         break;
+      case 'HTTP_VERSION':
+        if (val === CurlHttpVersion.V2_0) {
+          this.isHttp2 = true;
+        }
+        break;
       default:
         console.log('unhandled option', opt, name, val);
     }
@@ -289,13 +295,32 @@ class NotCurl extends EventEmitter {
       this.reqOptions.auth = { username: this.username, password: this.password };
     }
     this.reqOptions.httpsAgent = new https.Agent(agentConfig);
-    this.reqOptions.adapter = require('axios/lib/adapters/http'),
+    this.reqOptions.adapter = config => {
+      if (!this.isHttp2) {
+        return axios.defaults.adapter(config);
+      }
+      let req;
+      config.transport = {
+        request: (options, handleResponse) => {
+          // require('http2-wrapper')
+          req = require('http').request(options, handleResponse);
+          return req;
+        },
+      };
+      const ret = axios.defaults.adapter(config);
+      // Remove the axios action `socket.setKeepAlive` because the HTTP/2 sockets should not be directly manipulated
+      const listeners = req.listeners('socket');
+      if (listeners.length) {
+        req.removeListener('socket', listeners[0]);
+      }
+      return ret;
+    };
     this.reqOptions.responseType = 'stream';
     this.reqOptions.validateStatus = () => true;
     const startTime = performance.now();
     axios.request(this.reqOptions)
       .then(({ data, status, statusText, headers, config, request }) => {
-        console.log('perform', { data, status, statusText, headers, config, request });
+        // console.log('perform', { data, status, statusText, headers, config, request });
         if (this.caBundle) {
           this.debugListener(CurlInfoDebug.Text, `Found bundle for host ${request.host} (#1)`);
         }
@@ -321,6 +346,7 @@ class NotCurl extends EventEmitter {
         data.on('end', () => {
           this.elapsedTime = performance.now() - startTime;
 
+          // TODO: consider matching the node-libcurl rawHeaders Buffer type
           this.emit('end', null, null, [{
             version: 'HTTP/' + data.httpVersion,
             code: status,
