@@ -1,10 +1,3 @@
-// NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
-// Related issue https://github.com/JCMais/node-libcurl/issues/155
-if (process.type === 'renderer') {
-  throw new Error('node-libcurl unavailable in renderer');
-}
-
-import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -19,6 +12,7 @@ import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DAT
 import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../../common/misc';
 import { ClientCertificate } from '../../models/client-certificate';
 import { ResponseHeader } from '../../models/response';
+import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from './curl-shim';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 
@@ -282,13 +276,13 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
 
     // set up response writer
     let responseBodyBytes = 0;
-    curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
+    curl.setOpt(Curl.option.WRITEFUNCTION, (buffer: Buffer) => {
       responseBodyBytes += buffer.length;
       responseBodyWriteStream.write(buffer);
       return buffer.length;
     });
     // set up response logger
-    curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+    curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType: CurlInfoDebug, buffer: Buffer) => {
       const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
       const isEmpty = buffer.length === 0;
       // Don't show cookie setting because this will display every domain in the jar
