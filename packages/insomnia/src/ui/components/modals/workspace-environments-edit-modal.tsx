@@ -8,7 +8,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import { selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -25,7 +25,6 @@ import { Tooltip } from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface Props extends ModalProps {
-  handleSetActiveEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
 }
 
@@ -40,7 +39,6 @@ interface State {
 interface SidebarListItemProps extends Pick<Props, 'activeEnvironmentId'> {
   changeEnvironmentName: (environment: Environment, name?: string) => void;
   environment: Environment;
-  handleActivateEnvironment: (e: Environment) => void;
   selectedEnvironment: Environment | null;
   showEnvironment: (e: Environment) => void;
 }
@@ -49,7 +47,6 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
   activeEnvironmentId,
   changeEnvironmentName,
   environment,
-  handleActivateEnvironment,
   selectedEnvironment,
   showEnvironment,
 }: SidebarListItemProps) => {
@@ -59,6 +56,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
     // Specify theme because dragging will pull it out to <body>
     'theme--dialog': true,
   });
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   return (
     <li key={environment._id} className={classes}>
       <button onClick={() => showEnvironment(environment)}>
@@ -90,7 +88,14 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
         {environment._id === activeEnvironmentId ? (
           <i className="fa fa-square active" title="Active Environment" />
         ) : (
-          <button onClick={() => handleActivateEnvironment(environment)}>
+          <button
+            onClick={() => {
+              if (environment && environment._id === activeEnvironmentId && activeWorkspaceMeta) {
+                models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: environment._id });
+                showEnvironment(environment);
+              }
+            }}
+          >
             <i className="fa fa-square-o inactive" title="Click to activate Environment" />
           </button>
         )}
@@ -109,7 +114,6 @@ const SidebarList = SortableContainer<SidebarListProps>(
     activeEnvironmentId,
     changeEnvironmentName,
     environments,
-    handleActivateEnvironment,
     selectedEnvironment,
     showEnvironment,
   }: SidebarListProps) => (
@@ -119,7 +123,6 @@ const SidebarList = SortableContainer<SidebarListProps>(
           activeEnvironmentId={activeEnvironmentId}
           changeEnvironmentName={changeEnvironmentName}
           environment={environment}
-          handleActivateEnvironment={handleActivateEnvironment}
           index={index}
           key={environment._id}
           selectedEnvironment={selectedEnvironment}
@@ -148,6 +151,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   });
 
   const workspace = useSelector(selectActiveWorkspace);
+  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
   const _load = useCallback(async (environmentToSelect: Environment | null = null) => {
     if (!workspace) {
@@ -192,7 +196,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     },
   }), [_load, props]);
 
-  function _handleShowEnvironment(environment?: Environment) {
+  function handleShowEnvironment(environment?: Environment) {
     // Don't allow switching if the current one has errors
     if (editorRef.current?.isValid() && environment === getSelectedEnvironment()) {
       _load(environment);
@@ -200,7 +204,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   }
 
   async function _handleDeleteEnvironment(environment?: Environment) {
-    const { handleSetActiveEnvironment, activeEnvironmentId } = props;
+    const { activeEnvironmentId } = props;
     const { rootEnvironment } = state;
     // Don't delete the root environment
     if (environment === rootEnvironment) {
@@ -210,7 +214,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (activeEnvironmentId === environment!._id) {
-      handleSetActiveEnvironment(null);
+      if (activeWorkspaceMeta) {
+        models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: null });
+      }
     }
     // Delete the current one
     // TODO: unsound non-null assertion
@@ -233,10 +239,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       return;
     }
     await models.environment.update(realEnvironment, patch);
-  }
-
-  async function _handleChangeEnvironmentName(environment: Environment, name?: string) {
-    updateEnvironment(environment, { name });
   }
 
   function _didChange() {
@@ -282,14 +284,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     });
   };
 
-  function _handleClickColorChange(environment: Environment) {
-    if (!environment.color) {
-      // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
-      updateEnvironment(environment, { color: '#7d69cb' });
-    }
-    inputRef.current?.click();
-  }
-
   function _saveChanges() {
     // Only save if it's valid
     if (!editorRef.current || !editorRef.current?.isValid()) {
@@ -312,17 +306,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   }
 
-  const _handleActivateEnvironment = (environment: Environment) => {
-    const { handleSetActiveEnvironment, activeEnvironmentId } = props;
-    if (!environment) {
-      return;
-    }
-    if (environment._id === activeEnvironmentId) {
-      return;
-    }
-    handleSetActiveEnvironment(environment._id);
-    _handleShowEnvironment(environment);
-  };
   const { subEnvironments, rootEnvironment, isValid } = state;
 
   const selectedEnvironment = getSelectedEnvironment();
@@ -344,7 +327,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
             })}
           >
-            <button onClick={() => _handleShowEnvironment(rootEnvironment ?? undefined)}>
+            <button onClick={() => handleShowEnvironment(rootEnvironment ?? undefined)}>
               {ROOT_ENVIRONMENT_NAME}
               <HelpTooltip className="space-left">
                 The variables in this environment are always available, regardless of which
@@ -386,11 +369,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           </div>
           <SidebarList
             activeEnvironmentId={props.activeEnvironmentId}
-            handleActivateEnvironment={_handleActivateEnvironment}
             environments={subEnvironments}
             selectedEnvironment={selectedEnvironment}
-            showEnvironment={_handleShowEnvironment}
-            changeEnvironmentName={_handleChangeEnvironmentName}
+            showEnvironment={handleShowEnvironment}
+            changeEnvironmentName={(environment, name) => updateEnvironment(environment, { name })}
             onSortEnd={_handleSortEnd}
             helperClass="env-modal__sidebar-item--dragging"
             transitionDuration={0}
@@ -407,10 +389,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   singleClick
                   className="wide"
                   onSubmit={name => {
-                    if (!selectedEnvironment || !name) {
-                      return;
+                    if (selectedEnvironment && name) {
+                      updateEnvironment(selectedEnvironment, { name });
                     }
-                    _handleChangeEnvironmentName(selectedEnvironment, name);
                   }}
                   value={selectedEnvironment ? selectedEnvironment.name : ''}
                 />
@@ -439,7 +420,16 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     Color <i className="fa fa-caret-down" />
                   </DropdownButton>
 
-                  <DropdownItem onClick={() => _handleClickColorChange(selectedEnvironment)}>
+                  <DropdownItem
+                    onClick={() => {
+                      if (!selectedEnvironment.color) {
+                        // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
+                        // but we should be grabbing the actual value from the user's actual theme instead.
+                        updateEnvironment(selectedEnvironment, { color: '#7d69cb' });
+                      }
+                      inputRef.current?.click();
+                    }}
+                  >
                     <i
                       className="fa fa-circle"
                       style={{
