@@ -188,10 +188,10 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
   const { status, message, error, branch } = state;
   const allMap = { ...status.stage, ...status.unstaged };
   const addedKeys: string[] = Object.entries(allMap)
-    .filter(([_, value]) => 'added' in value)
+    .filter(([, value]) => 'added' in value)
     .map(([key]) => key);
   const nonAddedKeys: string[] = Object.entries(allMap)
-    .filter(([_, value]) => !('added' in value))
+    .filter(([, value]) => !('added' in value))
     .map(([key]) => key);
 
   return (
