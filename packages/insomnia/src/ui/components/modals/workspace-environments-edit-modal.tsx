@@ -187,64 +187,31 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           selectedEnvironmentId: props.activeEnvironmentId,
         }));
       }
-
       _load();
       modalRef.current?.show();
     },
   }), [_load, props]);
 
-  async function _handleAddEnvironment(isPrivate = false) {
-    const { rootEnvironment } = state;
-
-    if (!rootEnvironment) {
-      console.warn('Failed to add environment. Unknown root environment');
-      return;
-    }
-
-    const parentId = rootEnvironment._id;
-    const environment = await models.environment.create({
-      parentId,
-      isPrivate,
-    });
-    _load(environment);
-  }
-
   function _handleShowEnvironment(environment?: Environment) {
     // Don't allow switching if the current one has errors
-    if (editorRef.current && !editorRef.current.isValid()) {
-      return;
+    if (editorRef.current?.isValid() && environment === getSelectedEnvironment()) {
+      _load(environment);
     }
-
-    if (environment === _getSelectedEnvironment()) {
-      return;
-    }
-
-    _load(environment);
-  }
-
-  async function _handleDuplicateEnvironment(environment?: Environment) {
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const newEnvironment = await models.environment.duplicate(environment!);
-    await _load(newEnvironment);
   }
 
   async function _handleDeleteEnvironment(environment?: Environment) {
     const { handleSetActiveEnvironment, activeEnvironmentId } = props;
     const { rootEnvironment } = state;
-
     // Don't delete the root environment
     if (environment === rootEnvironment) {
       return;
     }
-
     // Unset active environment if it's being deleted
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (activeEnvironmentId === environment!._id) {
       handleSetActiveEnvironment(null);
     }
-
     // Delete the current one
     // TODO: unsound non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -252,7 +219,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     _load(rootEnvironment);
   }
 
-  async function _updateEnvironment(
+  async function updateEnvironment(
     environment: Environment | null,
     patch: Partial<Environment>,
   ) {
@@ -269,19 +236,13 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   }
 
   async function _handleChangeEnvironmentName(environment: Environment, name?: string) {
-    _updateEnvironment(environment, { name });
-  }
-
-  function _handleChangeEnvironmentColor(environment: Environment | null, color: string | null) {
-    _updateEnvironment(environment, { color });
+    updateEnvironment(environment, { name });
   }
 
   function _didChange() {
     _saveChanges();
-
     // Call this last in case component unmounted
     const isValid = editorRef.current ? editorRef.current.isValid() : false;
-
     if (state.isValid !== isValid) {
       setState(state => ({
         ...state,
@@ -290,7 +251,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   }
 
-  const _getSelectedEnvironment = (): Environment | null => {
+  const getSelectedEnvironment = (): Environment | null => {
     const { selectedEnvironmentId, subEnvironments, rootEnvironment } = state;
     if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
       return rootEnvironment;
@@ -300,14 +261,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   };
 
   // @TODO: ensure changes from sync cause re-render
-
   const _handleSortEnd: SortEndHandler = results => {
     const { oldIndex, newIndex } = results;
-
     if (newIndex === oldIndex) {
       return;
     }
-
     const { subEnvironments } = state;
     const newSubEnvironments = arrayMove(subEnvironments, oldIndex, newIndex);
     setState(state => ({
@@ -316,11 +274,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }));
     // Do this last so we don't block the sorting
     db.bufferChanges();
-
-    Promise.all(newSubEnvironments.map((environment, index) => _updateEnvironment(
+    Promise.all(newSubEnvironments.map((environment, index) => updateEnvironment(
       environment,
       { metaSortKey: index },
-      false,
     ))).then(() => {
       db.flushChanges();
     });
@@ -329,7 +285,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   function _handleClickColorChange(environment: Environment) {
     if (!environment.color) {
       // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
-      _handleChangeEnvironmentColor(environment, '#7d69cb');
+      updateEnvironment(environment, { color: '#7d69cb' });
     }
     inputRef.current?.click();
   }
@@ -350,20 +306,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       // Invalid JSON probably
       return;
     }
-
-    const selectedEnvironment = _getSelectedEnvironment();
-
+    const selectedEnvironment = getSelectedEnvironment();
     if (selectedEnvironment) {
-      _updateEnvironment(selectedEnvironment, patch);
+      updateEnvironment(selectedEnvironment, patch);
     }
-  }
-
-  function handleInputColorChage(event: React.ChangeEvent<HTMLInputElement>) {
-    _handleChangeEnvironmentColor(_getSelectedEnvironment(), event.target.value);
-  }
-
-  function unsetColor(environment: Environment) {
-    _handleChangeEnvironmentColor(environment, null);
   }
 
   const _handleActivateEnvironment = (environment: Environment) => {
@@ -379,7 +325,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   };
   const { subEnvironments, rootEnvironment, isValid } = state;
 
-  const selectedEnvironment = _getSelectedEnvironment();
+  const selectedEnvironment = getSelectedEnvironment();
 
   if (inputRef.current) {
     inputRef.current.value = selectedEnvironment?.color || '';
@@ -413,11 +359,25 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 <i className="fa fa-plus-circle" />
                 <i className="fa fa-caret-down" />
               </DropdownButton>
-              <DropdownItem onClick={() => _handleAddEnvironment(false)}>
+              <DropdownItem
+                onClick={async () => {
+                  const environment = await models.environment.create({
+                    parentId: state.rootEnvironment?._id,
+                    isPrivate: false,
+                  });
+                  _load(environment);
+                }}
+              >
                 <i className="fa fa-eye" /> Environment
               </DropdownItem>
               <DropdownItem
-                onClick={() => _handleAddEnvironment(true)}
+                onClick={async () => {
+                  const environment = await models.environment.create({
+                    parentId: state.rootEnvironment?._id,
+                    isPrivate: true,
+                  });
+                  _load(environment);
+                }}
                 title="Environment will not be exported or synced"
               >
                 <i className="fa fa-eye-slash" /> Private Environment
@@ -463,7 +423,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   className="hidden"
                   type="color"
                   ref={inputRef}
-                  onChange={handleInputColorChage}
+                  onChange={event => updateEnvironment(getSelectedEnvironment(), { color: event.target.value })}
                 />
 
                 <Dropdown className="space-right" right>
@@ -490,7 +450,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   </DropdownItem>
 
                   <DropdownItem
-                    onClick={() => unsetColor(selectedEnvironment)}
+                    onClick={() => updateEnvironment(selectedEnvironment, { color: null })}
                     disabled={!selectedEnvironment.color}
                   >
                     <i className="fa fa-minus-circle" />
@@ -499,7 +459,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 </Dropdown>
 
                 <button
-                  onClick={() => _handleDuplicateEnvironment(selectedEnvironment)}
+                  onClick={async () => {
+                    const newEnvironment = await models.environment.duplicate(selectedEnvironment);
+                    _load(newEnvironment);
+                  }}
                   className="btn btn--clicky space-right"
                 >
                   <i className="fa fa-copy" /> Duplicate
