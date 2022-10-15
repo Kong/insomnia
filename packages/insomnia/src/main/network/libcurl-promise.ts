@@ -315,7 +315,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.enable(CurlFeature.Raw);
     // NOTE: legacy write end callback
     curl.on('end', () => responseBodyWriteStream.end());
-    curl.on('end', async (_1: any, _2: any, rawHeaders: Buffer) => {
+    curl.on('end', async (_1: any, _2: any, headerResults: HeaderResult[]) => {
       const patch = {
         bytesContent: responseBodyBytes,
         bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
@@ -324,8 +324,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       };
       curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
-
-      const headerResults = _parseHeaders(rawHeaders);
       resolve({ patch, debugTimeline, headerResults, responseBodyPath });
     });
     // NOTE: legacy write end callback
@@ -377,25 +375,6 @@ interface HeaderResult {
   version: string;
   code: number;
   reason: string;
-}
-export function _parseHeaders(buffer: Buffer): HeaderResult[] {
-  // split on two new lines
-  const redirects = buffer.toString('utf8').split(/\r?\n\r?\n|\r\r/g);
-  return redirects.filter(r => !!r.trim()).map(redirect => {
-    // split on one new line
-    const [first, ...rest] = redirect.split(/\r?\n|\r/g);
-    const headers = rest.map(l => l.split(/:\s(.+)/))
-      .filter(([n]) => !!n)
-      .map(([name, value = '']) => ({ name, value }));
-
-    const [version, code, ...other] = first.split(/ +/g);
-    return {
-      version,
-      code: parseInt(code, 10),
-      reason: other.join(' '),
-      headers,
-    };
-  });
 }
 
 // NOTE: legacy, suspicious, could be simplified
