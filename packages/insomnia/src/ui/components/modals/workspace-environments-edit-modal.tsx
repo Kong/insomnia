@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, Fragment, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
@@ -7,7 +7,6 @@ import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
-import type { Workspace } from '../../../models/workspace';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -29,7 +28,6 @@ interface Props extends ModalProps {
 }
 
 interface State {
-  workspace: Workspace | null;
   isValid: boolean;
   subEnvironments: Environment[];
   rootEnvironment: Environment | null;
@@ -90,7 +88,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
         ) : (
           <button
             onClick={() => {
-              if (environment && environment._id === activeEnvironmentId && activeWorkspaceMeta) {
+              if (environment && environment._id !== activeEnvironmentId && activeWorkspaceMeta) {
                 models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: environment._id });
                 showEnvironment(environment);
               }
@@ -143,7 +141,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState<State>({
-    workspace: null,
     isValid: true,
     subEnvironments: [],
     rootEnvironment: null,
@@ -153,76 +150,52 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   const workspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
-  const _load = useCallback(async (environmentToSelect: Environment | null = null) => {
-    if (!workspace) {
-      console.warn('Failed to reload environment editor without Workspace');
-      return;
-    }
-
-    const rootEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
-    const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
-    let selectedEnvironmentId: string;
-
-    if (environmentToSelect) {
-      selectedEnvironmentId = environmentToSelect._id;
-    } else {
-      // We haven't changed workspaces, so try loading the last environment, and fall back
-      // to the root one
-      selectedEnvironmentId = state.selectedEnvironmentId || rootEnvironment._id;
-    }
-
-    setState(state => ({
-      ...state,
-      rootEnvironment,
-      subEnvironments,
-      selectedEnvironmentId,
-    }));
-  }, [state.selectedEnvironmentId, workspace]);
-
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
-    show: () => {
-      // Default to showing the currently active environment
-      if (props.activeEnvironmentId) {
-        setState(state => ({
-          ...state,
-          selectedEnvironmentId: props.activeEnvironmentId,
-        }));
+    show: async () => {
+      if (!workspace) {
+        return;
       }
-      _load();
+      const rootEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
+      const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
+
+      setState(state => ({
+        ...state,
+        rootEnvironment,
+        subEnvironments,
+        selectedEnvironmentId: props.activeEnvironmentId || rootEnvironment._id,
+      }));
       modalRef.current?.show();
     },
-  }), [_load, props]);
+  }), [props.activeEnvironmentId, workspace]);
 
   function handleShowEnvironment(environment?: Environment) {
     // Don't allow switching if the current one has errors
-    if (editorRef.current?.isValid() && environment === getSelectedEnvironment()) {
-      _load(environment);
+    if (editorRef.current?.isValid() && environment !== getSelectedEnvironment()) {
+      setState(state => ({
+        ...state,
+        selectedEnvironmentId: environment?._id || null,
+      }));
     }
   }
 
-  async function _handleDeleteEnvironment(environment?: Environment) {
-    const { activeEnvironmentId } = props;
-    const { rootEnvironment } = state;
+  async function handleDeleteEnvironment(environment?: Environment) {
     // Don't delete the root environment
-    if (environment === rootEnvironment) {
+    if (!environment || environment === state.rootEnvironment) {
       return;
     }
     // Unset active environment if it's being deleted
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (activeEnvironmentId === environment!._id) {
-      if (activeWorkspaceMeta) {
-        models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: null });
-      }
+    if (props.activeEnvironmentId === environment?._id && activeWorkspaceMeta) {
+      models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: null });
     }
     // Delete the current one
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await models.environment.remove(environment!);
-    _load(rootEnvironment);
+    await models.environment.remove(environment);
+    setState(state => ({
+      ...state,
+      selectedEnvironmentId: state.rootEnvironment?._id || null,
+    }));
   }
 
   async function updateEnvironment(
@@ -238,10 +211,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     if (!realEnvironment) {
       return;
     }
-    await models.environment.update(realEnvironment, patch);
+    models.environment.update(realEnvironment, patch);
   }
 
-  function _didChange() {
+  function didChange() {
     _saveChanges();
     // Call this last in case component unmounted
     const isValid = editorRef.current ? editorRef.current.isValid() : false;
@@ -255,11 +228,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   const getSelectedEnvironment = (): Environment | null => {
     const { selectedEnvironmentId, subEnvironments, rootEnvironment } = state;
-    if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
-      return rootEnvironment;
-    } else {
-      return subEnvironments.find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
-    }
+    return rootEnvironment?._id === selectedEnvironmentId ?
+      rootEnvironment :
+      subEnvironments.find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
   };
 
   // @TODO: ensure changes from sync cause re-render
@@ -348,7 +319,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     parentId: state.rootEnvironment?._id,
                     isPrivate: false,
                   });
-                  _load(environment);
+                  setState(state => ({
+                    ...state,
+                    selectedEnvironmentId: environment?._id || null,
+                  }));
                 }}
               >
                 <i className="fa fa-eye" /> Environment
@@ -359,7 +333,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     parentId: state.rootEnvironment?._id,
                     isPrivate: true,
                   });
-                  _load(environment);
+                  setState(state => ({
+                    ...state,
+                    selectedEnvironmentId: environment?._id || null,
+                  }));
                 }}
                 title="Environment will not be exported or synced"
               >
@@ -451,7 +428,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 <button
                   onClick={async () => {
                     const newEnvironment = await models.environment.duplicate(selectedEnvironment);
-                    _load(newEnvironment);
+                    setState(state => ({
+                      ...state,
+                      selectedEnvironmentId: newEnvironment?._id || null,
+                    }));
                   }}
                   className="btn btn--clicky space-right"
                 >
@@ -459,7 +439,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 </button>
 
                 <PromptButton
-                  onClick={() => _handleDeleteEnvironment(selectedEnvironment)}
+                  onClick={() => handleDeleteEnvironment(selectedEnvironment)}
                   className="btn btn--clicky"
                 >
                   <i className="fa fa-trash-o" />
@@ -472,7 +452,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               ref={editorRef}
               key={`${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
               environmentInfo={environmentInfo}
-              didChange={_didChange}
+              didChange={didChange}
             />
           </div>
         </div>
