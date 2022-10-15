@@ -58,29 +58,26 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     handlePush: async () => { },
   });
 
-  const refreshMainAttributes = useCallback(async (newStage: Stage = {}) => {
+  const refreshVCS = useCallback(async (newStage: Stage = {}) => {
     const branch = await vcs.getBranch();
     const status = await vcs.status(syncItems, newStage);
     const lookupMap: LookupMap = {};
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
     for (const key of allKeys) {
-      const item = syncItems.find(si => si.key === key);
-      const oldDoc: BaseModel | null = await vcs.blobFromLastSnapshot(key);
-      const doc = (item && item.document) || oldDoc;
+      const lastSnapshot: BaseModel | null = await vcs.blobFromLastSnapshot(key);
+      const document = syncItems.find(si => si.key === key)?.document;
+      const docOrLastSnapshot = document || lastSnapshot;
       const entry = status.stage[key] || status.unstaged[key];
-      if (!entry || !doc) {
-        continue;
+      const hasStagingChangeAndDoc = entry && docOrLastSnapshot;
+      const hasDocAndLastSnapshot = document && lastSnapshot;
+      if (hasStagingChangeAndDoc) {
+        lookupMap[key] = {
+          changes: hasDocAndLastSnapshot ? describeChanges(document, lastSnapshot) : null,
+          entry: entry,
+          type: models.getModelName(docOrLastSnapshot.type),
+          checked: !!status.stage[key],
+        };
       }
-      let changes: string[] | null = null;
-      if (item && item.document && oldDoc) {
-        changes = describeChanges(item.document, oldDoc);
-      }
-      lookupMap[key] = {
-        changes,
-        entry: entry,
-        type: models.getModelName(doc.type),
-        checked: !!status.stage[key],
-      };
     }
     setState(state => ({
       ...state,
@@ -115,17 +112,16 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
       const status: Status = await vcs.status(syncItems, {});
       const toStage: StageEntry[] = [];
       for (const key of Object.keys(status.unstaged)) {
-        // @ts-expect-error -- TSCONVERSION
-        if (status.unstaged[key].added) {
+        if ('added' in status.unstaged[key]) {
           // Don't automatically stage added resources
           continue;
         }
         toStage.push(status.unstaged[key]);
       }
       const stage = await vcs.stage(status.stage, toStage);
-      await refreshMainAttributes(stage);
+      await refreshVCS(stage);
     },
-  }), [refreshMainAttributes, syncItems, vcs]);
+  }), [refreshVCS, syncItems, vcs]);
 
   const handleStageToggle = async (event: React.SyntheticEvent<HTMLInputElement>) => {
     const { status } = state;
@@ -134,7 +130,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     const newStage = isStaged
       ? await vcs.unstage(status.stage, [status.stage[id]])
       : await vcs.stage(status.stage, [status.unstaged[id]]);
-    await refreshMainAttributes(newStage);
+    await refreshVCS(newStage);
   };
 
   const handleAllToggle = async (keys: DocumentKey[], doStage: boolean) => {
@@ -157,7 +153,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
       }
       stage = await vcs.unstage(status.stage, entries);
     }
-    await refreshMainAttributes(stage);
+    await refreshVCS(stage);
   };
 
   const handleTakeSnapshotAndPush = async () => {
@@ -176,33 +172,28 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     try {
       await vcs.takeSnapshot(stage, message);
     } catch (err) {
-      setState({
+      setState(state => ({
         ...state,
         error: err.message,
-      });
+      }));
       return false;
     }
     onSnapshot?.();
-    await refreshMainAttributes();
+    await refreshVCS();
     setState(state => ({ ...state, message: '', error: '' }));
     modalRef.current?.hide();
     return true;
   };
 
   const { status, message, error, branch } = state;
-  const nonAddedKeys: string[] = [];
-  const addedKeys: string[] = [];
   const allMap = { ...status.stage, ...status.unstaged };
-  const allKeys = Object.keys(allMap);
+  const addedKeys: string[] = Object.entries(allMap)
+    .filter(([_, value]) => 'added' in value)
+    .map(([key]) => key);
+  const nonAddedKeys: string[] = Object.entries(allMap)
+    .filter(([_, value]) => !('added' in value))
+    .map(([key]) => key);
 
-  for (const key of allKeys) {
-    // @ts-expect-error -- TSCONVERSION
-    if (allMap[key].added) {
-      addedKeys.push(key);
-    } else {
-      nonAddedKeys.push(key);
-    }
-  }
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Create Snapshot</ModalHeader>
@@ -271,24 +262,21 @@ interface OperationTooltipProps {
 }
 const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
   const operationType = type === models.workspace.type ? type = strings.collection.singular : type;
-  // @ts-expect-error -- TSCONVERSION type narrowing
-  if (entry.added) {
+  if ('added' in entry) {
     return (
       <Tooltip message="Added">
         <i className="fa fa-plus-circle success" /> {operationType}
       </Tooltip>
     );
   }
-  // @ts-expect-error -- TSCONVERSION type narrowing
-  if (entry.modified) {
+  if ('modified' in entry) {
     return (
       <Tooltip message={`Modified (${changes.join(', ')})`}>
         <i className="fa fa-circle faded" /> {operationType}
       </Tooltip>
     );
   }
-  // @ts-expect-error -- TSCONVERSION type narrowing
-  if (entry.deleted) {
+  if ('deleted' in entry) {
     return (
       <Tooltip message="Deleted">
         <i className="fa fa-minus-circle danger" /> {operationType}
@@ -355,11 +343,7 @@ const ChangesTable = ({
           </tr>
         </thead>
         <tbody>
-          {keys.map(key => {
-            if (!lookupMap[key]) {
-              return null;
-            }
-
+          {keys.filter(key => lookupMap[key]).map(key => {
             const { entry, type, checked, changes } = lookupMap[key];
             return (
               <tr key={key} className="table--no-outline-row">
