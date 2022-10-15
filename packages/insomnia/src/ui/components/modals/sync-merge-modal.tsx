@@ -64,7 +64,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle, ModalProps>((_, r
                       checked={conflict.choose === conflict.mineBlob}
                       onChange={event => setState({
                         ...state,
-                        conflicts: conflicts.map(c => c.key !== conflict.key ? c : { ...c, choose: event.currentTarget.value || null }),
+                        conflicts: conflicts.map(c => c.key !== conflict.key ? c : { ...c, choose: event.target.value || null }),
                       })}
                     />
                   </label>
@@ -76,7 +76,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle, ModalProps>((_, r
                       checked={conflict.choose === conflict.theirsBlob}
                       onChange={event => setState({
                         ...state,
-                        conflicts: conflicts.map(c => c.key !== conflict.key ? c : { ...c, choose: event.currentTarget.value || null }),
+                        conflicts: conflicts.map(c => c.key !== conflict.key ? c : { ...c, choose: event.target.value || null }),
                       })}
                     />
                   </label>
