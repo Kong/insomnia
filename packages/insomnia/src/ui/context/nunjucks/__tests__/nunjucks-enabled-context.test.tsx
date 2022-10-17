@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 
 import { NunjucksEnabledProvider, useNunjucksEnabled } from '../nunjucks-enabled-context';
 
@@ -8,15 +8,5 @@ describe('NunjucksEnabledProvider', () => {
     const { result } = renderHook(() => useNunjucksEnabled(), { wrapper: NunjucksEnabledProvider });
 
     expect(result.current.enabled).toBe(true);
-  });
-
-  it('should update the hook result if prop changes', () => {
-    const { rerender, result } = renderHook(() => useNunjucksEnabled(), { wrapper: NunjucksEnabledProvider, initialProps: { disable: false } });
-
-    expect(result.current.enabled).toBe(true);
-
-    rerender({ disable: true });
-
-    expect(result.current.enabled).toBe(false);
   });
 });

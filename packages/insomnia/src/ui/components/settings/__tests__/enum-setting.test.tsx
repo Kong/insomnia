@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { act, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, render } from '@testing-library/react';
 import { UpdateChannel } from 'insomnia-common';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
@@ -38,23 +37,31 @@ describe('<EnumSetting />', () => {
     renderOptions = { wrapper: withReduxStore(store) };
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('should render label text', async () => {
     const { getByLabelText } = render(enumSetting, renderOptions);
     expect(getByLabelText(label)).toBeInTheDocument();
   });
 
   it('should render help text', async () => {
+    jest.useFakeTimers();
     const { container, findByRole } = render(enumSetting, renderOptions);
-    await userEvent.hover(container);
 
-    act(async () => {
-      const helpText = await findByRole(/tooltip/);
-      expect(helpText).toBeInTheDocument();
-    });
+    fireEvent.mouseMove(container);
+    fireEvent.mouseEnter(container.querySelector('.tooltip'));
+
+    act(jest.runAllTimers);
+
+    const helpText = await findByRole(/tooltip/);
+    expect(helpText).toBeInTheDocument();
   });
 
   it('should be render the options provided', async () => {
     const { getByText } = render(enumSetting, renderOptions);
+
     expect(getByText(values[0].name)).toBeInTheDocument();
     expect(getByText(values[1].name)).toBeInTheDocument();
   });
