@@ -10,20 +10,8 @@ import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown/account-dropdown';
 import { GitHubStarsButton } from './github-stars-button';
 
-const LogoWraper = styled.div({
+const LogoWrapper = styled.div({
   display: 'flex',
-});
-
-const RightWrapper = styled.div({
-  transformOrigin: 'right',
-  transform: 'scale(0.85)',
-  display: 'flex',
-  justifySelf: 'flex-end',
-  alignItems: 'center',
-  '& .tooltip': {
-    display: 'flex',
-    alignItems: 'center',
-  },
 });
 
 export interface AppHeaderProps {
@@ -62,6 +50,8 @@ const StyledHeader = styled.div({
     gridArea: 'header_right',
     textAlign: 'right',
     display: 'flex',
+    gap: 'var(--padding-xs)',
+    padding: 'var(--padding-xs)',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
@@ -92,21 +82,21 @@ export const AppHeader: FC<AppHeaderProps> = ({
     <Header
       gridLeft={(
         <Fragment>
-          <LogoWraper>
+          <LogoWrapper>
             <img style={{ zIndex: 1 }} src={coreLogo} alt="Insomnia" width="28" height="28" />
             { !isLoggedIn ? <GitHubStarsButton /> : null }
-          </LogoWraper>
+          </LogoWrapper>
           <Breadcrumb {...breadcrumbProps} />
         </Fragment>
       )}
       gridCenter={gridCenter}
-      gridRight={(
-        <RightWrapper>
+      gridRight={
+        <Fragment>
           {gridRight}
           <SettingsButton />
           <AccountDropdownButton />
-        </RightWrapper>
-      )}
+        </Fragment>
+      }
     />
   );
 };
