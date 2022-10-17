@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, ReactNode } from 'react';
+import React, { FC, PropsWithChildren, ReactNode } from 'react';
 
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { HelpTooltip } from '../../../help-tooltip';
@@ -11,7 +11,7 @@ interface Props {
   disabled?: boolean;
 }
 
-export const AuthRow: FC<Props> = ({ labelFor, label, help, disabled, children }) => {
+export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
   const { activeRequest: { authentication } } = useActiveRequest();
 
   return (

@@ -1,5 +1,5 @@
 import { KeyboardShortcut } from 'insomnia-common';
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -28,7 +28,7 @@ const Description = styled.div({
   marginRight: '2em',
 });
 
-export const PlaceholderResponsePane: FC = ({ children }) => {
+export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   return (
     <Pane type="response">

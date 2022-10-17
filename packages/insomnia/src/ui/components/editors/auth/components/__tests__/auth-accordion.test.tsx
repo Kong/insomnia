@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
@@ -10,7 +10,7 @@ import * as models from '../../../../../../models';
 import { RequestMeta } from '../../../../../../models/request-meta';
 import { AuthAccordion } from '../auth-accordion';
 
-const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
+const Table: FC<PropsWithChildren<{}>> = ({ children }) => <table><tbody>{children}</tbody></table>;
 
 const childTestId = 'child-component';
 const child = <tr data-testid={childTestId} />;
