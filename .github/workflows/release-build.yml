@@ -136,7 +136,7 @@ jobs:
         id: release_version
         shell: bash
         run: |
-           echo ::set-output name=version::${BRANCH/release\//}
+           echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
         env:
           BRANCH: ${{ github.ref_name }}
 

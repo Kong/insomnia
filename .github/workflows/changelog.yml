@@ -38,7 +38,7 @@ jobs:
 
       - name: Save release version as output
         id: version
-        run: echo "::set-output name=version::$RELEASE_VERSION"
+        run: echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
 
@@ -104,7 +104,7 @@ jobs:
 
       - name: Set timestamp
         id: timestamp
-        run: echo "::set-output name=timestamp::$(date --iso-8601=seconds)"
+        run: echo "timestamp=$(date --iso-8601=seconds)" >> $GITHUB_OUTPUT
 
       - name: Find Comment
         uses: peter-evans/find-comment@v1
