@@ -147,7 +147,6 @@ const App = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const isFinishedBooting = useSelector(selectIsFinishedBooting);
   const activeGitRepository = useSelector(selectActiveGitRepository);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeProject = useSelector(selectActiveProject);
 
   const vcs = useVCS({
@@ -285,7 +284,6 @@ const App = () => {
 
                 <WorkspaceEnvironmentsEditModal
                   ref={instance => registerModal(instance, 'WorkspaceEnvironmentsEditModal')}
-                  activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
                 />
 
                 <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
