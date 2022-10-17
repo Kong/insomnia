@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useInterval } from 'react-use';
+import { useInterval, useMount } from 'react-use';
 
 import * as session from '../../../account/session';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
@@ -127,34 +127,26 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     refetchRemoteBranch();
   }, REFRESH_PERIOD);
 
-  // on mount
-  useEffect(() => {
-    let isMounted = true;
-    const fn = async () => {
-      isMounted && setState(state => ({
+  useMount(async () => {
+    setState(state => ({
+      ...state,
+      initializing: true,
+    }));
+
+    try {
+      // NOTE pushes the first snapshot automatically
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
+      await refreshVCSAndRefetchRemote();
+    } catch (err) {
+      console.log('[sync_menu] Error refreshing sync state', err);
+    } finally {
+      setState(state => ({
         ...state,
-        initializing: true,
+        initializing: false,
       }));
+    }
+  });
 
-      try {
-        // NOTE pushes the first snapshot automatically
-        await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
-        await refreshVCSAndRefetchRemote();
-      } catch (err) {
-        console.log('[sync_menu] Error refreshing sync state', err);
-      } finally {
-        isMounted && setState(state => ({
-          ...state,
-          initializing: false,
-        }));
-      }
-    };
-    fn();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [project, refreshVCSAndRefetchRemote, vcs, workspace, workspaceMeta]);
   // Update if new sync items
   useEffect(() => {
     if (vcs.hasBackendProject()) {
