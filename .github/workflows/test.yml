@@ -70,8 +70,8 @@ jobs:
           INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
           PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
 
-          echo ::set-output name=pkg-name::$PKG_NAME
-          echo ::set-output name=inso-version::$INSO_VERSION
+          echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
       - name: Run Inso NPM package tests
         run: npm run test:bundled-inso
