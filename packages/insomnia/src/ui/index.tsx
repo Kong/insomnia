@@ -1,6 +1,6 @@
 // eslint-disable-next-line simple-import-sort/imports
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import './rendererListeners';
 import { getProductName, isDevelopment } from '../common/constants';
@@ -23,7 +23,7 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-(async function() {
+async function renderApp() {
   await database.initClient();
 
   await initPlugins();
@@ -39,19 +39,22 @@ document.title = getProductName();
   // Create Redux store
   const store = await initStore();
 
-  const render = (App: React.ComponentType<any>) => {
-    ReactDOM.render(
-      <Provider store={store}>
-        <Router>
-          <App />
-        </Router>
-      </Provider>,
-      document.getElementById('root'),
-    );
-  };
+  const root = document.getElementById('root');
 
-  render(App);
-})();
+  if (!root) {
+    throw new Error('Could not find root element');
+  }
+
+  ReactDOM.createRoot(root).render(
+    <Provider store={store}>
+      <Router>
+        <App />
+      </Router>
+    </Provider>,
+  );
+}
+
+renderApp();
 
 // Export some useful things for dev
 if (isDevelopment()) {
