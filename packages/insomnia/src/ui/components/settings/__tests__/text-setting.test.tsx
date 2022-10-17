@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { act, fireEvent, render, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
