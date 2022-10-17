@@ -161,34 +161,6 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
 
   const dispatch = useDispatch();
 
-  const handleCreateWorkspace = useCallback(({ scope, onCreate }) => {
-    dispatch(createWorkspace({ scope, onCreate }));
-  }, [dispatch]);
-
-  const handleGitCloneWorkspace = useCallback(({ createFsClient }) => {
-    dispatch(cloneGitRepository({ createFsClient }));
-  }, [dispatch]);
-
-  const handleImportFile = useCallback(({ forceToWorkspace }) => {
-    dispatch(importFile({ forceToWorkspace }));
-  }, [dispatch]);
-
-  const handleImportUri = useCallback((uri, { forceToWorkspace }) => {
-    dispatch(importUri(uri, { forceToWorkspace }));
-  }, [dispatch]);
-
-  const handleImportClipboard = useCallback(({ forceToWorkspace }) => {
-    dispatch(importClipBoard({ forceToWorkspace }));
-  }, [dispatch]);
-
-  const handleSetDashboardSortOrder = useCallback(sortOrder => {
-    dispatch(setDashboardSortOrder(sortOrder));
-  }, [dispatch]);
-
-  const handleActivateWorkspace = useCallback(({ workspace }) => {
-    dispatch(activateWorkspace({ workspace }));
-  }, [dispatch]);
-
   const [filter, setFilter] = useState('');
 
   // Render each card, removing all the ones that don't match the filter
@@ -201,13 +173,13 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
         {...card}
         key={card.apiSpec._id}
         activeProject={activeProject}
-        onSelect={() => handleActivateWorkspace({ workspace: card.workspace })}
+        onSelect={() => dispatch(activateWorkspace({ workspace: card.workspace }))}
         filter={filter}
       />
     ));
 
   const createRequestCollection = useCallback(() => {
-    handleCreateWorkspace({
+    dispatch(createWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async (workspace: Workspace) => {
         // Don't mark for sync if not logged in at the time of creation
@@ -215,12 +187,12 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
           await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
-    });
-  }, [activeProject, handleCreateWorkspace, isLoggedIn, vcs]);
+    }));
+  }, [activeProject, dispatch, isLoggedIn, vcs]);
 
   const createDesignDocument = useCallback(() => {
-    handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });
-  }, [handleCreateWorkspace]);
+    dispatch(createWorkspace({ scope: WorkspaceScopeKeys.design  }));
+  }, [dispatch]);
 
   const importFromURL = useCallback(() => {
     showPrompt({
@@ -229,26 +201,22 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        handleImportUri(uri, { forceToWorkspace: ForceToWorkspace.existing });
+        dispatch(importUri(uri, { forceToWorkspace: ForceToWorkspace.existing }));
       },
     });
-  }, [handleImportUri]);
+  }, [dispatch]);
 
   const importFromClipboard = useCallback(() => {
-    handleImportClipboard({ forceToWorkspace: ForceToWorkspace.existing });
-  }, [handleImportClipboard]);
+    dispatch(importClipBoard({ forceToWorkspace: ForceToWorkspace.existing }));
+  }, [dispatch]);
 
   const importFromFile = useCallback(() => {
-    handleImportFile({ forceToWorkspace: ForceToWorkspace.existing });
-  }, [handleImportFile]);
+    dispatch(importFile({ forceToWorkspace: ForceToWorkspace.existing }));
+  }, [dispatch]);
 
   const importFromGit = useCallback(() => {
-    handleGitCloneWorkspace({ createFsClient: MemClient.createClient });
-  }, [handleGitCloneWorkspace]);
-
-  const onChangeFilter = useCallback(event => {
-    setFilter(event.currentTarget.value);
-  }, []);
+    dispatch(cloneGitRepository({ createFsClient: MemClient.createClient }));
+  }, [dispatch]);
 
   return (
     <PageLayout
@@ -281,12 +249,19 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
                     autoFocus
                     type="text"
                     placeholder="Filter..."
-                    onChange={onChangeFilter}
+                    onChange={event => {
+                      setFilter(event.currentTarget.value);
+                    }}
                     className="no-margin"
                   />
                   <span className="fa fa-search filter-icon" />
                 </div>
-                <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
+                <DashboardSortDropdown
+                  value={sortOrder}
+                  onSelect={sortOrder => {
+                    dispatch(setDashboardSortOrder(sortOrder));
+                  }}
+                />
                 <RemoteWorkspacesDropdown vcs={vcs} />
                 <Dropdown>
                   <DropdownButton buttonClass={CreateButton}>
