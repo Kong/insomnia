@@ -69,7 +69,7 @@ export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
             <details>
               <summary>Stack trace</summary>
               <pre className="pad-top-sm force-wrap selectable">
-                <code className="wide">{error.stack || error}</code>
+                <code className="wide">{error.stack}</code>
               </pre>
             </details>
           )}
