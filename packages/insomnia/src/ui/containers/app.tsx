@@ -286,11 +286,7 @@ const App = () => {
                   </Fragment>
                 ) : null}
 
-                <WorkspaceEnvironmentsEditModal
-                  ref={registerModal}
-                  handleSetActiveEnvironment={handleSetActiveEnvironment}
-                  activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-                />
+                <WorkspaceEnvironmentsEditModal ref={instance => registerModal(instance, 'WorkspaceEnvironmentsEditModal')} />
 
                 <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
                 <ExportRequestsModal ref={instance => registerModal(instance, 'ExportRequestsModal')} />
