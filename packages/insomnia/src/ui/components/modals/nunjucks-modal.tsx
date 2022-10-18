@@ -41,26 +41,13 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     },
   }), []);
 
-  const _handleTemplateChange = (template: string) => {
-    setState({
+  const handleTemplateChange = (template: string) => {
+    setState(state => ({
       template,
       onDone: state.onDone,
-    });
+    }));
   };
 
-  const _handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    modalRef.current?.hide();
-  };
-
-  const _handleModalHide = () => {
-    state.onDone(state.template);
-
-    setState({
-      template: '',
-      onDone: state.onDone,
-    });
-  };
   const { workspace } = props;
   const { template } = state;
   let editor: JSX.Element | null = null;
@@ -68,17 +55,31 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
 
   if (template.indexOf('{{') === 0) {
     title = 'Variable';
-    editor = <VariableEditor onChange={_handleTemplateChange} defaultValue={template} />;
+    editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
   } else if (template.indexOf('{%') === 0) {
     title = 'Tag';
-    editor = <TagEditor onChange={_handleTemplateChange} defaultValue={template} workspace={workspace} />;
+    editor = <TagEditor onChange={handleTemplateChange} defaultValue={template} workspace={workspace} />;
   }
 
   return (
-    <Modal ref={modalRef} onHide={_handleModalHide}>
+    <Modal
+      ref={modalRef}
+      onHide={() => {
+        state.onDone(state.template);
+        setState(state => ({
+          template: '',
+          onDone: state.onDone,
+        }));
+      }}
+    >
       <ModalHeader>Edit {title}</ModalHeader>
       <ModalBody className="pad" key={template}>
-        <form onSubmit={_handleSubmit}>{editor}</form>
+        <form
+          onSubmit={event => {
+            event.preventDefault();
+            modalRef.current?.hide();
+          }}
+        >{editor}</form>
       </ModalBody>
       <ModalFooter>
         <button className="btn" onClick={() => modalRef.current?.hide()}>

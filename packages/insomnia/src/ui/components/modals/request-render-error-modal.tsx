@@ -36,16 +36,12 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
       modalRef.current?.show();
     },
   }), []);
-  const showRequestSettings = () => {
-    modalRef.current?.hide();
-    showModal(RequestSettingsModal, { request: state.request });
-  };
+
   const { request, error } = state;
   const fullPath = `Request.${error?.path}`;
   const result = JSONPath({ json: request, path: `$.${error?.path}` });
   const template = result && result.length ? result[0] : null;
-  const locationLabel =
-      template?.includes('\n') ? `line ${error?.location.line} of` : null;
+  const locationLabel = template?.includes('\n') ? `line ${error?.location.line} of` : null;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Failed to Render Request</ModalHeader>
@@ -59,7 +55,10 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
               {error.path?.match(/^body/) && isRequest(request) && (
                 <button
                   className="btn btn--clicky margin-right-sm"
-                  onClick={showRequestSettings}
+                  onClick={() => {
+                    modalRef.current?.hide();
+                    showModal(RequestSettingsModal, { request: state.request });
+                  }}
                 >
                   Adjust Render Settings
                 </button>

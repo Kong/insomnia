@@ -90,39 +90,15 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       modalRef.current?.hide();
     },
     show: options => {
-      const { client, target } = state;
       if (!options.request) {
         return;
       }
-      generateCode(options.request, target, client);
+      generateCode(options.request, state.target, state.client);
       modalRef.current?.show();
     },
   }), [generateCode, state]);
 
-  const _handleClientChange = (client: HTTPSnippetClient) => {
-    const { target, request } = state;
-    if (!request) {
-      return;
-    }
-    generateCode(request, target, client);
-  };
-
-  const _handleTargetChange = (target: HTTPSnippetTarget) => {
-    const { target: currentTarget, request } = state;
-    if (currentTarget.key === target.key) {
-      // No change
-      return;
-    }
-    const client = target.clients.find(c => c.key === target.default);
-    if (!request) {
-      return;
-    }
-    // TODO: remove non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    generateCode(request, target, client!);
-  };
-
-  const { cmd, target, client } = state;
+  const { cmd, target, client, request } = state;
   const targets = HTTPSnippet.availableTargets();
   // NOTE: Just some extra precautions in case the target is messed up
   let clients: HTTPSnippetClient[] = [];
@@ -147,7 +123,15 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
               <i className="fa fa-caret-down" />
             </DropdownButton>
             {targets.map(target => (
-              <DropdownItem key={target.key} onClick={() => _handleTargetChange(target)}>
+              <DropdownItem
+                key={target.key}
+                onClick={() => {
+                  const client = target.clients.find(c => c.key === target.default);
+                  if (request && client) {
+                    generateCode(request, target, client);
+                  }
+                }}
+              >
                 {target.title}
               </DropdownItem>
             ))}
@@ -161,7 +145,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
             {clients.map(client => (
               <DropdownItem
                 key={client.key}
-                onClick={() => _handleClientChange(client)}
+                onClick={() => request && generateCode(request, state.target, client)}
               >
                 {client.title}
               </DropdownItem>
