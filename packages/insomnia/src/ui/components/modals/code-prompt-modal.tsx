@@ -62,18 +62,13 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     },
     show: options => {
       const realMode = typeof options.mode === 'string' ? options.mode : 'text/plain';
-      setState({
+      setState(state => ({
         ...options,
         mode: realMode || state.mode || 'text/plain',
-      });
+      }));
       modalRef.current?.show();
     },
-  }), [state.mode]);
-
-  const handleChangeMode = (mode: any) => {
-    setState({ ...state, mode });
-    state.onModeChange?.(mode);
-  };
+  }), []);
 
   const {
     submitName,
@@ -149,7 +144,13 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
             </DropdownButton>
             <DropdownDivider>Editor Syntax</DropdownDivider>
             {Object.keys(MODES).map(mode => (
-              <DropdownItem key={mode} onClick={() => handleChangeMode(mode)}>
+              <DropdownItem
+                key={mode}
+                onClick={() => {
+                  setState(state => ({ ...state, mode }));
+                  state.onModeChange?.(mode);
+                }}
+              >
                 <i className="fa fa-code" />
                 {MODES[mode]}
               </DropdownItem>

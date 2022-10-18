@@ -33,10 +33,10 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
       modalRef.current?.hide();
     },
     show: ({ requestGroup }) => {
-      setState({ requestGroup, isValid: state.isValid });
+      setState(state => ({ ...state, requestGroup }));
       modalRef.current?.show();
     },
-  }), [state.isValid]);
+  }), []);
   const didChange = () => {
     if (!editorRef.current?.isValid()) {
       return;

@@ -9,7 +9,6 @@ interface State {
   message: string;
   yesText: string;
   noText: string;
-  loading: boolean;
   onDone?: (success: boolean) => Promise<void>;
 }
 export interface AskModalOptions {
@@ -30,8 +29,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     message: '',
     yesText: 'Yes',
     noText: 'No',
-    loading: false,
-    onDone: async () => {},
+    onDone: async () => { },
   });
 
   useImperativeHandle(ref, () => ({
@@ -44,13 +42,12 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
         message: message || 'No message provided',
         yesText: yesText || 'Yes',
         noText: noText || 'No',
-        loading: false,
         onDone,
       });
       modalRef.current?.show();
     },
   }), []);
-  const { message, title, yesText, noText, loading, onDone } = state;
+  const { message, title, yesText, noText, onDone } = state;
   return (
     <Modal ref={modalRef} noEscape>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
@@ -68,17 +65,12 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
           </button>
           <button
             className="btn"
-            onClick={async () => {
-              setState({
-                ...state,
-                loading: true,
-              });
-              await onDone?.(true);
+            onClick={() => {
               modalRef.current?.hide();
+              onDone?.(true);
             }}
-            disabled={loading}
           >
-            {loading && <i className="fa fa-refresh fa-spin" />} {yesText}
+            {yesText}
           </button>
         </div>
       </ModalFooter>

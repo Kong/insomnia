@@ -186,10 +186,10 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
           onClick={() => {
             state.onDeleteHint?.(hint);
             const hints = state.hints.filter(h => h !== hint);
-            setState({
+            setState(state => ({
               ...state,
               hints,
-            });
+            }));
           }}
         >
           <i className="fa fa-close faint" />

@@ -40,9 +40,6 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       modalRef.current?.show();
     },
   }), []);
-  const _handleSelectChange = (event: React.SyntheticEvent<HTMLSelectElement>) => {
-    setState({ message, title, options, noEscape, value: event.currentTarget.value });
-  };
   const { message, title, options, value, noEscape, onDone } = state;
 
   return (
@@ -51,7 +48,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       <ModalBody className="wide pad">
         <p>{message}</p>
         <div className="form-control form-control--outlined">
-          <select onChange={_handleSelectChange} value={value ?? undefined}>
+          <select onChange={event => setState(state => ({ ...state, value: event.target.value }))} value={value ?? undefined}>
             {options.map(({ name, value }) => (
               <option key={value} value={value}>
                 {name}
@@ -63,8 +60,8 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       <ModalFooter>
         <button
           className="btn"
-          onClick={async () => {
-            await onDone?.(value);
+          onClick={() => {
+            onDone?.(value);
             modalRef.current?.hide();
           }}
         >
