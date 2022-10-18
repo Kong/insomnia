@@ -35,6 +35,8 @@ import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
 import { Tooltip } from '../tooltip';
 
+// TODO: handle refetching logic in one place not here in a component
+
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
 
