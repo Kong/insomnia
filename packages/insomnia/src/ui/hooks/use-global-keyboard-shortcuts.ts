@@ -23,7 +23,7 @@ export const useGlobalKeyboardShortcuts = () => {
     preferences_showGeneral:
       () => showModal(SettingsModal),
     preferences_showKeyboardShortcuts:
-      () => showModal(SettingsModal, TAB_INDEX_SHORTCUTS),
+      () => showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS }),
     sidebar_toggle:
       () => {
         if (activeWorkspaceMeta) {

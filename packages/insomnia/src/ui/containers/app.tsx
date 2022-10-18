@@ -222,11 +222,11 @@ const App = () => {
                 <FilterHelpModal ref={registerModal} />
                 <RequestRenderErrorModal ref={registerModal} />
                 <GenerateConfigModal ref={registerModal} />
-                <ProjectSettingsModal ref={registerModal} />
+                <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
                 <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
                 <CodePromptModal ref={registerModal} />
                 <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
-                <RequestGroupSettingsModal ref={registerModal} />
+                <RequestGroupSettingsModal ref={instance => registerModal(instance, 'RequestGroupSettingsModal')} />
 
                 {activeWorkspace ? <>
                   {/* TODO: Figure out why cookieJar is sometimes null */}

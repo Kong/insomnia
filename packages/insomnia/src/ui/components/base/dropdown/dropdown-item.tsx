@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { ButtonHTMLAttributes, createElement, ReactNode } from 'react';
 
 interface Props {
-  addIcon?: boolean; // TODO(TSCONVERSION) some consumers are passing this prop but it appears to be unused
+  addIcon?: boolean; // NOTE: used by prompt-button.tsx
   title?: string;
   buttonClass?: React.ElementType;
   stayOpenAfterClick?: boolean;

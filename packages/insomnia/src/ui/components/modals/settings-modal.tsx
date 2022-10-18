@@ -17,14 +17,13 @@ import { ThemePanel } from '../settings/theme-panel';
 import { showModal } from './index';
 export interface SettingsModalHandle {
   hide: () => void;
-  show: (currentTabIndex?: number) => void;
+  show: (options?: { tab?: number }) => void;
 }
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
-export const displayName = 'SettingsModal';
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const settings = useSelector(selectSettings);
   const [currentTabIndex, setCurrentTabIndex] = useState<number | null>(null);
@@ -32,11 +31,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const email = session.isLoggedIn() ? session.getFullName() : null;
 
   useImperativeHandle(ref, () => ({
-    hide(): void {
+    hide: () => {
       modalRef.current?.hide();
     },
-    show(currentTabIndex = 0): void {
-      const tabIndex = typeof currentTabIndex !== 'number' ? 0 : currentTabIndex;
+    show: options => {
+      const tabIndex = typeof options?.tab !== 'number' ? 0 : options.tab;
       setCurrentTabIndex(tabIndex);
       modalRef.current?.show();
     },
@@ -96,5 +95,5 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
     </Modal>
   );
 });
-SettingsModal.displayName = displayName;
+SettingsModal.displayName = 'SettingsModal';
 export const showSettingsModal = () => showModal(SettingsModal);

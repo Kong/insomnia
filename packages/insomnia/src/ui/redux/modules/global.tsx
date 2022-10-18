@@ -240,7 +240,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
 
           try {
             await window.main.installPlugin(args.name);
-            showModal(SettingsModal, TAB_INDEX_PLUGINS);
+            showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
           } catch (err) {
             showError({
               title: 'Plugin Install',
@@ -280,7 +280,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
           });
           await reloadPlugins();
           await setTheme(parsedTheme.name);
-          showModal(SettingsModal, TAB_INDEX_THEMES);
+          showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
         },
       });
       break;

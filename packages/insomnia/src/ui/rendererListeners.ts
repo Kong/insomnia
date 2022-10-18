@@ -94,5 +94,5 @@ ipcRenderer.on('reload-plugins', async () => {
 });
 
 ipcRenderer.on('toggle-preferences-shortcuts', () => {
-  showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
+  showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS });
 });
