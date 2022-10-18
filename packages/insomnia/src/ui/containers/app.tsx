@@ -214,7 +214,7 @@ const App = () => {
                 <AnalyticsModal />
                 <AlertModal ref={registerModal} />
                 <ErrorModal ref={registerModal} />
-                <PromptModal ref={registerModal} />
+                <PromptModal ref={instance => registerModal(instance, 'PromptModal')} />
                 <WrapperModal ref={registerModal} />
                 <LoginModal ref={registerModal} />
                 <AskModal ref={registerModal} />
