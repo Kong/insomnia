@@ -52,18 +52,6 @@ export const Account: FC = () => {
     setShowChangePassword(false);
   }, []);
 
-  const emailCode = useCallback(async event => {
-    event.preventDefault();
-    try {
-      session.sendPasswordChangeCode();
-    } catch (err) {
-      setError(err.message);
-      return;
-    }
-    setCodeSent(true);
-    setError('');
-  }, []);
-
   const openChangePasswordDialog = useCallback(() => {
     setShowChangePassword(!showChangePassword);
     setFinishedResetting(false);
@@ -138,7 +126,17 @@ export const Account: FC = () => {
               {codeSent ? 'A code was sent to your email' : 'Looking for a code?'}{' '}
               <Link
                 href="#"
-                onClick={emailCode}
+                onClick={async event => {
+                  event.preventDefault();
+                  try {
+                    session.sendPasswordChangeCode();
+                  } catch (err) {
+                    setError(err.message);
+                    return;
+                  }
+                  setCodeSent(true);
+                  setError('');
+                }}
               >
                 Email Me a Code
               </Link>

@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../../../models';
@@ -12,7 +12,7 @@ interface Props {
   accordionKey: RequestAccordionKeys;
 }
 
-export const AuthAccordion: FC<Props> = ({ accordionKey, label, children }) => {
+export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
   const activeRequest = useSelector(selectActiveRequest);
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
 

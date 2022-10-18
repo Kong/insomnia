@@ -33,7 +33,7 @@ export const WorkspacePageHeader: FC = () => {
   const activeActivity = useSelector(selectActiveActivity);
   const dispatch = useDispatch();
 
-  const handleActivityChange = useCallback(async ({ workspaceId, nextActivity }) => {
+  const handleActivityChange: HandleActivityChange = useCallback(async ({ workspaceId, nextActivity }) => {
     // Remember last activity on workspace for later, but only if it isn't HOME
     if (workspaceId && nextActivity !== ACTIVITY_HOME) {
       await models.workspaceMeta.updateByParentId(workspaceId, {

@@ -1,6 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 
 import { grpcActions } from '../../../../context/grpc';
 import { requestStateSchema } from '../../../../context/grpc/__schemas__';

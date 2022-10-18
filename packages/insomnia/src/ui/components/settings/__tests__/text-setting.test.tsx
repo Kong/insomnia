@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { act, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
@@ -35,6 +34,10 @@ describe('<TextSetting />', () => {
     renderOptions = { wrapper: withReduxStore(store) };
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('should render label text', async () => {
     const { getByLabelText } = render(textSetting, renderOptions);
     expect(getByLabelText(label)).toBeInTheDocument();
@@ -46,12 +49,16 @@ describe('<TextSetting />', () => {
   });
 
   it('should render help text', async () => {
+    jest.useFakeTimers();
     const { container, findByRole } = render(textSetting, renderOptions);
-    userEvent.hover(container);
-    act(async () => {
-      const helpText = await findByRole(/tooltip/);
-      expect(helpText).toBeInTheDocument();
-    });
+
+    fireEvent.mouseMove(container);
+    fireEvent.mouseEnter(container.querySelector('.tooltip'));
+
+    act(jest.runAllTimers);
+
+    const helpText = await findByRole(/tooltip/);
+    expect(helpText).toBeInTheDocument();
   });
 
   it('should be disabled when passed a disabled prop', async () => {

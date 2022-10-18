@@ -300,7 +300,7 @@ export class Plugins extends PureComponent<Props, State> {
               <details>
                 <summary>Additional Information</summary>
                 <pre className="pad-top-sm force-wrap selectable">
-                  <code>{error.stack || error}</code>
+                  <code>{error.stack || error.message}</code>
                 </pre>
               </details>
             </div>
