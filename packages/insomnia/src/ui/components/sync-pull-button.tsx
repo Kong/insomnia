@@ -1,45 +1,29 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent, ReactNode } from 'react';
-import { connect } from 'react-redux';
+import React, { FC, ReactNode, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../common/constants';
 import { VCS } from '../../sync/vcs/vcs';
-import { RootState } from '../redux/modules';
 import { selectActiveProject } from '../redux/selectors';
 import { showError } from './modals';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
+interface Props {
   vcs: VCS;
   branch: string;
-  onPull: (...args: any[]) => any;
+  onPull: () => void;
   disabled?: boolean;
   className?: string;
   children?: ReactNode;
 }
 
-interface State {
-  loading: boolean;
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedSyncPullButton extends PureComponent<Props, State> {
-  _timeout: NodeJS.Timeout | null = null;
-
-  state: State = {
-    loading: false,
-  };
-
-  async _handleClick() {
-    const { vcs, onPull, branch, project } = this.props;
-    this.setState({
-      loading: true,
-    });
+export const SyncPullButton: FC<Props> = props => {
+  const { className, children, disabled } = props;
+  const project = useSelector(selectActiveProject);
+  const [loading, setLoading] = useState(false);
+  const onClick = async () => {
+    const { vcs, onPull, branch } = props;
+    setLoading(true);
     const newVCS = vcs.newInstance();
     const oldBranch = await newVCS.getBranch();
     let failed = false;
-
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
@@ -57,44 +41,15 @@ export class UnconnectedSyncPullButton extends PureComponent<Props, State> {
       // have to do this hack
       await newVCS.checkout([], oldBranch);
     }
-
-    // Do this a bit later so the loading doesn't seem to stop too early
-    this._timeout = setTimeout(() => {
-      this.setState({
-        loading: false,
-      });
-    }, 400);
-
+    setLoading(false);
     if (!failed) {
       onPull?.();
     }
-  }
-
-  componentWillUnmount() {
-    if (this._timeout !== null) {
-      clearTimeout(this._timeout);
-    }
-  }
-
-  render() {
-    const { className, children, disabled } = this.props;
-    const { loading } = this.state;
-    return (
-      <button className={className} onClick={this._handleClick} disabled={disabled}>
-        {loading && <i className="fa fa-spin fa-refresh space-right" />}
-        {children || 'Pull'}
-      </button>
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  project: selectActiveProject(state),
-});
-
-export const SyncPullButton = connect(
-  mapStateToProps,
-  null,
-  null,
-  { forwardRef: true },
-)(UnconnectedSyncPullButton);
+  };
+  return (
+    <button className={className} onClick={onClick} disabled={disabled}>
+      {loading && <i className="fa fa-spin fa-refresh space-right" />}
+      {children || 'Pull'}
+    </button>
+  );
+};

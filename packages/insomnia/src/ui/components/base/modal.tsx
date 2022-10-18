@@ -19,7 +19,7 @@ export interface ModalProps {
 }
 
 export interface ModalHandle {
-  show: (options?: { onHide: () => void }) => void;
+  show: (options?: { onHide?: () => void }) => void;
   hide: () => void;
   toggle: () => void;
   isOpen: () => boolean;
@@ -49,8 +49,12 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
 
   const hide = useCallback(() => {
     setOpen(false);
-    onHideProp?.();
-    onHideArgument?.();
+    if (typeof onHideProp === 'function') {
+      onHideProp();
+    }
+    if (typeof onHideArgument === 'function') {
+      onHideArgument();
+    }
   }, [onHideProp, onHideArgument]);
 
   useImperativeHandle(ref, () => ({

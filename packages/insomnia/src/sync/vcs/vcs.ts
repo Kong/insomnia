@@ -346,13 +346,13 @@ export class VCS {
       throw new Error(`Failed to find snapshot by id ${snapshotId}`);
     }
 
-    const potentialNewState: SnapshotState = candidates.map(candidate => ({
+    const currentState: SnapshotState = candidates.map(candidate => ({
       key: candidate.key,
       blob: hashDocument(candidate.document).hash,
       name: candidate.name,
     }));
 
-    const delta = stateDelta(potentialNewState, rollbackSnapshot.state);
+    const delta = stateDelta(currentState, rollbackSnapshot.state);
     // We need to treat removals of candidates differently because they may not yet have been stored as blobs.
     const remove: StatusCandidate[] = [];
 
@@ -378,7 +378,7 @@ export class VCS {
 
   async getHistoryCount(branchName?: string) {
     const branch = branchName ? await this._getBranch(branchName) : await this._getCurrentBranch();
-    return branch?.snapshots.length;
+    return branch?.snapshots.length || 0;
   }
 
   async getHistory(count = 0) {
