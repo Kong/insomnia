@@ -19,7 +19,6 @@ export interface AlertModalHandle {
 export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<AlertModalOptions>({
-
     title: '',
     message: '',
     addCancel: false,
@@ -41,12 +40,7 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
       modalRef.current?.show();
     },
   }), []);
-  const handleOk = () => {
-    modalRef.current?.hide();
-    if (typeof state.onConfirm === 'function') {
-      state.onConfirm();
-    }
-  };
+
   const { message, title, addCancel, okLabel } = state;
   return (
     <Modal ref={modalRef} skinny>
@@ -59,7 +53,15 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
               Cancel
             </button>
           ) : null}
-          <button className="btn" onClick={handleOk}>
+          <button
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+              if (typeof state.onConfirm === 'function') {
+                state.onConfirm();
+              }
+            }}
+          >
             {okLabel || 'Ok'}
           </button>
         </div>
