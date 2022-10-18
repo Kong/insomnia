@@ -4,26 +4,17 @@ This project contains the smoke testing suite for Insomnia App and Inso CLI.
 
 We use [Playwright](https://github.com/microsoft/playwright) for App tests and [execa](https://github.com/sindresorhus/execa) for CLI tests.
 
+To find more about our CLI tests, check [this document](CLI.md).
+
 - [Insomnia Smoke Tests](#insomnia-smoke-tests)
-  - [App](#app)
-    - [Run App Smoke Tests](#run-app-smoke-tests)
-    - [Build and package methods](#build-and-package-methods)
-    - [Playwright Inspector](#playwright-inspector)
-    - [Playwright Trace viewer](#playwright-trace-viewer)
-    - [Playwright VS Code extension](#playwright-vs-code-extension)
-    - [Debugging Smoke Tests](#debugging-smoke-tests)
-  - [CLI](#cli)
-    - [Run CLI Smoke Tests](#run-cli-smoke-tests)
-    - [Debugging CLI tests using watcher](#debugging-cli-tests-using-watcher)
-    - [How to update the `inso-nedb` fixtures](#how-to-update-the-inso-nedb-fixtures)
-    - [How to run inso with the `inso-nedb` fixture locally?](#how-to-run-inso-with-the-inso-nedb-fixture-locally)
-  - [Notes](#notes)
-    - [Development guidelines](#development-guidelines)
-    - [Folder Structure](#folder-structure)
+  - [Run App Smoke Tests](#run-app-smoke-tests)
+  - [Build and package methods](#build-and-package-methods)
+  - [Playwright Inspector](#playwright-inspector)
+  - [Playwright Trace viewer](#playwright-trace-viewer)
+  - [Playwright VS Code extension](#playwright-vs-code-extension)
+  - [Debugging Smoke Tests](#debugging-smoke-tests)
 
-## App
-
-### Run App Smoke Tests
+## Run App Smoke Tests
 
 To run Smoke tests:
 
@@ -32,7 +23,7 @@ To run Smoke tests:
 
 To run individual tests, you can filter by the file or test title, for example `npm run test:smoke:dev -- oauth`
 
-### Build and package methods
+## Build and package methods
 
 It's possible to run the smoke tests for:
 
@@ -61,7 +52,7 @@ npm run test:smoke:package
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
 
-### Playwright Inspector
+## Playwright Inspector
 
 You can step through tests with playwright inspector: `PWDEBUG=1 npm run test:smoke:dev`
 
@@ -69,7 +60,7 @@ This is also useful to help create new tests.
 
 ![playwright inspector](docs/imgs/playwright-inspector.jpg)
 
-### Playwright Trace viewer
+## Playwright Trace viewer
 
 We generate [Playwright Traces](https://playwright.dev/docs/trace-viewer) when tests run. These can be used to debug local and CI test failures.
 
@@ -88,7 +79,7 @@ Traces from CI execution can be found in the failed CI job's artifacts.
 
 ![artifacts](docs/imgs/artifacts.png)
 
-### Playwright VS Code extension
+## Playwright VS Code extension
 
 In order to run/debug tests directly from VS Code:
 
@@ -103,86 +94,10 @@ If no tests appear, you may need to run "Refresh playwright tests". This can be 
 
 ![refresh](docs/imgs/refresh.png)
 
-### Debugging Smoke Tests
+## Debugging Smoke Tests
 
 You can enable additional logging to help you debug tests:
 
 - Playwright logs: `DEBUG=pw:api npm run test:smoke:dev`
 - Insomnia console logs: `DEBUG=pw:browser npm run test:smoke:dev`
 - WebServer console logs: `DEBUG=pw:WebServer npm run test:smoke:dev`
-
-## CLI
-
-### Run CLI Smoke Tests
-
-```shell
-# Package the Inso CLI binaries
-npm run inso-package
-
-# Run CLI tests
-npm run test:smoke:cli
-```
-
-### Debugging CLI tests using watcher
-
-This is helpful for debugging failing api tests and changing the send-request abstraction
-
-From project root, in separate terminals:
-
-```sh
-# start smoke test api
-npm run serve --prefix packages/insomnia-smoke-test
-
-# build send-request
-npm run build:sr --prefix packages/insomnia
-
-# watch inso
-npm run start --prefix packages/insomnia-inso
-
-# run api test
-$PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
-```
-
-### How to update the `inso-nedb` fixtures
-
-Run Insomnia with `INSOMNIA_DATA_PATH` environment variable set to `fixtures/inso-nedb`, e.g.:
-
-```bash
-INSOMNIA_DATA_PATH=packages/insomnia-smoke-test/fixtures/inso-nedb /Applications/Insomnia.app/Contents/MacOS/Insomnia
-```
-
-Relaunch the app one more time, so that Insomnia compacts the database.
-
-The `.gitignore` file will explicitly ignore certain database files, to keep the directory size down and avoid prevent sensitive data leaks.
-
-### How to run inso with the `inso-nedb` fixture locally?
-
-Set the `--src` argument pointed to `packages/insomnia-smoke-test/fixtures/inso-nedb`:
-
-```bash
-# if installed globally
-inso --src <INSO_NEDB_PATH>
-
-# using the package bin
-./packages/insomnia-inso/bin/inso --src <INSO_NEDB_PATH>
-
-# using a binary
-./packages/insomnia-inso/binaries/insomnia-inso --src <INSO_NEDB_PATH>
-```
-
-## Notes
-
-### Development guidelines
-
-- Tests run against a clean Insomnia data directory to keep test run data isolated.
-- Avoid depending on any external services. If a particular endpoint is required, implement a new endpoint in `/server`.
-
-### Folder Structure
-
-| Folder       | Purpose                           |
-| ------------ | --------------------------------- |
-| `/cli`       | tests for inso                    |
-| `/tests`     | tests for Insomnia                |
-| `/playwright`| test helpers                      |
-| `/server`    | Express server used by the tests  |
-| `/fixtures`  | data used by tests and the server |
