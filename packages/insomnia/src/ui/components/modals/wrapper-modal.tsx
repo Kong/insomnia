@@ -30,14 +30,7 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
       modalRef.current?.hide();
     },
     show: options => {
-      const { title, body, tall, skinny, wide } = options;
-      setState({
-        title,
-        body,
-        tall: !!tall,
-        skinny: !!skinny,
-        wide: !!wide,
-      });
+      setState(options);
       modalRef.current?.show();
     },
   }), []);
