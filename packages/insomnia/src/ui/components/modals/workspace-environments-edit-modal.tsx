@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, Fragment, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
@@ -7,7 +7,7 @@ import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
-import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
@@ -164,10 +164,14 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
     // Delete the current one
     await models.environment.remove(environment);
-    setState(state => ({
-      ...state,
-      selectedEnvironmentId: state.rootEnvironment?._id || null,
-    }));
+    if (rootEnvironment) {
+      const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
+      setState(state => ({
+        ...state,
+        subEnvironments,
+        selectedEnvironmentId: state.rootEnvironment?._id || null,
+      }));
+    }
   }
 
   async function updateEnvironment(
@@ -182,6 +186,13 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     const realEnvironment = await models.environment.getById(environment._id);
     if (realEnvironment) {
       models.environment.update(realEnvironment, patch);
+      if (rootEnvironment) {
+        const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
+        setState(state => ({
+          ...state,
+          subEnvironments,
+        }));
+      }
     }
   }
 
@@ -286,34 +297,36 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownButton>
               <DropdownItem
                 onClick={async () => {
-                  const environment = await models.environment.create({
-                    parentId: state.rootEnvironment?._id,
-                    isPrivate: false,
-                  });
-
-                  const subEnvironments = await models.environment.findByParentId(selectedEnvironment.parentId);
-                  setState(state => ({
-                    ...state,
-                    subEnvironments,
-                    selectedEnvironmentId: environment._id,
-                  }));
+                  if (rootEnvironment) {
+                    const environment = await models.environment.create({
+                      parentId: rootEnvironment._id,
+                      isPrivate: false,
+                    });
+                    const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
+                    setState(state => ({
+                      ...state,
+                      subEnvironments,
+                      selectedEnvironmentId: environment._id,
+                    }));
+                  }
                 }}
               >
                 <i className="fa fa-eye" /> Environment
               </DropdownItem>
               <DropdownItem
                 onClick={async () => {
-                  const environment = await models.environment.create({
-                    parentId: state.rootEnvironment?._id,
-                    isPrivate: true,
-                  });
-
-                  const subEnvironments = await models.environment.findByParentId(selectedEnvironment.parentId);
-                  setState(state => ({
-                    ...state,
-                    subEnvironments,
-                    selectedEnvironmentId: environment._id,
-                  }));
+                  if (rootEnvironment) {
+                    const environment = await models.environment.create({
+                      parentId: rootEnvironment._id,
+                      isPrivate: true,
+                    });
+                    const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
+                    setState(state => ({
+                      ...state,
+                      subEnvironments,
+                      selectedEnvironmentId: environment._id,
+                    }));
+                  }
                 }}
                 title="Environment will not be exported or synced"
               >
