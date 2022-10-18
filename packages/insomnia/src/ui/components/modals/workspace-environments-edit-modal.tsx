@@ -290,8 +290,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     parentId: state.rootEnvironment?._id,
                     isPrivate: false,
                   });
+
+                  const subEnvironments = await models.environment.findByParentId(selectedEnvironment.parentId);
                   setState(state => ({
                     ...state,
+                    subEnvironments,
                     selectedEnvironmentId: environment._id,
                   }));
                 }}
@@ -304,8 +307,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     parentId: state.rootEnvironment?._id,
                     isPrivate: true,
                   });
+
+                  const subEnvironments = await models.environment.findByParentId(selectedEnvironment.parentId);
                   setState(state => ({
                     ...state,
+                    subEnvironments,
                     selectedEnvironmentId: environment._id,
                   }));
                 }}
@@ -398,8 +404,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 <button
                   onClick={async () => {
                     const newEnvironment = await models.environment.duplicate(selectedEnvironment);
+                    const subEnvironments = await models.environment.findByParentId(selectedEnvironment.parentId);
                     setState(state => ({
                       ...state,
+                      subEnvironments,
                       selectedEnvironmentId: newEnvironment._id,
                     }));
                   }}

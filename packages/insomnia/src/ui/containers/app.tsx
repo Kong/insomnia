@@ -148,6 +148,7 @@ const App = () => {
   const isFinishedBooting = useSelector(selectIsFinishedBooting);
   const activeGitRepository = useSelector(selectActiveGitRepository);
   const activeProject = useSelector(selectActiveProject);
+  const activeEnvironment = useSelector(selectActiveEnvironment);
 
   const vcs = useVCS({
     workspaceId: activeWorkspace?._id,
