@@ -1,10 +1,8 @@
 # Insomnia Smoke Tests
 
-This project contains the smoke testing suite for Insomnia App and Inso CLI.
+This project contains the smoke testing suite for Insomnia App. We use [Playwright](https://github.com/microsoft/playwright) for App tests.
 
-We use [Playwright](https://github.com/microsoft/playwright) for App tests and [execa](https://github.com/sindresorhus/execa) for CLI tests.
-
-To find more about our CLI tests, check [this document](CLI.md).
+> To find more about Inso CLI smoke tests, check [this document](CLI.md).
 
 - [Insomnia Smoke Tests](#insomnia-smoke-tests)
   - [Quick-start](#quick-start)
