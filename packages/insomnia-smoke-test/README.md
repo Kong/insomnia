@@ -1,6 +1,8 @@
 # Insomnia Smoke Tests
 
-This project contains the smoke testing suite for Insomnia App. We use [Playwright](https://github.com/microsoft/playwright) for App tests.
+[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)
+
+This project contains the smoke testing suite for Insomnia App.
 
 > To find more about Inso CLI smoke tests, check [this document](CLI.md).
 
@@ -17,12 +19,19 @@ This project contains the smoke testing suite for Insomnia App. We use [Playwrig
 
 ## Quick-start
 
-To run Smoke tests:
+Prerequisites:
 
-- In one terminal window run `npm run watch:app`
+- Clone the project
+- Run `npm run bootstrap`
+
+To run all tests:
+
+- In one terminal run: `npm run watch:app`
 - In another terminal run: `npm run test:smoke:dev`
 
-To run individual tests, you can filter by the file or test title, for example `npm run test:smoke:dev -- oauth`
+To run single tests:
+
+- Filter by the file or test title, e.g. `npm run test:smoke:dev -- oauth`
 
 ## Debugging and Developing Tests locally
 
