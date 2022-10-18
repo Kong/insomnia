@@ -1,27 +1,23 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { createRef } from 'react';
-import { connect } from 'react-redux';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
-import { RootState } from '../../redux/modules';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { UnconnectedCodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
+export interface RequestGroupSettingsModalOptions {
+  requestGroup: RequestGroup;
+  forceEditMode: boolean;
 }
-
 interface State {
   requestGroup: RequestGroup | null;
   showDescription: boolean;
@@ -29,269 +25,103 @@ interface State {
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
   workspacesForActiveProject: Workspace[];
-  justCopied: boolean;
-  justMoved: boolean;
 }
-
-interface RequestGroupSettingsModalOptions {
-  requestGroup: RequestGroup;
-  forceEditMode: boolean;
+export interface RequestGroupSettingsModalHandle {
+  show: (options: RequestGroupSettingsModalOptions) => void;
+  hide: () => void;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Props, State> {
-  modal: ModalHandle | null = null;
-  _editorRef = createRef<UnconnectedCodeEditor>();
-
-  state: State = {
+export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
+  const [state, setState] = useState<State>({
     requestGroup: null,
     showDescription: false,
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
     workspacesForActiveProject: [],
-    justCopied: false,
-    justMoved: false,
-  };
+  });
 
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: async ({ requestGroup, forceEditMode }) => {
+      const hasDescription = !!requestGroup.description;
+      // Find this request workspace for filtering out of workspaces list
+      const ancestors = await db.withAncestors(requestGroup);
+      const workspace = workspacesForActiveProject
+        .find(w => w._id === ancestors.find(doc => doc.type === models.workspace.type)?._id);
 
-  async _handleNameChange(name: string) {
-    const { requestGroup: originalRequestGroup } = this.state;
+      setState(state => ({
+        ...state,
+        requestGroup,
+        workspace,
+        activeWorkspaceIdToCopyTo: null,
+        showDescription: forceEditMode || hasDescription,
+        defaultPreviewMode: hasDescription && !forceEditMode,
+      }));
+      modalRef.current?.show();
+    },
+  }), [workspacesForActiveProject]);
 
-    if (!originalRequestGroup) {
-      return;
-    }
-    const patch = { name };
-
-    const updatedRequestGroup = await models.requestGroup.update(
-      originalRequestGroup,
-      patch,
-    );
-    this.setState({ requestGroup: updatedRequestGroup });
-  }
-
-  async _handleDescriptionChange(description: string) {
-    if (!this.state.requestGroup) {
-      return;
-    }
-    const requestGroup = await models.requestGroup.update(
-      this.state.requestGroup,
-      {
-        description,
-      },
-    );
-    this.setState({ requestGroup, defaultPreviewMode: false });
-  }
-
-  _handleAddDescription() {
-    this.setState({ showDescription: true });
-  }
-
-  _handleUpdateMoveCopyWorkspace(event: React.SyntheticEvent<HTMLSelectElement>) {
-    const { value } = event.currentTarget;
-    const workspaceId = value === '__NULL__' ? null : value;
-    this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
-  }
-
-  async _handleMoveToWorkspace() {
-    const { activeWorkspaceIdToCopyTo, requestGroup } = this.state;
+  const handleMoveToWorkspace = async () => {
+    const { activeWorkspaceIdToCopyTo, requestGroup } = state;
     if (!requestGroup || !activeWorkspaceIdToCopyTo) {
       return;
     }
-
     const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
     if (!workspace) {
       return;
     }
-
     // TODO: if there are gRPC requests in a request group
     //  we should also copy the protofiles to the destination workspace - INS-267
-
     await models.requestGroup.duplicate(requestGroup, {
       metaSortKey: -1e9,
       parentId: activeWorkspaceIdToCopyTo,
       name: requestGroup.name, // Because duplicating will add (Copy) suffix
     });
-
     await models.requestGroup.remove(requestGroup);
+  };
 
-    this.setState({ justMoved: true });
-    setTimeout(() => {
-      this.setState({ justMoved: false });
-    }, 2000);
-  }
-
-  async _handleCopyToWorkspace() {
-    const { activeWorkspaceIdToCopyTo, requestGroup } = this.state;
+  const handleCopyToWorkspace = async () => {
+    const { activeWorkspaceIdToCopyTo, requestGroup } = state;
     if (!requestGroup || !activeWorkspaceIdToCopyTo) {
       return;
     }
-
     const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
     if (!workspace) {
       return;
     }
-
     const patch = {
       metaSortKey: -1e9, // Move to top of sort order
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
       parentId: activeWorkspaceIdToCopyTo,
     };
-
     await models.requestGroup.duplicate(requestGroup, patch);
-
-    this.setState({ justCopied: true });
-    setTimeout(() => {
-      this.setState({ justCopied: false });
-    }, 2000);
-
     models.stats.incrementCreatedRequests();
-  }
+  };
 
-  async show({
+  const {
     requestGroup,
-    forceEditMode,
-  }: RequestGroupSettingsModalOptions) {
-    const { workspacesForActiveProject } = this.props;
-
-    const hasDescription = !!requestGroup.description;
-
-    // Find workspaces for use with moving workspace
-    const ancestors = await db.withAncestors(requestGroup);
-    const doc = ancestors.find(doc => doc.type === models.workspace.type);
-    const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspacesForActiveProject.find(w => w._id === workspaceId);
-
-    this.setState(
-      {
-        requestGroup,
-        workspace: workspace,
-        activeWorkspaceIdToCopyTo: null,
-        showDescription: forceEditMode || hasDescription,
-        defaultPreviewMode: hasDescription && !forceEditMode,
-      },
-      () => {
-        this.modal?.show();
-
-        if (forceEditMode) {
-          setTimeout(() => {
-            this._editorRef.current?.focus();
-          }, 400);
-        }
-      },
-    );
+    showDescription,
+    defaultPreviewMode,
+    activeWorkspaceIdToCopyTo,
+    workspace,
+  } = state;
+  if (!requestGroup) {
+    return null;
   }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  _renderDescription() {
-    const {
-    } = this.props;
-
-    const { showDescription, defaultPreviewMode, requestGroup } = this.state;
-
-    if (!requestGroup) {
-      return null;
-    }
-
-    return showDescription ? (
-      <MarkdownEditor
-        ref={this._editorRef}
-        className="margin-top"
-        defaultPreviewMode={defaultPreviewMode}
-        placeholder="Write a description"
-        defaultValue={requestGroup.description}
-        onChange={this._handleDescriptionChange}
-      />
-    ) : (
-      <button
-        onClick={this._handleAddDescription}
-        className="btn btn--outlined btn--super-duper-compact"
-      >
-        Add Description
-      </button>
-    );
-  }
-
-  _renderMoveCopy() {
-    const { workspacesForActiveProject } = this.props;
-
-    const {
-      activeWorkspaceIdToCopyTo,
-      justMoved,
-      justCopied,
-      workspace,
-      requestGroup,
-    } = this.state;
-
-    if (!requestGroup) {
-      return null;
-    }
-
-    return (
-      <div className="form-row">
-        <div className="form-control form-control--outlined">
-          <label>
-            Move/Copy to Workspace
-            <HelpTooltip position="top" className="space-left">
-              Copy or move the current folder to a new workspace. It will be
-              placed at the root of the new workspace's folder structure.
-            </HelpTooltip>
-            <select
-              value={activeWorkspaceIdToCopyTo || '__NULL__'}
-              onChange={this._handleUpdateMoveCopyWorkspace}
-            >
-              <option value="__NULL__">-- Select Workspace --</option>
-              {workspacesForActiveProject.map(w => {
-                if (workspace && workspace._id === w._id) {
-                  return null;
-                }
-
-                return (
-                  <option key={w._id} value={w._id}>
-                    {w.name}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-        </div>
-        <div className="form-control form-control--no-label width-auto">
-          <button
-            disabled={justCopied || !activeWorkspaceIdToCopyTo}
-            className="btn btn--clicky"
-            onClick={this._handleCopyToWorkspace}
-          >
-            {justCopied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
-        <div className="form-control form-control--no-label width-auto">
-          <button
-            disabled={justMoved || !activeWorkspaceIdToCopyTo}
-            className="btn btn--clicky"
-            onClick={this._handleMoveToWorkspace}
-          >
-            {justMoved ? 'Moved!' : 'Move'}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  renderModalBody() {
-    const { requestGroup } = this.state;
-
-    if (!requestGroup) {
-      return null;
-    }
-
-    return (
-      <div>
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>
+        Folder Settings{' '}
+        <span className="txt-sm selectable faint monospace">
+          {requestGroup ? requestGroup._id : ''}
+        </span>
+      </ModalHeader>
+      <ModalBody className="pad"><div>
         <div className="form-control form-control--outlined">
           <label>
             Name
@@ -301,40 +131,81 @@ export class UnconnectedRequestGroupSettingsModal extends React.PureComponent<Pr
               type="text"
               placeholder={requestGroup.name || 'My Folder'}
               defaultValue={requestGroup.name}
-              onChange={this._handleNameChange}
+              onChange={async name => {
+                const updatedRequestGroup = await models.requestGroup.update(requestGroup, { name });
+                setState(state => ({ ...state, requestGroup: updatedRequestGroup }));
+              }}
             />
           </label>
         </div>
-        {this._renderDescription()}
+        {showDescription ? (
+          <MarkdownEditor
+            ref={editorRef}
+            className="margin-top"
+            defaultPreviewMode={defaultPreviewMode}
+            placeholder="Write a description"
+            defaultValue={requestGroup.description}
+            onChange={async (description: string) => {
+              const updated = await models.requestGroup.update(requestGroup, { description });
+              setState(state => ({ ...state, requestGroup: updated, defaultPreviewMode: false }));
+            }}
+          />
+        ) : (
+          <button
+            onClick={() => setState(state => ({ ...state, showDescription: true }))}
+            className="btn btn--outlined btn--super-duper-compact"
+          >
+            Add Description
+          </button>
+        )}
         <hr />
-        {this._renderMoveCopy()}
-      </div>
-    );
-  }
-
-  render() {
-    const { requestGroup } = this.state;
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>
-          Folder Settings{' '}
-          <span className="txt-sm selectable faint monospace">
-            {requestGroup ? requestGroup._id : ''}
-          </span>
-        </ModalHeader>
-        <ModalBody className="pad">{this.renderModalBody()}</ModalBody>
-      </Modal>
-    );
-  }
-}
-
-const mapStateToProps = (state: RootState) => ({
-  workspacesForActiveProject: selectWorkspacesForActiveProject(state),
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <label>
+              Move/Copy to Workspace
+              <HelpTooltip position="top" className="space-left">
+                Copy or move the current folder to a new workspace. It will be
+                placed at the root of the new workspace's folder structure.
+              </HelpTooltip>
+              <select
+                value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                onChange={event => {
+                  const workspaceId = event.currentTarget.value === '__NULL__' ? null : event.currentTarget.value;
+                  setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                }}
+              >
+                <option value="__NULL__">-- Select Workspace --</option>
+                {workspacesForActiveProject
+                  .filter(w => workspace?._id !== w._id)
+                  .map(w => (
+                    <option key={w._id} value={w._id}>
+                      {w.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          </div>
+          <div className="form-control form-control--no-label width-auto">
+            <button
+              disabled={!activeWorkspaceIdToCopyTo}
+              className="btn btn--clicky"
+              onClick={handleCopyToWorkspace}
+            >
+              Copy
+            </button>
+          </div>
+          <div className="form-control form-control--no-label width-auto">
+            <button
+              disabled={!activeWorkspaceIdToCopyTo}
+              className="btn btn--clicky"
+              onClick={handleMoveToWorkspace}
+            >
+              Move
+            </button>
+          </div>
+        </div>
+      </div></ModalBody>
+    </Modal>
+  );
 });
-
-export const RequestGroupSettingsModal = connect(
-  mapStateToProps,
-  null,
-  null,
-  { forwardRef: true },
-)(UnconnectedRequestGroupSettingsModal);
+RequestGroupSettingsModal.displayName = 'RequestGroupSettingsModal';

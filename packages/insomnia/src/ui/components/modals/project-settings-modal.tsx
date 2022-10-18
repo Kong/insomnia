@@ -1,115 +1,84 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { AnyAction, bindActionCreators, Dispatch } from 'redux';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models/index';
 import { isRemoteProject, projectHasSettings } from '../../../models/project';
-import { RootState } from '../../redux/modules';
-import * as projectActions from '../../redux/modules/project';
+import { removeProject } from '../../redux/modules/project';
 import { selectActiveProject } from '../../redux/selectors';
 import { DebouncedInput } from '../base/debounced-input';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 
-export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
-
-type Props = ReduxProps;
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class ProjectSettingsModal extends PureComponent<Props> {
-  modal: ModalHandle | null = null;
-
-  _handleSetModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
-
-  _handleRemoveProject() {
-    this.props.handleRemoveProject(this.props.project);
-    this.hide();
-  }
-
-  async _handleRename(name: string) {
-    const { project } = this.props;
-    await models.project.update(project, { name });
-  }
-
-  show() {
-    this.modal?.show();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  render() {
-    const { project } = this.props;
-    if (!projectHasSettings(project)) {
-      return null;
-    }
-
-    const isRemote = isRemoteProject(project);
-
-    return (
-      <Modal ref={this._handleSetModalRef}>
-        <ModalHeader key={`header::${project._id}`}>
-          {strings.project.singular} Settings{' '}
-          <div className="txt-sm selectable faint monospace">{project._id}</div>
-        </ModalHeader>
-        <ModalBody key={`body::${project._id}`} className="pad">
-          <div className="form-control form-control--outlined">
-            <label>
-              Name
-              {isRemote && (
-                <>
-                  <HelpTooltip className="space-left">
-                    To rename a {strings.remoteProject.singular.toLowerCase()} {strings.project.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
-                  </HelpTooltip>
-                  <input disabled readOnly defaultValue={project.name} />
-                </>
-              )}
-              {!isRemote && (
-                <DebouncedInput
-                // @ts-expect-error -- TSCONVERSION props are spread into an input element
-                  type="text"
-                  delay={500}
-                  placeholder={`My ${strings.project.singular}`}
-                  defaultValue={project.name}
-                  onChange={this._handleRename}
-                />
-              )}
-            </label>
-          </div>
-          <h2>Actions</h2>
-          <div className="form-control form-control--padded">
-            <PromptButton
-              onClick={this._handleRemoveProject}
-              addIcon
-              className="width-auto btn btn--clicky inline-block"
-            >
-              <i className="fa fa-trash-o" /> Delete
-            </PromptButton>
-          </div>
-        </ModalBody>
-      </Modal>
-    );
-  }
+export interface ProjectSettingsModalHandle {
+  show: () => void;
+  hide: () => void;
 }
+export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const project = useSelector(selectActiveProject);
+  const dispatch = useDispatch();
 
-const mapStateToProps = (state: RootState) => ({
-  project: selectActiveProject(state),
+  useImperativeHandle(ref, () => ({
+    hide: () => modalRef.current?.hide(),
+    show: () => modalRef.current?.show(),
+  }), []);
+
+  if (!projectHasSettings(project)) {
+    return null;
+  }
+  const isRemote = isRemoteProject(project);
+
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader key={`header::${project._id}`}>
+        {strings.project.singular} Settings{' '}
+        <div className="txt-sm selectable faint monospace">{project._id}</div>
+      </ModalHeader>
+      <ModalBody key={`body::${project._id}`} className="pad">
+        <div className="form-control form-control--outlined">
+          <label>
+            Name
+            {isRemote && (
+              <>
+                <HelpTooltip className="space-left">
+                  To rename a {strings.remoteProject.singular.toLowerCase()} {strings.project.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
+                </HelpTooltip>
+                <input disabled readOnly defaultValue={project.name} />
+              </>
+            )}
+            {!isRemote && (
+              <DebouncedInput
+                // @ts-expect-error -- TSCONVERSION props are spread into an input element
+                type="text"
+                delay={500}
+                placeholder={`My ${strings.project.singular}`}
+                defaultValue={project.name}
+                onChange={name => models.project.update(project, { name })}
+              />
+            )}
+          </label>
+        </div>
+        <h2>Actions</h2>
+        <div className="form-control form-control--padded">
+          <PromptButton
+            onClick={() => {
+              dispatch(removeProject(project));
+              modalRef.current?.hide();
+            }}
+            addIcon
+            className="width-auto btn btn--clicky inline-block"
+          >
+            <i className="fa fa-trash-o" /> Delete
+          </PromptButton>
+        </div>
+      </ModalBody>
+    </Modal>
+  );
 });
+ProjectSettingsModal.displayName = 'ProjectSettingsModal';
 
-const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => {
-  const boundProjectActions = bindActionCreators(projectActions, dispatch);
-  return {
-    handleRemoveProject: boundProjectActions.removeProject,
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(ProjectSettingsModal);
+export default ProjectSettingsModal;

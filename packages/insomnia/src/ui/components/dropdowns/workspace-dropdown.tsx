@@ -77,7 +77,7 @@ export const WorkspaceDropdown: FC = () => {
   }, []);
 
   const handleShowExport = useCallback(() => {
-    showModal(SettingsModal, TAB_INDEX_EXPORT);
+    showModal(SettingsModal, { tab: TAB_INDEX_EXPORT });
   }, []);
 
   const handleShowWorkspaceSettings = useCallback(() => {
