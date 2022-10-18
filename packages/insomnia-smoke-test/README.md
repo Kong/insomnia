@@ -67,11 +67,13 @@ You can step through tests with playwright inspector: `PWDEBUG=1 npm run test:sm
 
 This is also useful to help create new tests.
 
-// TODO(filfreire) add image
+![playwright inspector](docs/imgs/playwright-inspector.jpg)
 
 ### Playwright Trace viewer
 
 We generate [Playwright Traces](https://playwright.dev/docs/trace-viewer) when tests run. These can be used to debug local and CI test failures.
+
+![playwright trace viewer](docs/imgs/playwright-trace.jpg)
 
 To open a local trace viewer for a given test output, run:
 
@@ -82,9 +84,9 @@ npx playwright show-trace packages/insomnia-smoke-test/screenshots/app-can-send-
 
 Alternatively you can upload this trace to [trace.playwright.dev](https://trace.playwright.dev/).
 
-Traces from CI execution can be found in the failed CI job's artifacts:
+Traces from CI execution can be found in the failed CI job's artifacts.
 
-// TODO(filfreire) add image
+![artifacts](docs/imgs/artifacts.png)
 
 ### Playwright VS Code extension
 
@@ -95,11 +97,11 @@ In order to run/debug tests directly from VS Code:
 
 You can trigger tests from the `Testing` tab, or within the test files clicking the run button.
 
-// TODO(filfreire) add image
+![editor](docs/imgs/editor.png)
 
 If no tests appear, you may need to run "Refresh playwright tests". This can be done from the command palette, or by using the button at the top of the `Testing` tab.
 
-// TODO(filfreire) add image
+![refresh](docs/imgs/refresh.png)
 
 ### Debugging Smoke Tests
 
