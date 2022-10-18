@@ -193,7 +193,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.12.1",
     "react-redux": "^7.2.6",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.4.2",
     "react-stately": "^3.17.0",
     "react-tabs": "^3.2.3",
     "react-use": "^17.2.4",
