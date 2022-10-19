@@ -140,7 +140,7 @@ export const WrapperDebug: FC = () => {
     request_quickSwitch:
       () => showModal(RequestSwitcherModal),
     environment_showEditor:
-      () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
+    () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
     showCookiesEditor:
       () => showModal(CookiesModal),
     request_showGenerateCodeEditor:

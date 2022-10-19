@@ -3,8 +3,8 @@ import type { ApiSpec } from '../api-spec';
 import * as models from '../index';
 import { isDesign, Workspace } from '../workspace';
 
-export async function rename(workspace: Workspace, apiSpec: ApiSpec, name: string) {
-  if (isDesign(workspace)) {
+export async function rename(name: string, workspace: Workspace, apiSpec?: ApiSpec) {
+  if (isDesign(workspace) && apiSpec) {
     await models.apiSpec.update(apiSpec, {
       fileName: name,
     });

@@ -165,6 +165,7 @@ const App = () => {
       await models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId });
     }
   }
+
   // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
     if (!activeWorkspace) {
@@ -223,7 +224,7 @@ const App = () => {
                 <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
                 <GenerateConfigModal ref={instance => registerModal(instance, 'GenerateConfigModal')} />
                 <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
-                <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
+                <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')} vcs={vcs || undefined} />
                 <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
                 <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
                 <RequestGroupSettingsModal ref={instance => registerModal(instance, 'RequestGroupSettingsModal')} />
@@ -243,9 +244,7 @@ const App = () => {
                   />
 
                   {activeApiSpec ? <WorkspaceSettingsModal
-                    ref={registerModal}
-                    workspace={activeWorkspace}
-                    apiSpec={activeApiSpec}
+                    ref={instance => registerModal(instance, 'WorkspaceSettingsModal')}
                   /> : null}
                 </> : null}
 
