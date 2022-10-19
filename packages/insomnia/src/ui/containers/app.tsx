@@ -160,12 +160,6 @@ const App = () => {
     gitRepository: activeGitRepository,
   });
 
-  async function handleSetActiveEnvironment(activeEnvironmentId: string | null) {
-    if (activeWorkspaceMeta) {
-      await models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId });
-    }
-  }
-
   // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
     if (!activeWorkspace) {
@@ -286,11 +280,7 @@ const App = () => {
                   </Fragment>
                 ) : null}
 
-                <WorkspaceEnvironmentsEditModal
-                  ref={registerModal}
-                  handleSetActiveEnvironment={handleSetActiveEnvironment}
-                  activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
-                />
+                <WorkspaceEnvironmentsEditModal ref={instance => registerModal(instance, 'WorkspaceEnvironmentsEditModal')} />
 
                 <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
                 <ExportRequestsModal ref={instance => registerModal(instance, 'ExportRequestsModal')} />

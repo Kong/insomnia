@@ -90,12 +90,6 @@
     }
 
     position: relative;
-    .drag-handle {
-      position: absolute;
-      left: 0;
-      opacity: 0;
-      color: var(--hl-lg);
-    }
 
     .editable {
       white-space: nowrap;
@@ -123,18 +117,10 @@
     }
   }
 
-  &.env-modal__sidebar-item--dragging ,
-  &.env-modal__sidebar-item--active {
-    color: var(--color-font);
-    background-color: var(--hl-xs);
-  }
-
   &:hover {
     background-color: var(--hl-xs);
   }
 
-  &.env-modal__sidebar-item--dragging .drag-handle,
-  &:hover .drag-handle,
   &:hover .inactive {
     opacity: 1;
   }

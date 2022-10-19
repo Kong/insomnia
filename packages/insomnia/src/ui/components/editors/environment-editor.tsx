@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorProps, UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -56,7 +56,7 @@ export interface EnvironmentInfo {
   propertyOrder: Record<string, any> | null;
 }
 
-interface Props {
+interface Props extends Partial<CodeEditorProps> {
   environmentInfo: EnvironmentInfo;
   didChange: (...args: any[]) => any;
 }

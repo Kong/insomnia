@@ -107,7 +107,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
 
       <DropdownDivider>General</DropdownDivider>
 
-      <DropdownItem onClick={() => showModal(WorkspaceEnvironmentsEditModal, workspace)}>
+      <DropdownItem onClick={() => showModal(WorkspaceEnvironmentsEditModal)}>
         <i className="fa fa-wrench" /> Manage Environments
         <DropdownHint keyBindings={hotKeyRegistry.environment_showEditor} />
       </DropdownItem>
