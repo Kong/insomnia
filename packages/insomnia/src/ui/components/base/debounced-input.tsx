@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, PureComponent, useImperativeHandle, useRef } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
@@ -8,164 +8,70 @@ interface Props {
   onChange: (value: string) => void;
   onFocus?: (event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
   onBlur?: (event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
-  textarea?: boolean;
   delay?: number;
   placeholder?: string;
   initialValue?: string;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class DebouncedInput extends PureComponent<Props> {
-  _hasFocus = false;
-  _input: HTMLTextAreaElement | HTMLInputElement | null = null;
-  _handleValueChange: Props['onChange'] | null = null;
-
-  constructor(props: Props) {
-    super(props);
-
-    if (!props.delay) {
-      this._handleValueChange = props.onChange;
-    } else {
-      this._handleValueChange = debounce(props.onChange, props.delay || 500);
-    }
-  }
-
-  componentDidMount() {
-    if (this._input && this.props.initialValue) {
-      this._input.value = this.props.initialValue;
-    }
-  }
-
-  _handleChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this._handleValueChange?.(event.target.value);
-  }
-
-  _handleFocus(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this._hasFocus = true;
-    this.props.onFocus?.(event);
-  }
-
-  _handleBlur(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this._hasFocus = false;
-    this.props.onBlur?.(event);
-  }
-
-  _setRef(input: HTMLTextAreaElement | HTMLInputElement) {
-    this._input = input;
-  }
-
-  setAttribute(name: string, value: string) {
-    this._input?.setAttribute(name, value);
-  }
-
-  removeAttribute(name: string) {
-    this._input?.removeAttribute(name);
-  }
-
-  getAttribute(name: string) {
-    this._input?.getAttribute(name);
-  }
-
-  hasFocus() {
-    return this._hasFocus;
-  }
-
-  getSelectionStart() {
-    if (this._input) {
-      return this._input.selectionStart;
-    } else {
-      return -1;
-    }
-  }
-
-  getSelectionEnd() {
-    if (this._input) {
-      return this._input.selectionEnd;
-    } else {
-      return -1;
-    }
-  }
-
-  focus() {
-    if (this._input) {
-      this._input.focus();
-    }
-  }
-
-  focusEnd() {
-    if (this._input) {
-      // Hack to focus the end (set value to current value);
-      this._input.value = this.getValue();
-
-      this._input.focus();
-    }
-  }
-
-  blur() {
-    if (this._input) {
-      this._input.blur();
-    }
-  }
-
-  select() {
-    if (this._input) {
-      this._input.select();
-    }
-  }
-
-  getValue() {
-    if (this._input) {
-      return this._input.value;
-    } else {
-      return '';
-    }
-  }
-
-  setValue(value: string) {
-    if (this._input) {
-      this._input.value = value;
-    }
-  }
-
-  render() {
-    const {
-      onChange,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      onFocus,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      onBlur,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      delay,
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-      textarea,
-      initialValue,
-      ...props
-    } = this.props;
-
-    if (textarea) {
-      return (
-        <textarea
-          ref={ref => {
-            this._input = ref;
-          }}
-          {...props}
-          onChange={this._handleChange}
-          onFocus={this._handleFocus}
-          onBlur={this._handleBlur}
-        />
-      );
-    } else {
-      return (
-        <input
-          ref={ref => {
-            this._input = ref;
-          }}
-          {...props}
-          onChange={this._handleChange}
-          onFocus={this._handleFocus}
-          onBlur={this._handleBlur}
-        />
-      );
-    }
-  }
+export interface DebouncedInputHandle extends HTMLInputElement {
+  focusEnd: () => void;
 }
+
+const DebouncedInput = forwardRef<HTMLInputElement, Props>((props, ref) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { onChange,  delay, ...rest } = props;
+  const toDebounceOrNotToDebounce = delay ? debounce(onChange, delay || 500) : onChange;
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current?.focus();
+    },
+    focusEnd: () => {
+      if (inputRef.current) {
+        inputRef.current.value = inputRef.current.value;
+        inputRef.current.focus();
+      }
+    },
+    setAttribute: (name: string, value: string) => {
+      inputRef.current?.setAttribute(name, value);
+    },
+    removeAttribute: (name: string) => {
+      inputRef.current?.removeAttribute(name);
+    },
+    getAttribute: (name: string) => {
+      return inputRef.current?.getAttribute(name) || null;
+    },
+    hasFocus: () => {
+      return document.activeElement === inputRef.current;
+    },
+    getSelectionStart: () => {
+      return inputRef.current?.selectionStart;
+    },
+    getSelectionEnd: () => {
+      return inputRef.current?.selectionEnd;
+    },
+    blur: () => {
+      inputRef.current?.blur();
+    },
+    select: () => {
+      inputRef.current?.select();
+    },
+    getValue: () => {
+      return inputRef.current?.value;
+    },
+    setValue: (value: string) => {
+      if (inputRef.current) {
+        inputRef.current.value = value;
+      }
+    },
+  }), []);
+
+  return (
+    <input
+      ref={inputRef}
+      {...rest}
+      onChange={e => toDebounceOrNotToDebounce(e.target.value)}
+    />
+  );
+});
+DebouncedInput.displayName = 'DebouncedInput';

@@ -6,7 +6,6 @@ import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
-import { DebouncedInput } from '../base/debounced-input';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -125,14 +124,12 @@ export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHan
         <div className="form-control form-control--outlined">
           <label>
             Name
-            <DebouncedInput
-              delay={500}
-              // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
+            <input
               type="text"
               placeholder={requestGroup.name || 'My Folder'}
               defaultValue={requestGroup.name}
-              onChange={async name => {
-                const updatedRequestGroup = await models.requestGroup.update(requestGroup, { name });
+              onChange={async event => {
+                const updatedRequestGroup = await models.requestGroup.update(requestGroup, { name: event.target.value });
                 setState(state => ({ ...state, requestGroup: updatedRequestGroup }));
               }}
             />
