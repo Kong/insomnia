@@ -22,7 +22,6 @@ interface State {
   onComplete?: (arg0: string) => Promise<void> | void;
   onHide?: () => void;
   onDeleteHint?: ((arg0?: string) => void) | null;
-  currentValue: string;
   loading: boolean;
 }
 export interface PromptModalOptions {
@@ -66,7 +65,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     onComplete: undefined,
     onDeleteHint: undefined,
     onHide: undefined,
-    currentValue: '',
     loading: false,
   });
 
@@ -87,14 +85,9 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     show: options => {
       setState({
         ...options,
-        currentValue: '',
         loading: false,
       });
       modalRef.current?.show();
-      if (inputRef.current) {
-        inputRef.current.value = options.defaultValue || '';
-        inputRef.current.focus();
-      }
     },
   }), []);
 
@@ -118,6 +111,8 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
           event.target.setCustomValidity(errorMessage);
         }
       }}
+      autoFocus
+      defaultValue={state.defaultValue || ''}
       id="prompt-input"
       type={inputType === 'decimal' ? 'number' : inputType || 'text'}
       step={inputType === 'decimal' ? '0.1' : undefined}
