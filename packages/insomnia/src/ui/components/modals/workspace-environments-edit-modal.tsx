@@ -102,24 +102,26 @@ const SidebarList = SortableContainer<SidebarListProps>(
     environments,
     selectedEnvironment,
     showEnvironment,
-  }: SidebarListProps) => (
-    <ul>
-      {environments.map((environment, index) =>
-        (<SidebarListItem
-          changeEnvironmentName={changeEnvironmentName}
-          environment={environment}
-          index={index}
-          key={environment._id}
-          selectedEnvironment={selectedEnvironment}
-          showEnvironment={showEnvironment}
-        />
-        )
-      )}
-    </ul>
-  ));
+  }: SidebarListProps) => {
+    console.log(environments.map(x => x.name + x.metaSortKey));
+    return (
+      <ul>
+        {environments.sort((a, b) => a.metaSortKey - b.metaSortKey).map((environment, index) =>
+          (<SidebarListItem
+            changeEnvironmentName={changeEnvironmentName}
+            environment={environment}
+            index={index}
+            key={environment._id}
+            selectedEnvironment={selectedEnvironment}
+            showEnvironment={showEnvironment}
+          />
+          )
+        )}
+      </ul>);
+  }
+);
 interface State {
   isValid: boolean;
-  subEnvironments: Environment[];
   rootEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
 }
@@ -134,7 +136,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   const [state, setState] = useState<State>({
     isValid: true,
-    subEnvironments: [],
     rootEnvironment: null,
     selectedEnvironmentId: null,
   });
@@ -286,10 +287,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                       parentId: rootEnvironment._id,
                       isPrivate: false,
                     });
-                    const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
                     setState(state => ({
                       ...state,
-                      subEnvironments,
                       selectedEnvironmentId: environment._id,
                     }));
                   }
@@ -304,10 +303,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                       parentId: rootEnvironment._id,
                       isPrivate: true,
                     });
-                    const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
                     setState(state => ({
                       ...state,
-                      subEnvironments,
                       selectedEnvironmentId: environment._id,
                     }));
                   }
@@ -401,10 +398,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 <button
                   onClick={async () => {
                     const newEnvironment = await models.environment.duplicate(selectedEnvironment);
-                    const subEnvironments = await models.environment.findByParentId(selectedEnvironment.parentId);
                     setState(state => ({
                       ...state,
-                      subEnvironments,
                       selectedEnvironmentId: newEnvironment._id,
                     }));
                   }}
