@@ -60,7 +60,6 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     title = 'Tag';
     editor = <TagEditor onChange={handleTemplateChange} defaultValue={template} workspace={workspace} />;
   }
-
   return (
     <Modal
       ref={modalRef}
@@ -73,7 +72,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       }}
     >
       <ModalHeader>Edit {title}</ModalHeader>
-      <ModalBody className="pad" key={template}>
+      <ModalBody className="pad">
         <form
           onSubmit={event => {
             event.preventDefault();
