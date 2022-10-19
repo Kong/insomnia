@@ -33,7 +33,6 @@ export const ExportRequestsModal = forwardRef<ExportRequestsModalHandle, ModalPr
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({ treeRoot: null });
   const sidebarChildren = useSelector(selectSidebarChildren);
-  const dispatch = useDispatch();
   const createNode = useCallback((item: Record<string, any>): Node => {
     const children: Node[] = item.children.map((child: Record<string, any>) => createNode(child));
     let totalRequests = children

@@ -61,8 +61,8 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
         <button
           className="btn"
           onClick={() => {
-            onDone?.(value);
             modalRef.current?.hide();
+            onDone?.(value);
           }}
         >
           Done
