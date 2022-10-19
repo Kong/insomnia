@@ -63,7 +63,7 @@ export function init(): BaseSettings {
     incognitoMode: false,
     lightTheme: getAppDefaultLightTheme(),
     maxHistoryResponses: 20,
-    maxRedirects: -1,
+    maxRedirects: 10,
     maxTimelineDataSizeKB: 10,
     noProxy: '',
     nunjucksPowerUserMode: false,
@@ -73,7 +73,8 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
-    timeout: 0,
+    // milliseconds
+    timeout: 30_000,
     updateAutomatically: true,
     updateChannel: UpdateChannel.stable,
     useBulkHeaderEditor: false,
