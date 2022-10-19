@@ -106,7 +106,7 @@ const SidebarList = SortableContainer<SidebarListProps>(
     console.log(environments.map(x => x.name + x.metaSortKey));
     return (
       <ul>
-        {environments.sort((a, b) => a.metaSortKey - b.metaSortKey).map((environment, index) =>
+        {environments.map((environment, index) =>
           (<SidebarListItem
             changeEnvironmentName={changeEnvironmentName}
             environment={environment}
