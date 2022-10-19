@@ -160,12 +160,6 @@ const App = () => {
     gitRepository: activeGitRepository,
   });
 
-  async function handleSetActiveEnvironment(activeEnvironmentId: string | null) {
-    if (activeWorkspaceMeta) {
-      await models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId });
-    }
-  }
-
   // Ensure Children: Make sure cookies, env, and meta models are created under this workspace
   useEffect(() => {
     if (!activeWorkspace) {
