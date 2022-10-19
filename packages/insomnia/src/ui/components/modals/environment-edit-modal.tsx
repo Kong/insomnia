@@ -38,11 +38,13 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     },
   }), []);
   const didChange = () => {
-    if (!editorRef.current?.isValid()) {
+    const isValid = editorRef.current?.isValid() || false;
+    setState({ isValid, requestGroup });
+    if (!isValid) {
       return;
     }
     try {
-      const data = editorRef.current.getValue();
+      const data = editorRef.current?.getValue();
       if (state.requestGroup && data) {
         models.requestGroup.update(state.requestGroup, {
           environment: data.object,
@@ -52,11 +54,6 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     } catch (err) {
       // Invalid JSON probably
       return;
-    }
-
-    const isValid = Boolean(editorRef.current?.isValid());
-    if (state.isValid !== isValid) {
-      setState({ isValid, requestGroup });
     }
   };
   const { requestGroup, isValid } = state;
