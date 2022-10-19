@@ -6,7 +6,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { EnvironmentEditor } from '../editors/environment-editor';
+import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
 
 interface State {
   requestGroup: RequestGroup | null;
@@ -22,7 +22,7 @@ export interface EnvironmentEditModalHandle {
 }
 export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<EnvironmentEditor>(null);
+  const editorRef = useRef<EnvironmentEditorHandle>(null);
   const [state, setState] = useState<State>({
     requestGroup: null,
     isValid: true,
