@@ -100,7 +100,6 @@ const SidebarList: FC<SidebarListProps> =
     selectedEnvironment,
     showEnvironment,
   }: SidebarListProps) => {
-    console.log(environments.map(x => x.name + x.metaSortKey));
     return (
       <ul>
         {environments.map(environment =>
