@@ -204,18 +204,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   }
 
-  function didChange() {
-    _saveChanges();
-    // Call this last in case component unmounted
-    const isValid = editorRef.current ? editorRef.current.isValid() : false;
-    if (state.isValid !== isValid) {
-      setState(state => ({
-        ...state,
-        isValid,
-      }));
-    }
-  }
-
   const getSelectedEnvironment = (): Environment | null => {
     const { selectedEnvironmentId, rootEnvironment } = state;
     return rootEnvironment?._id === selectedEnvironmentId ?
@@ -240,27 +228,20 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     });
   };
 
-  function _saveChanges() {
+  const onBlur = () => {
     // Only save if it's valid
     if (!editorRef.current || !editorRef.current?.isValid()) {
       return;
     }
-    let patch: Partial<Environment>;
-    try {
-      const data = editorRef.current?.getValue();
-      patch = {
-        data: data?.object,
-        dataPropertyOrder: data && data.propertyOrder,
-      };
-    } catch (err) {
-      // Invalid JSON probably
-      return;
-    }
+    const data = editorRef.current?.getValue();
     const selectedEnvironment = getSelectedEnvironment();
-    if (selectedEnvironment) {
-      updateEnvironment(selectedEnvironment, patch);
+    if (selectedEnvironment && data) {
+      updateEnvironment(selectedEnvironment, {
+        data: data.object,
+        dataPropertyOrder: data.propertyOrder,
+      });
     }
-  }
+  };
 
   const { rootEnvironment, isValid } = state;
 
@@ -446,7 +427,16 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               ref={editorRef}
               key={`${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
               environmentInfo={environmentInfo}
-              didChange={didChange}
+              didChange={() => {
+                const isValid = editorRef.current?.isValid() || false;
+                if (state.isValid !== isValid) {
+                  setState(state => ({
+                    ...state,
+                    isValid,
+                  }));
+                }
+              }}
+              onBlur={onBlur}
             />
           </div>
         </div>
