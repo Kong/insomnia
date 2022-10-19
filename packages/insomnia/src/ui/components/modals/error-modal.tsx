@@ -1,92 +1,67 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-
+// NOTE: this is only used by the plugin api
 export interface ErrorModalOptions {
   title?: string;
   error?: Error | null;
   addCancel?: boolean;
   message?: string;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
-  modal: ModalHandle | null = null;
-  _okCallback: (value?: unknown) => void = () => {};
-
-  state: ErrorModalOptions = {
+export interface ErrorModalHandle {
+  show: (options: ErrorModalOptions) => void;
+  hide: () => void;
+}
+export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const [state, setState] = useState<ErrorModalOptions>({
     title: '',
     error: null,
     message: '',
     addCancel: false,
-  };
+  });
 
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
-
-  _handleOk() {
-    this.hide();
-
-    this._okCallback();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  show(options: ErrorModalOptions = {}) {
-    const { title, error, addCancel, message } = options;
-    this.setState({
-      title,
-      error,
-      addCancel,
-      message,
-    });
-
-    this.modal?.show();
-
-    console.log('[ErrorModal]', error);
-    return new Promise(resolve => {
-      this._okCallback = resolve;
-    });
-  }
-
-  render() {
-    const { error, title, addCancel } = this.state;
-    const message = this.state.message || error?.message;
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
-        <ModalBody className="wide pad">
-          {message ? <div className="notice error pre">{message}</div> : null}
-          {error && (
-            <details>
-              <summary>Stack trace</summary>
-              <pre className="pad-top-sm force-wrap selectable">
-                <code className="wide">{error.stack}</code>
-              </pre>
-            </details>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <div>
-            {addCancel ? (
-              <button className="btn" onClick={this.hide}>
-                Cancel
-              </button>
-            ) : null}
-            <button className="btn" onClick={this._handleOk}>
-              Ok
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
+  const { error, title, addCancel } = state;
+  const message = state.message || error?.message;
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
+      <ModalBody className="wide pad">
+        {message ? <div className="notice error pre">{message}</div> : null}
+        {error && (
+          <details>
+            <summary>Stack trace</summary>
+            <pre className="pad-top-sm force-wrap selectable">
+              <code className="wide">{error.stack}</code>
+            </pre>
+          </details>
+        )}
+      </ModalBody>
+      <ModalFooter>
+        <div>
+          {addCancel ? (
+            <button className="btn" onClick={() => modalRef.current?.hide()}>
+              Cancel
             </button>
-          </div>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+          ) : null}
+          <button className="btn" onClick={() => modalRef.current?.hide()}>
+            Ok
+          </button>
+        </div>
+      </ModalFooter>
+    </Modal>
+  );
+});
+ErrorModal.displayName = 'ErrorModal';

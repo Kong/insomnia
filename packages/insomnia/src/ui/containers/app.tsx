@@ -213,19 +213,19 @@ const App = () => {
             <div key="modals" className="modals">
               <ErrorBoundary showAlert>
                 <AnalyticsModal />
-                <AlertModal ref={registerModal} />
-                <ErrorModal ref={registerModal} />
+                <AlertModal ref={instance => registerModal(instance, 'AlertModal')} />
+                <ErrorModal ref={instance => registerModal(instance, 'ErrorModal')} />
                 <PromptModal ref={registerModal} />
-                <WrapperModal ref={registerModal} />
+                <WrapperModal ref={instance => registerModal(instance, 'WrapperModal')} />
                 <LoginModal ref={registerModal} />
-                <AskModal ref={registerModal} />
-                <SelectModal ref={registerModal} />
-                <FilterHelpModal ref={registerModal} />
-                <RequestRenderErrorModal ref={registerModal} />
-                <GenerateConfigModal ref={registerModal} />
+                <AskModal ref={instance => registerModal(instance, 'AskModal')} />
+                <SelectModal ref={instance => registerModal(instance, 'SelectModal')} />
+                <FilterHelpModal ref={instance => registerModal(instance, 'FilterHelpModal')} />
+                <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
+                <GenerateConfigModal ref={instance => registerModal(instance, 'GenerateConfigModal')} />
                 <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
                 <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')} vcs={vcs || undefined} />
-                <CodePromptModal ref={registerModal} />
+                <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
                 <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
                 <RequestGroupSettingsModal ref={instance => registerModal(instance, 'RequestGroupSettingsModal')} />
 
@@ -239,7 +239,7 @@ const App = () => {
                   </> : null}
 
                   <NunjucksModal
-                    ref={registerModal}
+                    ref={instance => registerModal(instance, 'NunjucksModal')}
                     workspace={activeWorkspace}
                   />
 
@@ -249,7 +249,7 @@ const App = () => {
                 </> : null}
 
                 <GenerateCodeModal
-                  ref={registerModal}
+                  ref={instance => registerModal(instance, 'GenerateCodeModal')}
                   environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
                 />
 
@@ -258,10 +258,7 @@ const App = () => {
 
                 <RequestSwitcherModal ref={instance => registerModal(instance, 'RequestSwitcherModal')} />
 
-                <EnvironmentEditModal
-                  ref={registerModal}
-                  onChange={models.requestGroup.update}
-                />
+                <EnvironmentEditModal ref={instance => registerModal(instance, 'EnvironmentEditModal')} />
 
                 <GitRepositorySettingsModal ref={registerModal} />
 
@@ -296,7 +293,7 @@ const App = () => {
                 />
 
                 <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
-                <ExportRequestsModal ref={registerModal} />
+                <ExportRequestsModal ref={instance => registerModal(instance, 'ExportRequestsModal')} />
 
                 <GrpcDispatchModalWrapper>
                   {dispatch => (

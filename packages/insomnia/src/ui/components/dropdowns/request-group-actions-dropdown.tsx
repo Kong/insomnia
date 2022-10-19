@@ -103,10 +103,6 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     models.requestGroup.remove(requestGroup);
   }, [requestGroup]);
 
-  const handleEditEnvironment = useCallback(() => {
-    showModal(EnvironmentEditModal, requestGroup);
-  }, [requestGroup]);
-
   const handlePluginClick = useCallback(async ({ label, plugin, action }: RequestGroupAction) => {
     setLoadingActions({ ...loadingActions, [label]: true });
 
@@ -174,7 +170,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         <i className="fa fa-copy" /> Duplicate
       </DropdownItem>
 
-      <DropdownItem onClick={handleEditEnvironment}>
+      <DropdownItem onClick={() => showModal(EnvironmentEditModal, { requestGroup })}>
         <i className="fa fa-code" /> Environment
       </DropdownItem>
 

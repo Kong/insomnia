@@ -144,7 +144,7 @@ export const WrapperDebug: FC = () => {
     showCookiesEditor:
       () => showModal(CookiesModal),
     request_showGenerateCodeEditor:
-      () => showModal(GenerateCodeModal, activeRequest),
+      () => showModal(GenerateCodeModal, { request: activeRequest }),
   });
   // Close all websocket connections when the active environment changes
   useEffect(() => {
