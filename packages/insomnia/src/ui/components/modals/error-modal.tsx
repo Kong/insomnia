@@ -4,7 +4,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-
+// NOTE: this is only used by the plugin api
 export interface ErrorModalOptions {
   title?: string;
   error?: Error | null;

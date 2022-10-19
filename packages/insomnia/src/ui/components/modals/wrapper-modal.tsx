@@ -38,7 +38,7 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
   const { title, body, tall, skinny, wide } = state;
 
   return (
-    <Modal ref={modalRef} tall={tall ?? undefined} skinny={skinny ?? undefined} wide={wide ?? undefined} {...props}>
+    <Modal ref={modalRef} tall={tall} skinny={skinny} wide={wide} {...props}>
       <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
       <ModalBody>{body}</ModalBody>
     </Modal>
