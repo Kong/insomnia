@@ -61,7 +61,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
-    showModal(GenerateCodeModal, request);
+    showModal(GenerateCodeModal, { request });
   };
   const focusInput = useCallback(() => {
     if (inputRef.current) {

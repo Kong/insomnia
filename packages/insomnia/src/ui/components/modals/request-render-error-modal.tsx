@@ -1,100 +1,88 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { JSONPath } from 'jsonpath-plus';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { docsTemplateTags } from '../../../common/documentation';
+import { Request } from '../../../models/request';
 import { isRequest } from '../../../models/request';
+import { RenderError } from '../../../templating';
 import { Link } from '../base/link';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { showModal } from './index';
-
-interface State {
-  error: Error | null;
-  request: any | null;
+export interface RequestRenderErrorModalOptions {
+  error: RenderError | null;
+  request: Request | null;
+}
+export interface RequestRenderErrorModalHandle {
+  show: (options: RequestRenderErrorModalOptions) => void;
+  hide: () => void;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class RequestRenderErrorModal extends PureComponent<{}, State> {
-  state: State = {
+export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const [state, setState] = useState<RequestRenderErrorModalOptions>({
     error: null,
     request: null,
-  };
+  });
 
-  modal: ModalHandle | null = null;
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
 
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
-
-  _handleShowRequestSettings() {
-    this.hide();
-    showModal(RequestSettingsModal, {
-      request: this.state.request,
-    });
-  }
-
-  show({ request, error }: Pick<State, 'request' | 'error'>) {
-    this.setState({ request, error });
-    this.modal?.show();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  renderModalBody(request: any, error: any) {
-    const fullPath = `Request.${error.path}`;
-    const result = JSONPath({ json: request, path: `$.${error.path}` });
-    const template = result && result.length ? result[0] : null;
-    const locationLabel =
-      template?.includes('\n') ? `line ${error.location.line} of` : null;
-    return (
-      <div className="pad">
-        <div className="notice warning">
-          <p>
-            Failed to render <strong>{fullPath}</strong> prior to sending
-          </p>
-          <div className="pad-top-sm">
-            {error.path.match(/^body/) && isRequest(request) && (
-              <button
-                className="btn btn--clicky margin-right-sm"
-                onClick={this._handleShowRequestSettings}
-              >
-                Adjust Render Settings
-              </button>
-            )}
-            <Link button href={docsTemplateTags} className="btn btn--clicky">
-              Templating Documentation <i className="fa fa-external-link" />
-            </Link>
+  const { request, error } = state;
+  const fullPath = `Request.${error?.path}`;
+  const result = JSONPath({ json: request, path: `$.${error?.path}` });
+  const template = result && result.length ? result[0] : null;
+  const locationLabel = template?.includes('\n') ? `line ${error?.location.line} of` : null;
+  return (
+    <Modal ref={modalRef}>
+      <ModalHeader>Failed to Render Request</ModalHeader>
+      <ModalBody>{request && error && error ? (
+        <div className="pad">
+          <div className="notice warning">
+            <p>
+              Failed to render <strong>{fullPath}</strong> prior to sending
+            </p>
+            <div className="pad-top-sm">
+              {error.path?.match(/^body/) && isRequest(request) && (
+                <button
+                  className="btn btn--clicky margin-right-sm"
+                  onClick={() => {
+                    modalRef.current?.hide();
+                    showModal(RequestSettingsModal, { request: state.request });
+                  }}
+                >
+                  Adjust Render Settings
+                </button>
+              )}
+              <Link button href={docsTemplateTags} className="btn btn--clicky">
+                Templating Documentation <i className="fa fa-external-link" />
+              </Link>
+            </div>
           </div>
+
+          <p>
+            <strong>Render error</strong>
+            <code className="block selectable">{error.message}</code>
+          </p>
+
+          <p>
+            <strong>Caused by the following field</strong>
+            <code className="block">
+              {locationLabel} {fullPath}
+            </code>
+          </p>
         </div>
-
-        <p>
-          <strong>Render error</strong>
-          <code className="block selectable">{error.message}</code>
-        </p>
-
-        <p>
-          <strong>Caused by the following field</strong>
-          <code className="block">
-            {locationLabel} {fullPath}
-          </code>
-        </p>
-      </div>
-    );
-  }
-
-  render() {
-    const { request, error } = this.state;
-    return (
-      <Modal ref={this._setModalRef}>
-        <ModalHeader>Failed to Render Request</ModalHeader>
-        <ModalBody>{request && error ? this.renderModalBody(request, error) : null}</ModalBody>
-      </Modal>
-    );
-  }
-}
+      ) : null}</ModalBody>
+    </Modal>
+  );
+});
+RequestRenderErrorModal.displayName = 'RequestRenderErrorModal';
