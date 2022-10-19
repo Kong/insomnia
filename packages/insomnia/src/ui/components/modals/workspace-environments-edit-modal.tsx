@@ -1,9 +1,7 @@
 import classnames from 'classnames';
-import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
-import { database as db } from '../../../common/database';
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -35,7 +33,7 @@ interface SidebarListItemProps {
   selectedEnvironment: Environment | null;
   showEnvironment: (e: Environment) => void;
 }
-const SidebarListItem = SortableElement<SidebarListItemProps>(({
+const SidebarListItem: FC<SidebarListItemProps> = ({
   changeEnvironmentName,
   environment,
   selectedEnvironment,
@@ -53,7 +51,6 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
     })}
   >
     <button onClick={() => showEnvironment(environment)}>
-      <i className="fa fa-drag-handle drag-handle" />
       {environment.color ? (
         <i
           className="space-right fa fa-circle"
@@ -94,9 +91,9 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
       )}
     </div>
   </li>);
-});
+};
 
-const SidebarList = SortableContainer<SidebarListProps>(
+const SidebarList: FC<SidebarListProps> =
   ({
     changeEnvironmentName,
     environments,
@@ -106,11 +103,10 @@ const SidebarList = SortableContainer<SidebarListProps>(
     console.log(environments.map(x => x.name + x.metaSortKey));
     return (
       <ul>
-        {environments.map((environment, index) =>
+        {environments.map(environment =>
           (<SidebarListItem
             changeEnvironmentName={changeEnvironmentName}
             environment={environment}
-            index={index}
             key={environment._id}
             selectedEnvironment={selectedEnvironment}
             showEnvironment={showEnvironment}
@@ -118,8 +114,7 @@ const SidebarList = SortableContainer<SidebarListProps>(
           )
         )}
       </ul>);
-  }
-);
+  };
 interface State {
   isValid: boolean;
   rootEnvironment: Environment | null;
@@ -210,23 +205,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     return rootEnvironment?._id === selectedEnvironmentId ?
       rootEnvironment :
       environments.filter(e => e.parentId === rootEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
-  };
-
-  // @TODO: ensure changes from sync cause re-render
-  const _handleSortEnd: SortEndHandler = results => {
-    const { oldIndex, newIndex } = results;
-    if (newIndex === oldIndex) {
-      return;
-    }
-    const newSubEnvironments = arrayMove(environments.filter(e => e.parentId === rootEnvironment?._id), oldIndex, newIndex);
-    // Do this last so we don't block the sorting
-    db.bufferChanges();
-    Promise.all(newSubEnvironments.map((environment, index) => updateEnvironment(
-      environment,
-      { metaSortKey: index },
-    ))).then(() => {
-      db.flushChanges();
-    });
   };
 
   const onBlur = () => {
@@ -320,10 +298,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             selectedEnvironment={selectedEnvironment}
             showEnvironment={handleShowEnvironment}
             changeEnvironmentName={(environment, name) => updateEnvironment(environment, { name })}
-            onSortEnd={_handleSortEnd}
-            helperClass="env-modal__sidebar-item--dragging"
-            transitionDuration={0}
-            useWindowAsScrollContainer={false}
           />
         </div>
         <div className="env-modal__main">
