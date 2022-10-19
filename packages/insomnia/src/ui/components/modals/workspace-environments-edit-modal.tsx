@@ -16,7 +16,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
-import { EnvironmentEditor } from '../editors/environment-editor';
+import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
@@ -100,7 +100,6 @@ const SidebarList: FC<SidebarListProps> =
     selectedEnvironment,
     showEnvironment,
   }: SidebarListProps) => {
-    console.log(environments.map(x => x.name + x.metaSortKey));
     return (
       <ul>
         {environments.map(environment =>
@@ -126,7 +125,7 @@ export interface WorkspaceEnvironmentsEditModalHandle {
 }
 export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<EnvironmentEditor>(null);
+  const editorRef = useRef<EnvironmentEditorHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState<State>({
