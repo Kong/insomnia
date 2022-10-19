@@ -89,12 +89,10 @@ export const WorkspaceDuplicateModal = forwardRef<WorkspaceDuplicateModalHandle,
     modalRef.current?.hide();
     state?.onDone?.();
   }, [dispatch, isLoggedIn, projects, vcs, state]);
-  if (!state.workspace) {
-    return null;
-  }
+
   return (
     <Modal ref={modalRef} onShow={reset}>
-      <ModalHeader>{`Duplicate ${getWorkspaceLabel(state.workspace).singular}`}</ModalHeader>
+      <ModalHeader>{`Duplicate ${state.workspace && getWorkspaceLabel(state.workspace).singular}`}</ModalHeader>
       <ModalBody className="wide">
         <form className="wide pad" onSubmit={handleSubmit(onSubmit)}>
           <div className="form-control form-control--wide form-control--outlined">
