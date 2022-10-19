@@ -1217,7 +1217,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
 
   _showFilterHelp() {
     const isJSON = UnconnectedCodeEditor._isJSON(this.props.mode);
-    showModal(FilterHelpModal, isJSON);
+    showModal(FilterHelpModal, { isJSON });
   }
 
   render() {

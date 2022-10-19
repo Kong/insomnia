@@ -31,9 +31,6 @@ export const EnvironmentsDropdown: FC<Props> = ({
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const dropdownRef = useRef<DropdownHandle>(null);
-  const handleShowEnvironmentModal = useCallback(() => {
-    showModal(WorkspaceEnvironmentsEditModal, workspace);
-  }, [workspace]);
 
   const toggleSwitchMenu = useCallback(() => {
     dropdownRef.current?.toggle(true);
@@ -110,7 +107,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
 
       <DropdownDivider>General</DropdownDivider>
 
-      <DropdownItem onClick={handleShowEnvironmentModal}>
+      <DropdownItem onClick={() => showModal(WorkspaceEnvironmentsEditModal, workspace)}>
         <i className="fa fa-wrench" /> Manage Environments
         <DropdownHint keyBindings={hotKeyRegistry.environment_showEditor} />
       </DropdownItem>

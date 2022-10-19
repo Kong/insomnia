@@ -140,11 +140,11 @@ export const WrapperDebug: FC = () => {
     request_quickSwitch:
       () => showModal(RequestSwitcherModal),
     environment_showEditor:
-      () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
+    () => showModal(WorkspaceEnvironmentsEditModal, activeWorkspace),
     showCookiesEditor:
       () => showModal(CookiesModal),
     request_showGenerateCodeEditor:
-      () => showModal(GenerateCodeModal, activeRequest),
+      () => showModal(GenerateCodeModal, { request: activeRequest }),
   });
   // Close all websocket connections when the active environment changes
   useEffect(() => {

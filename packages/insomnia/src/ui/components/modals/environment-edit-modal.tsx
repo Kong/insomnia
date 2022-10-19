@@ -1,112 +1,86 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
+import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { EnvironmentEditor } from '../editors/environment-editor';
-
-interface Props {
-  onChange: Function;
-}
 
 interface State {
   requestGroup: RequestGroup | null;
   isValid: boolean;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class EnvironmentEditModal extends PureComponent<Props, State> {
-  state: State = {
+export interface EnvironmentEditModalOptions {
+  requestGroup: RequestGroup;
+}
+export interface EnvironmentEditModalHandle {
+  show: (options: EnvironmentEditModalOptions) => void;
+  hide: () => void;
+}
+export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, ModalProps>((props, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const editorRef = useRef<EnvironmentEditor>(null);
+  const [state, setState] = useState<State>({
     requestGroup: null,
     isValid: true,
-  };
+  });
 
-  modal: ModalHandle | null = null;
-  _envEditor: EnvironmentEditor | null = null;
-
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
-
-  _setEditorRef(envEditor: EnvironmentEditor) {
-    this._envEditor = envEditor;
-  }
-
-  _saveChanges() {
-    if (!this._envEditor?.isValid()) {
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: ({ requestGroup }) => {
+      setState(state => ({ ...state, requestGroup }));
+      modalRef.current?.show();
+    },
+  }), []);
+  const didChange = () => {
+    const isValid = editorRef.current?.isValid() || false;
+    setState({ isValid, requestGroup });
+    if (!isValid) {
       return;
     }
-
-    let patch;
-
     try {
-      const data = this._envEditor.getValue();
-
-      patch = {
-        environment: data && data.object,
-        environmentPropertyOrder: data && data.propertyOrder,
-      };
+      const data = editorRef.current?.getValue();
+      if (state.requestGroup && data) {
+        models.requestGroup.update(state.requestGroup, {
+          environment: data.object,
+          environmentPropertyOrder: data.propertyOrder,
+        });
+      }
     } catch (err) {
       // Invalid JSON probably
       return;
     }
-
-    const { requestGroup } = this.state;
-    this.props.onChange(Object.assign({}, requestGroup, patch));
-  }
-
-  _didChange() {
-    this._saveChanges();
-
-    const isValid = Boolean(this._envEditor?.isValid());
-
-    if (this.state.isValid !== isValid) {
-      this.setState({ isValid });
-    }
-  }
-
-  show(requestGroup: RequestGroup) {
-    this.setState({ requestGroup });
-    this.modal?.show();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  render() {
-    const {
-      ...extraProps
-    } = this.props;
-    const { requestGroup, isValid } = this.state;
-    const environmentInfo = {
-      object: requestGroup ? requestGroup.environment : {},
-      propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
-    };
-    return (
-      <Modal ref={this._setModalRef} tall {...extraProps}>
-        <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
-        <ModalBody noScroll className="pad-top-sm">
-          <EnvironmentEditor
-            ref={this._setEditorRef}
-            key={requestGroup ? requestGroup._id : 'n/a'}
-            environmentInfo={environmentInfo}
-            didChange={this._didChange}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left italic txt-sm">
-            * Used to override data in the global environment
-          </div>
-          <button className="btn" disabled={!isValid} onClick={this.hide}>
-            Done
-          </button>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+  };
+  const { requestGroup, isValid } = state;
+  const environmentInfo = {
+    object: requestGroup ? requestGroup.environment : {},
+    propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
+  };
+  return (
+    <Modal ref={modalRef} tall {...props}>
+      <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
+      <ModalBody noScroll className="pad-top-sm">
+        <EnvironmentEditor
+          ref={editorRef}
+          key={requestGroup ? requestGroup._id : 'n/a'}
+          environmentInfo={environmentInfo}
+          didChange={didChange}
+        />
+      </ModalBody>
+      <ModalFooter>
+        <div className="margin-left italic txt-sm">
+          * Used to override data in the global environment
+        </div>
+        <button className="btn" disabled={!isValid} onClick={() => modalRef.current?.hide()}>
+          Done
+        </button>
+      </ModalFooter>
+    </Modal >
+  );
+});
+EnvironmentEditModal.displayName = 'EnvironmentEditModal';

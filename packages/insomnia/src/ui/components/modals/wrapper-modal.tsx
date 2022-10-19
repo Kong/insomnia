@@ -1,70 +1,48 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { type ModalHandle, Modal } from '../base/modal';
+import { type ModalProps, Modal, ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
-interface State {
+interface WrapperModalOptions {
   title: string;
   body: ReactNode;
-  bodyHTML?: string | null;
-  tall?: boolean | null;
-  skinny?: boolean | null;
-  wide?: boolean | null;
+  tall?: boolean;
+  skinny?: boolean;
+  wide?: boolean;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class WrapperModal extends PureComponent<{}, State> {
-  modal: ModalHandle | null = null;
-
-  state: State = {
+export interface WrapperModalHandle {
+  show: (options: WrapperModalOptions) => void;
+  hide: () => void;
+}
+export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const [state, setState] = useState<WrapperModalOptions>({
     title: '',
     body: null,
-    bodyHTML: null,
     tall: false,
     skinny: false,
     wide: false,
-  };
+  });
 
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
 
-  show(options: Record<string, any> = {}) {
-    const { title, body, bodyHTML, tall, skinny, wide } = options;
-    this.setState({
-      title,
-      body,
-      bodyHTML,
-      tall: !!tall,
-      skinny: !!skinny,
-      wide: !!wide,
-    });
-    this.modal?.show();
-  }
+  const { title, body, tall, skinny, wide } = state;
 
-  render() {
-    const { title, body, bodyHTML, tall, skinny, wide } = this.state;
-    let finalBody = body;
+  return (
+    <Modal ref={modalRef} tall={tall} skinny={skinny} wide={wide} {...props}>
+      <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
+      <ModalBody>{body}</ModalBody>
+    </Modal>
+  );
 
-    if (bodyHTML) {
-      finalBody = (
-        <div
-          dangerouslySetInnerHTML={{
-            __html: bodyHTML,
-          }}
-          className="tall wide pad"
-        />
-      );
-    }
-
-    return (
-      <Modal ref={this._setModalRef} tall={tall ?? undefined} skinny={skinny ?? undefined} wide={wide ?? undefined}>
-        <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
-        <ModalBody>{finalBody}</ModalBody>
-      </Modal>
-    );
-  }
-}
+});
+WrapperModal.displayName = 'WrapperModal';
