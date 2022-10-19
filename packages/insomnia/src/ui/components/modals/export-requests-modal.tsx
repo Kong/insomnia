@@ -161,7 +161,8 @@ export const ExportRequestsModal = forwardRef<ExportRequestsModalHandle, ModalPr
       return;
     }
     const exportedRequestIds = getSelectedRequestIds(treeRoot);
-    dispatch(exportRequestsToFile(exportedRequestIds));
+
+    exportRequestsToFile(exportedRequestIds);
     modalRef.current?.hide();
   };
 
