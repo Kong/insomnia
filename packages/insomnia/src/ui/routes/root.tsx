@@ -183,7 +183,7 @@ const App = () => {
                     <CookiesModal
                       ref={instance => registerModal(instance, 'CookiesModal')}
                     />
-                    <CookieModifyModal ref={registerModal} />
+                    <CookieModifyModal ref={instance => registerModal(instance, 'CookieModifyModal')} />
                   </> : null}
 
                   <NunjucksModal
