@@ -17,7 +17,7 @@ interface GitLogModalOptions {
   branch: string;
 }
 export interface GitLogModalHandle {
-  show: (options: GitLogModalOptions) => void;
+  show: () => void;
   hide: () => void;
 }
 export const GitLogModal = forwardRef<GitLogModalHandle, Props>(({ vcs }, ref) => {

@@ -215,10 +215,10 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
     }
     const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'), providerName });
-    setState({
+    setState(state => ({
       ...state,
       items: newItems,
-    });
+    }));
   };
 
   const handleToggleOne = async (event: React.SyntheticEvent<HTMLInputElement>) => {
@@ -230,10 +230,10 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
     newItems[gitPath].staged = !newItems[gitPath].staged;
     const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'), providerName });
-    setState({
+    setState(state => ({
       ...state,
       items: newItems,
-    });
+    }));
   };
 
   const handleRollback = async (items: Item[]) => {
