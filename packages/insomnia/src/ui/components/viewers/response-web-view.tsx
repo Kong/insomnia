@@ -1,7 +1,4 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { createRef, PureComponent } from 'react';
-
-import { AUTOBIND_CFG } from '../../../common/constants';
+import React, { FC, useEffect, useRef } from 'react';
 
 interface Props {
   body: string;
@@ -9,65 +6,33 @@ interface Props {
   url: string;
   webpreferences: string;
 }
+export const ResponseWebView: FC<Props> = ({ webpreferences, body, contentType, url }) => {
+  const webviewRef = useRef<Electron.WebviewTag>(null);
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseWebView extends PureComponent<Props> {
-  webview = createRef<HTMLWebViewElement>();
-
-  componentDidMount() {
-    if (!this.webview.current) {
-      // This is not supposed to be possible in react since the webview is not conditionally rendered (i.e. it's always rendered), but putting an error here just in case.
-      console.error('ResponseWebView was mounted without a ref to the underlying webview');
-      return;
+  useEffect(() => {
+    const webview = webviewRef.current;
+    const handleDOMReady = () => {
+      if (webview) {
+        webview.removeEventListener('dom-ready', handleDOMReady);
+        const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
+        webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
+      }
+    };
+    if (webview) {
+      webview.addEventListener('dom-ready', handleDOMReady);
     }
-
-    this.webview.current.addEventListener('dom-ready', this._handleDOMReady);
-  }
-
-  componentDidUpdate() {
-    this._setBody();
-  }
-
-  _handleDOMReady() {
-    if (!this.webview.current) {
-      return;
-    }
-
-    this.webview.current.removeEventListener('dom-ready', this._handleDOMReady);
-
-    this._setBody();
-  }
-
-  _setBody() {
-    if (!this.webview.current) {
-      return;
-    }
-
-    const { body, contentType, url } = this.props;
-    const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-
-    // NOTE: We *should* be setting the base URL by specifying the baseURLForDataURL option, but there is a bug in baseURLForDataURL since Electron 6 (that still exists in 9) that makes it impossible.
-    //
-    // For now we inject the <base> tag to achieve a similar effect. This was actually the way we did it before discovering the baseURLForDataURL setting.
-    //
-    //    https://github.com/electron/electron/issues/20700
-    //
-    // this.webview.current.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
-    //   baseURLForDataURL: url,
-    // });
-    // @ts-expect-error -- TSCONVERSION type mismatch
-    this.webview.current.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
-  }
-
-  render() {
-    const { webpreferences } = this.props;
-    return (
-      <webview
-        data-testid="ResponseWebView"
-        ref={this.webview}
-        src="about:blank"
-        webpreferences={webpreferences}
-      />
-    );
-  }
-}
+    return () => {
+      if (webview) {
+        webview.removeEventListener('dom-ready', handleDOMReady);
+      }
+    };
+  }, [body, contentType, url]);
+  return (
+    <webview
+      data-testid="ResponseWebView"
+      ref={webviewRef}
+      src="about:blank"
+      webpreferences={webpreferences}
+    />
+  );
+};
