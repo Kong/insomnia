@@ -193,7 +193,6 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
           <PromptButton
             className="btn btn--super-compact width-auto"
             confirmMessage=""
-            addIcon
             onClick={() => models.clientCertificate.remove(certificate)}
           >
             <i className="fa fa-trash-o" />
@@ -277,7 +276,6 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
               <div className="form-control form-control--padded">
                 <PromptButton
                   onClick={_handleRemoveWorkspace}
-                  addIcon
                   className="width-auto btn btn--clicky inline-block"
                 >
                   <i className="fa fa-trash-o" /> Delete
@@ -292,7 +290,6 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                 </button>
                 <PromptButton
                   onClick={_handleClearAllResponses}
-                  addIcon
                   className="width-auto btn btn--clicky inline-block space-left"
                 >
                   <i className="fa fa-trash-o" /> Clear All Responses

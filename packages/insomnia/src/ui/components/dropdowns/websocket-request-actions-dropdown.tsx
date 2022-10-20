@@ -74,7 +74,6 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
       <DropdownItem
         onClick={handleRename}
-        addIcon
       >
         <i className="fa fa-edit" /> Rename
       </DropdownItem>
@@ -82,7 +81,6 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       <DropdownItem
         buttonClass={PromptButton}
         onClick={deleteRequest}
-        addIcon
       >
         <i className="fa fa-trash-o" /> Delete
         <DropdownHint keyBindings={hotKeyRegistry.request_showDelete} />

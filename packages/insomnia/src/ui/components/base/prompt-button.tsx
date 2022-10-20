@@ -12,7 +12,6 @@ type PromptStateEnum = 'default' | 'ask' | 'done';
 
 interface Props<T> {
   className?: string;
-  addIcon?: boolean;
   disabled?: boolean;
   confirmMessage?: string;
   doneMessage?: string;
@@ -23,7 +22,6 @@ interface Props<T> {
 
 export const PromptButton = <T, >({
   onClick,
-  addIcon,
   disabled,
   confirmMessage = 'Click to confirm',
   doneMessage = 'Done',
@@ -91,7 +89,6 @@ export const PromptButton = <T, >({
         promptState={state}
         confirmMessage={confirmMessage}
         doneMessage={doneMessage}
-        addIcon={Boolean(addIcon)}
       >
         {children}
       </PromptMessage>
@@ -101,16 +98,15 @@ export const PromptButton = <T, >({
 
 interface PromptMessageProps {
   promptState: PromptStateEnum;
-  addIcon: boolean;
   confirmMessage?: string;
   doneMessage?: string;
   children: ReactNode;
 }
-const PromptMessage: FunctionComponent<PromptMessageProps> = ({ promptState, addIcon, confirmMessage, doneMessage, children }) => {
+const PromptMessage: FunctionComponent<PromptMessageProps> = ({ promptState, confirmMessage, doneMessage, children }) => {
   if (promptState === 'ask') {
     return (
       <span className='warning' title='Click again to confirm'>
-        {addIcon && <i className='fa fa-exclamation-circle' />}
+        <i className='fa fa-exclamation-circle' />
         {confirmMessage && (
           <span className='space-left'>{confirmMessage}</span>
         )}
