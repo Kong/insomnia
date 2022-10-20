@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
-import React, { FC, PureComponent, ReactNode } from 'react';
+import React, { FC, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -16,9 +16,7 @@ import type { Workspace } from '../../../models/workspace';
 import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
-import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import type {
-  NunjucksActionTag,
   NunjucksParsedTag,
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
@@ -75,19 +73,16 @@ class TagEditorInternal extends PureComponent<Props, State> {
     const tagDefinitions = await templating.getTagDefinitions();
     const activeTagDefinition: NunjucksParsedTag | null =
       tagDefinitions.find(d => d.name === activeTagData.name) || null;
-
     // Edit tags raw that we don't know about
     if (!activeTagDefinition) {
       activeTagData.rawValue = this.props.defaultValue;
     }
-
     // Fix strings: arg.value expects an escaped value (based on _updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
         arg.value = arg.value.replace(/\\/g, '\\\\');
       }
     }
-
     await Promise.all([
       this._refreshModels(this.props.workspace),
       this._update(tagDefinitions, activeTagDefinition, activeTagData, true),
@@ -129,30 +124,20 @@ class TagEditorInternal extends PureComponent<Props, State> {
   }
 
   async _refreshModels(workspace: Workspace) {
-    this.setState({
-      loadingDocs: true,
-    });
+    this.setState({ loadingDocs: true });
     const allDocs: Record<string, models.BaseModel[]> = {};
-
     for (const type of models.types()) {
       allDocs[type] = [];
     }
-
     for (const doc of await db.withDescendants(workspace, models.request.type)) {
       allDocs[doc.type].push(doc);
     }
-
     const requests = allDocs[models.request.type] || [];
     const requestGroups = allDocs[models.requestGroup.type] || [];
-
     // @ts-expect-error -- type unsoundness
     const sortedReqs = this._sortRequests(requests.concat(requestGroups), this.props.workspace._id);
-
     allDocs[models.request.type] = sortedReqs;
-    this.setState({
-      allDocs,
-      loadingDocs: false,
-    });
+    this.setState({ allDocs, loadingDocs: false });
   }
 
   async _updateArg(
@@ -183,7 +168,10 @@ class TagEditorInternal extends PureComponent<Props, State> {
     }
 
     // Ensure all arguments exist
-    const defaultArgs = TagEditorInternal._getDefaultTagData(activeTagDefinition).args;
+    const defaultArgs = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
+      activeTagDefinition.name,
+      activeTagDefinition.args,
+    )).args;
 
     for (let i = 0; i < defaultArgs.length; i++) {
       if (activeTagData.args[i]) {
@@ -220,48 +208,16 @@ class TagEditorInternal extends PureComponent<Props, State> {
       );
     }
 
-    await this._update(tagDefinitions, activeTagDefinition, tagData, false);
-  }
-
-  async _handleChangeArgVariable(options: { argIndex: number; variable: boolean }) {
-    const { variable, argIndex } = options;
-    const { activeTagData, activeTagDefinition, variables } = this.state;
-
-    if (!activeTagData || !activeTagDefinition) {
-      console.warn('Failed to change arg variable', {
-        state: this.state,
-      });
-      return;
-    }
-
-    const argData = activeTagData.args[argIndex];
-    const argDef = activeTagDefinition.args[argIndex];
-    const existingValue = argData ? argData.value : '';
-
-    if (variable) {
-      const variable = variables.find(v => v.value === existingValue);
-      const firstVariable = variables.length ? variables[0].name : '';
-      const value = variable ? variable.name : firstVariable;
-      return this._updateArg(value || 'my_variable', argIndex, 'variable');
-    } else {
-      const initialType = argDef ? argDef.type : 'string';
-      const variable = variables.find(v => v.name === existingValue);
-      const value = variable ? variable.value : '';
-      return this._updateArg(value, argIndex, initialType, {
-        quotedBy: "'",
-      });
-    }
+    this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
   _handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     const parent = event.currentTarget.parentNode;
     let argIndex = -1;
-
     if (parent instanceof HTMLElement) {
       const index = parent?.getAttribute('data-arg-index');
       argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
     }
-
     // Handle special types
     if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
       return this._updateArg(
@@ -269,7 +225,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
         argIndex,
       );
     }
-
     // Handle normal types
     if (event.currentTarget.type === 'number') {
       return this._updateArg(parseFloat(event.currentTarget.value), argIndex);
@@ -279,22 +234,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     } else {
       return this._updateArg(event.currentTarget.value, argIndex);
     }
-  }
-
-  async _handleActionClick(action: NunjucksActionTag) {
-    const templateTags = await getTemplateTags();
-    const activeTemplateTag = templateTags.find(({ templateTag }) => {
-      return templateTag.name === this.state.activeTagData?.name;
-    });
-    // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
-    const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
-    await action.run(helperContext);
-    this._update(
-      this.state.tagDefinitions,
-      this.state.activeTagDefinition,
-      this.state.activeTagData,
-      true,
-    );
   }
 
   _setSelectRef(select: HTMLSelectElement) {
@@ -314,14 +253,8 @@ class TagEditorInternal extends PureComponent<Props, State> {
     noCallback = false,
   ) {
     const { handleRender } = this.props;
-    this.setState({
-      rendering: true,
-    });
-    // Start render loader
     const start = Date.now();
-    this.setState({
-      rendering: true,
-    });
+    this.setState({ rendering: true });
     let preview = '';
     let error = '';
     let activeTagData: NunjucksParsedTag | null = tagData;
@@ -339,9 +272,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
         rawValue: templateUtils.unTokenizeTag(this.state.activeTagData),
       };
     }
-
     let template;
-
     if (activeTagData) {
       try {
         template =
@@ -360,37 +291,28 @@ class TagEditorInternal extends PureComponent<Props, State> {
       error,
       activeTagDefinition: tagDefinition,
     });
-
     // Call the callback if we need to
     if (!noCallback) {
       this.props.onChange(template);
     }
-
     // Make rendering take at least this long so we can see a spinner
     await delay(300 - (Date.now() - start));
-    this.setState({
-      rendering: false,
-      preview,
-    });
+    this.setState({ rendering: false, preview });
   }
 
   resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
     let prefix = '';
     let reqGroup: any;
-
     do {
       // Get prefix from inner most request group.
       reqGroup = allRequestGroups.find(rg => rg._id === requestGroupId);
-
       if (reqGroup == null) {
         break;
       }
-
       const name = typeof reqGroup.name === 'string' ? reqGroup.name : '';
       prefix = `[${name}] ` + prefix;
       requestGroupId = reqGroup.parentId;
     } while (true);
-
     return prefix;
   }
 
@@ -571,18 +493,37 @@ class TagEditorInternal extends PureComponent<Props, State> {
               </DropdownButton>
               <DropdownDivider>Input Type</DropdownDivider>
               <DropdownItem
-                onClick={() => this._handleChangeArgVariable({
-                  variable: false,
-                  argIndex,
-                })}
+                onClick={() => {
+                  const { activeTagData, activeTagDefinition, variables } = this.state;
+                  if (!activeTagData || !activeTagDefinition) {
+                    console.warn('Failed to change arg variable', { state: this.state });
+                    return;
+                  }
+                  const argData = activeTagData.args[argIndex];
+                  const argDef = activeTagDefinition.args[argIndex];
+                  const existingValue = argData ? argData.value : '';
+                  const initialType = argDef ? argDef.type : 'string';
+                  const variable = variables.find(v => v.name === existingValue);
+                  const value = variable ? variable.value : '';
+                  return this._updateArg(value, argIndex, initialType, { quotedBy: "'" });
+                }}
               >
                 <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
               </DropdownItem>
               <DropdownItem
-                onClick={() => this._handleChangeArgVariable({
-                  variable: true,
-                  argIndex,
-                })}
+                onClick={() => {
+                  const { activeTagData, activeTagDefinition, variables } = this.state;
+                  if (!activeTagData || !activeTagDefinition) {
+                    console.warn('Failed to change arg variable', { state: this.state });
+                    return;
+                  }
+                  const argData = activeTagData.args[argIndex];
+                  const existingValue = argData ? argData.value : '';
+                  const variable = variables.find(v => v.value === existingValue);
+                  const firstVariable = variables.length ? variables[0].name : '';
+                  const value = variable ? variable.name : firstVariable;
+                  return this._updateArg(value || 'my_variable', argIndex, 'variable');
+                }}
               >
                 <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
               </DropdownItem>
