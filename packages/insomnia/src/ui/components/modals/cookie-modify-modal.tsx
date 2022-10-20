@@ -58,7 +58,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
       console.warn(`Could not find cookie with id=${cookie.id} to edit`);
       return;
     }
-    cookieJar.cookies = [...cookieJar.cookies.slice(0, index), cookie, ...cookieJar.cookies.slice(index + 1)];
+    cookieJar.cookies = [...cookieJar.cookies.slice(0, index), newcookie, ...cookieJar.cookies.slice(index + 1)];
     models.cookieJar.update(cookieJar);
   };
 
