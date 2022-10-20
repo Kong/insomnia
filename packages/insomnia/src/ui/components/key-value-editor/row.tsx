@@ -1,7 +1,7 @@
 // eslint-disable-next-line filenames/match-exported
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { ClipboardEvent, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
+import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget, DropTargetMonitor } from 'react-dnd';
 import ReactDOM from 'react-dom';
 

@@ -3,7 +3,7 @@ import fs from 'fs';
 import * as importers from 'insomnia-importers';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
-import React, { ClipboardEvent, forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 

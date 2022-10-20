@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { ClipboardEvent, Fragment, PureComponent } from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -19,7 +19,7 @@ interface Props {
   onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
   onFocus?: (event: FocusEvent | React.FocusEvent) => void;
   onChange?: CodeEditorOnChange;
-  onPaste?: (event: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onPaste?: (event: ClipboardEvent) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
@@ -378,7 +378,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
             type={type}
             mode={syntaxMode}
             placeholder={placeholder}
-            onPaste={e => onPaste?.(e)}
+            onPaste={onPaste}
             onBlur={this._handleEditorBlur}
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
@@ -410,7 +410,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
           onMouseEnter={this._handleInputMouseEnter}
           onMouseLeave={this._handleInputMouseLeave}
           onDragEnter={this._handleInputDragEnter}
-          onPaste={e => onPaste?.(e)}
+          onPaste={e => onPaste?.(e.nativeEvent)}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />

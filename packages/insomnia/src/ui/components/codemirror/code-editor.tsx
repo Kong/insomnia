@@ -107,7 +107,7 @@ interface RawProps {
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
-  onPaste?: (event: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+  onPaste?: (event: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
