@@ -35,10 +35,10 @@
     "build:production": "cross-env NODE_ENV=production npm run build",
     "start": "concurrently --names source,types \"ESBUILD_WATCH=true npm run build:source\" \"npm run build:types -- --watch\"",
     "prepackage": "npm run build:production",
-    "package": "ts-node src/scripts/pkg.ts",
+    "package": "esr src/scripts/pkg.ts",
     "pkg": "pkg .",
-    "postpackage": "ts-node src/scripts/verify-pkg.ts",
-    "artifacts": "ts-node src/scripts/artifacts.ts",
+    "postpackage": "esr src/scripts/verify-pkg.ts",
+    "artifacts": "esr src/scripts/artifacts.ts",
     "prepublishOnly": "npm run build:production"
   },
   "devDependencies": {
@@ -59,8 +59,7 @@
     "jest": "^28.1.0",
     "jest-mock": "^28.0.2",
     "pkg": "^5.3.2",
-    "rimraf": "^3.0.2",
-    "ts-node": "^9.1.1"
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@stoplight/spectral-core": "^1.12.2",

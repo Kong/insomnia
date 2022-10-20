@@ -24,8 +24,8 @@
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
-    "serve": "ts-node server/index.ts",
-    "test:cli": "concurrently --names server,cli --success first --kill-others \"ts-node server/index.ts\" \"npm run cli\""
+    "serve": "esr server/index.ts",
+    "test:cli": "concurrently --names server,cli --success first --kill-others \"esr server/index.ts\" \"npm run cli\""
   },
   "devDependencies": {
     "@grpc/grpc-js": "^1.6.7",
@@ -44,6 +44,7 @@
     "@types/ws": "^8.5.3",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
+    "esbuild-runner": "2.2.1",
     "execa": "^5.0.0",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
@@ -56,7 +57,6 @@
     "oidc-provider": "^7.10.6",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.34.0",
-    "ts-node": "^9.1.1",
     "uuid": "^8.3.2",
     "ws": "^8.8.1",
     "xvfb-maybe": "^0.2.1"
