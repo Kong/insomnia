@@ -406,7 +406,6 @@ export const GraphQLEditor: FC<Props> = ({
     // Find op if there isn't one yet
     if (!body.operationName) {
       const newOperationName = getCurrentOperation();
-      console.log('newOperationName', newOperationName);
 
       if (newOperationName) {
         body.operationName = newOperationName;
