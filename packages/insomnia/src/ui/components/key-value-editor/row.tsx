@@ -1,7 +1,7 @@
 // eslint-disable-next-line filenames/match-exported
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
+import React, { ClipboardEvent, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget, DropTargetMonitor } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
@@ -137,10 +137,10 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
       // Unfortunately, this is the easiest way to do this.
       const currentValue = this._valueInput?.getValue();
 
-      // @ts-expect-error -- TSCONVERSION
-      const prefix = currentValue.slice(0, this._valueInput?.getSelectionStart());
-      // @ts-expect-error -- TSCONVERSION
-      const suffix = currentValue.slice(this._valueInput?.getSelectionEnd());
+      const start = this._valueInput?.getSelectionStart() || 0;
+      const end = this._valueInput?.getSelectionEnd() || 0;
+      const prefix = currentValue?.slice(0, start);
+      const suffix = currentValue?.slice(end);
       const finalValue = `${prefix}${value}${suffix}`;
 
       // Update type and value

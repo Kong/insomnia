@@ -107,7 +107,7 @@ interface RawProps {
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
-  onPaste?: (event: ClipboardEvent) => void;
+  onPaste?: (event: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
@@ -599,7 +599,7 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     this.codeMirror.on('endCompletion', this._codemirrorEndCompletion);
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
-    this.codeMirror.on('paste', this._codemirrorPaste);
+    this.codeMirror.on('paste', (_, event) => this.props.onPaste?.(event));
     this.codeMirror.on('scroll', this._codemirrorScroll);
     this.codeMirror.on('fold', this._codemirrorToggleFold);
     this.codeMirror.on('unfold', this._codemirrorToggleFold);
@@ -1110,10 +1110,6 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
     } else {
       this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
     }
-  }
-
-  _codemirrorPaste(_cm: CodeMirror.Editor, event: ClipboardEvent) {
-    this.props.onPaste?.(event);
   }
 
   _codemirrorPreventWhenTypePassword(_cm: CodeMirror.Editor, event: Event) {
