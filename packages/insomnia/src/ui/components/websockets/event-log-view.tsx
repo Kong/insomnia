@@ -1,7 +1,7 @@
+import { useVirtual } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { FC, useRef } from 'react';
 import { useMeasure } from 'react-use';
-import { useVirtual } from 'react-virtual';
 import styled from 'styled-components';
 
 import { WebSocketEvent } from '../../../main/network/websocket';
