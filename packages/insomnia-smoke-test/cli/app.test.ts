@@ -4,7 +4,6 @@ import fs from 'fs';
 import { getBinPathSync } from 'get-bin-path';
 import path from 'path';
 import { flatten } from 'ramda';
-import { compact } from 'ramda-adjunct';
 
 const binariesDirectory = '../insomnia-inso/binaries';
 const npmPackageBinPath = getBinPathSync({ cwd: '../insomnia-inso' });
@@ -24,7 +23,7 @@ describe('should find binaries', () => {
 
 const srcInsoNedb = ['--src', 'fixtures/inso-nedb'];
 
-describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath => {
+describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', binPath => {
   const inso = (...args: NestedArray<string>) => execa.sync(binPath, flatten(args));
 
   describe('run test', () => {

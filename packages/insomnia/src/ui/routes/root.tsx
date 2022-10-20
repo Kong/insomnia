@@ -172,7 +172,7 @@ const App = () => {
                 <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
                 <GenerateConfigModal ref={instance => registerModal(instance, 'GenerateConfigModal')} />
                 <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
-                <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')} vcs={vcs || undefined} />
+                <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')} />
                 <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
                 <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
                 <RequestGroupSettingsModal ref={instance => registerModal(instance, 'RequestGroupSettingsModal')} />
