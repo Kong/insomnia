@@ -41,10 +41,7 @@ const handleConnection = (ws: WebSocket, req: IncomingMessage) => {
   });
 };
 const redirectOnSuccess = (socket: Socket) => {
-  socket.end(`HTTP/1.1 302 Found
-Location: ws://localhost:4010
-
-`);
+  socket.end('HTTP/1.1 302 Found\r\nLocation: ws://localhost:4010/\r\n\r\n');
   return;
 };
 const return401withBody = (socket: Socket) => {
