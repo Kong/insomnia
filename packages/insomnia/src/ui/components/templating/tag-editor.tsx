@@ -50,6 +50,21 @@ interface State {
     value: string;
   }[];
 }
+const sortRequests = (_models: (Request | RequestGroup)[], parentId: string) => {
+  let sortedModels: (Request | RequestGroup)[] = [];
+  _models
+    .filter(model => model.parentId === parentId)
+    .sort(metaSortKeySort)
+    .forEach(model => {
+      if (isRequest(model)) {
+        sortedModels.push(model);
+      }
+      if (isRequestGroup(model)) {
+        sortedModels = sortedModels.concat(sortRequests(_models, model._id));
+      }
+    });
+  return sortedModels;
+};
 export const TagEditor: FC<Props> = props => {
   const [state, setState] = useState<State>({
     activeTagData: null,
@@ -64,22 +79,6 @@ export const TagEditor: FC<Props> = props => {
   });
   const { handleGetRenderContext } = useNunjucks();
 
-  const sortRequests = useCallback((_models: (Request | RequestGroup)[], parentId: string) => {
-    let sortedModels: (Request | RequestGroup)[] = [];
-    _models
-      .filter(model => model.parentId === parentId)
-      .sort(metaSortKeySort)
-      .forEach(model => {
-        if (isRequest(model)) {
-          sortedModels.push(model);
-        }
-        if (isRequestGroup(model)) {
-          sortedModels = sortedModels.concat(sortRequests(_models, model._id));
-        }
-      });
-    return sortedModels;
-  }, []);
-
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
     const allDocs: Record<string, models.BaseModel[]> = {};
@@ -92,7 +91,7 @@ export const TagEditor: FC<Props> = props => {
     // @ts-expect-error -- type unsoundness
     allDocs[models.request.type] = sortRequests((allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []), props.workspace._id);
     setState(state => ({ ...state, allDocs, loadingDocs: false }));
-  }, [sortRequests, props.workspace]);
+  }, [props.workspace]);
 
   useMount(async () => {
     const activeTagData = templateUtils.tokenizeTag(props.defaultValue);
@@ -103,7 +102,7 @@ export const TagEditor: FC<Props> = props => {
     if (!activeTagDefinition) {
       activeTagData.rawValue = props.defaultValue;
     }
-    // Fix strings: arg.value expects an escaped value (based on _updateArg logic)
+    // Fix strings: arg.value expects an escaped value (based on updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
         arg.value = arg.value.replace(/\\/g, '\\\\');
@@ -111,19 +110,18 @@ export const TagEditor: FC<Props> = props => {
     }
     await Promise.all([
       refreshModels(),
-      _update(tagDefinitions, activeTagDefinition, activeTagData, true),
+      update(tagDefinitions, activeTagDefinition, activeTagData, true),
     ]);
     const context = await handleGetRenderContext();
     const variables = context.keys;
     setState(state => ({ ...state, variables }));
   });
 
-  // this is probably
   useEffect(() => {
     refreshModels();
   }, [refreshModels]);
 
-  async function _updateArg(
+  async function updateArg(
     argValue: string | number | boolean,
     argIndex: number,
     forceNewType: string | null = null,
@@ -131,15 +129,11 @@ export const TagEditor: FC<Props> = props => {
   ) {
     const { tagDefinitions, activeTagData, activeTagDefinition } = state;
     if (!activeTagData) {
-      console.warn('No active tag data to update', {
-        state: state,
-      });
+      console.warn('No active tag data to update', { state });
       return;
     }
     if (!activeTagDefinition) {
-      console.warn('No active tag definition to update', {
-        state: state,
-      });
+      console.warn('No active tag definition to update', { state });
       return;
     }
     // Fix strings
@@ -174,7 +168,7 @@ export const TagEditor: FC<Props> = props => {
       // Ugh, what a hack (because it's enum)
       Object.assign(argData as any, { type: forceNewType }, patch);
     }
-    _update(tagDefinitions, activeTagDefinition, tagData, false);
+    update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
   function handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -185,19 +179,19 @@ export const TagEditor: FC<Props> = props => {
     }
     // Handle special types
     if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
-      return _updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
+      return updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
     }
     // Handle normal types
     if (event.currentTarget.type === 'number') {
-      return _updateArg(parseFloat(event.currentTarget.value), argIndex);
+      return updateArg(parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
       // @ts-expect-error -- TSCONVERSION .checked doesn't exist on HTMLSelectElement
-      return _updateArg(event.currentTarget.checked, argIndex);
+      return updateArg(event.currentTarget.checked, argIndex);
     } else {
-      return _updateArg(event.currentTarget.value, argIndex);
+      return updateArg(event.currentTarget.value, argIndex);
     }
   }
-  async function _update(
+  async function update(
     tagDefinitions: NunjucksParsedTag[],
     tagDefinition: NunjucksParsedTag | null,
     tagData: NunjucksParsedTag | null,
@@ -296,7 +290,7 @@ export const TagEditor: FC<Props> = props => {
               const tagDefinitions = await templating.getTagDefinitions();
               const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
 
-              _update(state.tagDefinitions, tagDefinition, null, false);
+              update(state.tagDefinitions, tagDefinition, null, false);
             }}
             value={activeTagDefinition ? activeTagDefinition.name : ''}
           >
@@ -336,100 +330,85 @@ export const TagEditor: FC<Props> = props => {
         }
         const strValue = templateUtils.decodeEncoding(argData.value.toString());
         const isVariable = argData.type === 'variable';
-        const argInputVariable = isVariable ? state.variables.length === 0 ? (
-          <select disabled>
-            <option>-- No Environment Variables Found --</option>
-          </select>
-        ) : (
-          <select value={strValue || ''} onChange={handleChange}>
-            <option key="n/a" value="NO_VARIABLE">
-              -- Select Variable --
-            </option>
-            {state.variables.map((v, i) => (
-              <option key={`${i}::${v.name}`} value={v.name}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        ) : null;
+
         let argInput;
         let isVariableAllowed = true;
-        if (argDefinition.type === 'string') {
-          const placeholder =
+        if (!isVariable) {
+          if (argDefinition.type === 'string') {
+            const placeholder =
             typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-          const encoding = argDefinition.encoding || 'utf8';
-          argInput = (<input
-            type="text"
-            defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
-            placeholder={placeholder}
-            onChange={handleChange}
-            data-encoding={encoding}
-          />);
-        } else if (argDefinition.type === 'enum') {
-          argInput = (
-            <select value={strValue} onChange={handleChange}>
-              {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
-              {argDefinition.options?.map(option => (
+            const encoding = argDefinition.encoding || 'utf8';
+            argInput = (<input
+              type="text"
+              defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
+              placeholder={placeholder}
+              onChange={handleChange}
+              data-encoding={encoding}
+            />);
+          } else if (argDefinition.type === 'enum') {
+            argInput = (
+              <select value={strValue} onChange={handleChange}>
+                {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
+                {argDefinition.options?.map(option => (
                 // @ts-expect-error -- TSCONVERSION boolean not accepted by option
-                <option key={option.value.toString()} value={option.value}>
-                  {option.description ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, state.activeTagData?.args || [])}
-                </option>
-              ))}
-            </select>
-          );
-        } else if (argDefinition.type === 'file') {
-          argInput = (<FileInputButton
-            showFileIcon
-            showFileName
-            className="btn btn--clicky btn--super-compact"
-            onChange={path => _updateArg(path, index)}
-            path={strValue.replace(/\\\\/g, '\\')}
-            itemtypes={argDefinition.itemTypes}
-            extensions={argDefinition.extensions}
-          />);
-        } else if (argDefinition.type === 'model') {
-          isVariableAllowed = false;
-          argInput = state.loadingDocs ? (
-            <select disabled={state.loadingDocs}>
-              <option>Loading...</option>
-            </select>
-          ) : (
-            <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
-              <option value="n/a">-- Select Item --</option>
-              {state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
-                let namePrefix: string | null = null;
-                // Show parent folder with name if it's a request
-                if (isRequest(doc)) {
-                  const requests = state.allDocs[models.request.type] || [];
-                  const request: any = requests.find(r => r._id === doc._id);
-                  const method = request && typeof request.method === 'string' ? request.method : 'GET';
-                  const parentId = request ? request.parentId : 'n/a';
-                  const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
-                  const requestGroupPrefix = resolveRequestGroupPrefix(parentId, allRequestGroups);
-                  namePrefix = `${requestGroupPrefix + method} `;
-                }
-                return (
-                  <option key={doc._id} value={doc._id}>
-                    {namePrefix}
-                    {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+                  <option key={option.value.toString()} value={option.value}>
+                    {option.description ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, state.activeTagData?.args || [])}
                   </option>
-                );
-              })}
-            </select>
-          );
-        } else if (argDefinition.type === 'boolean') {
-          argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={handleChange} />;
-        } else if (argDefinition.type === 'number') {
-          const placeholder =
-            typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-          argInput = (<input
-            type="number"
-            defaultValue={strValue || '0'}
-            placeholder={placeholder}
-            onChange={handleChange}
-          />);
-        } else {
-          return null;
+                ))}
+              </select>
+            );
+          } else if (argDefinition.type === 'file') {
+            argInput = (<FileInputButton
+              showFileIcon
+              showFileName
+              className="btn btn--clicky btn--super-compact"
+              onChange={path => updateArg(path, index)}
+              path={strValue.replace(/\\\\/g, '\\')}
+              itemtypes={argDefinition.itemTypes}
+              extensions={argDefinition.extensions}
+            />);
+          } else if (argDefinition.type === 'model') {
+            isVariableAllowed = false;
+            argInput = state.loadingDocs ? (
+              <select disabled={state.loadingDocs}>
+                <option>Loading...</option>
+              </select>
+            ) : (
+              <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
+                <option value="n/a">-- Select Item --</option>
+                {state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
+                  let namePrefix: string | null = null;
+                  // Show parent folder with name if it's a request
+                  if (isRequest(doc)) {
+                    const requests = state.allDocs[models.request.type] || [];
+                    const request: any = requests.find(r => r._id === doc._id);
+                    const method = request && typeof request.method === 'string' ? request.method : 'GET';
+                    const parentId = request ? request.parentId : 'n/a';
+                    const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
+                    const requestGroupPrefix = resolveRequestGroupPrefix(parentId, allRequestGroups);
+                    namePrefix = `${requestGroupPrefix + method} `;
+                  }
+                  return (
+                    <option key={doc._id} value={doc._id}>
+                      {namePrefix}
+                      {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+                    </option>
+                  );
+                })}
+              </select>
+            );
+          } else if (argDefinition.type === 'boolean') {
+            argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={handleChange} />;
+          } else if (argDefinition.type === 'number') {
+            argInput = (<input
+              type="number"
+              defaultValue={strValue || '0'}
+              placeholder={typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : ''}
+              onChange={handleChange}
+            />);
+          } else {
+            return null;
+          }
         }
         const help =
           typeof argDefinition.help === 'string' || typeof argDefinition.help === 'function'
@@ -458,7 +437,22 @@ export const TagEditor: FC<Props> = props => {
                 {isVariable && <span className="faded space-left">(Variable)</span>}
                 {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
                 {validationError && <span className="font-error space-left">{validationError}</span>}
-                {argInputVariable || argInput}
+                {isVariable ? state.variables.length === 0 ? (
+                  <select disabled>
+                    <option>-- No Environment Variables Found --</option>
+                  </select>
+                ) : (
+                  <select value={strValue || ''} onChange={handleChange}>
+                    <option key="n/a" value="NO_VARIABLE">
+                      -- Select Variable --
+                    </option>
+                    {state.variables.map((v, i) => (
+                      <option key={`${i}::${v.name}`} value={v.name}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : argInput}
               </label>
             </div>
             {isVariableAllowed ? (
@@ -485,7 +479,7 @@ export const TagEditor: FC<Props> = props => {
                       const initialType = argDef ? argDef.type : 'string';
                       const variable = variables.find(v => v.name === existingValue);
                       const value = variable ? variable.value : '';
-                      return _updateArg(value, index, initialType, { quotedBy: "'" });
+                      return updateArg(value, index, initialType, { quotedBy: "'" });
                     }}
                   >
                     <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
@@ -502,7 +496,7 @@ export const TagEditor: FC<Props> = props => {
                       const variable = variables.find(v => v.value === existingValue);
                       const firstVariable = variables.length ? variables[0].name : '';
                       const value = variable ? variable.name : firstVariable;
-                      return _updateArg(value || 'my_variable', index, 'variable');
+                      return updateArg(value || 'my_variable', index, 'variable');
                     }}
                   >
                     <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
@@ -531,7 +525,7 @@ export const TagEditor: FC<Props> = props => {
                   // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
                   const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
                   await action.run(helperContext);
-                  _update(
+                  update(
                     state.tagDefinitions,
                     state.activeTagDefinition,
                     state.activeTagData,
@@ -560,7 +554,7 @@ export const TagEditor: FC<Props> = props => {
                 if (tagData) {
                   tagData.rawValue = event.currentTarget.value;
                 }
-                _update(tagDefinitions, activeTagDefinition, tagData, false);
+                update(tagDefinitions, activeTagDefinition, tagData, false);
               }}
             />
           </label>
@@ -576,7 +570,7 @@ export const TagEditor: FC<Props> = props => {
               position: 'relative',
             }}
             className="txt-sm pull-right icon inline-block"
-            onClick={() => _update(
+            onClick={() => update(
               state.tagDefinitions,
               state.activeTagDefinition,
               state.activeTagData,
