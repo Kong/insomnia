@@ -32,7 +32,6 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
     },
     show: ({ cookie }) => {
       if (!activeCookieJar?.cookies.find(c => c.id === cookie.id)) {
-        // Cookie not found in jar
         return;
       }
       setCookie(cookie);
@@ -40,9 +39,8 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
     },
   }), [activeCookieJar?.cookies]);
 
-  async function handleCookieUpdate(nextCookie: any) {
+  const handleCookieUpdate = async (nextCookie: any) => {
     if (!cookie || !activeCookieJar) {
-      // We don't have a cookie to edit
       return;
     }
     const newcookie = clone(nextCookie);
@@ -52,6 +50,8 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
       dateFormat = new Date(newcookie.expires);
     }
     newcookie.expires = dateFormat;
+    setCookie(newcookie);
+
     // Clone so we don't modify the original
     const cookieJar = clone(activeCookieJar);
     const index = cookieJar.cookies.findIndex(c => c.id === cookie.id);
@@ -60,60 +60,22 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
       return;
     }
     cookieJar.cookies = [...cookieJar.cookies.slice(0, index), cookie, ...cookieJar.cookies.slice(index + 1)];
-    setCookie(cookie);
     models.cookieJar.update(cookieJar);
-  }
-
-  const renderInputField = (field: keyof Cookie) => {
-    if (!cookie) {
-      return null;
-    }
-    let localDateTime;
-    if (field === 'expires' && cookie.expires && isValid(new Date(cookie.expires))) {
-      localDateTime = new Date(cookie.expires).toISOString().slice(0, 16);
-    }
-    const val = (cookie[field] || '').toString();
-    return (
-      <div className="form-control form-control--outlined">
-        <label>
-          {capitalize(field)}
-          {field === 'expires' ?
-            <input type="datetime-local" defaultValue={localDateTime} onChange={value => handleChange(field, value)} /> :
-            <OneLineEditor
-              defaultValue={val || ''}
-              onChange={value => handleChange(field, value)}
-            />
-          }
-        </label>
-      </div>
-    );
   };
 
-  async function handleChange(field: string, eventOrValue: string | React.ChangeEvent<HTMLInputElement>) {
-    let value;
-    if (typeof eventOrValue === 'string') {
-      value = eventOrValue.trim();
-    } else if (eventOrValue.target instanceof HTMLInputElement) {
-      if (eventOrValue.target.type === 'checkbox') {
-        value = eventOrValue.target.checked;
-      } else {
-        value = eventOrValue.target.value.trim();
-      }
-    }
-    const newCookie = Object.assign({}, cookie, { [field]: value });
-    await handleCookieUpdate(newCookie);
-    setCookie(newCookie);
+  let localDateTime;
+  if (cookie && cookie.expires && isValid(new Date(cookie.expires))) {
+    localDateTime = new Date(cookie.expires).toISOString().slice(0, 16);
   }
-
-  let defaultValue;
+  let rawDefaultValue;
   if (!cookie) {
-    defaultValue = '';
+    rawDefaultValue = '';
   }
   try {
-    defaultValue = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
+    rawDefaultValue = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
   } catch (err) {
     console.warn('Failed to parse cookie string', err);
-    defaultValue = '';
+    rawDefaultValue = '';
   }
   return (
     <Modal ref={modalRef}>
@@ -132,14 +94,51 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
             <TabPanel>
               <div className="pad">
                 <div className="form-row">
-                  {renderInputField('key')}
-                  {renderInputField('value')}
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Key
+                      <OneLineEditor
+                        defaultValue={(cookie && cookie.key || '').toString()}
+                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { key: value.trim() }))}
+                      />
+                    </label>
+                  </div>
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Value
+                      <OneLineEditor
+                        defaultValue={(cookie && cookie.value || '').toString()}
+                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { value: value.trim() }))}
+                      />
+                    </label>
+                  </div>
                 </div>
                 <div className="form-row">
-                  {renderInputField('domain')}
-                  {renderInputField('path')}
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Domain
+                      <OneLineEditor
+                        defaultValue={(cookie && cookie.domain || '').toString()}
+                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { domain: value.trim() }))}
+                      />
+                    </label>
+                  </div>
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Path
+                      <OneLineEditor
+                        defaultValue={(cookie && cookie.path || '').toString()}
+                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { path: value.trim() }))}
+                      />
+                    </label>
+                  </div>
                 </div>
-                {renderInputField('expires')}
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Expires
+                    <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} /> :
+                  </label>
+                </div>
               </div>
               <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                 {['secure', 'httpOnly'].map((field, i) => {
@@ -153,7 +152,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                         type="checkbox"
                         name={field}
                         defaultChecked={checked || false}
-                        onChange={e => handleChange(field, e)}
+                        onChange={event => handleCookieUpdate(Object.assign({}, cookie, { [field]: event.target.checked }))}
                       />
                     </label>
                   );
@@ -180,7 +179,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                         return;
                       }
                     }}
-                    defaultValue={defaultValue}
+                    defaultValue={rawDefaultValue}
                   />
                 </label>
               </div>
