@@ -116,6 +116,7 @@
     "@babel/plugin-proposal-decorators": "^7.4.0",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@getinsomnia/api-client": "0.0.4",
+    "@tanstack/react-virtual": "3.0.0-beta.18",
     "@testing-library/dom": "^8.13.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.4.0",
@@ -196,14 +197,13 @@
     "react-stately": "^3.17.0",
     "react-tabs": "^5.1.0",
     "react-use": "^17.4.0",
-    "react-virtual": "2.10.4",
     "redux": "^4.1.2",
     "redux-mock-store": "^1.5.4",
     "redux-thunk": "^2.4.1",
     "reselect": "^4.1.5",
     "srp-js": "^0.2.1",
     "styled-components": "^5.3.3",
-    "swagger-ui-react": "4.5.1",
+    "swagger-ui-react": "4.14.3",
     "tinykeys": "^1.4.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
@@ -213,7 +213,11 @@
     "ws": "^8.8.1"
   },
   "overrides": {
-    "react": "^18.2.0"
+    "swagger-ui-react": {
+      "react-debounce-input": "3.3.0",
+      "react-inspector": "6.0.1",
+      "react-copy-to-clipboard": "5.1.0"
+    }
   },
   "dev": {
     "dev-server-port": 3334
