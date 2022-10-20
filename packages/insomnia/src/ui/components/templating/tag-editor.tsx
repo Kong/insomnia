@@ -68,7 +68,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
     variables: [],
   };
 
-  async load() {
+  async componentDidMount() {
     const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);
     const tagDefinitions = await templating.getTagDefinitions();
     const activeTagDefinition: NunjucksParsedTag | null =
@@ -87,10 +87,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
       this._refreshModels(this.props.workspace),
       this._update(tagDefinitions, activeTagDefinition, activeTagData, true),
     ]);
-  }
-
-  async componentDidMount() {
-    this.load();
     const context = await this.props.handleGetRenderContext();
     const variables = context.keys;
     this.setState({ variables });
@@ -147,43 +143,35 @@ class TagEditorInternal extends PureComponent<Props, State> {
     patch: Record<string, any> = {},
   ) {
     const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
-
     if (!activeTagData) {
       console.warn('No active tag data to update', {
         state: this.state,
       });
       return;
     }
-
     if (!activeTagDefinition) {
       console.warn('No active tag definition to update', {
         state: this.state,
       });
       return;
     }
-
     // Fix strings
     if (typeof argValue === 'string') {
       argValue = argValue.replace(/\\/g, '\\\\');
     }
-
     // Ensure all arguments exist
     const defaultArgs = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
       activeTagDefinition.name,
       activeTagDefinition.args,
     )).args;
-
     for (let i = 0; i < defaultArgs.length; i++) {
       if (activeTagData.args[i]) {
         continue;
       }
-
       activeTagData.args[i] = defaultArgs[i];
     }
-
     const tagData = clone(activeTagData);
     const argData: NunjucksParsedTagArg = tagData.args[argIndex];
-
     if (!argData) {
       // Should never happen
       console.warn('Could not find arg data to update', {
@@ -192,38 +180,25 @@ class TagEditorInternal extends PureComponent<Props, State> {
       });
       return;
     }
-
     // Update it
     argData.value = argValue;
-
     // Update type if we need to
     if (forceNewType) {
       // Ugh, what a hack (because it's enum)
-      Object.assign(
-        argData as any,
-        {
-          type: forceNewType,
-        },
-        patch,
-      );
+      Object.assign(argData as any, { type: forceNewType }, patch);
     }
-
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
   _handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
-    const parent = event.currentTarget.parentNode;
     let argIndex = -1;
-    if (parent instanceof HTMLElement) {
-      const index = parent?.getAttribute('data-arg-index');
+    if (event.currentTarget.parentNode instanceof HTMLElement) {
+      const index = event.currentTarget.parentNode?.getAttribute('data-arg-index');
       argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
     }
     // Handle special types
     if (event.currentTarget.getAttribute('data-encoding') === 'base64') {
-      return this._updateArg(
-        templateUtils.encodeEncoding(event.currentTarget.value, 'base64'),
-        argIndex,
-      );
+      return this._updateArg(templateUtils.encodeEncoding(event.currentTarget.value, 'base64'), argIndex);
     }
     // Handle normal types
     if (event.currentTarget.type === 'number') {
@@ -316,224 +291,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     return prefix;
   }
 
-  renderArg(
-    argDefinition: NunjucksParsedTagArg,
-    argDatas: NunjucksParsedTagArg[],
-    argIndex: number,
-  ) {
-    // Decide whether or not to show it
-    if (typeof argDefinition.hide === 'function' && argDefinition.hide(argDatas)) {
-      return null;
-    }
-
-    let argData: NunjucksParsedTagArg;
-
-    if (argIndex < argDatas.length) {
-      argData = argDatas[argIndex];
-    } else if (this.state.activeTagDefinition) {
-      const defaultTagData = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
-        this.state.activeTagDefinition.name,
-        this.state.activeTagDefinition.args,
-      ));
-
-      argData = defaultTagData.args[argIndex];
-    } else {
-      return null;
-    }
-
-    if (!argData) {
-      console.error('Failed to find argument to set default', {
-        argDefinition,
-        argDatas,
-        argIndex,
-      });
-      return null;
-    }
-
-    const strValue = templateUtils.decodeEncoding(argData.value.toString());
-    const isVariable = argData.type === 'variable';
-    const argInputVariable = isVariable ? this.state.variables.length === 0 ? (
-      <select disabled>
-        <option>-- No Environment Variables Found --</option>
-      </select>
-    ) : (
-      <select value={strValue || ''} onChange={this._handleChange}>
-        <option key="n/a" value="NO_VARIABLE">
-          -- Select Variable --
-        </option>
-        {this.state.variables.map((v, i) => (
-          <option key={`${i}::${v.name}`} value={v.name}>
-            {v.name}
-          </option>
-        ))}
-      </select>
-    ) : null;
-    let argInput;
-    let isVariableAllowed = true;
-
-    if (argDefinition.type === 'string') {
-      const placeholder =
-        typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-      const encoding = argDefinition.encoding || 'utf8';
-      argInput = (<input
-        type="text"
-        defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
-        placeholder={placeholder}
-        onChange={this._handleChange}
-        data-encoding={encoding}
-      />);
-    } else if (argDefinition.type === 'enum') {
-      argInput = (
-        <select value={strValue} onChange={this._handleChange}>
-          {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
-          {argDefinition.options?.map(option => (
-            // @ts-expect-error -- TSCONVERSION boolean not accepted by option
-            <option key={option.value.toString()} value={option.value}>
-              {option.description ? `${fnOrString(option.displayName, this.state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, this.state.activeTagData?.args || [])}
-            </option>
-          ))}
-        </select>
-      );
-    } else if (argDefinition.type === 'file') {
-      argInput = (<FileInputButton
-        showFileIcon
-        showFileName
-        className="btn btn--clicky btn--super-compact"
-        onChange={path => this._updateArg(path, argIndex)}
-        path={strValue.replace(/\\\\/g, '\\')}
-        itemtypes={argDefinition.itemTypes}
-        extensions={argDefinition.extensions}
-      />);
-    } else if (argDefinition.type === 'model') {
-      isVariableAllowed = false;
-      argInput = this.state.loadingDocs ? (
-        <select disabled={this.state.loadingDocs}>
-          <option>Loading...</option>
-        </select>
-      ) : (
-        <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={this._handleChange}>
-          <option value="n/a">-- Select Item --</option>
-          {this.state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
-            let namePrefix: string | null = null;
-            // Show parent folder with name if it's a request
-            if (isRequest(doc)) {
-              const requests = this.state.allDocs[models.request.type] || [];
-              const request: any = requests.find(r => r._id === doc._id);
-              const method = request && typeof request.method === 'string' ? request.method : 'GET';
-              const parentId = request ? request.parentId : 'n/a';
-              const allRequestGroups = this.state.allDocs[models.requestGroup.type] || [];
-              const requestGroupPrefix = this.resolveRequestGroupPrefix(parentId, allRequestGroups);
-              namePrefix = `${requestGroupPrefix + method} `;
-            }
-            return (
-              <option key={doc._id} value={doc._id}>
-                {namePrefix}
-                {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
-              </option>
-            );
-          })}
-        </select>
-      );
-    } else if (argDefinition.type === 'boolean') {
-      argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={this._handleChange} />;
-    } else if (argDefinition.type === 'number') {
-      const placeholder =
-        typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-      argInput = (<input
-        type="number"
-        defaultValue={strValue || '0'}
-        placeholder={placeholder}
-        onChange={this._handleChange}
-      />);
-    } else {
-      return null;
-    }
-
-    const help =
-      typeof argDefinition.help === 'string' || typeof argDefinition.help === 'function'
-        ? fnOrString(argDefinition.help, argDatas)
-        : '';
-    const displayName =
-      typeof argDefinition.displayName === 'string' ||
-        typeof argDefinition.displayName === 'function'
-        ? fnOrString(argDefinition.displayName, argDatas)
-        : '';
-    let validationError = '';
-    const canValidate = argDefinition.type === 'string' || argDefinition.type === 'number';
-
-    if (canValidate && typeof argDefinition.validate === 'function') {
-      validationError = argDefinition.validate(strValue) || '';
-    }
-
-    const formControlClasses = classnames({
-      'form-control': true,
-      'form-control--thin': argDefinition.type === 'boolean',
-      'form-control--outlined': argDefinition.type !== 'boolean',
-    });
-    return (
-      <div key={argIndex} className="form-row">
-        <div className={formControlClasses}>
-          <label data-arg-index={argIndex}>
-            {fnOrString(displayName, argDatas)}
-            {isVariable && <span className="faded space-left">(Variable)</span>}
-            {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-            {validationError && <span className="font-error space-left">{validationError}</span>}
-            {argInputVariable || argInput}
-          </label>
-        </div>
-        {isVariableAllowed ? (
-          <div
-            className={classnames('form-control form-control--outlined width-auto', {
-              'form-control--no-label': argDefinition.type !== 'boolean',
-            })}
-          >
-            <Dropdown right>
-              <DropdownButton className="btn btn--clicky">
-                <i className="fa fa-gear" />
-              </DropdownButton>
-              <DropdownDivider>Input Type</DropdownDivider>
-              <DropdownItem
-                onClick={() => {
-                  const { activeTagData, activeTagDefinition, variables } = this.state;
-                  if (!activeTagData || !activeTagDefinition) {
-                    console.warn('Failed to change arg variable', { state: this.state });
-                    return;
-                  }
-                  const argData = activeTagData.args[argIndex];
-                  const argDef = activeTagDefinition.args[argIndex];
-                  const existingValue = argData ? argData.value : '';
-                  const initialType = argDef ? argDef.type : 'string';
-                  const variable = variables.find(v => v.name === existingValue);
-                  const value = variable ? variable.value : '';
-                  return this._updateArg(value, argIndex, initialType, { quotedBy: "'" });
-                }}
-              >
-                <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
-              </DropdownItem>
-              <DropdownItem
-                onClick={() => {
-                  const { activeTagData, activeTagDefinition, variables } = this.state;
-                  if (!activeTagData || !activeTagDefinition) {
-                    console.warn('Failed to change arg variable', { state: this.state });
-                    return;
-                  }
-                  const argData = activeTagData.args[argIndex];
-                  const existingValue = argData ? argData.value : '';
-                  const variable = variables.find(v => v.value === existingValue);
-                  const firstVariable = variables.length ? variables[0].name : '';
-                  const value = variable ? variable.name : firstVariable;
-                  return this._updateArg(value || 'my_variable', argIndex, 'variable');
-                }}
-              >
-                <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
-              </DropdownItem>
-            </Dropdown>
-          </div>
-        ) : null}
-      </div>
-    );
-  }
-
   render() {
     const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
@@ -584,10 +341,211 @@ class TagEditorInternal extends PureComponent<Props, State> {
             </select>
           </label>
         </div>
-        {activeTagDefinition?.args.map((argDefinition: NunjucksParsedTagArg, index) =>
-          this.renderArg(argDefinition, activeTagData.args, index),
+        {activeTagDefinition?.args.map((argDefinition: NunjucksParsedTagArg, index) => {
+          // Decide whether or not to show it
+          if (typeof argDefinition.hide === 'function' && argDefinition.hide(activeTagData.args)) {
+            return null;
+          }
+          let argData: NunjucksParsedTagArg;
+          if (index < activeTagData.args.length) {
+            argData = activeTagData.args[index];
+          } else if (this.state.activeTagDefinition) {
+            const defaultTagData = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
+              this.state.activeTagDefinition.name,
+              this.state.activeTagDefinition.args,
+            ));
+            argData = defaultTagData.args[index];
+          } else {
+            return null;
+          }
+          if (!argData) {
+            console.error('Failed to find argument to set default', {
+              argDefinition,
+              argDatas: activeTagData.args,
+              argIndex: index,
+            });
+            return null;
+          }
+          const strValue = templateUtils.decodeEncoding(argData.value.toString());
+          const isVariable = argData.type === 'variable';
+          const argInputVariable = isVariable ? this.state.variables.length === 0 ? (
+            <select disabled>
+              <option>-- No Environment Variables Found --</option>
+            </select>
+          ) : (
+            <select value={strValue || ''} onChange={this._handleChange}>
+              <option key="n/a" value="NO_VARIABLE">
+                -- Select Variable --
+              </option>
+              {this.state.variables.map((v, i) => (
+                <option key={`${i}::${v.name}`} value={v.name}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          ) : null;
+          let argInput;
+          let isVariableAllowed = true;
+          if (argDefinition.type === 'string') {
+            const placeholder =
+              typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
+            const encoding = argDefinition.encoding || 'utf8';
+            argInput = (<input
+              type="text"
+              defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
+              placeholder={placeholder}
+              onChange={this._handleChange}
+              data-encoding={encoding}
+            />);
+          } else if (argDefinition.type === 'enum') {
+            argInput = (
+              <select value={strValue} onChange={this._handleChange}>
+                {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
+                {argDefinition.options?.map(option => (
+                  // @ts-expect-error -- TSCONVERSION boolean not accepted by option
+                  <option key={option.value.toString()} value={option.value}>
+                    {option.description ? `${fnOrString(option.displayName, this.state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, this.state.activeTagData?.args || [])}
+                  </option>
+                ))}
+              </select>
+            );
+          } else if (argDefinition.type === 'file') {
+            argInput = (<FileInputButton
+              showFileIcon
+              showFileName
+              className="btn btn--clicky btn--super-compact"
+              onChange={path => this._updateArg(path, index)}
+              path={strValue.replace(/\\\\/g, '\\')}
+              itemtypes={argDefinition.itemTypes}
+              extensions={argDefinition.extensions}
+            />);
+          } else if (argDefinition.type === 'model') {
+            isVariableAllowed = false;
+            argInput = this.state.loadingDocs ? (
+              <select disabled={this.state.loadingDocs}>
+                <option>Loading...</option>
+              </select>
+            ) : (
+              <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={this._handleChange}>
+                <option value="n/a">-- Select Item --</option>
+                {this.state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
+                  let namePrefix: string | null = null;
+                  // Show parent folder with name if it's a request
+                  if (isRequest(doc)) {
+                    const requests = this.state.allDocs[models.request.type] || [];
+                    const request: any = requests.find(r => r._id === doc._id);
+                    const method = request && typeof request.method === 'string' ? request.method : 'GET';
+                    const parentId = request ? request.parentId : 'n/a';
+                    const allRequestGroups = this.state.allDocs[models.requestGroup.type] || [];
+                    const requestGroupPrefix = this.resolveRequestGroupPrefix(parentId, allRequestGroups);
+                    namePrefix = `${requestGroupPrefix + method} `;
+                  }
+                  return (
+                    <option key={doc._id} value={doc._id}>
+                      {namePrefix}
+                      {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+                    </option>
+                  );
+                })}
+              </select>
+            );
+          } else if (argDefinition.type === 'boolean') {
+            argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={this._handleChange} />;
+          } else if (argDefinition.type === 'number') {
+            const placeholder =
+              typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
+            argInput = (<input
+              type="number"
+              defaultValue={strValue || '0'}
+              placeholder={placeholder}
+              onChange={this._handleChange}
+            />);
+          } else {
+            return null;
+          }
+          const help =
+            typeof argDefinition.help === 'string' || typeof argDefinition.help === 'function'
+              ? fnOrString(argDefinition.help, activeTagData.args)
+              : '';
+          const displayName =
+            typeof argDefinition.displayName === 'string' ||
+              typeof argDefinition.displayName === 'function'
+              ? fnOrString(argDefinition.displayName, activeTagData.args)
+              : '';
+          let validationError = '';
+          const canValidate = argDefinition.type === 'string' || argDefinition.type === 'number';
+          if (canValidate && typeof argDefinition.validate === 'function') {
+            validationError = argDefinition.validate(strValue) || '';
+          }
+          const formControlClasses = classnames({
+            'form-control': true,
+            'form-control--thin': argDefinition.type === 'boolean',
+            'form-control--outlined': argDefinition.type !== 'boolean',
+          });
+          return (
+            <div key={index} className="form-row">
+              <div className={formControlClasses}>
+                <label data-arg-index={index}>
+                  {fnOrString(displayName, activeTagData.args)}
+                  {isVariable && <span className="faded space-left">(Variable)</span>}
+                  {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+                  {validationError && <span className="font-error space-left">{validationError}</span>}
+                  {argInputVariable || argInput}
+                </label>
+              </div>
+              {isVariableAllowed ? (
+                <div
+                  className={classnames('form-control form-control--outlined width-auto', {
+                    'form-control--no-label': argDefinition.type !== 'boolean',
+                  })}
+                >
+                  <Dropdown right>
+                    <DropdownButton className="btn btn--clicky">
+                      <i className="fa fa-gear" />
+                    </DropdownButton>
+                    <DropdownDivider>Input Type</DropdownDivider>
+                    <DropdownItem
+                      onClick={() => {
+                        const { activeTagData, activeTagDefinition, variables } = this.state;
+                        if (!activeTagData || !activeTagDefinition) {
+                          console.warn('Failed to change arg variable', { state: this.state });
+                          return;
+                        }
+                        const argData = activeTagData.args[index];
+                        const argDef = activeTagDefinition.args[index];
+                        const existingValue = argData ? argData.value : '';
+                        const initialType = argDef ? argDef.type : 'string';
+                        const variable = variables.find(v => v.name === existingValue);
+                        const value = variable ? variable.value : '';
+                        return this._updateArg(value, index, initialType, { quotedBy: "'" });
+                      }}
+                    >
+                      <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
+                    </DropdownItem>
+                    <DropdownItem
+                      onClick={() => {
+                        const { activeTagData, activeTagDefinition, variables } = this.state;
+                        if (!activeTagData || !activeTagDefinition) {
+                          console.warn('Failed to change arg variable', { state: this.state });
+                          return;
+                        }
+                        const argData = activeTagData.args[index];
+                        const existingValue = argData ? argData.value : '';
+                        const variable = variables.find(v => v.value === existingValue);
+                        const firstVariable = variables.length ? variables[0].name : '';
+                        const value = variable ? variable.name : firstVariable;
+                        return this._updateArg(value || 'my_variable', index, 'variable');
+                      }}
+                    >
+                      <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
+                    </DropdownItem>
+                  </Dropdown>
+                </div>
+              ) : null}
+            </div>
+          );
+        }
         )}
-
         {activeTagDefinition?.actions && activeTagDefinition?.actions?.length > 0 ? (
           <div className="form-row">
             <div className="form-control">
