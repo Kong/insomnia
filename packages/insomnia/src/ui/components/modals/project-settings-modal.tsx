@@ -69,7 +69,6 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
               dispatch(removeProject(project));
               modalRef.current?.hide();
             }}
-            addIcon
             className="width-auto btn btn--clicky inline-block"
           >
             <i className="fa fa-trash-o" /> Delete

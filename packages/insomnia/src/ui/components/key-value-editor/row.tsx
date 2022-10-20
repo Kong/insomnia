@@ -504,7 +504,6 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
                 key={Math.random()}
                 tabIndex={-1}
                 confirmMessage=""
-                addIcon
                 onClick={this._handleDelete}
                 title="Delete item"
               >

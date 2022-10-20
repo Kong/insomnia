@@ -429,7 +429,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               {downloadPath ? (
                 <DropdownItem
                   stayOpenAfterClick
-                  addIcon
                   buttonClass={PromptButton}
                   onClick={handleClearDownloadLocation}
                 >
