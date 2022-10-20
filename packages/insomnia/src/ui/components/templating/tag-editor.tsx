@@ -307,14 +307,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     }, 100);
   }
 
-  static _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
-    const defaultFill: string = templateUtils.getDefaultFill(
-      tagDefinition.name,
-      tagDefinition.args,
-    );
-    return templateUtils.tokenizeTag(defaultFill);
-  }
-
   async _update(
     tagDefinitions: NunjucksParsedTag[],
     tagDefinition: NunjucksParsedTag | null,
@@ -335,7 +327,10 @@ class TagEditorInternal extends PureComponent<Props, State> {
     let activeTagData: NunjucksParsedTag | null = tagData;
 
     if (!activeTagData && tagDefinition) {
-      activeTagData = TagEditorInternal._getDefaultTagData(tagDefinition);
+      activeTagData = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
+        tagDefinition.name,
+        tagDefinition.args,
+      ));
     } else if (!activeTagData && !tagDefinition && this.state.activeTagData) {
       activeTagData = {
         name: 'custom',
@@ -379,109 +374,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     });
   }
 
-  renderArgVariable(path: string) {
-    const { variables } = this.state;
-
-    if (variables.length === 0) {
-      return (
-        <select disabled>
-          <option>-- No Environment Variables Found --</option>
-        </select>
-      );
-    }
-
-    return (
-      <select value={path || ''} onChange={this._handleChange}>
-        <option key="n/a" value="NO_VARIABLE">
-          -- Select Variable --
-        </option>
-        {variables.map((v, i) => (
-          <option key={`${i}::${v.name}`} value={v.name}>
-            {v.name}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  renderArgString(value: string, placeholder: string, encoding: string) {
-    return (
-      <input
-        type="text"
-        defaultValue={value.replace(/\\\\/g, '\\') || ''}
-        placeholder={placeholder}
-        onChange={this._handleChange}
-        data-encoding={encoding || 'utf8'}
-      />
-    );
-  }
-
-  renderArgNumber(value: string, placeholder: string) {
-    return (
-      <input
-        type="number"
-        defaultValue={value || '0'}
-        placeholder={placeholder}
-        onChange={this._handleChange}
-      />
-    );
-  }
-
-  renderArgBoolean(checked: boolean) {
-    return <input type="checkbox" checked={checked} onChange={this._handleChange} />;
-  }
-
-  renderArgFile(
-    value: string,
-    argIndex: number,
-    itemTypes?: ('file' | 'directory')[],
-    extensions?: string[],
-  ) {
-    return (
-      <FileInputButton
-        showFileIcon
-        showFileName
-        className="btn btn--clicky btn--super-compact"
-        onChange={path => this._updateArg(path, argIndex)}
-        path={value.replace(/\\\\/g, '\\')}
-        itemtypes={itemTypes}
-        extensions={extensions}
-      />
-    );
-  }
-
-  renderArgEnum(value: string, options: PluginArgumentEnumOption[]) {
-    const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
-    let unsetOption: ReactNode = null;
-
-    if (!options.find(o => o.value === value)) {
-      unsetOption = <option value="">-- Select Option --</option>;
-    }
-
-    return (
-      <select value={value} onChange={this._handleChange}>
-        {unsetOption}
-        {options.map(option => {
-          let label: string;
-          const { description } = option;
-
-          if (description) {
-            label = `${fnOrString(option.displayName, argDatas)} – ${description}`;
-          } else {
-            label = fnOrString(option.displayName, argDatas);
-          }
-
-          return (
-            // @ts-expect-error -- TSCONVERSION boolean not accepted by option
-            <option key={option.value.toString()} value={option.value}>
-              {label}
-            </option>
-          );
-        })}
-      </select>
-    );
-  }
-
   resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
     let prefix = '';
     let reqGroup: any;
@@ -502,48 +394,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     return prefix;
   }
 
-  renderArgModel(value: string, modelType: string) {
-    const { allDocs, loadingDocs } = this.state;
-    const docs = allDocs[modelType] || [];
-    const id = value || 'n/a';
-
-    if (loadingDocs) {
-      return (
-        <select disabled={loadingDocs}>
-          <option>Loading...</option>
-        </select>
-      );
-    }
-
-    return (
-      <select value={id} onChange={this._handleChange}>
-        <option value="n/a">-- Select Item --</option>
-        {docs.map((doc: any) => {
-          let namePrefix: string | null = null;
-
-          // Show parent folder with name if it's a request
-          if (isRequest(doc)) {
-            const requests = allDocs[models.request.type] || [];
-            const request: any = requests.find(r => r._id === doc._id);
-            const method = request && typeof request.method === 'string' ? request.method : 'GET';
-            const parentId = request ? request.parentId : 'n/a';
-            const allRequestGroups = allDocs[models.requestGroup.type] || [];
-            const requestGroupPrefix = this.resolveRequestGroupPrefix(parentId, allRequestGroups);
-            namePrefix = `${requestGroupPrefix + method} `;
-          }
-
-          const docName = typeof doc.name === 'string' ? doc.name : 'Unknown Request';
-          return (
-            <option key={doc._id} value={doc._id}>
-              {namePrefix}
-              {docName}
-            </option>
-          );
-        })}
-      </select>
-    );
-  }
-
   renderArg(
     argDefinition: NunjucksParsedTagArg,
     argDatas: NunjucksParsedTagArg[],
@@ -559,7 +409,10 @@ class TagEditorInternal extends PureComponent<Props, State> {
     if (argIndex < argDatas.length) {
       argData = argDatas[argIndex];
     } else if (this.state.activeTagDefinition) {
-      const defaultTagData = TagEditorInternal._getDefaultTagData(this.state.activeTagDefinition);
+      const defaultTagData = templateUtils.tokenizeTag(templateUtils.getDefaultFill(
+        this.state.activeTagDefinition.name,
+        this.state.activeTagDefinition.args,
+      ));
 
       argData = defaultTagData.args[argIndex];
     } else {
@@ -577,7 +430,22 @@ class TagEditorInternal extends PureComponent<Props, State> {
 
     const strValue = templateUtils.decodeEncoding(argData.value.toString());
     const isVariable = argData.type === 'variable';
-    const argInputVariable = isVariable ? this.renderArgVariable(strValue) : null;
+    const argInputVariable = isVariable ? this.state.variables.length === 0 ? (
+      <select disabled>
+        <option>-- No Environment Variables Found --</option>
+      </select>
+    ) : (
+      <select value={strValue || ''} onChange={this._handleChange}>
+        <option key="n/a" value="NO_VARIABLE">
+          -- Select Variable --
+        </option>
+        {this.state.variables.map((v, i) => (
+          <option key={`${i}::${v.name}`} value={v.name}>
+            {v.name}
+          </option>
+        ))}
+      </select>
+    ) : null;
     let argInput;
     let isVariableAllowed = true;
 
@@ -585,28 +453,76 @@ class TagEditorInternal extends PureComponent<Props, State> {
       const placeholder =
         typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
       const encoding = argDefinition.encoding || 'utf8';
-      argInput = this.renderArgString(strValue, placeholder, encoding);
+      argInput = (<input
+        type="text"
+        defaultValue={strValue.replace(/\\\\/g, '\\') || ''}
+        placeholder={placeholder}
+        onChange={this._handleChange}
+        data-encoding={encoding}
+      />);
     } else if (argDefinition.type === 'enum') {
-      const { options } = argDefinition;
-      argInput = this.renderArgEnum(strValue, options || []);
-    } else if (argDefinition.type === 'file') {
-      argInput = this.renderArgFile(
-        strValue,
-        argIndex,
-        argDefinition.itemTypes,
-        argDefinition.extensions,
+      argInput = (
+        <select value={strValue} onChange={this._handleChange}>
+          {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
+          {argDefinition.options?.map(option => (
+            // @ts-expect-error -- TSCONVERSION boolean not accepted by option
+            <option key={option.value.toString()} value={option.value}>
+              {option.description ? `${fnOrString(option.displayName, this.state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, this.state.activeTagData?.args || [])}
+            </option>
+          ))}
+        </select>
       );
+    } else if (argDefinition.type === 'file') {
+      argInput = (<FileInputButton
+        showFileIcon
+        showFileName
+        className="btn btn--clicky btn--super-compact"
+        onChange={path => this._updateArg(path, argIndex)}
+        path={strValue.replace(/\\\\/g, '\\')}
+        itemtypes={argDefinition.itemTypes}
+        extensions={argDefinition.extensions}
+      />);
     } else if (argDefinition.type === 'model') {
       isVariableAllowed = false;
-      const model = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
-      const modelId = typeof strValue === 'string' ? strValue : 'unknown';
-      argInput = this.renderArgModel(modelId, model);
+      argInput = this.state.loadingDocs ? (
+        <select disabled={this.state.loadingDocs}>
+          <option>Loading...</option>
+        </select>
+      ) : (
+        <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={this._handleChange}>
+          <option value="n/a">-- Select Item --</option>
+          {this.state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
+            let namePrefix: string | null = null;
+            // Show parent folder with name if it's a request
+            if (isRequest(doc)) {
+              const requests = this.state.allDocs[models.request.type] || [];
+              const request: any = requests.find(r => r._id === doc._id);
+              const method = request && typeof request.method === 'string' ? request.method : 'GET';
+              const parentId = request ? request.parentId : 'n/a';
+              const allRequestGroups = this.state.allDocs[models.requestGroup.type] || [];
+              const requestGroupPrefix = this.resolveRequestGroupPrefix(parentId, allRequestGroups);
+              namePrefix = `${requestGroupPrefix + method} `;
+            }
+            return (
+              <option key={doc._id} value={doc._id}>
+                {namePrefix}
+                {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+              </option>
+            );
+          })}
+        </select>
+      );
     } else if (argDefinition.type === 'boolean') {
-      argInput = this.renderArgBoolean(strValue.toLowerCase() === 'true');
+      argInput = <input type="checkbox" checked={strValue.toLowerCase() === 'true'} onChange={this._handleChange} />;
     } else if (argDefinition.type === 'number') {
       const placeholder =
         typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
-      argInput = this.renderArgNumber(strValue, placeholder || '');
+      argInput = (<input
+        type="number"
+        defaultValue={strValue || '0'}
+        placeholder={placeholder}
+        onChange={this._handleChange}
+      />);
     } else {
       return null;
     }
@@ -617,7 +533,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
         : '';
     const displayName =
       typeof argDefinition.displayName === 'string' ||
-      typeof argDefinition.displayName === 'function'
+        typeof argDefinition.displayName === 'function'
         ? fnOrString(argDefinition.displayName, argDatas)
         : '';
     let validationError = '';
@@ -677,33 +593,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     );
   }
 
-  renderActions(actions: NunjucksActionTag[] = []) {
-    return (
-      <div className="form-row">
-        <div className="form-control">
-          <label>Actions</label>
-          <div className="form-row">{actions.map(this.renderAction)}</div>
-        </div>
-      </div>
-    );
-  }
-
-  renderAction(action: NunjucksActionTag) {
-    const name = action.name;
-    const icon = action.icon ? <i className={action.icon} /> : undefined;
-    return (
-      <button
-        key={name}
-        className="btn btn--clicky btn--largest"
-        type="button"
-        onClick={() => this._handleActionClick(action)}
-      >
-        {icon}
-        {name}
-      </button>
-    );
-  }
-
   render() {
     const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
@@ -759,7 +648,36 @@ class TagEditorInternal extends PureComponent<Props, State> {
         )}
 
         {activeTagDefinition?.actions && activeTagDefinition?.actions?.length > 0 ? (
-          this.renderActions(activeTagDefinition.actions)
+          <div className="form-row">
+            <div className="form-control">
+              <label>Actions</label>
+              <div className="form-row">{activeTagDefinition.actions.map(action => (
+                <button
+                  key={action.name}
+                  className="btn btn--clicky btn--largest"
+                  type="button"
+                  onClick={async () => {
+                    const templateTags = await getTemplateTags();
+                    const activeTemplateTag = templateTags.find(({ templateTag }) => {
+                      return templateTag.name === this.state.activeTagData?.name;
+                    });
+                    // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
+                    const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
+                    await action.run(helperContext);
+                    this._update(
+                      this.state.tagDefinitions,
+                      this.state.activeTagDefinition,
+                      this.state.activeTagData,
+                      true,
+                    );
+                  }}
+                >
+                  {action.icon ? <i className={action.icon} /> : undefined}
+                  {action.name}
+                </button>
+              ))}</div>
+            </div>
+          </div>
         ) : null}
 
         {!activeTagDefinition && (
