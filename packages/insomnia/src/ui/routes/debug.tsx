@@ -8,6 +8,28 @@ import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc
 import * as requestOperations from '../../models/helpers/request-operations';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
+import { ErrorBoundary } from '../components/error-boundary';
+import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
+import { showModal } from '../components/modals';
+import { AskModal } from '../components/modals/ask-modal';
+import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
+import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { PromptModal } from '../components/modals/prompt-modal';
+import { RequestSettingsModal } from '../components/modals/request-settings-modal';
+import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
+import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { PageLayout } from '../components/page-layout';
+import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
+import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
+import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
+import { RequestPane } from '../components/panes/request-pane';
+import { ResponsePane } from '../components/panes/response-pane';
+import { SidebarChildren } from '../components/sidebar/sidebar-children';
+import { SidebarFilter } from '../components/sidebar/sidebar-filter';
+import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
+import { WorkspacePageHeader } from '../components/workspace-page-header';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import {
@@ -18,28 +40,6 @@ import {
   selectSettings,
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
-import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
-import { ErrorBoundary } from './error-boundary';
-import { useDocBodyKeyboardShortcuts } from './keydown-binder';
-import { showModal } from './modals';
-import { AskModal } from './modals/ask-modal';
-import { CookiesModal, showCookiesModal } from './modals/cookies-modal';
-import { GenerateCodeModal } from './modals/generate-code-modal';
-import { PromptModal } from './modals/prompt-modal';
-import { RequestSettingsModal } from './modals/request-settings-modal';
-import { RequestSwitcherModal } from './modals/request-switcher-modal';
-import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-edit-modal';
-import { PageLayout } from './page-layout';
-import { GrpcRequestPane } from './panes/grpc-request-pane';
-import { GrpcResponsePane } from './panes/grpc-response-pane';
-import { PlaceholderRequestPane } from './panes/placeholder-request-pane';
-import { RequestPane } from './panes/request-pane';
-import { ResponsePane } from './panes/response-pane';
-import { SidebarChildren } from './sidebar/sidebar-children';
-import { SidebarFilter } from './sidebar/sidebar-filter';
-import { WebSocketRequestPane } from './websockets/websocket-request-pane';
-import { WebSocketResponsePane } from './websockets/websocket-response-pane';
-import { WorkspacePageHeader } from './workspace-page-header';
 
 export const WrapperDebug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
