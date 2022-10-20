@@ -186,11 +186,11 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       <DropdownDivider>
         <strong>{environmentName}</strong> Responses
       </DropdownDivider>
-      <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponse}>
+      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteResponse}>
         <i className="fa fa-trash-o" />
         Delete Current Response
       </DropdownItem>
-      <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteResponses}>
+      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteResponses}>
         <i className="fa fa-trash-o" />
         Clear History
       </DropdownItem>

@@ -178,7 +178,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         <i className="fa fa-edit" /> Rename
       </DropdownItem>
 
-      <DropdownItem buttonClass={PromptButton} addIcon onClick={handleDeleteFolder}>
+      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteFolder}>
         <i className="fa fa-trash-o" /> Delete
       </DropdownItem>
 

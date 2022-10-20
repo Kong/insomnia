@@ -2,7 +2,6 @@ import classnames from 'classnames';
 import React, { ButtonHTMLAttributes, createElement, ReactNode } from 'react';
 
 interface Props {
-  addIcon?: boolean; // NOTE: used by prompt-button.tsx
   title?: string;
   buttonClass?: React.ElementType;
   stayOpenAfterClick?: boolean;

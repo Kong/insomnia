@@ -140,7 +140,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
           {hint}
         </button>
         <PromptButton
-          addIcon
           confirmMessage=""
           className="tall space-left icon"
           onClick={() => {
