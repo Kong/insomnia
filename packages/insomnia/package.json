@@ -41,7 +41,7 @@
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "2.3.5-2",
+    "@getinsomnia/node-libcurl": "2.3.5-4",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
     "@jest/globals": "^28.1.0",
@@ -165,7 +165,7 @@
     "cross-env": "^7.0.3",
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
-    "electron": "20.0.0",
+    "electron": "21.2.0",
     "electron-builder": "23.0.7",
     "electron-builder-squirrel-windows": "23.0.7",
     "electron-devtools-installer": "^3.2.0",
