@@ -6,7 +6,6 @@ import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as toughCookie from 'tough-cookie';
 
-import { capitalize } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
 import { selectActiveCookieJar } from '../../redux/selectors';
@@ -141,22 +140,26 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                 </div>
               </div>
               <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
-                {['secure', 'httpOnly'].map((field, i) => {
-                  // @ts-expect-error -- mapping unsoundness
-                  const checked = !!cookie[field];
-                  return (
-                    <label key={i}>
-                      {capitalize(field)}
-                      <input
-                        className="space-left"
-                        type="checkbox"
-                        name={field}
-                        defaultChecked={checked || false}
-                        onChange={event => handleCookieUpdate(Object.assign({}, cookie, { [field]: event.target.checked }))}
-                      />
-                    </label>
-                  );
-                })}
+                <label>
+                  Secure
+                  <input
+                    className="space-left"
+                    type="checkbox"
+                    name="secure"
+                    defaultChecked={cookie.secure || false}
+                    onChange={event => handleCookieUpdate(Object.assign({}, cookie, { secure: event.target.checked }))}
+                  />
+                </label>
+                <label>
+                  httpOnly
+                  <input
+                    className="space-left"
+                    type="checkbox"
+                    name="httpOnly"
+                    defaultChecked={cookie.httpOnly || false}
+                    onChange={event => handleCookieUpdate(Object.assign({}, cookie, { httpOnly: event.target.checked }))}
+                  />
+                </label>
               </div>
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad">
