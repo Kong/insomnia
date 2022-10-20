@@ -1,5 +1,5 @@
 {
-  "version": "3.6.1-beta.1",
+  "version": "3.6.1-beta.2",
   "includeMergedTags": true,
   "packages": [
     "packages/*",
