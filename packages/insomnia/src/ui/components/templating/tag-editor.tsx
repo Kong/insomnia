@@ -84,7 +84,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
     // Fix strings: arg.value expects an escaped value (based on _updateArg logic)
     for (const arg of activeTagData.args) {
       if (typeof arg.value === 'string') {
-        arg.value = this._escapeStringArgs(arg.value);
+        arg.value = arg.value.replace(/\\/g, '\\\\');
       }
     }
 
@@ -94,17 +94,11 @@ class TagEditorInternal extends PureComponent<Props, State> {
     ]);
   }
 
-  async loadVariables() {
+  async componentDidMount() {
+    this.load();
     const context = await this.props.handleGetRenderContext();
     const variables = context.keys;
-    this.setState({
-      variables,
-    });
-  }
-
-  componentDidMount() {
-    this.load();
-    this.loadVariables();
+    this.setState({ variables });
   }
 
   // eslint-disable-next-line camelcase
@@ -114,15 +108,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     if (this.props.workspace._id !== workspace._id) {
       this._refreshModels(workspace);
     }
-  }
-
-  async _handleRefresh() {
-    await this._update(
-      this.state.tagDefinitions,
-      this.state.activeTagDefinition,
-      this.state.activeTagData,
-      true,
-    );
   }
 
   _sortRequests(_models: (Request | RequestGroup)[], parentId: string) {
@@ -194,7 +179,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
 
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = this._escapeStringArgs(argValue);
+      argValue = argValue.replace(/\\/g, '\\\\');
     }
 
     // Ensure all arguments exist
@@ -268,10 +253,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     }
   }
 
-  _handleChangeFile(path: string, argIndex: number) {
-    return this._updateArg(path, argIndex);
-  }
-
   _handleChange(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     const parent = event.currentTarget.parentNode;
     let argIndex = -1;
@@ -300,25 +281,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
     }
   }
 
-  _handleChangeCustomArg(event: React.SyntheticEvent<HTMLInputElement>) {
-    const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
-    const tagData: NunjucksParsedTag | null = clone(activeTagData);
-
-    if (tagData) {
-      tagData.rawValue = event.currentTarget.value;
-    }
-
-    this._update(tagDefinitions, activeTagDefinition, tagData, false);
-  }
-
-  async _handleChangeTag(event: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
-    const name = event.currentTarget.value;
-    const tagDefinitions = await templating.getTagDefinitions();
-    const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
-
-    this._update(this.state.tagDefinitions, tagDefinition, null, false);
-  }
-
   async _handleActionClick(action: NunjucksActionTag) {
     const templateTags = await getTemplateTags();
     const activeTemplateTag = templateTags.find(({ templateTag }) => {
@@ -327,7 +289,12 @@ class TagEditorInternal extends PureComponent<Props, State> {
     // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
     const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
     await action.run(helperContext);
-    return this._handleRefresh();
+    this._update(
+      this.state.tagDefinitions,
+      this.state.activeTagDefinition,
+      this.state.activeTagData,
+      true,
+    );
   }
 
   _setSelectRef(select: HTMLSelectElement) {
@@ -338,14 +305,6 @@ class TagEditorInternal extends PureComponent<Props, State> {
         this._select.focus();
       }
     }, 100);
-  }
-
-  _escapeStringArgs(value: string) {
-    return value.replace(/\\/g, '\\\\');
-  }
-
-  _unescapeStringArgs(value: string) {
-    return value.replace(/\\\\/g, '\\');
   }
 
   static _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
@@ -449,7 +408,7 @@ class TagEditorInternal extends PureComponent<Props, State> {
     return (
       <input
         type="text"
-        defaultValue={this._unescapeStringArgs(value) || ''}
+        defaultValue={value.replace(/\\\\/g, '\\') || ''}
         placeholder={placeholder}
         onChange={this._handleChange}
         data-encoding={encoding || 'utf8'}
@@ -483,8 +442,8 @@ class TagEditorInternal extends PureComponent<Props, State> {
         showFileIcon
         showFileName
         className="btn btn--clicky btn--super-compact"
-        onChange={path => this._handleChangeFile(path, argIndex)}
-        path={this._unescapeStringArgs(value)}
+        onChange={path => this._updateArg(path, argIndex)}
+        path={value.replace(/\\\\/g, '\\')}
         itemtypes={itemTypes}
         extensions={extensions}
       />
@@ -777,7 +736,13 @@ class TagEditorInternal extends PureComponent<Props, State> {
             Function to Perform
             <select
               ref={this._setSelectRef}
-              onChange={this._handleChangeTag}
+              onChange={async event => {
+                const name = event.currentTarget.value;
+                const tagDefinitions = await templating.getTagDefinitions();
+                const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
+
+                this._update(this.state.tagDefinitions, tagDefinition, null, false);
+              }}
               value={activeTagDefinition ? activeTagDefinition.name : ''}
             >
               {this.state.tagDefinitions.map((tagDefinition, i) => (
@@ -804,7 +769,14 @@ class TagEditorInternal extends PureComponent<Props, State> {
               <input
                 type="text"
                 defaultValue={activeTagData.rawValue}
-                onChange={this._handleChangeCustomArg}
+                onChange={event => {
+                  const { tagDefinitions, activeTagData, activeTagDefinition } = this.state;
+                  const tagData: NunjucksParsedTag | null = clone(activeTagData);
+                  if (tagData) {
+                    tagData.rawValue = event.currentTarget.value;
+                  }
+                  this._update(tagDefinitions, activeTagDefinition, tagData, false);
+                }}
               />
             </label>
           </div>
@@ -819,7 +791,12 @@ class TagEditorInternal extends PureComponent<Props, State> {
                 position: 'relative',
               }}
               className="txt-sm pull-right icon inline-block"
-              onClick={this._handleRefresh}
+              onClick={() => this._update(
+                this.state.tagDefinitions,
+                this.state.activeTagDefinition,
+                this.state.activeTagData,
+                true,
+              )}
             >
               refresh{' '}
               <i
