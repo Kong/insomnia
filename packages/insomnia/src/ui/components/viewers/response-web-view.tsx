@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 
 interface Props {
   body: string;
@@ -9,17 +9,15 @@ interface Props {
 export const ResponseWebView: FC<Props> = ({ webpreferences, body, contentType, url }) => {
   const webviewRef = useRef<Electron.WebviewTag>(null);
 
-  const handleDOMReady = useCallback(() => {
-    const webview = webviewRef.current;
-    if (webview) {
-      webview.removeEventListener('dom-ready', handleDOMReady);
-      const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-      webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
-    }
-  }, [body, contentType, url]);
-
   useEffect(() => {
     const webview = webviewRef.current;
+    const handleDOMReady = () => {
+      if (webview) {
+        webview.removeEventListener('dom-ready', handleDOMReady);
+        const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
+        webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
+      }
+    };
     if (webview) {
       webview.addEventListener('dom-ready', handleDOMReady);
     }
@@ -28,7 +26,7 @@ export const ResponseWebView: FC<Props> = ({ webpreferences, body, contentType, 
         webview.removeEventListener('dom-ready', handleDOMReady);
       }
     };
-  }, [handleDOMReady]);
+  }, [body, contentType, url]);
   return (
     <webview
       data-testid="ResponseWebView"
