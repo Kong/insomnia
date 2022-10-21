@@ -69,12 +69,13 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
   let rawDefaultValue;
   if (!cookie) {
     rawDefaultValue = '';
-  }
-  try {
-    rawDefaultValue = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
-  } catch (err) {
-    console.warn('Failed to parse cookie string', err);
-    rawDefaultValue = '';
+  } else {
+    try {
+      rawDefaultValue = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
+    } catch (err) {
+      console.warn('Failed to parse cookie string', err);
+      rawDefaultValue = '';
+    }
   }
   return (
     <Modal ref={modalRef}>
