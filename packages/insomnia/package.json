@@ -41,7 +41,7 @@
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "2.3.5-5",
+    "@getinsomnia/node-libcurl": "2.3.5-6",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
     "@jest/globals": "^28.1.0",
