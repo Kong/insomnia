@@ -17,6 +17,6 @@ WORKDIR /insomnia
 
 RUN nvm install
 RUN npm run bootstrap
-RUN NODE_OPTIONS="--max-old-space-size=6144" BUILD_TARGETS="rpm" BUILD_DEPS_FROM_SOURCE="true" npm run app-package
+RUN NODE_OPTIONS="--max-old-space-size=6144" BUILD_TARGETS="rpm" BUILD_DEPS_FROM_SOURCE="true" BUILD_TARGET_LABEL="fedora" npm run app-package
 
 ENTRYPOINT [ "bash" ]

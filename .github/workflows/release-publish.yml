@@ -236,7 +236,7 @@ jobs:
         run: |
           docker build --tag fedora-insomnia-builder:latest -f fedora.Dockerfile .
           docker create --name builder fedora-insomnia-builder:latest
-          docker cp builder:/insomnia/packages/insomnia/dist ./artifacts/
+          docker cp builder:/insomnia/packages/insomnia/dist/. ./artifacts/
           docker rm -f builder
 
       - name: Upload artifacts to release

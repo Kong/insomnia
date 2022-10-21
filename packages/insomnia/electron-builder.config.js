@@ -139,12 +139,19 @@ const config = {
   },
 };
 
-const { env: { BUILD_TARGETS, BUILD_DEPS_FROM_SOURCE }, platform } = process;
+const { env: { BUILD_TARGETS, BUILD_DEPS_FROM_SOURCE, BUILD_TARGET_LABEL }, platform } = process;
 const targets = BUILD_TARGETS?.split(',');
+
+// TODO(Filipe): Improve this when we have a better solution for building Fedora
 if (BUILD_DEPS_FROM_SOURCE) {
   config.buildDependenciesFromSource = true;
-  config.linux.artifactName = `${BINARY_PREFIX}-\${version}-fromSource.\${ext}`;
+  let buildFromSourceLabel = 'fromSource';
+  if (BUILD_TARGET_LABEL) {
+    buildFromSourceLabel = `${BUILD_TARGET_LABEL}`;
+  }
+  config.linux.artifactName = `${BINARY_PREFIX}-\${version}-${buildFromSourceLabel}.\${ext}`;
 }
+
 if (platform && targets) {
   console.log('overriding build targets to: ', targets);
   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
