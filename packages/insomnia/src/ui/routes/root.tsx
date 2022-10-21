@@ -1,12 +1,9 @@
-import React, { FC, Fragment, lazy, Suspense, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 import {
-  ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -51,6 +48,7 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
 import { Toast } from '../components/toast';
+import { AppHooks } from '../containers/app-hooks';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcDispatchModalWrapper, GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
@@ -69,50 +67,6 @@ import {
   selectIsFinishedBooting,
   selectIsLoggedIn,
 } from '../redux/selectors';
-import { AppHooks } from './app-hooks';
-
-const lazyWithPreload = <T extends FC<any>>(
-  importFn: () => Promise<{ default: T }>
-) => {
-  const LazyComponent = lazy(importFn);
-  const preload = () => importFn();
-
-  return [LazyComponent, preload] as const;
-};
-
-const [WrapperHome, preloadWrapperHome] = lazyWithPreload(
-  () => import('../components/wrapper-home')
-);
-const [WrapperDebug, preloadWrapperDebug] = lazyWithPreload(
-  () => import('../components/wrapper-debug')
-);
-const [WrapperDesign, preloadWrapperDesign] = lazyWithPreload(
-  () => import('../components/wrapper-design')
-);
-const [WrapperUnitTest, preloadWrapperUnitTest] = lazyWithPreload(
-  () => import('../components/wrapper-unit-test')
-);
-
-preloadWrapperHome();
-preloadWrapperDebug();
-preloadWrapperDesign();
-preloadWrapperUnitTest();
-
-const LoadingIndicator = () => (<div
-  id="app-loading-indicator"
-  style={{
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    width: '100%',
-  }}
->
-  <img src="./ui/images/insomnia-logo.svg" alt="Insomnia" />
-</div>);
 
 const ActivityRouter = () => {
   const selectedActivity = useSelector(selectActiveActivity);
@@ -296,42 +250,7 @@ const App = () => {
               </ErrorBoundary>
             </div>
 
-            <Routes>
-              <Route
-                path="*"
-                element={
-                  <Suspense fallback={<LoadingIndicator />}>
-                    <WrapperHome
-                      vcs={vcs}
-                    />
-                  </Suspense>
-                }
-              />
-              <Route
-                path={ACTIVITY_UNIT_TEST}
-                element={
-                  <Suspense fallback={<LoadingIndicator />}>
-                    <WrapperUnitTest />
-                  </Suspense>
-                }
-              />
-              <Route
-                path={ACTIVITY_SPEC}
-                element={
-                  <Suspense fallback={<LoadingIndicator />}>
-                    <WrapperDesign />
-                  </Suspense>
-                }
-              />
-              <Route
-                path={ACTIVITY_DEBUG}
-                element={
-                  <Suspense fallback={<LoadingIndicator />}>
-                    <WrapperDebug />
-                  </Suspense>
-                }
-              />
-            </Routes>
+            <Outlet />
             <ActivityRouter />
           </ErrorBoundary>
 

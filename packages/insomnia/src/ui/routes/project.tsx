@@ -17,27 +17,27 @@ import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace'
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import { VCS } from '../../sync/vcs/vcs';
+import { AppHeader } from '../components/app-header';
+import { Dropdown } from '../components/base/dropdown/dropdown';
+import { DropdownButton } from '../components/base/dropdown/dropdown-button';
+import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
+import { DropdownItem } from '../components/base/dropdown/dropdown-item';
+import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
+import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
+import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
+import { showPrompt } from '../components/modals';
+import { PageLayout } from '../components/page-layout';
+import { WrapperHomeEmptyStatePane } from '../components/panes/wrapper-home-empty-state-pane';
+import { SvgIcon } from '../components/svg-icon';
+import { Button } from '../components/themed-button';
+import { WorkspaceCard, WorkspaceCardProps } from '../components/workspace-card';
+import { useVCS } from '../hooks/use-vcs';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading, setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import { selectActiveProject, selectApiSpecs, selectDashboardSortOrder, selectIsLoggedIn, selectWorkspaceMetas, selectWorkspacesForActiveProject } from '../redux/selectors';
-import { AppHeader } from './app-header';
-import { Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownDivider } from './base/dropdown/dropdown-divider';
-import { DropdownItem } from './base/dropdown/dropdown-item';
-import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
-import { ProjectDropdown } from './dropdowns/project-dropdown';
-import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { showPrompt } from './modals';
-import { PageLayout } from './page-layout';
-import { WrapperHomeEmptyStatePane } from './panes/wrapper-home-empty-state-pane';
-import { SvgIcon } from './svg-icon';
-import { Button } from './themed-button';
-import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 
 const CreateButton = styled(Button).attrs({
   variant: 'contained',
@@ -53,10 +53,6 @@ const CardContainer = styled.div({
   flexWrap: 'wrap',
   paddingTop: 'var(--padding-md)',
 });
-
-interface Props {
-  vcs: VCS | null;
-}
 
 function orderDashboardCards(orderBy: DashboardSortOrder) {
   return (cardA: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>, cardB: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>) => {
@@ -150,7 +146,7 @@ const mapWorkspaceToWorkspaceCard = ({
   };
 };
 
-const WrapperHome: FC<Props> = (({ vcs }) => {
+const WrapperHome: FC = (() => {
   const sortOrder = useSelector(selectDashboardSortOrder);
   const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -158,7 +154,7 @@ const WrapperHome: FC<Props> = (({ vcs }) => {
   const apiSpecs = useSelector(selectApiSpecs);
   const workspaceMetas = useSelector(selectWorkspaceMetas);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
-
+  const vcs = useVCS({});
   const dispatch = useDispatch();
 
   const [filter, setFilter] = useState('');

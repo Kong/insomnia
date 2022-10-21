@@ -9,16 +9,16 @@ import { database } from '../../common/database';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
+import { CodeEditor, UnconnectedCodeEditor } from '../components/codemirror/code-editor';
+import { DesignEmptyState } from '../components/design-empty-state';
+import { ErrorBoundary } from '../components/error-boundary';
+import { Notice, NoticeTable } from '../components/notice-table';
+import { PageLayout } from '../components/page-layout';
+import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
+import { WorkspacePageHeader } from '../components/workspace-page-header';
 import { superFaint } from '../css/css-in-js';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { selectActiveApiSpec } from '../redux/selectors';
-import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
-import { DesignEmptyState } from './design-empty-state';
-import { ErrorBoundary } from './error-boundary';
-import { Notice, NoticeTable } from './notice-table';
-import { PageLayout } from './page-layout';
-import { SpecEditorSidebar } from './spec-editor/spec-editor-sidebar';
-import { WorkspacePageHeader } from './workspace-page-header';
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
