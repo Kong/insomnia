@@ -1,10 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
-import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { CodeEditor, CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
+import { CodeEditor,  CodeEditorHandle, CodeEditorOnChange } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -36,7 +35,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class OneLineEditor extends PureComponent<Props, State> {
-  _editor: UnconnectedCodeEditor | null = null;
+  _editor: CodeEditorHandle | null = null;
   _input: HTMLInputElement | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
@@ -114,30 +113,28 @@ export class OneLineEditor extends PureComponent<Props, State> {
     }
   }
 
-  componentDidMount() {
-    document.body.addEventListener('mousedown', this._handleDocumentMousedown);
-  }
+  // componentDidMount() {
+  //   document.body.addEventListener('mousedown', this._handleDocumentMousedown);
+  // }
 
-  componentWillUnmount() {
-    document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
-  }
+  // componentWillUnmount() {
+  //   document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
+  // }
 
-  _handleDocumentMousedown(event: MouseEvent) {
-    if (!this._editor) {
-      return;
-    }
+  // _handleDocumentMousedown(event: MouseEvent) {
+  //   if (!this._editor) {
+  //     return;
+  //   }
 
-    // Clear the selection if mousedown happens outside the input so we act like
-    // a regular <input>
-    // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
-    const node = ReactDOM.findDOMNode(this._editor);
-    // @ts-expect-error -- TSCONVERSION
-    const clickWasOutsideOfComponent = !node.contains(event.target);
+  //   // Clear the selection if mousedown happens outside the input so we act like
+  //   // a regular <input>
+  //   // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
+  //   const clickWasOutsideOfComponent = !this._editor.contains(event?.target);
 
-    if (clickWasOutsideOfComponent) {
-      this._editor?.clearSelection();
-    }
-  }
+  //   if (clickWasOutsideOfComponent) {
+  //     this._editor?.clearSelection();
+  //   }
+  // }
 
   _handleInputDragEnter() {
     this._convertToEditorPreserveFocus();
@@ -324,7 +321,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(editor: UnconnectedCodeEditor) {
+  _setEditorRef(editor: CodeEditorHandle) {
     this._editor = editor;
   }
 

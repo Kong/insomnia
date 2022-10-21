@@ -1,6 +1,4 @@
-import { CodeEditorProps } from './code-editor';
-
-export const shouldIndentWithTabs = ({ mode, indentWithTabs }: Pick<CodeEditorProps, 'mode' | 'indentWithTabs'>) => {
+export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
   // YAML is not valid when indented with Tabs
   const isYaml = mode?.includes('yaml') || false;
 

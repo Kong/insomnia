@@ -1,6 +1,5 @@
 import './base-imports';
 
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
@@ -11,13 +10,11 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { Component, CSSProperties, forwardRef, ForwardRefRenderFunction, ReactNode, useRef } from 'react';
+import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
 
 import {
-  AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
   isMac,
 } from '../../../common/constants';
@@ -97,7 +94,7 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 
 export type CodeEditorOnChange = (value: string) => void;
 
-interface RawProps {
+export interface CodeEditorProps {
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.Editor) => void;
   onFocus?: (event: FocusEvent) => void;
@@ -143,355 +140,233 @@ interface RawProps {
   jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
   raw?: boolean;
-}
-
-interface FCProps {
   enableNunjucks?: boolean;
   ignoreEditorFontSettings?: boolean;
 }
 
-const useDerivedProps = ({ enableNunjucks, ignoreEditorFontSettings }: FCProps) => {
+const _normalizeMode = (mode?: string) => {
+  const mimeType = mode ? mode.split(';')[0] : 'text/plain';
+  if (mimeType.includes('graphql-variables')) {
+    return 'graphql-variables';
+  } else if (mimeType.includes('graphql')) {
+    // Because graphQL plugin doesn't recognize application/graphql content-type
+    return 'graphql';
+  } else if (mimeType.includes('json')) {
+    return 'application/json';
+  } else if (mimeType.includes('clojure')) {
+    return 'application/edn';
+  } else if (mimeType.includes('xml')) {
+    return 'application/xml';
+  } else if (mimeType.includes('kotlin')) {
+    return 'text/x-kotlin';
+  } else if (mimeType.includes('yaml')) {
+    // code-mirror doesn't recognize text/yaml or application/yaml
+    // as a valid mime-type
+    return 'yaml';
+  } else {
+    return mimeType;
+  }
+};
+export interface CodeEditorHandle {
+  setValue: (value: string) => void;
+  getValue: () => string;
+  setCursor: (ch: number, line: number) => void;
+  setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
+  scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
+  getSelectionStart: () => void;
+  getSelectionEnd: () => void;
+  selectAll: () => void;
+  focus: () => void;
+  focusEnd: () => void;
+  hasFocus: () => boolean;
+  setAttribute: (name: string, value: string) => void;
+  removeAttribute: (name: string) => void;
+  getAttribute: (name: string) => void;
+  clearSelection: () => void;
+}
+export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>((props, ref) => {
+  const {
+    id,
+    readOnly,
+    mode,
+    filterHistory,
+    onMouseLeave,
+    onClick,
+    className,
+    dynamicHeight,
+    style,
+    type,
+    raw,
+    updateFilter,
+    manualPrettify,
+    autoPrettify,
+    uniquenessKey,
+    defaultValue,
+    onChange,
+    lintOptions,
+    ignoreEditorFontSettings,
+    enableNunjucks,
+  } = props;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+  const [filter, setFilter] = useState('');
+  const [originalCode, setOriginalCode] = useState('');
+  const settings = useSelector(selectSettings);
+
   const {
     handleRender,
     handleGetRenderContext,
   } = useGatedNunjucks({ disabled: !enableNunjucks });
 
-  const {
-    hotKeyRegistry,
-    autocompleteDelay,
-    editorFontSize,
-    editorIndentSize,
-    editorKeyMap,
-    editorLineWrapping,
-    editorIndentWithTabs,
-    nunjucksPowerUserMode,
-    showVariableSourceAndValue,
-  } = useSelector(selectSettings);
-
-  return {
-    render: handleRender,
-    getRenderContext: handleGetRenderContext,
-    hotKeyRegistry,
-    autocompleteDelay,
-    fontSize: ignoreEditorFontSettings ? undefined : editorFontSize,
-    indentSize: ignoreEditorFontSettings ? undefined : editorIndentSize,
-    keyMap: editorKeyMap,
-    lineWrapping: ignoreEditorFontSettings ? undefined : editorLineWrapping,
-    indentWithTabs: ignoreEditorFontSettings ? undefined : editorIndentWithTabs,
-    nunjucksPowerUserMode,
-    showVariableSourceAndValue,
-  };
-};
-
-const CodeEditorFCWithRef: ForwardRefRenderFunction<UnconnectedCodeEditor, RawProps & FCProps> = (
-  { enableNunjucks, ignoreEditorFontSettings, ...rawProps },
-  ref
-) => {
-  const editorRef = useRef<UnconnectedCodeEditor | null>(null);
   useDocBodyKeyboardShortcuts({
-    beautifyRequestBody: () => editorRef.current?._prettify(),
+    beautifyRequestBody: () => {
+      const canPrettify = mode && (mode.includes('json') || mode.includes('xml'));
+      if (canPrettify) {
+        const code = codeMirror.current?.getValue();
+        _codemirrorSetValue(code, canPrettify);
+      }
+    },
   });
 
-  const derivedProps = useDerivedProps({ enableNunjucks, ignoreEditorFontSettings });
+  useEffect(() => {
+    _codemirrorSetOptions();
 
-  return <UnconnectedCodeEditor
-    ref={editor => {
-      if (typeof ref === 'function') {
-        ref(editor);
-      } else if (typeof ref === 'object' && ref) {
-        ref.current = editor;
+    // if (_uniquenessKey && _uniquenessKey !== _previousUniquenessKey) {
+    //   _codemirrorSetValue(defaultValue);
+
+    //   _restoreState();
+    // }
+    return () => {
+      if (codeMirror.current) {
+        codeMirror.current?.toTextArea();
+        codeMirror.current?.closeHintDropdown();
       }
-
-      editorRef.current = editor;
-    }}
-    {...rawProps}
-    {...derivedProps}
-  />;
-};
-
-export const CodeEditor = forwardRef(CodeEditorFCWithRef);
-
-export type CodeEditorProps = RawProps & ReturnType<typeof useDerivedProps>;
-
-interface State {
-  filter: string;
-}
-
-function isMarkerRange(mark?: CodeMirror.Position | CodeMirror.MarkerRange): mark is CodeMirror.MarkerRange {
-  if (!mark) {
-    return false;
-  }
-
-  return Object.prototype.hasOwnProperty.call(mark, 'from');
-}
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
-  private _uniquenessKey?: string;
-  private _previousUniquenessKey?: string;
-  private _originalCode: string;
-  codeMirror?: CodeMirror.EditorFromTextArea;
-  private _filterInput?: HTMLInputElement;
-  private _autocompleteDebounce: NodeJS.Timeout | null = null;
-  private _filterTimeout: NodeJS.Timeout | null = null;
-
-  constructor(props: CodeEditorProps) {
-    super(props);
-    this.state = {
-      filter: props.filter || '',
     };
-    this._originalCode = '';
-    this._uniquenessKey = this.props.uniquenessKey;
-    this._previousUniquenessKey = 'n/a';
+  }, []);
+  if (textAreaRef.current) {
+    _handleInitTextarea(textAreaRef.current);
   }
-
-  componentWillUnmount() {
-    if (this.codeMirror) {
-      this.codeMirror.toTextArea();
-      this.codeMirror.closeHintDropdown();
-    }
-  }
-
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: CodeEditorProps) {
-    this._uniquenessKey = nextProps.uniquenessKey;
-    this._previousUniquenessKey = this.props.uniquenessKey;
-    // Sync the filter too
-    this.setState({
-      filter: nextProps.filter || '',
-    });
-  }
-
-  componentDidUpdate() {
-    this._codemirrorSetOptions();
-
-    const { defaultValue } = this.props;
-
-    if (this._uniquenessKey && this._uniquenessKey !== this._previousUniquenessKey) {
-      this._codemirrorSetValue(defaultValue);
-
-      this._restoreState();
-    }
-  }
-
-  shouldComponentUpdate(nextProps: CodeEditorProps) {
-    // Update if any properties changed, except value. We ignore value.
-    for (const key of Object.keys(nextProps) as (keyof CodeEditorProps)[]) {
-      if (key === 'defaultValue') {
-        continue;
+  useImperativeHandle(ref, () => ({
+    setValue: value => {
+      if (codeMirror.current) {
+        codeMirror.current?.setValue(value);
       }
-
-      if (this.props[key] !== nextProps[key]) {
-        return true;
+    },
+    getValue: () => {
+      if (codeMirror.current) {
+        return codeMirror.current?.getValue();
       }
-    }
-
-    return false;
-  }
-
-  selectAll() {
-    if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        {
-          line: 0,
-          ch: 0,
-        },
-        {
-          line: this.codeMirror.lineCount(),
-          ch: 0,
-        },
-      );
-    }
-  }
-
-  focus() {
-    if (this.codeMirror) {
-      this.codeMirror.focus();
-    }
-  }
-
-  refresh() {
-    if (this.codeMirror) {
-      this.codeMirror.refresh();
-    }
-  }
-
-  setCursor(ch: number, line = 0) {
-    if (this.codeMirror) {
-      if (!this.hasFocus()) {
-        this.focus();
-      }
-
-      this.codeMirror.setCursor({
-        line,
-        ch,
-      });
-    }
-  }
-
-  setSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
-    if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        {
-          line: lineStart,
-          ch: chStart,
-        },
-        {
-          line: lineEnd,
-          ch: chEnd,
-        },
-      );
-      this.codeMirror.scrollIntoView({
-        line: lineStart,
-        ch: chStart,
-      });
-    }
-  }
-
-  scrollToSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
-    const selectionFocusPos = window.innerHeight / 2 - 100;
-
-    if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        {
-          line: lineStart,
-          ch: chStart,
-        },
-        {
-          line: lineEnd,
-          ch: chEnd,
-        },
-      );
-      this.codeMirror.scrollIntoView(
-        {
-          line: lineStart,
-          ch: chStart,
-        }, // If sizing permits, position selection just above center
-        selectionFocusPos,
-      );
-    }
-  }
-
-  getSelectionStart() {
-    if (!this.codeMirror) {
-      return null;
-    }
-
-    const selections = this.codeMirror.listSelections();
-
-    if (selections.length) {
-      return selections[0].anchor.ch;
-    } else {
-      return 0;
-    }
-  }
-
-  getSelectionEnd() {
-    if (!this.codeMirror) {
-      return null;
-    }
-
-    const selections = this.codeMirror.listSelections();
-
-    if (selections.length) {
-      return selections[0].head.ch;
-    } else {
-      return 0;
-    }
-  }
-
-  focusEnd() {
-    if (!this.codeMirror) {
-      return;
-    }
-
-    if (!this.hasFocus()) {
-      this.focus();
-    }
-
-    const doc = this.codeMirror.getDoc();
-    doc.setCursor(doc.lineCount(), 0);
-  }
-
-  hasFocus() {
-    if (this.codeMirror) {
-      return this.codeMirror.hasFocus();
-    } else {
-      return false;
-    }
-  }
-
-  setAttribute(name: string, value: string) {
-    if (!this.codeMirror) {
-      return;
-    }
-
-    this.codeMirror.getTextArea().parentElement?.setAttribute(name, value);
-  }
-
-  removeAttribute(name: string) {
-    if (!this.codeMirror) {
-      return;
-    }
-
-    this.codeMirror.getTextArea().parentElement?.removeAttribute(name);
-  }
-
-  getAttribute(name: string) {
-    if (!this.codeMirror) {
-      return;
-    }
-
-    this.codeMirror.getTextArea().parentElement?.getAttribute(name);
-  }
-
-  clearSelection() {
-    if (!this.codeMirror) {
-      return;
-    }
-
-    // Never do this if dropdown is open
-    if (this.codeMirror?.isHintDropdownActive()) {
-      return;
-    }
-
-    this.codeMirror.setSelection(
-      {
-        line: -1,
-        ch: -1,
-      },
-      {
-        line: -1,
-        ch: -1,
-      },
-      {
-        scroll: false,
-      },
-    );
-  }
-
-  getValue() {
-    if (this.codeMirror) {
-      return this.codeMirror.getValue();
-    } else {
       return '';
-    }
-  }
+    },
+    selectAll: () => {
+      if (codeMirror.current) {
+        codeMirror.current.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 });
+      }
+    },
+    focus: () => {
+      if (codeMirror.current) {
+        codeMirror.current.focus();
+      }
+    },
+    refresh: () => {
+      if (codeMirror.current) {
+        codeMirror.current.refresh();
+      }
+    },
+    setCursor: (ch, line = 0) => {
+      if (codeMirror.current) {
+        if (!codeMirror.current.hasFocus()) {
+          focus();
+        }
+        codeMirror.current.setCursor({ line, ch });
+      }
+    },
+    setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
+      if (codeMirror.current) {
+        codeMirror.current.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd },);
+        codeMirror.current.scrollIntoView({ line: lineStart, ch: chStart });
+      }
+    },
+    scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
+      const selectionFocusPos = window.innerHeight / 2 - 100;
+      if (codeMirror.current) {
+        codeMirror.current.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd },);
+        // If sizing permits, position selection just above center
+        codeMirror.current.scrollIntoView({ line: lineStart, ch: chStart }, selectionFocusPos,);
+      }
+    },
+    getSelectionStart: () => {
+      if (!codeMirror.current) {
+        return null;
+      }
+      const selections = codeMirror.current.listSelections();
+      if (selections.length) {
+        return selections[0].anchor.ch;
+      } else {
+        return 0;
+      }
+    },
+    getSelectionEnd: () => {
+      if (!codeMirror.current) {
+        return null;
+      }
+      const selections = codeMirror.current.listSelections();
+      if (selections.length) {
+        return selections[0].head.ch;
+      } else {
+        return 0;
+      }
+    },
+    focusEnd: () => {
+      if (codeMirror.current) {
+        if (!codeMirror.current.hasFocus()) {
+          focus();
+        }
+        const doc = codeMirror.current.getDoc();
+        doc.setCursor(doc.lineCount(), 0);
+      }
+    },
+    hasFocus: () => {
+      if (codeMirror.current) {
+        return codeMirror.current.hasFocus();
+      } else {
+        return false;
+      }
+    },
+    setAttribute: (name: string, value: string) => {
+      if (codeMirror.current) {
+        codeMirror.current.getTextArea().parentElement?.setAttribute(name, value);
+      }
+    },
+    removeAttribute: (name: string) => {
+      if (codeMirror.current) {
+        codeMirror.current.getTextArea().parentElement?.removeAttribute(name);
+      }
+    },
+    getAttribute: (name: string) => {
+      if (codeMirror.current) {
+        codeMirror.current.getTextArea().parentElement?.getAttribute(name);
+      }
+    },
+    clearSelection: () => {
+      if (codeMirror.current && !codeMirror.current?.isHintDropdownActive()) {
+        codeMirror.current.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false },);
+      }
+    },
+  }), []);
 
-  _persistState() {
-    const { uniquenessKey } = this.props;
-
-    if (!uniquenessKey || !this.codeMirror) {
+  function _persistState() {
+    if (!uniquenessKey || !codeMirror.current) {
       return;
     }
 
-    const marks = this.codeMirror
+    const marks = codeMirror.current
       .getAllMarks()
       .filter(mark => mark.__isFold)
       .map((mark): Partial<CodeMirror.MarkerRange> => {
         const result = mark.find();
-
-        if (isMarkerRange(result)) {
+        if (result && 'from' in result) {
           return result;
         }
 
@@ -502,435 +377,18 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       });
 
     editorStates[uniquenessKey] = {
-      scroll: this.codeMirror.getScrollInfo(),
-      selections: this.codeMirror.listSelections(),
-      cursor: this.codeMirror.getCursor(),
-      history: this.codeMirror.getHistory(),
+      scroll: codeMirror.current.getScrollInfo(),
+      selections: codeMirror.current.listSelections(),
+      cursor: codeMirror.current.getCursor(),
+      history: codeMirror.current.getHistory(),
       marks,
     };
   }
-
-  _restoreState() {
-    const { uniquenessKey } = this.props;
-
-    if (uniquenessKey === undefined) {
-      return;
-    }
-    if (!editorStates.hasOwnProperty(uniquenessKey)) {
-      return;
-    }
-    if (!this.codeMirror) {
-      return;
-    }
-
-    const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
-    this.codeMirror.scrollTo(scroll.left, scroll.top);
-    this.codeMirror.setHistory(history);
-    // NOTE: These won't be visible unless the editor is focused
-    this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
-    this.codeMirror.setSelections(selections, undefined, { scroll: false });
-
-    // Restore marks one-by-one
-    for (const { from, to } of marks || []) {
-      // @ts-expect-error -- type unsoundness
-      this.codeMirror.foldCode(from, to);
-    }
-  }
-
-  _setFilterInputRef(filterInput: HTMLInputElement) {
-    this._filterInput = filterInput;
-  }
-
-  _handleInitTextarea(textarea: HTMLTextAreaElement) {
-    if (!textarea) {
-      // Not mounted
-      return;
-    }
-
-    if (this.codeMirror) {
-      // Already initialized
-      return;
-    }
-
-    const foldOptions: CodeMirror.EditorConfiguration['foldOptions'] = {
-      widget: (from, to) => {
-        let count;
-        // Get open / close token
-        let startToken = '{';
-        let endToken = '}';
-        // Prevent retrieving an invalid content if undefined
-        if (!from?.line || !to?.line) {
-          return '\u2194';
-        }
-        const prevLine = this.codeMirror?.getLine(from.line);
-        if (!prevLine) {
-          return '\u2194';
-        }
-
-        if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
-          startToken = '[';
-          endToken = ']';
-        }
-
-        // Get json content
-        const internal = this.codeMirror?.getRange(from, to);
-        const toParse = startToken + internal + endToken;
-
-        // Get key count
-        try {
-          const parsed = JSON.parse(toParse);
-          count = Object.keys(parsed).length;
-        } catch (error) { }
-
-        return count ? `\u21A4 ${count} \u21A6` : '\u2194';
-      },
-    };
-    const { defaultValue, debounceMillis: ms } = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(textarea, {
-      ...BASE_CODEMIRROR_OPTIONS,
-      foldOptions,
-    });
-    // Set default listeners
-    const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
-    this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-    this.codeMirror.on('keydown', this._codemirrorKeyDown);
-    this.codeMirror.on('keyup', this._codemirrorTriggerCompletionKeyUp);
-    this.codeMirror.on('endCompletion', this._codemirrorEndCompletion);
-    this.codeMirror.on('focus', this._codemirrorFocus);
-    this.codeMirror.on('blur', this._codemirrorBlur);
-    this.codeMirror.on('paste', (_, event) => this.props.onPaste?.(event));
-    this.codeMirror.on('scroll', this._codemirrorScroll);
-    this.codeMirror.on('fold', this._codemirrorToggleFold);
-    this.codeMirror.on('unfold', this._codemirrorToggleFold);
-    this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
-    // Prevent these things if we're type === "password"
-    this.codeMirror.on('copy', this._codemirrorPreventWhenTypePassword);
-    this.codeMirror.on('cut', this._codemirrorPreventWhenTypePassword);
-    this.codeMirror.on('dragstart', this._codemirrorPreventWhenTypePassword);
-    this.codeMirror.setCursor({
-      line: -1,
-      ch: -1,
-    });
-
-    let extraKeys = BASE_CODEMIRROR_OPTIONS.extraKeys;
-    extraKeys = extraKeys && typeof extraKeys !== 'string' ? extraKeys : {};
-
-    this.codeMirror.setOption('extraKeys', {
-      ...extraKeys,
-      Tab: cm => {
-        // Indent with tabs or spaces
-        // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
-        if (cm.somethingSelected()) {
-          cm.indentSelection('add');
-        } else {
-          cm.replaceSelection(this._indentChars(), 'end');
-        }
-      },
-    });
-
-    // Set editor options
-    this._codemirrorSetOptions();
-
-    const setup = () => {
-      // Actually set the value
-      this._codemirrorSetValue(defaultValue || '');
-
-      // Clear history so we can't undo the initial set
-      this.codeMirror?.clearHistory();
-
-      // Setup nunjucks listeners
-      // TODO: we shouldn't need to set setup nunjucks if we're in readonly mode
-      if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror?.enableNunjucksTags(
-          this.props.render,
-          this.props.getRenderContext,
-          this.props.showVariableSourceAndValue,
-        );
-      }
-
-      // Make URLs clickable
-      if (this.props.onClickLink) {
-        this.codeMirror?.makeLinksClickable(this.props.onClickLink);
-      }
-
-      // HACK: Refresh because sometimes it renders too early and the scroll doesn't quite fit.
-      setTimeout(() => {
-        this.codeMirror?.refresh();
-      }, 100);
-
-      // Restore the state
-      this._restoreState();
-    };
-
-    // Do this a bit later for big values so we don't block the render process
-    if (defaultValue && defaultValue.length > 10000) {
-      setTimeout(setup, 100);
-    } else {
-      setup();
-    }
-
-    if (this.props.onCodeMirrorInit) {
-      this.props.onCodeMirrorInit(this.codeMirror);
-    }
-
-    // NOTE: Start listening to cursor after everything because it seems to fire
-    // immediately for some reason
-    this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
-  }
-
-  static _isJSON(mode?: string) {
-    if (!mode) {
-      return false;
-    }
-
-    return mode.indexOf('json') !== -1;
-  }
-
-  static _isYAML(mode?: string) {
-    if (!mode) {
-      return false;
-    }
-
-    return mode.indexOf('yaml') !== -1;
-  }
-
-  static _isXML(mode?: string) {
-    if (!mode) {
-      return false;
-    }
-
-    return mode.indexOf('xml') !== -1;
-  }
-
-  _indentChars() {
-    return this.codeMirror?.getOption('indentWithTabs')
-      ? '\t'
-      : new Array((this.codeMirror?.getOption?.('indentUnit') || 0) + 1).join(' ');
-  }
-
-  _prettify() {
-    const canPrettify = this._canPrettify();
-    if (!canPrettify) {
-      return;
-    }
-
-    const code = this.codeMirror?.getValue();
-    this._codemirrorSetValue(code, canPrettify);
-  }
-
-  _prettifyJSON(code: string) {
-    try {
-      let jsonString = code;
-
-      if (this.props.updateFilter && this.state.filter) {
-        try {
-          const codeObj = JSON.parse(code);
-          const results = JSONPath({ json: codeObj, path: this.state.filter.trim() });
-          jsonString = JSON.stringify(results);
-        } catch (err) {
-          console.log('[jsonpath] Error: ', err);
-          jsonString = '[]';
-        }
-      }
-
-      return jsonPrettify(jsonString, this._indentChars(), this.props.autoPrettify);
-    } catch (error) {
-      // That's Ok, just leave it
-      return code;
-    }
-  }
-
-  _prettifyXML(code: string) {
-    if (this.props.updateFilter && this.state.filter) {
-      try {
-        const results = queryXPath(code, this.state.filter);
-        code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
-      } catch (err) {
-        // Failed to parse filter (that's ok)
-        code = `<error>${err.message}</error>`;
-      }
-    }
-
-    try {
-      return vkBeautify.xml(code, this._indentChars());
-    } catch (error) {
-      // Failed to parse so just return original
-      return code;
-    }
-  }
-
-  /**
-   * Sets options on the CodeMirror editor while also sanitizing them
-   */
-  async _codemirrorSetOptions() {
-    const {
-      mode: rawMode,
-      autoCloseBrackets,
-      autocompleteDelay,
-      dynamicHeight,
-      getAutocompleteConstants,
-      getAutocompleteSnippets,
-      getRenderContext,
-      hideGutters,
-      hideLineNumbers,
-      hideScrollbars,
-      hintOptions,
-      hotKeyRegistry,
-      indentSize,
-      indentWithTabs,
-      infoOptions,
-      jumpOptions,
-      keyMap,
-      lineWrapping,
-      lintOptions,
-      noDragDrop,
-      noLint,
-      noMatchBrackets,
-      noStyleActiveLine,
-      placeholder,
-      readOnly,
-      tabIndex,
-    } = this.props;
-    let mode: EditorConfiguration['mode'];
-
-    if (this.props.render) {
-      mode = {
-        name: 'nunjucks',
-        baseMode: UnconnectedCodeEditor._normalizeMode(rawMode),
-      };
-    } else {
-      // foo bar baz
-      mode = UnconnectedCodeEditor._normalizeMode(rawMode);
-    }
-
-    const options: CodeMirror.EditorConfiguration = {
-      readOnly: !!readOnly,
-      placeholder: placeholder || '',
-      mode: mode,
-      tabindex: typeof tabIndex === 'number' ? tabIndex : undefined,
-      dragDrop: !noDragDrop,
-      scrollbarStyle: hideScrollbars ? 'null' : 'native',
-      styleActiveLine: !noStyleActiveLine,
-      lineNumbers: !hideGutters && !hideLineNumbers,
-      foldGutter: !hideGutters && !hideLineNumbers,
-      lineWrapping: lineWrapping,
-      indentWithTabs: shouldIndentWithTabs({ mode: rawMode, indentWithTabs }),
-      matchBrackets: !noMatchBrackets,
-      lint: !noLint && !readOnly,
-      gutters: [],
-    };
-
-    // Only set keyMap if we're not read-only. This is so things like
-    // ctrl-a work on read-only mode.
-    if (!readOnly && keyMap) {
-      options.keyMap = keyMap;
-    }
-
-    if (indentSize) {
-      options.tabSize = indentSize;
-      options.indentUnit = indentSize;
-    }
-
-    if (options.gutters && !hideGutters) {
-      if (options.lint) {
-        options.gutters.push('CodeMirror-lint-markers');
-      }
-
-      if (options.lineNumbers) {
-        options.gutters.push('CodeMirror-linenumbers');
-      }
-    }
-
-    if (!hideGutters && options.foldGutter) {
-      options.gutters?.push('CodeMirror-foldgutter');
-    }
-
-    if (hintOptions) {
-      options.hintOptions = hintOptions;
-    }
-
-    if (infoOptions) {
-      options.info = infoOptions;
-    }
-
-    if (jumpOptions) {
-      options.jump = jumpOptions;
-    }
-
-    if (lintOptions) {
-      options.lint = lintOptions;
-    }
-
-    if (typeof autoCloseBrackets === 'boolean') {
-      options.autoCloseBrackets = autoCloseBrackets;
-    }
-
-    // Setup the hint options
-    if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
-      let getVariables: (() => Promise<CodeMirror.Variable[]>) | undefined;
-      let getTags: (() => Promise<NunjucksParsedTag[]>) | undefined;
-
-      if (getRenderContext) {
-        getVariables = async () => {
-          const context = await getRenderContext();
-          const variables = context ? context.keys : [];
-          return variables || [];
-        };
-
-        // Only allow tags if we have variables too
-        getTags = async () => {
-          const expandedTags: NunjucksParsedTag[] = [];
-
-          for (const tagDef of await getTagDefinitions()) {
-            const firstArg = tagDef.args[0];
-
-            if (!firstArg || firstArg.type !== 'enum') {
-              expandedTags.push(tagDef);
-              continue;
-            }
-
-            for (const option of firstArg.options || []) {
-              const optionName = misc.fnOrString(option.displayName, tagDef.args);
-              const newDef = clone(tagDef);
-              newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
-              newDef.args[0].defaultValue = option.value;
-              expandedTags.push(newDef);
-            }
-          }
-
-          return expandedTags;
-        };
-      }
-
-      options.environmentAutocomplete = {
-        getVariables,
-        getTags,
-        getConstants: getAutocompleteConstants,
-        getSnippets: getAutocompleteSnippets,
-        hotKeyRegistry,
-        autocompleteDelay,
-      };
-    }
-
-    if (dynamicHeight) {
-      options.viewportMargin = Infinity;
-    }
-
-    // Strip of charset if there is one
-    Object.keys(options).map(key =>
-      this._codemirrorSmartSetOption(
-        key as keyof CodeMirror.EditorConfiguration,
-        options[key as keyof CodeMirror.EditorConfiguration]
-      )
-    );
-  }
-
   /**
    * Set option if it's different than in the current Codemirror instance
    */
-  _codemirrorSmartSetOption<K extends keyof CodeMirror.EditorConfiguration>(key: K, value: CodeMirror.EditorConfiguration[K]) {
-    const cm = this.codeMirror;
+  function _codemirrorSmartSetOption<K extends keyof CodeMirror.EditorConfiguration>(key: K, value: CodeMirror.EditorConfiguration[K]) {
+    const cm = codeMirror.current;
     let shouldSetOption = false;
 
     if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
@@ -958,388 +416,577 @@ export class UnconnectedCodeEditor extends Component<CodeEditorProps, State> {
       });
     }
   }
-
-  static _normalizeMode(mode?: string) {
-    const mimeType = mode ? mode.split(';')[0] : 'text/plain';
-
-    if (mimeType.includes('graphql-variables')) {
-      return 'graphql-variables';
-    } else if (mimeType.includes('graphql')) {
-      // Because graphQL plugin doesn't recognize application/graphql content-type
-      return 'graphql';
-    } else if (UnconnectedCodeEditor._isJSON(mimeType)) {
-      return 'application/json';
-    } else if (mimeType.includes('clojure')) {
-      return 'application/edn';
-    } else if (UnconnectedCodeEditor._isXML(mimeType)) {
-      return 'application/xml';
-    } else if (mimeType.includes('kotlin')) {
-      return 'text/x-kotlin';
-    } else if (UnconnectedCodeEditor._isYAML(mimeType)) {
-      // code-mirror doesn't recognize text/yaml or application/yaml
-      // as a valid mime-type
-      return 'yaml';
-    } else {
-      return mimeType;
-    }
-  }
-
-  _codemirrorCursorActivity(instance: CodeMirror.Editor) {
-    if (this.props.onCursorActivity) {
-      this.props.onCursorActivity(instance);
-    }
-  }
-
-  // Fired on every keydown happening on the editor.
-  // If the key is defined in the editor keymap (vim/sublime etc.) it will be handled by the editor unless we define event.codemirrorIgnore = true
-  // @UX-Issue There's no way for the user view the keymap definitions (vim/sublime).
-  // The user defined hotkeys have priority over the editor keymap.
-  async _codemirrorKeyDown(doc: CodeMirror.Editor, event: KeyboardEvent) {
-    // Use default tab behaviour if we're told
-    if (this.props.defaultTabBehavior && event.code === 'Tab') {
-      // @ts-expect-error -- unsound property assignment
-      event.codemirrorIgnore = true;
-    }
-
-    const pressedKeyComb: KeyCombination = {
-      ctrl: event.ctrlKey,
-      alt: event.altKey,
-      shift: event.shiftKey,
-      meta: event.metaKey,
-      keyCode: event.keyCode,
-    };
-
-    const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, this.props.hotKeyRegistry);
-    const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
-      'showAutocomplete': this.props.hotKeyRegistry.showAutocomplete,
-    });
-    const isEscapeKey = event.code === 'Escape';
-
-    // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
-    if (isUserDefinedKeyboardShortcut && !isCodeEditorAutoCompleteBinding) {
-      // @ts-expect-error -- unsound property assignment
-      event.codemirrorIgnore = true;
-    // Stop the editor from handling the escape key
-    } else if (isEscapeKey) {
-      // @ts-expect-error -- unsound property assignment
-      event.codemirrorIgnore = true;
-    } else {
-      event.stopPropagation();
-    }
-
-    if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
-      this.props.onKeyDown(event, doc.getValue());
-    }
-  }
-
-  _codemirrorEndCompletion() {
-    if (this._autocompleteDebounce !== null) {
-      clearTimeout(this._autocompleteDebounce);
-    }
-  }
-
-  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.Editor, event: KeyboardEvent) {
-    // Enable graphql completion if we're in that mode
-    if (doc.getOption('mode') === 'graphql') {
-      // Only operate on one-letter keys. This will filter out
-      // any special keys (Backspace, Enter, etc)
-      if (event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1) {
-        return;
-      }
-
-      if (this._autocompleteDebounce !== null) {
-        clearTimeout(this._autocompleteDebounce);
-      }
-
-      // You don't want to re-trigger the hint dropdown if it's already open
-      // for other reasons, like forcing its display with Ctrl+Space
-      if (this.codeMirror?.isHintDropdownActive()) {
-        return;
-      }
-
-      this._autocompleteDebounce = setTimeout(() => {
-        doc.execCommand('autocomplete');
-      }, 700);
-    }
-  }
-
-  _codemirrorFocus(_doc: CodeMirror.Editor, event: FocusEvent) {
-    this.props.onFocus?.(event);
-  }
-
-  _codemirrorBlur(_doc: CodeMirror.Editor, event: FocusEvent) {
-    this._persistState();
-
-    this.props.onBlur?.(event);
-  }
-
-  _codemirrorScroll() {
-    this._persistState();
-  }
-
-  _codemirrorToggleFold() {
-    this._persistState();
-  }
-
-  _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: Event) {
-    event.stopPropagation();
-  }
-
-  _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
-    const value = this.codeMirror?.getDoc().getValue();
-
-    // If we're in single-line mode, merge all changed lines into one
-    if (this.props.singleLine && change.text && change.text.length > 1) {
-      const text = change.text
-        .join('') // join all changed lines into one
-        .replace(/\n/g, ' ');
-      // Convert all whitespace to spaces
-      change.update?.(change.from, change.to, [text]);
-    }
-
-    // Don't allow non-breaking spaces because they break the GraphQL syntax
-    if (doc.getOption('mode') === 'graphql' && change.text.length > 0) {
-      const text = change.text.map(normalizeIrregularWhitespace);
-
-      change.update?.(change.from, change.to, text);
-    }
-
-    // Suppress lint on empty doc or single space exists (default value)
-    if (value?.trim() === '') {
-      this._codemirrorSmartSetOption('lint', false);
-    } else {
-      this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
-    }
-  }
-
-  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.Editor, event: Event) {
-    const { type } = this.props;
-
-    if (type && type.toLowerCase() === 'password') {
-      event.preventDefault();
-    }
-  }
-
-  /**
-   * Wrapper function to add extra behaviour to our onChange event
-   */
-  _codemirrorValueChanged() {
-    if (!this.props.onChange) {
+  function _handleInitTextarea(textarea: HTMLTextAreaElement) {
+    if (!textarea) {
+      // Not mounted
       return;
     }
 
-    const value = this.codeMirror?.getDoc().getValue() || '';
-    // Disable linting if the document reaches a maximum size or is empty
-    const isOverMaxSize = value.length > MAX_SIZE_FOR_LINTING;
-    const shouldLint = isOverMaxSize || value.length === 0 ? false : !this.props.noLint;
-
-    const existingLint = this.codeMirror?.getOption('lint') || false;
-
-    if (shouldLint !== existingLint) {
-      const { lintOptions } = this.props;
-      const lint = shouldLint ? lintOptions || true : false;
-      this._codemirrorSmartSetOption('lint', lint);
+    if (codeMirror.current) {
+      // Already initialized
+      return;
     }
 
-    this.props.onChange(value);
+    codeMirror.current = CodeMirror.fromTextArea(textarea, {
+      ...BASE_CODEMIRROR_OPTIONS,
+      foldOptions: {
+        widget: (from, to) => {
+          let count;
+          // Get open / close token
+          let startToken = '{';
+          let endToken = '}';
+          // Prevent retrieving an invalid content if undefined
+          if (!from?.line || !to?.line) {
+            return '\u2194';
+          }
+          const prevLine = codeMirror.current?.getLine(from.line);
+          if (!prevLine) {
+            return '\u2194';
+          }
+          if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
+            startToken = '[';
+            endToken = ']';
+          }
+          // Get json content
+          const internal = codeMirror.current?.getRange(from, to);
+          const toParse = startToken + internal + endToken;
+          // Get key count
+          try {
+            const parsed = JSON.parse(toParse);
+            count = Object.keys(parsed).length;
+          } catch (error) { }
+          return count ? `\u21A4 ${count} \u21A6` : '\u2194';
+        },
+      },
+    });
+    // Set default listeners
+    codeMirror.current.on('beforeChange', (doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
+      const value = codeMirror.current?.getDoc().getValue();
+
+      // If we're in single-line mode, merge all changed lines into one
+      if (props.singleLine && change.text && change.text.length > 1) {
+        const text = change.text
+          .join('') // join all changed lines into one
+          .replace(/\n/g, ' ');
+        // Convert all whitespace to spaces
+        change.update?.(change.from, change.to, [text]);
+      }
+
+      // Don't allow non-breaking spaces because they break the GraphQL syntax
+      if (doc.getOption('mode') === 'graphql' && change.text.length > 0) {
+        const text = change.text.map(normalizeIrregularWhitespace);
+
+        change.update?.(change.from, change.to, text);
+      }
+
+      // Suppress lint on empty doc or single space exists (default value)
+      if (value?.trim() === '') {
+        _codemirrorSmartSetOption('lint', false);
+      } else {
+        _codemirrorSmartSetOption('lint', props.lintOptions || true);
+      }
+    });
+    codeMirror.current.on('changes', misc.debounce(() => {
+      if (!onChange) {
+        return;
+      }
+      const value = codeMirror.current?.getDoc().getValue() || '';
+      // Disable linting if the document reaches a maximum size or is empty
+      const isOverMaxSize = value.length > MAX_SIZE_FOR_LINTING;
+      const shouldLint = isOverMaxSize || value.length === 0 ? false : !props.noLint;
+      const existingLint = codeMirror.current?.getOption('lint') || false;
+      if (shouldLint !== existingLint) {
+        const lint = shouldLint ? lintOptions || true : false;
+        _codemirrorSmartSetOption('lint', lint);
+      }
+      onChange(value);
+    }, typeof props.debounceMillis === 'number' ? props.debounceMillis : DEBOUNCE_MILLIS));
+
+    codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
+      // Use default tab behaviour if we're told
+      if (props.defaultTabBehavior && event.code === 'Tab') {
+        // @ts-expect-error -- unsound property assignment
+        event.codemirrorIgnore = true;
+      }
+      const pressedKeyComb: KeyCombination = {
+        ctrl: event.ctrlKey,
+        alt: event.altKey,
+        shift: event.shiftKey,
+        meta: event.metaKey,
+        keyCode: event.keyCode,
+      };
+      const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, settings.hotKeyRegistry);
+      const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+        'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
+      });
+      const isEscapeKey = event.code === 'Escape';
+      // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
+      if (isUserDefinedKeyboardShortcut && !isCodeEditorAutoCompleteBinding) {
+        // @ts-expect-error -- unsound property assignment
+        event.codemirrorIgnore = true;
+        // Stop the editor from handling the escape key
+      } else if (isEscapeKey) {
+        // @ts-expect-error -- unsound property assignment
+        event.codemirrorIgnore = true;
+      } else {
+        event.stopPropagation();
+      }
+      if (props.onKeyDown && !doc.isHintDropdownActive()) {
+        props.onKeyDown(event, doc.getValue());
+      }
+    });
+    codeMirror.current.on('keyup', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
+      // Enable graphql completion if we're in that mode
+      if (doc.getOption('mode') === 'graphql') {
+        // Only operate on one-letter keys. This will filter out
+        // any special keys (Backspace, Enter, etc)
+        if (event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1) {
+          return;
+        }
+        // if (_autocompleteDebounce !== null) {
+        //   clearTimeout(_autocompleteDebounce);
+        // }
+
+        // You don't want to re-trigger the hint dropdown if it's already open
+        // for other reasons, like forcing its display with Ctrl+Space
+        if (codeMirror.current?.isHintDropdownActive()) {
+          return;
+        }
+        // _autocompleteDebounce = setTimeout(() => {
+        doc.execCommand('autocomplete');
+        // }, 700);
+      }
+    });
+    codeMirror.current.on('endCompletion', () => {
+      // if (_autocompleteDebounce !== null) {
+      //   clearTimeout(_autocompleteDebounce);
+      // }
+    });
+    codeMirror.current.on('focus', (_, e) => props.onFocus?.(e));
+    codeMirror.current.on('blur', (_, e) => {
+      _persistState();
+      props.onBlur?.(e);
+    });
+    codeMirror.current.on('paste', (_, e) => props.onPaste?.(e));
+    codeMirror.current.on('scroll', _persistState);
+    codeMirror.current.on('fold', _persistState);
+    codeMirror.current.on('unfold', _persistState);
+    codeMirror.current.on('keyHandled', (_codeMirror: CodeMirror.Editor, _keyName: string, event: Event) => {
+      event.stopPropagation();
+    });
+    // Prevent these things if we're type === "password"
+    codeMirror.current.on('copy', (_cm: CodeMirror.Editor, event: Event) => {
+      if (type && type.toLowerCase() === 'password') {
+        event.preventDefault();
+      }
+    });
+    codeMirror.current.on('cut', (_cm: CodeMirror.Editor, event: Event) => {
+      if (type && type.toLowerCase() === 'password') {
+        event.preventDefault();
+      }
+    });
+    codeMirror.current.on('dragstart', (_cm: CodeMirror.Editor, event: Event) => {
+      if (type && type.toLowerCase() === 'password') {
+        event.preventDefault();
+      }
+    });
+    codeMirror.current.setCursor({
+      line: -1,
+      ch: -1,
+    });
+
+    let extraKeys = BASE_CODEMIRROR_OPTIONS.extraKeys;
+    extraKeys = extraKeys && typeof extraKeys !== 'string' ? extraKeys : {};
+
+    codeMirror.current.setOption('extraKeys', {
+      ...extraKeys,
+      Tab: cm => {
+        // Indent with tabs or spaces
+        // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
+        if (cm.somethingSelected()) {
+          cm.indentSelection('add');
+        } else {
+          cm.replaceSelection(_indentChars(), 'end');
+        }
+      },
+    });
+
+    // Set editor options
+    _codemirrorSetOptions();
+
+    const setup = () => {
+      // Actually set the value
+      _codemirrorSetValue(defaultValue || '');
+
+      // Clear history so we can't undo the initial set
+      codeMirror.current?.clearHistory();
+
+      // Setup nunjucks listeners
+      // TODO: we shouldn't need to set setup nunjucks if we're in readonly mode
+      if (handleRender && !settings.nunjucksPowerUserMode) {
+        codeMirror.current?.enableNunjucksTags(
+          handleRender,
+          handleGetRenderContext,
+          settings.showVariableSourceAndValue,
+        );
+      }
+
+      // Make URLs clickable
+      if (props.onClickLink) {
+        codeMirror.current?.makeLinksClickable(props.onClickLink);
+      }
+
+      // HACK: Refresh because sometimes it renders too early and the scroll doesn't quite fit.
+      setTimeout(() => {
+        codeMirror.current?.refresh();
+      }, 100);
+
+      // Restore the state
+      _restoreState();
+    };
+
+    // Do this a bit later for big values so we don't block the render process
+    if (defaultValue && defaultValue.length > 10000) {
+      setTimeout(setup, 100);
+    } else {
+      setup();
+    }
+
+    if (props.onCodeMirrorInit) {
+      props.onCodeMirrorInit(codeMirror.current);
+    }
+
+    // NOTE: Start listening to cursor after everything because it seems to fire
+    // immediately for some reason
+    codeMirror.current.on('cursorActivity', (instance: CodeMirror.Editor) => {
+      if (props.onCursorActivity) {
+        props.onCursorActivity(instance);
+      }
+    });
   }
+  /**
+   * Sets options on the CodeMirror editor while also sanitizing them
+   */
+  async function _codemirrorSetOptions() {
+    let normalisedMode: EditorConfiguration['mode'];
+
+    if (handleRender) {
+      normalisedMode = {
+        name: 'nunjucks',
+        baseMode: _normalizeMode(mode),
+      };
+    } else {
+      // foo bar baz
+      normalisedMode = _normalizeMode(mode);
+    }
+
+    const options: CodeMirror.EditorConfiguration = {
+      readOnly: !!readOnly,
+      placeholder: props.placeholder || '',
+      mode: normalisedMode,
+      tabindex: typeof props.tabIndex === 'number' ? props.tabIndex : undefined,
+      dragDrop: !props.noDragDrop,
+      scrollbarStyle: props.hideScrollbars ? 'null' : 'native',
+      styleActiveLine: !props.noStyleActiveLine,
+      lineNumbers: !props.hideGutters && !props.hideLineNumbers,
+      foldGutter: !props.hideGutters && !props.hideLineNumbers,
+      lineWrapping: ignoreEditorFontSettings ? undefined : settings.editorLineWrapping,
+      indentWithTabs: shouldIndentWithTabs({ mode, indentWithTabs: ignoreEditorFontSettings ? undefined : settings.editorIndentWithTabs }),
+      matchBrackets: !props.noMatchBrackets,
+      lint: !props.noLint && !readOnly,
+      gutters: [],
+    };
+
+    // Only set keyMap if we're not read-only. This is so things like
+    // ctrl-a work on read-only mode.
+    if (!readOnly && settings.editorKeyMap) {
+      options.keyMap = settings.editorKeyMap;
+    }
+    const indentSize = ignoreEditorFontSettings ? undefined : settings.editorIndentSize;
+    if (indentSize) {
+      options.tabSize = indentSize;
+      options.indentUnit = indentSize;
+    }
+    if (options.gutters && !props.hideGutters) {
+      if (options.lint) {
+        options.gutters.push('CodeMirror-lint-markers');
+      }
+      if (options.lineNumbers) {
+        options.gutters.push('CodeMirror-linenumbers');
+      }
+    }
+    if (!props.hideGutters && options.foldGutter) {
+      options.gutters?.push('CodeMirror-foldgutter');
+    }
+    if (props.hintOptions) {
+      options.hintOptions = props.hintOptions;
+    }
+    if (props.infoOptions) {
+      options.info = props.infoOptions;
+    }
+    if (props.jumpOptions) {
+      options.jump = props.jumpOptions;
+    }
+    if (lintOptions) {
+      options.lint = lintOptions;
+    }
+    if (typeof props.autoCloseBrackets === 'boolean') {
+      options.autoCloseBrackets = props.autoCloseBrackets;
+    }
+    // Setup the hint options
+    if (handleGetRenderContext || props.getAutocompleteConstants || props.getAutocompleteSnippets) {
+      options.environmentAutocomplete = {
+        getVariables: async () => {
+          if (!handleGetRenderContext) {
+            return [];
+          }
+          const context = await handleGetRenderContext();
+          const variables = context ? context.keys : [];
+          return variables || [];
+        },
+        getTags: async () => {
+          if (!handleGetRenderContext) {
+            return [];
+          }
+          const expandedTags: NunjucksParsedTag[] = [];
+          for (const tagDef of await getTagDefinitions()) {
+            const firstArg = tagDef.args[0];
+            if (!firstArg || firstArg.type !== 'enum') {
+              expandedTags.push(tagDef);
+              continue;
+            }
+            for (const option of firstArg.options || []) {
+              const optionName = misc.fnOrString(option.displayName, tagDef.args);
+              const newDef = clone(tagDef);
+              newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
+              newDef.args[0].defaultValue = option.value;
+              expandedTags.push(newDef);
+            }
+          }
+          return expandedTags;
+        },
+        getConstants: props.getAutocompleteConstants,
+        getSnippets: props.getAutocompleteSnippets,
+        hotKeyRegistry: settings.hotKeyRegistry,
+        autocompleteDelay: settings.autocompleteDelay,
+      };
+    }
+
+    if (dynamicHeight) {
+      options.viewportMargin = Infinity;
+    }
+
+    // Strip of charset if there is one
+    Object.keys(options).map(key =>
+      _codemirrorSmartSetOption(
+        key as keyof CodeMirror.EditorConfiguration,
+        options[key as keyof CodeMirror.EditorConfiguration]
+      )
+    );
+  }
+  function _restoreState() {
+    if (uniquenessKey === undefined) {
+      return;
+    }
+    if (!editorStates.hasOwnProperty(uniquenessKey)) {
+      return;
+    }
+    if (!codeMirror.current) {
+      return;
+    }
+    const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
+    codeMirror.current.scrollTo(scroll.left, scroll.top);
+    codeMirror.current.setHistory(history);
+    // NOTE: These won't be visible unless the editor is focused
+    codeMirror.current.setCursor(cursor.line, cursor.ch, { scroll: false });
+    codeMirror.current.setSelections(selections, undefined, { scroll: false });
+
+    // Restore marks one-by-one
+    for (const { from, to } of marks || []) {
+      // @ts-expect-error -- type unsoundness
+      codeMirror.current.foldCode(from, to);
+    }
+  }
+  function _setFilter(filter = '') {
+    setFilter(filter);
+    _codemirrorSetValue(originalCode);
+    if (updateFilter) {
+      updateFilter(filter);
+    }
+  }
+  const _indentChars = () => codeMirror.current?.getOption('indentWithTabs')
+    ? '\t'
+    : new Array((codeMirror.current?.getOption?.('indentUnit') || 0) + 1).join(' ');
 
   /**
-   * Sets the CodeMirror value without triggering the onChange event
-   * @param code the code to set in the editor
-   * @param forcePrettify
-   */
-  _codemirrorSetValue(code?: string, forcePrettify?: boolean) {
+ * Sets the CodeMirror value without triggering the onChange event
+ * @param code the code to set in the editor
+ * @param forcePrettify
+ */
+  function _codemirrorSetValue(code?: string, forcePrettify?: boolean) {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
     }
-    const { autoPrettify, mode } = this.props;
-    this._originalCode = code;
+    setOriginalCode(code);
     const shouldPrettify = forcePrettify || autoPrettify;
+    const isJSONOrXML = mode && (mode.includes('json') || mode.includes('xml'));
 
-    if (shouldPrettify && this._canPrettify()) {
-      if (UnconnectedCodeEditor._isXML(mode)) {
-        code = this._prettifyXML(code);
-      } else if (UnconnectedCodeEditor._isJSON(mode)) {
-        code = this._prettifyJSON(code);
+    if (shouldPrettify && isJSONOrXML) {
+      if (mode.includes('xml')) {
+        if (updateFilter && filter) {
+          try {
+            const results = queryXPath(code, filter);
+            code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+          } catch (err) {
+            // Failed to parse filter (that's ok)
+            code = `<error>${err.message}</error>`;
+          }
+        }
+
+        try {
+          code = vkBeautify.xml(code, _indentChars());
+        } catch (error) {
+          // Failed to parse so just return original
+        }
+      } else if (mode.includes('json')) {
+        try {
+          let jsonString = code;
+          if (updateFilter && filter) {
+            try {
+              const codeObj = JSON.parse(code);
+              const results = JSONPath({ json: codeObj, path: filter.trim() });
+              jsonString = JSON.stringify(results);
+            } catch (err) {
+              console.log('[jsonpath] Error: ', err);
+              jsonString = '[]';
+            }
+          }
+          code = jsonPrettify(jsonString, _indentChars(), autoPrettify);
+        } catch (error) {
+          // That's Ok, just leave it
+        }
       } else {
-        unreachable('attempted to prettify in a mode that should not support prettifying');
+        console.error('attempted to prettify in a mode that should not support prettifying');
       }
     }
 
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
-    const currentCode = this.codeMirror?.getValue();
+    const currentCode = codeMirror.current?.getValue();
     if (currentCode === code) {
       return;
     }
 
-    this.codeMirror?.setValue(code || '');
+    codeMirror.current?.setValue(code || '');
   }
+  const toolbarChildren: ReactNode[] = [];
 
-  _handleFilterHistorySelect(filter = '') {
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this._filterInput!.value = filter;
+  if (updateFilter && mode && (mode.includes('json') || mode.includes('xml'))) {
+    toolbarChildren.push(
+      <input
+        ref={inputRef}
+        key="filter"
+        type="text"
+        title="Filter response body"
+        defaultValue={filter || ''}
+        placeholder={mode.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+        onChange={event => _setFilter(event.target.value)}
+      />,
+    );
 
-    this._setFilter(filter);
-  }
-
-  _handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
-    this._setFilter(event.target.value);
-  }
-
-  _setFilter(filter = '') {
-    if (this._filterTimeout !== null) {
-      clearTimeout(this._filterTimeout);
-    }
-    this._filterTimeout = setTimeout(() => {
-      this.setState({
-        filter,
-      });
-
-      this._codemirrorSetValue(this._originalCode);
-
-      if (this.props.updateFilter) {
-        this.props.updateFilter(filter);
-      }
-    }, 200);
-  }
-
-  _canPrettify() {
-    const { mode } = this.props;
-    return UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode);
-  }
-
-  _showFilterHelp() {
-    const isJSON = UnconnectedCodeEditor._isJSON(this.props.mode);
-    showModal(FilterHelpModal, { isJSON });
-  }
-
-  render() {
-    const {
-      id,
-      readOnly,
-      fontSize,
-      mode,
-      filter,
-      filterHistory,
-      onMouseLeave,
-      onClick,
-      className,
-      dynamicHeight,
-      style,
-      type,
-      raw,
-    } = this.props;
-    const classes = classnames(className, {
-      editor: true,
-      'editor--dynamic-height': dynamicHeight,
-      'editor--readonly': readOnly,
-      'raw-editor': raw,
-    });
-    const toolbarChildren: ReactNode[] = [];
-
-    if (this.props.updateFilter && (UnconnectedCodeEditor._isJSON(mode) || UnconnectedCodeEditor._isXML(mode))) {
+    if (filterHistory && filterHistory.length) {
       toolbarChildren.push(
-        <input
-          ref={this._setFilterInputRef}
-          key="filter"
-          type="text"
-          title="Filter response body"
-          defaultValue={filter || ''}
-          placeholder={UnconnectedCodeEditor._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
-          onChange={this._handleFilterChange}
-        />,
-      );
-
-      if (filterHistory && filterHistory.length) {
-        toolbarChildren.push(
-
-          <Dropdown key="history" className="tall" right>
-            <DropdownButton className="btn btn--compact">
-              <i className="fa fa-clock-o" />
-            </DropdownButton>
-            {filterHistory.reverse().map(filter => (
-
-              <DropdownItem key={filter} onClick={() => this._handleFilterHistorySelect(filter)}>
-                {filter}
-              </DropdownItem>
-            ))}
-          </Dropdown>,
-        );
-      }
-
-      toolbarChildren.push(
-        <button key="help" className="btn btn--compact" onClick={this._showFilterHelp}>
-          <i className="fa fa-question-circle" />
-        </button>,
+        <Dropdown key="history" className="tall" right>
+          <DropdownButton className="btn btn--compact">
+            <i className="fa fa-clock-o" />
+          </DropdownButton>
+          {filterHistory.reverse().map(filter => (
+            <DropdownItem
+              key={filter}
+              onClick={() => {
+                if (inputRef.current) {
+                  inputRef.current.value = filter;
+                }
+                _setFilter(filter);
+              }}
+            >
+              {filter}
+            </DropdownItem>
+          ))}
+        </Dropdown>,
       );
     }
 
-    if (this.props.manualPrettify && this._canPrettify()) {
-      let contentTypeName = '';
-
-      if (UnconnectedCodeEditor._isJSON(mode)) {
-        contentTypeName = 'JSON';
-      } else if (UnconnectedCodeEditor._isXML(mode)) {
-        contentTypeName = 'XML';
-      }
-
-      toolbarChildren.push(
-        <button
-          key="prettify"
-          className="btn btn--compact"
-          title="Auto-format request body whitespace"
-          onClick={this._prettify}
-        >
-          Beautify {contentTypeName}
-        </button>,
-      );
-    }
-
-    let toolbar: ReactNode = null;
-
-    if (toolbarChildren.length) {
-      toolbar = (
-        <div key={this._uniquenessKey} className="editor__toolbar">
-          {toolbarChildren}
-        </div>
-      );
-    }
-
-    const styles: CSSProperties = {};
-
-    if (fontSize) {
-      styles.fontSize = `${fontSize}px`;
-    }
-
-    return (
-      <div
-        className={classes}
-        style={style}
-        data-editor-type={type}
-        data-testid="CodeEditor"
-      >
-        <div
-          className={classnames('editor__container', 'input', className)}
-          style={styles}
-          onClick={onClick}
-          onMouseLeave={onMouseLeave}
-        >
-          <textarea
-            id={id}
-            ref={this._handleInitTextarea}
-            style={{
-              display: 'none',
-            }}
-            readOnly={readOnly}
-            autoComplete="off"
-            defaultValue=""
-          />
-        </div>
-        {toolbar}
-      </div>
+    toolbarChildren.push(
+      <button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: mode?.includes('json') })}>
+        <i className="fa fa-question-circle" />
+      </button>,
     );
   }
-}
+
+  if (manualPrettify && mode && (mode.includes('json') || mode.includes('xml'))) {
+    let contentTypeName = '';
+
+    if (mode?.includes('json')) {
+      contentTypeName = 'JSON';
+    } else if (mode?.includes('xml')) {
+      contentTypeName = 'XML';
+    }
+
+    toolbarChildren.push(
+      <button
+        key="prettify"
+        className="btn btn--compact"
+        title="Auto-format request body whitespace"
+        onClick={() => {
+          const canPrettify = mode && (mode.includes('json') || mode.includes('xml'));
+          if (!canPrettify) {
+            return;
+          }
+          const code = codeMirror.current?.getValue();
+          _codemirrorSetValue(code, canPrettify);
+        }}
+      >
+        Beautify {contentTypeName}
+      </button>
+    );
+  }
+  const fontSize = ignoreEditorFontSettings ? undefined : settings.editorFontSize;
+  return (
+    <div
+      className={classnames(className, {
+        editor: true,
+        'editor--dynamic-height': dynamicHeight,
+        'editor--readonly': readOnly,
+        'raw-editor': raw,
+      })}
+      style={style}
+      data-editor-type={type}
+      data-testid="CodeEditor"
+    >
+      <div
+        className={classnames('editor__container', 'input', className)}
+        style={{ fontSize: `${fontSize}px` }}
+        onClick={onClick}
+        onMouseLeave={onMouseLeave}
+      >
+        <textarea
+          id={id}
+          ref={textAreaRef}
+          style={{
+            display: 'none',
+          }}
+          readOnly={readOnly}
+          autoComplete="off"
+          defaultValue=""
+        />
+      </div>
+      {toolbarChildren.length ? (
+        <div key={uniquenessKey} className="editor__toolbar">
+          {toolbarChildren}
+        </div>
+      ) : null}
+    </div>
+  );
+});
+CodeEditor.displayName = 'CodeEditor';

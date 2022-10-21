@@ -15,7 +15,7 @@ import {
 } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
 import { xmlDecode } from '../../../common/misc';
-import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
@@ -71,7 +71,7 @@ export const ResponseViewer = ({
 
   const error = responseError || parseError;
 
-  const _selectableViewRef = useRef<UnconnectedCodeEditor | null>(null);
+  const _selectableViewRef = useRef<CodeEditorHandle | null>(null);
 
   function _handleDismissBlocker() {
     setBlockingBecauseTooLarge(false);

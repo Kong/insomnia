@@ -11,7 +11,7 @@ import { database } from '../../common/database';
 import { debounce } from '../../common/misc';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
-import { CodeEditor, UnconnectedCodeEditor } from '../components/codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
@@ -38,7 +38,7 @@ interface LintMessage extends Notice {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
   const contents = activeApiSpec?.contents ?? '';
@@ -193,7 +193,7 @@ const RenderPreview: FC = () => {
   );
 };
 
-const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ editor }) => {
+const RenderPageSidebar: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
     if (!editor.current) {
@@ -236,7 +236,7 @@ const RenderPageSidebar: FC<{ editor: RefObject<UnconnectedCodeEditor> }> = ({ e
 };
 
 export const WrapperDesign: FC = () => {
-  const editor = createRef<UnconnectedCodeEditor>();
+  const editor = createRef<CodeEditorHandle>();
 
   return (
     <PageLayout

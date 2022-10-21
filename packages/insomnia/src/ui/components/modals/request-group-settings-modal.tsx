@@ -9,7 +9,7 @@ import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditorHandle } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
@@ -31,7 +31,7 @@ export interface RequestGroupSettingsModalHandle {
 }
 export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const [state, setState] = useState<State>({
     requestGroup: null,
