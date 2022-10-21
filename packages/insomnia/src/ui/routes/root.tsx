@@ -14,7 +14,7 @@ import { AnalyticsModal } from '../components/modals/analytics-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { CodePromptModal } from '../components/modals/code-prompt-modal';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
-import { CookiesModalFC } from '../components/modals/cookies-modal';
+import { CookiesModal } from '../components/modals/cookies-modal';
 import { EnvironmentEditModal } from '../components/modals/environment-edit-modal';
 import { ErrorModal } from '../components/modals/error-modal';
 import { ExportRequestsModal } from '../components/modals/export-requests-modal';
@@ -180,10 +180,10 @@ const App = () => {
                 {activeWorkspace ? <>
                   {/* TODO: Figure out why cookieJar is sometimes null */}
                   {activeCookieJar ? <>
-                    <CookiesModalFC
-                      ref={registerModal}
+                    <CookiesModal
+                      ref={instance => registerModal(instance, 'CookiesModal')}
                     />
-                    <CookieModifyModal ref={registerModal} />
+                    <CookieModifyModal ref={instance => registerModal(instance, 'CookieModifyModal')} />
                   </> : null}
 
                   <NunjucksModal

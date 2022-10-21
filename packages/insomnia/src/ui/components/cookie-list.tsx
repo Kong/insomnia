@@ -30,14 +30,6 @@ const CookieRow: FC<{
   deleteCookie: (cookie: Cookie) => void;
 }> = ({ cookie, index, deleteCookie }) => {
 
-  const handleDeleteCookie = useCallback(() => {
-    deleteCookie(cookie);
-  }, [deleteCookie, cookie]);
-
-  const handleShowModal = useCallback(() => {
-    showModal(CookieModifyModal, cookie);
-  }, [cookie]);
-
   const cookieString = cookieToString(ToughCookie.fromJSON(cookie));
   return <tr className="selectable" key={index}>
     <td>
@@ -49,7 +41,7 @@ const CookieRow: FC<{
     <td onClick={() => { }} className="text-right no-wrap">
       <button
         className="btn btn--super-compact btn--outlined"
-        onClick={handleShowModal}
+        onClick={() => showModal(CookieModifyModal, { cookie })}
         title="Edit cookie properties"
       >
         Edit
@@ -57,7 +49,7 @@ const CookieRow: FC<{
       <PromptButton
         className="btn btn--super-compact btn--outlined"
         confirmMessage=""
-        onClick={handleDeleteCookie}
+        onClick={() => deleteCookie(cookie)}
         title="Delete cookie"
       >
         <i className="fa fa-trash-o" />
