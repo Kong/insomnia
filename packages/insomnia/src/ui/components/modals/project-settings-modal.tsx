@@ -6,7 +6,6 @@ import * as models from '../../../models/index';
 import { isRemoteProject, projectHasSettings } from '../../../models/project';
 import { removeProject } from '../../redux/modules/project';
 import { selectActiveProject } from '../../redux/selectors';
-import { DebouncedInput } from '../base/debounced-input';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -51,13 +50,11 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
               </>
             )}
             {!isRemote && (
-              <DebouncedInput
-                // @ts-expect-error -- TSCONVERSION props are spread into an input element
+              <input
                 type="text"
-                delay={500}
                 placeholder={`My ${strings.project.singular}`}
                 defaultValue={project.name}
-                onChange={name => models.project.update(project, { name })}
+                onChange={event => models.project.update(project, { name: event.target.value })}
               />
             )}
           </label>

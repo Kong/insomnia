@@ -12,7 +12,6 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { setActiveActivity } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
-import { DebouncedInput } from '../base/debounced-input';
 import { FileInputButton } from '../base/file-input-button';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -234,13 +233,11 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
               <div className="form-control form-control--outlined">
                 <label>
                   Name
-                  <DebouncedInput
-                    // @ts-expect-error -- TSCONVERSION props are spread into an input element
+                  <input
                     type="text"
-                    delay={500}
                     placeholder="Awesome API"
                     defaultValue={activeWorkspaceName}
-                    onChange={name => workspaceOperations.rename(name, workspace, apiSpec)}
+                    onChange={event => workspaceOperations.rename(event.target.value, workspace, apiSpec)}
                   />
                 </label>
               </div>

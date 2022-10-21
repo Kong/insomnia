@@ -8,7 +8,6 @@ import * as requestOperations from '../../../models/helpers/request-operations';
 import type { Request } from '../../../models/request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
-import { DebouncedInput } from '../base/debounced-input';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -123,14 +122,12 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
             <label>
               Name{' '}
               <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
-              <DebouncedInput
-                delay={500}
-                // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
+              <input
                 type="text"
                 placeholder={request.url || 'My Request'}
                 defaultValue={request.name}
-                onChange={async name => {
-                  const updatedRequest = await requestOperations.update(request, { name });
+                onChange={async event => {
+                  const updatedRequest = await requestOperations.update(request, { name: event.target.value });
                   setState(state => ({
                     ...state,
                     request: updatedRequest,

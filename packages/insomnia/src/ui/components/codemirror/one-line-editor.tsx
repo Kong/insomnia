@@ -4,8 +4,7 @@ import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { DebouncedInput } from '../base/debounced-input';
-import { CodeEditor,  CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
+import { CodeEditor, CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -38,7 +37,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class OneLineEditor extends PureComponent<Props, State> {
   _editor: UnconnectedCodeEditor | null = null;
-  _input: DebouncedInput | null = null;
+  _input: HTMLInputElement | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -62,12 +61,17 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
   focus(setToEnd = false) {
     if (this.state.mode === MODE_EDITOR) {
-      if (this._editor && !this._editor?.hasFocus()) {
+      if (this._editor && !this._editor.hasFocus()) {
         setToEnd ? this._editor?.focusEnd() : this._editor?.focus();
       }
     } else {
-      if (this._input && !this._input?.hasFocus()) {
-        setToEnd ? this._input?.focusEnd() : this._input?.focus();
+      if (this._input && this._input !== document.activeElement) {
+        if (this._input) {
+          if (setToEnd) {
+            this._input.value = this._input.value;
+          }
+          this._input.focus();
+        }
       }
     }
   }
@@ -88,7 +92,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     if (this.state.mode === MODE_EDITOR) {
       return this._editor?.getValue();
     } else {
-      return this._input?.getValue();
+      return this._input?.value;
     }
   }
 
@@ -97,7 +101,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
       return this._editor?.getSelectionStart();
     } else {
       console.warn('Tried to get selection start of one-line-editor when <input>');
-      // @ts-expect-error -- TSCONVERSION
       return this._input?.value.length;
     }
   }
@@ -107,7 +110,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
       return this._editor?.getSelectionEnd();
     } else {
       console.warn('Tried to get selection end of one-line-editor when <input>');
-      // @ts-expect-error -- TSCONVERSION
       return this._input?.value.length;
     }
   }
@@ -183,14 +185,18 @@ export class OneLineEditor extends PureComponent<Props, State> {
   _handleInputFocus(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement, Element>) {
     // If we're focusing the whole thing, blur the input. This happens when
     // the user tabs to the field.
-    const start = this._input?.getSelectionStart();
+    if (!this._input) {
+      return;
+    }
+    const start = this._input.selectionStart;
 
-    const end = this._input?.getSelectionEnd();
+    const end = this._input.selectionEnd;
 
     const focusedFromTabEvent = start === 0 && end === event.target.value.length;
 
     if (focusedFromTabEvent) {
-      this._input?.focusEnd();
+      this._input.value = this._input.value;
+      this._input.focus();
 
       // Also convert to editor if we tabbed to it. Just in case the user
       // needs an editor
@@ -204,10 +210,9 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this.props.onFocus?.(event);
   }
 
-  _handleInputChange(value: string) {
+  _handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     this._convertToEditorPreserveFocus();
-
-    this.props.onChange?.(value);
+    this.props.onChange?.(event.target.value);
   }
 
   _handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -219,7 +224,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
   _handleInputBlur(event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     // Set focused state
     this._input?.removeAttribute('data-focused');
-
     this.props.onBlur?.(event);
   }
 
@@ -231,7 +235,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
     // Set focused state
     this._editor?.removeAttribute('data-focused');
-
     if (!this.props.forceEditor) {
       // Convert back to input sometime in the future.
       // NOTE: this was originally added because the input would disappear if
@@ -241,7 +244,6 @@ export class OneLineEditor extends PureComponent<Props, State> {
         this._convertToInputIfNotFocused();
       }, 2000);
     }
-
     this.props.onBlur?.(event);
   }
 
@@ -277,9 +279,9 @@ export class OneLineEditor extends PureComponent<Props, State> {
       return;
     }
 
-    if (this._input?.hasFocus()) {
-      const start = this._input?.getSelectionStart();
-      const end = this._input?.getSelectionEnd();
+    if (this._input === document.activeElement) {
+      const start = this._input?.selectionStart;
+      const end = this._input?.selectionEnd;
       if (start === null || end === null) {
         return;
       }
@@ -326,7 +328,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
     this._editor = editor;
   }
 
-  _setInputRef(input: DebouncedInput) {
+  _setInputRef(input: HTMLInputElement) {
     this._input = input;
   }
 
@@ -391,9 +393,8 @@ export class OneLineEditor extends PureComponent<Props, State> {
       );
     } else {
       return (
-        <DebouncedInput
+        <input
           ref={this._setInputRef}
-          // @ts-expect-error -- TSCONVERSION
           id={id}
           type={type}
           className={className}
@@ -409,7 +410,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
           onMouseEnter={this._handleInputMouseEnter}
           onMouseLeave={this._handleInputMouseLeave}
           onDragEnter={this._handleInputDragEnter}
-          onPaste={onPaste}
+          onPaste={e => onPaste?.(e.nativeEvent)}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />
