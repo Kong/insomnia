@@ -1,4 +1,4 @@
-// TODO(TSCONVERSION) convert to TypeScript and update package.json to use ts-node
+// TODO(TSCONVERSION) convert to TypeScript?
 const fs = require('fs');
 
 const GREEN_FG = '\x1b[32m';

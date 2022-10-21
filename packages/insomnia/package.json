@@ -41,7 +41,7 @@
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "2.3.5-2",
+    "@getinsomnia/node-libcurl": "2.3.5-6",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
     "@jest/globals": "^28.1.0",
@@ -116,6 +116,7 @@
     "@babel/plugin-proposal-decorators": "^7.4.0",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@getinsomnia/api-client": "0.0.4",
+    "@tanstack/react-virtual": "3.0.0-beta.18",
     "@testing-library/dom": "^8.13.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.4.0",
@@ -145,7 +146,7 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/react-redux": "^7.1.22",
-    "@types/react-tabs": "^2.3.4",
+    "@types/react-tabs": "^5.0.5",
     "@types/redux-mock-store": "^1.0.2",
     "@types/rimraf": "^3.0.2",
     "@types/styled-components": "^5.1.23",
@@ -165,7 +166,7 @@
     "cross-env": "^7.0.3",
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
-    "electron": "19.0.3",
+    "electron": "21.2.0",
     "electron-builder": "23.0.7",
     "electron-builder-squirrel-windows": "23.0.7",
     "electron-devtools-installer": "^3.2.0",
@@ -191,20 +192,18 @@
     "react-dnd": "^7.4.5",
     "react-dnd-html5-backend": "^7.4.4",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.12.1",
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.4.2",
     "react-stately": "^3.17.0",
-    "react-tabs": "^3.2.3",
-    "react-use": "^17.2.4",
-    "react-virtual": "2.10.4",
+    "react-tabs": "^5.1.0",
+    "react-use": "^17.4.0",
     "redux": "^4.1.2",
     "redux-mock-store": "^1.5.4",
     "redux-thunk": "^2.4.1",
     "reselect": "^4.1.5",
     "srp-js": "^0.2.1",
     "styled-components": "^5.3.3",
-    "swagger-ui-react": "4.5.1",
+    "swagger-ui-react": "4.14.3",
     "tinykeys": "^1.4.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
@@ -212,6 +211,13 @@
     "vite-plugin-commonjs-externals": "^0.1.1",
     "vkbeautify": "^0.99.1",
     "ws": "^8.8.1"
+  },
+  "overrides": {
+    "swagger-ui-react": {
+      "react-debounce-input": "3.3.0",
+      "react-inspector": "6.0.1",
+      "react-copy-to-clipboard": "5.1.0"
+    }
   },
   "dev": {
     "dev-server-port": 3334

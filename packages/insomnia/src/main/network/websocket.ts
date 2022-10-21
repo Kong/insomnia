@@ -319,7 +319,7 @@ const openWebSocketConnection = async (
     });
 
     ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
-      console.error(error);
+      console.error('Error from remote:', error.code, error);
 
       const errorEvent: WebSocketErrorEvent = {
         _id: uuidV4(),
@@ -332,7 +332,7 @@ const openWebSocketConnection = async (
 
       deleteRequestMaps(request._id, message, errorEvent);
       event.sender.send(readyStateChannel, ws.readyState);
-      if (error.code === 'ENOTFOUND') {
+      if (error.code) {
         createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
       }
     });

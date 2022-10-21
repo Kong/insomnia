@@ -1,7 +1,7 @@
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { FC, useRef } from 'react';
 import { useMeasure } from 'react-use';
-import { useVirtual } from 'react-virtual';
 import styled from 'styled-components';
 
 import { WebSocketEvent } from '../../../main/network/websocket';
@@ -138,12 +138,12 @@ const EventTimestampCell = styled('div')({
 
 export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
   const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtual({
-    parentRef,
-    size: events.length,
+  const virtualizer = useVirtualizer({
+    getScrollElement: () => parentRef.current,
+    count: events.length,
     estimateSize: React.useCallback(() => 30, []),
     overscan: 30,
-    keyExtractor: index => events[index]._id,
+    getItemKey: index => events[index]._id,
   });
 
   const [autoSizeRef, { height }] = useMeasure<HTMLDivElement>();
@@ -163,10 +163,10 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
         <Scrollable style={{ height }} ref={parentRef}>
           <List
             style={{
-              height: `${virtualizer.totalSize}px`,
+              height: `${virtualizer.getTotalSize()}px`,
             }}
           >
-            {virtualizer.virtualItems.map(item => {
+            {virtualizer.getVirtualItems().map(item => {
               const event = events[item.index];
 
               return (
