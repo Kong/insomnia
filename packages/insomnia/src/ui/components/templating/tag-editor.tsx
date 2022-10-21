@@ -5,7 +5,6 @@ import { useMount } from 'react-use';
 
 import { database as db } from '../../../common/database';
 import { delay, fnOrString } from '../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
 import type { BaseModel } from '../../../models/index';
@@ -29,8 +28,6 @@ import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
   defaultValue: string;
   onChange: (...args: any[]) => any;
   workspace: Workspace;
@@ -77,7 +74,7 @@ export const TagEditor: FC<Props> = props => {
     error: '',
     variables: [],
   });
-  const { handleGetRenderContext } = useNunjucks();
+  const { handleRender, handleGetRenderContext } = useNunjucks();
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
@@ -197,7 +194,6 @@ export const TagEditor: FC<Props> = props => {
     tagData: NunjucksParsedTag | null,
     noCallback = false,
   ) {
-    const { handleRender } = props;
     const start = Date.now();
     setState(state => ({ ...state, rendering: true }));
     let preview = '';
@@ -289,7 +285,6 @@ export const TagEditor: FC<Props> = props => {
               const name = event.currentTarget.value;
               const tagDefinitions = await templating.getTagDefinitions();
               const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
-
               update(state.tagDefinitions, tagDefinition, null, false);
             }}
             value={activeTagDefinition ? activeTagDefinition.name : ''}
@@ -332,11 +327,11 @@ export const TagEditor: FC<Props> = props => {
         const isVariable = argData.type === 'variable';
 
         let argInput;
-        let isVariableAllowed = true;
+        const isVariableAllowed = argDefinition.type !== 'model';
         if (!isVariable) {
           if (argDefinition.type === 'string') {
             const placeholder =
-            typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
+              typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
             const encoding = argDefinition.encoding || 'utf8';
             argInput = (<input
               type="text"
@@ -350,7 +345,7 @@ export const TagEditor: FC<Props> = props => {
               <select value={strValue} onChange={handleChange}>
                 {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
                 {argDefinition.options?.map(option => (
-                // @ts-expect-error -- TSCONVERSION boolean not accepted by option
+                  // @ts-expect-error -- TSCONVERSION boolean not accepted by option
                   <option key={option.value.toString()} value={option.value}>
                     {option.description ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, state.activeTagData?.args || [])}
                   </option>
@@ -368,7 +363,6 @@ export const TagEditor: FC<Props> = props => {
               extensions={argDefinition.extensions}
             />);
           } else if (argDefinition.type === 'model') {
-            isVariableAllowed = false;
             argInput = state.loadingDocs ? (
               <select disabled={state.loadingDocs}>
                 <option>Loading...</option>
