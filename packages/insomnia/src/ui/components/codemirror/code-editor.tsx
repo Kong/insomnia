@@ -244,9 +244,11 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>((props, 
       }
     };
   }, []);
-  if (textAreaRef.current) {
-    _handleInitTextarea(textAreaRef.current);
-  }
+  useEffect(() => {
+    if (textAreaRef.current) {
+      _handleInitTextarea(textAreaRef.current);
+    }
+  }, []);
   useImperativeHandle(ref, () => ({
     setValue: value => {
       if (codeMirror.current) {
