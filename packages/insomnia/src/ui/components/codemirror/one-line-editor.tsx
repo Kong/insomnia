@@ -61,7 +61,7 @@ export class OneLineEditor extends PureComponent<Props, State> {
 
   focus(setToEnd = false) {
     if (this.state.mode === MODE_EDITOR) {
-      if (this._editor && this._editor.hasFocus()) {
+      if (this._editor && !this._editor.hasFocus()) {
         setToEnd ? this._editor?.focusEnd() : this._editor?.focus();
       }
     } else {
