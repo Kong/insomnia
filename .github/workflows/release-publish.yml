@@ -16,6 +16,8 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.core_tag_and_release.outputs.id }}
     steps:
       - name: Checkout branch # Check out the release branch
         uses: actions/checkout@v3
@@ -242,7 +244,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          release_id: ${{ steps.core_tag_and_release.outputs.id }}
+          release_id: ${{ needs.publish.outputs.release_id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           file: "./artifacts/**.rpm"
           prerelease: ${{ env.IS_PRERELEASE }}
