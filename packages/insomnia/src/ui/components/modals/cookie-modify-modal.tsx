@@ -135,7 +135,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                 <div className="form-control form-control--outlined">
                   <label>
                     Expires
-                    <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} /> :
+                    <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} />
                   </label>
                 </div>
               </div>
