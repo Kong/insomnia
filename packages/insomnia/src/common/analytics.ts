@@ -1,5 +1,4 @@
 import Analytics from 'analytics-node';
-import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId } from '../account/session';
@@ -13,19 +12,7 @@ import {
   getSegmentWriteKey,
 } from './constants';
 
-const axiosConfig: AxiosRequestConfig = {
-  // This is needed to ensure that we use the NodeJS adapter in the render process
-  ...(global?.require ? {
-    adapter: global.require('axios/lib/adapters/http'),
-  } : {}),
-};
-
-const segmentClient = new Analytics(getSegmentWriteKey(), {
-  // @ts-expect-error this is missing from the analytics-node types (and docs) but is present in the source code
-  // https://github.com/segmentio/analytics-node/blob/0a6aa0d9d865b56f799f9d014b4d7b98ae5d2f2e/index.js#L28
-  // as for the types: since (as of @types/analytics-node v3.1.7) this is hardcoded into a class constructor, it makes it hard to fix with module augmentation
-  axiosConfig,
-});
+const segmentClient = new Analytics(getSegmentWriteKey());
 
 const getDeviceId = async () => {
   const settings = await models.settings.getOrCreate();

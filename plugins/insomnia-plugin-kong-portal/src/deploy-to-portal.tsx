@@ -293,7 +293,7 @@ export function getDeployToPortalComponent(options: {
           if (isAxiosError(connectionError) && connectionError.response) {
             const response = connectionError.response;
             messageToShow = `${response.status} ${response.statusText}`;
-            const responseMessage = response.data?.message;
+            const responseMessage = connectionError.message;
             if (responseMessage) {
               messageToShow += `: ${responseMessage}`;
             }

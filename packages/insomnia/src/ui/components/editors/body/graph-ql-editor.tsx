@@ -104,7 +104,7 @@ const fetchGraphQLSchemaForRequest = async ({
     const response = await window.main.axiosRequest({
       url: setDefaultProtocol(joinUrlAndQueryString(rendered.url, queryString)),
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...enabledHeaders },
+      headers: enabledHeaders,
       data: {
         query: getIntrospectionQuery(),
       },
