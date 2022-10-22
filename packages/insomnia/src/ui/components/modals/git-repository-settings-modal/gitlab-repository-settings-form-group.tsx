@@ -5,7 +5,6 @@ import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { GitRepository } from '../../../../models/git-repository';
-import { axiosRequest } from '../../../../network/axios-request';
 import {
   generateAuthorizationUrl,
   getGitLabOauthApiURL,
@@ -163,7 +162,7 @@ const GitLabRepositoryForm = ({
 
   useEffect(() => {
     if (token && !user) {
-      axiosRequest({
+      window.main.axiosRequest({
         method: 'GET',
         url: `${getGitLabOauthApiURL()}/api/v4/user`,
         headers: {

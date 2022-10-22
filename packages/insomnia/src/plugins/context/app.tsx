@@ -3,7 +3,6 @@ import React from 'react';
 import type ReactDOM from 'react-dom';
 
 import * as analytics from '../../../src/common/analytics';
-import { axiosRequest as axios } from '../../../src/network/axios-request';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {
@@ -63,7 +62,7 @@ export interface AppContext {
 }
 
 export interface PrivateProperties {
-  axios: typeof axios;
+  axios: typeof window.main.axiosRequest;
   analytics: typeof analytics;
   loadRendererModules: () => Promise<{
     ReactDOM: typeof ReactDOM;
@@ -215,7 +214,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
     },
     __private: {
-      axios,
+      axios: window.main.axiosRequest,
       analytics,
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {

@@ -20,7 +20,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
 
   const finalConfig: AxiosRequestConfig = {
     ...config,
-    adapter: global.require('axios/lib/adapters/http'),
     httpsAgent: new https.Agent({
       rejectUnauthorized: settings.validateSSL,
     }),
@@ -48,5 +47,13 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     });
   }
 
-  return response;
+  return {
+    data: response?.data,
+    status: response?.status,
+    request: {
+      res: {
+        responseUrl: response?.request?.res?.responseUrl,
+      },
+    },
+  };
 }

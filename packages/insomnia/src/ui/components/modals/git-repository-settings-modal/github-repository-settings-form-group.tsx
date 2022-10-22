@@ -1,12 +1,10 @@
 import { AxiosResponse } from 'axios';
-import type { GraphQLError } from 'graphql';
 import React, { MouseEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { GitRepository } from '../../../../models/git-repository';
-import { axiosRequest } from '../../../../network/axios-request';
 import {
   generateAuthorizationUrl,
   GITHUB_GRAPHQL_API_URL,
@@ -66,10 +64,10 @@ interface FetchGraphQLInput {
   url: string;
 }
 
-async function fetchGraphQL<QueryResult>(input: FetchGraphQLInput) {
+async function fetchGraphQL(input: FetchGraphQLInput) {
   const { headers, query, variables, url } = input;
-  const response: AxiosResponse<{ data: QueryResult; errors: GraphQLError[] }> =
-    await axiosRequest({
+  const response: Partial<AxiosResponse> =
+    await window.main.axiosRequest({
       url,
       method: 'POST',
       headers: {
@@ -215,22 +213,16 @@ const GitHubRepositoryForm = ({
     let isMounted = true;
 
     if (token && !user) {
-      fetchGraphQL<GitHubUserInfoQueryResult>({
+      fetchGraphQL({
         query: GitHubUserInfoQuery,
         headers: {
           Authorization: `Bearer ${token}`,
         },
         url: GITHUB_GRAPHQL_API_URL,
       })
-        .then(({ data, errors }) => {
-          if (isMounted) {
-            if (errors) {
-              setError(
-                'Something went wrong when trying to fetch info from GitHub.'
-              );
-            } else if (data) {
-              setUser(data.viewer);
-            }
+        .then(({ data }) => {
+          if (isMounted && data) {
+            setUser(data.viewer);
           }
         })
         .catch((error: unknown) => {

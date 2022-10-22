@@ -28,6 +28,7 @@ const main: Window['main'] = {
     return () => ipcRenderer.removeListener(channel, listener);
   },
   webSocket,
+  axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

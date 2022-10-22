@@ -21,7 +21,6 @@ import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import { axiosRequest } from '../../../../network/axios-request';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
@@ -102,7 +101,7 @@ const fetchGraphQLSchemaForRequest = async ({
         enabledHeaders['cookie'] = cookieHeader;
       }
     }
-    const response = await axiosRequest({
+    const response = await window.main.axiosRequest({
       url: setDefaultProtocol(joinUrlAndQueryString(rendered.url, queryString)),
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...enabledHeaders },

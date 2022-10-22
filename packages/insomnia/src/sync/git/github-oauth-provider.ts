@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
-import { axiosRequest } from '../../network/axios-request';
 
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
@@ -44,7 +43,7 @@ export async function exchangeCodeForToken({
     );
   }
 
-  return axiosRequest({
+  return window.main.axiosRequest({
     url: getApiBaseURL() + '/v1/oauth/github',
     method: 'POST',
     headers: {

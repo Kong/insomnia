@@ -1,6 +1,7 @@
 import { app, ipcMain, IpcRendererEvent } from 'electron';
 import { writeFile } from 'fs/promises';
 
+import { axiosRequest } from '../../network/axios-request';
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
 import installPlugin from '../install-plugin';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -16,6 +17,7 @@ export interface MainBridgeAPI {
   curlRequest: typeof curlRequest;
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
+  axiosRequest: typeof axiosRequest;
 }
 export function registerMainHandlers() {
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
@@ -43,8 +45,13 @@ export function registerMainHandlers() {
   ipcMain.handle('installPlugin', (_, lookupName: string) => {
     return installPlugin(lookupName);
   });
+
   ipcMain.on('restart', () => {
     app.relaunch();
     app.exit();
+  });
+
+  ipcMain.handle('axiosRequest', (_, options: Parameters<typeof axiosRequest>[0]) => {
+    return axiosRequest(options);
   });
 }
