@@ -13,7 +13,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor } from '../codemirror/one-line-editor';
+import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { CodePromptModal } from '../modals/code-prompt-modal';
 import { showModal } from '../modals/index';
 
@@ -77,9 +77,9 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class KeyValueEditorRowInternal extends PureComponent<Props, State> {
-  _nameInput: OneLineEditor | null = null;
-  _valueInput: OneLineEditor | null = null;
-  _descriptionInput: OneLineEditor | null = null;
+  _nameInput: OneLineEditorHandle | null = null;
+  _valueInput: OneLineEditorHandle | null = null;
+  _descriptionInput: OneLineEditorHandle | null = null;
   state: State = {
     dragDirection: 0,
   };
@@ -108,7 +108,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     }
   }
 
-  _setDescriptionInputRef(descriptionInput: OneLineEditor) {
+  _setDescriptionInputRef(descriptionInput: OneLineEditorHandle) {
     this._descriptionInput = descriptionInput;
   }
 

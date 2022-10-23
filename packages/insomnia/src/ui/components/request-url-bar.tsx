@@ -24,7 +24,7 @@ import { DropdownDivider } from './base/dropdown/dropdown-divider';
 import { DropdownHint } from './base/dropdown/dropdown-hint';
 import { DropdownItem } from './base/dropdown/dropdown-item';
 import { PromptButton } from './base/prompt-button';
-import { OneLineEditor } from './codemirror/one-line-editor';
+import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
@@ -57,7 +57,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
-  const inputRef = useRef<OneLineEditor>(null);
+  const inputRef = useRef<OneLineEditorHandle>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
@@ -65,7 +65,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   };
   const focusInput = useCallback(() => {
     if (inputRef.current) {
-      inputRef.current.focus(true);
+      inputRef.current.focusEnd();
     }
   }, [inputRef]);
 
@@ -228,6 +228,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } else {
       handleSend();
     }
+    inputRef.current?.focusEnd();
   }, [downloadPath, handleSend, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
