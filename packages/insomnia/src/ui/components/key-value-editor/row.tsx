@@ -75,6 +75,10 @@ interface State {
   dragDirection: DragDirection;
 }
 
+// export const KeyValueEditorRowInternal = forwardRef<OneLineEditorHandle, Props>(({props, ref}) => {
+
+// })
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class KeyValueEditorRowInternal extends PureComponent<Props, State> {
   _nameInput: OneLineEditorHandle | null = null;
@@ -112,261 +116,66 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
     this._descriptionInput = descriptionInput;
   }
 
-  _sendChange(patch: Partial<Pair>) {
-    const pair = Object.assign({}, this.props.pair, patch);
-    this.props.onChange?.(pair);
-  }
-
-  _handleNameChange(name: string) {
-    this._sendChange({
-      name,
-    });
-  }
-
-  _handleValuePaste(event: ClipboardEvent) {
-    if (!this.props.allowMultiline) {
-      return;
-    }
-
-    const value = event.clipboardData?.getData('text/plain');
-
-    if (value?.includes('\n')) {
-      event.preventDefault();
-
-      // Insert the pasted text into the current selection.
-      // Unfortunately, this is the easiest way to do this.
-      const currentValue = this._valueInput?.getValue();
-
-      const start = this._valueInput?.getSelectionStart() || 0;
-      const end = this._valueInput?.getSelectionEnd() || 0;
-      const prefix = currentValue?.slice(0, start);
-      const suffix = currentValue?.slice(end);
-      const finalValue = `${prefix}${value}${suffix}`;
-
-      // Update type and value
-      this._handleTypeChange({
-        type: 'text',
-        multiline: 'text/plain',
-      });
-
-      this._handleValueChange(finalValue);
-    }
-  }
-
-  _handleValueChange(value: string) {
-    this._sendChange({
-      value,
-    });
-  }
-
-  _handleFileNameChange(fileName: string) {
-    this._sendChange({
-      fileName,
-    });
-  }
-
-  _handleDescriptionChange(description: string) {
-    this._sendChange({
-      description,
-    });
-  }
-
   _handleTypeChange(def: Partial<Pair>) {
     // Remove newlines if converting to text
     // WARNING: props should never be overwritten!
     let value = this.props.pair.value || '';
-
     if (def.type === 'text' && !def.multiline && value.includes('\n')) {
       value = value.replace(/\n/g, '');
     }
-
-    this._sendChange({
-      type: def.type,
-      multiline: def.multiline,
-      value,
-    });
+    this.props.onChange?.(Object.assign({}, this.props.pair, { type: def.type, multiline: def.multiline, value }));
   }
 
-  _handleDisableChange(disabled?: boolean) {
-    this._sendChange({
-      disabled,
-    });
-  }
-
-  _handleFocusName(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onFocusName?.(this.props.pair, event);
-  }
-
-  _handleFocusValue(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onFocusValue?.(this.props.pair, event);
-  }
-
-  _handleFocusDescription(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onFocusDescription?.(this.props.pair, event);
-  }
-
-  _handleBlurName(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onBlurName?.(this.props.pair, event);
-  }
-
-  _handleBlurValue(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onBlurValue?.(this.props.pair, event);
-  }
-
-  _handleBlurDescription(event: FocusEvent | React.FocusEvent<Element, Element>) {
-    this.props.onBlurDescription?.(this.props.pair, event);
-  }
-
-  _handleDelete() {
-    this.props.onDelete?.(this.props.pair);
-  }
-
-  _handleKeyDown(event: KeyboardEvent | React.KeyboardEvent<Element>, value?: any) {
-    this.props.onKeyDown?.(this.props.pair, event, value);
-  }
-
-  _handleAutocompleteNames() {
-    const { handleGetAutocompleteNameConstants } = this.props;
-
-    if (handleGetAutocompleteNameConstants) {
-      return handleGetAutocompleteNameConstants(this.props.pair);
-    }
-
-    return [];
-  }
-
-  _handleAutocompleteValues() {
-    const { handleGetAutocompleteValueConstants } = this.props;
-
-    if (handleGetAutocompleteValueConstants) {
-      return handleGetAutocompleteValueConstants(this.props.pair);
-    }
-
-    return [];
-  }
-
-  _handleEditMultiline() {
-    const { pair, enableNunjucks } = this.props;
-    showModal(CodePromptModal, {
-      submitName: 'Done',
-      title: `Edit ${pair.name}`,
-      defaultValue: pair.value,
-      onChange: this._handleValueChange,
-      enableRender: enableNunjucks,
-      mode: pair.multiline || 'text/plain',
-      onModeChange: (mode: string) => {
-        this._handleTypeChange(
-          Object.assign({}, pair, {
-            multiline: mode,
-          }),
-        );
-      },
-    });
-  }
-
-  renderPairDescription() {
+  render() {
     const {
+      pair,
+      namePlaceholder,
+      sortable,
+      noDropZone,
+      hideButtons,
+      forceInput,
+      readOnly,
+      className,
+      isDragging,
+      isDraggingOver,
+      noDelete,
+      renderLeftIcon,
+      connectDragSource,
+      connectDragPreview,
+      connectDropTarget,
       displayDescription,
-      readOnly,
-      forceInput,
       descriptionPlaceholder,
-      pair,
-    } = this.props;
-    return displayDescription ? (
-      <div
-        className={classnames(
-          'form-control form-control--underlined form-control--wide no-min-width',
-          {
-            'form-control--inactive': pair.disabled,
-          },
-        )}
-      >
-        <OneLineEditor
-          ref={this._setDescriptionInputRef}
-          readOnly={readOnly}
-          forceInput={forceInput}
-          placeholder={descriptionPlaceholder || 'Description'}
-          defaultValue={pair.description || ''}
-          onChange={this._handleDescriptionChange}
-          onBlur={this._handleBlurDescription}
-          onKeyDown={this._handleKeyDown}
-          onFocus={this._handleFocusDescription}
-        />
-      </div>
-    ) : null;
-  }
-
-  renderPairValue() {
-    const {
-      pair,
-      readOnly,
-      forceInput,
+      handleGetAutocompleteNameConstants,
+      handleGetAutocompleteValueConstants,
+      enableNunjucks,
       valueInputType,
       valuePlaceholder,
+      onFocusName,
+      allowMultiline,
+      allowFile,
     } = this.props;
+    const { dragDirection } = this.state;
+    const classes = classnames(className, {
+      'key-value-editor__row-wrapper': true,
+      'key-value-editor__row-wrapper--dragging': isDragging,
+      'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
+      'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
+      'key-value-editor__row-wrapper--disabled': pair.disabled,
+    });
 
-    if (pair.type === 'file') {
-      return (
-        <FileInputButton
-          showFileName
-          showFileIcon
-          className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-          path={pair.fileName || ''}
-          onChange={this._handleFileNameChange}
-        />
-      );
-    } else if (pair.type === 'text' && pair.multiline) {
-      const bytes = Buffer.from(pair.value, 'utf8').length;
-      return (
-        <button
-          className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-          onClick={this._handleEditMultiline}
-        >
-          <i className="fa fa-pencil-square-o space-right" />
-          {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
-        </button>
-      );
-    } else {
-      return (
-        <OneLineEditor
-          ref={ref => {
-            this._valueInput = ref;
-          }}
-          readOnly={readOnly}
-          forceInput={forceInput}
-          type={valueInputType || 'text'}
-          placeholder={valuePlaceholder || 'Value'}
-          defaultValue={pair.value}
-          onPaste={this._handleValuePaste}
-          onChange={this._handleValueChange}
-          onBlur={this._handleBlurValue}
-          onKeyDown={this._handleKeyDown}
-          onFocus={this._handleFocusValue}
-          getAutocompleteConstants={this._handleAutocompleteValues}
-        />
-      );
-    }
-  }
-
-  renderPairSelector() {
-    const { hideButtons, allowMultiline, allowFile } = this.props;
     const showDropdown = allowMultiline || allowFile;
-
+    let renderPairSelector;
     // Put a spacer in for dropdown if needed
     if (hideButtons && showDropdown) {
-      return (
+      renderPairSelector = (
         <button>
           <i className="fa fa-empty" />
         </button>
       );
-    }
-
-    if (hideButtons) {
-      return null;
-    }
-
-    if (showDropdown) {
-      return (
+    } else if (hideButtons) {
+      renderPairSelector = null;
+    } else {
+      renderPairSelector = showDropdown ? (
         <Dropdown right>
           <DropdownButton className="tall">
             <i className="fa fa-caret-down" />
@@ -399,38 +208,87 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
             </DropdownItem>
           )}
         </Dropdown>
+      ) : null;
+    }
+
+    let pairValue;
+    if (pair.type === 'file') {
+      pairValue = (
+        <FileInputButton
+          showFileName
+          showFileIcon
+          className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+          path={pair.fileName || ''}
+          onChange={filename => this.props.onChange?.(Object.assign({}, this.props.pair, { filename }))}
+        />
+      );
+    } else if (pair.type === 'text' && pair.multiline) {
+      const bytes = Buffer.from(pair.value, 'utf8').length;
+      pairValue = (
+        <button
+          className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+          onClick={() => showModal(CodePromptModal, {
+            submitName: 'Done',
+            title: `Edit ${pair.name}`,
+            defaultValue: pair.value,
+            onChange: value => this.props.onChange?.(Object.assign({}, this.props.pair, { value })),
+            enableRender: enableNunjucks,
+            mode: pair.multiline || 'text/plain',
+            onModeChange: (mode: string) => {
+              this._handleTypeChange(
+                Object.assign({}, pair, {
+                  multiline: mode,
+                }),
+              );
+            },
+          })}
+        >
+          <i className="fa fa-pencil-square-o space-right" />
+          {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
+        </button>
       );
     } else {
-      return null;
+      pairValue = (
+        <OneLineEditor
+          ref={ref => {
+            this._valueInput = ref;
+          }}
+          readOnly={readOnly}
+          forceInput={forceInput}
+          type={valueInputType || 'text'}
+          placeholder={valuePlaceholder || 'Value'}
+          defaultValue={pair.value}
+          onPaste={event => {
+            if (!this.props.allowMultiline) {
+              return;
+            }
+            const value = event.clipboardData?.getData('text/plain');
+            if (value?.includes('\n')) {
+              event.preventDefault();
+              // Insert the pasted text into the current selection.
+              // Unfortunately, this is the easiest way to do this.
+              const currentValue = this._valueInput?.getValue();
+              const start = this._valueInput?.getSelectionStart() || 0;
+              const end = this._valueInput?.getSelectionEnd() || 0;
+              const prefix = currentValue?.slice(0, start);
+              const suffix = currentValue?.slice(end);
+              const finalValue = `${prefix}${value}${suffix}`;
+              // Update type and value
+              this._handleTypeChange({
+                type: 'text',
+                multiline: 'text/plain',
+              });
+              this.props.onChange?.(Object.assign({}, this.props.pair, { value: finalValue }));
+            }
+          }}
+          onChange={value => this.props.onChange?.(Object.assign({}, this.props.pair, { value }))}
+          onBlur={event => this.props.onBlurValue?.(this.props.pair, event)}
+          onKeyDown={(event, value) => this.props.onKeyDown?.(this.props.pair, event, value)}
+          onFocus={event => this.props.onFocusValue?.(this.props.pair, event)}
+          getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(this.props.pair) || []}
+        />
+      );
     }
-  }
-
-  render() {
-    const {
-      pair,
-      namePlaceholder,
-      sortable,
-      noDropZone,
-      hideButtons,
-      forceInput,
-      readOnly,
-      className,
-      isDragging,
-      isDraggingOver,
-      noDelete,
-      renderLeftIcon,
-      connectDragSource,
-      connectDragPreview,
-      connectDropTarget,
-    } = this.props;
-    const { dragDirection } = this.state;
-    const classes = classnames(className, {
-      'key-value-editor__row-wrapper': true,
-      'key-value-editor__row-wrapper--dragging': isDragging,
-      'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
-      'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
-      'key-value-editor__row-wrapper--disabled': pair.disabled,
-    });
 
     let handle: ConnectDragSource | JSX.Element | undefined | null = null;
 
@@ -461,13 +319,13 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
               }}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
-              getAutocompleteConstants={this._handleAutocompleteNames}
+              getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(this.props.pair) || []}
               forceInput={forceInput}
               readOnly={readOnly}
-              onBlur={this._handleBlurName}
-              onChange={this._handleNameChange}
-              onFocus={this._handleFocusName}
-              onKeyDown={this._handleKeyDown}
+              onBlur={event => this.props.onBlurName?.(this.props.pair, event)}
+              onChange={name => this.props.onChange?.(Object.assign({}, this.props.pair, { name }))}
+              onFocus={event => onFocusName?.(this.props.pair, event)}
+              onKeyDown={(event, value) => this.props.onKeyDown?.(this.props.pair, event, value)}
             />
           </div>
           <div
@@ -475,15 +333,36 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
               'form-control--inactive': pair.disabled,
             })}
           >
-            {this.renderPairValue()}
+            {pairValue}
           </div>
-          {this.renderPairDescription()}
+          {displayDescription ? (
+            <div
+              className={classnames(
+                'form-control form-control--underlined form-control--wide no-min-width',
+                {
+                  'form-control--inactive': pair.disabled,
+                },
+              )}
+            >
+              <OneLineEditor
+                ref={this._setDescriptionInputRef}
+                readOnly={readOnly}
+                forceInput={forceInput}
+                placeholder={descriptionPlaceholder || 'Description'}
+                defaultValue={pair.description || ''}
+                onChange={description => this.props.onChange?.(Object.assign({}, this.props.pair, { description }))}
+                onBlur={event => this.props.onBlurDescription?.(this.props.pair, event)}
+                onKeyDown={(event, value) => this.props.onKeyDown?.(this.props.pair, event, value)}
+                onFocus={event => this.props.onFocusDescription?.(this.props.pair, event)}
+              />
+            </div>
+          ) : null}
 
-          {this.renderPairSelector()}
+          {renderPairSelector}
 
           {!hideButtons ? (
             <button
-              onClick={() => this._handleDisableChange(!pair.disabled)}
+              onClick={() => this.props.onChange?.(Object.assign({}, this.props.pair, { disabled: !pair.disabled }))}
               title={pair.disabled ? 'Enable item' : 'Disable item'}
             >
               {pair.disabled ? (
@@ -504,7 +383,7 @@ class KeyValueEditorRowInternal extends PureComponent<Props, State> {
                 key={Math.random()}
                 tabIndex={-1}
                 confirmMessage=""
-                onClick={this._handleDelete}
+                onClick={() => this.props.onDelete?.(this.props.pair)}
                 title="Delete item"
               >
                 <i className="fa fa-trash-o" />
