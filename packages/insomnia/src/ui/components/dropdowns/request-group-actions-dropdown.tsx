@@ -26,7 +26,7 @@ interface Props extends Partial<DropdownProps> {
   handleShowSettings: (requestGroup: RequestGroup) => any;
 }
 
-interface RequestGroupActionsDropdownHandle {
+export interface RequestGroupActionsDropdownHandle {
     show: () => void;
 }
 
