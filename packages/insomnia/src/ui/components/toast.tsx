@@ -1,13 +1,12 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import * as electron from 'electron';
-import React, { PureComponent } from 'react';
+import { IpcRendererEvent } from 'electron/renderer';
+import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import * as fetch from '../../account/fetch';
 import * as session from '../../account/session';
 import {
-  AUTOBIND_CFG,
   getAppId,
   getAppPlatform,
   getAppVersion,
@@ -25,12 +24,6 @@ export interface ToastNotification {
   url: string;
   cta: string;
   message: string;
-}
-
-interface State {
-  notification: ToastNotification | null;
-  visible: boolean;
-  productName: string;
 }
 
 const StyledLogo = styled.div`
@@ -60,61 +53,39 @@ const StyledFooter = styled.footer`
 
 type SeenNotifications = Record<string, boolean>;
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class Toast extends PureComponent<{}, State> {
-  _interval: NodeJS.Timeout | null = null;
-
-  state: State = {
-    notification: null,
-    visible: false,
-    productName: getProductName(),
-  };
-
-  _cancel() {
-    const { notification } = this.state;
-
+export const Toast: FC = () => {
+  const [notification, setNotification] = useState<ToastNotification | null>(null);
+  const [visible, setVisible] = useState(false);
+  const handleNotification = (notification: ToastNotification | null | undefined) => {
     if (!notification) {
       return;
     }
-
-    this._dismissNotification();
-  }
-
-  _handleNotification(notification: ToastNotification | null | undefined) {
-    if (!notification) {
-      return;
-    }
-
-    const seenNotifications = this._loadSeen();
-
+    let seenNotifications: SeenNotifications = {};
+    try {
+      const storedKeys = window.localStorage.getItem(INSOMNIA_NOTIFICATIONS_SEEN);
+      if (storedKeys) {
+        seenNotifications = JSON.parse(storedKeys) as SeenNotifications || {};
+      }
+    } catch (e) { }
     console.log(`[toast] Received notification ${notification.key}`);
-
     if (seenNotifications[notification.key]) {
       console.log(`[toast] Not showing notification ${notification.key} because has already been seen`);
       return;
     }
-
     seenNotifications[notification.key] = true;
-    const obj = JSON.stringify(seenNotifications, null, 2);
-    window.localStorage.setItem(INSOMNIA_NOTIFICATIONS_SEEN, obj);
-
-    this.setState({
-      notification,
-      visible: false,
-    });
-
+    window.localStorage.setItem(INSOMNIA_NOTIFICATIONS_SEEN, JSON.stringify(seenNotifications, null, 2));
+    setNotification(notification);
+    setVisible(false);
     // Fade the notification in
     setTimeout(() => {
-      this.setState({ visible: true });
+      setVisible(true);
     }, 1000);
-  }
-
-  async _checkForNotifications() {
+  };
+  const checkForNotifications = async () => {
     // If there is a notification open, skip check
-    if (this.state.notification) {
+    if (notification) {
       return;
     }
-
     const stats = await models.stats.get();
     const {
       allowNotificationRequests,
@@ -123,14 +94,11 @@ export class Toast extends PureComponent<{}, State> {
       updateAutomatically,
       updateChannel,
     } = await models.settings.getOrCreate();
-
     if (!allowNotificationRequests) {
       // if the user has specifically said they don't want to send notification requests, then exit early
       return;
     }
-
-    let notification: ToastNotification | null = null;
-
+    let updatedNotification: ToastNotification | null = null;
     // Try fetching user notification
     try {
       const data = {
@@ -147,98 +115,72 @@ export class Toast extends PureComponent<{}, State> {
       };
       const notificationOrEmpty = await fetch.post<ToastNotification>('/notification', data, session.getCurrentSessionId());
       if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
-        notification = notificationOrEmpty;
+        updatedNotification = notificationOrEmpty;
       }
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
+    handleNotification(updatedNotification);
+  };
 
-    this._handleNotification(notification);
-  }
+  useEffect(() => {
+    const showNotification = (_: IpcRendererEvent, notification: ToastNotification) => handleNotification(notification);
+    electron.ipcRenderer.on('show-notification', showNotification);
+    return () => {
+      electron.ipcRenderer.removeListener('show-notification', showNotification);
+    };
+  }, []);
 
-  _loadSeen() {
-    try {
-      const storedKeys = window.localStorage.getItem(INSOMNIA_NOTIFICATIONS_SEEN);
-      if (!storedKeys) {
-        return {};
-      }
-
-      return JSON.parse(storedKeys) as SeenNotifications || {};
-    } catch (error) {
-      return {};
-    }
-  }
-
-  _dismissNotification() {
-    const { notification } = this.state;
-
-    if (!notification) {
-      return;
-    }
-
-    // Hide the currently showing notification
-    this.setState({ visible: false });
-
-    // Give time for toast to fade out, then remove it
-    setTimeout(() => {
-      this.setState({ notification: null }, this._checkForNotifications);
-    }, 1000);
-  }
-
-  _listenerShowNotification(_e: Electron.IpcRendererEvent, notification: ToastNotification) {
-    this._handleNotification(notification);
-  }
-
-  componentDidMount() {
-    setTimeout(this._checkForNotifications, 1000 * 10);
-    this._interval = setInterval(this._checkForNotifications, 1000 * 60 * 30);
-    electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
-  }
-
-  componentWillUnmount() {
-    if (this._interval !== null) {
-      clearInterval(this._interval);
-    }
-    electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
-  }
-
-  render() {
-    const { notification, visible, productName } = this.state;
-
-    if (!notification) {
-      return null;
-    }
-
-    return (
-      <div
-        className={classnames('toast theme--dialog', {
-          'toast--show': visible,
-        })}
-      >
-        <StyledLogo>
-          <img src={imgSrcCore} alt={productName} />
-        </StyledLogo>
-        <StyledContent>
-          <p>{notification?.message || 'Unknown'}</p>
-          <StyledFooter>
-            <button
-              className="btn btn--super-duper-compact btn--outlined"
-              onClick={this._cancel}
-            >
-              Dismiss
-            </button>
-            &nbsp;&nbsp;
-            <Link
-              button
-              className="btn btn--super-duper-compact btn--outlined no-wrap"
-              onClick={this._cancel}
-              href={notification.url}
-            >
-              {notification.cta}
-            </Link>
-          </StyledFooter>
-        </StyledContent>
-      </div>
-    );
-  }
-}
+  const productName = getProductName();
+  return notification ? (
+    <div
+      className={classnames('toast theme--dialog', {
+        'toast--show': visible,
+      })}
+    >
+      <StyledLogo>
+        <img src={imgSrcCore} alt={productName} />
+      </StyledLogo>
+      <StyledContent>
+        <p>{notification?.message || 'Unknown'}</p>
+        <StyledFooter>
+          <button
+            className="btn btn--super-duper-compact btn--outlined"
+            onClick={() => {
+              if (notification) {
+                // Hide the currently showing notification
+                setVisible(false);
+                // Give time for toast to fade out, then remove it
+                setTimeout(() => {
+                  setNotification(null);
+                  checkForNotifications();
+                }, 1000);
+              }
+            }}
+          >
+            Dismiss
+          </button>
+          &nbsp;&nbsp;
+          <Link
+            button
+            className="btn btn--super-duper-compact btn--outlined no-wrap"
+            onClick={() => {
+              if (notification) {
+                // Hide the currently showing notification
+                setVisible(false);
+                // Give time for toast to fade out, then remove it
+                setTimeout(() => {
+                  setNotification(null);
+                  checkForNotifications();
+                }, 1000);
+              }
+            }}
+            href={notification.url}
+          >
+            {notification.cta}
+          </Link>
+        </StyledFooter>
+      </StyledContent>
+    </div>
+  ) : null;
+};
