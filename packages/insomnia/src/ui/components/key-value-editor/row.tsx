@@ -1,8 +1,6 @@
 // eslint-disable-next-line filenames/match-exported
 import classnames from 'classnames';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget, DropTargetMonitor } from 'react-dnd';
-import ReactDOM from 'react-dom';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -28,23 +26,16 @@ export interface Pair {
 
 export type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[]>;
 
-type DragDirection = 0 | 1 | -1;
-
 interface Props {
   allowFile?: boolean;
   allowMultiline?: boolean;
   className?: string;
-  connectDragPreview?: ConnectDragPreview;
-  connectDragSource?: ConnectDragSource;
-  connectDropTarget?: ConnectDropTarget;
   descriptionPlaceholder?: string;
   displayDescription: boolean;
   forceInput?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   hideButtons?: boolean;
-  isDragging?: boolean;
-  isDraggingOver?: boolean;
   namePlaceholder?: string;
   noDelete?: boolean;
   noDropZone?: boolean;
@@ -64,35 +55,23 @@ interface Props {
   valueInputType?: string;
   valuePlaceholder?: string;
 }
-interface DnDProps extends Props {
-  onMove?: (pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) => void;
-  index: number;
-}
-
 export interface RowHandle {
   focusNameEnd: () => void;
   focusValueEnd: () => void;
   focusDescriptionEnd: () => void;
-  setDragDirection: (dragDirection: DragDirection) => void;
 }
-const RowFC = forwardRef<RowHandle, Props>(({
+export const Row = forwardRef<RowHandle, Props>(({
   allowFile,
   allowMultiline,
   className,
-  connectDragPreview,
-  connectDragSource,
-  connectDropTarget,
   descriptionPlaceholder,
   displayDescription,
   forceInput,
   handleGetAutocompleteNameConstants,
   handleGetAutocompleteValueConstants,
   hideButtons,
-  isDragging,
-  isDraggingOver,
   namePlaceholder,
   noDelete,
-  noDropZone,
   onBlurDescription,
   onBlurName,
   onBlurValue,
@@ -115,13 +94,11 @@ const RowFC = forwardRef<RowHandle, Props>(({
   const nameRef = useRef<OneLineEditorHandle>(null);
   const valueRef = useRef<OneLineEditorHandle>(null);
   const descriptionRef = useRef<OneLineEditorHandle>(null);
-  const [dragDirection, setDragDirection] = useState<DragDirection>(0);
 
   useImperativeHandle(ref, () => ({
     focusNameEnd: () => nameRef.current?.focusEnd(),
     focusValueEnd: () => valueRef.current?.focusEnd(),
     focusDescriptionEnd: () => descriptionRef.current?.focusEnd(),
-    setDragDirection,
   }));
 
   function _handleTypeChange(def: Partial<Pair>) {
@@ -135,9 +112,6 @@ const RowFC = forwardRef<RowHandle, Props>(({
   }
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
-    'key-value-editor__row-wrapper--dragging': isDragging,
-    'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
-    'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
     'key-value-editor__row-wrapper--disabled': pair.disabled,
   });
 
@@ -260,23 +234,9 @@ const RowFC = forwardRef<RowHandle, Props>(({
     );
   }
 
-  let handle: ConnectDragSource | JSX.Element | undefined | null = null;
-
-  if (sortable) {
-    handle = renderLeftIcon ? (
-      <div className="key-value-editor__drag">{renderLeftIcon()}</div>
-    ) : (
-      connectDragSource?.(
-        <div className="key-value-editor__drag">
-          <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')} />
-        </div>,
-      )
-    );
-  }
-
-  const row = (
+  return (
     <li className={classes}>
-      {handle}
+      {sortable && renderLeftIcon ? (<div className="key-value-editor__drag">{renderLeftIcon()}</div>) : null}
       <div className="key-value-editor__row">
         <div
           className={classnames('form-control form-control--underlined form-control--wide', {
@@ -364,70 +324,5 @@ const RowFC = forwardRef<RowHandle, Props>(({
       </div>
     </li>
   );
-  const isConnected = connectDragPreview && connectDropTarget;
-  if (!isConnected) {
-    return row;
-  }
-  return Boolean(noDropZone) ? row : connectDragPreview(connectDropTarget(row));
 });
-RowFC.displayName = 'RowFC';
-
-const dragSource = {
-  beginDrag(props: Props) {
-    return {
-      pair: props.pair,
-    };
-  },
-};
-
-function isAbove(monitor: DropTargetMonitor, component: any) {
-  const hoveredNode = ReactDOM.findDOMNode(component);
-  // @ts-expect-error -- TSCONVERSION
-  const hoveredTop = hoveredNode.getBoundingClientRect().top;
-  // @ts-expect-error -- TSCONVERSION
-  const height = hoveredNode.clientHeight;
-  const draggedTop = monitor.getSourceClientOffset()?.y;
-  // NOTE: Not quite sure why it's height / 3 (seems to work)
-  return draggedTop !== undefined ? hoveredTop > draggedTop - height / 3 : false;
-}
-
-const dragTarget = {
-  drop(props: DnDProps, monitor: DropTargetMonitor, component: any) {
-    if (isAbove(monitor, component)) {
-      props.onMove?.(monitor.getItem().pair, props.pair, 1);
-    } else {
-      props.onMove?.(monitor.getItem().pair, props.pair, -1);
-    }
-  },
-
-  hover(_props: Props, monitor: DropTargetMonitor, component: any) {
-    if (isAbove(monitor, component)) {
-      component.setDragDirection(1);
-    } else {
-      component.setDragDirection(-1);
-    }
-  },
-};
-
-const source = DragSource('KEY_VALUE_EDITOR', dragSource, (connect, monitor) => ({
-  connectDragSource: connect.dragSource(),
-  connectDragPreview: connect.dragPreview(),
-  isDragging: monitor.isDragging(),
-}))(RowFC);
-
-export const Row = DropTarget('KEY_VALUE_EDITOR', dragTarget, (connect, monitor) => ({
-  connectDropTarget: connect.dropTarget(),
-  isDraggingOver: monitor.isOver(),
-}))(source);
-
-Row.prototype.focusNameEnd = function() {
-  decoratedRef.current.decoratedRef.current.focusNameEnd();
-};
-
-Row.prototype.focusValueEnd = function() {
-  decoratedRef.current.decoratedRef.current.focusValueEnd();
-};
-
-Row.prototype.focusDescriptionEnd = function() {
-  decoratedRef.current.decoratedRef.current.focusDescriptionEnd();
-};
+Row.displayName = 'Row';

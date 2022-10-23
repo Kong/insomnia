@@ -99,29 +99,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
     this._onChange([]);
   }
 
-  _handleMove(pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) {
-    if (pairToMove.id === pairToTarget.id) {
-      // Nothing to do
-      return;
-    }
-
-    const withoutPair = this.state.pairs.filter(p => p.id !== pairToMove.id);
-    let toIndex = withoutPair.findIndex(p => p.id === pairToTarget.id);
-
-    // If we're moving below, add 1 to the index
-    if (targetOffset < 0) {
-      toIndex += 1;
-    }
-
-    const pairs = [
-      ...withoutPair.slice(0, toIndex),
-      Object.assign({}, pairToMove),
-      ...withoutPair.slice(toIndex),
-    ];
-
-    this._onChange(pairs);
-  }
-
   _handlePairDelete(pair: Pair) {
     const i = this.state.pairs.findIndex(p => p.id === pair.id);
 
@@ -456,7 +433,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
         {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
           <Row
             key={i}
-            index={i}
             sortable={true}
             displayDescription={this.state.displayDescription}
             descriptionPlaceholder={descriptionPlaceholder}
@@ -466,11 +442,10 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             pair={pair}
           />
         )) : null}
-        {pairs.map((pair, i) => (
+        {pairs.map(pair => (
           <Row
             noDelete={disableDelete}
             key={pair.id || 'no-id'}
-            index={i} // For dragging
             ref={this._setRowRef}
             sortable={sortable}
             displayDescription={this.state.displayDescription}
@@ -487,7 +462,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             onBlurName={this._handleBlurName}
             onBlurValue={this._handleBlurValue}
             onBlurDescription={this._handleBlurDescription}
-            onMove={this._handleMove}
             handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
@@ -505,7 +479,6 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             sortable
             noDropZone
             forceInput
-            index={-1}
             onChange={() => {}}
             onDelete={() => {}}
             renderLeftIcon={() => (
