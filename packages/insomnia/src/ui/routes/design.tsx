@@ -1,3 +1,5 @@
+import 'swagger-ui-react/swagger-ui.css';
+
 import { IRuleResult } from '@stoplight/spectral-core';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
