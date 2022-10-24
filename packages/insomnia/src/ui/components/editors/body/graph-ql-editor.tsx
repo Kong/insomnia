@@ -4,7 +4,18 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
+import {
+  DefinitionNode,
+  DocumentNode,
+  GraphQLNonNull,
+  GraphQLSchema,
+  IntrospectionOptions,
+  Kind,
+  NonNullTypeNode,
+  OperationDefinitionNode,
+  parse,
+  typeFromAST
+} from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import { jarFromCookies } from 'insomnia-cookies';
@@ -61,11 +72,13 @@ const fetchGraphQLSchemaForRequest = async ({
   environmentId,
   workspaceId,
   url,
+  introspectionOptions,
 }: {
   requestId: string;
   environmentId: string;
   workspaceId: string;
   url: string;
+  introspectionOptions: IntrospectionOptions;
 }) => {
   if (!url) {
     return;
@@ -122,7 +135,7 @@ const fetchGraphQLSchemaForRequest = async ({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...enabledHeaders },
       data: {
-        query: getIntrospectionQuery(),
+        query: getIntrospectionQuery(introspectionOptions),
       },
     });
 
@@ -181,6 +194,7 @@ interface State {
   activeReference: null | ActiveReference;
   documentAST: null | DocumentNode;
   disabledOperationMarkers: (TextMarker | undefined)[];
+  introspectionOptions: IntrospectionOptions;
 }
 export const GraphQLEditor: FC<Props> = ({
   request,
@@ -219,6 +233,26 @@ export const GraphQLEditor: FC<Props> = ({
       console.warn('Could not parse value of graphql.automaticFetch from localStorage:', err.message);
     }
   }
+
+  let introspectionOptions = {
+    descriptions: true,
+    specifiedByUrl: false,
+    directiveIsRepeatable: false,
+    schemaDescription: false,
+    inputValueDeprecation: false,
+  };
+
+  try {
+    const introspectionOptionsStringified = window.localStorage.getItem('graphql.introspectionOptions');
+    if (introspectionOptionsStringified) {
+      introspectionOptions = JSON.parse(introspectionOptionsStringified);
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.warn('Could not parse value of graphql.introspectionOptions from localStorage:', err.message);
+    }
+  }
+
   const [state, setState] = useState<State>({
     body: {
       query: maybeBody.query || '',
@@ -232,6 +266,7 @@ export const GraphQLEditor: FC<Props> = ({
     automaticFetch,
     documentAST,
     disabledOperationMarkers: [],
+    introspectionOptions,
   });
   const [schema, setSchema] = useState<GraphQLSchema | null>(null);
   const [schemaFetchError, setSchemaFetchError] = useState<{
@@ -251,6 +286,7 @@ export const GraphQLEditor: FC<Props> = ({
         environmentId,
         url: request.url,
         workspaceId,
+        introspectionOptions: state.introspectionOptions,
       });
 
       isMounted && setSchemaFetchError(newState?.schemaFetchError);
@@ -262,7 +298,7 @@ export const GraphQLEditor: FC<Props> = ({
     return () => {
       isMounted = false;
     };
-  }, [environmentId, request._id, request.url, workspaceId]);
+  }, [environmentId, request._id, request.url, workspaceId, state.introspectionOptions]);
 
   const getCurrentOperation = () => {
     if (!editorRef.current) {
@@ -374,6 +410,7 @@ export const GraphQLEditor: FC<Props> = ({
       environmentId,
       url: request.url,
       workspaceId,
+      introspectionOptions: state.introspectionOptions,
     });
     setSchemaIsFetching(false);
   };
@@ -588,6 +625,77 @@ export const GraphQLEditor: FC<Props> = ({
           <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
           Automatic Fetch
           <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+        </DropdownItem>
+
+        <DropdownDivider>Introspection Options</DropdownDivider>
+        <DropdownItem
+          onClick={() => {
+            setState(state => {
+              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, descriptions: !state.introspectionOptions.descriptions } };
+              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
+              return updated;
+            });
+          }}
+          stayOpenAfterClick
+        >
+          <i className={`fa fa-toggle-${state.introspectionOptions.descriptions ? 'on' : 'off'}`} />{' '}
+          Include descriptions
+        </DropdownItem>
+
+        <DropdownItem
+          onClick={() => {
+            setState(state => {
+              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, specifiedByUrl: !state.introspectionOptions.specifiedByUrl } };
+              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
+              return updated;
+            });
+          }}
+          stayOpenAfterClick
+        >
+          <i className={`fa fa-toggle-${state.introspectionOptions.specifiedByUrl ? 'on' : 'off'}`} />{' '}
+          Include <pre>specifiedByUrl</pre>
+        </DropdownItem>
+
+        <DropdownItem
+          onClick={() => {
+            setState(state => {
+              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, directiveIsRepeatable: !state.introspectionOptions.directiveIsRepeatable } };
+              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
+              return updated;
+            });
+          }}
+          stayOpenAfterClick
+        >
+          <i className={`fa fa-toggle-${state.introspectionOptions.directiveIsRepeatable ? 'on' : 'off'}`} />{' '}
+          Include <pre>isRepeatable</pre>
+        </DropdownItem>
+
+        <DropdownItem
+          onClick={() => {
+            setState(state => {
+              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, schemaDescription: !state.introspectionOptions.schemaDescription } };
+              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
+              return updated;
+            });
+          }}
+          stayOpenAfterClick
+        >
+          <i className={`fa fa-toggle-${state.introspectionOptions.schemaDescription ? 'on' : 'off'}`} />{' '}
+          Include schema description
+        </DropdownItem>
+
+        <DropdownItem
+          onClick={() => {
+            setState(state => {
+              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, inputValueDeprecation: !state.introspectionOptions.inputValueDeprecation } };
+              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
+              return updated;
+            });
+          }}
+          stayOpenAfterClick
+        >
+          <i className={`fa fa-toggle-${state.introspectionOptions.inputValueDeprecation ? 'on' : 'off'}`} />{' '}
+          Include deprecated input values
         </DropdownItem>
 
         <DropdownDivider>Local GraphQL Schema</DropdownDivider>
