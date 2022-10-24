@@ -1,13 +1,11 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
-import { AUTOBIND_CFG } from '../../../../common/constants';
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
 import { deleteGitRepository } from '../../../../models/helpers/git-repository-operations';
 import { Link } from '../../base/link';
-import { type ModalHandle, Modal } from '../../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
@@ -17,70 +15,49 @@ import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
-interface State {
+interface GitRepositorySettingsModalOptions {
   gitRepository: GitRepository | null;
+  onSubmitEdits: (gitRepoPatch: Partial<GitRepository>) => void;
 }
-
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class GitRepositorySettingsModal extends PureComponent<{}, State> {
-  modal: ModalHandle | null = null;
-  _onSubmitEdits?: ((repo: Partial<GitRepository>) => any) | null;
-
-  state: State = {
+export interface GitRepositorySettingsModalHandle {
+  show: (options: GitRepositorySettingsModalOptions) => void;
+  hide: () => void;
+}
+export const GitRepositorySettingsModal = forwardRef<GitRepositorySettingsModalHandle, ModalProps>((_, ref) => {
+  const modalRef = useRef<ModalHandle>(null);
+  const [state, setState] = useState<GitRepositorySettingsModalOptions>({
     gitRepository: null,
-  };
+    onSubmitEdits: () => {},
+  });
 
-  _setModalRef(modal: ModalHandle) {
-    this.modal = modal;
-  }
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide();
+    },
+    show: options => {
+      setState(options);
+      modalRef.current?.show();
+    },
+  }), []);
 
-  show(options: {
-    gitRepository: GitRepository | null;
-    onSubmitEdits: (repo: Partial<GitRepository>) => any;
-  }) {
-    this._onSubmitEdits = options.onSubmitEdits;
-    const { gitRepository } = options;
-
-    this.setState({ gitRepository });
-    this.modal?.show();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  render() {
-    const _handleReset = async () => {
-      const { gitRepository } = this.state;
-
-      if (!gitRepository) {
-        // Nothing to do
-        return;
-      }
-
-      await deleteGitRepository(gitRepository);
-      this.hide();
-    };
-
-    const _handleSubmitEdit = async (patch: Partial<GitRepository>) => {
-      if (this._onSubmitEdits) {
-        this._onSubmitEdits({ ...this.state.gitRepository, ...patch });
-      }
-
-      this.hide();
-    };
-
-    return (
-      <Modal ref={this._setModalRef} {...this.props}>
-        <ModalForm
-          onSubmit={patch => _handleSubmitEdit(patch)}
-          onReset={_handleReset}
-          gitRepository={this.state.gitRepository}
-        />
-      </Modal>
-    );
-  }
-}
+  const { gitRepository, onSubmitEdits } = state;
+  return (
+    <Modal ref={modalRef}>
+      <ModalForm
+        onSubmit={patch => {
+          onSubmitEdits({ ...gitRepository, ...patch });
+          modalRef.current?.hide();
+        }}
+        onReset={() => {
+          gitRepository && deleteGitRepository(gitRepository);
+          modalRef.current?.hide();
+        }}
+        gitRepository={gitRepository}
+      />
+    </Modal>
+  );
+});
+GitRepositorySettingsModal.displayName = 'GitRepositorySettingsModal';
 
 interface Props {
   gitRepository: GitRepository | null;

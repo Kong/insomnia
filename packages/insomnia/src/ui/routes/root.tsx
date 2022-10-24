@@ -208,17 +208,16 @@ const App = () => {
 
                 <EnvironmentEditModal ref={instance => registerModal(instance, 'EnvironmentEditModal')} />
 
-                <GitRepositorySettingsModal ref={registerModal} />
+                <GitRepositorySettingsModal ref={instance => registerModal(instance, 'GitRepositorySettingsModal')}  />
 
                 {activeWorkspace && gitVCS ? (
                   <Fragment>
-                    <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} gitRepository={activeGitRepository} />
-                    <GitLogModal ref={registerModal} vcs={gitVCS} />
+                    <GitStagingModal ref={instance => registerModal(instance, 'GitStagingModal')} workspace={activeWorkspace} vcs={gitVCS} gitRepository={activeGitRepository} />
+                    <GitLogModal ref={instance => registerModal(instance, 'GitLogModal')} vcs={gitVCS} />
                     {activeGitRepository !== null && (
                       <GitBranchesModal
-                        ref={registerModal}
+                        ref={instance => registerModal(instance, 'GitBranchesModal')}
                         vcs={gitVCS}
-                        gitRepository={activeGitRepository}
                       />
                     )}
                   </Fragment>
