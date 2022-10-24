@@ -1,19 +1,20 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, ReactNode, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { useMount } from 'react-use';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
-import type { GitRepository } from '../../../models/git-repository';
 import type { Workspace } from '../../../models/workspace';
 import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import * as gitActions from '../../redux/modules/git';
+import { selectActiveGitRepository } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -28,22 +29,19 @@ import { GitStagingModal } from '../modals/git-staging-modal';
 interface Props {
   workspace: Workspace;
   vcs: GitVCS;
-  gitRepository: GitRepository | null;
   className?: string;
   renderDropdownButton?: (children: ReactNode) => ReactNode;
 }
 
 interface State {
-  initializing: boolean;
   loadingPush: boolean;
   loadingPull: boolean;
   log: GitLogEntry[];
   branch: string;
   branches: string[];
 }
-export const GitSyncDropdown: FC<Props> = props => {
+export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className, renderDropdownButton }) => {
   const [state, setState] = useState<State>({
-    initializing: false,
     loadingPush: false,
     loadingPull: false,
     log: [],
@@ -51,12 +49,15 @@ export const GitSyncDropdown: FC<Props> = props => {
     branches: [],
   });
   const dispatch = useDispatch();
+  const gitRepository = useSelector(selectActiveGitRepository);
   const dropdownRef = useRef<DropdownHandle>(null);
 
-  async function _refreshState() {
-    const { vcs, workspace } = props;
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  useMount(() => {
+    refreshState();
+  });
 
+  async function refreshState() {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
     // Clear cached items and return if no state
     if (!vcs.isInitialized() || !workspaceMeta.gitRepositoryId) {
       // Don't update unnecessarily
@@ -65,107 +66,49 @@ export const GitSyncDropdown: FC<Props> = props => {
         workspaceMeta.cachedGitLastAuthor,
         workspaceMeta.cachedGitLastCommitTime,
       ].some(isNotNullOrUndefined);
-
       if (needsUpdate) {
-        await models.workspaceMeta.updateByParentId(workspace._id, {
+        models.workspaceMeta.updateByParentId(workspace._id, {
           cachedGitRepositoryBranch: null,
           cachedGitLastAuthor: null,
           cachedGitLastCommitTime: null,
         });
       }
-
       return;
     }
-
     const branch = await vcs.getBranch();
     const branches = await vcs.listBranches();
     const log = (await vcs.log()) || [];
     setState(state => ({ ...state, log, branch, branches }));
     const author = log[0] ? log[0].commit.author : null;
-    const cachedGitRepositoryBranch = branch;
-    const cachedGitLastAuthor = author ? author.name : null;
     // NOTE: We're converting timestamp to ms here
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
     await models.workspaceMeta.updateByParentId(workspace._id, {
-      cachedGitRepositoryBranch,
-      cachedGitLastAuthor,
+      cachedGitRepositoryBranch: branch,
+      cachedGitLastAuthor: author?.name || null,
       cachedGitLastCommitTime,
     });
   }
-  async function _handlePull() {
-    setState(state => ({
-      ...state,
-      loadingPull: true,
-    }));
-    const { vcs, gitRepository } = props;
 
+  async function handlePush({ force }: { force: boolean }) {
     if (!gitRepository) {
-      // Should never happen
-      throw new Error('Tried to pull without configuring git repo');
+      return;
     }
-
-    const bufferId = await db.bufferChanges();
-    const providerName = getOauth2FormatName(gitRepository.credentials);
-    try {
-      await vcs.pull(gitRepository.credentials);
-      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
-    } catch (err) {
-      showError({
-        title: 'Error Pulling Repository',
-        error: err,
-      });
-      trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', err.message));
-    }
-
-    await db.flushChanges(bufferId);
-    setState(state => ({
-      ...state,
-      loadingPull: false,
-    }));
-  }
-
-  async function _handlePush(_e: unknown, force = false) {
-    setState(state => ({
-      ...state,
-      loadingPush: true,
-    }));
-    const { vcs, gitRepository } = props;
-
-    if (!gitRepository) {
-      // Should never happen
-      throw new Error('Tried to push without configuring git repo');
-    }
-
+    setState(state => ({ ...state, loadingPush: true }));
     // Check if there is anything to push
     let canPush = false;
-
     try {
       canPush = await vcs.canPush(gitRepository.credentials);
     } catch (err) {
-      showError({
-        title: 'Error Pushing Repository',
-        error: err,
-      });
-      setState(state => ({
-        ...state,
-        loadingPush: false,
-      }));
+      showError({ title: 'Error Pushing Repository', error: err });
+      setState(state => ({ ...state, loadingPush: false }));
       return;
     }
-
     // If nothing to push, display that to the user
     if (!canPush) {
-      showAlert({
-        title: 'Push Skipped',
-        message: 'Everything up-to-date. Nothing was pushed to the remote',
-      });
-      setState(state => ({
-        ...state,
-        loadingPush: false,
-      }));
+      showAlert({ title: 'Push Skipped', message: 'Everything up-to-date. Nothing was pushed to the remote' });
+      setState(state => ({ ...state, loadingPush: false }));
       return;
     }
-
     const bufferId = await db.bufferChanges();
     const providerName = getOauth2FormatName(gitRepository.credentials);
     try {
@@ -180,58 +123,18 @@ export const GitSyncDropdown: FC<Props> = props => {
           okLabel: 'Force Push',
           addCancel: true,
           onConfirm: () => {
-            _handlePush(null, true);
+            handlePush({ force: true });
           },
         });
       } else {
-        showError({
-          title: 'Error Pushing Repository',
-          error: err,
-        });
+        showError({ title: 'Error Pushing Repository', error: err });
         trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message), providerName });
       }
     }
-
     await db.flushChanges(bufferId);
-    setState(state => ({
-      ...state,
-      loadingPush: false,
-    }));
+    setState(state => ({ ...state, loadingPush: false }));
   }
 
-  function _handleConfig() {
-    const { gitRepository, workspace } = props;
-
-    if (gitRepository) {
-      dispatch(gitActions.updateGitRepository({
-        gitRepository,
-      }));
-    } else {
-      dispatch(gitActions.setupGitRepository({
-        workspace,
-        createFsClient: MemClient.createClient,
-      }));
-    }
-  }
-
-  async function _handleCheckoutBranch(branch: string) {
-    const { vcs } = props;
-    const bufferId = await db.bufferChanges();
-
-    try {
-      await vcs.checkout(branch);
-    } catch (err) {
-      showError({
-        title: 'Checkout Error',
-        error: err,
-      });
-    }
-
-    await db.flushChanges(bufferId, true);
-    await dispatch(initializeEntities());
-    await _refreshState();
-  }
-  const { className, vcs, renderDropdownButton, gitRepository } = props;
   const { log, branches, branch, loadingPull, loadingPush } = state;
   let iconClassName = '';
   const providerName = getOauth2FormatName(gitRepository?.credentials);
@@ -241,13 +144,12 @@ export const GitSyncDropdown: FC<Props> = props => {
   if (providerName === 'gitlab') {
     iconClassName = 'fa fa-gitlab';
   }
-  const initializing = false;
   return (
     <div className={className}>
-      <Dropdown className="wide tall" onOpen={() => _refreshState()} ref={dropdownRef}>
+      <Dropdown className="wide tall" ref={dropdownRef}>
         {renderDropdownButton || vcs.isInitialized() ? (<DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
           {iconClassName && <i className={classnames('space-right', iconClassName)} />}
-          <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
+          <div className="ellipsis">{branch}</div>
           <i className="fa fa-code-fork space-left" />
         </DropdownButton>) :
           (<DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
@@ -268,13 +170,26 @@ export const GitSyncDropdown: FC<Props> = props => {
           </HelpTooltip>
         </DropdownDivider>
 
-        <DropdownItem onClick={_handleConfig}>
+        <DropdownItem
+          onClick={() => {
+            if (gitRepository) {
+              dispatch(gitActions.updateGitRepository({
+                gitRepository,
+              }));
+            } else {
+              dispatch(gitActions.setupGitRepository({
+                workspace,
+                createFsClient: MemClient.createClient,
+              }));
+            }
+          }}
+        >
           <i className="fa fa-wrench" /> Repository Settings
         </DropdownItem>
 
         {vcs.isInitialized() && (
           <Fragment>
-            <DropdownItem onClick={() => showModal(GitBranchesModal, { onHide: _refreshState })}>
+            <DropdownItem onClick={() => showModal(GitBranchesModal, { onHide: refreshState })}>
               <i className="fa fa-code-fork" /> Branches
             </DropdownItem>
           </Fragment>
@@ -285,16 +200,26 @@ export const GitSyncDropdown: FC<Props> = props => {
             <DropdownDivider>Branches</DropdownDivider>
             {branches.map(branch => {
               const { branch: currentBranch } = state;
-              const icon =
-                branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
+              const icon = branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
               const isCurrentBranch = branch === currentBranch;
               return (
                 <DropdownItem
                   key={branch}
-                  onClick={isCurrentBranch ? undefined : () => _handleCheckoutBranch(branch)}
-                  className={classnames({
-                    bold: isCurrentBranch,
-                  })}
+                  onClick={async () => {
+                    if (isCurrentBranch) {
+                      return;
+                    }
+                    const bufferId = await db.bufferChanges();
+                    try {
+                      await vcs.checkout(branch);
+                    } catch (error) {
+                      showError({ title: 'Checkout Error', error });
+                    }
+                    await db.flushChanges(bufferId, true);
+                    await dispatch(initializeEntities());
+                    refreshState();
+                  }}
+                  className={classnames({ bold: isCurrentBranch })}
                   title={isCurrentBranch ? '' : `Switch to "${branch}"`}
                 >
                   {icon}
@@ -307,14 +232,14 @@ export const GitSyncDropdown: FC<Props> = props => {
 
             <DropdownItem
               onClick={() => showModal(GitStagingModal, {
-                onCommit: _refreshState,
+                onCommit: refreshState,
                 gitRepository,
               })}
             >
               <i className="fa fa-check" /> Commit
             </DropdownItem>
             {log.length > 0 && (
-              <DropdownItem onClick={_handlePush} stayOpenAfterClick>
+              <DropdownItem onClick={() => handlePush({ force: false })} stayOpenAfterClick>
                 <i
                   className={classnames({
                     fa: true,
@@ -325,7 +250,30 @@ export const GitSyncDropdown: FC<Props> = props => {
                 Push
               </DropdownItem>
             )}
-            <DropdownItem onClick={_handlePull} stayOpenAfterClick>
+            <DropdownItem
+              onClick={async () => {
+                setState(state => ({ ...state, loadingPull: true }));
+                if (!gitRepository) {
+                  // Should never happen
+                  throw new Error('Tried to pull without configuring git repo');
+                }
+                const bufferId = await db.bufferChanges();
+                const providerName = getOauth2FormatName(gitRepository.credentials);
+                try {
+                  await vcs.pull(gitRepository.credentials);
+                  trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
+                } catch (err) {
+                  showError({
+                    title: 'Error Pulling Repository',
+                    error: err,
+                  });
+                  trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', err.message));
+                }
+                await db.flushChanges(bufferId);
+                setState(state => ({ ...state, loadingPull: false }));
+              }}
+              stayOpenAfterClick
+            >
               <i
                 className={classnames({
                   fa: true,

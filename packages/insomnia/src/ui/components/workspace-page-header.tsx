@@ -128,7 +128,6 @@ export const WorkspacePageHeader: FC = () => {
       /> : isGitSync ? <GitSyncDropdown
         className="margin-left"
         workspace={activeWorkspace}
-        gitRepository={activeGitRepository}
         vcs={gitVCS}
         renderDropdownButton={children => (
           <DropdownButton className="btn--clicky-small btn-sync">
