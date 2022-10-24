@@ -35,6 +35,11 @@ export default defineConfig(({ mode }) => {
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.INSOMNIA_ENV': JSON.stringify(mode),
     },
+    resolve: {
+      alias: {
+        'url': path.join(__dirname, 'src', 'url.shim.js'),
+      },
+    },
     optimizeDeps: {
       exclude: commonjsPackages,
     },
