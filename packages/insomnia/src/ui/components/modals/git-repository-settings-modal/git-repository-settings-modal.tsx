@@ -23,7 +23,7 @@ export interface GitRepositorySettingsModalHandle {
   show: (options: GitRepositorySettingsModalOptions) => void;
   hide: () => void;
 }
-export const GitRepositorySettingsModal = forwardRef<GitRepositorySettingsModalHandle, ModalProps>((props, ref) => {
+export const GitRepositorySettingsModal = forwardRef<GitRepositorySettingsModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<GitRepositorySettingsModalOptions>({
     gitRepository: null,
