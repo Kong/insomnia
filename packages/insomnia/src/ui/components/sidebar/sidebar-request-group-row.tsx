@@ -23,7 +23,7 @@ interface SidebarRequestGroupRowHandle {
   setDragDirection: (direction: number) => void;
 }
 
-export const UnconnectedSidebarRequestGroupRow = forwardRef<SidebarRequestGroupRowHandle, Props>(({
+export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle, Props>(({
   connectDragSource,
   connectDropTarget,
   filter,
@@ -117,7 +117,7 @@ export const UnconnectedSidebarRequestGroupRow = forwardRef<SidebarRequestGroupR
     </li>
   );
 });
-UnconnectedSidebarRequestGroupRow.displayName = 'UnconnectedSidebarRequestGroupRow';
+SidebarRequestGroupRowFC.displayName = 'SidebarRequestGroupRowFC';
 /**
  * Implements the drag source contract.
  */
@@ -169,6 +169,6 @@ const dragTarget: DropTargetSpec<Props> = {
   },
 };
 
-const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestGroupRow);
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestGroupRowFC);
 const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 export const SidebarRequestGroupRow = target;
