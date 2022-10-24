@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, Fragment, ReactNode, useRef, useState } from 'react';
+import React, { FC, Fragment, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 
@@ -30,7 +30,6 @@ interface Props {
   workspace: Workspace;
   vcs: GitVCS;
   className?: string;
-  renderDropdownButton?: (children: ReactNode) => ReactNode;
 }
 
 interface State {
@@ -40,7 +39,7 @@ interface State {
   branch: string;
   branches: string[];
 }
-export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className, renderDropdownButton }) => {
+export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
   const [state, setState] = useState<State>({
     loadingPush: false,
     loadingPull: false,
@@ -147,12 +146,13 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className, renderDr
   return (
     <div className={className}>
       <Dropdown className="wide tall" ref={dropdownRef}>
-        {renderDropdownButton || vcs.isInitialized() ? (<DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
-          {iconClassName && <i className={classnames('space-right', iconClassName)} />}
-          <div className="ellipsis">{branch}</div>
-          <i className="fa fa-code-fork space-left" />
-        </DropdownButton>) :
-          (<DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced" name="git-sync-dropdown-btn">
+        {vcs.isInitialized() ?
+          (<DropdownButton className="btn--clicky-small btn-sync">
+            {iconClassName && <i className={classnames('space-right', iconClassName)} />}
+            <div className="ellipsis">{branch}</div>
+            <i className="fa fa-code-fork space-left" />
+          </DropdownButton>) :
+          (<DropdownButton className="btn--clicky-small btn-sync">
             <i className="fa fa-code-fork space-right" />
             Setup Git Sync
           </DropdownButton>)}
