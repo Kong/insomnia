@@ -40,27 +40,19 @@ export const GitRepositorySettingsModal = forwardRef<GitRepositorySettingsModalH
     },
   }), []);
 
-  const onReset = async () => {
-    const { gitRepository } = state;
-    if (!gitRepository) {
-      // Nothing to do
-      return;
-    }
-    await deleteGitRepository(gitRepository);
-    modalRef.current?.hide();
-  };
-
-  const handleSubmitEdit = (patch: Partial<GitRepository>) => {
-    state.onSubmitEdits({ ...state.gitRepository, ...patch });
-    modalRef.current?.hide();
-  };
-
+  const { gitRepository, onSubmitEdits } = state;
   return (
-    <Modal ref={modalRef} {...props}>
+    <Modal ref={modalRef}>
       <ModalForm
-        onSubmit={patch => handleSubmitEdit(patch)}
-        onReset={onReset}
-        gitRepository={state.gitRepository}
+        onSubmit={patch => {
+          onSubmitEdits({ ...gitRepository, ...patch });
+          modalRef.current?.hide();
+        }}
+        onReset={() => {
+          gitRepository && deleteGitRepository(gitRepository);
+          modalRef.current?.hide();
+        }}
+        gitRepository={gitRepository}
       />
     </Modal>
   );
