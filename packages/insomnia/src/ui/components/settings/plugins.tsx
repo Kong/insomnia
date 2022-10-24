@@ -1,5 +1,5 @@
 import * as path from 'path';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import {
   NPM_PACKAGE_BASE,
@@ -8,7 +8,6 @@ import {
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { clickLink } from '../../../common/electron-helpers';
-import { delay } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
@@ -51,16 +50,17 @@ export const Plugins: FC<Props> = ({ settings }) => {
     npmPluginValue,
   } = state;
 
+  useEffect(() => {
+    refreshPlugins();
+  }, []);
+
   async function refreshPlugins() {
-    const start = Date.now();
     setState(state => ({ ...state, isRefreshingPlugins: true }));
     // Get and reload plugins
     const plugins = await getPlugins(true);
     reload();
-    // Delay loading for at least 500ms. UX FTW!
-    const delta = Date.now() - start;
-    await delay(500 - delta);
-    setState(state => ({ ...state, plugins, isRefreshingPlugins: true }));
+
+    setState(state => ({ ...state, plugins, isRefreshingPlugins: false }));
   }
 
   return (
@@ -97,7 +97,7 @@ export const Plugins: FC<Props> = ({ settings }) => {
                         await models.settings.update(settings, {
                           pluginConfig: { ...settings.pluginConfig, [plugin.name]: newConfig },
                         });
-                        await refreshPlugins();
+                        refreshPlugins();
                       }}
                     />
                   </td>
