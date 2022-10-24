@@ -27,21 +27,21 @@
               "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
             }
           ],
-          "paths": ["/basic-auth/(?<user>[^\\/]+)/(?<password>[^\\/]+)$"]
+          "paths": ["/basic-auth/(?<user>[^/]+)/(?<password>[^/]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-image-format-get",
-          "paths": ["/image/(?<format>[^\\/]+)$"]
+          "paths": ["/image/(?<format>[^/]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-delay-n-get",
-          "paths": ["/delay/(?<n>[^\\/]+)$"]
+          "paths": ["/delay/(?<n>[^/]+)$"]
         },
         {
           "methods": ["GET"],
@@ -55,35 +55,35 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status-statusCode-delete",
-          "paths": ["/status/(?<statusCode>[^\\/]+)$"]
+          "paths": ["/status/(?<statusCode>[^/]+)$"]
         },
         {
           "methods": ["PUT"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status-statusCode-put",
-          "paths": ["/status/(?<statusCode>[^\\/]+)$"]
+          "paths": ["/status/(?<statusCode>[^/]+)$"]
         },
         {
           "methods": ["PATCH"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status-statusCode-patch",
-          "paths": ["/status/(?<statusCode>[^\\/]+)$"]
+          "paths": ["/status/(?<statusCode>[^/]+)$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status-statusCode-post",
-          "paths": ["/status/(?<statusCode>[^\\/]+)$"]
+          "paths": ["/status/(?<statusCode>[^/]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status-statusCode-get",
-          "paths": ["/status/(?<statusCode>[^\\/]+)$"]
+          "paths": ["/status/(?<statusCode>[^/]+)$"]
         },
         {
           "methods": ["GET"],
@@ -105,7 +105,7 @@
             }
           ],
           "paths": [
-            "/hidden-basic-auth/(?<user>[^\\/]+)/(?<password>[^\\/]+)$"
+            "/hidden-basic-auth/(?<user>[^/]+)/(?<password>[^/]+)$"
           ]
         },
         {
@@ -161,7 +161,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-parse-machine_timestamp-get",
-          "paths": ["/parse/(?<machine_timestamp>[^\\/]+)$"]
+          "paths": ["/parse/(?<machine_timestamp>[^/]+)$"]
         },
         {
           "methods": ["POST"],
@@ -209,7 +209,7 @@
               "enabled": true
             }
           ],
-          "paths": ["/when/(?<human_timestamp>[^\\/]+)$"]
+          "paths": ["/when/(?<human_timestamp>[^/]+)$"]
         },
         {
           "methods": ["GET"],
