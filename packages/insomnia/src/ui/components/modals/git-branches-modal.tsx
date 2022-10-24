@@ -69,64 +69,6 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
     },
   }), [refreshState, vcs, gitRepository?.credentials]);
 
-  const handleCreate = async (event: React.SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      const providerName = getOauth2FormatName(gitRepository?.credentials);
-      await vcs.checkout(state.newBranchName);
-      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
-      setState({ ...state, newBranchName: '' });
-      await refreshState();
-    } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-
-  const handleMerge = async (branch: string) => {
-    try {
-      const providerName = getOauth2FormatName(gitRepository?.credentials);
-      await vcs.merge(branch);
-      // Apparently merge doesn't update the working dir so need to checkout too
-      await handleCheckout(branch);
-      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
-    } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-
-  const handleDelete = async (branch: string) => {
-    try {
-      const providerName = getOauth2FormatName(gitRepository?.credentials);
-      await vcs.deleteBranch(branch);
-      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
-      await refreshState();
-    } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-
-  const handleRemoteCheckout = async (branch: string) => {
-    try {
-      // First fetch more history to make sure we have lots
-      await vcs.fetch(true, 20, gitRepository?.credentials);
-      await handleCheckout(branch);
-    } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-
   const handleCheckout = async (branch: string) => {
     try {
       const bufferId = await db.bufferChanges();
@@ -137,10 +79,7 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
       await dispatch(initializeEntities());
       await refreshState();
     } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
+      setState(state => ({ ...state, error: err.message }));
     }
   };
   const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = state;
@@ -157,7 +96,20 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
             {error}
           </p>
         )}
-        <form onSubmit={handleCreate}>
+        <form
+          onSubmit={async event => {
+            event.preventDefault();
+            try {
+              const providerName = getOauth2FormatName(gitRepository?.credentials);
+              await vcs.checkout(state.newBranchName);
+              trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
+              setState({ ...state, newBranchName: '' });
+              refreshState();
+            } catch (err) {
+              setState(state => ({ ...state, error: err.message }));
+            }
+          }}
+        >
           <div className="form-row">
             <div className="form-control form-control--outlined">
               <label>
@@ -189,40 +141,59 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
               </tr>
             </thead>
             <tbody>
-              {branches.map(name => (
-                <tr key={name} className="table--no-outline-row">
+              {branches.map(branch => (
+                <tr key={branch} className="table--no-outline-row">
                   <td>
                     <span
                       className={classnames({
-                        bold: name === currentBranch,
+                        bold: branch === currentBranch,
                       })}
                     >
-                      {name}
+                      {branch}
                     </span>
-                    {name === currentBranch ? (
+                    {branch === currentBranch ? (
                       <span className="txt-sm space-left">(current)</span>
                     ) : null}
                   </td>
                   <td className="text-right">
-                    {name !== currentBranch && (
+                    {branch !== currentBranch && (
                       <>
                         <PromptButton
                           className="btn btn--micro btn--outlined space-left"
                           doneMessage="Merged"
-                          onClick={() => handleMerge(name)}
+                          onClick={async () => {
+                            try {
+                              const providerName = getOauth2FormatName(gitRepository?.credentials);
+                              await vcs.merge(branch);
+                              // Apparently merge doesn't update the working dir so need to checkout too
+                              await handleCheckout(branch);
+                              trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
+                            } catch (err) {
+                              setState(state => ({ ...state, error: err.message }));
+                            }
+                          }}
                         >
                           Merge
                         </PromptButton>
                         <PromptButton
                           className="btn btn--micro btn--outlined space-left"
                           doneMessage="Deleted"
-                          onClick={() => handleDelete(name)}
+                          onClick={async () => {
+                            try {
+                              const providerName = getOauth2FormatName(gitRepository?.credentials);
+                              await vcs.deleteBranch(branch);
+                              trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
+                              refreshState();
+                            } catch (err) {
+                              setState(state => ({ ...state, error: err.message }));
+                            }
+                          }}
                         >
                           Delete
                         </PromptButton>
                         <button
                           className="btn btn--micro btn--outlined space-left"
-                          onClick={() => handleCheckout(name)}
+                          onClick={() => handleCheckout(branch)}
                         >
                           Checkout
                         </button>
@@ -244,13 +215,21 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
                 </tr>
               </thead>
               <tbody>
-                {remoteOnlyBranches.map(name => (
-                  <tr key={name} className="table--no-outline-row">
-                    <td>{name}</td>
+                {remoteOnlyBranches.map(branch => (
+                  <tr key={branch} className="table--no-outline-row">
+                    <td>{branch}</td>
                     <td className="text-right">
                       <button
                         className="btn btn--micro btn--outlined space-left"
-                        onClick={() => handleRemoteCheckout(name)}
+                        onClick={async () => {
+                          try {
+                            // First fetch more history to make sure we have lots
+                            await vcs.fetch(true, 20, gitRepository?.credentials);
+                            handleCheckout(branch);
+                          } catch (err) {
+                            setState(state => ({ ...state, error: err.message }));
+                          }
+                        }}
                       >
                         Checkout
                       </button>
