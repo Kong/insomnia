@@ -144,7 +144,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 <div className="scrollable">
                   <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
                     <KeyValueEditor
-                      sortable
                       namePlaceholder="header"
                       valuePlaceholder="value"
                       descriptionPlaceholder="description"

@@ -11,7 +11,6 @@ export const FormEditor: FC<Props> = ({ parameters, onChange }) => (
   <div className="scrollable-container tall wide">
     <div className="scrollable">
       <KeyValueEditor
-        sortable
         allowFile
         allowMultiline
         namePlaceholder="name"

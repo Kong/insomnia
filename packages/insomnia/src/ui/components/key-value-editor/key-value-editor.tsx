@@ -15,7 +15,6 @@ interface Props {
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   allowFile?: boolean;
   allowMultiline?: boolean;
-  sortable?: boolean;
   maxPairs?: number;
   namePlaceholder?: string;
   valuePlaceholder?: string;
@@ -40,7 +39,6 @@ export const KeyValueEditor: FC<Props> = ({
   handleGetAutocompleteValueConstants,
   allowFile,
   allowMultiline,
-  sortable,
   disableDelete,
   isDisabled,
   isWebSocketRequest,
@@ -82,7 +80,6 @@ export const KeyValueEditor: FC<Props> = ({
       {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
         <Row
           key={i}
-          sortable={true}
           displayDescription={displayDescription}
           descriptionPlaceholder={descriptionPlaceholder}
           readOnly
@@ -96,7 +93,6 @@ export const KeyValueEditor: FC<Props> = ({
           noDelete={disableDelete}
           key={pair.id}
           ref={rowRef}
-          sortable={sortable}
           displayDescription={displayDescription}
           namePlaceholder={namePlaceholder}
           valuePlaceholder={valuePlaceholder}
@@ -128,40 +124,18 @@ export const KeyValueEditor: FC<Props> = ({
         />
       ))}
       {showNewHeaderInput ? (
-        <Row
-          key="empty-row"
-          hideButtons
-          sortable
-          noDropZone
-          forceInput
-          onChange={() => { }}
-          onDelete={() => { }}
-          renderLeftIcon={() => (
-            <Dropdown>
-              <DropdownButton>
-                <i className="fa fa-cog" />
-              </DropdownButton>
-              <DropdownItem onClick={() => onChange([])} buttonClass={PromptButton}>
-                Delete All Items
-              </DropdownItem>
-              <DropdownItem onClick={() => setDisplayDescription(!displayDescription)}>Toggle Description</DropdownItem>
-            </Dropdown>
-          )}
-          className="key-value-editor__row-wrapper--clicker"
-          displayDescription={displayDescription}
-          namePlaceholder={`New ${namePlaceholder}`}
-          valuePlaceholder={`New ${valuePlaceholder}`}
-          descriptionPlaceholder={`New ${descriptionPlaceholder}`}
-          onFocusName={() => addPair()}
-          onFocusValue={() => addPair()}
-          onFocusDescription={() => addPair()}
-          allowMultiline={allowMultiline}
-          allowFile={allowFile}
-          pair={{
-            name: '',
-            value: '',
-          }}
-        />
+        <div className="key-value-editor__drag">
+          <Dropdown>
+            <DropdownButton>
+              <i className="fa fa-cog" />
+            </DropdownButton>
+            <DropdownItem onClick={() => onChange([])} buttonClass={PromptButton}>
+              Delete All Items
+            </DropdownItem>
+            <DropdownItem onClick={() => setDisplayDescription(!displayDescription)}>Toggle Description</DropdownItem>
+            <DropdownItem onClick={() => addPair()}>Add header</DropdownItem>
+          </Dropdown>
+        </div>
       ) : null}
     </ul>
   );

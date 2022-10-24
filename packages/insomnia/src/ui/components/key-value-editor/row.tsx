@@ -39,26 +39,15 @@ interface Props {
   namePlaceholder?: string;
   noDelete?: boolean;
   noDropZone?: boolean;
-  onBlurDescription?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onBlurName?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onBlurValue?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
   onChange?: (pair: Pair) => void;
   onDelete?: (pair: Pair) => void;
-  onFocusDescription?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onFocusName?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onFocusValue?: (pair: Pair, event: FocusEvent | React.FocusEvent<Element, Element>) => void;
-  onKeyDown?: (pair: Pair, event: KeyboardEvent | React.KeyboardEvent<Element>, value?: any) => void;
   pair: Pair;
   readOnly?: boolean;
-  renderLeftIcon?: Function;
-  sortable?: boolean;
   valueInputType?: string;
   valuePlaceholder?: string;
 }
 export interface RowHandle {
   focusNameEnd: () => void;
-  focusValueEnd: () => void;
-  focusDescriptionEnd: () => void;
 }
 export const Row = forwardRef<RowHandle, Props>(({
   allowFile,
@@ -72,19 +61,10 @@ export const Row = forwardRef<RowHandle, Props>(({
   hideButtons,
   namePlaceholder,
   noDelete,
-  onBlurDescription,
-  onBlurName,
-  onBlurValue,
   onChange,
   onDelete,
-  onFocusDescription,
-  onFocusName,
-  onFocusValue,
-  onKeyDown,
   pair,
   readOnly,
-  renderLeftIcon,
-  sortable,
   valueInputType,
   valuePlaceholder,
 }, ref) => {
@@ -97,8 +77,6 @@ export const Row = forwardRef<RowHandle, Props>(({
 
   useImperativeHandle(ref, () => ({
     focusNameEnd: () => nameRef.current?.focusEnd(),
-    focusValueEnd: () => valueRef.current?.focusEnd(),
-    focusDescriptionEnd: () => descriptionRef.current?.focusEnd(),
   }));
 
   function _handleTypeChange(def: Partial<Pair>) {
@@ -226,9 +204,6 @@ export const Row = forwardRef<RowHandle, Props>(({
           }
         }}
         onChange={value => onChange?.(Object.assign({}, pair, { value }))}
-        onBlur={event => onBlurValue?.(pair, event)}
-        onKeyDown={(event, value) => onKeyDown?.(pair, event, value)}
-        onFocus={event => onFocusValue?.(pair, event)}
         getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
       />
     );
@@ -236,7 +211,6 @@ export const Row = forwardRef<RowHandle, Props>(({
 
   return (
     <li className={classes}>
-      {sortable && renderLeftIcon ? (<div className="key-value-editor__drag">{renderLeftIcon()}</div>) : null}
       <div className="key-value-editor__row">
         <div
           className={classnames('form-control form-control--underlined form-control--wide', {
@@ -250,10 +224,7 @@ export const Row = forwardRef<RowHandle, Props>(({
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
             forceInput={forceInput}
             readOnly={readOnly}
-            onBlur={event => onBlurName?.(pair, event)}
             onChange={name => onChange?.(Object.assign({}, pair, { name }))}
-            onFocus={event => onFocusName?.(pair, event)}
-            onKeyDown={(event, value) => onKeyDown?.(pair, event, value)}
           />
         </div>
         <div
@@ -279,9 +250,6 @@ export const Row = forwardRef<RowHandle, Props>(({
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}
               onChange={description => onChange?.(Object.assign({}, pair, { description }))}
-              onBlur={event => onBlurDescription?.(pair, event)}
-              onKeyDown={(event, value) => onKeyDown?.(pair, event, value)}
-              onFocus={event => onFocusDescription?.(pair, event)}
             />
           </div>
         ) : null}

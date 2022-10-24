@@ -72,7 +72,6 @@ export const RequestParametersEditor: FC<Props> = ({
 
   return (
     <KeyValueEditor
-      sortable
       allowMultiline
       namePlaceholder="name"
       valuePlaceholder="value"

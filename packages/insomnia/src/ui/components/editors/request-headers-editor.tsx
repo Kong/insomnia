@@ -75,7 +75,6 @@ export const RequestHeadersEditor: FC<Props> = ({
 
   return (
     <KeyValueEditor
-      sortable
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
