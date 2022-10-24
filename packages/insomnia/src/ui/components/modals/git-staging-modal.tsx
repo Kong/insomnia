@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useMount } from 'react-use';
 import YAML from 'yaml';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
@@ -64,10 +65,8 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
     // @ts-expect-error -- TSCONVERSION
     const f = vcs.getFs().promises;
     const fsPaths: string[] = [];
-
     for (const type of await f.readdir(GIT_INSOMNIA_DIR)) {
       const typeDir = path.join(GIT_INSOMNIA_DIR, type);
-
       for (const name of await f.readdir(typeDir)) {
         // NOTE: git paths don't start with '/' so we're omitting
         //  it here too.
@@ -75,7 +74,6 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
         fsPaths.push(path.join(gitPath));
       }
     }
-
     // To get all possible paths, we need to combine the paths already in Git
     // with the paths on the FS. This is required to cover the case where a
     // file can be deleted from FS or from Git.
@@ -85,16 +83,10 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
   }, [vcs]);
 
   const refresh = useCallback(async () => {
-    setState(state => ({
-      ...state,
-      loading: true,
-    }));
+    setState(state => ({ ...state, loading: true }));
     // Get and set branch name
     const branch = await vcs.getBranch();
-    setState(state => ({
-      ...state,
-      branch,
-    }));
+    setState(state => ({ ...state, branch }));
     // Cache status names
     const docs = await db.withDescendants(workspace);
     const allPaths = await getAllPaths();
@@ -114,15 +106,10 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
       }
       if (!statusNames[gitPath] && log.length > 0) {
         const docYML = await vcs.readObjFromTree(log[0].commit.tree, gitPath);
-        if (!docYML) {
-          continue;
-        }
-        try {
-          // @ts-expect-error -- TSCONVERSION
-          const doc = YAML.parse(docYML);
-          statusNames[gitPath] = doc.name || '';
-        } catch (err) {
-          // Nothing here
+        if (docYML) {
+          try {
+            statusNames[gitPath] = YAML.parse(docYML.toString()).name || '';
+          } catch (err) {}
         }
       }
       // We know that type is in the path; extract it. If the model is not found, set to Unknown.
@@ -177,48 +164,21 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
       refresh();
     },
   }), [refresh]);
-
-  const handleCommit = async () => {
-    const { items, message, onCommit } = state;
-    // Set the stage
-    for (const p of Object.keys(items)) {
-      const item = items[p];
-      if (!item.staged) {
-        continue;
-      }
-      if (item.status.includes('deleted')) {
-        await vcs.remove(item.path);
-      } else {
-        await vcs.add(item.path);
-      }
-    }
-    await vcs.commit(message);
-    const providerName = getOauth2FormatName(gitRepository?.credentials);
-    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
-    modalRef.current?.hide();
-
-    if (typeof onCommit === 'function') {
-      onCommit();
-    }
-  };
-
+  useMount(() => {
+    refresh();
+  });
   const toggleAll = async (items: Item[], forceAdd = false) => {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
     const newItems = { ...state.items };
     for (const { path: p } of items) {
-      if (!newItems[p].editable) {
-        continue;
+      if (newItems[p].editable) {
+        newItems[p].staged = doStage || forceAdd;
       }
-
-      newItems[p].staged = doStage || forceAdd;
     }
     const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', doStage ? 'stage_all' : 'unstage_all'), providerName });
-    setState(state => ({
-      ...state,
-      items: newItems,
-    }));
+    setState(state => ({ ...state, items: newItems }));
   };
 
   const handleToggleOne = async (event: React.SyntheticEvent<HTMLInputElement>) => {
@@ -230,10 +190,7 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
     newItems[gitPath].staged = !newItems[gitPath].staged;
     const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', newItems[gitPath].staged ? 'stage' : 'unstage'), providerName });
-    setState(state => ({
-      ...state,
-      items: newItems,
-    }));
+    setState(state => ({ ...state, items: newItems }));
   };
 
   const handleRollback = async (items: Item[]) => {
@@ -244,26 +201,22 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
         status: i.status,
       }));
     await gitRollback(vcs, files);
-    await refresh();
+    refresh();
   };
 
-  const handleRollbackSingle = async (item: Item) => {
-    await handleRollback([item]);
+  const handleRollbackSingle = (item: Item) => {
+    handleRollback([item]);
     const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback'), providerName });
   };
 
-  const handleRollbackAll = async (items: Item[]) => {
-    await handleRollback(items);
+  const handleRollbackAll = (items: Item[]) => {
+    handleRollback(items);
     const providerName = getOauth2FormatName(gitRepository?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'rollback_all'), providerName });
   };
-
-  const { items, branch, loading } = state;
-  const itemsList = Object.keys(items).map(k => items[k]);
-  const hasChanges = !!itemsList.length;
-  const newItems = itemsList.filter(i => i.status.includes('added'));
-  const existingItems = itemsList.filter(i => !i.status.includes('added'));
+  const { items, branch, loading, statusNames, message, onCommit } = state;
+  const hasChanges = !!Object.values(items).length;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Commit Changes</ModalHeader>
@@ -275,13 +228,14 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
               required
               placeholder="A descriptive message to describe changes made"
               defaultValue={state.message}
-              onChange={event => setState({ ...state, message: event.currentTarget.value })}
+              onChange={event => setState({ ...state, message: event.target.value })}
             />
           </div>
           <ChangesTable
             title="Modified Objects"
             rollbackLabel='Rollback all'
-            items={existingItems}
+            items={Object.values(items).filter(i => !i.status.includes('added'))}
+            statusNames={statusNames}
             rollbackAll={handleRollbackAll}
             rollbackOne={handleRollbackSingle}
             toggleAll={toggleAll}
@@ -290,7 +244,8 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
           <ChangesTable
             title="Unversioned Objects"
             rollbackLabel='Delete all'
-            items={newItems}
+            items={Object.values(items).filter(i => i.status.includes('added'))}
+            statusNames={statusNames}
             rollbackAll={handleRollbackAll}
             rollbackOne={handleRollbackSingle}
             toggleAll={toggleAll}
@@ -308,7 +263,24 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
           <button className="btn" onClick={() => modalRef.current?.hide()}>
             Close
           </button>
-          <button className="btn" onClick={handleCommit} disabled={loading || !hasChanges}>
+          <button
+            className="btn"
+            onClick={async () => {
+              for (const item of Object.values(items)) {
+                if (item.staged) {
+                  item.status.includes('deleted') ? await vcs.remove(item.path) : await vcs.add(item.path);
+                }
+              }
+              await vcs.commit(message);
+              const providerName = getOauth2FormatName(gitRepository?.credentials);
+              trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
+              modalRef.current?.hide();
+              if (typeof onCommit === 'function') {
+                onCommit();
+              }
+            }}
+            disabled={loading || !hasChanges}
+          >
             Commit
           </button>
         </div>
@@ -351,7 +323,7 @@ interface ChangeTableProps {
   items: Item[];
   title: string;
   rollbackLabel: string;
-  statusNames?: Record<string, string>;
+  statusNames: Record<string, string>;
   rollbackAll: (items: Item[]) => void;
   rollbackOne: (item: Item) => void;
   toggleAll: (items: Item[], forceAdd: boolean) => void;
