@@ -18,7 +18,7 @@ type Props = ModalProps & {
   vcs: GitVCS;
 };
 export interface GitBranchesModalOptions {
-  onHide: () => void;
+  onCheckout: () => void;
 }
 export interface State {
   error: string;
@@ -26,6 +26,7 @@ export interface State {
   remoteBranches: string[];
   branch: string;
   newBranchName: string;
+  onCheckout: () => void;
 }
 export interface GitBranchesModalHandle {
   show: (options: GitBranchesModalOptions) => void;
@@ -39,6 +40,7 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
     branches: [],
     remoteBranches: [],
     newBranchName: '',
+    onCheckout: () => {},
   });
   const dispatch = useDispatch();
   const gitRepository = useSelector(selectActiveGitRepository);
@@ -58,10 +60,10 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
     hide: () => {
       modalRef.current?.hide();
     },
-    show: async ({ onHide }) => {
-      setState(state => ({ ...state, newBranchName: '' }));
+    show: async ({ onCheckout }) => {
+      setState(state => ({ ...state, newBranchName: '', onCheckout }));
       await refreshState();
-      modalRef.current?.show({ onHide });
+      modalRef.current?.show({ onHide: onCheckout });
       // Do a fetch of remotes and refresh again. NOTE: we're doing this
       // last because it's super slow
       await vcs.fetch(false, 1, gitRepository?.credentials);
@@ -78,11 +80,12 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
       await db.flushChanges(bufferId, true);
       await dispatch(initializeEntities());
       await refreshState();
+      state.onCheckout?.();
     } catch (err) {
       setState(state => ({ ...state, error: err.message }));
     }
   };
-  const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = state;
+  const { branch: currentBranch, branches, remoteBranches, newBranchName, error, onCheckout } = state;
   const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
   return (
     <Modal ref={modalRef}>
@@ -105,6 +108,7 @@ export const GitBranchesModal = forwardRef<GitBranchesModalHandle, Props>(({ vcs
               trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
               setState({ ...state, newBranchName: '' });
               refreshState();
+              onCheckout?.();
             } catch (err) {
               setState(state => ({ ...state, error: err.message }));
             }

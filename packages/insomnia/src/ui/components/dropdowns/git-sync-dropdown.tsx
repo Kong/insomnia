@@ -189,7 +189,7 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
 
         {vcs.isInitialized() && (
           <Fragment>
-            <DropdownItem onClick={() => showModal(GitBranchesModal, { onHide: refreshState })}>
+            <DropdownItem onClick={() => showModal(GitBranchesModal, { onCheckout: refreshState })}>
               <i className="fa fa-code-fork" /> Branches
             </DropdownItem>
           </Fragment>
