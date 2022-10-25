@@ -152,7 +152,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
                 handleSubmit();
               }
             }}
-            disabled={readyState === ReadyState.OPEN}
+            readOnly={readyState === ReadyState.OPEN}
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}
             onChange={onChange}

@@ -2,9 +2,7 @@ import classnames from 'classnames';
 import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 
 import { CodeEditor, CodeEditorHandle, CodeEditorOnChange } from './code-editor';
-const MODE_INPUT = 'input';
-const MODE_EDITOR = 'editor';
-const TYPE_TEXT = 'text';
+
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
 interface Props {
@@ -12,9 +10,7 @@ interface Props {
   id?: string;
   type?: string;
   mode?: string;
-  onBlur?: (event: FocusEvent | React.FocusEvent) => void;
   onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
-  onFocus?: (event: FocusEvent | React.FocusEvent) => void;
   onChange?: CodeEditorOnChange;
   onPaste?: (event: ClipboardEvent) => void;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
@@ -23,8 +19,6 @@ interface Props {
   forceEditor?: boolean;
   forceInput?: boolean;
   readOnly?: boolean;
-  // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
-  disabled?: boolean;
 }
 
 const _mayContainNunjucks = (text: string) => {
@@ -49,59 +43,47 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   className,
   onChange,
   placeholder,
-  onBlur,
   onKeyDown,
   onPaste,
-  onFocus,
   forceInput,
   forceEditor,
   readOnly,
   getAutocompleteConstants,
-  mode: syntaxMode,
-  type: originalType,
+  mode,
+  type,
 }, ref) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  let initMode;
 
-  if (forceInput) {
-    initMode = MODE_INPUT;
-  } else if (forceEditor) {
-    initMode = MODE_EDITOR;
-  } else if (_mayContainNunjucks(defaultValue)) {
-    initMode = MODE_EDITOR;
-  } else {
-    initMode = MODE_INPUT;
-  }
-  const [mode, setMode] = useState(initMode);
+  const [isEditor, setIsEditor] = useState(forceEditor || _mayContainNunjucks(defaultValue));
   useImperativeHandle(ref, () => ({
     getValue: () => {
-      if (mode === MODE_EDITOR) {
+      if (isEditor) {
         return editorRef.current?.getValue();
       }
       return inputRef.current?.value;
     },
     getSelectionStart: () => {
-      if (mode === MODE_EDITOR) {
+      if (isEditor) {
         return editorRef.current?.getSelectionStart();
       }
       return inputRef.current?.selectionStart;
     },
     getSelectionEnd: () => {
-      if (mode === MODE_EDITOR) {
+      if (isEditor) {
         return editorRef.current?.getSelectionEnd();
       }
       return inputRef.current?.selectionEnd;
     },
     focus: () => {
-      if (mode === MODE_EDITOR) {
+      if (isEditor) {
         editorRef.current && !editorRef.current.hasFocus() && editorRef.current?.focus();
         return;
       }
       inputRef.current && inputRef.current !== document.activeElement && inputRef.current.focus();
     },
     focusEnd: () => {
-      if (mode === MODE_EDITOR) {
+      if (isEditor) {
         editorRef.current && !editorRef.current.hasFocus() && editorRef.current?.focusEnd();
         return;
       }
@@ -111,7 +93,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
       }
     },
     selectAll: () => {
-      if (mode === MODE_EDITOR) {
+      if (isEditor) {
         editorRef.current?.selectAll();
         return;
       }
@@ -120,7 +102,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   }));
 
   const convertToEditorPreserveFocus = () => {
-    if (mode !== MODE_INPUT || forceInput) {
+    if (!isEditor || forceInput) {
       return;
     }
     if (!inputRef.current) {
@@ -144,25 +126,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
       // Tell the component to show the editor
       setTimeout(check);
     }
-    setMode(MODE_EDITOR);
+    setIsEditor(true);
   };
 
   const convertToInputIfNotFocused = () => {
-    if (mode === MODE_INPUT || forceEditor) {
-      return;
+    if (isEditor && !forceEditor && !editorRef.current?.hasFocus() && !_mayContainNunjucks(editorRef.current?.getValue() || '')) {
+      setIsEditor(false);
     }
-    if (!editorRef.current || editorRef.current?.hasFocus()) {
-      return;
-    }
-    if (_mayContainNunjucks(editorRef.current.getValue() || '')) {
-      return;
-    }
-    setMode(MODE_INPUT);
   };
-  const type = originalType || TYPE_TEXT;
-  const showEditor = mode === MODE_EDITOR;
-
-  if (showEditor) {
+  if (isEditor) {
     return (
       <Fragment>
         <CodeEditor
@@ -179,11 +151,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
           autoCloseBrackets={false}
           tabIndex={0}
           id={id}
-          type={type}
-          mode={syntaxMode}
+          type={type || 'text'}
+          mode={mode}
           placeholder={placeholder}
           onPaste={onPaste}
-          onBlur={event => {
+          onBlur={() => {
             // Editor was already removed from the DOM, so do nothing
             if (!editorRef.current) {
               return;
@@ -199,7 +171,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
                 convertToInputIfNotFocused();
               }, 2000);
             }
-            onBlur?.(event);
           }}
           onKeyDown={event => {
             // submit form if needed
@@ -232,7 +203,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
             }
             // Set focused state
             editorRef.current?.setAttribute('data-focused', 'on');
-            onFocus?.(event);
           }}
           onMouseLeave={convertToInputIfNotFocused}
           onChange={onChange}
@@ -257,10 +227,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
         placeholder={placeholder}
         defaultValue={defaultValue}
         disabled={readOnly}
-        onBlur={event => {
-          inputRef.current?.removeAttribute('data-focused');
-          onBlur?.(event);
-        }}
+        onBlur={() => inputRef.current?.removeAttribute('data-focused')}
         onChange={event => {
           convertToEditorPreserveFocus();
           onChange?.(event.target.value);
@@ -286,8 +253,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
           }
           // Set focused state
           inputRef.current?.setAttribute('data-focused', 'on');
-          // Also call the regular callback
-          onFocus?.(event);
         }}
         onKeyDown={event => onKeyDown?.(event, event.currentTarget.value)}
       />
