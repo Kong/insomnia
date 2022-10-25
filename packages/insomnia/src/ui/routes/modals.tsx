@@ -22,7 +22,6 @@ import { GitRepositorySettingsModal } from '../components/modals/git-repository-
 import { GitStagingModal } from '../components/modals/git-staging-modal';
 import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
-import ProjectSettingsModal from '../components/modals/project-settings-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { ProtoFilesModal } from '../components/modals/proto-files-modal';
 import { RequestGroupSettingsModal } from '../components/modals/request-group-settings-modal';
@@ -37,7 +36,6 @@ import { SyncDeleteModal } from '../components/modals/sync-delete-modal';
 import { SyncHistoryModal } from '../components/modals/sync-history-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { SyncStagingModal } from '../components/modals/sync-staging-modal';
-import { WorkspaceDuplicateModal } from '../components/modals/workspace-duplicate-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
@@ -97,10 +95,7 @@ const Modals: FC = () => {
         <GenerateConfigModal
           ref={instance => registerModal(instance, 'GenerateConfigModal')}
         />
-        <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
-        <WorkspaceDuplicateModal
-          ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')}
-        />
+
         <CodePromptModal
           ref={instance => registerModal(instance, 'CodePromptModal')}
         />

@@ -3,7 +3,6 @@ import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LoaderFunction,
-  Outlet,
   useFetcher,
   useNavigate,
   useRouteLoaderData,
@@ -14,7 +13,11 @@ import styled from 'styled-components';
 
 import { isLoggedIn } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, DashboardSortOrder } from '../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  DashboardSortOrder,
+} from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
@@ -22,10 +25,7 @@ import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
 import { Project } from '../../models/project';
-import {
-  isDesign,
-  Workspace,
-} from '../../models/workspace';
+import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
@@ -206,11 +206,20 @@ export const loader: LoaderFunction = async ({
   ) {
     switch (sortOrder) {
       case 'modified-desc':
-        return sortMethodMap['modified-desc'](workspaceWithMetaA, workspaceWithMetaB);
+        return sortMethodMap['modified-desc'](
+          workspaceWithMetaA,
+          workspaceWithMetaB
+        );
       case 'name-asc':
-        return sortMethodMap['name-asc'](workspaceWithMetaA.workspace, workspaceWithMetaB.workspace);
+        return sortMethodMap['name-asc'](
+          workspaceWithMetaA.workspace,
+          workspaceWithMetaB.workspace
+        );
       case 'name-desc':
-        return sortMethodMap['name-desc'](workspaceWithMetaA.workspace, workspaceWithMetaB.workspace);
+        return sortMethodMap['name-desc'](
+          workspaceWithMetaA.workspace,
+          workspaceWithMetaB.workspace
+        );
       case 'created-asc':
         return sortMethodMap['created-asc'](
           workspaceWithMetaA.workspace,
@@ -259,7 +268,7 @@ export const useProjectLoaderData = () => {
 };
 
 const ProjectRoute: FC = () => {
-  const { workspaces, activeProject } = useProjectLoaderData();
+  const { workspaces, activeProject, projects } = useProjectLoaderData();
   const [searchParams] = useSearchParams();
   const isLoading = useSelector(selectIsLoading);
   const vcs = useVCS({});
@@ -280,13 +289,16 @@ const ProjectRoute: FC = () => {
       defaultValue: 'My Collection',
       selectText: true,
       onComplete: async (name: string) => {
-        fetcher.submit({
-          name,
-          scope: 'collection',
-        }, {
-          action: `project/${activeProject._id}/workspace/new`,
-          method: 'post',
-        });
+        fetcher.submit(
+          {
+            name,
+            scope: 'collection',
+          },
+          {
+            action: `project/${activeProject._id}/workspace/new`,
+            method: 'post',
+          }
+        );
       },
     });
   };
@@ -299,13 +311,16 @@ const ProjectRoute: FC = () => {
       defaultValue: 'my-spec.yaml',
       selectText: true,
       onComplete: async (name: string) => {
-        fetcher.submit({
-          name,
-          scope: 'design',
-        }, {
-          action: `project/${activeProject._id}/workspace/new`,
-          method: 'post',
-        });
+        fetcher.submit(
+          {
+            name,
+            scope: 'design',
+          },
+          {
+            action: `project/${activeProject._id}/workspace/new`,
+            method: 'post',
+          }
+        );
       },
     });
   };
@@ -345,7 +360,12 @@ const ProjectRoute: FC = () => {
               crumbs: [
                 {
                   id: 'project',
-                  node: <ProjectDropdown activeProject={activeProject} />,
+                  node: (
+                    <ProjectDropdown
+                      activeProject={activeProject}
+                      projects={projects}
+                    />
+                  ),
                 },
               ],
               isLoading,
@@ -425,6 +445,7 @@ const ProjectRoute: FC = () => {
                 {workspaces.map(workspace => (
                   <WorkspaceCard
                     {...workspace}
+                    projects={projects}
                     key={workspace.apiSpec._id}
                     activeProject={activeProject}
                     onSelect={() =>
@@ -468,7 +489,6 @@ const ProjectRoute: FC = () => {
           </div>
         }
       />
-      <Outlet />
     </Fragment>
   );
 };

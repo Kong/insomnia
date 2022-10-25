@@ -61,7 +61,8 @@ const router = createMemoryRouter(
             {
               path: ':projectId',
               id: '/project/:projectId',
-              loader: async (...args) => (await import('./routes/project')).loader(...args),
+              loader: async (...args) =>
+                (await import('./routes/project')).loader(...args),
               element: (
                 <Suspense fallback={<AppLoadingIndicator />}>
                   <Project />
@@ -70,46 +71,76 @@ const router = createMemoryRouter(
               children: [
                 {
                   path: 'delete',
-                  action: async (...args) => (await import('./routes/actions')).deleteProjectAction(...args),
+                  action: async (...args) =>
+                    (await import('./routes/actions')).deleteProjectAction(
+                      ...args
+                    ),
                 },
                 {
                   path: 'rename',
-                  action: async (...args) => (await import('./routes/actions')).renameProjectAction(...args),
+                  action: async (...args) =>
+                    (await import('./routes/actions')).renameProjectAction(
+                      ...args
+                    ),
                 },
               ],
             },
             {
-              path: ':projectId/workspace/:workspaceId',
+              path: ':projectId/workspace',
               children: [
                 {
-                  path: `${ACTIVITY_DEBUG}`,
-                  element: (
-                    <Suspense fallback={<AppLoadingIndicator />}>
-                      <Debug />
-                    </Suspense>
-                  ),
+                  path: ':workspaceId',
+                  children: [
+                    {
+                      path: `${ACTIVITY_DEBUG}`,
+                      element: (
+                        <Suspense fallback={<AppLoadingIndicator />}>
+                          <Debug />
+                        </Suspense>
+                      ),
+                    },
+                    {
+                      path: `${ACTIVITY_SPEC}`,
+                      element: (
+                        <Suspense fallback={<AppLoadingIndicator />}>
+                          <Design />
+                        </Suspense>
+                      ),
+                    },
+                    {
+                      path: `${ACTIVITY_UNIT_TEST}`,
+                      element: (
+                        <Suspense fallback={<AppLoadingIndicator />}>
+                          <UnitTest />
+                        </Suspense>
+                      ),
+                    },
+                    {
+                      path: 'duplicate',
+                      action: async (...args) => (await import('./routes/actions')).duplicateWorkspaceAction(...args),
+                    },
+                  ],
                 },
                 {
-                  path: `${ACTIVITY_SPEC}`,
-                  element: (
-                    <Suspense fallback={<AppLoadingIndicator />}>
-                      <Design />
-                    </Suspense>
-                  ),
+                  path: 'new',
+                  action: async (...args) => (await import('./routes/actions')).createNewWorkspaceAction(...args),
                 },
                 {
-                  path: `${ACTIVITY_UNIT_TEST}`,
-                  element: (
-                    <Suspense fallback={<AppLoadingIndicator />}>
-                      <UnitTest />
-                    </Suspense>
-                  ),
+                  path: 'delete',
+                  action: async (...args) => (await import('./routes/actions')).deleteWorkspaceAction(...args),
+                },
+                {
+                  path: 'update',
+                  action: async (...args) => (await import('./routes/actions')).updateWorkspaceAction(...args),
                 },
               ],
             },
             {
               path: 'new',
-              action: async (...args) => (await import('./routes/actions')).createNewProjectAction(...args),
+              action: async (...args) =>
+                (await import('./routes/actions')).createNewProjectAction(
+                  ...args
+                ),
             },
           ],
         },
