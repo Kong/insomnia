@@ -44,7 +44,7 @@ interface EditorState {
 }
 const extraKeys = {
   'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
-  [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function () {
+  [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function() {
     // HACK: So nothing conflicts withe the "Send Request" shortcut
   },
   [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
@@ -359,9 +359,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
             }
             for (const option of firstArg.options || []) {
               const optionName = misc.fnOrString(option.displayName, tagDef.args);
-              expandedTags.push({
-                displayName: `${tagDef.displayName} ⇒ ${optionName}`
-                , args: [{ defaultValue: option.value });
+              expandedTags.push({ displayName: `${tagDef.displayName} ⇒ ${optionName}`, args: [{ defaultValue: option.value }] });
             }
           }
           return expandedTags;
