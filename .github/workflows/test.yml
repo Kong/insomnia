@@ -108,13 +108,13 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.23.0
         if: always()
-          with:
-            # This data can be any valid JSON from a previous step in the GitHub Action
-            payload: |
-              {
-                "message": "[debug] this is a notification from github",
-                "jobUrl": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-                "status": "${{ job.status }}"
-              }
-          env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEST_RESULTS }}
+        with:
+          # This data can be any valid JSON from a previous step in the GitHub Action
+          payload: |
+            {
+              "message": "[debug] this is a notification from github",
+              "jobUrl": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+              "status": "${{ job.status }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEST_RESULTS }}
