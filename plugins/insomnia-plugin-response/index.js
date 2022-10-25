@@ -134,7 +134,7 @@ module.exports.templateTags = [
             shouldResend = ageSeconds > maxAgeSeconds;
           }
           break;
-        
+
         case 'always':
           shouldResend = true;
           break;
@@ -209,7 +209,7 @@ module.exports.templateTags = [
             console.warn('[response] Failed to decode body', err);
             body = bodyBuffer.toString();
           }
-    
+
           if (sanitizedFilter.indexOf('$') === 0) {
             return matchJSONPath(body, sanitizedFilter);
           } else {
@@ -241,8 +241,10 @@ function matchJSONPath(bodyStr, query) {
 
   if (results.length === 0) {
     throw new Error(`Returned no results: ${query}`);
-  } else if (results.length > 1) {
-    throw new Error(`Returned more than one result: ${query}`);
+  }
+
+  if (results.length > 1 ) {
+    return JSON.stringify(results);
   }
 
   if (typeof results[0] !== 'string') {
