@@ -228,7 +228,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } else {
       handleSend();
     }
-    inputRef.current?.focus(true);
   }, [downloadPath, handleSend, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
