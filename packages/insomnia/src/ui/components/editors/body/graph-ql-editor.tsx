@@ -593,6 +593,14 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }
 
+  const options: [keyof IntrospectionOptions, () => React.ReactNode][] = [
+    ['descriptions', () => <> Include descriptions </>],
+    ['specifiedByUrl', () => <> Include <pre>specifiedByUrl</pre> </>],
+    ['directiveIsRepeatable', () => <> Include <pre>isRepeatable</pre> </>],
+    ['schemaDescription', () => <> Include schema description </>],
+    ['inputValueDeprecation', () => <> Include deprecated input values </>],
+  ];
+
   return (
     <div className="graphql-editor">
       <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
@@ -628,75 +636,27 @@ export const GraphQLEditor: FC<Props> = ({
         </DropdownItem>
 
         <DropdownDivider>Introspection Options</DropdownDivider>
-        <DropdownItem
-          onClick={() => {
-            setState(state => {
-              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, descriptions: !state.introspectionOptions.descriptions } };
-              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
-              return updated;
-            });
-          }}
-          stayOpenAfterClick
-        >
-          <i className={`fa fa-toggle-${state.introspectionOptions.descriptions ? 'on' : 'off'}`} />{' '}
-          Include descriptions
-        </DropdownItem>
 
-        <DropdownItem
-          onClick={() => {
-            setState(state => {
-              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, specifiedByUrl: !state.introspectionOptions.specifiedByUrl } };
-              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
-              return updated;
-            });
-          }}
-          stayOpenAfterClick
-        >
-          <i className={`fa fa-toggle-${state.introspectionOptions.specifiedByUrl ? 'on' : 'off'}`} />{' '}
-          Include <pre>specifiedByUrl</pre>
-        </DropdownItem>
-
-        <DropdownItem
-          onClick={() => {
-            setState(state => {
-              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, directiveIsRepeatable: !state.introspectionOptions.directiveIsRepeatable } };
-              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
-              return updated;
-            });
-          }}
-          stayOpenAfterClick
-        >
-          <i className={`fa fa-toggle-${state.introspectionOptions.directiveIsRepeatable ? 'on' : 'off'}`} />{' '}
-          Include <pre>isRepeatable</pre>
-        </DropdownItem>
-
-        <DropdownItem
-          onClick={() => {
-            setState(state => {
-              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, schemaDescription: !state.introspectionOptions.schemaDescription } };
-              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
-              return updated;
-            });
-          }}
-          stayOpenAfterClick
-        >
-          <i className={`fa fa-toggle-${state.introspectionOptions.schemaDescription ? 'on' : 'off'}`} />{' '}
-          Include schema description
-        </DropdownItem>
-
-        <DropdownItem
-          onClick={() => {
-            setState(state => {
-              const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, inputValueDeprecation: !state.introspectionOptions.inputValueDeprecation } };
-              window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
-              return updated;
-            });
-          }}
-          stayOpenAfterClick
-        >
-          <i className={`fa fa-toggle-${state.introspectionOptions.inputValueDeprecation ? 'on' : 'off'}`} />{' '}
-          Include deprecated input values
-        </DropdownItem>
+        {
+          options.map((([name, description]) => {
+            return (
+              <DropdownItem
+                onClick={() => {
+                  setState(state => {
+                    const updated = { ...state, introspectionOptions: { ...state.introspectionOptions, [name]: !state.introspectionOptions[name] } };
+                    window.localStorage.setItem('graphql.introspectionOptions', JSON.stringify(updated.introspectionOptions));
+                    return updated;
+                  });
+                }}
+                stayOpenAfterClick
+                key={name}
+              >
+                <i className={`fa fa-toggle-${state.introspectionOptions[name] ? 'on' : 'off'}`} />{' '}
+                {description()}
+              </DropdownItem>
+            );
+          }))
+        }
 
         <DropdownDivider>Local GraphQL Schema</DropdownDivider>
 
