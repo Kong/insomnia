@@ -5,8 +5,8 @@ import {
   LoaderFunction,
   Outlet,
   useFetcher,
-  useLoaderData,
   useNavigate,
+  useRouteLoaderData,
   useSearchParams,
   useSubmit,
 } from 'react-router-dom';
@@ -20,6 +20,7 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
+import { sortProjects } from '../../models/helpers/project';
 import { Project } from '../../models/project';
 import {
   isDesign,
@@ -242,7 +243,7 @@ export const loader: LoaderFunction = async ({
     await database.batchModifyDocs({ upsert: projects });
   }
 
-  const projects = await models.project.all();
+  const projects = sortProjects(await models.project.all());
 
   return {
     workspaces,
@@ -252,7 +253,7 @@ export const loader: LoaderFunction = async ({
 };
 
 export const useProjectLoaderData = () => {
-  const data = useLoaderData() as LoaderData;
+  const data = useRouteLoaderData('/project/:projectId') as LoaderData;
 
   return data;
 };

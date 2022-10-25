@@ -1,11 +1,9 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useFetcher } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
-import * as models from '../../../models/index';
 import { isRemoteProject, projectHasSettings } from '../../../models/project';
-import { removeProject } from '../../redux/modules/project';
-import { selectActiveProject } from '../../redux/selectors';
+import { useProjectLoaderData } from '../../routes/project';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -16,11 +14,11 @@ export interface ProjectSettingsModalHandle {
   show: () => void;
   hide: () => void;
 }
+
 export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const project = useSelector(selectActiveProject);
-  const dispatch = useDispatch();
-
+  const { activeProject: project } = useProjectLoaderData();
+  const { submit } = useFetcher();
   useImperativeHandle(ref, () => ({
     hide: () => modalRef.current?.hide(),
     show: () => modalRef.current?.show(),
@@ -29,6 +27,7 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
   if (!projectHasSettings(project)) {
     return null;
   }
+
   const isRemote = isRemoteProject(project);
 
   return (
@@ -54,7 +53,14 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
                 type="text"
                 placeholder={`My ${strings.project.singular}`}
                 defaultValue={project.name}
-                onChange={event => models.project.update(project, { name: event.target.value })}
+                onChange={e => {
+                  submit({
+                    name: e.currentTarget.value,
+                  }, {
+                    action: `/project/${project._id}/rename`,
+                    method: 'post',
+                  });
+                }}
               />
             )}
           </label>
@@ -62,10 +68,7 @@ export const ProjectSettingsModal = forwardRef<ProjectSettingsModalHandle, Modal
         <h2>Actions</h2>
         <div className="form-control form-control--padded">
           <PromptButton
-            onClick={() => {
-              dispatch(removeProject(project));
-              modalRef.current?.hide();
-            }}
+            onClick={() => submit({}, { method: 'post', action: `/project/${project._id}/delete` })}
             className="width-auto btn btn--clicky inline-block"
           >
             <i className="fa fa-trash-o" /> Delete

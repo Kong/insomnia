@@ -60,6 +60,7 @@ const router = createMemoryRouter(
           children: [
             {
               path: ':projectId',
+              id: '/project/:projectId',
               loader: async (...args) => (await import('./routes/project')).loader(...args),
               element: (
                 <Suspense fallback={<AppLoadingIndicator />}>
