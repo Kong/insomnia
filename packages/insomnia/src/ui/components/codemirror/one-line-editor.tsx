@@ -10,7 +10,6 @@ interface Props {
   forceInput?: boolean;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   id?: string;
-  mode?: string;
   onChange?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
   onPaste?: (event: ClipboardEvent) => void;
@@ -42,7 +41,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   forceInput,
   getAutocompleteConstants,
   id,
-  mode,
   onChange,
   onKeyDown,
   onPaste,
@@ -147,7 +145,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
           tabIndex={0}
           id={id}
           type={type || 'text'}
-          mode={mode}
           placeholder={placeholder}
           onPaste={onPaste}
           onBlur={() => {

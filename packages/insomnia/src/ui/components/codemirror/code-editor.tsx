@@ -1,7 +1,7 @@
 import './base-imports';
 
 import classnames from 'classnames';
-import CodeMirror, { CodeMirrorLinkClickCallback, ShowHintOptions } from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
@@ -9,8 +9,9 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useMount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import {
@@ -19,7 +20,6 @@ import {
 } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
-import { NunjucksParsedTag } from '../../../templating/utils';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -291,11 +291,15 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     },
   });
-  useEffect(() => {
-    if (!textAreaRef.current || codeMirror.current) {
+  useMount(() => {
+    if (!textAreaRef.current) {
       return;
     }
-    console.log(uniquenessKey, mode);
+    // TODO: handle differently?
+    // if (codeMirror.current) {
+    //   // already mounted
+    //   return;
+    // }
     const indentSize = ignoreEditorFontSettings ? undefined : settings.editorIndentSize;
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
     const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
@@ -304,7 +308,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     const gutters = showGuttersAndLineNumbers ?
       ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter']
       : ['CodeMirror-lint-markers'];
-    const initialOptions = {
+    const initialOptions: EditorConfiguration = {
       lineNumbers: showGuttersAndLineNumbers,
       placeholder: placeholder || 'Start Typing...',
       foldGutter: showGuttersAndLineNumbers,
@@ -321,7 +325,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       dragDrop: !noDragDrop,
       viewportMargin: dynamicHeight ? Infinity : 30,
       readOnly: !!readOnly,
-      tabIndex: typeof tabIndex === 'number' ? tabIndex : undefined,
+      tabindex: typeof tabIndex === 'number' ? tabIndex : undefined,
       selectionPointer: 'default',
       jump: jumpOptions,
       styleActiveLine: !noStyleActiveLine,
@@ -337,33 +341,13 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         name: 'nunjucks',
         baseMode: normalizeMimeType(mode),
       },
+      // @ts-expect-error -- nunjucks type?
       environmentAutocomplete: canAutocomplete && {
-        getVariables: async () => {
-          if (!handleGetRenderContext) {
-            return [];
-          }
-          const context = await handleGetRenderContext();
-          const variables = context ? context.keys : [];
-          return variables || [];
-        },
-        getTags: async () => {
-          if (!handleGetRenderContext) {
-            return [];
-          }
-          const expandedTags: NunjucksParsedTag[] = [];
-          for (const tagDef of await getTagDefinitions()) {
-            const firstArg = tagDef.args[0];
-            if (!firstArg || firstArg.type !== 'enum') {
-              expandedTags.push(tagDef);
-              continue;
-            }
-            for (const option of firstArg.options || []) {
-              const optionName = misc.fnOrString(option.displayName, tagDef.args);
-              expandedTags.push({ displayName: `${tagDef.displayName} ⇒ ${optionName}`, args: [{ defaultValue: option.value }] });
-            }
-          }
-          return expandedTags;
-        },
+        getVariables: async () => !handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || [],
+        getTags: async () => !handleGetRenderContext ? [] : (await getTagDefinitions()).map(tagDef =>  tagDef.args[0]?.type === 'enum' ? tagDef.args[0].options?.map(option => ({
+          displayName: `${tagDef.displayName} ⇒ ${misc.fnOrString(option.displayName, tagDef.args)}`,
+          args: [{ defaultValue: option.value }],
+        })) : tagDef),
         getConstants: getAutocompleteConstants,
         getSnippets: getAutocompleteSnippets,
         hotKeyRegistry: settings.hotKeyRegistry,
@@ -372,7 +356,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     };
     codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
     codeMirror.current.on('beforeChange', (doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-      if (singleLine && change.text && change.text.length > 1) {
+      const isOneLineEditorWithChange = singleLine && change.text && change.text.length > 1;
+      if (isOneLineEditorWithChange) {
         // If we're in single-line mode, merge all changed lines into one
         change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
       }
@@ -512,7 +497,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       codeMirror.current?.makeLinksClickable(onClickLink);
     }
     // HACK: Refresh because sometimes it renders too early and the scroll doesn't quite fit.
-    setTimeout(() => codeMirror.current?.refresh(), 100);
+    // setTimeout(() => codeMirror.current?.refresh(), 100);
     // Restore the state
     if (uniquenessKey && editorStates.hasOwnProperty(uniquenessKey) && codeMirror.current) {
       const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
@@ -538,8 +523,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       codeMirror.current?.toTextArea();
       codeMirror.current?.closeHintDropdown();
     };
-  }, [autoCloseBrackets, codemirrorSetValue, debounceMillis, defaultTabBehavior, defaultValue, dynamicHeight, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hideScrollbars, hintOptions, ignoreEditorFontSettings, infoOptions, jumpOptions, lintOptions, mode, noDragDrop, noLint, noMatchBrackets, noStyleActiveLine, onBlur, onChange, onClickLink, onCodeMirrorInit, onCursorActivity, onFocus, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorIndentSize, settings.editorIndentWithTabs, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, singleLine, tabIndex, type, uniquenessKey]);
-
+  });
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
     getValue: () => codeMirror.current?.getValue() || '',
