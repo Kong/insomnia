@@ -212,7 +212,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const extraKeys = {
     'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
     // HACK: So nothing conflicts withe the "Send Request" shortcut
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: () => {},
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: () => { },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
     // Autocomplete
     'Ctrl-Space': 'autocomplete',
@@ -341,21 +341,24 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         // Don't allow non-breaking spaces because they break the GraphQL syntax
         change.update?.(change.from, change.to, change.text.map(normalizeIrregularWhitespace));
       }
-      // Suppress lint on empty doc or single space exists (default value)
-      const hasValue = codeMirror.current?.getDoc().getValue()?.trim() === '';
-      const lintOption = lintOptions || true;
-      codemirrorSmartSetOption('lint', hasValue ? lintOption : false);
     });
     const debounceTime = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
     codeMirror.current.on('changes', misc.debounce(() => {
       if (onChange) {
-        const value = codeMirror.current?.getDoc().getValue() || '';
+        const value = codeMirror.current?.getDoc().getValue()?.trim() || '';
         // Disable linting if the document reaches a maximum size or is empty
         const withinLintingThresholds = value.length > 0 && value.length < MAX_SIZE_FOR_LINTING;
         const isLintPropOn = !noLint;
         const shouldLint = withinLintingThresholds && isLintPropOn;
         const lintOption = lintOptions || true;
-        codemirrorSmartSetOption('lint', shouldLint ? lintOption : false);
+        try {
+          const newValue = shouldLint ? lintOption : false;
+          if (!deepEqual(codeMirror.current?.getOption('lint'), newValue)) {
+            codeMirror.current?.setOption('lint', newValue);
+          }
+        } catch (err) {
+          console.log('Failed to set CodeMirror option', err.message);
+        }
         onChange(codeMirror.current?.getDoc().getValue() || '');
       }
     }, debounceTime));
@@ -526,24 +529,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     },
   }), []);
-
-  /**
- * Set option if it's different than in the current Codemirror instance
- */
-  function codemirrorSmartSetOption<K extends keyof CodeMirror.EditorConfiguration>(key: K, value: CodeMirror.EditorConfiguration[K]) {
-    const allowList = key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions';
-    // Use stringify here because these could be infinitely recursive due to GraphQL schemas
-    const hasOptionChanged = allowList ? !deepEqual(value, codeMirror.current?.getOption(key)) : JSON.stringify(value) !== JSON.stringify(codeMirror.current?.getOption(key));
-    if (hasOptionChanged) {
-      // Set the option safely. When setting "lint", for example, it can throw an exception
-      // and cause the editor to break.
-      try {
-        codeMirror.current?.setOption(key, value);
-      } catch (err) {
-        console.log('Failed to set CodeMirror option', err.message, { key, value });
-      }
-    }
-  }
 
   const showFilter = updateFilter && mode && (mode.includes('json') || mode.includes('xml'));
   const showPrettify = manualPrettify && mode?.includes('json') || mode?.includes('xml');
