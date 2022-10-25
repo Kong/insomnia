@@ -113,7 +113,7 @@ jobs:
           payload: |
             {
               "message": "[debug] this is a notification from github",
-              "jobUrl": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID",
+              "jobUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
               "status": "${{ job.status }}"
             }
         env:
