@@ -150,7 +150,7 @@ describe('Response tag', () => {
       }
     });
 
-    it('allows more than 1 result', async () => {
+    it('allows more than 1 result if array of strings', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
 
       const responses = [
@@ -168,6 +168,26 @@ describe('Response tag', () => {
 
       const result = await tag.run(context, 'body', 'req_1', '$.array');
       expect(result).toBe('["bar","baz"]');
+    });
+
+    it('allows more than 1 result if array of integers', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+
+      const responses = [
+        {
+          _id: 'res_1',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'application/json',
+          _body: '{"array": [1, 2]}',
+        },
+      ];
+
+      const context = _genTestContext(requests, responses);
+
+
+      const result = await tag.run(context, 'body', 'req_1', '$.array');
+      expect(result).toBe('[1,2]');
     });
 
     it('works with utf-16 encoding', async () => {

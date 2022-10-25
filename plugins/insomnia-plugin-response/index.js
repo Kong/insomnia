@@ -243,6 +243,10 @@ function matchJSONPath(bodyStr, query) {
     throw new Error(`Returned no results: ${query}`);
   }
 
+  if (results.length > 1 ) {
+    return JSON.stringify(results);
+  }
+
   if (typeof results[0] !== 'string') {
     return JSON.stringify(results[0]);
   } else {
