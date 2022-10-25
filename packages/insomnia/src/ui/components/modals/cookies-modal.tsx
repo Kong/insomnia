@@ -51,6 +51,7 @@ class CookiesModal extends PureComponent<Props, State> {
       return;
     }
     await models.cookieJar.update(activeCookieJar);
+    await this._applyFilter(this.state.filter, activeCookieJar?.cookies || []); // Force re-render on cookie list
   }
 
   async _handleCookieAdd(cookie: Cookie) {
