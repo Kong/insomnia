@@ -1,10 +1,7 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
-import {
-  ACTIVITY_HOME,
-} from '../../common/constants';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -28,7 +25,6 @@ import { GitStagingModal } from '../components/modals/git-staging-modal';
 import { registerModal } from '../components/modals/index';
 import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
-import ProjectSettingsModal from '../components/modals/project-settings-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { ProtoFilesModal } from '../components/modals/proto-files-modal';
 import { RequestGroupSettingsModal } from '../components/modals/request-group-settings-modal';
@@ -55,7 +51,6 @@ import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-co
 import { useGitVCS } from '../hooks/use-git-vcs';
 import { useVCS } from '../hooks/use-vcs';
 import {
-  selectActiveActivity,
   selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
@@ -67,22 +62,6 @@ import {
   selectIsFinishedBooting,
   selectIsLoggedIn,
 } from '../redux/selectors';
-
-const ActivityRouter = () => {
-  const selectedActivity = useSelector(selectActiveActivity);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  // If there is no active workspace, we want to navigate to home no matter what the previous activity was
-  const activity = activeWorkspace ? selectedActivity : ACTIVITY_HOME;
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (activity) {
-      navigate(activity);
-    }
-  }, [activity, navigate]);
-
-  return null;
-};
 
 interface State {
   isMigratingChildren: boolean;
@@ -171,7 +150,6 @@ const App = () => {
                 <FilterHelpModal ref={instance => registerModal(instance, 'FilterHelpModal')} />
                 <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
                 <GenerateConfigModal ref={instance => registerModal(instance, 'GenerateConfigModal')} />
-                <ProjectSettingsModal ref={instance => registerModal(instance, 'ProjectSettingsModal')} />
                 <WorkspaceDuplicateModal ref={instance => registerModal(instance, 'WorkspaceDuplicateModal')} />
                 <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
                 <RequestSettingsModal ref={instance => registerModal(instance, 'RequestSettingsModal')} />
@@ -250,7 +228,6 @@ const App = () => {
             </div>
 
             <Outlet />
-            <ActivityRouter />
           </ErrorBoundary>
 
           <ErrorBoundary showAlert>
