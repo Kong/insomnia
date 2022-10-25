@@ -9,33 +9,33 @@ import { PromptButton } from '../base/prompt-button';
 import { AutocompleteHandler, Pair, Row, RowHandle } from './row';
 
 interface Props {
-  onChange: Function;
-  pairs: Pair[];
-  handleGetAutocompleteNameConstants?: AutocompleteHandler;
-  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   allowFile?: boolean;
   allowMultiline?: boolean;
-  namePlaceholder?: string;
-  valuePlaceholder?: string;
-  descriptionPlaceholder?: string;
   className?: string;
+  descriptionPlaceholder?: string;
+  handleGetAutocompleteNameConstants?: AutocompleteHandler;
+  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   isDisabled?: boolean;
   isWebSocketRequest?: boolean;
+  namePlaceholder?: string;
+  onChange: Function;
+  pairs: Pair[];
+  valuePlaceholder?: string;
 }
 
 export const KeyValueEditor: FC<Props> = ({
+  allowFile,
+  allowMultiline,
   className,
-  valuePlaceholder,
-  namePlaceholder,
   descriptionPlaceholder,
   handleGetAutocompleteNameConstants,
   handleGetAutocompleteValueConstants,
-  allowFile,
-  allowMultiline,
   isDisabled,
   isWebSocketRequest,
+  namePlaceholder,
   onChange,
   pairs,
+  valuePlaceholder,
 }) => {
   const [showDescription, setShowDescription] = useState<boolean>(false);
   const rowRef = useRef<RowHandle>(null);

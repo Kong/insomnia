@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 
 import { CodeEditor, CodeEditorHandle, CodeEditorOnChange } from './code-editor';
@@ -7,21 +6,20 @@ const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
 interface Props {
   defaultValue: string;
-  id?: string;
-  type?: string;
-  mode?: string;
-  onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
-  onChange?: CodeEditorOnChange;
-  onPaste?: (event: ClipboardEvent) => void;
-  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
-  placeholder?: string;
-  className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
+  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
+  id?: string;
+  mode?: string;
+  onChange?: CodeEditorOnChange;
+  onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
+  onPaste?: (event: ClipboardEvent) => void;
+  placeholder?: string;
   readOnly?: boolean;
+  type?: string;
 }
 
-const _mayContainNunjucks = (text: string) => {
+const mayContainNunjucks = (text: string) => {
   // Not sure, but sometimes this isn't a string
   if (typeof text !== 'string') {
     return false;
@@ -38,24 +36,23 @@ export interface OneLineEditorHandle {
   getSelectionEnd: () => void;
 }
 export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
-  id,
   defaultValue,
-  className,
+  forceEditor,
+  forceInput,
+  getAutocompleteConstants,
+  id,
+  mode,
   onChange,
-  placeholder,
   onKeyDown,
   onPaste,
-  forceInput,
-  forceEditor,
+  placeholder,
   readOnly,
-  getAutocompleteConstants,
-  mode,
   type,
 }, ref) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [isEditor, setIsEditor] = useState(forceEditor || _mayContainNunjucks(defaultValue));
+  const [isEditor, setIsEditor] = useState(forceEditor || mayContainNunjucks(defaultValue));
   useImperativeHandle(ref, () => ({
     getValue: () => {
       if (isEditor) {
@@ -130,7 +127,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   };
 
   const convertToInputIfNotFocused = () => {
-    if (isEditor && !forceEditor && !editorRef.current?.hasFocus() && !_mayContainNunjucks(editorRef.current?.getValue() || '')) {
+    if (isEditor && !forceEditor && !editorRef.current?.hasFocus() && !mayContainNunjucks(editorRef.current?.getValue() || '')) {
       setIsEditor(false);
     }
   };
@@ -207,7 +204,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
           onMouseLeave={convertToInputIfNotFocused}
           onChange={onChange}
           getAutocompleteConstants={getAutocompleteConstants}
-          className={classnames('editor--single-line', className)}
+          className="editor--single-line"
           defaultValue={defaultValue}
           readOnly={readOnly}
         />
@@ -219,7 +216,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
         ref={inputRef}
         id={id}
         type={type}
-        className={className}
         style={{
           // background: 'rgba(255, 0, 0, 0.05)', // For debugging
           width: '100%',

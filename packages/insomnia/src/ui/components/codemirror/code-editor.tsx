@@ -10,8 +10,9 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useMount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import {
@@ -95,53 +96,53 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 export type CodeEditorOnChange = (value: string) => void;
 
 export interface CodeEditorProps {
+  autoCloseBrackets?: boolean;
+  autoPrettify?: boolean;
+  className?: string;
+  debounceMillis?: number;
+  defaultTabBehavior?: boolean;
+  defaultValue?: string;
+  dynamicHeight?: boolean;
+  enableNunjucks?: boolean;
+  filter?: string;
+  filterHistory?: string[];
+  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
+  getAutocompleteSnippets?: () => CodeMirror.Snippet[];
+  hideGutters?: boolean;
+  hideLineNumbers?: boolean;
+  hideScrollbars?: boolean;
+  hintOptions?: ShowHintOptions;
+  id?: string;
+  ignoreEditorFontSettings?: boolean;
+  infoOptions?: GraphQLInfoOptions;
+  jumpOptions?: ModifiedGraphQLJumpOptions;
+  lintOptions?: any;
+  manualPrettify?: boolean;
+  mode?: string;
+  noDragDrop?: boolean;
+  noLint?: boolean;
+  noMatchBrackets?: boolean;
+  noStyleActiveLine?: boolean;
+  onBlur?: (event: FocusEvent) => void;
   onChange?: CodeEditorOnChange;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  onClickLink?: CodeMirrorLinkClickCallback;
+  onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
   onCursorActivity?: (cm: CodeMirror.Editor) => void;
   onFocus?: (event: FocusEvent) => void;
-  onBlur?: (event: FocusEvent) => void;
-  onClickLink?: CodeMirrorLinkClickCallback;
   // NOTE: This is a hack to define keydown events on the Editor.
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
   onPaste?: (event: ClipboardEvent) => void;
-  onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
-  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
-  getAutocompleteSnippets?: () => CodeMirror.Snippet[];
-  mode?: string;
-  id?: string;
   placeholder?: string;
-  hideLineNumbers?: boolean;
-  hideGutters?: boolean;
-  noMatchBrackets?: boolean;
-  hideScrollbars?: boolean;
-  defaultValue?: string;
-  tabIndex?: number;
-  autoPrettify?: boolean;
-  manualPrettify?: boolean;
-  noLint?: boolean;
-  noDragDrop?: boolean;
-  noStyleActiveLine?: boolean;
-  className?: string;
-  style?: Object;
-  updateFilter?: (filter: string) => void;
-  defaultTabBehavior?: boolean;
-  readOnly?: boolean;
-  type?: string;
-  filter?: string;
-  filterHistory?: string[];
-  singleLine?: boolean;
-  debounceMillis?: number;
-  dynamicHeight?: boolean;
-  autoCloseBrackets?: boolean;
-  hintOptions?: ShowHintOptions;
-  lintOptions?: any;
-  infoOptions?: GraphQLInfoOptions;
-  jumpOptions?: ModifiedGraphQLJumpOptions;
-  uniquenessKey?: string;
   raw?: boolean;
-  enableNunjucks?: boolean;
-  ignoreEditorFontSettings?: boolean;
+  readOnly?: boolean;
+  singleLine?: boolean;
+  style?: Object;
+  tabIndex?: number;
+  type?: string;
+  uniquenessKey?: string;
+  updateFilter?: (filter: string) => void;
 }
 
 const _normalizeMode = (mode?: string) => {
@@ -186,26 +187,26 @@ export interface CodeEditorHandle {
 }
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>((props, ref) => {
   const {
-    id,
-    readOnly,
-    mode,
-    filterHistory,
-    onMouseLeave,
-    onClick,
+    autoPrettify,
     className,
+    defaultValue,
     dynamicHeight,
+    enableNunjucks,
+    filterHistory,
+    id,
+    ignoreEditorFontSettings,
+    lintOptions,
+    manualPrettify,
+    mode,
+    onChange,
+    onClick,
+    onMouseLeave,
+    raw,
+    readOnly,
     style,
     type,
-    raw,
-    updateFilter,
-    manualPrettify,
-    autoPrettify,
     uniquenessKey,
-    defaultValue,
-    onChange,
-    lintOptions,
-    ignoreEditorFontSettings,
-    enableNunjucks,
+    updateFilter,
   } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -229,7 +230,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>((props, 
     },
   });
 
-  useEffect(() => {
+  useMount(() => {
     _codemirrorSetOptions();
 
     // if (_uniquenessKey && _uniquenessKey !== _previousUniquenessKey) {
@@ -243,12 +244,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>((props, 
         codeMirror.current?.closeHintDropdown();
       }
     };
-  }, []);
-  useEffect(() => {
+  });
+  useMount(() => {
     if (textAreaRef.current) {
       _handleInitTextarea(textAreaRef.current);
     }
-  }, []);
+  });
   useImperativeHandle(ref, () => ({
     setValue: value => {
       if (codeMirror.current) {
