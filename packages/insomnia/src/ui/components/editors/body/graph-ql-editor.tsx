@@ -23,7 +23,7 @@ import { json as jsonPrettify } from 'insomnia-prettify';
 import { buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol } from 'insomnia-url';
 import prettier from 'prettier';
 import { complement } from 'ramda';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, {FC, useCallback, useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
 
@@ -279,6 +279,24 @@ export const GraphQLEditor: FC<Props> = ({
 
   const [automaticUrl, setAutomaticUrl] = useState(request.url);
 
+  const updateSchema = useCallback(async (url: string, isMounted: boolean) => {
+    setSchemaIsFetching(true);
+    const newState = await fetchGraphQLSchemaForRequest({
+      requestId: request._id,
+      environmentId,
+      url: url,
+      workspaceId,
+      introspectionOptions: state.introspectionOptions,
+    });
+
+    if (isMounted) {
+      setSchemaFetchError(newState?.schemaFetchError);
+      newState?.schema && setSchema(newState.schema);
+      newState?.schema && setSchemaLastFetchTime(Date.now());
+      setSchemaIsFetching(false);
+    }
+  }, [environmentId, request._id, state.introspectionOptions, workspaceId]);
+
   useEffect(() => {
     if (state.automaticFetch) {
       setAutomaticUrl(request.url);
@@ -287,26 +305,11 @@ export const GraphQLEditor: FC<Props> = ({
 
   useEffect(() => {
     let isMounted = true;
-    const init = async () => {
-      setSchemaIsFetching(true);
-      const newState = await fetchGraphQLSchemaForRequest({
-        requestId: request._id,
-        environmentId,
-        url: automaticUrl,
-        workspaceId,
-        introspectionOptions: state.introspectionOptions,
-      });
-
-      isMounted && setSchemaFetchError(newState?.schemaFetchError);
-      isMounted && newState?.schema && setSchema(newState.schema);
-      isMounted && newState?.schema && setSchemaLastFetchTime(Date.now());
-      isMounted && setSchemaIsFetching(false);
-    };
-    init();
+    updateSchema(automaticUrl, isMounted);
     return () => {
       isMounted = false;
     };
-  }, [environmentId, request._id, automaticUrl, workspaceId, state.introspectionOptions]);
+  }, [environmentId, request._id, automaticUrl, workspaceId, state.introspectionOptions, updateSchema]);
 
   const getCurrentOperation = () => {
     if (!editorRef.current) {
@@ -412,15 +415,7 @@ export const GraphQLEditor: FC<Props> = ({
     // First, "forget" preference to hide errors so they always show
     // again after a refresh
     setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-    setSchemaIsFetching(true);
-    await fetchGraphQLSchemaForRequest({
-      requestId: request._id,
-      environmentId,
-      url: request.url,
-      workspaceId,
-      introspectionOptions: state.introspectionOptions,
-    });
-    setSchemaIsFetching(false);
+    updateSchema(request.url, true);
   };
 
   const handleVariablesChange = (variables: string) => {
