@@ -277,6 +277,14 @@ export const GraphQLEditor: FC<Props> = ({
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeMirror.Editor | null>(null);
 
+  const [automaticUrl, setAutomaticUrl] = useState(request.url);
+
+  useEffect(() => {
+    if (state.automaticFetch) {
+      setAutomaticUrl(request.url);
+    }
+  }, [state.automaticFetch, request.url]);
+
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
@@ -284,7 +292,7 @@ export const GraphQLEditor: FC<Props> = ({
       const newState = await fetchGraphQLSchemaForRequest({
         requestId: request._id,
         environmentId,
-        url: request.url,
+        url: automaticUrl,
         workspaceId,
         introspectionOptions: state.introspectionOptions,
       });
@@ -298,7 +306,7 @@ export const GraphQLEditor: FC<Props> = ({
     return () => {
       isMounted = false;
     };
-  }, [environmentId, request._id, request.url, workspaceId, state.introspectionOptions]);
+  }, [environmentId, request._id, automaticUrl, workspaceId, state.introspectionOptions]);
 
   const getCurrentOperation = () => {
     if (!editorRef.current) {
@@ -625,12 +633,15 @@ export const GraphQLEditor: FC<Props> = ({
         </DropdownItem>
         <DropdownItem
           onClick={() => {
-            setState(state => ({ ...state, automaticFetch: !state.automaticFetch }));
-            window.localStorage.setItem('graphql.automaticFetch', state.automaticFetch.toString());
+            setState(state => {
+              const updated = { ...state, automaticFetch: !state.automaticFetch };
+              window.localStorage.setItem('graphql.automaticFetch', state.automaticFetch.toString());
+              return updated;
+            });
           }}
           stayOpenAfterClick
         >
-          <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
+          <i className={`fa fa-toggle-${state.automaticFetch ? 'on' : 'off'}`} />{' '}
           Automatic Fetch
           <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
         </DropdownItem>
