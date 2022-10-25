@@ -37,7 +37,6 @@ export const KeyValueEditor: FC<Props> = ({
   pairs,
   valuePlaceholder,
 }) => {
-  const [showDescription, setShowDescription] = useState<boolean>(false);
   const rowRef = useRef<RowHandle>(null);
 
   const readOnlyPairs = [
@@ -52,20 +51,20 @@ export const KeyValueEditor: FC<Props> = ({
       {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
         <Row
           key={i}
-          showDescription={showDescription}
           descriptionPlaceholder={descriptionPlaceholder}
           readOnly
           hideButtons
           forceInput
           pair={pair}
           onChange={() => {}}
+          addPair={() => {}}
+          deleteAll={() => {}}
         />
       )) : null}
       {pairs.map(pair => (
         <Row
           key={pair.id}
           ref={rowRef}
-          showDescription={showDescription}
           namePlaceholder={namePlaceholder}
           valuePlaceholder={valuePlaceholder}
           descriptionPlaceholder={descriptionPlaceholder}
@@ -78,32 +77,15 @@ export const KeyValueEditor: FC<Props> = ({
           readOnly={isDisabled}
           hideButtons={isDisabled}
           pair={pair}
+          addPair={() => onChange([...pairs, {
+            id: generateId('pair'),
+            name: '',
+            value: '',
+            description: '',
+          }])}
+          deleteAll={() => onChange([])}
         />
       ))}
-      {!isDisabled ? (
-        <div className="key-value-editor__drag">
-          <Dropdown>
-            <DropdownButton>
-              <i className="fa fa-cog" />
-            </DropdownButton>
-            <DropdownItem onClick={() => onChange([])} buttonClass={PromptButton}>
-              Delete All Items
-            </DropdownItem>
-            <DropdownItem onClick={() => setShowDescription(!showDescription)}>Toggle Description</DropdownItem>
-            <DropdownItem
-              onClick={() => {
-                rowRef.current?.focusNameEnd();
-                onChange([...pairs, {
-                  id: generateId('pair'),
-                  name: '',
-                  value: '',
-                  description: '',
-                }]);
-              }}
-            >Add header</DropdownItem>
-          </Dropdown>
-        </div>
-      ) : null}
     </ul>
   );
 };

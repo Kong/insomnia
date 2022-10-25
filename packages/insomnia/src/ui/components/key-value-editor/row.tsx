@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -26,11 +26,12 @@ export interface Pair {
 export type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[]>;
 
 interface Props {
+  addPair: () => void;
   allowFile?: boolean;
   allowMultiline?: boolean;
   className?: string;
+  deleteAll: () => void;
   descriptionPlaceholder?: string;
-  showDescription: boolean;
   forceInput?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
@@ -46,11 +47,12 @@ export interface RowHandle {
   focusNameEnd: () => void;
 }
 export const Row = forwardRef<RowHandle, Props>(({
+  addPair,
   allowFile,
   allowMultiline,
   className,
+  deleteAll,
   descriptionPlaceholder,
-  showDescription,
   forceInput,
   handleGetAutocompleteNameConstants,
   handleGetAutocompleteValueConstants,
@@ -63,6 +65,7 @@ export const Row = forwardRef<RowHandle, Props>(({
   valuePlaceholder,
 }, ref) => {
   const { enabled } = useNunjucksEnabled();
+  const [showDescription, setShowDescription] = useState<boolean>(false);
 
   const nameRef = useRef<OneLineEditorHandle>(null);
   const valueRef = useRef<OneLineEditorHandle>(null);
@@ -100,7 +103,7 @@ export const Row = forwardRef<RowHandle, Props>(({
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
             forceInput={forceInput}
             readOnly={readOnly}
-            onChange={name => onChange({ ...pair,  name })}
+            onChange={name => onChange({ ...pair, name })}
           />
         </div>
         <div
@@ -114,7 +117,7 @@ export const Row = forwardRef<RowHandle, Props>(({
               showFileIcon
               className="btn btn--outlined btn--super-duper-compact wide ellipsis"
               path={pair.fileName || ''}
-              onChange={fileName => onChange({ ...pair,  fileName })}
+              onChange={fileName => onChange({ ...pair, fileName })}
             />
           ) : isMultiline ? (
             <button
@@ -123,10 +126,10 @@ export const Row = forwardRef<RowHandle, Props>(({
                 submitName: 'Done',
                 title: `Edit ${pair.name}`,
                 defaultValue: pair.value,
-                onChange: (value: string) => onChange({ ...pair,  value }),
+                onChange: (value: string) => onChange({ ...pair, value }),
                 enableRender: enabled,
                 mode: pair.multiline || 'text/plain',
-                onModeChange: (mode: string) => onChange({ ...pair,  multiline: mode }),
+                onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
               })}
             >
               <i className="fa fa-pencil-square-o space-right" />
@@ -156,14 +159,15 @@ export const Row = forwardRef<RowHandle, Props>(({
                   const suffix = currentValue?.slice(end);
                   const finalValue = `${prefix}${value}${suffix}`;
                   console.log(start, end, finalValue);
-                  onChange({ ...pair,
+                  onChange({
+                    ...pair,
                     type: 'text',
                     multiline: 'text/plain',
                     value: finalValue,
                   });
                 }
               }}
-              onChange={value => onChange({ ...pair,  value })}
+              onChange={value => onChange({ ...pair, value })}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
             />
           )}
@@ -180,7 +184,7 @@ export const Row = forwardRef<RowHandle, Props>(({
               forceInput={forceInput}
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}
-              onChange={description => onChange({ ...pair,  description })}
+              onChange={description => onChange({ ...pair, description })}
             />
           </div>
         ) : null}
@@ -243,6 +247,18 @@ export const Row = forwardRef<RowHandle, Props>(({
             <i className="fa fa-empty" />
           </button>
         )}
+        {!hideButtons ? (
+          <Dropdown>
+            <DropdownItem onClick={addPair}>Add Header</DropdownItem>
+            <DropdownButton>
+              <i className="fa fa-cog" />
+            </DropdownButton>
+            <DropdownItem onClick={deleteAll} buttonClass={PromptButton}>
+              Delete All Items
+            </DropdownItem>
+            <DropdownItem onClick={() => setShowDescription(!showDescription)}>Toggle Description</DropdownItem>
+          </Dropdown>
+        ) : null}
       </div>
     </li>
   );
