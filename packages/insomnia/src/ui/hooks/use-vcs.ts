@@ -4,11 +4,9 @@ import { getDataDirectory } from '../../common/electron-helpers';
 import { generateId } from '../../common/misc';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { type MergeConflict } from '../../sync/types';
-import { VCS } from '../../sync/vcs/vcs';
+import { getVCS, initVCS, VCS } from '../../sync/vcs/vcs';
 import { showModal } from '../components/modals/index';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
-
-let vcsInstance: VCS | null = null;
 
 export function useVCS({
   workspaceId,
@@ -27,10 +25,11 @@ export function useVCS({
     setVCS(null);
 
     async function updateVCS() {
+      let vcsInstance = getVCS();
       if (!vcsInstance) {
         const driver = FileSystemDriver.create(getDataDirectory());
 
-        vcsInstance = new VCS(driver, async conflicts => {
+        vcsInstance = await initVCS(driver, async conflicts => {
           return new Promise(resolve => {
             showModal(SyncMergeModal, {
               conflicts,
