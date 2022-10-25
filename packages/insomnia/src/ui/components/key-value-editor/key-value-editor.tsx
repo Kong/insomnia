@@ -37,7 +37,7 @@ export const KeyValueEditor: FC<Props> = ({
   onChange,
   pairs,
 }) => {
-  const [displayDescription, setDisplayDescription] = useState<boolean>(false);
+  const [showDescription, setShowDescription] = useState<boolean>(false);
   const rowRef = useRef<RowHandle>(null);
 
   const readOnlyPairs = [
@@ -52,19 +52,20 @@ export const KeyValueEditor: FC<Props> = ({
       {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
         <Row
           key={i}
-          displayDescription={displayDescription}
+          showDescription={showDescription}
           descriptionPlaceholder={descriptionPlaceholder}
           readOnly
           hideButtons
           forceInput
           pair={pair}
+          onChange={() => {}}
         />
       )) : null}
       {pairs.map(pair => (
         <Row
           key={pair.id}
           ref={rowRef}
-          displayDescription={displayDescription}
+          showDescription={showDescription}
           namePlaceholder={namePlaceholder}
           valuePlaceholder={valuePlaceholder}
           descriptionPlaceholder={descriptionPlaceholder}
@@ -88,7 +89,7 @@ export const KeyValueEditor: FC<Props> = ({
             <DropdownItem onClick={() => onChange([])} buttonClass={PromptButton}>
               Delete All Items
             </DropdownItem>
-            <DropdownItem onClick={() => setDisplayDescription(!displayDescription)}>Toggle Description</DropdownItem>
+            <DropdownItem onClick={() => setShowDescription(!showDescription)}>Toggle Description</DropdownItem>
             <DropdownItem
               onClick={() => {
                 rowRef.current?.focusNameEnd();

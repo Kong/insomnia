@@ -1,4 +1,3 @@
-// eslint-disable-next-line filenames/match-exported
 import classnames from 'classnames';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 
@@ -31,13 +30,13 @@ interface Props {
   allowMultiline?: boolean;
   className?: string;
   descriptionPlaceholder?: string;
-  displayDescription: boolean;
+  showDescription: boolean;
   forceInput?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   hideButtons?: boolean;
   namePlaceholder?: string;
-  onChange?: (pair: Pair) => void;
+  onChange: (pair: Pair) => void;
   onDelete?: (pair: Pair) => void;
   pair: Pair;
   readOnly?: boolean;
@@ -51,7 +50,7 @@ export const Row = forwardRef<RowHandle, Props>(({
   allowMultiline,
   className,
   descriptionPlaceholder,
-  displayDescription,
+  showDescription,
   forceInput,
   handleGetAutocompleteNameConstants,
   handleGetAutocompleteValueConstants,
@@ -63,146 +62,28 @@ export const Row = forwardRef<RowHandle, Props>(({
   readOnly,
   valuePlaceholder,
 }, ref) => {
-
   const { enabled } = useNunjucksEnabled();
 
   const nameRef = useRef<OneLineEditorHandle>(null);
   const valueRef = useRef<OneLineEditorHandle>(null);
-  const descriptionRef = useRef<OneLineEditorHandle>(null);
 
   useImperativeHandle(ref, () => ({
     focusNameEnd: () => nameRef.current?.focusEnd(),
   }));
 
-  function _handleTypeChange(def: Partial<Pair>) {
-    // Remove newlines if converting to text
-    // WARNING: props should never be overwritten!
-    let value = pair.value || '';
-    if (def.type === 'text' && !def.multiline && value.includes('\n')) {
-      value = value.replace(/\n/g, '');
-    }
-    onChange?.(Object.assign({}, pair, { type: def.type, multiline: def.multiline, value }));
-  }
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
     'key-value-editor__row-wrapper--disabled': pair.disabled,
   });
 
-  const showDropdown = allowMultiline || allowFile;
-  let renderPairSelector;
-  // Put a spacer in for dropdown if needed
-  if (hideButtons && showDropdown) {
-    renderPairSelector = (
-      <button>
-        <i className="fa fa-empty" />
-      </button>
-    );
-  } else if (hideButtons) {
-    renderPairSelector = null;
-  } else {
-    renderPairSelector = showDropdown ? (
-      <Dropdown right>
-        <DropdownButton className="tall">
-          <i className="fa fa-caret-down" />
-        </DropdownButton>
-        <DropdownItem
-          onClick={() => _handleTypeChange({
-            type: 'text',
-            multiline: false,
-          })}
-        >
-          Text
-        </DropdownItem>
-        {allowMultiline && (
-          <DropdownItem
-            onClick={() => _handleTypeChange({
-              type: 'text',
-              multiline: true,
-            })}
-          >
-            Text (Multi-line)
-          </DropdownItem>
-        )}
-        {allowFile && (
-          <DropdownItem
-            onClick={() => _handleTypeChange({
-              type: 'file',
-            })}
-          >
-            File
-          </DropdownItem>
-        )}
-      </Dropdown>
-    ) : null;
-  }
+  const isFileOrMultiline = allowMultiline || allowFile;
+  const hiddenButtons = isFileOrMultiline ? (<button>
+    <i className="fa fa-empty" />
+  </button>) : null;
 
-  let pairValue;
-  if (pair.type === 'file') {
-    pairValue = (
-      <FileInputButton
-        showFileName
-        showFileIcon
-        className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-        path={pair.fileName || ''}
-        onChange={filename => onChange?.(Object.assign({}, pair, { filename }))}
-      />
-    );
-  } else if (pair.type === 'text' && pair.multiline) {
-    const bytes = Buffer.from(pair.value, 'utf8').length;
-    pairValue = (
-      <button
-        className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-        onClick={() => showModal(CodePromptModal, {
-          submitName: 'Done',
-          title: `Edit ${pair.name}`,
-          defaultValue: pair.value,
-          onChange: (value: string) => onChange?.(Object.assign({}, pair, { value })),
-          enableRender: enabled,
-          mode: pair.multiline || 'text/plain',
-          onModeChange: (mode: string) => _handleTypeChange(Object.assign({}, pair, { multiline: mode })),
-        })}
-      >
-        <i className="fa fa-pencil-square-o space-right" />
-        {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
-      </button>
-    );
-  } else {
-    pairValue = (
-      <OneLineEditor
-        ref={valueRef}
-        readOnly={readOnly}
-        forceInput={forceInput}
-        type="text"
-        placeholder={valuePlaceholder || 'Value'}
-        defaultValue={pair.value}
-        onPaste={event => {
-          if (!allowMultiline) {
-            return;
-          }
-          const value = event.clipboardData?.getData('text/plain');
-          if (value?.includes('\n')) {
-            event.preventDefault();
-            // Insert the pasted text into the current selection.
-            // Unfortunately, this is the easiest way to do
-            const currentValue = valueRef.current?.getValue();
-            const start = valueRef.current?.getSelectionStart() || 0;
-            const end = valueRef.current?.getSelectionEnd() || 0;
-            const prefix = currentValue?.slice(0, start);
-            const suffix = currentValue?.slice(end);
-            const finalValue = `${prefix}${value}${suffix}`;
-            // Update type and value
-            _handleTypeChange({
-              type: 'text',
-              multiline: 'text/plain',
-            });
-            onChange?.(Object.assign({}, pair, { value: finalValue }));
-          }
-        }}
-        onChange={value => onChange?.(Object.assign({}, pair, { value }))}
-        getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
-      />
-    );
-  }
+  const isFile = pair.type === 'file';
+  const isMultiline = pair.type === 'text' && pair.multiline;
+  const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
 
   return (
     <li className={classes}>
@@ -219,7 +100,7 @@ export const Row = forwardRef<RowHandle, Props>(({
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
             forceInput={forceInput}
             readOnly={readOnly}
-            onChange={name => onChange?.(Object.assign({}, pair, { name }))}
+            onChange={name => onChange({ ...pair,  name })}
           />
         </div>
         <div
@@ -227,33 +108,112 @@ export const Row = forwardRef<RowHandle, Props>(({
             'form-control--inactive': pair.disabled,
           })}
         >
-          {pairValue}
+          {isFile ? (
+            <FileInputButton
+              showFileName
+              showFileIcon
+              className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+              path={pair.fileName || ''}
+              onChange={fileName => onChange({ ...pair,  fileName })}
+            />
+          ) : isMultiline ? (
+            <button
+              className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+              onClick={() => showModal(CodePromptModal, {
+                submitName: 'Done',
+                title: `Edit ${pair.name}`,
+                defaultValue: pair.value,
+                onChange: (value: string) => onChange({ ...pair,  value }),
+                enableRender: enabled,
+                mode: pair.multiline || 'text/plain',
+                onModeChange: (mode: string) => onChange({ ...pair,  multiline: mode }),
+              })}
+            >
+              <i className="fa fa-pencil-square-o space-right" />
+              {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
+            </button>
+          ) : (
+            <OneLineEditor
+              ref={valueRef}
+              readOnly={readOnly}
+              forceInput={forceInput}
+              type="text"
+              placeholder={valuePlaceholder || 'Value'}
+              defaultValue={pair.value}
+              onPaste={event => {
+                if (!allowMultiline) {
+                  return;
+                }
+                const value = event.clipboardData?.getData('text/plain');
+                if (value?.includes('\n')) {
+                  event.preventDefault();
+                  // Insert the pasted text into the current selection.
+                  // Unfortunately, this is the easiest way to do
+                  const currentValue = valueRef.current?.getValue();
+                  const start = valueRef.current?.getSelectionStart() || 0;
+                  const end = valueRef.current?.getSelectionEnd() || 0;
+                  const prefix = currentValue?.slice(0, start);
+                  const suffix = currentValue?.slice(end);
+                  const finalValue = `${prefix}${value}${suffix}`;
+                  onChange({ ...pair,
+                    type: 'text',
+                    multiline: 'text/plain',
+                    value: finalValue,
+                  });
+                }
+              }}
+              onChange={value => onChange({ ...pair,  value })}
+              getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
+            />
+          )}
         </div>
-        {displayDescription ? (
+        {showDescription ? (
           <div
             className={classnames(
               'form-control form-control--underlined form-control--wide no-min-width',
-              {
-                'form-control--inactive': pair.disabled,
-              },
+              { 'form-control--inactive': pair.disabled },
             )}
           >
             <OneLineEditor
-              ref={descriptionRef}
               readOnly={readOnly}
               forceInput={forceInput}
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}
-              onChange={description => onChange?.(Object.assign({}, pair, { description }))}
+              onChange={description => onChange({ ...pair,  description })}
             />
           </div>
         ) : null}
 
-        {renderPairSelector}
+        {hideButtons ? hiddenButtons : isFileOrMultiline ? (
+          <Dropdown right>
+            <DropdownButton className="tall">
+              <i className="fa fa-caret-down" />
+            </DropdownButton>
+            <DropdownItem
+              onClick={() => onChange({ ...pair, type: 'text', multiline: false })}
+            >
+              Text
+            </DropdownItem>
+            {allowMultiline && (
+              <DropdownItem
+                onClick={() => onChange({ ...pair, type: 'text', multiline: true })}
+              >
+                Text (Multi-line)
+              </DropdownItem>
+            )}
+            {allowFile && (
+              <DropdownItem
+                onClick={() => onChange({ ...pair, type: 'file' })}
+              >
+                File
+              </DropdownItem>
+            )}
+          </Dropdown>
+        ) : null}
 
         {!hideButtons ? (
           <button
-            onClick={() => onChange?.(Object.assign({}, pair, { disabled: !pair.disabled }))}
+            onClick={() => onChange({ ...pair, disabled: !pair.disabled })}
             title={pair.disabled ? 'Enable item' : 'Disable item'}
           >
             {pair.disabled ? (
@@ -270,7 +230,6 @@ export const Row = forwardRef<RowHandle, Props>(({
 
         {!hideButtons ? (
           <PromptButton
-            key={Math.random()}
             tabIndex={-1}
             confirmMessage=""
             onClick={() => onDelete?.(pair)}
