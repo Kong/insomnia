@@ -1,6 +1,6 @@
 import React, { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 
-import { CodeEditor, CodeEditorHandle, CodeEditorOnChange } from './code-editor';
+import { CodeEditor, CodeEditorHandle } from './code-editor';
 
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
@@ -11,7 +11,7 @@ interface Props {
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   id?: string;
   mode?: string;
-  onChange?: CodeEditorOnChange;
+  onChange?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent | React.KeyboardEvent, value?: any) => void;
   onPaste?: (event: ClipboardEvent) => void;
   placeholder?: string;
@@ -31,6 +31,7 @@ export interface OneLineEditorHandle {
   focus: () => void;
   focusEnd: () => void;
   selectAll: () => void;
+  // NOTE: only used for some weird multiline paste logic
   getValue: () => string | undefined;
   getSelectionStart: () => void;
   getSelectionEnd: () => void;
@@ -99,10 +100,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   }));
 
   const convertToEditorPreserveFocus = () => {
-    if (!isEditor || forceInput) {
-      return;
-    }
-    if (!inputRef.current) {
+    if (!isEditor || forceInput || !inputRef.current) {
       return;
     }
     if (inputRef.current === document.activeElement) {

@@ -155,6 +155,7 @@ export const Row = forwardRef<RowHandle, Props>(({
                   const prefix = currentValue?.slice(0, start);
                   const suffix = currentValue?.slice(end);
                   const finalValue = `${prefix}${value}${suffix}`;
+                  console.log(start, end, finalValue);
                   onChange({ ...pair,
                     type: 'text',
                     multiline: 'text/plain',
