@@ -10,7 +10,7 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
@@ -425,7 +425,19 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // HACK: Refresh because sometimes it renders too early and the scroll doesn't quite fit.
     setTimeout(() => codeMirror.current?.refresh(), 100);
     // Restore the state
-    restoreState();
+    if (uniquenessKey && editorStates.hasOwnProperty(uniquenessKey) && codeMirror.current) {
+      const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
+      codeMirror.current.scrollTo(scroll.left, scroll.top);
+      codeMirror.current.setHistory(history);
+      // NOTE: These won't be visible unless the editor is focused
+      codeMirror.current.setCursor(cursor.line, cursor.ch, { scroll: false });
+      codeMirror.current.setSelections(selections, undefined, { scroll: false });
+      // Restore marks one-by-one
+      for (const { from, to } of marks || []) {
+        // @ts-expect-error -- type unsoundness
+        codeMirror.current.foldCode(from, to);
+      }
+    }
     if (onCodeMirrorInit) {
       onCodeMirrorInit(codeMirror.current);
     }
@@ -600,22 +612,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       )
     );
   };
-  const restoreState = () => {
-    if (!uniquenessKey || !editorStates.hasOwnProperty(uniquenessKey) || !codeMirror.current) {
-      return;
-    }
-    const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
-    codeMirror.current.scrollTo(scroll.left, scroll.top);
-    codeMirror.current.setHistory(history);
-    // NOTE: These won't be visible unless the editor is focused
-    codeMirror.current.setCursor(cursor.line, cursor.ch, { scroll: false });
-    codeMirror.current.setSelections(selections, undefined, { scroll: false });
-    // Restore marks one-by-one
-    for (const { from, to } of marks || []) {
-      // @ts-expect-error -- type unsoundness
-      codeMirror.current.foldCode(from, to);
-    }
-  };
+
   const indentChars = () => codeMirror.current?.getOption('indentWithTabs')
     ? '\t'
     : new Array((codeMirror.current?.getOption?.('indentUnit') || 0) + 1).join(' ');
@@ -672,87 +669,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       codeMirror.current?.setValue(code || '');
     }
   }
-  const toolbarChildren: ReactNode[] = [];
 
-  if (updateFilter && mode && (mode.includes('json') || mode.includes('xml'))) {
-    toolbarChildren.push(
-      <input
-        ref={inputRef}
-        key="filter"
-        type="text"
-        title="Filter response body"
-        defaultValue={filter || ''}
-        placeholder={mode.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
-        onChange={event => {
-          const filter = event.target.value;
-          setFilter(filter);
-          codemirrorSetValue(originalCode);
-          if (updateFilter) {
-            updateFilter(filter);
-          }
-        }}
-      />,
-    );
+  const showFilter = updateFilter && mode && (mode.includes('json') || mode.includes('xml'));
+  const showPrettify = manualPrettify && mode?.includes('json') || mode?.includes('xml');
 
-    if (filterHistory && filterHistory.length) {
-      toolbarChildren.push(
-        <Dropdown key="history" className="tall" right>
-          <DropdownButton className="btn btn--compact">
-            <i className="fa fa-clock-o" />
-          </DropdownButton>
-          {filterHistory.reverse().map(filter => (
-            <DropdownItem
-              key={filter}
-              onClick={() => {
-                if (inputRef.current) {
-                  inputRef.current.value = filter;
-                }
-                setFilter(filter);
-                codemirrorSetValue(originalCode);
-                if (updateFilter) {
-                  updateFilter(filter);
-                }
-              }}
-            >
-              {filter}
-            </DropdownItem>
-          ))}
-        </Dropdown>,
-      );
-    }
-
-    toolbarChildren.push(
-      <button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: mode?.includes('json') })}>
-        <i className="fa fa-question-circle" />
-      </button>,
-    );
-  }
-
-  if (manualPrettify && mode && (mode.includes('json') || mode.includes('xml'))) {
-    let contentTypeName = '';
-    if (mode?.includes('json')) {
-      contentTypeName = 'JSON';
-    } else if (mode?.includes('xml')) {
-      contentTypeName = 'XML';
-    }
-    toolbarChildren.push(
-      <button
-        key="prettify"
-        className="btn btn--compact"
-        title="Auto-format request body whitespace"
-        onClick={() => {
-          const canPrettify = mode && (mode.includes('json') || mode.includes('xml'));
-          if (!canPrettify) {
-            return;
-          }
-          codemirrorSetValue(codeMirror.current?.getValue(), canPrettify);
-        }}
-      >
-        Beautify {contentTypeName}
-      </button>
-    );
-  }
-  const fontSize = ignoreEditorFontSettings ? undefined : settings.editorFontSize;
   return (
     <div
       className={classnames(className, {
@@ -767,7 +687,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     >
       <div
         className={classnames('editor__container', 'input', className)}
-        style={{ fontSize: `${fontSize}px` }}
+        style={ignoreEditorFontSettings ? {} : { fontSize: `${settings.editorFontSize}px` }}
         onClick={onClick}
         onMouseLeave={onMouseLeave}
       >
@@ -780,12 +700,73 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
           defaultValue=""
         />
       </div>
-      {toolbarChildren.length ? (
-        <div key={uniquenessKey} className="editor__toolbar">
-          {toolbarChildren}
-        </div>
-      ) : null}
-    </div>
+      {
+        showFilter || showPrettify ? (
+          <div key={uniquenessKey} className="editor__toolbar">
+            {showFilter ?
+              (<input
+                ref={inputRef}
+                key="filter"
+                type="text"
+                title="Filter response body"
+                defaultValue={filter || ''}
+                placeholder={mode.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                onChange={event => {
+                  const filter = event.target.value;
+                  setFilter(filter);
+                  codemirrorSetValue(originalCode);
+                  if (updateFilter) {
+                    updateFilter(filter);
+                  }
+                }}
+              />) : null}
+            {showFilter && filterHistory?.length ?
+              ((
+                <Dropdown key="history" className="tall" right>
+                  <DropdownButton className="btn btn--compact">
+                    <i className="fa fa-clock-o" />
+                  </DropdownButton>
+                  {filterHistory.reverse().map(filter => (
+                    <DropdownItem
+                      key={filter}
+                      onClick={() => {
+                        if (inputRef.current) {
+                          inputRef.current.value = filter;
+                        }
+                        setFilter(filter);
+                        codemirrorSetValue(originalCode);
+                        if (updateFilter) {
+                          updateFilter(filter);
+                        }
+                      }}
+                    >
+                      {filter}
+                    </DropdownItem>
+                  ))}
+                </Dropdown>
+              )) : null}
+            {showFilter ?
+              (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: mode?.includes('json') })}>
+                <i className="fa fa-question-circle" />
+              </button>) : null}
+            {showPrettify ?
+              (<button
+                key="prettify"
+                className="btn btn--compact"
+                title="Auto-format request body whitespace"
+                onClick={() => {
+                  const canPrettify = mode?.includes('json') || mode?.includes('xml');
+                  if (canPrettify) {
+                    codemirrorSetValue(codeMirror.current?.getValue(), canPrettify);
+                  }
+                }}
+              >
+                Beautify {mode?.includes('json') ? 'JSON' : mode?.includes('xml') ? 'XML' : ''}
+              </button>) : null}
+          </div>
+        ) : null
+      }
+    </div >
   );
 });
 CodeEditor.displayName = 'CodeEditor';
