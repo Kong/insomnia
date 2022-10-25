@@ -37,13 +37,10 @@ interface Props {
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   hideButtons?: boolean;
   namePlaceholder?: string;
-  noDelete?: boolean;
-  noDropZone?: boolean;
   onChange?: (pair: Pair) => void;
   onDelete?: (pair: Pair) => void;
   pair: Pair;
   readOnly?: boolean;
-  valueInputType?: string;
   valuePlaceholder?: string;
 }
 export interface RowHandle {
@@ -60,12 +57,10 @@ export const Row = forwardRef<RowHandle, Props>(({
   handleGetAutocompleteValueConstants,
   hideButtons,
   namePlaceholder,
-  noDelete,
   onChange,
   onDelete,
   pair,
   readOnly,
-  valueInputType,
   valuePlaceholder,
 }, ref) => {
 
@@ -177,7 +172,7 @@ export const Row = forwardRef<RowHandle, Props>(({
         ref={valueRef}
         readOnly={readOnly}
         forceInput={forceInput}
-        type={valueInputType || 'text'}
+        type="text"
         placeholder={valuePlaceholder || 'Value'}
         defaultValue={pair.value}
         onPaste={event => {
@@ -273,22 +268,21 @@ export const Row = forwardRef<RowHandle, Props>(({
           </button>
         )}
 
-        {!noDelete &&
-          (!hideButtons ? (
-            <PromptButton
-              key={Math.random()}
-              tabIndex={-1}
-              confirmMessage=""
-              onClick={() => onDelete?.(pair)}
-              title="Delete item"
-            >
-              <i className="fa fa-trash-o" />
-            </PromptButton>
-          ) : (
-            <button>
-              <i className="fa fa-empty" />
-            </button>
-          ))}
+        {!hideButtons ? (
+          <PromptButton
+            key={Math.random()}
+            tabIndex={-1}
+            confirmMessage=""
+            onClick={() => onDelete?.(pair)}
+            title="Delete item"
+          >
+            <i className="fa fa-trash-o" />
+          </PromptButton>
+        ) : (
+          <button>
+            <i className="fa fa-empty" />
+          </button>
+        )}
       </div>
     </li>
   );

@@ -15,23 +15,16 @@ interface Props {
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   allowFile?: boolean;
   allowMultiline?: boolean;
-  maxPairs?: number;
   namePlaceholder?: string;
   valuePlaceholder?: string;
   descriptionPlaceholder?: string;
-  valueInputType?: string;
-  disableDelete?: boolean;
-  onDelete?: Function;
-  onCreate?: Function;
   className?: string;
   isDisabled?: boolean;
   isWebSocketRequest?: boolean;
 }
 
 export const KeyValueEditor: FC<Props> = ({
-  maxPairs,
   className,
-  valueInputType,
   valuePlaceholder,
   namePlaceholder,
   descriptionPlaceholder,
@@ -39,34 +32,13 @@ export const KeyValueEditor: FC<Props> = ({
   handleGetAutocompleteValueConstants,
   allowFile,
   allowMultiline,
-  disableDelete,
   isDisabled,
   isWebSocketRequest,
   onChange,
-  onDelete,
-  onCreate,
   pairs,
 }) => {
   const [displayDescription, setDisplayDescription] = useState<boolean>(false);
   const rowRef = useRef<RowHandle>(null);
-  const classes = classnames('key-value-editor', 'wide', className);
-  const hasMaxPairsAndNotExceeded = !maxPairs || pairs.length < maxPairs;
-  const showNewHeaderInput = !isDisabled && hasMaxPairsAndNotExceeded;
-  function addPair() {
-    const numPairs = pairs.length;
-    // Don't add any more pairs
-    if (maxPairs !== undefined && numPairs >= maxPairs) {
-      return;
-    }
-    rowRef.current?.focusNameEnd();
-    onChange([...pairs, {
-      id: generateId('pair'),
-      name: '',
-      value: '',
-      description: '',
-    }]);
-    onCreate?.();
-  }
 
   const readOnlyPairs = [
     { name: 'Connection', value: 'Upgrade' },
@@ -76,7 +48,7 @@ export const KeyValueEditor: FC<Props> = ({
     { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
   ];
   return (
-    <ul className={classes}>
+    <ul className={classnames('key-value-editor', 'wide', className)}>
       {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
         <Row
           key={i}
@@ -90,30 +62,14 @@ export const KeyValueEditor: FC<Props> = ({
       )) : null}
       {pairs.map(pair => (
         <Row
-          noDelete={disableDelete}
           key={pair.id}
           ref={rowRef}
           displayDescription={displayDescription}
           namePlaceholder={namePlaceholder}
           valuePlaceholder={valuePlaceholder}
           descriptionPlaceholder={descriptionPlaceholder}
-          valueInputType={valueInputType}
-          onChange={pair => {
-            const index = pairs.findIndex(p => p.id === pair.id);
-            onChange([
-              ...pairs.slice(0, index),
-              pair,
-              ...pairs.slice(index + index),
-            ]);
-          }}
-          onDelete={pair => {
-            if (disableDelete) {
-              return;
-            }
-            const index = pairs.findIndex(p => p.id === pair.id);
-            onDelete?.(pairs[index]);
-            onChange([...pairs.slice(0, index), ...pairs.slice(index + 1)]);
-          }}
+          onChange={pair => onChange(pairs.map(p => (p.id === pair.id ? pair : p)))}
+          onDelete={pair => onChange(pairs.filter(p => p.id !== pair.id))}
           handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
           handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
           allowMultiline={allowMultiline}
@@ -123,7 +79,7 @@ export const KeyValueEditor: FC<Props> = ({
           pair={pair}
         />
       ))}
-      {showNewHeaderInput ? (
+      {!isDisabled ? (
         <div className="key-value-editor__drag">
           <Dropdown>
             <DropdownButton>
@@ -133,7 +89,17 @@ export const KeyValueEditor: FC<Props> = ({
               Delete All Items
             </DropdownItem>
             <DropdownItem onClick={() => setDisplayDescription(!displayDescription)}>Toggle Description</DropdownItem>
-            <DropdownItem onClick={() => addPair()}>Add header</DropdownItem>
+            <DropdownItem
+              onClick={() => {
+                rowRef.current?.focusNameEnd();
+                onChange([...pairs, {
+                  id: generateId('pair'),
+                  name: '',
+                  value: '',
+                  description: '',
+                }]);
+              }}
+            >Add header</DropdownItem>
           </Dropdown>
         </div>
       ) : null}
