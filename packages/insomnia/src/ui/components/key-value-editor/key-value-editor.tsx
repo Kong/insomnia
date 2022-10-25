@@ -1,11 +1,7 @@
 import classnames from 'classnames';
-import React, { FC, useRef, useState } from 'react';
+import React, { FC, useRef } from 'react';
 
 import { generateId } from '../../../common/misc';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { PromptButton } from '../base/prompt-button';
 import { AutocompleteHandler, Pair, Row, RowHandle } from './row';
 
 interface Props {

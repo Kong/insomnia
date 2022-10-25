@@ -1,7 +1,6 @@
 import './base-imports';
 
 import classnames from 'classnames';
-import clone from 'clone';
 import CodeMirror, { CodeMirrorLinkClickCallback, ShowHintOptions } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
@@ -10,9 +9,8 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import {
@@ -46,7 +44,7 @@ interface EditorState {
 }
 const extraKeys = {
   'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
-  [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function() {
+  [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function () {
     // HACK: So nothing conflicts withe the "Send Request" shortcut
   },
   [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
@@ -60,7 +58,7 @@ const extraKeys = {
   'Shift-Tab': 'indentLess',
   Tab: 'indentMore',
 };
-const widget = (cm: CodeMirror.EditorFromTextArea, from: CodeMirror.Position, to: CodeMirror.Position) => {
+const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Position, to: CodeMirror.Position) => {
   // Prevent retrieving an invalid content if undefined
   if (!from?.line || !to?.line) {
     return '\u2194';
@@ -231,6 +229,58 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     handleRender,
     handleGetRenderContext,
   } = useGatedNunjucks({ disabled: !enableNunjucks });
+  /**
+ * Sets the CodeMirror value without triggering the onChange event
+ * @param code the code to set in the editor
+ * @param forcePrettify
+ */
+  const codemirrorSetValue = useCallback((code?: string, forcePrettify?: boolean) => {
+    if (typeof code !== 'string') {
+      console.warn('Code editor was passed non-string value', code);
+      return;
+    }
+    setOriginalCode(code);
+    const shouldPrettify = forcePrettify || autoPrettify;
+    const isJSONOrXML = mode?.includes('json') || mode?.includes('xml');
+    if (shouldPrettify && isJSONOrXML) {
+      if (mode?.includes('xml')) {
+        if (updateFilter && filter) {
+          try {
+            const results = queryXPath(code, filter);
+            code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+          } catch (err) {
+            // Failed to parse filter (that's ok)
+            code = `<error>${err.message}</error>`;
+          }
+        }
+
+        try {
+          code = vkBeautify.xml(code, indentChars());
+        } catch (error) { }
+      } else if (mode?.includes('json')) {
+        try {
+          let jsonString = code;
+          if (updateFilter && filter) {
+            try {
+              const codeObj = JSON.parse(code);
+              const results = JSONPath({ json: codeObj, path: filter.trim() });
+              jsonString = JSON.stringify(results);
+            } catch (err) {
+              console.log('[jsonpath] Error: ', err);
+              jsonString = '[]';
+            }
+          }
+          code = jsonPrettify(jsonString, indentChars(), autoPrettify);
+        } catch (error) { }
+      } else {
+        console.error('attempted to prettify in a mode that should not support prettifying');
+      }
+    }
+    // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
+    if (codeMirror.current?.getValue() !== code) {
+      codeMirror.current?.setValue(code || '');
+    }
+  }, [autoPrettify, filter, mode, updateFilter]);
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
@@ -241,45 +291,87 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     },
   });
-  useUnmount(() => {
-    codeMirror.current?.toTextArea();
-    codeMirror.current?.closeHintDropdown();
-  });
-  useMount(() => {
+  useEffect(() => {
     if (!textAreaRef.current || codeMirror.current) {
       return;
     }
-    console.log(mode);
+    console.log(uniquenessKey, mode);
+    const indentSize = ignoreEditorFontSettings ? undefined : settings.editorIndentSize;
+    const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
+    const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
+    // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
+    //   be in the default options. DO NOT REMOVE THIS.
+    const gutters = showGuttersAndLineNumbers ?
+      ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter']
+      : ['CodeMirror-lint-markers'];
     const initialOptions = {
-      lineNumbers: true,
-      placeholder: 'Start Typing...',
-      foldGutter: true,
+      lineNumbers: showGuttersAndLineNumbers,
+      placeholder: placeholder || 'Start Typing...',
+      foldGutter: showGuttersAndLineNumbers,
       autoRefresh: { delay: 2000 },
-      lineWrapping: true,
-      scrollbarStyle: 'native',
-      lint: true,
-      matchBrackets: true,
-      autoCloseBrackets: true,
-      tabSize: TAB_SIZE,
-      indentUnit: TAB_SIZE,
-      hintOptions: undefined,
-      dragDrop: true,
-      viewportMargin: 30,
-      // default 10
+      lineWrapping: ignoreEditorFontSettings ? undefined : settings.editorLineWrapping,
+      scrollbarStyle: hideScrollbars ? 'null' : 'native',
+      lint: !noLint && !readOnly,
+      matchBrackets: !noMatchBrackets,
+      autoCloseBrackets: typeof autoCloseBrackets === 'boolean' ? autoCloseBrackets : undefined,
+      tabSize: indentSize || TAB_SIZE,
+      indentUnit: indentSize || TAB_SIZE,
+      hintOptions,
+      info: infoOptions,
+      dragDrop: !noDragDrop,
+      viewportMargin: dynamicHeight ? Infinity : 30,
+      readOnly: !!readOnly,
+      tabIndex: typeof tabIndex === 'number' ? tabIndex : undefined,
       selectionPointer: 'default',
-      styleActiveLine: true,
-      indentWithTabs: true,
+      jump: jumpOptions,
+      styleActiveLine: !noStyleActiveLine,
+      indentWithTabs: shouldIndentWithTabs({ mode, indentWithTabs: ignoreEditorFontSettings ? undefined : settings.editorIndentWithTabs }),
       showCursorWhenSelecting: false,
       cursorScrollMargin: 12,
-      // NOTE: This is px
-      keyMap: 'default',
+      // Only set keyMap if we're not read-only. This is so things like ctrl-a work on read-only mode.
+      keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
       extraKeys: CodeMirror.normalizeKeyMap(extraKeys),
-      // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
-      //   be in the default options. DO NOT REMOVE THIS.
-      gutters: ['CodeMirror-lint-markers'],
+      gutters,
       foldOptions: { widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to) },
+      mode: !handleRender ? normalizeMimeType(mode) : {
+        name: 'nunjucks',
+        baseMode: normalizeMimeType(mode),
+      },
+      environmentAutocomplete: canAutocomplete && {
+        getVariables: async () => {
+          if (!handleGetRenderContext) {
+            return [];
+          }
+          const context = await handleGetRenderContext();
+          const variables = context ? context.keys : [];
+          return variables || [];
+        },
+        getTags: async () => {
+          if (!handleGetRenderContext) {
+            return [];
+          }
+          const expandedTags: NunjucksParsedTag[] = [];
+          for (const tagDef of await getTagDefinitions()) {
+            const firstArg = tagDef.args[0];
+            if (!firstArg || firstArg.type !== 'enum') {
+              expandedTags.push(tagDef);
+              continue;
+            }
+            for (const option of firstArg.options || []) {
+              const optionName = misc.fnOrString(option.displayName, tagDef.args);
+              expandedTags.push({
+                displayName: `${tagDef.displayName} ⇒ ${optionName}`
+                , args: [{ defaultValue: option.value });
+            }
+          }
+          return expandedTags;
+        },
+        getConstants: getAutocompleteConstants,
+        getSnippets: getAutocompleteSnippets,
+        hotKeyRegistry: settings.hotKeyRegistry,
+        autocompleteDelay: settings.autocompleteDelay,
+      },
     };
-
     codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
     codeMirror.current.on('beforeChange', (doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       if (singleLine && change.text && change.text.length > 1) {
@@ -295,6 +387,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       const lintOption = lintOptions || true;
       codemirrorSmartSetOption('lint', hasValue ? lintOption : false);
     });
+    const debounceTime = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
     codeMirror.current.on('changes', misc.debounce(() => {
       if (onChange) {
         const value = codeMirror.current?.getDoc().getValue() || '';
@@ -306,7 +399,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codemirrorSmartSetOption('lint', shouldLint ? lintOption : false);
         onChange(codeMirror.current?.getDoc().getValue() || '');
       }
-    }, typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS));
+    }, debounceTime));
 
     codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
       // Use default tab behaviour if we're told
@@ -402,112 +495,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         }
       },
     });
-    /**
-   * Sets options on the CodeMirror editor while also sanitizing them
-   */
-    const options: CodeMirror.EditorConfiguration = {
-      readOnly: !!readOnly,
-      placeholder: placeholder || '',
-      mode: !handleRender ? normalizeMimeType(mode) : {
-        name: 'nunjucks',
-        baseMode: normalizeMimeType(mode),
-      },
-      tabindex: typeof tabIndex === 'number' ? tabIndex : undefined,
-      dragDrop: !noDragDrop,
-      scrollbarStyle: hideScrollbars ? 'null' : 'native',
-      styleActiveLine: !noStyleActiveLine,
-      lineNumbers: !hideGutters && !hideLineNumbers,
-      foldGutter: !hideGutters && !hideLineNumbers,
-      lineWrapping: ignoreEditorFontSettings ? undefined : settings.editorLineWrapping,
-      indentWithTabs: shouldIndentWithTabs({ mode, indentWithTabs: ignoreEditorFontSettings ? undefined : settings.editorIndentWithTabs }),
-      matchBrackets: !noMatchBrackets,
-      lint: !noLint && !readOnly,
-      gutters: [],
-    };
-    // Only set keyMap if we're not read-only. This is so things like
-    // ctrl-a work on read-only mode.
-    if (!readOnly && settings.editorKeyMap) {
-      options.keyMap = settings.editorKeyMap;
-    }
-    const indentSize = ignoreEditorFontSettings ? undefined : settings.editorIndentSize;
-    if (indentSize) {
-      options.tabSize = indentSize;
-      options.indentUnit = indentSize;
-    }
-    if (options.gutters && !hideGutters) {
-      if (options.lint) {
-        options.gutters.push('CodeMirror-lint-markers');
-      }
-      if (options.lineNumbers) {
-        options.gutters.push('CodeMirror-linenumbers');
-      }
-    }
-    if (!hideGutters && options.foldGutter) {
-      options.gutters?.push('CodeMirror-foldgutter');
-    }
-    if (hintOptions) {
-      options.hintOptions = hintOptions;
-    }
-    if (infoOptions) {
-      options.info = infoOptions;
-    }
-    if (jumpOptions) {
-      options.jump = jumpOptions;
-    }
-    if (lintOptions) {
-      options.lint = lintOptions;
-    }
-    if (typeof autoCloseBrackets === 'boolean') {
-      options.autoCloseBrackets = autoCloseBrackets;
-    }
-    // Setup the hint options
-    if (handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
-      options.environmentAutocomplete = {
-        getVariables: async () => {
-          if (!handleGetRenderContext) {
-            return [];
-          }
-          const context = await handleGetRenderContext();
-          const variables = context ? context.keys : [];
-          return variables || [];
-        },
-        getTags: async () => {
-          if (!handleGetRenderContext) {
-            return [];
-          }
-          const expandedTags: NunjucksParsedTag[] = [];
-          for (const tagDef of await getTagDefinitions()) {
-            const firstArg = tagDef.args[0];
-            if (!firstArg || firstArg.type !== 'enum') {
-              expandedTags.push(tagDef);
-              continue;
-            }
-            for (const option of firstArg.options || []) {
-              const optionName = misc.fnOrString(option.displayName, tagDef.args);
-              const newDef = clone(tagDef);
-              newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
-              newDef.args[0].defaultValue = option.value;
-              expandedTags.push(newDef);
-            }
-          }
-          return expandedTags;
-        },
-        getConstants: getAutocompleteConstants,
-        getSnippets: getAutocompleteSnippets,
-        hotKeyRegistry: settings.hotKeyRegistry,
-        autocompleteDelay: settings.autocompleteDelay,
-      };
-    }
-    if (dynamicHeight) {
-      options.viewportMargin = Infinity;
-    }
-    // Strip of charset if there is one
-    Object.keys(options).map(key =>
-      codemirrorSmartSetOption(
-        key as keyof CodeMirror.EditorConfiguration,
-        options[key as keyof CodeMirror.EditorConfiguration]
-      )
-    );
+
     // Actually set the value
     codemirrorSetValue(defaultValue || '');
     // Clear history so we can't undo the initial set
@@ -547,7 +535,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // NOTE: Start listening to cursor after everything because it seems to fire
     // immediately for some reason
     codeMirror.current.on('cursorActivity', (instance: CodeMirror.Editor) => onCursorActivity?.(instance));
-  });
+
+    return () => {
+      codeMirror.current?.toTextArea();
+      codeMirror.current?.closeHintDropdown();
+    };
+  }, [autoCloseBrackets, codemirrorSetValue, debounceMillis, defaultTabBehavior, defaultValue, dynamicHeight, getAutocompleteConstants, getAutocompleteSnippets, handleGetRenderContext, handleRender, hideGutters, hideLineNumbers, hideScrollbars, hintOptions, ignoreEditorFontSettings, infoOptions, jumpOptions, lintOptions, mode, noDragDrop, noLint, noMatchBrackets, noStyleActiveLine, onBlur, onChange, onClickLink, onCodeMirrorInit, onCursorActivity, onFocus, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorIndentSize, settings.editorIndentWithTabs, settings.editorKeyMap, settings.editorLineWrapping, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, singleLine, tabIndex, type, uniquenessKey]);
 
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
@@ -590,8 +583,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   }), []);
 
   /**
-   * Set option if it's different than in the current Codemirror instance
-   */
+ * Set option if it's different than in the current Codemirror instance
+ */
   function codemirrorSmartSetOption<K extends keyof CodeMirror.EditorConfiguration>(key: K, value: CodeMirror.EditorConfiguration[K]) {
     const allowList = key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions';
     // Use stringify here because these could be infinitely recursive due to GraphQL schemas
@@ -610,59 +603,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const indentChars = () => codeMirror.current?.getOption('indentWithTabs')
     ? '\t'
     : new Array((codeMirror.current?.getOption?.('indentUnit') || 0) + 1).join(' ');
-
-  /**
- * Sets the CodeMirror value without triggering the onChange event
- * @param code the code to set in the editor
- * @param forcePrettify
- */
-  function codemirrorSetValue(code?: string, forcePrettify?: boolean) {
-    if (typeof code !== 'string') {
-      console.warn('Code editor was passed non-string value', code);
-      return;
-    }
-    setOriginalCode(code);
-    const shouldPrettify = forcePrettify || autoPrettify;
-    const isJSONOrXML = mode?.includes('json') || mode?.includes('xml');
-    if (shouldPrettify && isJSONOrXML) {
-      if (mode?.includes('xml')) {
-        if (updateFilter && filter) {
-          try {
-            const results = queryXPath(code, filter);
-            code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
-          } catch (err) {
-            // Failed to parse filter (that's ok)
-            code = `<error>${err.message}</error>`;
-          }
-        }
-
-        try {
-          code = vkBeautify.xml(code, indentChars());
-        } catch (error) { }
-      } else if (mode?.includes('json')) {
-        try {
-          let jsonString = code;
-          if (updateFilter && filter) {
-            try {
-              const codeObj = JSON.parse(code);
-              const results = JSONPath({ json: codeObj, path: filter.trim() });
-              jsonString = JSON.stringify(results);
-            } catch (err) {
-              console.log('[jsonpath] Error: ', err);
-              jsonString = '[]';
-            }
-          }
-          code = jsonPrettify(jsonString, indentChars(), autoPrettify);
-        } catch (error) { }
-      } else {
-        console.error('attempted to prettify in a mode that should not support prettifying');
-      }
-    }
-    // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
-    if (codeMirror.current?.getValue() !== code) {
-      codeMirror.current?.setValue(code || '');
-    }
-  }
 
   const showFilter = updateFilter && mode && (mode.includes('json') || mode.includes('xml'));
   const showPrettify = manualPrettify && mode?.includes('json') || mode?.includes('xml');
