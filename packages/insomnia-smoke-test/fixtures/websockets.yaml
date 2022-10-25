@@ -59,6 +59,26 @@ resources:
     headers: []
     authentication: {}
     _type: websocket_request
+  - _id: ws-req_49815a73d8bf4024baebf82037b5730d
+    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
+    modified: 1666696265531
+    created: 1666695713692
+    name: delay
+    url: ws://localhost:4010/delay
+    metaSortKey: -1661942202573
+    headers:
+      - id: pair_d5c62785928d4cc3a09b297bfbb847f7
+        name: duration
+        value: "5"
+        description: ""
+    authentication: {}
+    parameters: []
+    settingEncodeUrl: true
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingFollowRedirects: global
+    description: ""
+    _type: websocket_request
   - _id: env_78d7375877d288dfb527a256e6d7e92dce4ff968
     parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
     modified: 1661942194375
