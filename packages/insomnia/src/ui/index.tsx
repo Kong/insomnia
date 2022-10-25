@@ -66,6 +66,16 @@ const router = createMemoryRouter(
                   <Project />
                 </Suspense>
               ),
+              children: [
+                {
+                  path: 'delete',
+                  action: async (...args) => (await import('./routes/actions')).deleteProjectAction(...args),
+                },
+                {
+                  path: 'rename',
+                  action: async (...args) => (await import('./routes/actions')).renameProjectAction(...args),
+                },
+              ],
             },
             {
               path: ':projectId/workspace/:workspaceId',
@@ -95,6 +105,10 @@ const router = createMemoryRouter(
                   ),
                 },
               ],
+            },
+            {
+              path: 'new',
+              action: async (...args) => (await import('./routes/actions')).createNewProjectAction(...args),
             },
           ],
         },
