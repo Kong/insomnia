@@ -237,12 +237,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     handleRender,
     handleGetRenderContext,
   } = useGatedNunjucks({ disabled: !enableNunjucks });
-  /**
-   * Sets the CodeMirror value without triggering the onChange event
-   * @param code the code to set in the editor
-   * @param forcePrettify
-   */
-  const codemirrorSetValue = useCallback((code?: string) => {
+
+  const prettifyAndSetValue = useCallback((code?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -287,7 +283,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
       if (mode?.includes('json') || mode?.includes('xml')) {
-        codemirrorSetValue(codeMirror.current?.getValue());
+        prettifyAndSetValue(codeMirror.current?.getValue());
       }
     },
   });
@@ -295,6 +291,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
   useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
   useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
+  useEffect(() => codeMirror.current?.setValue(defaultValue || ''), [defaultValue]);
 
   useMount(() => {
     if (!textAreaRef.current) {
@@ -485,7 +482,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
-    codemirrorSetValue(defaultValue || '');
+    prettifyAndSetValue(defaultValue || '');
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
@@ -607,7 +604,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 onChange={event => {
                   const filter = event.target.value;
                   setFilter(filter);
-                  codemirrorSetValue(originalCode);
+                  prettifyAndSetValue(originalCode);
                   if (updateFilter) {
                     updateFilter(filter);
                   }
@@ -627,7 +624,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                           inputRef.current.value = filter;
                         }
                         setFilter(filter);
-                        codemirrorSetValue(originalCode);
+                        prettifyAndSetValue(originalCode);
                         if (updateFilter) {
                           updateFilter(filter);
                         }
@@ -649,7 +646,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 title="Auto-format request body whitespace"
                 onClick={() => {
                   if (mode?.includes('json') || mode?.includes('xml')) {
-                    codemirrorSetValue(codeMirror.current?.getValue());
+                    prettifyAndSetValue(codeMirror.current?.getValue());
                   }
                 }}
               >
