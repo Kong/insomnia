@@ -228,7 +228,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } else {
       handleSend();
     }
-    inputRef.current?.focusEnd();
   }, [downloadPath, handleSend, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
@@ -370,6 +369,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       />
       <div className="urlbar__flex__right">
         <OneLineEditor
+          id="request-url-bar"
           key={uniquenessKey}
           ref={inputRef}
           onPaste={handleUrlPaste}

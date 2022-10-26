@@ -1,6 +1,7 @@
 import './base-imports';
 
 import classnames from 'classnames';
+import clone from 'clone';
 import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
@@ -17,6 +18,7 @@ import vkBeautify from 'vkbeautify';
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import { getTagDefinitions } from '../../../templating/index';
+import { NunjucksParsedTag } from '../../../templating/utils';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -27,7 +29,6 @@ import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
-import { shouldIndentWithTabs } from './should-indent-with-tabs';
 
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
@@ -39,6 +40,19 @@ interface EditorState {
   history: any;
   marks: Partial<CodeMirror.MarkerRange>[];
 }
+
+export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
+  // YAML is not valid when indented with Tabs
+  const isYaml = mode?.includes('yaml') || false;
+
+  // OpenAPI is not valid when indented with Tabs
+  // TODO: OpenAPI in yaml is not valid with tabs, but in JSON is. Currently we do not differentiate and disable tabs regardless. INS-1390
+  const isOpenAPI = mode === 'openapi';
+
+  const actuallyIndentWithTabs = indentWithTabs && !isYaml && !isOpenAPI;
+
+  return actuallyIndentWithTabs;
+};
 
 const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Position, to: CodeMirror.Position) => {
   // Prevent retrieving an invalid content if undefined
@@ -231,10 +245,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     handleGetRenderContext,
   } = useGatedNunjucks({ disabled: !enableNunjucks });
   /**
- * Sets the CodeMirror value without triggering the onChange event
- * @param code the code to set in the editor
- * @param forcePrettify
- */
+   * Sets the CodeMirror value without triggering the onChange event
+   * @param code the code to set in the editor
+   * @param forcePrettify
+   */
   const codemirrorSetValue = useCallback((code?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
@@ -257,6 +271,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         return codeMirror.current?.setValue('[]');
       }
     }
+
+    return codeMirror.current?.setValue(code);
   }, [autoPrettify, filter, indentChars, mode, updateFilter]);
 
   useDocBodyKeyboardShortcuts({
@@ -267,6 +283,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     },
   });
   useMount(() => {
+
     if (!textAreaRef.current) {
       return;
     }
@@ -278,11 +295,30 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
     const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
+
+    console.log({ canAutocomplete });
     // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
     //   be in the default options. DO NOT REMOVE THIS.
     const gutters = showGuttersAndLineNumbers ?
       ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter']
       : ['CodeMirror-lint-markers'];
+
+    const transformEnums = (
+      tagDef: NunjucksParsedTag
+    ): NunjucksParsedTag[] => {
+      if (tagDef.args[0]?.type === 'enum') {
+        return tagDef.args[0].options?.map(option => {
+          const optionName = misc.fnOrString(option.displayName, tagDef.args);
+          const newDef = clone(tagDef);
+          newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
+          newDef.args[0].defaultValue = option.value;
+
+          return newDef;
+        }) || [];
+      }
+      return [tagDef];
+    };
+
     const initialOptions: EditorConfiguration = {
       lineNumbers: showGuttersAndLineNumbers,
       placeholder: placeholder || '',
@@ -292,7 +328,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lint: !noLint && !readOnly,
       matchBrackets: !noMatchBrackets,
-      autoCloseBrackets: typeof autoCloseBrackets === 'boolean' ? autoCloseBrackets : undefined,
+      autoCloseBrackets: typeof autoCloseBrackets === 'boolean' ? autoCloseBrackets : true,
       tabSize: indentSize || TAB_SIZE,
       indentUnit: indentSize || TAB_SIZE,
       hintOptions,
@@ -316,13 +352,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         name: 'nunjucks',
         baseMode: normalizeMimeType(mode),
       },
-      // @ts-expect-error -- nunjucks type?
       environmentAutocomplete: canAutocomplete && {
         getVariables: async () => !handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || [],
-        getTags: async () => !handleGetRenderContext ? [] : (await getTagDefinitions()).map(tagDef => tagDef.args[0]?.type === 'enum' ? tagDef.args[0].options?.map(option => ({
-          displayName: `${tagDef.displayName} ⇒ ${misc.fnOrString(option.displayName, tagDef.args)}`,
-          args: [{ defaultValue: option.value }],
-        })) : tagDef),
+        getTags: async () => !handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat(),
         getConstants: getAutocompleteConstants,
         getSnippets: getAutocompleteSnippets,
         hotKeyRegistry: settings.hotKeyRegistry,
