@@ -151,6 +151,9 @@ export class GitVCS {
   }
 
   async getBranch() {
+    if (!this._baseOpts.gitdir) {
+      throw new Error('Git directory not set');
+    }
     const branch = await git.currentBranch({ ...this._baseOpts });
 
     if (typeof branch !== 'string') {
