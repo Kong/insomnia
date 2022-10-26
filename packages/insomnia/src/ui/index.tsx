@@ -34,6 +34,7 @@ import {
   setActiveActivity,
 } from './redux/modules/global';
 import { DEFAULT_PROJECT_ID } from '../models/project';
+import { ErrorRoute } from './routes/error';
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -53,7 +54,7 @@ const router = createMemoryRouter(
     {
       path: '/',
       element: <Root />,
-      errorElement: <div>Error</div>,
+      errorElement: <ErrorRoute />,
       children: [
         {
           path: 'project',
@@ -117,21 +118,33 @@ const router = createMemoryRouter(
                     },
                     {
                       path: 'duplicate',
-                      action: async (...args) => (await import('./routes/actions')).duplicateWorkspaceAction(...args),
+                      action: async (...args) =>
+                        (
+                          await import('./routes/actions')
+                        ).duplicateWorkspaceAction(...args),
                     },
                   ],
                 },
                 {
                   path: 'new',
-                  action: async (...args) => (await import('./routes/actions')).createNewWorkspaceAction(...args),
+                  action: async (...args) =>
+                    (await import('./routes/actions')).createNewWorkspaceAction(
+                      ...args
+                    ),
                 },
                 {
                   path: 'delete',
-                  action: async (...args) => (await import('./routes/actions')).deleteWorkspaceAction(...args),
+                  action: async (...args) =>
+                    (await import('./routes/actions')).deleteWorkspaceAction(
+                      ...args
+                    ),
                 },
                 {
                   path: 'update',
-                  action: async (...args) => (await import('./routes/actions')).updateWorkspaceAction(...args),
+                  action: async (...args) =>
+                    (await import('./routes/actions')).updateWorkspaceAction(
+                      ...args
+                    ),
                 },
               ],
             },
@@ -141,6 +154,22 @@ const router = createMemoryRouter(
                 (await import('./routes/actions')).createNewProjectAction(
                   ...args
                 ),
+            },
+            {
+              path: ':projectId/remote-collections',
+              loader: async (...args) =>
+                (
+                  await import('./routes/remote-collections')
+                ).remoteCollectionsLoader(...args),
+              children: [
+                {
+                  path: 'pull',
+                  action: async (...args) =>
+                    (
+                      await import('./routes/remote-collections')
+                    ).pullRemoteCollectionAction(...args),
+                },
+              ],
             },
           ],
         },

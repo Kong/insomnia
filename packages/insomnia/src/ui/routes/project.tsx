@@ -43,7 +43,6 @@ import { WrapperHomeEmptyStatePane } from '../components/panes/wrapper-home-empt
 import { SvgIcon } from '../components/svg-icon';
 import { Button } from '../components/themed-button';
 import { WorkspaceCard } from '../components/workspace-card';
-import { useVCS } from '../hooks/use-vcs';
 import { cloneGitRepository } from '../redux/modules/git';
 import { selectIsLoading } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
@@ -195,8 +194,6 @@ export const loader: LoaderFunction = async ({
       }
     );
 
-    console.log(workspace.name, matchResults);
-
     return filter ? Boolean(matchResults?.indexes) : true;
   };
 
@@ -271,7 +268,6 @@ const ProjectRoute: FC = () => {
   const { workspaces, activeProject, projects } = useProjectLoaderData();
   const [searchParams] = useSearchParams();
   const isLoading = useSelector(selectIsLoading);
-  const vcs = useVCS({});
   const dispatch = useDispatch();
   const fetcher = useFetcher();
 
@@ -407,7 +403,7 @@ const ProjectRoute: FC = () => {
                       });
                     }}
                   />
-                  <RemoteWorkspacesDropdown vcs={vcs} />
+                  <RemoteWorkspacesDropdown project={activeProject} />
                   <Dropdown>
                     <DropdownButton buttonClass={CreateButton}>
                       Create <i className="fa fa-caret-down pad-left-sm" />
