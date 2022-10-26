@@ -54,6 +54,8 @@ export const KeyValueEditor: FC<Props> = ({
   valuePlaceholder,
 }) => {
   const rowRef = useRef<RowHandle>(null);
+  // We should make the pair.id property required and pass them in from the parent
+  const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
   const readOnlyPairs = [
     { name: 'Connection', value: 'Upgrade' },
@@ -77,15 +79,6 @@ export const KeyValueEditor: FC<Props> = ({
   return (
     <Fragment>
       <Toolbar>
-        <PromptButton className="btn btn--compact" onClick={() => onChange([])}>
-          Delete All Items
-        </PromptButton>
-        <button
-          className="btn btn--compact"
-          onClick={() => setShowDescription(!showDescription)}
-        >
-          Toggle Description
-        </button>
         <button
           className="btn btn--compact"
           onClick={() =>
@@ -100,7 +93,16 @@ export const KeyValueEditor: FC<Props> = ({
             ])
           }
         >
-          Add Header
+          Add
+        </button>
+        <PromptButton className="btn btn--compact" onClick={() => onChange([])}>
+          Delete All
+        </PromptButton>
+        <button
+          className="btn btn--compact"
+          onClick={() => setShowDescription(!showDescription)}
+        >
+          Toggle Description
         </button>
       </Toolbar>
       <ul onKeyDown={keyDownHandler} className={classnames('key-value-editor', 'wide', className)}>
@@ -135,7 +137,7 @@ export const KeyValueEditor: FC<Props> = ({
             addPair={() => {}}
           />
         )) : null}
-        {pairs.map(pair => (
+        {pairsWithIds.map(pair => (
           <Row
             key={pair.id}
             showDescription={showDescription}
@@ -143,8 +145,8 @@ export const KeyValueEditor: FC<Props> = ({
             namePlaceholder={namePlaceholder}
             valuePlaceholder={valuePlaceholder}
             descriptionPlaceholder={descriptionPlaceholder}
-            onChange={pair => onChange(pairs.map(p => (p.id === pair.id ? pair : p)))}
-            onDelete={pair => onChange(pairs.filter(p => p.id !== pair.id))}
+            onChange={pair => onChange(pairsWithIds.map(p => (p.id === pair.id ? pair : p)))}
+            onDelete={pair => onChange(pairsWithIds.filter(p => p.id !== pair.id))}
             handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
@@ -152,8 +154,7 @@ export const KeyValueEditor: FC<Props> = ({
             readOnly={isDisabled}
             hideButtons={isDisabled}
             pair={pair}
-            addPair={() => onChange([...pairs, {
-              id: generateId('pair'),
+            addPair={() => onChange([...pairsWithIds, {
               name: '',
               value: '',
               description: '',
