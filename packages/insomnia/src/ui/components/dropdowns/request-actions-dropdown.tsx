@@ -26,6 +26,7 @@ import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
 import { showError, showModal, showPrompt } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 
 interface Props extends Pick<DropdownProps, 'right'> {
@@ -93,14 +94,20 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   }, [request]);
 
   const copyAsCurl = useCallback(async () => {
-    const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    const har = await exportHarRequest(request._id, environmentId);
-    const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert('shell', 'curl');
+    try {
+      const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+      const har = await exportHarRequest(request._id, environmentId);
+      const snippet = new HTTPSnippet(har);
+      const cmd = snippet.convert('shell', 'curl');
 
-    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
-    if (cmd) {
-      clipboard.writeText(cmd);
+      if (cmd) {
+        clipboard.writeText(cmd);
+      }
+    } catch (err) {
+      showModal(AlertModal, {
+        title: 'Could not generate cURL',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      });
     }
   }, [activeEnvironment, request._id]);
 
