@@ -285,7 +285,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       : ['CodeMirror-lint-markers'];
     const initialOptions: EditorConfiguration = {
       lineNumbers: showGuttersAndLineNumbers,
-      placeholder: placeholder || 'Start Typing...',
+      placeholder: placeholder || '',
       foldGutter: showGuttersAndLineNumbers,
       autoRefresh: { delay: 2000 },
       lineWrapping: ignoreEditorFontSettings ? undefined : settings.editorLineWrapping,
