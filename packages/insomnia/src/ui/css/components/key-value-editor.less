@@ -11,51 +11,9 @@
     padding-bottom: var(--padding-sm);
     box-sizing: border-box;
 
-    &.key-value-editor__row-wrapper--dragging {
-      // Set opacity on children so we can still see the separator
-      & > * {
-        opacity: 0.2;
-      }
-    }
-
-    &.key-value-editor__row-wrapper--dragging-below::after,
-    &.key-value-editor__row-wrapper--dragging-above::before {
-      position: absolute;
-      height: 0;
-      right: 0;
-      left: 0;
-      border-bottom: 2px dotted var(--color-surprise);
-      content: ' ';
-      display: block;
-    }
-
-    // So the line appears on the next row
-    &.key-value-editor__row-wrapper--dragging-below::after {
-      bottom: -1px; // half border thickness
-    }
-
-    // So the line appears on the next row
-    &.key-value-editor__row-wrapper--dragging-above::before {
-      top: -1px; // half border thickness
-    }
-
     // Style last row the same no matter if focused or not.
     &.key-value-editor__row-wrapper--clicker input {
       border-color: var(--hl-sm) !important;
-    }
-  }
-
-  .key-value-editor__drag {
-    width: var(--line-height-sm);
-    min-width: var(--line-height-sm);
-    text-align: center;
-    box-sizing: border-box;
-    overflow: hidden;
-
-    // Remove hover effect
-    &,
-    &:hover {
-      color: var(--hl);
     }
   }
 
@@ -68,7 +26,6 @@
     padding: 0 var(--padding-sm) 0 0;
     box-sizing: border-box;
 
-    // Pad the first form if there's no drag handle before it
     &:first-child,
     &:first-child .form-control {
       padding-left: var(--padding-md);
@@ -89,6 +46,10 @@
 
     & > * {
       padding: 0 var(--padding-xs);
+    }
+
+    .dropdown {
+      display: flex;
     }
 
     & > button,
