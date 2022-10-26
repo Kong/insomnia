@@ -14,7 +14,13 @@ interface Props {
 function getTimeFromNow(timestamp: string | number | Date, titleCase: boolean): string {
   const date = new Date(timestamp);
   let text = formatDistanceToNowStrict(date, { addSuffix: true });
-  const lessThanOneMinuteAgo = differenceInMinutes(Date.now(), date) < 1;
+  const now = new Date();
+  let lessThanOneMinuteAgo;
+  if (now > date) {
+    lessThanOneMinuteAgo = differenceInMinutes(now, date) < 1;
+  } else {
+    lessThanOneMinuteAgo = differenceInMinutes(date, now) < 1;
+  }
   if (lessThanOneMinuteAgo) {
     text = 'just now';
   }
