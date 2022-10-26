@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -30,7 +30,6 @@ interface Props {
   allowFile?: boolean;
   allowMultiline?: boolean;
   className?: string;
-  deleteAll: () => void;
   descriptionPlaceholder?: string;
   forceInput?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
@@ -42,16 +41,17 @@ interface Props {
   pair: Pair;
   readOnly?: boolean;
   valuePlaceholder?: string;
+  onClick?: () => void;
+  onKeydown?: (e: React.KeyboardEvent) => void;
+  showDescription: boolean;
 }
 export interface RowHandle {
   focusNameEnd: () => void;
 }
 export const Row = forwardRef<RowHandle, Props>(({
-  addPair,
   allowFile,
   allowMultiline,
   className,
-  deleteAll,
   descriptionPlaceholder,
   forceInput,
   handleGetAutocompleteNameConstants,
@@ -62,10 +62,12 @@ export const Row = forwardRef<RowHandle, Props>(({
   onDelete,
   pair,
   readOnly,
+  onClick,
+  onKeydown,
   valuePlaceholder,
+  showDescription,
 }, ref) => {
   const { enabled } = useNunjucksEnabled();
-  const [showDescription, setShowDescription] = useState<boolean>(false);
 
   const nameRef = useRef<OneLineEditorHandle>(null);
   const valueRef = useRef<OneLineEditorHandle>(null);
@@ -73,6 +75,10 @@ export const Row = forwardRef<RowHandle, Props>(({
   useImperativeHandle(ref, () => ({
     focusNameEnd: () => nameRef.current?.focusEnd(),
   }));
+
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, []);
 
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
@@ -89,7 +95,7 @@ export const Row = forwardRef<RowHandle, Props>(({
   const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
 
   return (
-    <li className={classes}>
+    <li onKeyDown={onKeydown} onClick={onClick} className={classes}>
       <div className="key-value-editor__row">
         <div
           className={classnames('form-control form-control--underlined form-control--wide', {
@@ -247,18 +253,6 @@ export const Row = forwardRef<RowHandle, Props>(({
             <i className="fa fa-empty" />
           </button>
         )}
-        {!hideButtons ? (
-          <Dropdown>
-            <DropdownItem onClick={addPair}>Add Header</DropdownItem>
-            <DropdownButton>
-              <i className="fa fa-cog" />
-            </DropdownButton>
-            <DropdownItem onClick={deleteAll} buttonClass={PromptButton}>
-              Delete All Items
-            </DropdownItem>
-            <DropdownItem onClick={() => setShowDescription(!showDescription)}>Toggle Description</DropdownItem>
-          </Dropdown>
-        ) : null}
       </div>
     </li>
   );
