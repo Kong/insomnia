@@ -44,10 +44,14 @@ interface EditorState {
 export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
   // YAML is not valid when indented with Tabs
   const isYaml = mode?.includes('yaml') || false;
+
   // OpenAPI is not valid when indented with Tabs
   // TODO: OpenAPI in yaml is not valid with tabs, but in JSON is. Currently we do not differentiate and disable tabs regardless. INS-1390
   const isOpenAPI = mode === 'openapi';
-  return indentWithTabs && !isYaml && !isOpenAPI;
+
+  const actuallyIndentWithTabs = indentWithTabs && !isYaml && !isOpenAPI;
+
+  return actuallyIndentWithTabs;
 };
 
 const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Position, to: CodeMirror.Position) => {
@@ -104,6 +108,7 @@ export interface CodeEditorProps {
   onChange?: (value: string) => void;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   onClickLink?: CodeMirrorLinkClickCallback;
+  onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
   onCursorActivity?: (cm: CodeMirror.Editor) => void;
   onFocus?: (event: FocusEvent) => void;
   // NOTE: This is a hack to define keydown events on the Editor.
@@ -192,6 +197,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   onChange,
   onClick,
   onClickLink,
+  onCodeMirrorInit,
   onCursorActivity,
   onFocus,
   onKeyDown,
@@ -509,6 +515,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         // @ts-expect-error -- type unsoundness
         codeMirror.current.foldCode(from, to);
       }
+    }
+    if (onCodeMirrorInit) {
+      // TODO: refactor graphql editor hack to eliminate this
+      onCodeMirrorInit(codeMirror.current);
     }
     // NOTE: Start listening to cursor after everything because it seems to fire
     // immediately for some reason

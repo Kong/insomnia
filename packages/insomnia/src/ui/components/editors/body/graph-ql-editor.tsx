@@ -619,6 +619,13 @@ export const GraphQLEditor: FC<Props> = ({
             // based on the current cursor position.
             handleBodyChange(query, state.body.variables, null);
           }}
+          onCodeMirrorInit={codeMirror => {
+            editorRef.current = codeMirror;
+            // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
+            window.cm = editorRef.current;
+            const { query, variables, operationName } = state.body;
+            handleBodyChange(query, variables, operationName);
+          }}
           onCursorActivity={handleQueryUserActivity}
           onFocus={handleQueryUserActivity}
           mode="graphql"
