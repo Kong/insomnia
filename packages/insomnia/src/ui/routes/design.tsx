@@ -45,16 +45,15 @@ const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) =
   const gitVersion = useGitVCSVersion();
   const syncVersion = useActiveApiSpecSyncVCSVersion();
 
-  const onUpdateContents = useCallback(async (value: string) => {
+  const onImport = useCallback(async (value: string) => {
     if (!activeApiSpec) {
       return;
     }
 
-    await database.update({ ...activeApiSpec, modified: Date.now(), contents: value }, true);
+    await database.update({ ...activeApiSpec, modified: Date.now(), created: Date.now(), contents: value }, true);
   }, [activeApiSpec]);
 
-  const uniquenessKey = `::${activeApiSpec?._id}::${gitVersion}::${syncVersion}`;
-
+  const uniquenessKey = `${activeApiSpec?._id}::${activeApiSpec?.created}::${gitVersion}::${syncVersion}`;
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
       if (!activeApiSpec) {
@@ -112,6 +111,7 @@ const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) =
     <div className="column tall theme--pane__body">
       <div className="tall relative overflow-hidden">
         <CodeEditor
+          key={uniquenessKey}
           manualPrettify
           ref={editor}
           lintOptions={{ delay: 1000 }}
@@ -122,7 +122,7 @@ const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) =
         />
         {contents ? null : (
           <DesignEmptyState
-            onUpdateContents={onUpdateContents}
+            onImport={onImport}
           />
         )}
       </div>

@@ -291,7 +291,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
   useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
   useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
-  useEffect(() => codeMirror.current?.setValue(defaultValue || ''), [defaultValue]);
 
   useMount(() => {
     if (!textAreaRef.current) {
