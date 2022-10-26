@@ -164,38 +164,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
               }, 2000);
             }
           }}
-          onKeyDown={event => {
-            // submit form if needed
-            if (event.keyCode === 13) {
-              // TODO: This can be NULL, or not an HTMLElement.
-              let node = event.target as HTMLElement;
-              for (let i = 0; i < 20 && node; i++) {
-                if (node.tagName === 'FORM') {
-                  node.dispatchEvent(new window.Event('submit'));
-                  event.preventDefault();
-                  event.stopPropagation();
-                  break;
-                }
-                // TODO: This can be NULL.
-                node = node.parentNode as HTMLElement;
-              }
-            }
-            onKeyDown?.(event, editorRef.current?.getValue());
-          }
-          }
-          onFocus={event => {
-            // TODO: unclear why this is missing in TypeScript DOM.
-            const focusedFromTabEvent = !!(event as any).sourceCapabilities;
-            if (focusedFromTabEvent) {
-              editorRef.current?.focusEnd();
-            }
-            if (!editorRef.current) {
-              console.warn('Tried to focus editor when it was not mounted', this);
-              return;
-            }
-            // Set focused state
-            editorRef.current?.setAttribute('data-focused', 'on');
-          }}
+          onKeyDown={event => onKeyDown?.(event, editorRef.current?.getValue())}
+          onFocus={() => editorRef.current?.setAttribute('data-focused', 'on')}
           onMouseLeave={convertToInputIfNotFocused}
           onChange={onChange}
           getAutocompleteConstants={getAutocompleteConstants}
@@ -211,10 +181,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
         ref={inputRef}
         id={id}
         type={type}
-        style={{
-          // background: 'rgba(255, 0, 0, 0.05)', // For debugging
-          width: '100%',
-        }}
+        style={{ width: '100%' }}
         placeholder={placeholder}
         defaultValue={defaultValue}
         disabled={readOnly}
@@ -226,25 +193,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
         onMouseEnter={convertToEditorPreserveFocus}
         onDragEnter={convertToEditorPreserveFocus}
         onPaste={e => onPaste?.(e.nativeEvent)}
-        onFocus={event => {
-          // If we're focusing the whole thing, blur the input. This happens when
-          // the user tabs to the field.
-          if (!inputRef.current) {
-            return;
-          }
-          const start = inputRef.current.selectionStart;
-          const end = inputRef.current.selectionEnd;
-          const focusedFromTabEvent = start === 0 && end === event.target.value.length;
-          if (focusedFromTabEvent) {
-            inputRef.current.value = inputRef.current.value;
-            inputRef.current.focus();
-            // Also convert to editor if we tabbed to it. Just in case the user
-            // needs an editor
-            convertToEditorPreserveFocus();
-          }
-          // Set focused state
-          inputRef.current?.setAttribute('data-focused', 'on');
-        }}
+        onFocus={() => inputRef.current?.setAttribute('data-focused', 'on')}
         onKeyDown={event => onKeyDown?.(event, event.currentTarget.value)}
       />
     );
