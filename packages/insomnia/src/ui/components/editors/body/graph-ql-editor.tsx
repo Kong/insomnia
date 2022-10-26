@@ -630,7 +630,10 @@ export const GraphQLEditor: FC<Props> = ({
           onFocus={handleQueryUserActivity}
           mode="graphql"
           placeholder=""
-          {...graphqlOptions}
+          hintOptions={graphqlOptions?.hintOptions}
+          infoOptions={graphqlOptions?.infoOptions}
+          jumpOptions={graphqlOptions?.jumpOptions}
+          lintOptions={graphqlOptions?.lintOptions}
         />
       </div>
       <div className="graphql-editor__schema-error">

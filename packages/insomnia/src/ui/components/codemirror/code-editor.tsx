@@ -10,7 +10,7 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 import vkBeautify from 'vkbeautify';
@@ -73,8 +73,7 @@ const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Posit
     return '\u2194';
   }
 };
-// Global object used for storing and persisting editor states
-// TODO: why not used for one-line-editor?
+// Global object used for storing and persisting editor scroll, lint and folding margin states
 const editorStates: Record<string, EditorState> = {};
 
 export interface CodeEditorProps {
@@ -255,24 +254,40 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       return;
     }
     setOriginalCode(code);
-    const shouldPrettify = (mode?.includes('json') || mode?.includes('xml') || autoPrettify) && updateFilter && filter;
-    if (shouldPrettify && mode?.includes('xml')) {
-      try {
-        return codeMirror.current?.setValue(vkBeautify.xml(`<result>${queryXPath(code, filter).map(r => r.outer).join('\n')}</result>`));
-      } catch (err) {
-        return codeMirror.current?.setValue(vkBeautify.xml(`<error>${err.message}</error>`));
+    if (autoPrettify) {
+      if (mode?.includes('xml')) {
+        if (updateFilter && filter) {
+          try {
+            const results = queryXPath(code, filter);
+            code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+          } catch (err) {
+            code = `<error>${err.message}</error>`;
+          }
+        }
+        try {
+          code = vkBeautify.xml(code, indentChars);
+        } catch (error) { }
+      } else if (mode?.includes('json')) {
+        try {
+          let jsonString = code;
+          if (updateFilter && filter) {
+            try {
+              const codeObj = JSON.parse(code);
+              const results = JSONPath({ json: codeObj, path: filter.trim() });
+              jsonString = JSON.stringify(results);
+            } catch (err) {
+              console.log('[jsonpath] Error: ', err);
+              jsonString = '[]';
+            }
+          }
+          code = jsonPrettify(jsonString, indentChars, autoPrettify);
+        } catch (error) { }
       }
     }
-    if (shouldPrettify && mode?.includes('json')) {
-      try {
-        return codeMirror.current?.setValue(jsonPrettify(JSON.stringify(JSONPath({ json: JSON.parse(code), path: filter.trim() })), indentChars, autoPrettify));
-      } catch (err) {
-        console.log('[jsonpath] Error: ', err);
-        return codeMirror.current?.setValue('[]');
-      }
+    // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
+    if (codeMirror.current?.getValue() !== code) {
+      codeMirror.current?.setValue(code || '');
     }
-
-    return codeMirror.current?.setValue(code);
   }, [autoPrettify, filter, indentChars, mode, updateFilter]);
 
   useDocBodyKeyboardShortcuts({
@@ -282,21 +297,18 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     },
   });
-  useMount(() => {
+  useEffect(() => codeMirror.current?.setOption('hintOptions', hintOptions), [hintOptions]);
+  useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
+  useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
+  useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
 
+  useMount(() => {
     if (!textAreaRef.current) {
       return;
     }
-    // TODO: handle differently?
-    // if (codeMirror.current) {
-    //   // already mounted
-    //   return;
-    // }
 
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
     const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
-
-    console.log({ canAutocomplete });
     // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
     //   be in the default options. DO NOT REMOVE THIS.
     const gutters = showGuttersAndLineNumbers ?
@@ -324,11 +336,11 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       placeholder: placeholder || '',
       foldGutter: showGuttersAndLineNumbers,
       autoRefresh: { delay: 2000 },
-      lineWrapping: ignoreEditorFontSettings ? undefined : settings.editorLineWrapping,
+      lineWrapping: ignoreEditorFontSettings ? undefined : (settings.editorLineWrapping ?? true),
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lint: !noLint && !readOnly,
       matchBrackets: !noMatchBrackets,
-      autoCloseBrackets: typeof autoCloseBrackets === 'boolean' ? autoCloseBrackets : true,
+      autoCloseBrackets: autoCloseBrackets ?? true,
       tabSize: indentSize || TAB_SIZE,
       indentUnit: indentSize || TAB_SIZE,
       hintOptions,
@@ -483,8 +495,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
-    // TODO: we shouldn't need to set setup nunjucks if we're in readonly mode
-    if (handleRender && !settings.nunjucksPowerUserMode) {
+    if (!readOnly && handleRender && !settings.nunjucksPowerUserMode) {
       codeMirror.current?.enableNunjucksTags(
         handleRender,
         handleGetRenderContext,
