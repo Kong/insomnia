@@ -38,11 +38,18 @@ const HeaderTabPanel = styled(TabPanel)({
   overflowY: 'auto',
 });
 
-const TabPanelFooter = styled.div({
-  boxSizing: 'border-box',
-  paddingRight: 'var(--padding-md)',
-  flex: '0 0',
-  textAlign: 'right',
+export const TabPanelFooter = styled.div({
+  boxSizing: 'content-box',
+  display: 'flex',
+  flexDirection: 'row',
+  borderTop: '1px solid var(--hl-md)',
+  height: 'var(--line-height-sm)',
+  fontSize: 'var(--font-size-sm)',
+  '& > button': {
+    color: 'var(--hl)',
+    padding: 'var(--padding-xs) var(--padding-xs)',
+    height: '100%',
+  },
 });
 
 const TabPanelBody = styled.div({
@@ -246,21 +253,21 @@ export const RequestPane: FC<Props> = ({
               />
             </ErrorBoundary>
           </div>
-          <div className="pad-right text-right">
+          <TabPanelFooter>
             <button
-              className="margin-top-sm btn btn--clicky"
+              className="btn btn--compact"
               title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
               onClick={handleImportQueryFromUrl}
             >
               Import from URL
             </button>
             <button
-              className="margin-top-sm btn btn--clicky space-left"
+              className="btn btn--compact"
               onClick={handleUpdateSettingsUseBulkParametersEditor}
             >
               {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
             </button>
-          </div>
+          </TabPanelFooter>
         </TabPanel>
         <HeaderTabPanel className="react-tabs__tab-panel">
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
@@ -274,7 +281,7 @@ export const RequestPane: FC<Props> = ({
 
           <TabPanelFooter>
             <button
-              className="margin-top-sm btn btn--clicky"
+              className="btn btn--compact"
               onClick={handleUpdateSettingsUseBulkHeaderEditor}
             >
               {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
