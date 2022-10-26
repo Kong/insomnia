@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 
+import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Dashboard', async () => {
@@ -37,6 +38,39 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('[data-testid="project"]')).toContainText('Insomnia');
       await expect(page.locator('.app')).toContainText('Dashboard');
       await expect(page.locator('.app')).toContainText('New Document');
+    });
+  });
+  test.describe('Interactions', async () => { // Not sure about the name here
+    test('Can filter through multiple collections', async ({ app, page }) => {
+      await page.click('[data-testid="project"]');
+      await page.click('text=Create');
+      const text = await loadFixture('multiple-workspaces.yaml');
+      await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+      await page.click('button:has-text("Clipboard")');
+
+      // Check that 10 new workspaces are imported besides the default one
+      const workspaceCards = page.locator('.card-badge');
+      await expect(workspaceCards).toHaveCount(11);
+      await expect(page.locator('.app')).toContainText('New Document');
+      await expect(page.locator('.app')).toContainText('collection 1');
+      await expect(page.locator('.app')).toContainText('design doc 1');
+      await expect(page.locator('.app')).toContainText('Swagger Petstore V3 JSON 1.0.0');
+      await expect(page.locator('.app')).toContainText('Swagger Petstore V3 YAML 1.0.0');
+
+      // Filter by collection
+      const filter = page.locator('[placeholder="Filter\\.\\.\\."]');
+
+      // Filter by word with results expected
+      await filter.fill('design');
+      await expect(page.locator('.card-badge')).toHaveCount(4);
+
+      // Filter by number
+      await filter.fill('3');
+      await expect(page.locator('.card-badge')).toHaveCount(2);
+
+      // Filter by word with no results expected
+      await filter.fill('invalid');
+      await expect(page.locator('.card-badge')).toHaveCount(0);
     });
   });
 });
