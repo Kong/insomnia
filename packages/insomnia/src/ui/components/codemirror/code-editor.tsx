@@ -96,7 +96,6 @@ export interface CodeEditorProps {
   lintOptions?: Record<string, any>;
   manualPrettify?: boolean;
   mode?: string;
-  noDragDrop?: boolean;
   noLint?: boolean;
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
@@ -104,8 +103,6 @@ export interface CodeEditorProps {
   onChange?: (value: string) => void;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   onClickLink?: CodeMirrorLinkClickCallback;
-  onCodeMirrorInit?: (editor: CodeMirror.Editor) => void;
-  onCursorActivity?: (cm: CodeMirror.Editor) => void;
   onFocus?: (event: FocusEvent) => void;
   // NOTE: This is a hack to define keydown events on the Editor.
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
@@ -118,6 +115,7 @@ export interface CodeEditorProps {
   style?: Object;
   tabIndex?: number;
   type?: string;
+  // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
 }
@@ -187,7 +185,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   lintOptions,
   manualPrettify,
   mode,
-  noDragDrop,
   noLint,
   noMatchBrackets,
   noStyleActiveLine,
@@ -195,8 +192,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   onChange,
   onClick,
   onClickLink,
-  onCodeMirrorInit,
-  onCursorActivity,
   onFocus,
   onKeyDown,
   onMouseLeave,
@@ -339,7 +334,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       indentUnit: indentSize || TAB_SIZE,
       hintOptions,
       info: infoOptions,
-      dragDrop: !noDragDrop,
       viewportMargin: dynamicHeight ? Infinity : 30,
       readOnly: !!readOnly,
       tabindex: typeof tabIndex === 'number' ? tabIndex : undefined,
@@ -514,18 +508,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-    if (onCodeMirrorInit) {
-      onCodeMirrorInit(codeMirror.current);
-    }
-    // NOTE: Start listening to cursor after everything because it seems to fire
-    // immediately for some reason
-    codeMirror.current.on('cursorActivity', (instance: CodeMirror.Editor) => onCursorActivity?.(instance));
-
     return () => {
       codeMirror.current?.toTextArea();
       codeMirror.current?.closeHintDropdown();
     };
   });
+
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
     getValue: () => codeMirror.current?.getValue() || '',

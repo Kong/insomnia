@@ -138,12 +138,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
           noMatchBrackets
           noStyleActiveLine
           noLint
+          id={id}
           singleLine
           ignoreEditorFontSettings
           enableNunjucks
           autoCloseBrackets={false}
           tabIndex={0}
-          id={id}
           type={type || 'text'}
           placeholder={placeholder}
           onPaste={onPaste}
