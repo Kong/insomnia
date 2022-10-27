@@ -1,9 +1,9 @@
 import { app, ipcMain, IpcRendererEvent } from 'electron';
 import { writeFile } from 'fs/promises';
 
-import { axiosRequest } from '../../network/axios-request';
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
 import installPlugin from '../install-plugin';
+import { axiosRequest } from '../network/axios-request';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 
