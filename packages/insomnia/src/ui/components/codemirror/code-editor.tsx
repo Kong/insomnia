@@ -44,14 +44,10 @@ interface EditorState {
 export const shouldIndentWithTabs = ({ mode, indentWithTabs }: { mode?: string; indentWithTabs?: boolean }) => {
   // YAML is not valid when indented with Tabs
   const isYaml = mode?.includes('yaml') || false;
-
   // OpenAPI is not valid when indented with Tabs
   // TODO: OpenAPI in yaml is not valid with tabs, but in JSON is. Currently we do not differentiate and disable tabs regardless. INS-1390
   const isOpenAPI = mode === 'openapi';
-
-  const actuallyIndentWithTabs = indentWithTabs && !isYaml && !isOpenAPI;
-
-  return actuallyIndentWithTabs;
+  return indentWithTabs && !isYaml && !isOpenAPI;
 };
 
 const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Position, to: CodeMirror.Position) => {
@@ -538,7 +534,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     refresh: () => codeMirror.current?.refresh(),
     setCursor: (ch, line = 0) => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
-        focus();
+        codeMirror.current.focus();
       }
       codeMirror.current?.setCursor({ line, ch });
     },
@@ -555,7 +551,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     getSelectionEnd: () => codeMirror.current?.listSelections()?.[0].head.ch || 0,
     focusEnd: () => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
-        focus();
+        codeMirror.current.focus();
       }
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
     },
