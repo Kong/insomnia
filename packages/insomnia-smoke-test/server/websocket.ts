@@ -68,6 +68,13 @@ const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket,
     }
     return redirectOnSuccess(socket);
   }
+  if (request.url === '/delay') {
+    const delaySec = Number.parseInt(request.headers.duration as string || '5');
+    setTimeout(function() {
+      redirectOnSuccess(socket);
+    }, delaySec * 1000);
+    return ;
+  }
   if (request.url === '/basic-auth') {
     // login with user:password
     if (request.headers.authorization !== 'Basic dXNlcjpwYXNzd29yZA==') {
