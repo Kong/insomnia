@@ -262,15 +262,7 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }, [environmentId, request._id, request.url, workspaceId]);
 
-  const getCurrentOperation = (documentAST: DocumentNode, fallback?: string): string | undefined => {
-    if (!editorRef.current || !editorRef.current.hasFocus()) {
-      return fallback;
-    }
-    const cursorIndex = editorRef.current.cursorIndex() || 0;
-    return documentAST.definitions.filter(isOperationDefinition).find(({ name, loc }) => name && loc && cursorIndex >= loc.start && cursorIndex <= loc.end)?.name?.value || fallback;
-  };
-
-  const _handlePrettify = () => {
+  const beautifyRequestBody = () => {
     const { body } = state;
     const prettyQuery = prettier.format(body.query, {
       parser: 'graphql',
@@ -279,7 +271,7 @@ export const GraphQLEditor: FC<Props> = ({
     });
     const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
 
-    handleBodyChange(prettyQuery, prettyVariables, state.body.operationName);
+    handleBodyChange(prettyQuery, prettyVariables);
 
     // Update editor contents
     if (editorRef.current) {
@@ -288,42 +280,43 @@ export const GraphQLEditor: FC<Props> = ({
   };
 
   useDocBodyKeyboardShortcuts({
-    beautifyRequestBody: _handlePrettify,
+    beautifyRequestBody,
   });
 
-  const handleBodyChange = (query: string, variables?: Record<string, any>, operationName?: string) => {
+  const handleBodyChange = (query: string, variables?: Record<string, any>) => {
     try {
       const documentAST = parse(query);
-      const body: GraphQLBody = {
-        query,
-        variables,
-        operationName: operationName || getCurrentOperation(documentAST, state.body.operationName),
-      };
-      setState(state => ({ ...state, documentAST, body, variablesSyntaxError: '' }));
+      setState(state => ({
+        ...state,
+        documentAST,
+        body: {
+          query,
+          variables,
+        },
+        variablesSyntaxError: '',
+      }));
       onChange(JSON.stringify(body));
       // Remove current query highlighting
       for (const textMarker of state.disabledOperationMarkers) {
         textMarker?.clear();
       }
-      const markers = state.documentAST?.definitions
-        .filter(isOperationDefinition)
-        .filter(complement(matchesOperation(body.operationName || null)))
-        .filter(hasLocation)
-        .map(({ loc: { startToken, endToken } }) =>
-          editorRef.current?.markText({
-            line: startToken.line - 1,
-            ch: startToken.column - 1,
-          }, {
-            line: endToken.line,
-            ch: endToken.column - 1,
-          }, {
-            className: 'cm-gql-disabled',
-          })
-        );
-      markers && setState(state => ({ ...state, disabledOperationMarkers: markers }));
+      setState(state => ({
+        ...state, disabledOperationMarkers: documentAST.definitions
+          .filter(isOperationDefinition)
+          .filter(complement(matchesOperation(body.operationName || null)))
+          .filter(hasLocation)
+          .map(({ loc: { startToken, endToken } }) =>
+            editorRef.current?.markText({ line: startToken.line - 1, ch: startToken.column - 1 }, { line: endToken.line, ch: endToken.column - 1 }, { className: 'cm-gql-disabled' })
+          ),
+      }));
     } catch (error) {
       console.log('failed to parse', error);
-      setState(state => ({ ...state, documentAST: null, body:{ query, variables } }));
+      setState(state => ({
+        ...state,
+        documentAST: null,
+        body: { query, variables },
+        selectedOperationName:'',
+      }));
       onChange(JSON.stringify({ query, variables }));
       return;
     }
@@ -545,22 +538,13 @@ export const GraphQLEditor: FC<Props> = ({
             handleBodyChange(query, state.body.variables);
           }}
           onCursorActivity={() => {
-            if (state.documentAST) {
-              const newOperationName = getCurrentOperation(state.documentAST, state.body.operationName);
-              const { query, variables, operationName } = state.body;
-              if (newOperationName !== operationName) {
-                handleBodyChange(query, variables, newOperationName);
-              }
+            const editor = editorRef.current;
+            if (!state.documentAST || !editor || !editor.hasFocus()) {
+              return;
             }
-          }}
-          onFocus={() => {
-            if (state.documentAST) {
-              const newOperationName = getCurrentOperation(state.documentAST, state.body.operationName);
-              const { query, variables, operationName } = state.body;
-              if (newOperationName !== operationName) {
-                handleBodyChange(query, variables, newOperationName);
-              }
-            }
+            const cursorIndex = editor?.cursorIndex() || 0;
+            const selectedOperationName = state.documentAST.definitions.filter(isOperationDefinition).find(({ name, loc }) => name && loc && cursorIndex >= loc.start && cursorIndex <= loc.end)?.name?.value || '';
+            setState(state => ({ ...state, body:{ ...state.body, operationName:selectedOperationName } }));
           }}
           mode="graphql"
           placeholder=""
@@ -615,7 +599,7 @@ export const GraphQLEditor: FC<Props> = ({
           noLint={!variableTypes}
           onChange={variables => {
             try {
-              handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
+              handleBodyChange(state.body.query, JSON.parse(variables || 'null'));
             } catch (err) {
               setState(state => ({ ...state, variablesSyntaxError: err.message }));
             }
@@ -626,7 +610,7 @@ export const GraphQLEditor: FC<Props> = ({
         />
       </div>
       <div className="pane__footer">
-        <button className="pull-right btn btn--compact" onClick={_handlePrettify}>
+        <button className="pull-right btn btn--compact" onClick={beautifyRequestBody}>
           Prettify GraphQL
         </button>
       </div>
