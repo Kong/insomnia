@@ -1,19 +1,7 @@
 {
   "version": "3.6.1-beta.2",
-  "includeMergedTags": true,
   "packages": [
     "packages/*",
     "plugins/*"
-  ],
-  "command": {
-    "version": {
-      "exact": true,
-      "forcePublish": true,
-      "gitTagVersion": false,
-      "push": false
-    },
-    "publish": {
-      "verifyAccess": false
-    }
-  }
+  ]
 }

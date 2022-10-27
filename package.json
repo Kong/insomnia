@@ -17,7 +17,6 @@
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version",
-    "publish": "lerna publish from-package",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules **/*.tsbuildinfo",
     "test": "lerna run --stream --parallel test",
     "inso-start": "npm start --prefix packages/insomnia-inso",
