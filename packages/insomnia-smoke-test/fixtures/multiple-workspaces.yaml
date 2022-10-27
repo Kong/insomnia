@@ -1,0 +1,963 @@
+_type: export
+__export_format: 4
+__export_date: 2022-10-26T13:22:24.234Z
+__export_source: insomnia.desktop.app:v2022.7.0-beta.3
+resources:
+  - _id: req_301ee7822f044678b853f8738d43b671
+    parentId: wrk_21ad31a525d4405dbda1f95d0c5c7b96
+    modified: 1666782885586
+    created: 1666782885586
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782885586
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_21ad31a525d4405dbda1f95d0c5c7b96
+    parentId: null
+    modified: 1666781834107
+    created: 1666781834107
+    name: design doc 1
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: req_2ca883f772b944c6bd15e9224e1165cb
+    parentId: wrk_bdf332f870c64853b4e923a655f949fa
+    modified: 1666782891204
+    created: 1666782891204
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782891204
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_bdf332f870c64853b4e923a655f949fa
+    parentId: null
+    modified: 1666781842050
+    created: 1666781842050
+    name: design doc 2
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: req_a32577ff4e9747a08743278c9c3d5843
+    parentId: wrk_a788e78ffada4586b78da74ab6a58ba5
+    modified: 1666782881532
+    created: 1666782881532
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782881532
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_a788e78ffada4586b78da74ab6a58ba5
+    parentId: null
+    modified: 1666781850374
+    created: 1666781850374
+    name: design doc 3
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: req_950d0605d54545199115cb08ffca34b8
+    parentId: wrk_e6ba2aa3127b45f29ea5c47800fd03bb
+    modified: 1666782877009
+    created: 1666782877009
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782877009
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_e6ba2aa3127b45f29ea5c47800fd03bb
+    parentId: null
+    modified: 1666781857328
+    created: 1666781857328
+    name: collection 1
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_5046827caea449638f44a7393178dc57
+    parentId: wrk_a893044e98964298aba252e05a1d116b
+    modified: 1666782874031
+    created: 1666782874031
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782874031
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_a893044e98964298aba252e05a1d116b
+    parentId: null
+    modified: 1666781865359
+    created: 1666781865359
+    name: collection 2
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_b1a0b68e0687433a902c13ecc6ec3734
+    parentId: wrk_7a78b6f321ed469a99e9049ff247289d
+    modified: 1666782848082
+    created: 1666782848082
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782848082
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_7a78b6f321ed469a99e9049ff247289d
+    parentId: null
+    modified: 1666781878049
+    created: 1666781878049
+    name: collection 3
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_9a0cca5290b544cba7ac259132c0b719
+    parentId: wrk_4008e14dea714ce3844dd6a790a9817c
+    modified: 1666782863226
+    created: 1666782863226
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782863226
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_4008e14dea714ce3844dd6a790a9817c
+    parentId: null
+    modified: 1666781891933
+    created: 1666781891933
+    name: design doc 4
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: req_e6fcb2c927d744a8aab037e0c5799606
+    parentId: wrk_885166d854fa412da796b86bee922779
+    modified: 1666782842797
+    created: 1666782842797
+    url: ""
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666782842798
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_885166d854fa412da796b86bee922779
+    parentId: null
+    modified: 1666781900708
+    created: 1666781900708
+    name: collection 4
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_wrk_ca77d560bfe247afa3f287885bba750e3b13e39c
+    parentId: wrk_ca77d560bfe247afa3f287885bba750e
+    modified: 1666781942179
+    created: 1666781942179
+    url: "{{ base_url }}/pets/{{ petId }}"
+    name: Info for a specific pet
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666781942179
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_ca77d560bfe247afa3f287885bba750e
+    parentId: null
+    modified: 1666781942713
+    created: 1666781942713
+    name: Swagger Petstore V3 JSON 1.0.0
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: req_wrk_ca77d560bfe247afa3f287885bba750e09e1157b
+    parentId: wrk_ca77d560bfe247afa3f287885bba750e
+    modified: 1666781942196
+    created: 1666781942196
+    url: "{{ base_url }}/pets"
+    name: Create a pet
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666781942196
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_wrk_ca77d560bfe247afa3f287885bba750e26e3ae98
+    parentId: wrk_ca77d560bfe247afa3f287885bba750e
+    modified: 1666781942198
+    created: 1666781942198
+    url: "{{ base_url }}/pets"
+    name: List all pets
+    description: ""
+    method: GET
+    body: {}
+    parameters:
+      - name: limit
+        disabled: true
+        value: "0"
+    headers: []
+    authentication: {}
+    metaSortKey: -1666781942198
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_wrk_4beaf4c152e54b60810577fb0300775d3b13e39c
+    parentId: wrk_4beaf4c152e54b60810577fb0300775d
+    modified: 1666781948569
+    created: 1666781948569
+    url: "{{ base_url }}/pets/{{ petId }}"
+    name: Info for a specific pet
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666781948569
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_4beaf4c152e54b60810577fb0300775d
+    parentId: null
+    modified: 1666781949091
+    created: 1666781949091
+    name: Swagger Petstore V3 YAML 1.0.0
+    description: ""
+    scope: design
+    _type: workspace
+  - _id: req_wrk_4beaf4c152e54b60810577fb0300775d09e1157b
+    parentId: wrk_4beaf4c152e54b60810577fb0300775d
+    modified: 1666781948586
+    created: 1666781948586
+    url: "{{ base_url }}/pets"
+    name: Create a pet
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1666781948586
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_wrk_4beaf4c152e54b60810577fb0300775d26e3ae98
+    parentId: wrk_4beaf4c152e54b60810577fb0300775d
+    modified: 1666781948588
+    created: 1666781948588
+    url: "{{ base_url }}/pets"
+    name: List all pets
+    description: ""
+    method: GET
+    body: {}
+    parameters:
+      - name: limit
+        disabled: true
+        value: "0"
+    headers: []
+    authentication: {}
+    metaSortKey: -1666781948588
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: env_77543d6b4b54e11d5412c433ccbc64736e47ce34
+    parentId: wrk_21ad31a525d4405dbda1f95d0c5c7b96
+    modified: 1666781834110
+    created: 1666781834110
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781834110
+    _type: environment
+  - _id: jar_77543d6b4b54e11d5412c433ccbc64736e47ce34
+    parentId: wrk_21ad31a525d4405dbda1f95d0c5c7b96
+    modified: 1666781834112
+    created: 1666781834112
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_501e0d57cf5d495690197f761047e8cf
+    parentId: wrk_21ad31a525d4405dbda1f95d0c5c7b96
+    modified: 1666781834108
+    created: 1666781834108
+    fileName: design doc 1
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_48323cf5b2a642fcb7ab1045be9c426b
+    parentId: wrk_bdf332f870c64853b4e923a655f949fa
+    modified: 1666781842051
+    created: 1666781842051
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781834110
+    _type: environment
+  - _id: jar_534dffd55a37474ebe2658c4968966c3
+    parentId: wrk_bdf332f870c64853b4e923a655f949fa
+    modified: 1666781842055
+    created: 1666781842055
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_c71920334078418a84b67e41dfbe3d20
+    parentId: wrk_bdf332f870c64853b4e923a655f949fa
+    modified: 1666781842077
+    created: 1666781842060
+    fileName: design doc 2
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_fa0dec2d3ce9470a9c4e2924a9d115fc
+    parentId: wrk_a788e78ffada4586b78da74ab6a58ba5
+    modified: 1666781850375
+    created: 1666781850375
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781834110
+    _type: environment
+  - _id: jar_8d436535140b4018bf2e31833ae45758
+    parentId: wrk_a788e78ffada4586b78da74ab6a58ba5
+    modified: 1666781850378
+    created: 1666781850378
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_cac4166eb3134318adbdeb71ee78dee4
+    parentId: wrk_a788e78ffada4586b78da74ab6a58ba5
+    modified: 1666781850400
+    created: 1666781850382
+    fileName: design doc 3
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_fc7b13a435ca5ef5d6b1bee00dd75aa8948b4c6b
+    parentId: wrk_e6ba2aa3127b45f29ea5c47800fd03bb
+    modified: 1666781857332
+    created: 1666781857332
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781857332
+    _type: environment
+  - _id: jar_fc7b13a435ca5ef5d6b1bee00dd75aa8948b4c6b
+    parentId: wrk_e6ba2aa3127b45f29ea5c47800fd03bb
+    modified: 1666781857333
+    created: 1666781857333
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_acd1329f60514abdba8062612058a35d
+    parentId: wrk_e6ba2aa3127b45f29ea5c47800fd03bb
+    modified: 1666781857329
+    created: 1666781857329
+    fileName: collection 1
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_23dc257191c2419e9de15a9dab52f2af
+    parentId: wrk_a893044e98964298aba252e05a1d116b
+    modified: 1666781865360
+    created: 1666781865360
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781857332
+    _type: environment
+  - _id: jar_e00521f2f9054cbbb633546a7fe7549c
+    parentId: wrk_a893044e98964298aba252e05a1d116b
+    modified: 1666781865364
+    created: 1666781865364
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_990bd664545549d2873f0a46629af8be
+    parentId: wrk_a893044e98964298aba252e05a1d116b
+    modified: 1666781865385
+    created: 1666781865367
+    fileName: collection 2
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_01595179df3542db8b1c94d0de3dc479
+    parentId: wrk_7a78b6f321ed469a99e9049ff247289d
+    modified: 1666781878051
+    created: 1666781878051
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781857332
+    _type: environment
+  - _id: jar_aa952677563947f488fd3537964d080f
+    parentId: wrk_7a78b6f321ed469a99e9049ff247289d
+    modified: 1666781878055
+    created: 1666781878055
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_67026fc5e8e141a0808796da92ae66bb
+    parentId: wrk_7a78b6f321ed469a99e9049ff247289d
+    modified: 1666781878076
+    created: 1666781878058
+    fileName: collection 3
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_64ffa48323084208af89597eb42a250e
+    parentId: wrk_4008e14dea714ce3844dd6a790a9817c
+    modified: 1666781891934
+    created: 1666781891934
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781834110
+    _type: environment
+  - _id: jar_f3066cc09b674e3ca8e582f4ceb4209f
+    parentId: wrk_4008e14dea714ce3844dd6a790a9817c
+    modified: 1666781891937
+    created: 1666781891937
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_cc1a6aabe9af486c91b211266c8df600
+    parentId: wrk_4008e14dea714ce3844dd6a790a9817c
+    modified: 1666782861505
+    created: 1666781891941
+    fileName: design doc 4
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_3d482f7a53cf4f09a5f95115a9155b3e
+    parentId: wrk_885166d854fa412da796b86bee922779
+    modified: 1666781900709
+    created: 1666781900709
+    name: Base Environment
+    data: {}
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781857332
+    _type: environment
+  - _id: jar_531fe7fa574b478294c76760afac4fd1
+    parentId: wrk_885166d854fa412da796b86bee922779
+    modified: 1666781900712
+    created: 1666781900712
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_11a073e0e29b4f10ae4ad17fd0c0fc76
+    parentId: wrk_885166d854fa412da796b86bee922779
+    modified: 1666781900734
+    created: 1666781900716
+    fileName: collection 4
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_9ec288935d0fd65502fed237175088a5f24e55bf
+    parentId: wrk_ca77d560bfe247afa3f287885bba750e
+    modified: 1666781942204
+    created: 1666781942200
+    name: Base environment
+    data:
+      base_url: "{{ scheme }}://{{ host }}{{ base_path }}"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781942200
+    _type: environment
+  - _id: jar_9ec288935d0fd65502fed237175088a5f24e55bf
+    parentId: wrk_ca77d560bfe247afa3f287885bba750e
+    modified: 1666782834696
+    created: 1666782834696
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_6524f9363e9f49dbaaa173d8bc7c36d8
+    parentId: wrk_ca77d560bfe247afa3f287885bba750e
+    modified: 1666790517105
+    created: 1666781942714
+    fileName: Swagger Petstore V3 JSON 1.0.0
+    contents: >
+      {
+        "openapi": "3.0.0",
+        "info": {
+          "version": "1.0.0",
+          "title": "Swagger Petstore V3 JSON",
+          "license": {
+            "name": "MIT"
+          }
+        },
+        "servers": [
+          {
+            "url": "http://petstore.swagger.io/v1"
+          }
+        ],
+        "paths": {
+          "/pets": {
+            "get": {
+              "summary": "List all pets",
+              "operationId": "listPets",
+              "tags": [
+                "pets"
+              ],
+              "parameters": [
+                {
+                  "name": "limit",
+                  "in": "query",
+                  "description": "How many items to return at one time (max 100)",
+                  "required": false,
+                  "schema": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "A paged array of pets",
+                  "headers": {
+                    "x-next": {
+                      "description": "A link to the next page of responses",
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Pets"
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "post": {
+              "summary": "Create a pet",
+              "operationId": "createPets",
+              "tags": [
+                "pets"
+              ],
+              "responses": {
+                "201": {
+                  "description": "Null response"
+                },
+                "default": {
+                  "description": "unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/pets/{petId}": {
+            "get": {
+              "summary": "Info for a specific pet",
+              "operationId": "showPetById",
+              "tags": [
+                "pets"
+              ],
+              "parameters": [
+                {
+                  "name": "petId",
+                  "in": "path",
+                  "required": true,
+                  "description": "The id of the pet to retrieve",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Expected response to a valid request",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Pet"
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "components": {
+          "schemas": {
+            "Pet": {
+              "type": "object",
+              "required": [
+                "id",
+                "name"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "tag": {
+                  "type": "string"
+                }
+              }
+            },
+            "Pets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            },
+            "Error": {
+              "type": "object",
+              "required": [
+                "code",
+                "message"
+              ],
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    contentType: yaml
+    _type: api_spec
+  - _id: env_env_9ec288935d0fd65502fed237175088a5f24e55bf_sub
+    parentId: env_9ec288935d0fd65502fed237175088a5f24e55bf
+    modified: 1666781942202
+    created: 1666781942202
+    name: OpenAPI env
+    data:
+      scheme: http
+      base_path: /v1
+      host: petstore.swagger.io
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781942202
+    _type: environment
+  - _id: env_975cbfbf5feac5d42973525f87e8feacdf1531c3
+    parentId: wrk_4beaf4c152e54b60810577fb0300775d
+    modified: 1666781948594
+    created: 1666781948590
+    name: Base environment
+    data:
+      base_url: "{{ scheme }}://{{ host }}{{ base_path }}"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781948590
+    _type: environment
+  - _id: jar_975cbfbf5feac5d42973525f87e8feacdf1531c3
+    parentId: wrk_4beaf4c152e54b60810577fb0300775d
+    modified: 1666782832684
+    created: 1666782832684
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: spc_4164e989580a44229dde1282223ed069
+    parentId: wrk_4beaf4c152e54b60810577fb0300775d
+    modified: 1666790521098
+    created: 1666781949095
+    fileName: Swagger Petstore V3 YAML 1.0.0
+    contents: |
+      openapi: "3.0.0"
+      info:
+        version: 1.0.0
+        title: Swagger Petstore V3 YAML
+        license:
+          name: MIT
+      servers:
+        - url: http://petstore.swagger.io/v1
+      paths:
+        /pets:
+          get:
+            summary: List all pets
+            operationId: listPets
+            tags:
+              - pets
+            parameters:
+              - name: limit
+                in: query
+                description: How many items to return at one time (max 100)
+                required: false
+                schema:
+                  type: integer
+                  format: int32
+            responses:
+              '200':
+                description: A paged array of pets
+                headers:
+                  x-next:
+                    description: A link to the next page of responses
+                    schema:
+                      type: string
+                content:
+                  application/json:    
+                    schema:
+                      $ref: "#/components/schemas/Pets"
+              default:
+                description: unexpected error
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/Error"
+          post:
+            summary: Create a pet
+            operationId: createPets
+            tags:
+              - pets
+            responses:
+              '201':
+                description: Null response
+              default:
+                description: unexpected error
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/Error"
+        /pets/{petId}:
+          get:
+            summary: Info for a specific pet
+            operationId: showPetById
+            tags:
+              - pets
+            parameters:
+              - name: petId
+                in: path
+                required: true
+                description: The id of the pet to retrieve
+                schema:
+                  type: string
+            responses:
+              '200':
+                description: Expected response to a valid request
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/Pet"
+              default:
+                description: unexpected error
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/Error"
+      components:
+        schemas:
+          Pet:
+            type: object
+            required:
+              - id
+              - name
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+              tag:
+                type: string
+          Pets:
+            type: array
+            items:
+              $ref: "#/components/schemas/Pet"
+          Error:
+            type: object
+            required:
+              - code
+              - message
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+    contentType: yaml
+    _type: api_spec
+  - _id: env_env_975cbfbf5feac5d42973525f87e8feacdf1531c3_sub
+    parentId: env_975cbfbf5feac5d42973525f87e8feacdf1531c3
+    modified: 1666781948592
+    created: 1666781948592
+    name: OpenAPI env
+    data:
+      scheme: http
+      base_path: /v1
+      host: petstore.swagger.io
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1666781948592
+    _type: environment
