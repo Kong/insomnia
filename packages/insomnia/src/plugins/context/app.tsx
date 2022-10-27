@@ -214,7 +214,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
     },
     __private: {
-      axios: window.main.axiosRequest,
+      axios: window.main?.axiosRequest,
       analytics,
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {
