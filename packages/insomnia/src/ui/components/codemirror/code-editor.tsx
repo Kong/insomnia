@@ -165,6 +165,8 @@ export interface CodeEditorHandle {
   removeAttribute: (name: string) => void;
   getAttribute: (name: string) => void;
   clearSelection: () => void;
+  cursorIndex: () => number | undefined;
+  markText: (from: CodeMirror.Position, to: CodeMirror.Position, options: CodeMirror.TextMarkerOptions) => CodeMirror.TextMarker | undefined;
 }
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoCloseBrackets,
@@ -517,7 +519,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     }
     if (onCodeMirrorInit) {
-      // TODO: refactor graphql editor hack to eliminate this
       onCodeMirrorInit(codeMirror.current);
     }
     // NOTE: Start listening to cursor after everything because it seems to fire
@@ -566,6 +567,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       if (codeMirror.current && !codeMirror.current?.isHintDropdownActive()) {
         codeMirror.current.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false },);
       }
+    },
+    cursorIndex:() => codeMirror.current?.indexFromPos(codeMirror.current.getCursor()),
+    markText: (from: CodeMirror.Position, to: CodeMirror.Position, options: CodeMirror.TextMarkerOptions) => {
+      return codeMirror.current?.getDoc().markText(from, to, options);
     },
   }), []);
 

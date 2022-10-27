@@ -28,7 +28,7 @@ import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../../base/dropdown/dropdown-item';
-import { CodeEditor } from '../../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
@@ -222,8 +222,8 @@ export const GraphQLEditor: FC<Props> = ({
   const [state, setState] = useState<State>({
     body: {
       query: maybeBody.query || '',
-      variables: maybeBody.variables || undefined,
-      operationName: maybeBody.operationName || undefined,
+      variables: maybeBody.variables,
+      operationName: maybeBody.operationName,
     },
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
@@ -240,7 +240,7 @@ export const GraphQLEditor: FC<Props> = ({
   } | undefined>();
   const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
-  const editorRef = useRef<CodeMirror.Editor | null>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -264,39 +264,14 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }, [environmentId, request._id, request.url, workspaceId]);
 
-  const getCurrentOperation = () => {
-    if (!editorRef.current) {
-      return state.body.operationName || null;
-    }
-    // Ignore cursor position when editor isn't focused
-    if (!editorRef.current.hasFocus()) {
-      return state.body.operationName || null;
+  const getCurrentOperation = (): string | undefined => {
+    if (!editorRef.current || !editorRef.current.hasFocus()) {
+      return state.body.operationName;
     }
     const isOperation = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
-    const operations = !state.documentAST ? [] : state.documentAST.definitions.filter(isOperation);
-    const cursorIndex = editorRef.current.indexFromPos(editorRef.current.getCursor());
-    let operationName: string | null = null;
-    const allOperationNames: (string | null)[] = [];
-    // Loop through all operations to see if one contains the cursor.
-    for (let i = 0; i < operations.length; i++) {
-      const operation = operations[i];
-      if (!operation.name) {
-        continue;
-      }
-      allOperationNames.push(operation.name.value);
-      const start = operation.loc?.start ?? 0;
-      const end = operation.loc?.end ?? 0;
-      if (start <= cursorIndex && end >= cursorIndex) {
-        operationName = operation.name.value;
-      }
-    }
-    if (!operationName && operations.length > 0) {
-      operationName = state.body.operationName || null;
-    }
-    if (!allOperationNames.includes(operationName)) {
-      return null;
-    }
-    return operationName;
+    const cursorIndex = editorRef.current.cursorIndex() || 0;
+    const selectedOperation = state.documentAST?.definitions.filter(isOperation).find(({ name, loc }) => name && loc  && cursorIndex >= loc.start && cursorIndex <= loc.end);
+    return selectedOperation?.name?.value || state.body.operationName;
   };
 
   const _handlePrettify = () => {
@@ -333,7 +308,6 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const handleQueryUserActivity = () => {
     const newOperationName = getCurrentOperation();
-
     const { query, variables, operationName } = state.body;
     if (newOperationName !== operationName) {
       handleBodyChange(query, variables, newOperationName);
@@ -364,20 +338,6 @@ export const GraphQLEditor: FC<Props> = ({
     return variableToType;
   };
 
-  const handleRefreshSchema = async () => {
-    // First, "forget" preference to hide errors so they always show
-    // again after a refresh
-    setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-    setSchemaIsFetching(true);
-    await fetchGraphQLSchemaForRequest({
-      requestId: request._id,
-      environmentId,
-      url: request.url,
-      workspaceId,
-    });
-    setSchemaIsFetching(false);
-  };
-
   const handleVariablesChange = (variables: string) => {
     try {
       handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
@@ -386,7 +346,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
   };
 
-  const handleBodyChange = (query: string, variables?: Record<string, any> | null, operationName?: string | null,) => {
+  const handleBodyChange = (query: string, variables?: Record<string, any>, operationName?: string) => {
     let documentAST: DocumentNode | null = null;
     try {
       documentAST = parse(query);
@@ -395,7 +355,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
     setState(state => ({ ...state, documentAST }));
 
-    const body: GraphQLBody = { query };
+    const body: GraphQLBody = { query, operationName };
     if (variables) {
       body.variables = variables;
     }
@@ -427,7 +387,7 @@ export const GraphQLEditor: FC<Props> = ({
         .filter(complement(matchesOperation(body.operationName || null)))
         .filter(hasLocation)
         .map(({ loc: { startToken, endToken } }) =>
-          editorRef.current?.getDoc().markText({
+          editorRef.current?.markText({
             line: startToken.line - 1,
             ch: startToken.column - 1,
           }, {
@@ -575,7 +535,22 @@ export const GraphQLEditor: FC<Props> = ({
 
         <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
 
-        <DropdownItem onClick={handleRefreshSchema} stayOpenAfterClick>
+        <DropdownItem
+          onClick={async () => {
+            // First, "forget" preference to hide errors so they always show
+            // again after a refresh
+            setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+            setSchemaIsFetching(true);
+            await fetchGraphQLSchemaForRequest({
+              requestId: request._id,
+              environmentId,
+              url: request.url,
+              workspaceId,
+            });
+            setSchemaIsFetching(false);
+          }}
+          stayOpenAfterClick
+        >
           <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
         </DropdownItem>
         <DropdownItem
@@ -608,6 +583,7 @@ export const GraphQLEditor: FC<Props> = ({
 
       <div className="graphql-editor__query">
         <CodeEditor
+          ref={editorRef}
           dynamicHeight
           manualPrettify
           uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
@@ -617,17 +593,14 @@ export const GraphQLEditor: FC<Props> = ({
             // Since we're editing the query, we may be changing the operation name, so
             // Don't pass it to the body change in order to automatically re-detect it
             // based on the current cursor position.
-            handleBodyChange(query, state.body.variables, null);
+            handleBodyChange(query, state.body.variables);
           }}
-          onCodeMirrorInit={codeMirror => {
-            editorRef.current = codeMirror;
-            // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
-            window.cm = editorRef.current;
-            const { query, variables, operationName } = state.body;
-            handleBodyChange(query, variables, operationName);
+          onCursorActivity={() => {
+            handleQueryUserActivity();
           }}
-          onCursorActivity={handleQueryUserActivity}
-          onFocus={handleQueryUserActivity}
+          onFocus={() => {
+            handleQueryUserActivity();
+          }}
           mode="graphql"
           placeholder=""
           hintOptions={graphqlOptions?.hintOptions}
