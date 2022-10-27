@@ -40,9 +40,7 @@ if (!explorerContainer) {
   throw new Error('Failed to find #graphql-explorer-container');
 }
 
-function isOperationDefinition(def: DefinitionNode): def is OperationDefinitionNode {
-  return def.kind === 'OperationDefinition';
-}
+const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
 
 type HasLocation = SetRequired<OperationDefinitionNode, 'loc'>;
 const hasLocation = (def: OperationDefinitionNode): def is HasLocation => Boolean(def.loc);
@@ -264,25 +262,22 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }, [environmentId, request._id, request.url, workspaceId]);
 
-  const getCurrentOperation = (): string | undefined => {
+  const getCurrentOperation = (documentAST: DocumentNode, fallback?: string): string | undefined => {
     if (!editorRef.current || !editorRef.current.hasFocus()) {
-      return state.body.operationName;
+      return fallback;
     }
-    const isOperation = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
     const cursorIndex = editorRef.current.cursorIndex() || 0;
-    const selectedOperation = state.documentAST?.definitions.filter(isOperation).find(({ name, loc }) => name && loc  && cursorIndex >= loc.start && cursorIndex <= loc.end);
-    return selectedOperation?.name?.value || state.body.operationName;
+    return documentAST.definitions.filter(isOperationDefinition).find(({ name, loc }) => name && loc && cursorIndex >= loc.start && cursorIndex <= loc.end)?.name?.value || fallback;
   };
 
   const _handlePrettify = () => {
     const { body } = state;
-    const { variables, query } = body;
-    const prettyQuery = prettier.format(query, {
+    const prettyQuery = prettier.format(body.query, {
       parser: 'graphql',
       useTabs: settings.editorIndentWithTabs,
       tabWidth: settings.editorIndentSize,
     });
-    const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
+    const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
 
     handleBodyChange(prettyQuery, prettyVariables, state.body.operationName);
 
@@ -296,93 +291,21 @@ export const GraphQLEditor: FC<Props> = ({
     beautifyRequestBody: _handlePrettify,
   });
 
-  const _handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
-    event.preventDefault();
-    if (reference) {
-      setState(state => ({
-        ...state,
-        explorerVisible: true,
-        activeReference: reference,
-      }));
-    }
-  };
-  const handleQueryUserActivity = () => {
-    const newOperationName = getCurrentOperation();
-    const { query, variables, operationName } = state.body;
-    if (newOperationName !== operationName) {
-      handleBodyChange(query, variables, newOperationName);
-    }
-  };
-
-  const buildVariableTypes = (schema: GraphQLSchema | null): Record<string, GraphQLNonNull<any>> | null => {
-    if (!schema) {
-      return null;
-    }
-    const definitions = state.documentAST ? state.documentAST.definitions : [];
-    const variableToType: Record<string, GraphQLNonNull<any>> = {};
-    for (const definition of definitions) {
-      if (!isOperationDefinition(definition)) {
-        continue;
-      }
-      if (!definition.variableDefinitions) {
-        continue;
-      }
-      for (const { variable, type } of definition.variableDefinitions) {
-        const inputType = typeFromAST(schema, type as NonNullTypeNode);
-        if (!inputType) {
-          continue;
-        }
-        variableToType[variable.name.value] = inputType;
-      }
-    }
-    return variableToType;
-  };
-
-  const handleVariablesChange = (variables: string) => {
-    try {
-      handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
-    } catch (err) {
-      setState(state => ({ ...state, variablesSyntaxError: err.message }));
-    }
-  };
-
   const handleBodyChange = (query: string, variables?: Record<string, any>, operationName?: string) => {
-    let documentAST: DocumentNode | null = null;
     try {
-      documentAST = parse(query);
-    } catch (error) {
-      documentAST = null;
-    }
-    setState(state => ({ ...state, documentAST }));
-
-    const body: GraphQLBody = { query, operationName };
-    if (variables) {
-      body.variables = variables;
-    }
-    if (operationName) {
-      body.operationName = operationName;
-    }
-
-    // Find op if there isn't one yet
-    if (!body.operationName) {
-      const newOperationName = getCurrentOperation();
-
-      if (newOperationName) {
-        body.operationName = newOperationName;
+      const documentAST = parse(query);
+      const body: GraphQLBody = {
+        query,
+        variables,
+        operationName: operationName || getCurrentOperation(documentAST, state.body.operationName),
+      };
+      setState(state => ({ ...state, documentAST, body, variablesSyntaxError: '' }));
+      onChange(JSON.stringify(body));
+      // Remove current query highlighting
+      for (const textMarker of state.disabledOperationMarkers) {
+        textMarker?.clear();
       }
-    }
-    setState(state => ({ ...state, variablesSyntaxError: '', body }));
-    onChange(JSON.stringify(body));
-
-    if (!documentAST || !editorRef.current) {
-      return;
-    }
-    // Remove current query highlighting
-    for (const textMarker of state.disabledOperationMarkers) {
-      textMarker?.clear();
-    }
-    if (editorRef.current) {
-      const markers = documentAST.definitions
+      const markers = state.documentAST?.definitions
         .filter(isOperationDefinition)
         .filter(complement(matchesOperation(body.operationName || null)))
         .filter(hasLocation)
@@ -397,7 +320,12 @@ export const GraphQLEditor: FC<Props> = ({
             className: 'cm-gql-disabled',
           })
         );
-      setState(state => ({ ...state, disabledOperationMarkers: markers }));
+      markers && setState(state => ({ ...state, disabledOperationMarkers: markers }));
+    } catch (error) {
+      console.log('failed to parse', error);
+      setState(state => ({ ...state, documentAST: null, body:{ query, variables } }));
+      onChange(JSON.stringify({ query, variables }));
+      return;
     }
   };
 
@@ -461,7 +389,6 @@ export const GraphQLEditor: FC<Props> = ({
     activeReference,
     explorerVisible,
   } = state;
-  const { operationName } = state.body;
   let body: GraphQLBody;
   try {
     body = JSON.parse(request.body.text || '');
@@ -471,7 +398,20 @@ export const GraphQLEditor: FC<Props> = ({
 
   const query = body.query || '';
   const variables = jsonPrettify(JSON.stringify(body.variables));
-  const variableTypes = buildVariableTypes(schema);
+
+  const variableTypes: Record<string, GraphQLNonNull<any>> = {};
+  if (schema) {
+    const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition);
+    operationDefinitions?.forEach(({ variableDefinitions }) => {
+      variableDefinitions?.forEach(({ variable, type }) => {
+        const inputType = typeFromAST(schema, type as NonNullTypeNode);
+        if (inputType) {
+          variableTypes[variable.name.value] = inputType;
+        }
+      }
+      );
+    });
+  }
 
   // Create portal for GraphQL Explorer
   let graphQLExplorerPortal: React.ReactPortal | null = null;
@@ -494,7 +434,16 @@ export const GraphQLEditor: FC<Props> = ({
     jumpOptions: ModifiedGraphQLJumpOptions;
     lintOptions: LintOptions;
   } | undefined;
-
+  const handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
+    event.preventDefault();
+    if (reference) {
+      setState(state => ({
+        ...state,
+        explorerVisible: true,
+        activeReference: reference,
+      }));
+    }
+  };
   if (schema) {
     graphqlOptions = {
       hintOptions: {
@@ -504,11 +453,11 @@ export const GraphQLEditor: FC<Props> = ({
       infoOptions: {
         schema,
         renderDescription: text => `<div class="markdown-preview__content">${markdownToHTML(text)}</div>`,
-        onClick: _handleClickReference,
+        onClick: handleClickReference,
       },
       jumpOptions: {
         schema,
-        onClick: _handleClickReference,
+        onClick: handleClickReference,
       },
       lintOptions: {
         schema,
@@ -596,10 +545,22 @@ export const GraphQLEditor: FC<Props> = ({
             handleBodyChange(query, state.body.variables);
           }}
           onCursorActivity={() => {
-            handleQueryUserActivity();
+            if (state.documentAST) {
+              const newOperationName = getCurrentOperation(state.documentAST, state.body.operationName);
+              const { query, variables, operationName } = state.body;
+              if (newOperationName !== operationName) {
+                handleBodyChange(query, variables, newOperationName);
+              }
+            }
           }}
           onFocus={() => {
-            handleQueryUserActivity();
+            if (state.documentAST) {
+              const newOperationName = getCurrentOperation(state.documentAST, state.body.operationName);
+              const { query, variables, operationName } = state.body;
+              if (newOperationName !== operationName) {
+                handleBodyChange(query, variables, newOperationName);
+              }
+            }
           }}
           mode="graphql"
           placeholder=""
@@ -627,7 +588,7 @@ export const GraphQLEditor: FC<Props> = ({
       </div>
       <div className="graphql-editor__meta">
         {renderSchemaFetchMessage()}
-        <div className="graphql-editor__operation-name">{operationName ? <span title="Current operationName">{operationName}</span> : null}</div>
+        <div className="graphql-editor__operation-name">{state.body.operationName ? <span title="Current operationName">{state.body.operationName}</span> : null}</div>
       </div>
       <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
         Query Variables
@@ -647,12 +608,19 @@ export const GraphQLEditor: FC<Props> = ({
           manualPrettify={false}
           defaultValue={variables}
           className={className}
-          getAutocompleteConstants={() => Object.keys(variableTypes || {})}
+          getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{
             variableToType: variableTypes,
           }}
           noLint={!variableTypes}
-          onChange={handleVariablesChange}
+          onChange={variables => {
+            try {
+              handleBodyChange(state.body.query, JSON.parse(variables || 'null'), state.body.operationName);
+            } catch (err) {
+              setState(state => ({ ...state, variablesSyntaxError: err.message }));
+            }
+          }
+          }
           mode="graphql-variables"
           placeholder=""
         />
