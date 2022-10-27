@@ -24,7 +24,7 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
@@ -171,6 +171,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   defaultValue,
   dynamicHeight,
   enableNunjucks,
+  filter,
   filterHistory,
   getAutocompleteConstants,
   getAutocompleteSnippets,
@@ -209,7 +210,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const inputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
-  const [filter, setFilter] = useState('');
   const [originalCode, setOriginalCode] = useState('');
   const settings = useSelector(selectSettings);
   const indentSize = ignoreEditorFontSettings ? undefined : settings.editorIndentSize;
@@ -237,7 +237,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     handleGetRenderContext,
   } = useGatedNunjucks({ disabled: !enableNunjucks });
 
-  const prettifyAndSetValue = useCallback((code?: string) => {
+  const prettifyAndSetValue = useCallback((code?: string, filter?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -277,7 +277,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     if (codeMirror.current?.getValue() !== code) {
       codeMirror.current?.setValue(code || '');
     }
-  }, [autoPrettify, filter, indentChars, mode, updateFilter]);
+  }, [autoPrettify, indentChars, mode, updateFilter]);
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
@@ -392,6 +392,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
           console.log('Failed to set CodeMirror option', err.message);
         }
         onChange(codeMirror.current?.getDoc().getValue() || '');
+        setOriginalCode(codeMirror.current?.getDoc().getValue() || '');
       }
     }, debounceTime));
 
@@ -479,7 +480,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
-    prettifyAndSetValue(defaultValue || '');
+    prettifyAndSetValue(defaultValue || '', filter);
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
@@ -552,7 +553,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false },);
       }
     },
-    cursorIndex:() => codeMirror.current?.indexFromPos(codeMirror.current.getCursor()),
+    cursorIndex: () => codeMirror.current?.indexFromPos(codeMirror.current.getCursor()),
     markText: (from: CodeMirror.Position, to: CodeMirror.Position, options: CodeMirror.TextMarkerOptions) => {
       return codeMirror.current?.getDoc().markText(from, to, options);
     },
@@ -599,12 +600,21 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 title="Filter response body"
                 defaultValue={filter || ''}
                 placeholder={mode.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
-                onChange={event => {
-                  const filter = event.target.value;
-                  setFilter(filter);
-                  prettifyAndSetValue(originalCode);
-                  if (updateFilter) {
-                    updateFilter(filter);
+                onKeyDown={createKeybindingsHandler({
+                  'Enter': () => {
+                    const filter = inputRef.current?.value;
+                    if (updateFilter) {
+                      updateFilter(filter || '');
+                    }
+                    prettifyAndSetValue(originalCode, filter);
+                  },
+                })}
+                onChange={e => {
+                  if (e.target.value === '') {
+                    if (updateFilter) {
+                      updateFilter('');
+                    }
+                    prettifyAndSetValue(originalCode);
                   }
                 }}
               />) : null}
@@ -621,11 +631,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                         if (inputRef.current) {
                           inputRef.current.value = filter;
                         }
-                        setFilter(filter);
-                        prettifyAndSetValue(originalCode);
                         if (updateFilter) {
                           updateFilter(filter);
                         }
+                        prettifyAndSetValue(originalCode, filter);
                       }}
                     >
                       {filter}
