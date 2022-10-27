@@ -11,7 +11,6 @@ import { jarFromCookies } from 'insomnia-cookies';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol } from 'insomnia-url';
 import prettier from 'prettier';
-import { complement } from 'ramda';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { SetRequired } from 'type-fest';
@@ -32,6 +31,7 @@ import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import { HelpTooltip } from '../../help-tooltip';
+import { Toolbar } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
@@ -41,18 +41,6 @@ if (!explorerContainer) {
 }
 
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
-
-type HasLocation = SetRequired<OperationDefinitionNode, 'loc'>;
-const hasLocation = (def: OperationDefinitionNode): def is HasLocation => Boolean(def.loc);
-
-/** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
-const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
-  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
-  if (operationName === null && name === undefined) {
-    return true;
-  }
-  return name?.value === operationName;
-};
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
@@ -156,7 +144,7 @@ const fetchGraphQLSchemaForRequest = async ({
 
 interface GraphQLBody {
   query: string;
-  variables?: Record<string, any>;
+  variables?: string;
   operationName?: string;
 }
 
@@ -172,6 +160,7 @@ interface Props {
 
 interface State {
   body: GraphQLBody;
+  operations: string[];
   hideSchemaFetchErrors: boolean;
   variablesSyntaxError: string;
   automaticFetch: boolean;
@@ -189,18 +178,18 @@ export const GraphQLEditor: FC<Props> = ({
   uniquenessKey,
   workspaceId,
 }) => {
-  let maybeBody: GraphQLBody;
+  let requestBody: GraphQLBody;
   try {
-    maybeBody = JSON.parse(request.body.text || '');
+    requestBody = JSON.parse(request.body.text || '');
   } catch (err) {
-    maybeBody = { query: '' };
+    requestBody = { query: '' };
   }
-  if (typeof maybeBody.variables === 'string') {
-    maybeBody.variables = jsonParseOr(maybeBody.variables, '');
+  if (typeof requestBody.variables === 'string') {
+    requestBody.variables = jsonParseOr(requestBody.variables, '');
   }
   let documentAST;
   try {
-    documentAST = parse(maybeBody.query || '');
+    documentAST = parse(requestBody.query || '');
   } catch (error) {
     documentAST = null;
   }
@@ -219,10 +208,11 @@ export const GraphQLEditor: FC<Props> = ({
   }
   const [state, setState] = useState<State>({
     body: {
-      query: maybeBody.query || '',
-      variables: maybeBody.variables,
-      operationName: maybeBody.operationName,
+      query: requestBody.query || '',
+      variables: requestBody.variables,
+      operationName: requestBody.operationName,
     },
+    operations: [],
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
     activeReference: null,
@@ -270,9 +260,8 @@ export const GraphQLEditor: FC<Props> = ({
       tabWidth: settings.editorIndentSize,
     });
     const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
-
-    handleBodyChange(prettyQuery, prettyVariables);
-
+    changeQuery(prettyQuery);
+    changeVariables(prettyVariables);
     // Update editor contents
     if (editorRef.current) {
       editorRef.current?.setValue(prettyQuery);
@@ -282,42 +271,34 @@ export const GraphQLEditor: FC<Props> = ({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody,
   });
-
-  const handleBodyChange = (query: string, variables?: Record<string, any>, operationName?: string) => {
+  const changeOperationName = (operationName: string) => {
+    onChange(JSON.stringify({ ...state.body, operationName }));
+    setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
+  };
+  const changeVariables = (variables: string) => {
+    onChange(JSON.stringify({ ...state.body, variables }));
+    try {
+      setState(state => ({
+        ...state,
+        body: { ...state.body, variables },
+        variablesSyntaxError: '',
+      }));
+    } catch (err) {
+      setState(state => ({ ...state, variablesSyntaxError: err.message }));
+    }
+  };
+  const changeQuery = (query: string) => {
+    onChange(JSON.stringify({ ...state.body, query }));
     try {
       const documentAST = parse(query);
       setState(state => ({
         ...state,
-        documentAST,
-        body: {
-          query,
-          variables,
-        },
-        variablesSyntaxError: '',
-      }));
-      onChange(JSON.stringify(body));
-      // Remove current query highlighting
-      for (const textMarker of state.disabledOperationMarkers) {
-        textMarker?.clear();
-      }
-      setState(state => ({
-        ...state, disabledOperationMarkers: documentAST.definitions
-          .filter(isOperationDefinition)
-          .filter(complement(matchesOperation(body.operationName || null)))
-          .filter(hasLocation)
-          .map(({ loc: { startToken, endToken } }) =>
-            editorRef.current?.markText({ line: startToken.line - 1, ch: startToken.column - 1 }, { line: endToken.line, ch: endToken.column - 1 }, { className: 'cm-gql-disabled' })
-          ),
+        body: { ...state.body, query },
+        operations: documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || ''),
       }));
     } catch (error) {
-      console.log('failed to parse', error);
-      setState(state => ({
-        ...state,
-        documentAST: null,
-        body: { query, variables, operationName  },
-      }));
-      onChange(JSON.stringify({ query, variables }));
-      return;
+      console.warn('failed to parse', error);
+      setState(state => ({ ...state, documentAST: null, body: { ...state.body, query } }));
     }
   };
 
@@ -381,15 +362,9 @@ export const GraphQLEditor: FC<Props> = ({
     activeReference,
     explorerVisible,
   } = state;
-  let body: GraphQLBody;
-  try {
-    body = JSON.parse(request.body.text || '');
-  } catch (err) {
-    body = { query: '' };
-  }
 
+  const body: GraphQLBody = JSON.parse(request.body.text || '');
   const query = body.query || '';
-  const variables = jsonPrettify(JSON.stringify(body.variables));
 
   const variableTypes: Record<string, GraphQLNonNull<any>> = {};
   if (schema) {
@@ -459,68 +434,73 @@ export const GraphQLEditor: FC<Props> = ({
 
   return (
     <div className="graphql-editor">
-      <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
-
-        <DropdownButton className="space-left btn btn--micro btn--outlined">
-          schema <i className="fa fa-wrench" />
-        </DropdownButton>
-
-        <DropdownItem
-          onClick={() => {
-            setState(state => ({ ...state, explorerVisible: true }));
-          }}
-          disabled={!schema}
-        >
-          <i className="fa fa-file-code-o" /> Show Documentation
-        </DropdownItem>
-
-        <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
-
-        <DropdownItem
-          onClick={async () => {
-            // First, "forget" preference to hide errors so they always show
-            // again after a refresh
-            setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-            setSchemaIsFetching(true);
-            await fetchGraphQLSchemaForRequest({
-              requestId: request._id,
-              environmentId,
-              url: request.url,
-              workspaceId,
-            });
-            setSchemaIsFetching(false);
-          }}
-          stayOpenAfterClick
-        >
-          <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
-        </DropdownItem>
-        <DropdownItem
-          onClick={() => {
-            setState(state => ({ ...state, automaticFetch: !state.automaticFetch }));
-            window.localStorage.setItem('graphql.automaticFetch', state.automaticFetch.toString());
-          }}
-          stayOpenAfterClick
-        >
-          <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
-          Automatic Fetch
-          <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
-        </DropdownItem>
-
-        <DropdownDivider>Local GraphQL Schema</DropdownDivider>
-
-        <DropdownItem
-          onClick={() => {
-            setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-            loadAndSetLocalSchema();
-          }}
-        >
-          <i className="fa fa-file-code-o" /> Load schema from JSON
-          <HelpTooltip>
-            Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
-            convert GraphQL DSL to JSON.
-          </HelpTooltip>
-        </DropdownItem>
-      </Dropdown>
+      <Toolbar>
+        <Dropdown>
+          <DropdownButton className="btn btn--compact">{state.body.operationName || 'Operations'}</DropdownButton>
+          {state.operations.map(operationName => (
+            <DropdownItem
+              key={operationName}
+              onClick={() => changeOperationName(operationName)}
+            >{operationName}</DropdownItem>
+          ))}
+        </Dropdown>
+        <Dropdown>
+          <DropdownButton className="btn btn--compact">
+            schema <i className="fa fa-wrench" />
+          </DropdownButton>
+          <DropdownItem
+            onClick={() => {
+              setState(state => ({ ...state, explorerVisible: true }));
+            }}
+            disabled={!schema}
+          >
+            <i className="fa fa-file-code-o" /> Show Documentation
+          </DropdownItem>
+          <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
+          <DropdownItem
+            onClick={async () => {
+              // First, "forget" preference to hide errors so they always show
+              // again after a refresh
+              setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+              setSchemaIsFetching(true);
+              await fetchGraphQLSchemaForRequest({
+                requestId: request._id,
+                environmentId,
+                url: request.url,
+                workspaceId,
+              });
+              setSchemaIsFetching(false);
+            }}
+            stayOpenAfterClick
+          >
+            <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
+          </DropdownItem>
+          <DropdownItem
+            onClick={() => {
+              setState(state => ({ ...state, automaticFetch: !state.automaticFetch }));
+              window.localStorage.setItem('graphql.automaticFetch', state.automaticFetch.toString());
+            }}
+            stayOpenAfterClick
+          >
+            <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
+            Automatic Fetch
+            <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+          </DropdownItem>
+          <DropdownDivider>Local GraphQL Schema</DropdownDivider>
+          <DropdownItem
+            onClick={() => {
+              setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+              loadAndSetLocalSchema();
+            }}
+          >
+            <i className="fa fa-file-code-o" /> Load schema from JSON
+            <HelpTooltip>
+              Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
+              convert GraphQL DSL to JSON.
+            </HelpTooltip>
+          </DropdownItem>
+        </Dropdown>
+      </Toolbar>
 
       <div className="graphql-editor__query">
         <CodeEditor
@@ -530,21 +510,7 @@ export const GraphQLEditor: FC<Props> = ({
           uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
           defaultValue={query}
           className={className}
-          onChange={query => {
-            // Since we're editing the query, we may be changing the operation name, so
-            // Don't pass it to the body change in order to automatically re-detect it
-            // based on the current cursor position.
-            handleBodyChange(query, state.body.variables);
-          }}
-          onCursorActivity={() => {
-            const editor = editorRef.current;
-            if (!state.documentAST || !editor || !editor.hasFocus()) {
-              return;
-            }
-            const cursorIndex = editor?.cursorIndex() || 0;
-            const selectedOperationName = state.documentAST.definitions.filter(isOperationDefinition).find(({ name, loc }) => name && loc && cursorIndex >= loc.start && cursorIndex <= loc.end)?.name?.value || '';
-            setState(state => ({ ...state, body:{ ...state.body, operationName:selectedOperationName } }));
-          }}
+          onChange={changeQuery}
           mode="graphql"
           placeholder=""
           hintOptions={graphqlOptions?.hintOptions}
@@ -571,7 +537,6 @@ export const GraphQLEditor: FC<Props> = ({
       </div>
       <div className="graphql-editor__meta">
         {renderSchemaFetchMessage()}
-        <div className="graphql-editor__operation-name">{state.body.operationName ? <span title="Current operationName">{state.body.operationName}</span> : null}</div>
       </div>
       <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
         Query Variables
@@ -589,21 +554,14 @@ export const GraphQLEditor: FC<Props> = ({
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
           manualPrettify={false}
-          defaultValue={variables}
+          defaultValue={body.variables}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{
             variableToType: variableTypes,
           }}
           noLint={!variableTypes}
-          onChange={variables => {
-            try {
-              handleBodyChange(state.body.query, JSON.parse(variables || 'null'));
-            } catch (err) {
-              setState(state => ({ ...state, variablesSyntaxError: err.message }));
-            }
-          }
-          }
+          onChange={changeVariables}
           mode="graphql-variables"
           placeholder=""
         />
