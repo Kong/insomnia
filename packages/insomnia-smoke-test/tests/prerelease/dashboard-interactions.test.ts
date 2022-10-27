@@ -72,5 +72,80 @@ test.describe('Dashboard', async () => {
       await filter.fill('invalid');
       await expect(page.locator('.card-badge')).toHaveCount(0);
     });
+
+    test('Can create, rename and delete a document', async ({ page }) => {
+      await page.click('[data-testid="project"]');
+      // Create new document
+      await page.click('text=Create');
+      await page.click('button:has-text("Design Document")');
+      await page.locator('text=Create').nth(1).click();
+
+      // Return to dashboard
+      await page.click('[data-testid="project"]');
+      await expect(page.locator('.app')).toContainText('my-spec.yaml');
+
+      // Rename document
+      await page.click('text=Documentmy-spec.yamljust now >> button');
+      await page.locator('button:has-text("Rename")').first().click();
+      await page.locator('text=Rename DocumentName Rename >> input[type="text"]').fill('test123');
+      await page.click('#root button:has-text("Rename")');
+      await expect(page.locator('.app')).toContainText('test123');
+
+      // Duplicate document
+      await page.click('text=Documenttest123just now >> button');
+      await page.locator('button:has-text("Duplicate")').first().click();
+      await page.locator('input[name="name"]').fill('test123-duplicate');
+      await page.click('#root button:has-text("Duplicate")');
+
+      // Return to dashboard
+      await page.click('[data-testid="project"]');
+      await expect(page.locator('.app')).toContainText('test123-duplicate');
+
+      const workspaceCards = page.locator('.card-badge');
+      await expect(workspaceCards).toHaveCount(3);
+
+      // Delete document
+      await page.click('text=Documenttest123just now >> button');
+      await page.locator('button:has-text("Delete")').nth(1).click();
+      await page.locator('text=Yes').click();
+      await expect(workspaceCards).toHaveCount(2);
+    });
+
+    test('Can create, rename and delete a collection', async ({ page }) => {
+      await page.click('[data-testid="project"]');
+      // Create new collection
+      await page.click('text=Create');
+      await page.click('button:has-text("Request Collection")');
+      await page.locator('text=Create').nth(1).click();
+
+      // Return to dashboard
+      await page.click('[data-testid="project"]');
+      await expect(page.locator('.app')).toContainText('My Collection');
+
+      // Rename collection
+      await page.click('text=CollectionMy Collectionjust now >> button');
+      await page.locator('button:has-text("Rename")').first().click();
+      await page.locator('text=Rename CollectionName Rename >> input[type="text"]').fill('test123');
+      await page.click('#root button:has-text("Rename")');
+      await expect(page.locator('.app')).toContainText('test123');
+
+      // Duplicate collection
+      await page.click('text=Collectiontest123just now >> button');
+      await page.locator('button:has-text("Duplicate")').first().click();
+      await page.locator('input[name="name"]').fill('test123-duplicate');
+      await page.click('#root button:has-text("Duplicate")');
+
+      // Return to dashboard
+      await page.click('[data-testid="project"]');
+      await expect(page.locator('.app')).toContainText('test123-duplicate');
+      const workspaceCards = page.locator('.card-badge');
+      await expect(workspaceCards).toHaveCount(3);
+
+      // Delete collection
+      await page.click('text=Collectiontest123just now >> button');
+      await page.locator('button:has-text("Delete")').nth(1).click();
+      await page.locator('text=Yes').click();
+      await expect(workspaceCards).toHaveCount(2);
+    });
   });
 });
