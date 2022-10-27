@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "insomnia-importers",
   "version": "3.6.1-beta.2",
   "author": "Kong <office@konghq.com>",
