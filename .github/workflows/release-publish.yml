@@ -136,13 +136,6 @@ jobs:
           snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
           release: stable
 
-      - name: Publish npm packages
-        run: |
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm run publish -- --pre-dist-tag ${{ contains(github.event.inputs.version, 'alpha') && 'alpha' || 'beta' }} --yes
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == 'false' }}
         uses: docker://kong/release-script:latest

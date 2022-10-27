@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "insomnia-inso",
   "version": "3.6.1-beta.2",
   "homepage": "https://insomnia.rest",
@@ -38,8 +39,7 @@
     "package": "esr src/scripts/pkg.ts",
     "pkg": "pkg .",
     "postpackage": "esr src/scripts/verify-pkg.ts",
-    "artifacts": "esr src/scripts/artifacts.ts",
-    "prepublishOnly": "npm run build:production"
+    "artifacts": "esr src/scripts/artifacts.ts"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",

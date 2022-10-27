@@ -1,5 +1,5 @@
 {
-  "private": false,
+  "private": true,
   "name": "insomnia-testing",
   "license": "Apache-2.0",
   "version": "3.6.1-beta.2",
@@ -22,8 +22,7 @@
     "postclean": "rimraf dist",
     "test": "jest",
     "build": "tsc --build tsconfig.build.json",
-    "watch": "npm run build -- --watch",
-    "prepublish": "npm run build"
+    "watch": "npm run build -- --watch"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",

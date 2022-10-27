@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "openapi-2-kong",
   "license": "Apache-2.0",
   "version": "3.6.1-beta.2",
@@ -12,8 +13,7 @@
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest",
-    "prepublish": "npm run build"
+    "test": "jest"
   },
   "dependencies": {
     "openapi-types": "^8.0.0",
