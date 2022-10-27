@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import { CodeEditor, CodeEditorProps, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle, CodeEditorProps } from '../codemirror/code-editor';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -71,7 +71,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>((pro
     didChange,
     ...rest
   } = props;
-  const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
   const [error, setError] = useState('');
   const getValue = useCallback(() => {
     if (!editorRef.current) {

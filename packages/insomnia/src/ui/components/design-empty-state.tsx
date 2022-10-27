@@ -43,10 +43,10 @@ const ExampleButton = styled.div({
 });
 
 interface Props {
-  onUpdateContents: (contents: string) => void;
+  onImport: (contents: string) => void;
 }
 
-const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
+const ImportSpecButton: FC<Props> = ({ onImport }) => {
   const handleImportFile = useCallback(async () => {
     const { canceled, filePath } = await selectFileOrFolder({
       extensions: ['yml', 'yaml', 'json'],
@@ -58,8 +58,8 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
     }
 
     const contents = String(await fs.promises.readFile(filePath));
-    onUpdateContents(contents);
-  }, [onUpdateContents]);
+    onImport(contents);
+  }, [onImport]);
 
   const handleImportUri = useCallback(async () => {
     showPrompt({
@@ -73,10 +73,10 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
           return;
         }
         const contents = await response.text();
-        onUpdateContents(contents);
+        onImport(contents);
       },
     });
-  }, [onUpdateContents]);
+  }, [onImport]);
 
   return (
     <Dropdown>
@@ -100,7 +100,7 @@ const ImportSpecButton: FC<Props> = ({ onUpdateContents }) => {
   );
 };
 
-const SecondaryAction: FC<Props> = ({ onUpdateContents }) => {
+const SecondaryAction: FC<Props> = ({ onImport }) => {
   const PETSTORE_EXAMPLE_URI = 'https://gist.githubusercontent.com/gschier/4e2278d5a50b4bbf1110755d9b48a9f9/raw/801c05266ae102bcb9288ab92c60f52d45557425/petstore-spec.yaml';
 
   const onClick = useCallback(async () => {
@@ -109,20 +109,20 @@ const SecondaryAction: FC<Props> = ({ onUpdateContents }) => {
       return;
     }
     const contents = await response.text();
-    onUpdateContents(contents);
-  }, [onUpdateContents]);
+    onImport(contents);
+  }, [onImport]);
 
   return (
     <div>
       <div>
         Or import an existing OpenAPI spec or <ExampleButton onClick={onClick}>start from an example</ExampleButton>
       </div>
-      <ImportSpecButton onUpdateContents={onUpdateContents} />
+      <ImportSpecButton onImport={onImport} />
     </div>
   );
 };
 
-export const DesignEmptyState: FC<Props> = ({ onUpdateContents }) => {
+export const DesignEmptyState: FC<Props> = ({ onImport }) => {
   const activeApiSpec = useSelector(selectActiveApiSpec);
 
   if (!activeApiSpec || activeApiSpec.contents) {
@@ -137,7 +137,7 @@ export const DesignEmptyState: FC<Props> = ({ onUpdateContents }) => {
           documentationLinks.workingWithDesignDocs,
           documentationLinks.introductionToInsomnia,
         ]}
-        secondaryAction={<SecondaryAction onUpdateContents={onUpdateContents} />}
+        secondaryAction={<SecondaryAction onImport={onImport} />}
         title="Enter an OpenAPI specification here"
       />
     </Wrapper>

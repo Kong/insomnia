@@ -1,13 +1,13 @@
 import React, { forwardRef } from 'react';
 
-import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
 interface Props {
   value: string;
   responseId?: string;
 }
 
-export const ResponseRawViewer = forwardRef<UnconnectedCodeEditor, Props>(({ responseId, value }, ref) => (
+export const ResponseRawViewer = forwardRef<CodeEditorHandle, Props>(({ responseId, value }, ref) => (
   <CodeEditor
     ref={ref}
     defaultValue={value}

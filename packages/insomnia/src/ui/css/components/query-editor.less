@@ -1,7 +1,7 @@
 .query-editor {
   display: grid;
   height: 100%;
-  grid-template-rows: auto minmax(100px, 1fr) var(--line-height-md);
+  grid-template-rows: auto 1fr;
   grid-template-columns: 100%;
 
   .query-editor__preview {
@@ -18,6 +18,8 @@
   .query-editor__editor {
     min-height: 2rem;
     max-height: 100%;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
 
     .key-value-editor {

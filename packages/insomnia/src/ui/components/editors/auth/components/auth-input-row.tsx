@@ -8,7 +8,7 @@ import { selectSettings } from '../../../../redux/selectors';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
 
-interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompleteConstants' | 'mode'> {
+interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompleteConstants'> {
   label: string;
   property: string;
   help?: ReactNode;
@@ -16,7 +16,7 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
   disabled?: boolean;
 }
 
-export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, mode, help, disabled = false }) => {
+export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, help, disabled = false }) => {
   const { showPasswords } = useSelector(selectSettings);
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
@@ -33,9 +33,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
       <OneLineEditor
         id={id}
         type={isMasked ? 'password' : 'text'}
-        mode={mode}
         onChange={onChange}
-        disabled={authentication.disabled}
         readOnly={disabled}
         defaultValue={authentication[property] || ''}
         getAutocompleteConstants={getAutocompleteConstants}

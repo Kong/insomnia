@@ -12,7 +12,7 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
-import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -118,13 +118,13 @@ const WebSocketRequestForm: FC<FormProps> = ({
   environmentId,
   workspaceId,
 }) => {
-  const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
 
   useEffect(() => {
     const init = async () => {
       const payload = await models.webSocketPayload.getByParentId(request._id);
       const msg = payload?.value || '';
-      editorRef.current?.codeMirror?.setValue(msg);
+      editorRef.current?.setValue(msg);
     };
 
     init();

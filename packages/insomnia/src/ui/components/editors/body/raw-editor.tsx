@@ -1,9 +1,9 @@
 import React, { FC, Fragment } from 'react';
 
-import { CodeEditor,  CodeEditorOnChange } from '../../codemirror/code-editor';
+import { CodeEditor } from '../../codemirror/code-editor';
 
 interface Props {
-  onChange: CodeEditorOnChange;
+  onChange: (value: string) => void;
   content: string;
   contentType: string;
   uniquenessKey: string;

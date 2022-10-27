@@ -12,7 +12,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
 const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
 const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
@@ -46,7 +46,7 @@ export interface GenerateCodeModalHandle {
 }
 export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<UnconnectedCodeEditor>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
 
   let storedTarget: HTTPSnippetTarget | undefined;
   let storedClient: HTTPSnippetClient | undefined;

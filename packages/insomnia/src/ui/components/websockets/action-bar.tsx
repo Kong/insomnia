@@ -6,7 +6,7 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/r
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { OneLineEditor } from '../codemirror/one-line-editor';
+import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
@@ -69,9 +69,9 @@ export const ConnectionCircle = styled.span({
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, environmentId, defaultValue, onChange, readyState }) => {
   const isOpen = readyState === ReadyState.OPEN;
-  const editorRef = useRef<OneLineEditor>(null);
+  const editorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
-    editorRef.current?.focus(true);
+    editorRef.current?.focusEnd();
   }, []);
   const handleSubmit = useCallback(async () => {
     if (isOpen) {
@@ -152,7 +152,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
                 handleSubmit();
               }
             }}
-            disabled={readyState === ReadyState.OPEN}
+            readOnly={readyState === ReadyState.OPEN}
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}
             onChange={onChange}

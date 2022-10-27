@@ -1,493 +1,152 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, Fragment, useRef } from 'react';
+import styled from 'styled-components';
 
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { generateId } from '../../../common/misc';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { PromptButton } from '../base/prompt-button';
-import { AutocompleteHandler, Pair, Row } from './row';
+import { createKeybindingsHandler } from '../keydown-binder';
+import { AutocompleteHandler, Pair, Row, RowHandle } from './row';
 
-const NAME = 'name';
-const VALUE = 'value';
-const DESCRIPTION = 'description';
-const ENTER = 13;
-const BACKSPACE = 8;
-const UP = 38;
-const DOWN = 40;
-const LEFT = 37;
-const RIGHT = 39;
-
+export const Toolbar = styled.div({
+  boxSizing: 'content-box',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  backgroundColor: 'var(--color-bg)',
+  display: 'flex',
+  flexDirection: 'row',
+  borderBottom: '1px solid var(--hl-md)',
+  height: 'var(--line-height-sm)',
+  fontSize: 'var(--font-size-sm)',
+  '& > button': {
+    color: 'var(--hl)',
+    padding: 'var(--padding-xs) var(--padding-xs)',
+    height: '100%',
+  },
+});
 interface Props {
-  onChange: Function;
-  pairs: any[];
-  handleGetAutocompleteNameConstants?: AutocompleteHandler;
-  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   allowFile?: boolean;
   allowMultiline?: boolean;
-  sortable?: boolean;
-  maxPairs?: number;
-  namePlaceholder?: string;
-  valuePlaceholder?: string;
-  descriptionPlaceholder?: string;
-  valueInputType?: string;
-  disableDelete?: boolean;
-  onToggleDisable?: Function;
-  onChangeType?: Function;
-  onChooseFile?: Function;
-  onDelete?: Function;
-  onCreate?: Function;
   className?: string;
+  descriptionPlaceholder?: string;
+  handleGetAutocompleteNameConstants?: AutocompleteHandler;
+  handleGetAutocompleteValueConstants?: AutocompleteHandler;
   isDisabled?: boolean;
   isWebSocketRequest?: boolean;
+  namePlaceholder?: string;
+  onChange: Function;
+  pairs: Pair[];
+  valuePlaceholder?: string;
 }
 
-interface State {
-  pairs: Props['pairs'];
-  displayDescription: boolean;
-}
+export const KeyValueEditor: FC<Props> = ({
+  allowFile,
+  allowMultiline,
+  className,
+  descriptionPlaceholder,
+  handleGetAutocompleteNameConstants,
+  handleGetAutocompleteValueConstants,
+  isDisabled,
+  isWebSocketRequest,
+  namePlaceholder,
+  onChange,
+  pairs,
+  valuePlaceholder,
+}) => {
+  const rowRef = useRef<RowHandle>(null);
+  // We should make the pair.id property required and pass them in from the parent
+  const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class KeyValueEditor extends PureComponent<Props, State> {
-  _focusedPairId: string | null = null;
-  _focusedField: string | null = NAME;
-  // @ts-expect-error -- TSCONVERSION being imported as a value but should be usable as a type
-  private _rows: Row[] = [];
-  _triggerTimeout: NodeJS.Timeout | null = null;
+  const readOnlyPairs = [
+    { name: 'Connection', value: 'Upgrade' },
+    { name: 'Upgrade', value: 'websocket' },
+    { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
+    { name: 'Sec-WebSocket-Version', value: '13' },
+    { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
+  ];
 
-  constructor(props: Props) {
-    super(props);
-    // Migrate and add IDs to all pairs (pairs didn't used to have IDs)
-    const pairs = [...props.pairs];
-
-    for (const pair of pairs) {
-      if (props.maxPairs !== 1 && !pair.id) {
-        pair.id = generateId('pair');
-      }
-    }
-
-    this.state = {
-      pairs,
-      // If any pair has a description, display description field
-      displayDescription: props.pairs.some(p => p.description),
-    };
-  }
-
-  // @ts-expect-error -- TSCONVERSION being imported as a value but should be usable as a type
-  private _setRowRef(n?: Row) {
-    // NOTE: We're not handling unmounting (may lead to a bug)
-    if (n) {
-      this._rows[n.props.pair.id] = n;
-    }
-  }
-
-  _handlePairChange(pair: Pair) {
-    const i = this._getPairIndex(pair);
-
-    const pairs: Pair[] = [
-      ...this.state.pairs.slice(0, i),
-      Object.assign({}, pair),
-      ...this.state.pairs.slice(i + 1),
-    ];
-
-    this._onChange(pairs);
-  }
-
-  _handleDeleteAll() {
-    this._onChange([]);
-  }
-
-  _handleMove(pairToMove: Pair, pairToTarget: Pair, targetOffset: 1 | -1) {
-    if (pairToMove.id === pairToTarget.id) {
-      // Nothing to do
-      return;
-    }
-
-    const withoutPair = this.state.pairs.filter(p => p.id !== pairToMove.id);
-    let toIndex = withoutPair.findIndex(p => p.id === pairToTarget.id);
-
-    // If we're moving below, add 1 to the index
-    if (targetOffset < 0) {
-      toIndex += 1;
-    }
-
-    const pairs = [
-      ...withoutPair.slice(0, toIndex),
-      Object.assign({}, pairToMove),
-      ...withoutPair.slice(toIndex),
-    ];
-
-    this._onChange(pairs);
-  }
-
-  _handlePairDelete(pair: Pair) {
-    const i = this.state.pairs.findIndex(p => p.id === pair.id);
-
-    this._deletePair(i, true);
-  }
-
-  _handleBlurName() {
-    this._focusedField = null;
-  }
-
-  _handleBlurValue() {
-    this._focusedField = null;
-  }
-
-  _handleBlurDescription() {
-    this._focusedField = null;
-  }
-
-  _handleFocusName(pair: Pair) {
-    this._setFocusedPair(pair);
-
-    this._focusedField = NAME;
-
-    // TODO: this may be a bug; pair.id is not an index into _rows
-    this._rows[pair.id as any].focusNameEnd();
-  }
-
-  _handleFocusValue(pair: Pair) {
-    this._setFocusedPair(pair);
-
-    this._focusedField = VALUE;
-
-    // TODO: this may be a bug; pair.id is not an index into _rows
-    this._rows[pair.id as any].focusValueEnd();
-  }
-
-  _handleFocusDescription(pair: Pair) {
-    this._setFocusedPair(pair);
-
-    this._focusedField = DESCRIPTION;
-
-    // TODO: this may be a bug; pair.id is not an index into _rows
-    this._rows[pair.id as any].focusDescriptionEnd();
-  }
-
-  _handleAddFromName() {
-    this._focusedField = NAME;
-
-    this._addPair();
-  }
-
-  // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromValue() {
-    this._focusedField = VALUE;
-
-    this._addPair();
-  }
-
-  _handleAddFromDescription() {
-    this._focusedField = DESCRIPTION;
-
-    this._addPair();
-  }
-
-  _handleKeyDown(_pair: Pair, event: KeyboardEvent | React.KeyboardEvent<Element>, value?: any) {
-    if (event.metaKey || event.ctrlKey) {
-      return;
-    }
-
-    if (event.keyCode === ENTER) {
-      this._focusNext(true);
-    } else if (event.keyCode === BACKSPACE) {
-      if (!value) {
-        this._focusPrevious(true);
-      }
-    } else if (event.keyCode === DOWN) {
-      event.preventDefault();
-
-      this._focusNextPair();
-    } else if (event.keyCode === UP) {
-      event.preventDefault();
-
-      this._focusPreviousPair();
-    } else if (event.keyCode === LEFT) {
-      // TODO: Implement this
-    } else if (event.keyCode === RIGHT) {
-      // TODO: Implement this
-    }
-  }
-
-  _onChange(pairs: Pair[]) {
-    this.setState(
-      {
-        pairs,
-      },
-      () => {
-        if (this._triggerTimeout !== null) {
-          clearTimeout(this._triggerTimeout);
-        }
-        this._triggerTimeout = setTimeout(() => {
-          this.props.onChange(pairs);
-        }, DEBOUNCE_MILLIS);
-      },
-    );
-  }
-
-  _addPair(position?: number) {
-    const numPairs = this.state.pairs.length;
-    const { maxPairs } = this.props;
-
-    // Don't add any more pairs
-    if (maxPairs !== undefined && numPairs >= maxPairs) {
-      return;
-    }
-
-    position = position === undefined ? numPairs : position;
-    const pair: Pair = {
-      id: '',
+  const keyDownHandler = createKeybindingsHandler({
+    'Enter': () => onChange([...pairs, {
+      id: generateId('pair'),
       name: '',
       value: '',
       description: '',
-    };
+    }]),
+  });
 
-    // Only add ids if we need 'em
-    if (this.props.maxPairs !== 1) {
-      pair.id = generateId('pair');
-    }
+  const [showDescription, setShowDescription] = React.useState(false);
 
-    const pairs = [
-      ...this.state.pairs.slice(0, position),
-      pair,
-      ...this.state.pairs.slice(position),
-    ];
-
-    this._setFocusedPair(pair);
-
-    this._onChange(pairs);
-
-    this.props.onCreate?.();
-  }
-
-  _deletePair(position: number, breakFocus = false) {
-    if (this.props.disableDelete) {
-      return;
-    }
-
-    const focusedPosition = this._getFocusedPairIndex();
-
-    const pair = this.state.pairs[position];
-    this.props.onDelete?.(pair);
-    const pairs = [...this.state.pairs.slice(0, position), ...this.state.pairs.slice(position + 1)];
-
-    if (focusedPosition >= position) {
-      const newPosition = breakFocus ? -1 : focusedPosition - 1;
-
-      this._setFocusedPair(pairs[newPosition]);
-    }
-
-    this._onChange(pairs);
-  }
-
-  _focusNext(addIfValue = false) {
-    if (this.props.maxPairs === 1) {
-      return;
-    }
-
-    if (this._focusedField === NAME) {
-      this._focusedField = VALUE;
-
-      this._updateFocus();
-    } else if (this._focusedField === VALUE && this.state.displayDescription) {
-      this._focusedField = DESCRIPTION;
-
-      this._updateFocus();
-    } else if (this._focusedField === VALUE || this._focusedField === DESCRIPTION) {
-      this._focusedField = NAME;
-
-      if (addIfValue) {
-        this._addPair(this._getFocusedPairIndex() + 1);
-      } else {
-        this._focusNextPair();
-      }
-    }
-  }
-
-  _focusPrevious(deleteIfEmpty = false) {
-    if (this._focusedField === DESCRIPTION) {
-      this._focusedField = VALUE;
-
-      this._updateFocus();
-    } else if (this._focusedField === VALUE) {
-      this._focusedField = NAME;
-
-      this._updateFocus();
-    } else if (this._focusedField === NAME) {
-      const p = this._getFocusedPair();
-
-      const notEmpty = !p.name && !p.value && !p.fileName;
-
-      if (!this.props.disableDelete && notEmpty && deleteIfEmpty) {
-        this._focusedField = VALUE;
-
-        this._deletePair(this._getFocusedPairIndex());
-      } else if (!p.name) {
-        this._focusedField = VALUE;
-
-        this._focusPreviousPair();
-      }
-    }
-  }
-
-  _focusNextPair() {
-    if (this.props.maxPairs === 1) {
-      return;
-    }
-
-    const i = this._getFocusedPairIndex();
-
-    if (i === -1) {
-      // No focused pair currently
-      return;
-    }
-
-    if (i >= this.state.pairs.length - 1) {
-      // Focused on last one, so add another
-      this._addPair();
-    } else {
-      this._setFocusedPair(this.state.pairs[i + 1]);
-
-      this._updateFocus();
-    }
-  }
-
-  _focusPreviousPair() {
-    if (this.props.maxPairs === 1) {
-      return;
-    }
-
-    const i = this._getFocusedPairIndex();
-
-    if (i > 0) {
-      this._setFocusedPair(this.state.pairs[i - 1]);
-
-      this._updateFocus();
-    }
-  }
-
-  _updateFocus() {
-    const pair = this._getFocusedPair();
-
-    const id = pair ? pair.id : 'n/a';
-    const row = this._rows[id];
-
-    if (!row) {
-      return;
-    }
-
-    if (this._focusedField === NAME) {
-      row.focusNameEnd();
-    } else if (this._focusedField === VALUE) {
-      row.focusValueEnd();
-    } else if (this._focusedField === DESCRIPTION) {
-      row.focusDescriptionEnd();
-    }
-  }
-
-  _getPairIndex(pair: Pair) {
-    if (pair) {
-      return this.state.pairs.findIndex(p => p.id === pair.id);
-    } else {
-      return -1;
-    }
-  }
-
-  _getFocusedPairIndex() {
-    return this._getPairIndex(this._getFocusedPair());
-  }
-
-  _getFocusedPair() {
-    return this.state.pairs.find(p => p.id === this._focusedPairId) || null;
-  }
-
-  _setFocusedPair(pair: Pair) {
-    if (pair) {
-      this._focusedPairId = pair.id || 'n/a';
-    } else {
-      this._focusedPairId = null;
-    }
-  }
-
-  _toggleDescription() {
-    this.setState({
-      displayDescription: !this.state.displayDescription,
-    });
-  }
-
-  componentDidUpdate() {
-    this._updateFocus();
-  }
-
-  render() {
-    const {
-      maxPairs,
-      className,
-      valueInputType,
-      valuePlaceholder,
-      namePlaceholder,
-      descriptionPlaceholder,
-      handleGetAutocompleteNameConstants,
-      handleGetAutocompleteValueConstants,
-      allowFile,
-      allowMultiline,
-      sortable,
-      disableDelete,
-      isDisabled,
-      isWebSocketRequest,
-    } = this.props;
-    const { pairs } = this.state;
-
-    const classes = classnames('key-value-editor', 'wide', className);
-    const hasMaxPairsAndNotExceeded = !maxPairs || pairs.length < maxPairs;
-    const showNewHeaderInput = !isDisabled && hasMaxPairsAndNotExceeded;
-    const readOnlyPairs = [
-      { name: 'Connection', value: 'Upgrade' },
-      { name: 'Upgrade', value: 'websocket' },
-      { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
-      { name: 'Sec-WebSocket-Version', value: '13' },
-      { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
-    ];
-    return (
-      <ul className={classes}>
+  return (
+    <Fragment>
+      <Toolbar>
+        <button
+          className="btn btn--compact"
+          onClick={() =>
+            onChange([
+              ...pairs,
+              {
+                id: generateId('pair'),
+                name: '',
+                value: '',
+                description: '',
+              },
+            ])
+          }
+        >
+          Add
+        </button>
+        <PromptButton className="btn btn--compact" onClick={() => onChange([])}>
+          Delete All
+        </PromptButton>
+        <button
+          className="btn btn--compact"
+          onClick={() => setShowDescription(!showDescription)}
+        >
+          Toggle Description
+        </button>
+      </Toolbar>
+      <ul onKeyDown={keyDownHandler} className={classnames('key-value-editor', 'wide', className)}>
+        {pairs.length === 0 && (
+          <Row
+            key='empty-row'
+            showDescription={showDescription}
+            descriptionPlaceholder={descriptionPlaceholder}
+            hideButtons
+            readOnly
+            onClick={() => onChange([...pairs, {
+              id: generateId('pair'),
+              name: '',
+              value: '',
+              description: '',
+            }])}
+            pair={{ name: '', value: '' }}
+            onChange={() => {}}
+            addPair={() => {}}
+          />
+        )}
         {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
           <Row
             key={i}
-            index={i}
-            sortable={true}
-            displayDescription={this.state.displayDescription}
+            showDescription={showDescription}
             descriptionPlaceholder={descriptionPlaceholder}
             readOnly
             hideButtons
             forceInput
             pair={pair}
+            onChange={() => {}}
+            addPair={() => {}}
           />
         )) : null}
-        {pairs.map((pair, i) => (
+        {pairsWithIds.map(pair => (
           <Row
-            noDelete={disableDelete}
-            key={pair.id || 'no-id'}
-            index={i} // For dragging
-            ref={this._setRowRef}
-            sortable={sortable}
-            displayDescription={this.state.displayDescription}
+            key={pair.id}
+            showDescription={showDescription}
+            ref={rowRef}
             namePlaceholder={namePlaceholder}
             valuePlaceholder={valuePlaceholder}
             descriptionPlaceholder={descriptionPlaceholder}
-            valueInputType={valueInputType}
-            onChange={this._handlePairChange}
-            onDelete={this._handlePairDelete}
-            onFocusName={this._handleFocusName}
-            onFocusValue={this._handleFocusValue}
-            onFocusDescription={this._handleFocusDescription}
-            onKeyDown={this._handleKeyDown}
-            onBlurName={this._handleBlurName}
-            onBlurValue={this._handleBlurValue}
-            onBlurDescription={this._handleBlurDescription}
-            onMove={this._handleMove}
+            onChange={pair => onChange(pairsWithIds.map(p => (p.id === pair.id ? pair : p)))}
+            onDelete={pair => onChange(pairsWithIds.filter(p => p.id !== pair.id))}
             handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
             handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
             allowMultiline={allowMultiline}
@@ -495,47 +154,14 @@ export class KeyValueEditor extends PureComponent<Props, State> {
             readOnly={isDisabled}
             hideButtons={isDisabled}
             pair={pair}
-          />
-        ))}
-
-        {showNewHeaderInput ? (
-          <Row
-            key="empty-row"
-            hideButtons
-            sortable
-            noDropZone
-            forceInput
-            index={-1}
-            onChange={() => {}}
-            onDelete={() => {}}
-            renderLeftIcon={() => (
-              <Dropdown>
-                <DropdownButton>
-                  <i className="fa fa-cog" />
-                </DropdownButton>
-                <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
-                  Delete All Items
-                </DropdownItem>
-                <DropdownItem onClick={this._toggleDescription}>Toggle Description</DropdownItem>
-              </Dropdown>
-            )}
-            className="key-value-editor__row-wrapper--clicker"
-            displayDescription={this.state.displayDescription}
-            namePlaceholder={`New ${namePlaceholder}`}
-            valuePlaceholder={`New ${valuePlaceholder}`}
-            descriptionPlaceholder={`New ${descriptionPlaceholder}`}
-            onFocusName={this._handleAddFromName}
-            onFocusValue={this._handleAddFromValue}
-            onFocusDescription={this._handleAddFromDescription}
-            allowMultiline={allowMultiline}
-            allowFile={allowFile}
-            pair={{
+            addPair={() => onChange([...pairsWithIds, {
               name: '',
               value: '',
-            }}
+              description: '',
+            }])}
           />
-        ) : null}
+        ))}
       </ul>
-    );
-  }
-}
+    </Fragment>
+  );
+};

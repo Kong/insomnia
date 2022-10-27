@@ -24,7 +24,7 @@ import { DropdownDivider } from './base/dropdown/dropdown-divider';
 import { DropdownHint } from './base/dropdown/dropdown-hint';
 import { DropdownItem } from './base/dropdown/dropdown-item';
 import { PromptButton } from './base/prompt-button';
-import { OneLineEditor } from './codemirror/one-line-editor';
+import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
@@ -57,7 +57,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
-  const inputRef = useRef<OneLineEditor>(null);
+  const inputRef = useRef<OneLineEditorHandle>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
@@ -65,7 +65,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   };
   const focusInput = useCallback(() => {
     if (inputRef.current) {
-      inputRef.current.focus(true);
+      inputRef.current.focusEnd();
     }
   }, [inputRef]);
 
@@ -301,7 +301,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
   });
 
-  const [lastPastedText, setLastPastedText] = useState<string>();
+  const lastPastedTextRef = useRef('');
   const handleImport = useCallback(async (text: string) => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
@@ -333,25 +333,27 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [activeRequest]);
 
   const handleUrlChange = useCallback(async (url: string) => {
-    const pastedText = lastPastedText;
+    const pastedText = lastPastedTextRef.current;
     // If no pasted text in the queue, just fire the regular change handler
     if (!pastedText) {
       onUrlChange(request, url);
       return;
     }
     // Reset pasted text cache
-    setLastPastedText(undefined);
+    lastPastedTextRef.current = '';
     // Attempt to import the pasted text
     const importedRequest = await handleImport(pastedText);
     // Update depending on whether something was imported
     if (!importedRequest) {
       onUrlChange(request, url);
     }
-  }, [handleImport, lastPastedText, onUrlChange, request]);
+  }, [handleImport, onUrlChange, request]);
+
   const handleUrlPaste = useCallback((event: ClipboardEvent) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange
-    setLastPastedText(event.clipboardData?.getData('text/plain'));
+    lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
   }, []);
+
   const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
 
   const handleSendDropdownHide = useCallback(() => {
@@ -369,6 +371,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       />
       <div className="urlbar__flex__right">
         <OneLineEditor
+          id="request-url-bar"
           key={uniquenessKey}
           ref={inputRef}
           onPaste={handleUrlPaste}

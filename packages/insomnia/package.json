@@ -113,7 +113,6 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
-    "@babel/plugin-proposal-decorators": "^7.4.0",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@getinsomnia/api-client": "0.0.4",
     "@tanstack/react-virtual": "3.0.0-beta.18",
@@ -150,7 +149,7 @@
     "@types/redux-mock-store": "^1.0.2",
     "@types/rimraf": "^3.0.2",
     "@types/styled-components": "^5.1.23",
-    "@types/swagger-ui-react": "^4.1.1",
+    "@types/swagger-ui-react": "^4.11.0",
     "@types/tough-cookie": "^2.3.7",
     "@types/uuid": "^8.3.4",
     "@types/vkbeautify": "^0.99.2",
@@ -158,7 +157,6 @@
     "@types/yaml": "^1.9.7",
     "@vitejs/plugin-react": "^1.2.0",
     "buffer": "^6.0.3",
-    "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.3.1",
     "codemirror": "^5.65.2",
     "codemirror-graphql": "^1.2.12",
@@ -203,7 +201,7 @@
     "reselect": "^4.1.5",
     "srp-js": "^0.2.1",
     "styled-components": "^5.3.3",
-    "swagger-ui-react": "4.14.3",
+    "swagger-ui-react": "4.15.0",
     "tinykeys": "^1.4.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
@@ -211,13 +209,6 @@
     "vite-plugin-commonjs-externals": "^0.1.1",
     "vkbeautify": "^0.99.1",
     "ws": "^8.8.1"
-  },
-  "overrides": {
-    "swagger-ui-react": {
-      "react-debounce-input": "3.3.0",
-      "react-inspector": "6.0.1",
-      "react-copy-to-clipboard": "5.1.0"
-    }
   },
   "dev": {
     "dev-server-port": 3334

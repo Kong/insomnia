@@ -11,7 +11,7 @@ export const AsapAuth: FC = () => (
     <AuthInputRow label='Issuer (iss)' property='issuer' />
     <AuthInputRow label='Subject (sub)' property='subject' />
     <AuthInputRow label='Audience (aud)' property='audience' />
-    <AuthInputRow label='Additional Claims' property='additionalClaims' mode='application/json' />
+    <AuthInputRow label='Additional Claims' property='additionalClaims' />
     <AuthInputRow label='Key ID (kid)' property='keyId' />
     <AuthPrivateKeyRow
       label='Private Key'

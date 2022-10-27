@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { forwardRef, ReactElement, useCallback, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
-import { CodeEditor, UnconnectedCodeEditor } from './codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from './codemirror/code-editor';
 import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
   tall?: boolean;
 }
 
-export const MarkdownEditor = forwardRef<UnconnectedCodeEditor, Props>(({
+export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
   mode,
   placeholder,
   defaultPreviewMode,

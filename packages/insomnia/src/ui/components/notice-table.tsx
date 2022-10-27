@@ -242,7 +242,7 @@ export const NoticeTable = <T extends Notice>({
             </ErrorCount>
           )}
         </div>
-        <Button onClick={onCollapse}>
+        <Button className='btn btn--compact' onClick={onCollapse}>
           {collapsed ? 'Show' : 'Hide'} Details
           <SvgIcon
             style={{ marginLeft: 'var(--padding-xs)' }}

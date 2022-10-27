@@ -1,7 +1,6 @@
 import classnames from 'classnames';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useMount } from 'react-use';
 import YAML from 'yaml';
 
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
@@ -164,9 +163,7 @@ export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, 
       refresh();
     },
   }), [refresh]);
-  useMount(() => {
-    refresh();
-  });
+
   const toggleAll = async (items: Item[], forceAdd = false) => {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;

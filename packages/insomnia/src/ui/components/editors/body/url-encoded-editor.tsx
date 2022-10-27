@@ -11,7 +11,6 @@ export const UrlEncodedEditor: FC<Props> = ({ parameters, onChange }) => (
   <div className="scrollable-container tall wide">
     <div className="scrollable">
       <KeyValueEditor
-        sortable
         allowMultiline
         namePlaceholder="name"
         valuePlaceholder="value"
