@@ -283,7 +283,7 @@ export const GraphQLEditor: FC<Props> = ({
     beautifyRequestBody,
   });
 
-  const handleBodyChange = (query: string, variables?: Record<string, any>) => {
+  const handleBodyChange = (query: string, variables?: Record<string, any>, operationName?: string) => {
     try {
       const documentAST = parse(query);
       setState(state => ({
@@ -314,8 +314,7 @@ export const GraphQLEditor: FC<Props> = ({
       setState(state => ({
         ...state,
         documentAST: null,
-        body: { query, variables },
-        selectedOperationName:'',
+        body: { query, variables, operationName  },
       }));
       onChange(JSON.stringify({ query, variables }));
       return;
