@@ -13,7 +13,6 @@ import { buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol }
 import prettier from 'prettier';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { SetRequired } from 'type-fest';
 
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
@@ -275,7 +274,8 @@ export const GraphQLEditor: FC<Props> = ({
     onChange(JSON.stringify({ ...state.body, operationName }));
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
-  const changeVariables = (variables: string) => {
+  const changeVariables = (variablesInput: string) => {
+    const variables = JSON.parse(variablesInput || 'null');
     onChange(JSON.stringify({ ...state.body, variables }));
     try {
       setState(state => ({
@@ -554,7 +554,7 @@ export const GraphQLEditor: FC<Props> = ({
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
           manualPrettify={false}
-          defaultValue={body.variables}
+          defaultValue={jsonPrettify(JSON.stringify(body.variables))}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{
