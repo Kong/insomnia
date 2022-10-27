@@ -137,7 +137,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   const workspace = useSelector(selectActiveWorkspace);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const environments = useSelector(selectEnvironments);
-
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
@@ -194,9 +193,14 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     // NOTE: Fetch the environment first because it might not be up to date.
     // For example, editing the body updates silently.
     const realEnvironment = await models.environment.getById(environment._id);
+    const isRoot = realEnvironment?.parentId === workspace?._id;
+    if (isRoot) {
+      setState({ ...state, rootEnvironment: realEnvironment });
+    }
     if (realEnvironment) {
       models.environment.update(realEnvironment, patch);
     }
+
   }
 
   const getSelectedEnvironment = (): Environment | null => {
