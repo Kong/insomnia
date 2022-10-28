@@ -10,6 +10,7 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
+import { axiosRequest } from '../../main/network/axios-request';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
@@ -214,7 +215,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
     },
     __private: {
-      axios: window.main?.axiosRequest,
+      axios: process.type === 'renderer' ? window.main?.axiosRequest : axiosRequest,
       analytics,
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {
