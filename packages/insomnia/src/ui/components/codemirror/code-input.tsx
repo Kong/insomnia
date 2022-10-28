@@ -111,9 +111,7 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
       extraKeys: CodeMirror.normalizeKeyMap({
         'Ctrl-Space': 'autocomplete',
       }),
-      // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
-      //   be in the default options. DO NOT REMOVE THIS.
-      gutters: ['CodeMirror-lint-markers'],
+      gutters: [],
       mode: !handleRender ? 'text/plain' : {
         name: 'nunjucks',
         baseMode: 'text/plain',
