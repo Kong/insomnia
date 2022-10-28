@@ -26,8 +26,8 @@ export const renameProjectAction: ActionFunction = async ({
   params,
 }) => {
   const formData = await request.formData();
-  const name = formData.get('name');
 
+  const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
   const { projectId } = params;
@@ -35,13 +35,12 @@ export const renameProjectAction: ActionFunction = async ({
 
   const project = await models.project.getById(projectId);
 
-  if (!project) {
-    throw new Error('Project not found');
-  }
+  invariant(project, 'Project not found');
 
-  if (isRemoteProject(project)) {
-    throw new Error('Cannot rename remote project');
-  }
+  invariant(
+    !isRemoteProject(project),
+    'Cannot rename remote project',
+  );
 
   await models.project.update(project, { name });
 };
@@ -50,9 +49,8 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project ID is required');
   const project = await models.project.getById(projectId);
-  if (!project) {
-    throw new Error('Project not found');
-  }
+  invariant(project, 'Project not found');
+
   await models.stats.incrementDeletedRequestsForDescendents(project);
   await models.project.remove(project);
 
@@ -67,23 +65,18 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 }) => {
   const { projectId } = params;
 
-  if (!projectId) {
-    throw new Error('Invalid project ID');
-  }
+  invariant(typeof projectId === 'string', 'Project ID is required');
 
   const project = await models.project.getById(projectId);
 
-  if (!project) {
-    throw new Response('Project was not found', {
-      status: 404,
-      statusText: 'Not Found',
-    });
-  }
+  invariant(project, 'Project not found');
 
   const formData = await request.formData();
+
   const name = formData.get('name');
-  const scope = formData.get('scope');
   invariant(typeof name === 'string', 'Name is required');
+
+  const scope = formData.get('scope');
   invariant(scope === 'design' || scope === 'collection', 'Scope is required');
 
   const flushId = await database.bufferChanges();
@@ -130,14 +123,10 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   request,
 }) => {
   const { projectId } = params;
-
   invariant(projectId, 'projectId is required');
 
   const project = await models.project.getById(projectId);
-
-  if (!project) {
-    throw Error('Project was not found');
-  }
+  invariant(project, 'Project not found');
 
   const formData = await request.formData();
 
@@ -145,10 +134,7 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
-
-  if (!workspace) {
-    throw new Error('Workspace was not found');
-  }
+  invariant(workspace, 'Workspace not found');
 
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
@@ -159,23 +145,19 @@ export const deleteWorkspaceAction: ActionFunction = async ({
 export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const projectId = formData.get('projectId');
-  const workspaceId = formData.get('workspaceId');
-
   invariant(typeof projectId === 'string', 'Project ID is required');
+
+  const workspaceId = formData.get('workspaceId');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
-
-  if (!workspace) {
-    throw new Error('Workspace was not found');
-  }
+  invariant(workspace, 'Workspace not found');
 
   const name = formData.get('name') || '';
   invariant(typeof name === 'string', 'Name is required');
+
   const duplicateToProject = await models.project.getById(projectId);
-  if (!duplicateToProject) {
-    throw new Error('Project could not be found');
-  }
+  invariant(duplicateToProject, 'Project not found');
 
   const newWorkspace = await workspaceOperations.duplicate(workspace, {
     name,
@@ -202,28 +184,26 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const workspaceId = formData.get('workspaceId');
-  const name = formData.get('name');
-  const description = formData.get('description');
-
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
+
+  const description = formData.get('description');
   if (description) {
     invariant(typeof description === 'string', 'Description is required');
   }
 
   const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
 
-  if (workspace?.scope === 'design') {
+  if (workspace.scope === 'design') {
     const apiSpec = await models.apiSpec.getByParentId(workspaceId);
     invariant(apiSpec, 'No Api Spec found for this workspace');
 
     await models.apiSpec.update(apiSpec, {
       fileName: name,
     });
-  }
-
-  if (!workspace) {
-    throw new Error('No Workspace was found');
   }
 
   await models.workspace.update(workspace, {

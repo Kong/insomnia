@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useRef } from 'react';
+import { OverlayContainer } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -21,47 +22,49 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
 
   useEffect(() => {
     modalRef.current?.show();
-  });
+  }, []);
 
   return (
-    <Modal {...modalProps} ref={modalRef}>
-      <ModalHeader>{`Duplicate ${workspace && getWorkspaceLabel(workspace).singular}`}</ModalHeader>
-      <ModalBody className="wide">
-        <Form
-          onSubmit={() => {
-            modalRef.current?.hide();
-          }}
-          method='post'
-          action={`/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
-          id="workspace-duplicate-form"
-          className="wide pad"
-        >
-          <div className="form-control form-control--wide form-control--outlined">
-            <label>
-              New Name
-              <input name="name" defaultValue={workspace.name} />
-            </label>
-          </div>
-          <input name="workspaceId" value={workspace._id} readOnly className="hidden" />
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.project.singular} to duplicate into
-              <select defaultValue={workspace.parentId} name="projectId">
-                {projects.map(project => (
-                  <option key={project._id} value={project._id}>
-                    {project.name} ({isDefaultProject(project) ? strings.defaultProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </Form>
-      </ModalBody>
-      <ModalFooter>
-        <button type="submit" form="workspace-duplicate-form" className="btn">
-          Duplicate
-        </button>
-      </ModalFooter>
-    </Modal>
+    <OverlayContainer onClick={e => e.stopPropagation()}>
+      <Modal {...modalProps} ref={modalRef}>
+        <ModalHeader>{`Duplicate ${workspace && getWorkspaceLabel(workspace).singular}`}</ModalHeader>
+        <ModalBody className="wide">
+          <Form
+            onSubmit={() => {
+              modalRef.current?.hide();
+            }}
+            method='post'
+            action={`/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
+            id="workspace-duplicate-form"
+            className="wide pad"
+          >
+            <div className="form-control form-control--wide form-control--outlined">
+              <label>
+                New Name
+                <input name="name" defaultValue={workspace.name} />
+              </label>
+            </div>
+            <input name="workspaceId" value={workspace._id} readOnly className="hidden" />
+            <div className="form-control form-control--outlined">
+              <label>
+                {strings.project.singular} to duplicate into
+                <select defaultValue={workspace.parentId} name="projectId">
+                  {projects.map(project => (
+                    <option key={project._id} value={project._id}>
+                      {project.name} ({isDefaultProject(project) ? strings.defaultProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </Form>
+        </ModalBody>
+        <ModalFooter>
+          <button type="submit" form="workspace-duplicate-form" className="btn">
+            Duplicate
+          </button>
+        </ModalFooter>
+      </Modal>
+    </OverlayContainer>
   );
 };
