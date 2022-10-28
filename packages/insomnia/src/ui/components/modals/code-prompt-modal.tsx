@@ -122,7 +122,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               <div className="form-control form-control--outlined form-control--tall tall">
                 <CodeEditor
                   hideLineNumbers
-                  manualPrettify
+                  showPrettifyButton
                   className="tall"
                   defaultValue={defaultValue}
                   placeholder={placeholder}

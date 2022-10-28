@@ -10,12 +10,12 @@ interface Props {
 export const ResponseRawViewer = forwardRef<CodeEditorHandle, Props>(({ responseId, value }, ref) => (
   <CodeEditor
     ref={ref}
+    className="raw-editor"
     defaultValue={value}
     hideLineNumbers
     mode="text/plain"
     noMatchBrackets
     placeholder="..."
-    raw
     readOnly
     uniquenessKey={responseId}
   />

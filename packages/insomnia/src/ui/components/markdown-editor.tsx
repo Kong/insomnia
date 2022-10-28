@@ -52,12 +52,11 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
             hideGutters
             hideLineNumbers
             dynamicHeight={!tall}
-            manualPrettify
+            showPrettifyButton
             noStyleActiveLine
             enableNunjucks
             mode={mode || 'text/x-markdown'}
             placeholder={placeholder}
-            debounceMillis={300}
             defaultValue={markdown}
             onChange={handleChange}
           />
