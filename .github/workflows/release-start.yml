@@ -56,11 +56,11 @@ jobs:
 
       - name: Lerna version (stable)
         if: github.event.inputs.channel == 'stable'
-        run: npm run version -- --yes 'minor'
+        run: npm run version -- --yes --no-push 'minor'
 
       - name: Lerna version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
-        run: npm run version -- --yes --preid "${{ github.event.inputs.channel }}" "${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
+        run: npm run version -- --yes --no-push --preid "${{ github.event.inputs.channel }}" "${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
 
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
