@@ -17,16 +17,12 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request }) =>
   invariant(typeof remoteId === 'string', 'Remote Id is required');
 
   const vcs = getVCS();
-  if (!vcs) {
-    throw new Error('VCS is not defined');
-  }
+  invariant(vcs, 'VCS is not defined');
 
   const remoteBackendProjects = await vcs.remoteBackendProjects(remoteId);
   const backendProject = remoteBackendProjects.find(p => p.id === backendProjectId);
 
-  if (!backendProject) {
-    throw new Error('Could not find backend project');
-  }
+  invariant(backendProject, 'Backend project not found');
 
   const remoteProjects = await database.find<RemoteProject>(models.project.type, {
     // @ts-expect-error -- Improve database query typing
@@ -53,21 +49,13 @@ export const remoteCollectionsLoader: LoaderFunction = async ({ params }) => {
 
   const project = await models.project.getById(projectId);
 
-  if (!project) {
-    throw new Error('Could not find project');
-  }
+  invariant(project, 'Project not found');
 
   const vcs = getVCS();
-
-  if (!vcs) {
-    throw new Error('VCS is not defined');
-  }
+  invariant(vcs, 'VCS is not defined');
 
   const remoteId = project.remoteId;
-
-  if (!remoteId) {
-    throw new Error('Project is not a remote project');
-  }
+  invariant(remoteId, 'Project is not a remote project');
 
   const localBackendProjects = await vcs.localBackendProjects();
 

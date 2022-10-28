@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   LoaderFunction,
   useFetcher,
+  useLoaderData,
   useNavigate,
   useRevalidator,
-  useRouteLoaderData,
   useSearchParams,
   useSubmit,
 } from 'react-router-dom';
@@ -102,12 +102,7 @@ export const loader: LoaderFunction = async ({
 
   const project = await models.project.getById(projectId);
 
-  if (!project) {
-    throw new Response('Project was not found', {
-      status: 404,
-      statusText: 'Not Found',
-    });
-  }
+  invariant(project, 'Project was not found');
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
@@ -263,14 +258,8 @@ export const loader: LoaderFunction = async ({
   };
 };
 
-export const useProjectLoaderData = () => {
-  const data = useRouteLoaderData('/project/:projectId') as LoaderData;
-
-  return data;
-};
-
 const ProjectRoute: FC = () => {
-  const { workspaces, activeProject, projects } = useProjectLoaderData();
+  const { workspaces, activeProject, projects } = useLoaderData() as LoaderData;
   const [searchParams] = useSearchParams();
   const isLoading = useSelector(selectIsLoading);
   const dispatch = useDispatch();

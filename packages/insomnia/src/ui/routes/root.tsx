@@ -25,7 +25,7 @@ interface State {
   isMigratingChildren: boolean;
 }
 
-const App = () => {
+const Root = () => {
   const [state, setState] = useState<State>({
     isMigratingChildren: false,
   });
@@ -95,4 +95,4 @@ const App = () => {
   );
 };
 
-export default withDragDropContext(App);
+export default withDragDropContext(Root);
