@@ -2,11 +2,7 @@ import React, { FC, useEffect, useRef } from 'react';
 import { useFetcher } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
-import {
-  isRemoteProject,
-  Project,
-  projectHasSettings,
-} from '../../../models/project';
+import { isRemoteProject, Project } from '../../../models/project';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -17,7 +13,7 @@ export interface ProjectSettingsModalProps extends ModalProps {
   project: Project;
 }
 
-export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, ...modalProps }) => {
+export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, onHide }) => {
   const modalRef = useRef<ModalHandle>(null);
   const { submit } = useFetcher();
 
@@ -25,14 +21,10 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, .
     modalRef.current?.show();
   });
 
-  if (!projectHasSettings(project)) {
-    return null;
-  }
-
   const isRemote = isRemoteProject(project);
 
   return (
-    <Modal {...modalProps} ref={modalRef}>
+    <Modal onHide={onHide} ref={modalRef}>
       <ModalHeader key={`header::${project._id}`}>
         {strings.project.singular} Settings{' '}
         <div className="txt-sm selectable faint monospace">{project._id}</div>

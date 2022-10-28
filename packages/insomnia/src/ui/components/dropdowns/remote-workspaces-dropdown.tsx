@@ -4,10 +4,7 @@ import styled from 'styled-components';
 
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
-import {
-  isRemoteProject,
-  Project,
-} from '../../../models/project';
+import { RemoteProject } from '../../../models/project';
 import { RemoteCollectionsLoaderData } from '../../routes/remote-collections';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -18,7 +15,7 @@ import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 interface Props {
-  project: Project;
+  project: RemoteProject;
 }
 
 const PullButton = styled(Button)({
@@ -70,7 +67,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
   const { load, data, state } = useFetcher<RemoteCollectionsLoaderData>();
 
   useEffect(() => {
-    if (project && isRemoteProject(project) && state === 'idle' && !data) {
+    if (isLoggedIn() && project && state === 'idle' && !data) {
       load(`/project/${project._id}/remote-collections`);
     }
   }, [data, load, project, state]);
@@ -89,10 +86,6 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
         </PullButton>
       </Tooltip>
     );
-  }
-
-  if (!project || !isRemoteProject(project)) {
-    return null;
   }
 
   return (

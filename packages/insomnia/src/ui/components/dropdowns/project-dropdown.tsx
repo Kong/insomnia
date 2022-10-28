@@ -1,4 +1,4 @@
-import { partition } from 'ramda';
+import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useState } from 'react';
 import { useFetcher, useNavigate, useRevalidator } from 'react-router-dom';
 import styled from 'styled-components';
@@ -8,7 +8,6 @@ import {
   isDefaultProject,
   isRemoteProject,
   Project,
-  projectHasSettings,
 } from '../../../models/project';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -89,7 +88,9 @@ export const ProjectDropdown: FC<Props> = ({ activeProject, projects }) => {
   const navigate = useNavigate();
   const { submit } = useFetcher();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [defaultProjects, userProjects] = partition(isDefaultProject, projects);
+  const defaultProject = projects.find(isDefaultProject);
+  invariant(defaultProject, 'No default project found');
+  const userProjects = projects.filter(p => !isDefaultProject(p));
 
   return (
     <Fragment>
@@ -98,28 +99,18 @@ export const ProjectDropdown: FC<Props> = ({ activeProject, projects }) => {
           {activeProject.name}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>
-        {defaultProjects.map(project => {
-          return (
-            <DropdownItem
-              key={project._id}
-              onClick={() => navigate(`/project/${project._id}`)}
-            >
-              <Item>
-                {isDefaultProject(project) ? (
-                  <HomeIcon />
-                ) : isRemoteProject(project) ? (
-                  <RemoteProjectIcon />
-                ) : (
-                  <LocalProjectIcon />
-                )}
-                {project.name}
-                {project._id === activeProject._id && (
-                  <Checkmark icon="checkmark" />
-                )}
-              </Item>
-            </DropdownItem>
-          );
-        })}
+        <DropdownItem
+          key={defaultProject._id}
+          onClick={() => navigate(`/project/${defaultProject._id}`)}
+        >
+          <Item>
+            <HomeIcon />
+            {defaultProject.name}
+            {defaultProject._id === activeProject._id && (
+              <Checkmark icon="checkmark" />
+            )}
+          </Item>
+        </DropdownItem>
         <DropdownDivider>
           All {strings.project.plural.toLowerCase()}{' '}
           {state === 'loading' && <Spinner />}
@@ -131,9 +122,7 @@ export const ProjectDropdown: FC<Props> = ({ activeProject, projects }) => {
               onClick={() => navigate(`/project/${project._id}`)}
             >
               <Item>
-                {isDefaultProject(project) ? (
-                  <HomeIcon />
-                ) : isRemoteProject(project) ? (
+                {isRemoteProject(project) ? (
                   <RemoteProjectIcon />
                 ) : (
                   <LocalProjectIcon />
@@ -146,7 +135,7 @@ export const ProjectDropdown: FC<Props> = ({ activeProject, projects }) => {
             </DropdownItem>
           );
         })}
-        {projectHasSettings(activeProject) && (
+        {!isDefaultProject(activeProject) && (
           <>
             <DropdownDivider />
             <DropdownItem onClick={() => setIsSettingsModalOpen(true)}>

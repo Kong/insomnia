@@ -42,43 +42,36 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
     }
   }, [workspace.scope]);
 
-  const handleClick = useCallback(
-    async (p: DocumentAction) => {
-      startLoading(p.label);
+  const handleClick = useCallback(async (p: DocumentAction) => {
+    startLoading(p.label);
 
-      try {
-        const context = {
-          ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-          ...pluginContexts.data.init(project._id),
-          ...pluginContexts.store.init(p.plugin),
-        };
-        await p.action(context, parseApiSpec(apiSpec.contents));
-      } catch (err) {
-        showError({
-          title: 'Document Action Failed',
-          error: err,
-        });
-      } finally {
-        stopLoading(p.label);
-      }
-    },
-    [apiSpec.contents, project._id, startLoading, stopLoading]
-  );
+    try {
+      const context = {
+        ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+        ...pluginContexts.data.init(project._id),
+        ...pluginContexts.store.init(p.plugin),
+      };
+      await p.action(context, parseApiSpec(apiSpec.contents));
+    } catch (err) {
+      showError({
+        title: 'Document Action Failed',
+        error: err,
+      });
+    } finally {
+      stopLoading(p.label);
+    }
+  }, [apiSpec.contents, project._id, startLoading, stopLoading]);
 
-  const renderPluginDropdownItems = useCallback(
-    () =>
-      actionPlugins.map(p => (
-        <DropdownItem
-          key={`${p.plugin.name}:${p.label}`}
-          onClick={() => handleClick(p)}
-          stayOpenAfterClick={!p.hideAfterClick}
-        >
-          {isLoading(p.label) && spinner}
-          {p.label}
-        </DropdownItem>
-      )),
-    [actionPlugins, handleClick, isLoading]
-  );
+  const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
+    <DropdownItem
+      key={`${p.plugin.name}:${p.label}`}
+      onClick={() => handleClick(p)}
+      stayOpenAfterClick={!p.hideAfterClick}
+    >
+      {isLoading(p.label) && spinner}
+      {p.label}
+    </DropdownItem>
+  )), [actionPlugins, handleClick, isLoading]);
 
   return { renderPluginDropdownItems, refresh };
 };
@@ -90,8 +83,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
 
   const workspaceName = getWorkspaceName(workspace, apiSpec);
 
-  const { refresh, renderPluginDropdownItems } =
-    useDocumentActionPlugins(props);
+  const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins(props);
 
   return (
     <Fragment>
@@ -100,9 +92,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           <SvgIcon icon="ellipsis" />
         </DropdownButton>
 
-        <DropdownItem onClick={() => setIsDuplicateModalOpen(true)}>
-          Duplicate
-        </DropdownItem>
+        <DropdownItem onClick={() => setIsDuplicateModalOpen(true)}>Duplicate</DropdownItem>
         <DropdownItem
           onClick={() => {
             showPrompt({

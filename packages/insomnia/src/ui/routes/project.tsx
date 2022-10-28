@@ -25,7 +25,7 @@ import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
-import { Project } from '../../models/project';
+import { isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
@@ -243,11 +243,15 @@ export const loader: LoaderFunction = async ({
     .sort(sortWorkspaces);
 
   // Load all projects
-  const vcs = getVCS();
-  if (vcs && isLoggedIn()) {
-    const teams = await vcs.teams();
-    const projects = await Promise.all(teams.map(initializeProjectFromTeam));
-    await database.batchModifyDocs({ upsert: projects });
+  try {
+    const vcs = getVCS();
+    if (vcs && isLoggedIn()) {
+      const teams = await vcs.teams();
+      const projects = await Promise.all(teams.map(initializeProjectFromTeam));
+      await database.batchModifyDocs({ upsert: projects });
+    }
+  } catch {
+    console.log('Failed to load projects');
   }
 
   const projects = sortProjects(await models.project.all());
@@ -405,7 +409,7 @@ const ProjectRoute: FC = () => {
                       });
                     }}
                   />
-                  <RemoteWorkspacesDropdown project={activeProject} />
+                  {isRemoteProject(activeProject) && <RemoteWorkspacesDropdown project={activeProject} />}
                   <Dropdown>
                     <DropdownButton buttonClass={CreateButton}>
                       Create <i className="fa fa-caret-down pad-left-sm" />
