@@ -1,3 +1,4 @@
+import { invariant } from '@remix-run/router';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -66,13 +67,10 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
 
   async function handleMoveToWorkspace() {
     const { activeWorkspaceIdToCopyTo, request } = state;
-    if (!request || !activeWorkspaceIdToCopyTo) {
-      return;
-    }
+    invariant(request, 'Request is required');
+    invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-    if (!workspace) {
-      return;
-    }
+    invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     await requestOperations.update(request, {
       metaSortKey: -1e9,
@@ -83,13 +81,10 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
 
   async function handleCopyToWorkspace() {
     const { activeWorkspaceIdToCopyTo, request } = state;
-    if (!request || !activeWorkspaceIdToCopyTo) {
-      return;
-    }
+    invariant(request, 'Request is required');
+    invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-    if (!workspace) {
-      return;
-    }
+    invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     await requestOperations.duplicate(request, {
       metaSortKey: -1e9,
@@ -101,10 +96,8 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     models.stats.incrementCreatedRequests();
   }
   const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, workspace } = state;
-  if (!request) {
-    return null;
-  }
   const toggleCheckBox = async (event: any) => {
+    invariant(request, 'Request is required');
     const updated = await requestOperations.update(request, {
       [event.currentTarget.name]: event.currentTarget.checked,
     });
@@ -124,9 +117,10 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
               <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
               <input
                 type="text"
-                placeholder={request.url || 'My Request'}
-                defaultValue={request.name}
+                placeholder={request?.url || 'My Request'}
+                defaultValue={request?.name}
                 onChange={async event => {
+                  invariant(request, 'Request is required');
                   const updatedRequest = await requestOperations.update(request, { name: event.target.value });
                   setState(state => ({
                     ...state,
@@ -136,7 +130,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
               />
             </label>
           </div>
-          {isGrpcRequest(request)
+          {request && isGrpcRequest(request)
             ? (
               <p className="faint italic">
                 Are there any gRPC settings you expect to see? Create a{' '}
@@ -152,8 +146,9 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       className="margin-top"
                       defaultPreviewMode={defaultPreviewMode}
                       placeholder="Write a description"
-                      defaultValue={request.description}
+                      defaultValue={request?.description || ''}
                       onChange={async (description: string) => {
+                        invariant(request, 'Request is required');
                         const updated = await models.request.update(request, {
                           description,
                         });
@@ -181,7 +176,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         <input
                           type="checkbox"
                           name="settingSendCookies"
-                          checked={request['settingSendCookies']}
+                          checked={request?.settingSendCookies}
                           onChange={toggleCheckBox}
                         />
                       </label>
@@ -192,7 +187,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         <input
                           type="checkbox"
                           name="settingStoreCookies"
-                          checked={request['settingStoreCookies']}
+                          checked={request?.settingStoreCookies}
                           onChange={toggleCheckBox}
                         />
                       </label>
@@ -203,7 +198,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         <input
                           type="checkbox"
                           name="settingEncodeUrl"
-                          checked={request['settingEncodeUrl']}
+                          checked={request?.settingEncodeUrl}
                           onChange={toggleCheckBox}
                         />
                         <HelpTooltip position="top" className="space-left">
@@ -218,7 +213,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         <input
                           type="checkbox"
                           name="settingDisableRenderRequestBody"
-                          checked={request['settingDisableRenderRequestBody']}
+                          checked={request?.settingDisableRenderRequestBody}
                           onChange={toggleCheckBox}
                         />
                         <HelpTooltip position="top" className="space-left">
@@ -237,7 +232,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         <input
                           type="checkbox"
                           name="settingRebuildPath"
-                          checked={request['settingRebuildPath']}
+                          checked={request?.settingRebuildPath}
                           onChange={toggleCheckBox}
                         />
                       </label>
@@ -251,6 +246,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                         defaultValue={state.request?.settingFollowRedirects}
                         name="settingFollowRedirects"
                         onChange={async event => {
+                          invariant(request, 'Request is required');
                           const updated = await models.request.update(request, {
                             [event.currentTarget.name]: event.currentTarget.value,
                           });
