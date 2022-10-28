@@ -1,6 +1,6 @@
 import React, { forwardRef, Fragment, useImperativeHandle, useRef } from 'react';
 
-import { CodeEditor, CodeEditorHandle } from './code-editor';
+import { CodeInput, CodeInputHandle } from './code-input';
 
 interface Props {
   defaultValue: string;
@@ -30,41 +30,38 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   readOnly,
   type,
 }, ref) => {
-  const editorRef = useRef<CodeEditorHandle>(null);
+  const codeInputRef = useRef<CodeInputHandle>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
-      editorRef.current && !editorRef.current.hasFocus() && editorRef.current?.focus();
+      codeInputRef.current && !codeInputRef.current.hasFocus() && codeInputRef.current?.focus();
     },
     focusEnd: () => {
-      editorRef.current && !editorRef.current.hasFocus() && editorRef.current?.focusEnd();
+      codeInputRef.current && !codeInputRef.current.hasFocus() && codeInputRef.current?.focusEnd();
     },
     selectAll: () => {
-      editorRef.current?.selectAll();
+      codeInputRef.current?.selectAll();
     },
   }));
 
   return (
     <Fragment>
-      <CodeEditor
-        ref={editorRef}
-        defaultTabBehavior
-        hideLineNumbers
-        hideScrollbars
-        noMatchBrackets
-        noStyleActiveLine
-        noLint
+      <CodeInput
+        ref={codeInputRef}
         id={id}
-        singleLine
-        ignoreEditorFontSettings
-        enableNunjucks
-        autoCloseBrackets={false}
-        tabIndex={0}
         type={type || 'text'}
         placeholder={placeholder}
         onPaste={onPaste}
-        onKeyDown={event => onKeyDown?.(event, editorRef.current?.getValue())}
-        onFocus={() => editorRef.current?.setAttribute('data-focused', 'on')}
+        onBlur={() => {
+          // Editor was already removed from the DOM, so do nothing
+          if (!codeInputRef.current) {
+            return;
+          }
+          // Set focused state
+          codeInputRef.current?.removeAttribute('data-focused');
+        }}
+        onKeyDown={event => onKeyDown?.(event, codeInputRef.current?.getValue())}
+        onFocus={() => codeInputRef.current?.setAttribute('data-focused', 'on')}
         onChange={onChange}
         getAutocompleteConstants={getAutocompleteConstants}
         className="editor--single-line"
