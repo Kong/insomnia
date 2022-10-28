@@ -141,7 +141,7 @@ jobs:
           BRANCH: ${{ github.ref_name }}
 
       - name: update-pull-request
-        uses: kt3k/update-pr-description@v1.0.1
+        uses: kt3k/update-pr-description@v2.0.0
         with:
           pr_body: |
             Download release artifacts [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
