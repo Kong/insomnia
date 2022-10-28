@@ -1,3 +1,4 @@
+import { invariant } from '@remix-run/router';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -109,15 +110,12 @@ export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHan
     activeWorkspaceIdToCopyTo,
     workspace,
   } = state;
-  if (!requestGroup) {
-    return null;
-  }
   return (
     <Modal ref={modalRef}>
       <ModalHeader>
         Folder Settings{' '}
         <span className="txt-sm selectable faint monospace">
-          {requestGroup ? requestGroup._id : ''}
+          {requestGroup?._id || ''}
         </span>
       </ModalHeader>
       <ModalBody className="pad"><div>
@@ -126,9 +124,10 @@ export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHan
             Name
             <input
               type="text"
-              placeholder={requestGroup.name || 'My Folder'}
-              defaultValue={requestGroup.name}
+              placeholder={requestGroup?.name || 'My Folder'}
+              defaultValue={requestGroup?.name}
               onChange={async event => {
+                invariant(requestGroup, 'No request group');
                 const updatedRequestGroup = await models.requestGroup.update(requestGroup, { name: event.target.value });
                 setState(state => ({ ...state, requestGroup: updatedRequestGroup }));
               }}
@@ -141,8 +140,9 @@ export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHan
             className="margin-top"
             defaultPreviewMode={defaultPreviewMode}
             placeholder="Write a description"
-            defaultValue={requestGroup.description}
+            defaultValue={requestGroup?.description || ''}
             onChange={async (description: string) => {
+              invariant(requestGroup, 'No request group');
               const updated = await models.requestGroup.update(requestGroup, { description });
               setState(state => ({ ...state, requestGroup: updated, defaultPreviewMode: false }));
             }}
