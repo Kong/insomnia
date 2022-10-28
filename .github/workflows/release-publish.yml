@@ -46,7 +46,7 @@ jobs:
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
       - name: Create Release for Inso CLI
-        uses: avakar/tag-and-release@v1
+        uses: filfreire/tag-and-release@v1
         id: release_inso_cli
         with:
           tag_name: lib@${{ env.INSO_VERSION }}
@@ -70,7 +70,7 @@ jobs:
           draft: false
 
       - name: Create Tag and Release
-        uses: avakar/tag-and-release@v1
+        uses: filfreire/tag-and-release@v1
         id: core_tag_and_release
         with:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
