@@ -30,6 +30,8 @@
     "insomnia-plugin-core-themes",
     "insomnia-plugin-kong-declarative-config",
     "insomnia-plugin-kong-kubernetes-config",
-    "insomnia-plugin-kong-portal"
+    "insomnia-plugin-kong-portal",
+    "insomnia-plugin-default-headers",
+    "insomnia-plugin-os"
   ]
 }

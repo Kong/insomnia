@@ -71,6 +71,7 @@
     "insomnia-plugin-base64": "3.6.1-beta.2",
     "insomnia-plugin-cookie-jar": "3.6.1-beta.2",
     "insomnia-plugin-core-themes": "3.6.1-beta.2",
+    "insomnia-plugin-default-headers": "3.6.1-beta.2",
     "insomnia-plugin-file": "3.6.1-beta.2",
     "insomnia-plugin-hash": "3.6.1-beta.2",
     "insomnia-plugin-jsonpath": "3.6.1-beta.2",
