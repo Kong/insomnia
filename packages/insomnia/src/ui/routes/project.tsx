@@ -5,6 +5,7 @@ import {
   LoaderFunction,
   useFetcher,
   useNavigate,
+  useRevalidator,
   useRouteLoaderData,
   useSearchParams,
   useSubmit,
@@ -270,6 +271,7 @@ const ProjectRoute: FC = () => {
   const isLoading = useSelector(selectIsLoading);
   const dispatch = useDispatch();
   const fetcher = useFetcher();
+  const { revalidate } = useRevalidator();
 
   const submit = useSubmit();
   const navigate = useNavigate();
@@ -329,19 +331,19 @@ const ProjectRoute: FC = () => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         dispatch(
-          importUri(uri, { forceToWorkspace: ForceToWorkspace.existing })
+          importUri(uri, { forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate })
         );
       },
     });
-  }, [dispatch]);
+  }, [dispatch, revalidate]);
 
   const importFromClipboard = useCallback(() => {
-    dispatch(importClipBoard({ forceToWorkspace: ForceToWorkspace.existing }));
-  }, [dispatch]);
+    dispatch(importClipBoard({ forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate }));
+  }, [dispatch, revalidate]);
 
   const importFromFile = useCallback(() => {
-    dispatch(importFile({ forceToWorkspace: ForceToWorkspace.existing }));
-  }, [dispatch]);
+    dispatch(importFile({ forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate }));
+  }, [dispatch, revalidate]);
 
   const importFromGit = useCallback(() => {
     dispatch(cloneGitRepository({ createFsClient: MemClient.createClient }));

@@ -22,6 +22,7 @@ export interface ImportOptions {
   forceToProject?: 'active' | 'prompt';
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
+  onComplete?: () => void;
 }
 
 const handleImportResult = (result: ImportResult, errorMessage: string) => {
@@ -113,6 +114,8 @@ export const importFile = (
       dispatch(loadStop());
     }
   }
+
+  options.onComplete?.();
 };
 
 export const readFromClipBoard = () => {
@@ -150,6 +153,8 @@ export const importClipBoard = (
   } finally {
     dispatch(loadStop());
   }
+
+  options.onComplete?.();
 };
 
 export const importUri = (
@@ -169,4 +174,6 @@ export const importUri = (
   } finally {
     dispatch(loadStop());
   }
+
+  options.onComplete?.();
 };
