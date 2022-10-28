@@ -25,7 +25,8 @@
   }
 
   .CodeMirror {
-    z-index: 0; // Because some children have z-index ~5
+    z-index: 0;
+    /* Because some children have z-index ~5*/
     line-height: 1.4em;
     position: absolute;
     left: 0;
@@ -73,7 +74,8 @@
   }
 
   .CodeMirror,
-  .cm-s-seti.CodeMirror, // Hack because seti theme is dumb
+  .cm-s-seti.CodeMirror,
+  // Hack because seti theme is dumb
   .CodeMirror-scrollbar-filler,
   .CodeMirror-gutter-filler {
     // Let the background behind show through
@@ -94,6 +96,7 @@
 
   .CodeMirror-guttermarker-subtle {
     color: var(--hl-lg);
+
     &:hover {
       color: var(--hl);
     }
@@ -170,8 +173,9 @@
   .CodeMirror-lines {
     padding: var(--padding-md);
   }
-  
-  .CodeMirror-wrap pre.CodeMirror-line, .CodeMirror-wrap pre.CodeMirror-line-like {
+
+  .CodeMirror-wrap pre.CodeMirror-line,
+  .CodeMirror-wrap pre.CodeMirror-line-like {
     word-break: break-all;
     line-height: normal;
     padding: 1px 0px;

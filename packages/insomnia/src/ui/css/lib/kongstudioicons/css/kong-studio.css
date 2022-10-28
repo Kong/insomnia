@@ -7,7 +7,7 @@
 
 [class*='ico-']:before {
   display: inline-block;
-  font-family: 'kong-studio-icons';
+  font-family: 'kong-studio-icons' sans-serif;
   font-style: normal;
   font-weight: normal;
   text-rendering: auto;

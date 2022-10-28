@@ -9,6 +9,7 @@ export const ResponsePDFViewer = (props: Props) => {
 
   return (
     <webview
+      className='webview'
       data-testid="ResponsePDFView"
       src={url}
     />

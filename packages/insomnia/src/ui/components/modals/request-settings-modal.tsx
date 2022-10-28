@@ -317,8 +317,6 @@ export class UnconnectedRequestSettingsModal extends PureComponent<Props, State>
   }
 
   _renderDescription() {
-    const {
-    } = this.props;
     const { showDescription, defaultPreviewMode, request } = this.state;
 
     // Don't show description if it doesn't exist, or if it is a gRPC request

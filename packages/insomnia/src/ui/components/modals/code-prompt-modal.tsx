@@ -105,8 +105,6 @@ export class CodePromptModal extends PureComponent<{}, State> {
 
   render() {
     const {
-    } = this.props;
-    const {
       submitName,
       title,
       placeholder,
