@@ -98,7 +98,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   }));
 
   const convertToEditorPreserveFocus = () => {
-    if (!isEditor || forceInput || !inputRef.current) {
+    if (isEditor || forceInput || !inputRef.current) {
       return;
     }
     if (inputRef.current === document.activeElement) {
