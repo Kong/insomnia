@@ -1,13 +1,11 @@
-import React, { FC } from 'react';
-import { useSelector } from 'react-redux';
+import React, { FC, useEffect } from 'react';
+import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
-import { isRemoteProject } from '../../../models/project';
-import { VCS } from '../../../sync/vcs/vcs';
-import { useRemoteWorkspaces } from '../../hooks/workspace';
-import { selectActiveProject } from '../../redux/selectors';
+import { RemoteProject } from '../../../models/project';
+import { RemoteCollectionsLoaderData } from '../../routes/remote-collections';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -17,7 +15,7 @@ import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 interface Props {
-  vcs?: VCS | null;
+  project: RemoteProject;
 }
 
 const PullButton = styled(Button)({
@@ -26,31 +24,63 @@ const PullButton = styled(Button)({
   },
 });
 
-export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {
-  const {
-    loading,
-    refresh,
-    missingBackendProjects,
-    pullingBackendProjects,
-    pull,
-  } = useRemoteWorkspaces(vcs || undefined);
+const RemoteWorkspaceDropdownItem: FC<{
+  remoteId: string;
+  backendProjectId: string;
+  name: string;
+  projectId: string;
+}> = ({ remoteId, backendProjectId, name, projectId }) => {
+  const { submit, state } = useFetcher();
 
-  const project = useSelector(selectActiveProject);
-  if (!project) {
-    return null;
-  }
+  return (
+    <DropdownItem
+      key={backendProjectId}
+      stayOpenAfterClick
+      onClick={() =>
+        submit(
+          {
+            remoteId,
+            backendProjectId,
+          },
+          {
+            action: `project/${projectId}/remote-collections/pull`,
+            method: 'post',
+          }
+        )
+      }
+    >
+      {state === 'submitting' ? (
+        <i className="fa fa-refresh fa-spin" />
+      ) : (
+        <i className="fa fa-cloud-download" />
+      )}
+      <span>
+        Pull <strong>{name}</strong>
+      </span>
+    </DropdownItem>
+  );
+};
 
-  const isRemote = isRemoteProject(project);
+RemoteWorkspaceDropdownItem.displayName = DropdownItem.name;
 
-  // Don't show the pull dropdown if we are not in a remote project
-  if (!isRemote) {
-    return null;
-  }
+export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
+  const { load, data, state } = useFetcher<RemoteCollectionsLoaderData>();
+
+  useEffect(() => {
+    if (isLoggedIn() && project && state === 'idle' && !data) {
+      load(`/project/${project._id}/remote-collections`);
+    }
+  }, [data, load, project, state]);
+
+  const remoteBackendProjects = data?.remoteBackendProjects ?? [];
 
   // Show a disabled button if remote project but not logged in
   if (!isLoggedIn()) {
     return (
-      <Tooltip message="Please log in to access your remote collections" position="bottom">
+      <Tooltip
+        message="Please log in to access your remote collections"
+        position="bottom"
+      >
         <PullButton disabled>
           Pull <i className="fa fa-caret-down pad-left-sm" />
         </PullButton>
@@ -59,36 +89,29 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ vcs }) => {
   }
 
   return (
-    <Dropdown onOpen={refresh}>
+    <Dropdown onOpen={() => load(`/project/${project._id}/remote-collections`)}>
       <DropdownButton buttonClass={PullButton}>
         Pull <i className="fa fa-caret-down pad-left-sm" />
       </DropdownButton>
       <DropdownDivider>
         Remote {strings.collection.plural}
         <HelpTooltip>
-          These {strings.collection.plural.toLowerCase()} have been shared with you via Insomnia
-          Sync and do not yet exist on your machine.
+          These {strings.collection.plural.toLowerCase()} have been shared with
+          you via Insomnia Sync and do not yet exist on your machine.
         </HelpTooltip>{' '}
-        {loading && <i className="fa fa-spin fa-refresh" />}
+        {state === 'loading' && <i className="fa fa-spin fa-refresh" />}
       </DropdownDivider>
-      {missingBackendProjects.length === 0 && (
+      {remoteBackendProjects.length === 0 && (
         <DropdownItem disabled>Nothing to pull</DropdownItem>
       )}
-      {missingBackendProjects.map(p => (
-        <DropdownItem
-          key={p.id}
-          stayOpenAfterClick
-          onClick={() => pull(p)}
-        >
-          {pullingBackendProjects[p.id] ? (
-            <i className="fa fa-refresh fa-spin" />
-          ) : (
-            <i className="fa fa-cloud-download" />
-          )}
-          <span>
-            Pull <strong>{p.name}</strong>
-          </span>
-        </DropdownItem>
+      {remoteBackendProjects.map(backendProject => (
+        <RemoteWorkspaceDropdownItem
+          projectId={project._id}
+          key={backendProject.id}
+          name={backendProject.name}
+          backendProjectId={backendProject.id}
+          remoteId={project.remoteId}
+        />
       ))}
     </Dropdown>
   );

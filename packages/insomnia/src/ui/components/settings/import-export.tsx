@@ -1,6 +1,7 @@
 import { importers } from 'insomnia-importers';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRevalidator } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
@@ -31,7 +32,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const forceToWorkspace = activeWorkspace?._id ? ForceToWorkspace.current : ForceToWorkspace.existing;
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
-
+  const { revalidate } = useRevalidator();
   const handleImportUri = useCallback(() => {
     const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
     const defaultValue = lastUsedImportUri ? { defaultValue: lastUsedImportUri } : {};
@@ -43,12 +44,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
-        dispatch(importUri(uri, { workspaceId: activeWorkspace?._id, forceToWorkspace }));
+        dispatch(importUri(uri, { workspaceId: activeWorkspace?._id, forceToWorkspace, onComplete: revalidate }));
         hideSettingsModal();
       },
       ...defaultValue,
     });
-  }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
+  }, [dispatch, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
   const showExportRequestsModal = useCallback(() => {
     if (!workspaceRequestsAndRequestGroups.filter(r => !isRequestGroup(r)).length) {
@@ -68,14 +69,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [hideSettingsModal, projectName, workspacesForActiveProject]);
 
   const handleImportFile = useCallback(() => {
-    dispatch(importFile({ workspaceId: activeWorkspace?._id, forceToWorkspace }));
+    dispatch(importFile({ workspaceId: activeWorkspace?._id, forceToWorkspace, onComplete: revalidate }));
     hideSettingsModal();
-  }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
+  }, [dispatch, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
   const handleImportClipBoard = useCallback(() => {
-    dispatch(importClipBoard({ workspaceId: activeWorkspace?._id, forceToWorkspace }));
+    dispatch(importClipBoard({ workspaceId: activeWorkspace?._id, forceToWorkspace, onComplete: revalidate }));
     hideSettingsModal();
-  }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
+  }, [dispatch, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
 

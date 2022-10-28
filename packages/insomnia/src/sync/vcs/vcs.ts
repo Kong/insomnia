@@ -10,6 +10,7 @@ import { strings } from '../../common/strings';
 import { BaseModel } from '../../models';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
+import type FileSystemDriver from '../store/drivers/file-system-driver';
 import compress from '../store/hooks/compress';
 import type {
   BackendProject,
@@ -1524,3 +1525,13 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
 
   return hash.digest('hex');
 }
+
+let vcsInstance: VCS | null = null;
+
+export const getVCS = () => vcsInstance;
+
+export const initVCS = async (driver: FileSystemDriver, conflictHandler: ConflictHandler) => {
+  vcsInstance = new VCS(driver, conflictHandler);
+
+  return vcsInstance;
+};

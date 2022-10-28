@@ -31,6 +31,7 @@ export interface WorkspaceCardProps {
   specFormatVersion: string | null;
   hasUnsavedChanges: boolean;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
+  projects: Project[];
 }
 
 /** note: numbers are not technically valid (and, indeed, we throw a lint error), but we need to handle this case otherwise a user will not be able to import a spec with a malformed version and even _see_ that it's got the error. */
@@ -40,7 +41,9 @@ export const getVersionDisplayment = (version?: string | number | null) => {
   }
 
   if (typeof version === 'number') {
-    console.warn(`OpenAPI documents must not use number data types for $.info.version, found ${version}`);
+    console.warn(
+      `OpenAPI documents must not use number data types for $.info.version, found ${version}`
+    );
     version = String(version);
   } else if (typeof version !== 'string') {
     console.error('unable to parse spec version');
@@ -68,6 +71,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   specFormat,
   specFormatVersion,
   hasUnsavedChanges,
+  projects,
   onSelect,
 }) => {
   let branch = lastActiveBranch;
@@ -81,10 +85,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
     if (modifiedLocally) {
       log = (
         <Fragment>
-          <TimeFromNow
-            className="text-danger"
-            timestamp={modifiedLocally}
-          />{' '}
+          <TimeFromNow className="text-danger" timestamp={modifiedLocally} />{' '}
           (unsaved)
         </Fragment>
       );
@@ -98,13 +99,6 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
       </Fragment>
     );
   }
-  const docMenu = (
-    <WorkspaceCardDropdown
-      apiSpec={apiSpec}
-      workspace={workspace}
-      project={activeProject}
-    />
-  );
 
   const version = getVersionDisplayment(spec?.info?.version);
   let label: string = strings.collection.singular;
@@ -129,10 +123,14 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   }
 
   // Filter the card by multiple different properties
-  const matchResults = fuzzyMatchAll(filter, [title, label, branch || '', version || ''], {
-    splitSpace: true,
-    loose: true,
-  });
+  const matchResults = fuzzyMatchAll(
+    filter,
+    [title, label, branch || '', version || ''],
+    {
+      splitSpace: true,
+      loose: true,
+    }
+  );
 
   // Return null if we don't match the filter
   if (filter && !matchResults) {
@@ -141,17 +139,30 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
 
   return (
     <Card
-      docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
+      docBranch={
+        branch ? <Highlight search={filter} text={branch} /> : undefined
+      }
       docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
-      docVersion={version ? <Highlight search={filter} text={version} /> : undefined}
-      tagLabel={label ? (
-        <>
-          <span className="margin-right-xs">{labelIcon}</span>
-          <Highlight search={filter} text={label} />
-        </>
-      ) : undefined}
+      docVersion={
+        version ? <Highlight search={filter} text={version} /> : undefined
+      }
+      tagLabel={
+        label ? (
+          <>
+            <span className="margin-right-xs">{labelIcon}</span>
+            <Highlight search={filter} text={label} />
+          </>
+        ) : undefined
+      }
       docLog={log}
-      docMenu={docMenu}
+      docMenu={
+        <WorkspaceCardDropdown
+          apiSpec={apiSpec}
+          workspace={workspace}
+          project={activeProject}
+          projects={projects}
+        />
+      }
       docFormat={format}
       onClick={() => onSelect(workspace._id, defaultActivity)}
     />

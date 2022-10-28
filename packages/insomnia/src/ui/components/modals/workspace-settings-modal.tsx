@@ -11,7 +11,7 @@ import * as workspaceOperations from '../../../models/helpers/workspace-operatio
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
+import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName, selectProjects } from '../../redux/selectors';
 import { FileInputButton } from '../base/file-input-button';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -20,7 +20,6 @@ import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
-import { showModal } from '.';
 import { WorkspaceDuplicateModal } from './workspace-duplicate-modal';
 
 const CertificateFields = styled.div({
@@ -85,8 +84,10 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     showDescription: false,
     defaultPreviewMode: false,
   });
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
 
   const workspace = useSelector(selectActiveWorkspace);
+  const projects = useSelector(selectProjects);
   const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
   const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
@@ -278,13 +279,12 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                   <i className="fa fa-trash-o" /> Delete
                 </PromptButton>
                 <button
-                  onClick={() => {
-                    showModal(WorkspaceDuplicateModal, { workspace, apiSpec, onDone: modalRef.current?.hide });
-                  }}
+                  onClick={() => setIsDuplicateModalOpen(true)}
                   className="width-auto btn btn--clicky inline-block space-left"
                 >
                   <i className="fa fa-copy" /> Duplicate
                 </button>
+                {isDuplicateModalOpen && <WorkspaceDuplicateModal projects={projects} workspace={workspace} onHide={() => setIsDuplicateModalOpen(false)} />}
                 <PromptButton
                   onClick={_handleClearAllResponses}
                   className="width-auto btn btn--clicky inline-block space-left"
